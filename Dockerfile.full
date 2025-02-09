@@ -6,7 +6,7 @@
 # Written by: TheTechromancer
 #
 
-FROM python:3
+FROM python:3.14.0a1-slim-bookworm
 
 # Install tools/dependencies from apt
 RUN apt-get -y update && apt-get -y install nbtscan onesixtyone nmap
