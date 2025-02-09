@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "alertifyjs": "^1.13.1",
-    "bootstrap": "^3.4.1",
+    "bootstrap": "^5.0.0",
     "d3": "^3.5.17",
     "jquery": "^3.7.1",
     "sigma": "^1.2.1",
