@@ -3,5 +3,5 @@ version: "3"
 services:
   spiderfoot:
     build:
-      context: ./
-      dockerfile: ./Dockerfile.full
+      context: .
+      dockerfile: Dockerfile.full

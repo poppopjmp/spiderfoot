@@ -111,6 +111,12 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
  python3 ./sf.py -l 127.0.0.1:5001
 ```
 
+#### Docker build:
+
+```
+ docker-compose up
+```
+
 Check out the [documentation](https://www.spiderfoot.net/documentation) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
 
 ### CONFIGURING POSTGRESQL
