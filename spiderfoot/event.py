@@ -101,26 +101,56 @@ class SpiderFootEvent():
 
     @property
     def module(self) -> str:
+        """Module which created the event.
+
+        Returns:
+            str: module
+        """
         return self._module
 
     @property
     def data(self) -> str:
+        """Event data.
+
+        Returns:
+            str: data
+        """
         return self._data
 
     @property
     def sourceEvent(self) -> 'SpiderFootEvent':
+        """Source event which lead to this event.
+
+        Returns:
+            SpiderFootEvent: source event
+        """
         return self._sourceEvent
 
     @property
     def sourceEventHash(self) -> str:
+        """Hash of the source event.
+
+        Returns:
+            str: source event hash
+        """
         return self._sourceEventHash
 
     @property
     def actualSource(self) -> str:
+        """Source data of parent event.
+
+        Returns:
+            str: actual source
+        """
         return self._actualSource
 
     @property
     def moduleDataSource(self) -> str:
+        """Module data source.
+
+        Returns:
+            str: module data source
+        """
         return self._moduleDataSource
 
     @property
@@ -275,10 +305,20 @@ class SpiderFootEvent():
 
     @actualSource.setter
     def actualSource(self, actualSource: str) -> None:
+        """Source data of parent event.
+
+        Args:
+            actualSource (str): actual source
+        """
         self._actualSource = actualSource
 
     @moduleDataSource.setter
     def moduleDataSource(self, moduleDataSource: str) -> None:
+        """Module data source.
+
+        Args:
+            moduleDataSource (str): module data source
+        """
         self._moduleDataSource = moduleDataSource
 
     def asDict(self) -> dict:

@@ -16,10 +16,10 @@ class SpiderFootSqliteLogHandler(logging.Handler):
     """
 
     def __init__(self, opts: dict) -> None:
-        """TBD.
+        """Initialize the SQLite log handler.
 
         Args:
-            opts (dict): TBD
+            opts (dict): Configuration options
         """
         self.opts = opts
         self.dbh = None
@@ -32,7 +32,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         super().__init__()
 
     def emit(self, record: 'logging.LogRecord') -> None:
-        """TBD
+        """Emit a log record.
 
         Args:
             record (logging.LogRecord): Log event record
@@ -49,6 +49,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
                 self.logBatch()
 
     def logBatch(self):
+        """Log a batch of records to the database."""
         batch = self.batch
         self.batch = []
         if self.dbh is None:
@@ -61,7 +62,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
             self.dbh.scanLogEvents(batch)
 
     def makeDbh(self) -> None:
-        """TBD."""
+        """Create a new database handle."""
         self.dbh = SpiderFootDb(self.opts)
 
 
@@ -137,7 +138,7 @@ def logWorkerSetup(loggingQueue) -> 'logging.Logger':
     """Root SpiderFoot logger.
 
     Args:
-        loggingQueue (Queue): TBD
+        loggingQueue (Queue): Queue for logging events
 
     Returns:
         logging.Logger: Logger
@@ -152,10 +153,10 @@ def logWorkerSetup(loggingQueue) -> 'logging.Logger':
 
 
 def stop_listener(listener: 'logging.handlers.QueueListener') -> None:
-    """TBD.
+    """Stop the log listener.
 
     Args:
-        listener: (logging.handlers.QueueListener): TBD
+        listener: (logging.handlers.QueueListener): Log listener
     """
     with suppress(Exception):
         listener.stop()

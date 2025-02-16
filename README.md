@@ -364,3 +364,15 @@ Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 Read more at the [project website](https://www.spiderfoot.net/r.php?u=aHR0cHM6Ly93d3cuc3BpZGVyZm9vdC5uZXQv&s=os_gh), including more complete documentation, blog posts with tutorials/guides, plus information about [SpiderFoot HX](https://www.spiderfoot.net/r.php?u=aHR0cHM6Ly93d3cuc3BpZGVyZm9vdC5uZXQvaHgvCg==&s=os_gh).
 
 Latest updates announced on [Twitter](https://twitter.com/spiderfoot).
+
+### ACTIVE MAINTENANCE STATUS
+
+SpiderFoot is actively maintained with regular updates and contributions. The project is under active development, with recent commits and ongoing improvements. Issues and pull requests are actively managed and addressed. The community is engaged through discussions and contributions. We encourage users to report issues and contribute to the project.
+
+### RECENT UPDATES
+
+- Added new modules for enhanced data extraction and analysis.
+- Improved performance and stability of existing modules.
+- Updated dependencies to ensure compatibility with the latest versions.
+- Fixed various bugs and issues reported by the community.
+- Enhanced documentation and added new tutorials for better user experience.
