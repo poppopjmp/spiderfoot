@@ -15,6 +15,7 @@ import sys
 import json
 import os
 from subprocess import PIPE, Popen, TimeoutExpired
+from urllib.parse import urlparse
 
 from spiderfoot import SpiderFootPlugin, SpiderFootEvent
 
@@ -93,23 +94,23 @@ class sfp_tool_trufflehog(SpiderFootPlugin):
             return
 
         if eventName == "SOCIAL_MEDIA":
-            if "github.com/" in eventData.lower() or "gitlab.com/" in eventData.lower() or "bitbucket.org/" in eventData.lower():
-                try:
-                    url = eventData.split(": ")[1].replace("<SFURL>", "").replace("</SFURL>", "")
-                except BaseException:
-                    self.debug("Unable to extract repository URL, skipping.")
+            try:
+                url = eventData.split(": ")[1].replace("<SFURL>", "").replace("</SFURL>", "")
+                hostname = urlparse(url).hostname
+                if hostname not in ["github.com", "gitlab.com", "bitbucket.org"]:
                     return
-            else:
+            except BaseException:
+                self.debug("Unable to extract repository URL, skipping.")
                 return
 
         if eventName == "PUBLIC_CODE_REPO" and self.opts['allrepos']:
-            if "github.com/" in eventData.lower() or "gitlab.com/" in eventData.lower() or "bitbucket.org/" in eventData.lower():
-                try:
-                    url = eventData.split("\n")[1].replace("URL: ", "")
-                except BaseException:
-                    self.debug("Unable to extract repository URL, skipping.")
+            try:
+                url = eventData.split("\n")[1].replace("URL: ", "")
+                hostname = urlparse(url).hostname
+                if hostname not in ["github.com", "gitlab.com", "bitbucket.org"]:
                     return
-            else:
+            except BaseException:
+                self.debug("Unable to extract repository URL, skipping.")
                 return
 
         if not url:
