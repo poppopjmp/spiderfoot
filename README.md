@@ -113,6 +113,37 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 
 Check out the [documentation](https://www.spiderfoot.net/documentation) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
 
+### CONFIGURING POSTGRESQL
+
+To use PostgreSQL as the database backend, follow these steps:
+
+1. Install PostgreSQL and psycopg2:
+   ```
+   sudo apt-get install postgresql postgresql-contrib
+   pip3 install psycopg2
+   ```
+
+2. Create a PostgreSQL database and user:
+   ```
+   sudo -u postgres psql
+   CREATE DATABASE spiderfoot;
+   CREATE USER spiderfootuser WITH PASSWORD 'yourpassword';
+   GRANT ALL PRIVILEGES ON DATABASE spiderfoot TO spiderfootuser;
+   \q
+   ```
+
+3. Update the `spiderfoot` configuration to use PostgreSQL:
+   Edit the `sf.py` file and set the following configuration options:
+   ```python
+   __database = "dbname=spiderfoot user=spiderfootuser password=yourpassword host=localhost"
+   __dbtype = "postgresql"
+   ```
+
+4. Run SpiderFoot with the updated configuration:
+   ```
+   python3 ./sf.py -l 127.0.0.1:5001
+   ```
+
 ### COMMUNITY
 
 Whether you're a contributor, user or just curious about SpiderFoot and OSINT in general, we'd love to have you join our community! SpiderFoot now has a [Discord server](https://discord.gg/vyvztrG) for seeking help from the community, requesting features or just general OSINT chit-chat.
