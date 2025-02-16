@@ -192,3 +192,136 @@ If we were to look at `This is some web content: foo` in our rule, here are the 
 Notice how the `entity.type` and `entity.data` fields for "This is some web content: foo" is **not** the `LINKED_URL_INTERNAL` data element, but actually the `bar` `INTERNET_NAME` data element. This is because an `INTERNET_NAME` is an entity, but a `LINKED_URL_INTERNAL` is not.
 
 You can look in `spiderfoot/db.py` to see which data types are entities and which are not.
+
+### New Correlation Rules
+
+#### `cert_expired.yaml`
+```yaml
+id: cert_expired
+version: 1
+meta:
+  name: Expired SSL certificate found
+  description: >
+    A host was found with an expired SSL certificate. This may
+    pose a risk to the security of the service exposed and/or
+    cause connecting services to fail due to being unable to
+    verify the certificate.
+  risk: MEDIUM
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: SSL_CERTIFICATE_EXPIRED
+aggregation:
+  field: source.data
+headline: "Expired SSL certificate found: {source.data}"
+```
+
+#### `cloud_bucket_open_related.yaml`
+```yaml
+id: cloud_bucket_open_related
+version: 1
+meta:
+  name: Possibly related cloud storage bucket open to the Internet
+  description: >
+    A cloud storage bucket (e.g. S3) potentially related to
+    the target has been found to be open to the Internet.
+
+    As the buckets in this case are based on name-matching, verification
+    for actual association with the target is necessary.
+  risk: LOW
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: CLOUD_STORAGE_BUCKET
+      - method: exact
+        field: source.type
+        value: not LINKED_URL_EXTERNAL
+      - method: exact
+        field: child.type
+        value: CLOUD_STORAGE_BUCKET_OPEN
+aggregation:
+  field: data
+headline: "Potentially relevant cloud storage bucket found open: {data}"
+```
+
+#### `cloud_bucket_open.yaml`
+```yaml
+id: cloud_bucket_open
+version: 1
+meta:
+  name: Cloud storage bucket open to the Internet
+  description: >
+    A cloud storage bucket (e.g. S3) referenced from the target
+    website has been found to be open to the Internet. Such
+    buckets should be restricted so that contents cannot be
+    listed, even if needing to be publicly accessible.
+  risk: HIGH
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: CLOUD_STORAGE_BUCKET
+      - method: exact
+        field: source.type
+        value: LINKED_URL_EXTERNAL
+      - method: exact
+        field: child.type
+        value: CLOUD_STORAGE_BUCKET_OPEN
+aggregation:
+  field: data
+headline: "Cloud storage bucket found open: {data}"
+```
+
+#### `data_from_base64.yaml`
+```yaml
+id: data_from_base64
+version: 1
+meta:
+  name: Data was found within base64-encoded data
+  description: >
+    Possibly interesting data was found within base64-encoded data,
+    such as software versions, names, email addresses and hostnames.
+  risk: INFO
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: BASE64_DATA
+      - method: regex
+        field: child.data
+        value: .*
+      - method: exact
+        field: child.type
+        value: not HASH
+aggregation:
+  field: child.data
+headline: "Interesting data was found within base64-encoded data: '{child.data}'"
+```
+
+#### `data_from_docmeta.yaml`
+```yaml
+id: data_from_docmeta
+version: 1
+meta:
+  name: Data was found within document/image meta data
+  description: >
+    Possibly interesting data was found within document/image meta data,
+    such as software versions, names, email addresses and hostnames.
+  risk: INFO
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: RAW_FILE_META_DATA
+      - method: regex
+        field: child.data
+        value: .*
+      - method: exact
+        field: child.type
+        value: not HASH
+aggregation:
+  field: child.data
+headline: "Interesting data was found within document meta data: '{child.data}'"
+```
