@@ -1882,3 +1882,23 @@ class SpiderFootWebUi:
         retdata['data'] = datamap
 
         return retdata
+
+    @cherrypy.expose
+    def active_maintenance_status(self: 'SpiderFootWebUi') -> str:
+        """Display the active maintenance status of the project.
+
+        Returns:
+            str: Active maintenance status page HTML
+        """
+        templ = Template(filename='spiderfoot/templates/active_maintenance_status.tmpl', lookup=self.lookup)
+        return templ.render(docroot=self.docroot, version=__version__)
+
+    @cherrypy.expose
+    def footer(self: 'SpiderFootWebUi') -> str:
+        """Display the footer with active maintenance status.
+
+        Returns:
+            str: Footer HTML
+        """
+        templ = Template(filename='spiderfoot/templates/footer.tmpl', lookup=self.lookup)
+        return templ.render(docroot=self.docroot, version=__version__)
