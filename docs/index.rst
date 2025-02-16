@@ -10,6 +10,7 @@ Welcome to spiderfoot's documentation!
    :maxdepth: 4
    :caption: Contents:
 
+   README
    spiderfoot
 
 
