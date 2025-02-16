@@ -17,21 +17,23 @@ import re
 import sqlite3
 import threading
 import time
+import psycopg2
+import psycopg2.extras
 
 
 class SpiderFootDb:
     """SpiderFoot database
 
     Attributes:
-        conn: SQLite connect() connection
-        dbh: SQLite cursor() database handle
+        conn: Database connection
+        dbh: Database cursor
         dbhLock (_thread.RLock): thread lock on database handle
     """
 
     dbh = None
     conn = None
 
-    # Prevent multithread access to sqlite database
+    # Prevent multithread access to database
     dbhLock = threading.RLock()
 
     # Queries for creating the SpiderFoot database
@@ -284,7 +286,7 @@ class SpiderFootDb:
     ]
 
     def __init__(self, opts: dict, init: bool = False) -> None:
-        """Initialize database and create handle to the SQLite database file.
+        """Initialize database and create handle to the database file.
         Creates the database file if it does not exist.
         Creates database schema if it does not exist.
 
@@ -306,90 +308,127 @@ class SpiderFootDb:
         if not opts.get('__database'):
             raise ValueError("opts['__database'] is empty") from None
 
-        database_path = opts['__database']
+        self.db_type = opts.get('__dbtype', 'sqlite')
 
-        # create database directory
-        Path(database_path).parent.mkdir(exist_ok=True, parents=True)
+        if self.db_type == 'sqlite':
+            database_path = opts['__database']
 
-        # connect() will create the database file if it doesn't exist, but
-        # at least we can use this opportunity to ensure we have permissions to
-        # read and write to such a file.
-        try:
-            dbh = sqlite3.connect(database_path)
-        except Exception as e:
-            raise IOError(f"Error connecting to internal database {database_path}") from e
+            # create database directory
+            Path(database_path).parent.mkdir(exist_ok=True, parents=True)
 
-        if dbh is None:
-            raise IOError(f"Could not connect to internal database, and could not create {database_path}") from None
-
-        dbh.text_factory = str
-
-        self.conn = dbh
-        self.dbh = dbh.cursor()
-
-        def __dbregex__(qry: str, data: str) -> bool:
-            """SQLite doesn't support regex queries, so we create
-            a custom function to do so.
-
-            Args:
-                qry (str): TBD
-                data (str): TBD
-
-            Returns:
-                bool: matches
-            """
-
+            # connect() will create the database file if it doesn't exist, but
+            # at least we can use this opportunity to ensure we have permissions to
+            # read and write to such a file.
             try:
-                rx = re.compile(qry, re.IGNORECASE | re.DOTALL)
-                ret = rx.match(data)
-            except Exception:
-                return False
-            return ret is not None
+                dbh = sqlite3.connect(database_path)
+            except Exception as e:
+                raise IOError(f"Error connecting to internal database {database_path}") from e
 
-        # Now we actually check to ensure the database file has the schema set
-        # up correctly.
-        with self.dbhLock:
-            try:
-                self.dbh.execute('SELECT COUNT(*) FROM tbl_scan_config')
-                self.conn.create_function("REGEXP", 2, __dbregex__)
-            except sqlite3.Error:
-                init = True
+            if dbh is None:
+                raise IOError(f"Could not connect to internal database, and could not create {database_path}") from None
+
+            dbh.text_factory = str
+
+            self.conn = dbh
+            self.dbh = dbh.cursor()
+
+            def __dbregex__(qry: str, data: str) -> bool:
+                """SQLite doesn't support regex queries, so we create
+                a custom function to do so.
+
+                Args:
+                    qry (str): TBD
+                    data (str): TBD
+
+                Returns:
+                    bool: matches
+                """
+
                 try:
-                    self.create()
-                except Exception as e:
-                    raise IOError("Tried to set up the SpiderFoot database schema, but failed") from e
+                    rx = re.compile(qry, re.IGNORECASE | re.DOTALL)
+                    ret = rx.match(data)
+                except Exception:
+                    return False
+                return ret is not None
 
-            # For users with pre 4.0 databases, add the correlation
-            # tables + indexes if they don't exist.
-            try:
-                self.dbh.execute("SELECT COUNT(*) FROM tbl_scan_correlation_results")
-            except sqlite3.Error:
+            # Now we actually check to ensure the database file has the schema set
+            # up correctly.
+            with self.dbhLock:
                 try:
-                    for query in self.createSchemaQueries:
-                        if "correlation" in query:
-                            self.dbh.execute(query)
-                        self.conn.commit()
+                    self.dbh.execute('SELECT COUNT(*) FROM tbl_scan_config')
+                    self.conn.create_function("REGEXP", 2, __dbregex__)
                 except sqlite3.Error:
-                    raise IOError("Looks like you are running a pre-4.0 database. Unfortunately "
-                                  "SpiderFoot wasn't able to migrate you, so you'll need to delete "
-                                  "your SpiderFoot database in order to proceed.") from None
-
-            if init:
-                for row in self.eventDetails:
-                    event = row[0]
-                    event_descr = row[1]
-                    event_raw = row[2]
-                    event_type = row[3]
-                    qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (?, ?, ?, ?)"
-
+                    init = True
                     try:
-                        self.dbh.execute(qry, (
-                            event, event_descr, event_raw, event_type
-                        ))
-                        self.conn.commit()
-                    except Exception:
-                        continue
-                self.conn.commit()
+                        self.create()
+                    except Exception as e:
+                        raise IOError("Tried to set up the SpiderFoot database schema, but failed") from e
+
+                # For users with pre 4.0 databases, add the correlation
+                # tables + indexes if they don't exist.
+                try:
+                    self.dbh.execute("SELECT COUNT(*) FROM tbl_scan_correlation_results")
+                except sqlite3.Error:
+                    try:
+                        for query in self.createSchemaQueries:
+                            if "correlation" in query:
+                                self.dbh.execute(query)
+                            self.conn.commit()
+                    except sqlite3.Error:
+                        raise IOError("Looks like you are running a pre-4.0 database. Unfortunately "
+                                      "SpiderFoot wasn't able to migrate you, so you'll need to delete "
+                                      "your SpiderFoot database in order to proceed.") from None
+
+                if init:
+                    for row in self.eventDetails:
+                        event = row[0]
+                        event_descr = row[1]
+                        event_raw = row[2]
+                        event_type = row[3]
+                        qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (?, ?, ?, ?)"
+
+                        try:
+                            self.dbh.execute(qry, (
+                                event, event_descr, event_raw, event_type
+                            ))
+                            self.conn.commit()
+                        except Exception:
+                            continue
+                    self.conn.commit()
+
+        elif self.db_type == 'postgresql':
+            try:
+                self.conn = psycopg2.connect(opts['__database'])
+                self.dbh = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            except Exception as e:
+                raise IOError(f"Error connecting to PostgreSQL database {opts['__database']}") from e
+
+            with self.dbhLock:
+                try:
+                    self.dbh.execute('SELECT COUNT(*) FROM tbl_scan_config')
+                except psycopg2.Error:
+                    init = True
+                    try:
+                        self.create()
+                    except Exception as e:
+                        raise IOError("Tried to set up the SpiderFoot database schema, but failed") from e
+
+                if init:
+                    for row in self.eventDetails:
+                        event = row[0]
+                        event_descr = row[1]
+                        event_raw = row[2]
+                        event_type = row[3]
+                        qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (%s, %s, %s, %s)"
+
+                        try:
+                            self.dbh.execute(qry, (
+                                event, event_descr, event_raw, event_type
+                            ))
+                            self.conn.commit()
+                        except Exception:
+                            continue
+                    self.conn.commit()
 
     #
     # Back-end database operations
@@ -418,7 +457,7 @@ class SpiderFootDb:
                         event, event_descr, event_raw, event_type
                     ))
                 self.conn.commit()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when setting up database") from e
 
     def close(self) -> None:
@@ -438,10 +477,13 @@ class SpiderFootDb:
         """
         with self.dbhLock:
             try:
-                self.dbh.execute("VACUUM")
+                if self.db_type == 'sqlite':
+                    self.dbh.execute("VACUUM")
+                elif self.db_type == 'postgresql':
+                    self.dbh.execute("VACUUM")
                 self.conn.commit()
                 return True
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when vacuuming the database") from e
         return False
 
@@ -525,7 +567,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching search results") from e
 
     def eventTypes(self) -> list:
@@ -543,7 +585,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when retrieving event types") from e
 
     def scanLogEvents(self, batch: list) -> bool:
@@ -586,7 +628,7 @@ class SpiderFootDb:
                 try:
                     self.dbh.executemany(qry, inserts)
                     self.conn.commit()
-                except sqlite3.Error as e:
+                except (sqlite3.Error, psycopg2.Error) as e:
                     if "locked" not in e.args[0] and "thread" not in e.args[0]:
                         raise IOError("Unable to log scan event in database") from e
                     return False
@@ -631,7 +673,7 @@ class SpiderFootDb:
                     instanceId, time.time() * 1000, component, classification, message
                 ))
                 self.conn.commit()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 if "locked" not in e.args[0] and "thread" not in e.args[0]:
                     raise IOError("Unable to log scan event in database") from e
                 # print("[warning] Couldn't log due to SQLite limitations. You can probably ignore this.")
@@ -670,7 +712,7 @@ class SpiderFootDb:
                     instanceId, scanName, scanTarget, time.time() * 1000, 'CREATED'
                 ))
                 self.conn.commit()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("Unable to create scan instance in database") from e
 
     def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None) -> None:
@@ -713,7 +755,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 self.conn.commit()
-            except sqlite3.Error:
+            except (sqlite3.Error, psycopg2.Error):
                 raise IOError("Unable to set information for the scan instance.") from None
 
     def scanInstanceGet(self, instanceId: str) -> list:
@@ -742,7 +784,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchone()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when retrieving scan instance") from e
 
     def scanResultSummary(self, instanceId: str, by: str = "type") -> list:
@@ -796,7 +838,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching result summary") from e
 
     def scanCorrelationSummary(self, instanceId: str, by: str = "rule") -> list:
@@ -841,7 +883,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching correlation summary") from e
 
     def scanCorrelationList(self, instanceId: str) -> list:
@@ -873,7 +915,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching correlation list") from e
 
     def scanResultEvent(
@@ -971,7 +1013,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching result events") from e
 
     def scanResultEventUnique(self, instanceId: str, eventType: str = 'ALL', filterFp: bool = False) -> list:
@@ -1013,7 +1055,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching unique result events") from e
 
     def scanLogs(self, instanceId: str, limit: int = None, fromRowId: int = 0, reverse: bool = False) -> list:
@@ -1059,7 +1101,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching scan logs") from e
 
     def scanErrors(self, instanceId: str, limit: int = 0) -> list:
@@ -1096,7 +1138,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching scan errors") from e
 
     def scanInstanceDelete(self, instanceId: str) -> bool:
@@ -1129,7 +1171,7 @@ class SpiderFootDb:
                 self.dbh.execute(qry3, qvars)
                 self.dbh.execute(qry4, qvars)
                 self.conn.commit()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when deleting scan") from e
 
         return True
@@ -1163,12 +1205,12 @@ class SpiderFootDb:
                 qvars = [fpFlag, instanceId, resultHash]
                 try:
                     self.dbh.execute(qry, qvars)
-                except sqlite3.Error as e:
+                except (sqlite3.Error, psycopg2.Error) as e:
                     raise IOError("SQL error encountered when updating false-positive") from e
 
             try:
                 self.conn.commit()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when updating false-positive") from e
 
         return True
@@ -1207,12 +1249,12 @@ class SpiderFootDb:
 
                 try:
                     self.dbh.execute(qry, qvals)
-                except sqlite3.Error as e:
+                except (sqlite3.Error, psycopg2.Error) as e:
                     raise IOError("SQL error encountered when storing config, aborting") from e
 
             try:
                 self.conn.commit()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when storing config, aborting") from e
 
         return True
@@ -1241,7 +1283,7 @@ class SpiderFootDb:
                         retval[f"{scope}:{opt}"] = val
 
                 return retval
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching configuration") from e
 
     def configClear(self) -> None:
@@ -1258,7 +1300,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry)
                 self.conn.commit()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("Unable to clear configuration from the database") from e
 
     def scanConfigSet(self, scan_id, optMap=dict()) -> None:
@@ -1294,12 +1336,12 @@ class SpiderFootDb:
 
                 try:
                     self.dbh.execute(qry, qvals)
-                except sqlite3.Error as e:
+                except (sqlite3.Error, psycopg2.Error) as e:
                     raise IOError("SQL error encountered when storing config, aborting") from e
 
             try:
                 self.conn.commit()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when storing config, aborting") from e
 
     def scanConfigGet(self, instanceId: str) -> dict:
@@ -1334,7 +1376,7 @@ class SpiderFootDb:
                     else:
                         retval[f"{component}:{opt}"] = val
                 return retval
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching configuration") from e
 
     def scanEventStore(self, instanceId: str, sfEvent, truncateSize: int = 0) -> None:
@@ -1432,7 +1474,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvals)
                 self.conn.commit()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError(f"SQL error encountered when storing event data ({self.dbh})") from e
 
     def scanInstanceList(self) -> list:
@@ -1463,7 +1505,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when fetching scan list") from e
 
     def scanResultHistory(self, instanceId: str) -> list:
@@ -1492,7 +1534,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError(f"SQL error encountered when fetching history for scan {instanceId}") from e
 
     def scanElementSourcesDirect(self, instanceId: str, elementIdList: list) -> list:
@@ -1543,7 +1585,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when getting source element IDs") from e
 
     def scanElementChildrenDirect(self, instanceId: str, elementIdList: list) -> list:
@@ -1592,7 +1634,7 @@ class SpiderFootDb:
             try:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("SQL error encountered when getting child element IDs") from e
 
     def scanElementSourcesAll(self, instanceId: str, childData: list) -> list:
@@ -1781,7 +1823,7 @@ class SpiderFootDb:
                     uniqueId, instanceId, correlationTitle, ruleName, ruleDescr, ruleRisk, ruleId, ruleYaml
                 ))
                 self.conn.commit()
-            except sqlite3.Error as e:
+            except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError("Unable to create correlation result in database") from e
 
         # Map events to the correlation result
@@ -1796,7 +1838,7 @@ class SpiderFootDb:
                         uniqueId, eventHash
                     ))
                     self.conn.commit()
-                except sqlite3.Error as e:
+                except (sqlite3.Error, psycopg2.Error) as e:
                     raise IOError("Unable to create correlation result in database") from e
 
         return uniqueId
