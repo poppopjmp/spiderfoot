@@ -251,7 +251,9 @@ class sfp_intelx(SpiderFootPlugin):
                 e = SpiderFootEvent(evt, val, self.__name__, event)
                 self.notifyListeners(e)
 
-        if "public.intelx.io" in self.opts['base_url'] or eventName != "INTERNET_NAME":
+        from urllib.parse import urlparse
+        parsed_url = urlparse(self.opts['base_url'])
+        if parsed_url.hostname == "public.intelx.io" or eventName != "INTERNET_NAME":
             return
 
         data = self.query(eventData, "phonebook")
