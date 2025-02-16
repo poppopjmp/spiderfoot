@@ -966,10 +966,12 @@ class SpiderFoot:
         Returns:
             sock
         """
+        context = ssl.create_default_context()
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
         s = socket.socket()
         s.settimeout(int(timeout))
         s.connect((host, int(port)))
-        sock = ssl.wrap_socket(s)
+        sock = context.wrap_socket(s, server_hostname=host)
         sock.do_handshake()
         return sock
 
