@@ -395,6 +395,9 @@ Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 [Zetalytics](https://zetalytics.com/)|Query the Zetalytics database for hosts on your target domain(s).|Tiered API
 [ZoneFile.io](https://zonefiles.io)|Search ZoneFiles.io Domain query API for domain information.|Tiered API
 [Zone-H Defacement Check](https://zone-h.org/)|Check if a hostname/domain appears on the zone-h.org 'special defacements' RSS feed.|Free API
+[ZoomEye](https://www.zoomeye.org/)|Look up domain, IP address, and other information from ZoomEye.|Tiered API
+[Fofa](https://fofa.so/)|Look up domain, IP address, and other information from Fofa.|Tiered API
+[RocketReach](https://rocketreach.co/)|Look up email addresses, phone numbers, and social media profiles from RocketReach.|Tiered API
 
 ### DOCUMENTATION
 
@@ -405,6 +408,8 @@ Latest updates announced on [Twitter](https://twitter.com/spiderfoot).
 ### ACTIVE MAINTENANCE STATUS
 
 SpiderFoot is actively maintained with regular updates and contributions. The project is under active development, with recent commits and ongoing improvements. Issues and pull requests are actively managed and addressed. The community is engaged through discussions and contributions. We encourage users to report issues and contribute to the project.
+
+Maintainer: Poppopjmp <van1sh@van1shland.io>
 
 ### RECENT UPDATES
 
