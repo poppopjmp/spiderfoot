@@ -4,3 +4,4 @@ services:
   spiderfoot:
     volumes:
       - .:/home/spiderfoot
+      - ./new_directory:/home/spiderfoot/new_directory
