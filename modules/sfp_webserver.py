@@ -12,6 +12,7 @@
 # -------------------------------------------------------------------------------
 
 import json
+import re
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
@@ -123,8 +124,10 @@ class sfp_webserver(SpiderFootPlugin):
         if cookies and 'JSESSIONID' in cookies:
             tech.append("Java/JSP")
 
-        if cookies and 'ASP.NET' in cookies:
-            tech.append("ASP.NET")
+        if cookies:
+            asp_net_cookies = re.findall(r'ASP\.NET_SessionId|\.ASPXAUTH', cookies)
+            if asp_net_cookies:
+                tech.append("ASP.NET")
 
         if '.asp' in eventSource:
             tech.append("ASP")
