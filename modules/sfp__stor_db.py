@@ -15,6 +15,11 @@ from spiderfoot import SpiderFootPlugin
 
 
 class sfp__stor_db(SpiderFootPlugin):
+    """
+    SpiderFoot plug-in for storing events to the local SpiderFoot SQLite database.
+
+    This class is responsible for storing scan results into the back-end SpiderFoot database.
+    """
 
     meta = {
         'name': "Storage",
@@ -35,19 +40,34 @@ class sfp__stor_db(SpiderFootPlugin):
     }
 
     def setup(self, sfc, userOpts=dict()):
+        """
+        Set up the module with user options.
+
+        Args:
+            sfc: SpiderFoot instance
+            userOpts (dict): User options
+        """
         self.sf = sfc
 
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
-    # What events is this module interested in for input
-    # Because this is a storage plugin, we are interested in everything so we
-    # can store all events for later analysis.
     def watchedEvents(self):
+        """
+        Define the events this module is interested in for input.
+
+        Returns:
+            list: List of event types
+        """
         return ["*"]
 
-    # Handle events sent to this module
     def handleEvent(self, sfEvent):
+        """
+        Handle events sent to this module.
+
+        Args:
+            sfEvent: SpiderFoot event
+        """
         if not self.opts['_store']:
             return
 

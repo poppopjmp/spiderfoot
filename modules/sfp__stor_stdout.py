@@ -4,6 +4,7 @@
 # Purpose:      SpiderFoot plug-in for dumping events to standard output.
 #
 # Author:      Steve Micallef <steve@binarypool.com>
+# Maintainer:  poppopjmp
 #
 # Created:     22/10/2018
 # Copyright:   (c) Steve Micallef 2018
@@ -16,6 +17,11 @@ from spiderfoot import SpiderFootPlugin
 
 
 class sfp__stor_stdout(SpiderFootPlugin):
+    """
+    SpiderFoot plug-in for dumping events to standard output.
+
+    This class is responsible for outputting scan results to the standard output.
+    """
 
     meta = {
         'name': "Command-line output",
@@ -42,18 +48,34 @@ class sfp__stor_stdout(SpiderFootPlugin):
     }
 
     def setup(self, sfc, userOpts=dict()):
+        """
+        Set up the module with user options.
+
+        Args:
+            sfc: SpiderFoot instance
+            userOpts (dict): User options
+        """
         self.sf = sfc
 
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
-    # What events is this module interested in for input
-    # Because this is a storage plugin, we are interested in everything so we
-    # can store all events for later analysis.
     def watchedEvents(self):
+        """
+        Define the events this module is interested in for input.
+
+        Returns:
+            list: List of event types
+        """
         return ["*"]
 
     def output(self, event):
+        """
+        Output the event data to standard output.
+
+        Args:
+            event: SpiderFoot event
+        """
         d = self.opts['_csvdelim']
         if type(event.data) in [list, dict]:
             data = str(event.data)
@@ -103,8 +125,13 @@ class sfp__stor_stdout(SpiderFootPlugin):
                 print(",")
             print(json.dumps(d), end='')
 
-    # Handle events sent to this module
     def handleEvent(self, sfEvent):
+        """
+        Handle events sent to this module.
+
+        Args:
+            sfEvent: SpiderFoot event
+        """
         if sfEvent.eventType == "ROOT":
             return
 

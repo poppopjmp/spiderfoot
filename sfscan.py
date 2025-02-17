@@ -4,6 +4,7 @@
 # Purpose:      Scanning control functionality
 #
 # Author:       Steve Micallef <steve@binarypool.com>
+# Maintainer:   poppopjmp
 #
 # Created:      11/03/2013
 # Copyright:    (c) Steve Micallef 2013
@@ -24,6 +25,17 @@ from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootPlugin, SpiderFo
 
 
 def startSpiderFootScanner(loggingQueue, *args, **kwargs):
+    """
+    Initialize and start the SpiderFootScanner.
+
+    Args:
+        loggingQueue (Queue): Queue for logging events
+        *args: Additional arguments for SpiderFootScanner
+        **kwargs: Additional keyword arguments for SpiderFootScanner
+
+    Returns:
+        SpiderFootScanner: Initialized SpiderFootScanner object
+    """
     logger.logWorkerSetup(loggingQueue)
     return SpiderFootScanner(*args, **kwargs)
 

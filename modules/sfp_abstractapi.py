@@ -4,9 +4,8 @@
 # Purpose:     Search AbstractAPI for domain, phone and IP address information.
 #
 # Author:      Krishnasis Mandal <krishnasis@hotmail.com>
-#
-# Created:     29/07/2021
 # Copyright:   (c) Steve Micallef
+# Maintainer:  poppopjmp
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
@@ -18,6 +17,11 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_abstractapi(SpiderFootPlugin):
+    """
+    SpiderFoot plug-in for searching AbstractAPI for domain, phone, and IP address information.
+
+    This class is responsible for querying AbstractAPI to retrieve information about domains, phone numbers, and IP addresses.
+    """
 
     meta = {
         'name': "AbstractAPI",
@@ -44,12 +48,14 @@ class sfp_abstractapi(SpiderFootPlugin):
         }
     }
 
+    # Default options
     opts = {
         "companyenrichment_api_key": "",
         "phonevalidation_api_key": "",
         "ipgeolocation_api_key": "",
     }
 
+    # Option descriptions
     optdescs = {
         "companyenrichment_api_key": "AbstractAPI Company Enrichment API key.",
         "phonevalidation_api_key": "AbstractAPI Phone Validation API key.",
@@ -60,6 +66,13 @@ class sfp_abstractapi(SpiderFootPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=dict()):
+        """
+        Set up the module with user options.
+
+        Args:
+            sfc: SpiderFoot instance
+            userOpts (dict): User options
+        """
         self.sf = sfc
         self.errorState = False
         self.results = self.tempStorage()
@@ -68,12 +81,33 @@ class sfp_abstractapi(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
+        """
+        Define the events this module is interested in for input.
+
+        Returns:
+            list: List of event types
+        """
         return ["DOMAIN_NAME", "PHONE_NUMBER", "IP_ADDRESS", "IPV6_ADDRESS"]
 
     def producedEvents(self):
+        """
+        Define the events this module produces.
+
+        Returns:
+            list: List of event types
+        """
         return ["COMPANY_NAME", "SOCIAL_MEDIA", "GEOINFO", "PHYSICAL_COORDINATES", "PROVIDER_TELCO", "RAW_RIR_DATA"]
 
     def parseApiResponse(self, res: dict):
+        """
+        Parse the API response from AbstractAPI.
+
+        Args:
+            res (dict): API response
+
+        Returns:
+            dict: Parsed response data
+        """
         if not res:
             self.error("No response from Abstract API.")
             return None
@@ -117,7 +151,8 @@ class sfp_abstractapi(SpiderFootPlugin):
         return None
 
     def queryCompanyEnrichment(self, qry):
-        """Enrich domain with company information.
+        """
+        Enrich domain with company information.
 
         Args:
             qry (str): domain name
@@ -125,7 +160,6 @@ class sfp_abstractapi(SpiderFootPlugin):
         Returns:
             dict: company information
         """
-
         api_key = self.opts['companyenrichment_api_key']
         if not api_key:
             return None
@@ -149,7 +183,8 @@ class sfp_abstractapi(SpiderFootPlugin):
         return self.parseApiResponse(res)
 
     def queryPhoneValidation(self, qry):
-        """Verify phone number and enrich with carrier and location information.
+        """
+        Verify phone number and enrich with carrier and location information.
 
         Args:
             qry (str): phone number
@@ -157,7 +192,6 @@ class sfp_abstractapi(SpiderFootPlugin):
         Returns:
             dict: phone number information
         """
-
         api_key = self.opts['phonevalidation_api_key']
         if not api_key:
             return None
@@ -181,7 +215,8 @@ class sfp_abstractapi(SpiderFootPlugin):
         return self.parseApiResponse(res)
 
     def queryIpGeolocation(self, qry):
-        """Enrich IP address with geolocation information.
+        """
+        Enrich IP address with geolocation information.
 
         Args:
             qry (str): IPv4 address
@@ -189,7 +224,6 @@ class sfp_abstractapi(SpiderFootPlugin):
         Returns:
             dict: location information
         """
-
         api_key = self.opts['ipgeolocation_api_key']
         if not api_key:
             return None
@@ -213,6 +247,12 @@ class sfp_abstractapi(SpiderFootPlugin):
         return self.parseApiResponse(res)
 
     def handleEvent(self, event):
+        """
+        Handle events sent to this module.
+
+        Args:
+            event: SpiderFoot event
+        """
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
