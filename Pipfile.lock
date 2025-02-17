@@ -1,0 +1,190 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "d4e8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.10"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "adblockparser": {
+            "hashes": [
+                "sha256:1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f"
+            ],
+            "version": "==0.7"
+        },
+        "dnspython": {
+            "hashes": [
+                "sha256:2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3"
+            ],
+            "version": "==2.3.0"
+        },
+        "ExifRead": {
+            "hashes": [
+                "sha256:3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4"
+            ],
+            "version": "==2.3.2"
+        },
+        "CherryPy": {
+            "hashes": [
+                "sha256:4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5"
+            ],
+            "version": "==18.8.0"
+        },
+        "cherrypy-cors": {
+            "hashes": [
+                "sha256:5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6"
+            ],
+            "version": "==1.6"
+        },
+        "Mako": {
+            "hashes": [
+                "sha256:6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7"
+            ],
+            "version": "==1.2.4"
+        },
+        "beautifulsoup4": {
+            "hashes": [
+                "sha256:7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8"
+            ],
+            "version": "==4.11.2"
+        },
+        "lxml": {
+            "hashes": [
+                "sha256:8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9"
+            ],
+            "version": "==4.9.2"
+        },
+        "netaddr": {
+            "hashes": [
+                "sha256:9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0"
+            ],
+            "version": "==0.8.0"
+        },
+        "pysocks": {
+            "hashes": [
+                "sha256:0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1"
+            ],
+            "version": "==1.7.1"
+        },
+        "requests": {
+            "hashes": [
+                "sha256:1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2"
+            ],
+            "version": "==2.28.2"
+        },
+        "ipwhois": {
+            "hashes": [
+                "sha256:2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3"
+            ],
+            "version": "==1.1.0"
+        },
+        "ipaddr": {
+            "hashes": [
+                "sha256:3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4"
+            ],
+            "version": "==2.2.0"
+        },
+        "phonenumbers": {
+            "hashes": [
+                "sha256:4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5"
+            ],
+            "version": "==8.13.6"
+        },
+        "pygexf": {
+            "hashes": [
+                "sha256:5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6"
+            ],
+            "version": "==0.2.2"
+        },
+        "PyPDF2": {
+            "hashes": [
+                "sha256:6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7"
+            ],
+            "version": "==1.28.6"
+        },
+        "python-whois": {
+            "hashes": [
+                "sha256:7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8"
+            ],
+            "version": "==0.7.3"
+        },
+        "secure": {
+            "hashes": [
+                "sha256:8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9"
+            ],
+            "version": "==0.3.0"
+        },
+        "pyOpenSSL": {
+            "hashes": [
+                "sha256:9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0"
+            ],
+            "version": "==21.0.0"
+        },
+        "python-docx": {
+            "hashes": [
+                "sha256:0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1"
+            ],
+            "version": "==0.8.11"
+        },
+        "python-pptx": {
+            "hashes": [
+                "sha256:1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2"
+            ],
+            "version": "==0.6.21"
+        },
+        "networkx": {
+            "hashes": [
+                "sha256:2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3"
+            ],
+            "version": "==2.6.3"
+        },
+        "cryptography": {
+            "hashes": [
+                "sha256:3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3a4"
+            ],
+            "version": "==42.0.2"
+        },
+        "publicsuffixlist": {
+            "hashes": [
+                "sha256:4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3a4b5"
+            ],
+            "version": "==0.9.3"
+        },
+        "openpyxl": {
+            "hashes": [
+                "sha256:5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3a4b5c6"
+            ],
+            "version": "==3.1.1"
+        },
+        "pyyaml": {
+            "hashes": [
+                "sha256:6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d7"
+            ],
+            "version": "==6.0.0"
+        },
+        "psycopg2": {
+            "hashes": [
+                "sha256:7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d7e8"
+            ],
+            "version": "==2.9.3"
+        }
+    },
+    "develop": {
+        "lock-requirements": {
+            "hashes": [
+                "sha256:8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d7e8f9"
+            ],
+            "version": "==0.1.0"
+        }
+    }
+}
