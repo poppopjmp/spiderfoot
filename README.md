@@ -3,7 +3,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/smicallef/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.7+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-4.0-blue.svg)](https://github.com/smicallef/spiderfoot/releases/tag/v5.0)
+[![Stable Release](https://img.shields.io/badge/version-5.0.0-blue.svg)](https://github.com/smicallef/spiderfoot/releases/tag/v5.0)
 [![CI status](https://github.com/smicallef/spiderfoot/workflows/Tests/badge.svg)](https://github.com/smicallef/spiderfoot/actions?query=workflow%3A"Tests")
 [![Last Commit](https://img.shields.io/github/last-commit/smicallef/spiderfoot)](https://github.com/smicallef/spiderfoot/commits/master)
 [![Codecov](https://codecov.io/github/smicallef/spiderfoot/coverage.svg)](https://codecov.io/github/smicallef/spiderfoot)
@@ -95,9 +95,9 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 #### Stable build (packaged release):
 
 ```
- wget https://github.com/smicallef/spiderfoot/archive/v4.0.tar.gz
- tar zxvf v4.0.tar.gz
- cd spiderfoot-4.0
+ wget https://github.com/smicallef/spiderfoot/archive/v5.0.tar.gz
+ tar zxvf v5.0.tar.gz
+ cd spiderfoot-5.0
  pip3 install -r requirements.txt
  python3 ./sf.py -l 127.0.0.1:5001
 ```
@@ -418,3 +418,16 @@ Maintainers: Steve Micallef <steve@binarypool.com>, Poppopjmp <van1sh@van1shland
 - Updated dependencies to ensure compatibility with the latest versions.
 - Fixed various bugs and issues reported by the community.
 - Enhanced documentation and added new tutorials for better user experience.
+
+### TRIGGERING A RELEASE BUILD
+
+To trigger a release build manually using the GitHub Actions workflow, follow these steps:
+
+1. Go to the GitHub repository page.
+2. Click on the "Actions" tab.
+3. In the left sidebar, click on the "Release" workflow.
+4. Click on the "Run workflow" button.
+5. Select the branch you want to release from (e.g., `main`).
+6. Click on the "Run workflow" button to start the release build process.
+
+The GitHub Actions workflow will handle the rest, including checking out the repository, setting up Python, installing dependencies, running tests, building the Docker image, and pushing the Docker image to Docker Hub.
