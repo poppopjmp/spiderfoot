@@ -14,3 +14,7 @@ lock test/requirements.txt
 git diff test/requirements.txt
 
 # python3 -m safety check -r test/requirements.txt
+
+# Update Pipfile and Pipfile.lock
+pipenv lock
+git diff Pipfile.lock

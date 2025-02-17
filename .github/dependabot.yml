@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pip"
+    directory: "/test"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/spiderfoot/static"
+    schedule:
+      interval: "daily"
