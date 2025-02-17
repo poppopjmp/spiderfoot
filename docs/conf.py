@@ -20,6 +20,8 @@ sys.path.insert(0, os.path.abspath('../spiderfoot'))
 project = 'SpiderFoot'
 copyright = '2012, Steve Micallef'
 author = 'Steve Micallef'
+version = '5.0.0'
+release = '5.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -70,3 +72,18 @@ html_static_path = ['_static']
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# Relevant information about the new release
+release_notes = """
+Version 5.0.0
+=============
+
+Release Notes
+-------------
+
+- Added new modules for enhanced data extraction and analysis.
+- Improved performance and stability of existing modules.
+- Updated dependencies to ensure compatibility with the latest versions.
+- Fixed various bugs and issues reported by the community.
+- Enhanced documentation and added new tutorials for better user experience.
+"""

@@ -28,9 +28,9 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 ### Stable build (packaged release):
 
 ```
- wget https://github.com/smicallef/spiderfoot/archive/v4.0.tar.gz
- tar zxvf v4.0.tar.gz
- cd spiderfoot-4.0
+ wget https://github.com/smicallef/spiderfoot/archive/v5.0.tar.gz
+ tar zxvf v5.0.tar.gz
+ cd spiderfoot-5.0
  pip3 install -r requirements.txt
  python3 ./sf.py -l 127.0.0.1:5001
 ```
@@ -94,3 +94,13 @@ Whether you're a contributor, user or just curious about SpiderFoot and OSINT in
 
 Steve Micallef <steve@binarypool.com>
 Poppopjmp <van1sh@van1shland.io>
+
+## Release Notes
+
+### Version 5.0.0
+
+- Added new modules for enhanced data extraction and analysis.
+- Improved performance and stability of existing modules.
+- Updated dependencies to ensure compatibility with the latest versions.
+- Fixed various bugs and issues reported by the community.
+- Enhanced documentation and added new tutorials for better user experience.
