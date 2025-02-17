@@ -34,7 +34,7 @@
 #   sudo docker build -t spiderfoot-test --build-arg REQUIREMENTS=test/requirements.txt .
 #   sudo docker run --rm spiderfoot-test -m pytest --flake8 .
 
-FROM python:3.10-slim AS build
+FROM python:3.13.2-slim AS build
 ARG REQUIREMENTS=requirements.txt
 RUN apt-get update && apt-get install -y gcc git curl swig libxml2-dev libxslt-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev cargo rustc
 RUN python -m venv /opt/venv
@@ -47,7 +47,7 @@ RUN pip install -r "$REQUIREMENTS"
 
 
 
-FROM python:3.10-slim
+FROM python:3.13.2-slim
 WORKDIR /home/spiderfoot
 
 # Place database and logs outside installation directory
