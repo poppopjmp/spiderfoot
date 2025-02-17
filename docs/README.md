@@ -89,3 +89,8 @@ Latest updates announced on [Twitter](https://twitter.com/spiderfoot).
 ## Community
 
 Whether you're a contributor, user or just curious about SpiderFoot and OSINT in general, we'd love to have you join our community! SpiderFoot now has a [Discord server](https://discord.gg/vyvztrG) for seeking help from the community, requesting features or just general OSINT chit-chat.
+
+## Maintainers
+
+Steve Micallef <steve@binarypool.com>
+Poppopjmp <van1sh@van1shland.io>

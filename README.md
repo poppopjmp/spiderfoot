@@ -409,7 +409,7 @@ Latest updates announced on [Twitter](https://twitter.com/spiderfoot).
 
 SpiderFoot is actively maintained with regular updates and contributions. The project is under active development, with recent commits and ongoing improvements. Issues and pull requests are actively managed and addressed. The community is engaged through discussions and contributions. We encourage users to report issues and contribute to the project.
 
-Maintainer: Poppopjmp <van1sh@van1shland.io>
+Maintainers: Steve Micallef <steve@binarypool.com>, Poppopjmp <van1sh@van1shland.io>
 
 ### RECENT UPDATES
 

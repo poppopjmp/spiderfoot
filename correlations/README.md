@@ -325,3 +325,8 @@ aggregation:
   field: child.data
 headline: "Interesting data was found within document meta data: '{child.data}'"
 ```
+
+## Maintainers
+
+Steve Micallef <steve@binarypool.com>
+Poppopjmp <van1sh@van1shland.io>
