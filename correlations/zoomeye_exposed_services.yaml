@@ -1,0 +1,17 @@
+id: zoomeye_exposed_services
+version: 1
+meta:
+  name: Exposed services detected using ZoomEye
+  description: >
+    Services exposed to the internet were detected using the ZoomEye module.
+    This may pose a risk to the security of the service exposed and/or
+    cause connecting services to fail due to being unable to verify the certificate.
+  risk: HIGH
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: ZOOMEYE_SERVICE
+aggregation:
+  field: data
+headline: "Exposed service detected using ZoomEye: {data}"
