@@ -1,0 +1,17 @@
+id: rocketreach_exposed_contacts
+version: 1
+meta:
+  name: Exposed contacts detected using RocketReach
+  description: >
+    Contacts exposed to the internet were detected using the RocketReach module.
+    This may pose a risk to the privacy of the individuals whose contact information
+    is exposed.
+  risk: HIGH
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: ROCKETREACH_CONTACT
+aggregation:
+  field: data
+headline: "Exposed contact detected using RocketReach: {data}"

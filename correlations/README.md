@@ -326,6 +326,95 @@ aggregation:
 headline: "Interesting data was found within document meta data: '{child.data}'"
 ```
 
+#### `internal_service_exposed.yaml`
+```yaml
+id: internal_service_exposed
+version: 1
+meta:
+  name: Internal service exposed to the Internet
+  description: >
+    An internal service (e.g., web server, database) was found to be accessible over
+    the Internet. This may pose a risk to the security of the service exposed and/or
+    cause connecting services to fail due to being unable to verify the certificate.
+  risk: HIGH
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: TCP_PORT_OPEN
+      - method: regex
+        field: data
+        value:
+          - .*:8080$
+          - .*:8443$
+aggregation:
+  field: data
+headline: "Internal service exposed to the Internet: {data}"
+```
+
+#### `fofa_exposed_services.yaml`
+```yaml
+id: fofa_exposed_services
+version: 1
+meta:
+  name: Exposed services detected using Fofa
+  description: >
+    Services exposed to the internet were detected using the Fofa module.
+    This may pose a risk to the security of the service exposed and/or
+    cause connecting services to fail due to being unable to verify the certificate.
+  risk: HIGH
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: FOFA_SERVICE
+aggregation:
+  field: data
+headline: "Exposed service detected using Fofa: {data}"
+```
+
+#### `zoomeye_exposed_services.yaml`
+```yaml
+id: zoomeye_exposed_services
+version: 1
+meta:
+  name: Exposed services detected using ZoomEye
+  description: >
+    Services exposed to the internet were detected using the ZoomEye module.
+    This may pose a risk to the security of the service exposed and/or
+    cause connecting services to fail due to being unable to verify the certificate.
+  risk: HIGH
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: ZOOMEYE_SERVICE
+aggregation:
+  field: data
+headline: "Exposed service detected using ZoomEye: {data}"
+```
+
+#### `rocketreach_exposed_contacts.yaml`
+```yaml
+id: rocketreach_exposed_contacts
+version: 1
+meta:
+  name: Exposed contacts detected using RocketReach
+  description: >
+    Contacts exposed to the internet were detected using the RocketReach module.
+    This may pose a risk to the privacy of the individuals whose contact information
+    is exposed.
+  risk: HIGH
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: ROCKETREACH_CONTACT
+aggregation:
+  field: data
+headline: "Exposed contact detected using RocketReach: {data}"
+```
+
 ## Maintainers
 
 Steve Micallef <steve@binarypool.com>
