@@ -23,7 +23,7 @@ pysocks==1.7.1
 python-docx==0.8.11
 python-pptx==0.6.21
 python-whois==0.7.3
-pyyaml==6.0.0
+pyyaml==6.0.2
 requests==2.32.2
 secure==0.3.0
 pillow>=10.3.0 # not directly required, pinned by Snyk to avoid a vulnerability
