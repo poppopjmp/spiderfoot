@@ -1,13 +1,12 @@
-//-------------------------------------------------------------------------------
-// Name:         spiderfoot.js
-// Purpose:      All the javascript code for the spiderfoot aspects of the UI.
-//
-// Author:      Steve Micallef <steve@binarypool.com>
-//
-// Created:     03/10/2012
-// Copyright:   (c) Steve Micallef 2012
-// Licence:     MIT
-//-------------------------------------------------------------------------------
+/**
+ * spiderfoot.js
+ * All the JavaScript code for the SpiderFoot aspects of the UI.
+ * 
+ * Author: Steve Micallef <steve@binarypool.com>
+ * Created: 03/10/2012
+ * Copyright: (c) Steve Micallef 2012
+ * Licence: MIT
+ */
 
 // Toggler for theme
 document.addEventListener("DOMContentLoaded", () => {
@@ -23,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
     togglerText.innerText = "Light Mode";
     document.getElementById("theme-toggler").checked = false; // ensure theme toggle is set to light
   }
-
 
   themeToggler.addEventListener("click", () => {
     togglerText.innerText = "Light Mode";
@@ -136,37 +134,6 @@ sf.fetchData = function (url, postData, postFunc) {
   });
 };
 
-/*
-sf.simpleTable = function(id, data, cols, linkcol=null, linkstring=null, sortable=true, rowfunc=null) {
-	var table = "<table id='" + id + "' ";
-	table += "class='table table-bordered table-striped tablesorter'>";
-	table += "<thead><tr>";
-	for (var i = 0; i < cols.length; i++) {
-		table += "<th>" + cols[i] + "</th>";
-	}
-	table += "</tr></thead><tbody>";
-
-	for (var i = 1; i < data.length; i++) {
-		table += "<tr>";
-		for (var c = 0; c < data[i].length; c++) {
-			if (c == linkcol) {
-				if (linkstring.indexOf("%%col") > 0) {
-				}
-				table += "<td>" + <a class='link' onClick='" + linkstring + "'>";
-				table += data[i][c] + "</a></td>"
-			} else {
-				table += "<td>" + data[i][c] + "</td>";
-			}
-		}
-		table += "</tr>";
-	}
-	table += "</tbody></table>";
-
-	return table;
-}
-
-*/
-
 sf.updateTooltips = function () {
   $(document).ready(function () {
     if ($("[rel=tooltip]").length) {
@@ -196,3 +163,20 @@ sf.log = function (message) {
     console.log("[" + datetime + "] " + message);
   }
 };
+
+// Responsive design adjustments
+window.addEventListener("resize", () => {
+  const width = window.innerWidth;
+
+  if (width < 576) {
+    document.body.style.fontSize = "0.6rem";
+  } else if (width < 768) {
+    document.body.style.fontSize = "0.7rem";
+  } else if (width < 992) {
+    document.body.style.fontSize = "0.8rem";
+  } else if (width < 1200) {
+    document.body.style.fontSize = "0.9rem";
+  } else {
+    document.body.style.fontSize = "1rem";
+  }
+});
