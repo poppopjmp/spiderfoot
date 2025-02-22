@@ -841,7 +841,7 @@ class SpiderFootWebUi:
             p.daemon = True
             p.start()
         except Exception as e:
-            self.log.error(f"[-] Scan [{scanId}] failed: {e}")
+            self.log.error(f"[-] Scan [{scanId}] failed: {e}", exc_info=True)
             return self.error(f"[-] Scan [{scanId}] failed: {e}")
 
         # Wait until the scan has initialized
@@ -895,7 +895,7 @@ class SpiderFootWebUi:
                 p.daemon = True
                 p.start()
             except Exception as e:
-                self.log.error(f"[-] Scan [{scanId}] failed: {e}")
+                self.log.error(f"[-] Scan [{scanId}] failed: {e}", exc_info=True)
                 return self.error(f"[-] Scan [{scanId}] failed: {e}")
 
             # Wait until the scan has initialized
@@ -1489,7 +1489,7 @@ class SpiderFootWebUi:
             p.daemon = True
             p.start()
         except Exception as e:
-            self.log.error(f"[-] Scan [{scanId}] failed: {e}")
+            self.log.error(f"[-] Scan [{scanId}] failed: {e}", exc_info=True)
             return self.error(f"[-] Scan [{scanId}] failed: {e}")
 
         # Wait until the scan has initialized
