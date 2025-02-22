@@ -6,7 +6,7 @@
 [![Stable Release](https://img.shields.io/badge/version-5.0.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
 [![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
-[![Codecov](https://codecov.io/github/smicallef/spiderfoot/coverage.svg)](https://codecov.io/github/poppopjmp/spiderfoot)
+[![Codecov](https://codecov.io/github/poppopjmp/spiderfoot/coverage.svg)](https://codecov.io/github/poppopjmp/spiderfoot)
 [![Twitter Follow](https://img.shields.io/twitter/follow/spiderfoot?label=follow&style=social)](https://twitter.com/spiderfoot)
 [![Discord](https://img.shields.io/discord/770524432464216074)](https://discord.gg/vyvztrG)
 
