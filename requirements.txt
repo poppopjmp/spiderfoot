@@ -1,6 +1,6 @@
 -i https://pypi.org/simple
 adblockparser==0.7
-beautifulsoup4==4.11.2
+beautifulsoup4==4.13.3
 cherrypy==18.8.0
 cherrypy-cors==1.6
 cryptography==44.0.1
