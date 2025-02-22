@@ -201,3 +201,28 @@ input:checked + .slider:before {
 .download-button {
   padding: 6px 12px !important;
 }
+
+/* Media Queries for Responsiveness */
+@media (max-width: 1200px) {
+  body {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 992px) {
+  body {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 576px) {
+  body {
+    font-size: 0.6rem;
+  }
+}
