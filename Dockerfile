@@ -64,7 +64,7 @@ RUN apt-get update && apt-get install -y libxml2 libxslt1.1 libjpeg62-turbo zlib
 
 
 # Install tools/dependencies from apt
-RUN apt-get -y update && apt-get -y install nbtscan onesixtyone nmap whatweb bsdmainutils dnsutils coreutils
+RUN apt-get -y update && apt-get -y install nbtscan onesixtyone nmap whatweb bsdmainutils dnsutils coreutils libcap2-bin
 
 # Install Python tools
 
