@@ -146,7 +146,7 @@ def main() -> None:
         try:
             mod_dir = os.path.dirname(os.path.abspath(__file__)) + '/modules/'
             sfModules = SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_template.py'])
-        except BaseException as e:
+        except Exception as e:
             log.critical(f"Failed to load modules: {e}", exc_info=True)
             sys.exit(-1)
 
@@ -159,7 +159,7 @@ def main() -> None:
         try:
             correlations_dir = os.path.dirname(os.path.abspath(__file__)) + '/correlations/'
             correlationRulesRaw = SpiderFootHelpers.loadCorrelationRulesRaw(correlations_dir, ['template.yaml'])
-        except BaseException as e:
+        except Exception as e:
             log.critical(f"Failed to load correlation rules: {e}", exc_info=True)
             sys.exit(-1)
 
@@ -223,7 +223,7 @@ def main() -> None:
         if args.l:
             try:
                 (host, port) = args.l.split(":")
-            except BaseException:
+            except Exception:
                 log.critical("Invalid ip:port format.")
                 sys.exit(-1)
 
@@ -440,7 +440,7 @@ def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
             p = mp.Process(target=startSpiderFootScanner, args=(loggingQueue, scanName, scanId, target, targetType, modlist, cfg))
             p.daemon = True
             p.start()
-        except BaseException as e:
+        except Exception as e:
             log.error(f"Scan [{scanId}] failed: {e}")
             sys.exit(-1)
 

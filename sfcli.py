@@ -232,7 +232,7 @@ class SpiderFootCli(cmd.Cmd):
         out = list()
         # Get the column titles
         maxsize = dict()
-        if type(data[0]) == dict:
+        if isinstance(data[0], dict):
             cols = list(data[0].keys())
         else:
             # for lists, use the index numbers as titles
@@ -250,12 +250,12 @@ class SpiderFootCli(cmd.Cmd):
         # Find the maximum column sizes
         for r in data:
             for i, c in enumerate(r):
-                if type(r) == list:
+                if isinstance(r, list):
                     # we have  list index
                     cn = str(i)
-                    if type(c) == int:
+                    if isinstance(c, int):
                         v = str(c)
-                    if type(c) == str:
+                    if isinstance(c, str):
                         v = c
                 else:
                     # we have a dict key
@@ -392,7 +392,7 @@ class SpiderFootCli(cmd.Cmd):
             if r.status_code == requests.codes.ok:  # pylint: disable=no-member
                 return r.text
             r.raise_for_status()
-        except BaseException as e:
+        except Exception as e:
             self.edprint(f"Failed communicating with server: {e}")
             return None
 
@@ -455,7 +455,7 @@ class SpiderFootCli(cmd.Cmd):
             else:
                 j = json.loads(data)
                 totalrec = len(j)
-        except BaseException as e:
+        except Exception as e:
             self.edprint(f"Unable to parse data from server: {e}")
             return
 
@@ -522,7 +522,7 @@ class SpiderFootCli(cmd.Cmd):
                     f = codecs.open(pipeargs, "w", encoding="utf-8")
                     f.write(out)
                     f.close()
-                except BaseException as e:
+                except Exception as e:
                     self.edprint(f"Unable to write to file: {e}")
                     return
                 self.dprint(f"Successfully wrote to file '{pipeargs}'.")
@@ -930,6 +930,7 @@ class SpiderFootCli(cmd.Cmd):
                 self.edprint(f"{r[1]}: {r[3]}")
             else:
                 self.dprint(f"{r[1]}: {r[3]}")
+            rowid = str(r[4])
 
         try:
             while True:
@@ -1025,7 +1026,7 @@ class SpiderFootCli(cmd.Cmd):
         c = self.myparseline(line)
         try:
             scan_id = c[0][0]
-        except BaseException:
+        except Exception:
             self.edprint("Invalid syntax.")
             return
 
@@ -1126,7 +1127,7 @@ class SpiderFootCli(cmd.Cmd):
         c = self.myparseline(line)
         try:
             scan_id = c[0][0]
-        except BaseException:
+        except Exception:
             self.edprint("Invalid syntax.")
             return
 
@@ -1187,7 +1188,7 @@ class SpiderFootCli(cmd.Cmd):
         if len(c[0]) > 2:
             try:
                 val = c[0][2]
-            except BaseException:
+            except Exception:
                 self.edprint("Invalid syntax.")
                 return
 
@@ -1246,7 +1247,7 @@ class SpiderFootCli(cmd.Cmd):
                     self.dprint(f"{k} = {c}", plain=True)
 
             for k in sorted(serverconfig.keys()):
-                if type(serverconfig[k]) == list:
+                if isinstance(serverconfig[k], list):
                     serverconfig[k] = ','.join(serverconfig[k])
                 if not cfg:
                     output.append({'opt': k, 'val': str(serverconfig[k])})
@@ -1270,7 +1271,7 @@ class SpiderFootCli(cmd.Cmd):
             for k in serverconfig:
                 if k == cfg:
                     serverconfig[k] = val
-                    if type(val) == str:
+                    if isinstance(val, str):
                         if val.lower() == "true":
                             serverconfig[k] = "1"
                         if val.lower() == "false":
@@ -1284,18 +1285,18 @@ class SpiderFootCli(cmd.Cmd):
             # Sanitize the data before sending it to the server
             for k in serverconfig:
                 optstr = ":".join(k.split(".")[1:])
-                if type(serverconfig[k]) == bool:
+                if isinstance(serverconfig[k], bool):
                     if serverconfig[k]:
                         confdata[optstr] = "1"
                     else:
                         confdata[optstr] = "0"
-                if type(serverconfig[k]) == list:
+                if isinstance(serverconfig[k], list):
                     # If set by the user, it must already be a
                     # string, not a list
                     confdata[optstr] = ','.join(serverconfig[k])
-                if type(serverconfig[k]) == int:
+                if isinstance(serverconfig[k], int):
                     confdata[optstr] = str(serverconfig[k])
-                if type(serverconfig[k]) == str:
+                if isinstance(serverconfig[k], str):
                     confdata[optstr] = serverconfig[k]
 
             self.ddprint(str(confdata))
@@ -1370,7 +1371,7 @@ if __name__ == "__main__":
         try:
             with open(args.e, 'r') as f:
                 cin = f.read()
-        except BaseException as e:
+        except Exception as e:
             print(f"Unable to open {args.e}: ({e})")
             sys.exit(-1)
     else:
@@ -1387,7 +1388,7 @@ if __name__ == "__main__":
         try:
             with open(args.P, 'r') as f:
                 s.ownopts['cli.password'] = f.readlines()[0].strip('\n')
-        except BaseException as e:
+        except Exception as e:
             print(f"Unable to open {args.P}: ({e})")
             sys.exit(-1)
     if args.i:
@@ -1407,7 +1408,7 @@ if __name__ == "__main__":
     else:
         try:
             s.ownopts['cli.history_file'] = expanduser("~") + "/.spiderfoot_history"
-        except BaseException as e:
+        except Exception as e:
             s.dprint(f"Failed to set 'cli.history_file': {e}")
             s.dprint("Using '.spiderfoot_history' in working directory")
             s.ownopts['cli.history_file'] = ".spiderfoot_history"
@@ -1442,7 +1443,7 @@ if __name__ == "__main__":
             for line in f.readlines():
                 readline.add_history(line.strip())
             s.dprint("Loaded previous command history.")
-        except BaseException:
+        except Exception:
             pass
 
     try:
