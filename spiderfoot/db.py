@@ -396,7 +396,7 @@ class SpiderFootDb:
                             continue
                     self.conn.commit()
 
-        elif self.db_type == 'postgresql':
+        elif ((self.db_type == 'sqlite') or (self.db_type == 'postgresql')):
             try:
                 self.conn = psycopg2.connect(opts['__database'])
                 self.dbh = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
