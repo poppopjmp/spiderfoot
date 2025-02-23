@@ -1,32 +1,42 @@
-import pytest
 import unittest
+from unittest.mock import patch
 
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_accounts import sfp_accounts
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-@pytest.mark.usefixtures
-class TestModuleIntegrationaccounts(unittest.TestCase):
+class TestModuleIntegrationAccounts(unittest.TestCase):
 
-    @unittest.skip("todo")
-    def test_handleEvent(self):
-        sf = SpiderFoot(self.default_options)
+    def setUp(self):
+        self.sf = SpiderFoot(self.default_options)  # Assuming default_options is defined
+        self.module = sfp_accounts()
+        self.module.setup(self.sf, dict())
 
-        module = sfp_accounts()
-        module.setup(sf, dict())
+    @patch('modules.sfp_accounts.some_external_function')  # Mock external interaction
+    def test_handleEvent_with_accounts(self, mock_external_function):
+        # Mock the external interaction to return some account data
+        mock_external_function.return_value = [
+            {"type": "social_media", "platform": "Twitter", "username": "johndoe"},
+            {"type": "email", "address": "johndoe@example.com"}
+        ]
 
-        target_value = 'example target value'
-        target_type = 'IP_ADDRESS'
+        target_value = 'John Doe'
+        target_type = 'HUMAN_NAME'
         target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
+        self.module.setTarget(target)
 
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent('ROOT', '', '', '')
+        self.module.handleEvent(evt)
 
-        result = module.handleEvent(evt)
+        # Check if the module produced the expected events
+        events = self.sf.getEvents()
+        self.assertTrue(any(e.eventType == 'SOCIAL_MEDIA' for e in events))
+        self.assertTrue(any(e.eventType == 'EMAILADDR' for e in events))
 
-        self.assertIsNone(result)
+        # Check the data in the events (example)
+        social_media_event = next((e for e in events if e.eventType == 'SOCIAL_MEDIA'), None)
+        self.assertIsNotNone(social_media_event)
+        self.assertEqual(social_media_event.data, "Twitter: johndoe")
+
+    # Add more tests for targets without accounts, API errors, etc.

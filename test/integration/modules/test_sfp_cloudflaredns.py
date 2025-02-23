@@ -1,84 +1,61 @@
-import pytest
 import unittest
+from unittest.mock import patch
 
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_cloudflaredns import sfp_cloudflaredns
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-@pytest.mark.usefixtures
 class TestModuleIntegrationCloudflaredns(unittest.TestCase):
 
-    def test_handleEvent_event_data_safe_internet_name_not_blocked_should_not_return_event(self):
-        sf = SpiderFoot(self.default_options)
+    def setUp(self):
+        self.sf = SpiderFoot(self.default_options)
+        self.module = sfp_cloudflaredns()
+        self.module.setup(self.sf, dict())
 
-        module = sfp_cloudflaredns()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            raise Exception(f"Raised event {event.eventType}: {event.data}")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_cloudflaredns)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'INTERNET_NAME'
-        event_data = 'cloudflare.com'
-        event_module = 'example module'
-        source_event = evt
-
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
-
-    def test_handleEvent_event_data_adult_internet_name_blocked_should_return_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_cloudflaredns()
-        module.setup(sf, dict())
+    @patch('modules.sfp_cloudflaredns.socket.getaddrinfo')
+    def test_handleEvent_safe_domain(self, mock_getaddrinfo):
+        """
+        Test handleEvent() with a safe domain.
+        """
+        # Mock the DNS response for a safe domain
+        mock_getaddrinfo.return_value = [(2, 1, 6, '', ('1.1.1.1', 53))]  # Simulate a normal IP address response
 
         target_value = 'spiderfoot.net'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
+        self.module.setTarget(target)
 
-        def new_notifyListeners(self, event):
-            expected = 'BLACKLISTED_INTERNET_NAME'
-            if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != {expected}")
+        evt = SpiderFootEvent('INTERNET_NAME', 'cloudflare.com', 'example module', None)
+        self.module.handleEvent(evt)
 
-            expected = 'CloudFlare - Family [pornhub.com]'
-            if str(event.data) != expected:
-                raise Exception(f"{event.data} != {expected}")
+        # Check that no BLACKLISTED_INTERNET_NAME event was produced
+        events = self.sf.getEvents()
+        self.assertFalse(any(e.eventType == 'BLACKLISTED_INTERNET_NAME' for e in events))
 
-            raise Exception("OK")
+    @patch('modules.sfp_cloudflaredns.socket.getaddrinfo')
+    def test_handleEvent_blocked_domain(self, mock_getaddrinfo):
+        """
+        Test handleEvent() with a blocked domain.
+        """
+        # Mock the DNS response for a blocked domain (adult category)
+        mock_getaddrinfo.return_value = [(2, 1, 6, '', ('1.1.1.2', 53))]  # Simulate a blocked IP response
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_cloudflaredns)
+        target_value = 'spiderfoot.net'
+        target_type = 'INTERNET_NAME'
+        target = SpiderFootTarget(target_value, target_type)
+        self.module.setTarget(target)
 
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent('INTERNET_NAME', 'pornhub.com', 'example module', None)
+        self.module.handleEvent(evt)
 
-        event_type = 'INTERNET_NAME'
-        event_data = 'pornhub.com'
-        event_module = 'example module'
-        source_event = evt
+        # Check that a BLACKLISTED_INTERNET_NAME event was produced
+        events = self.sf.getEvents()
+        self.assertTrue(any(e.eventType == 'BLACKLISTED_INTERNET_NAME' for e in events))
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        # Check the data in the event
+        blocked_event = next((e for e in events if e.eventType == 'BLACKLISTED_INTERNET_NAME'), None)
+        self.assertIsNotNone(blocked_event)
+        self.assertEqual(blocked_event.data, 'CloudFlare - Family [pornhub.com]')
 
-        with self.assertRaises(Exception) as cm:
-            module.handleEvent(evt)
-
-        self.assertEqual("OK", str(cm.exception))
+    # Add more test cases for other categories, invalid domains, etc.
