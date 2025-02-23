@@ -33,29 +33,14 @@ from spiderfoot import SpiderFootHelpers
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootCorrelator
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
-from spiderfoot import sfConfig
 
 scanId = None
 dbh = None
 
-
-def main() -> None:
-    """
-    Main function to parse command-line arguments and start the appropriate SpiderFoot functionality.
-    """
-    try:
-        # web server config
-        sfWebUiConfig = {
-            'host': '127.0.0.1',
-            'port': 5001,
-            'root': '/',
-            'cors_origins': [],
-        }
-
         # 'Global' configuration options
         # These can be overriden on a per-module basis, and some will
         # be overridden from saved configuration settings stored in the DB.
-        sfConfig = {
+sfConfig = {
             '_debug': False,  # Debug
             '_maxthreads': 3,  # Number of modules to run concurrently
             '__logging': True,  # Logging in general
@@ -74,7 +59,22 @@ def main() -> None:
             '_socks3port': '',
             '_socks4user': '',
             '_socks5pwd': '',
+}
+
+
+def main() -> None:
+    """
+    Main function to parse command-line arguments and start the appropriate SpiderFoot functionality.
+    """
+    try:
+        # web server config
+        sfWebUiConfig = {
+            'host': '127.0.0.1',
+            'port': 5001,
+            'root': '/',
+            'cors_origins': [],
         }
+
 
         sfOptdescs = {
             '_debug': "Enable debugging?",
