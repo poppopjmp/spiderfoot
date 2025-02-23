@@ -13,7 +13,7 @@ Welcome to spiderfoot's documentation!
    README
    spiderfoot
 
-Version 5.0.0
+Version 5.0.1
 =============
 
 Release Notes
