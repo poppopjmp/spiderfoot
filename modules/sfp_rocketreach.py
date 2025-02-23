@@ -69,7 +69,7 @@ class sfp_rocketreach(SpiderFootPlugin):
         return ["DOMAIN_NAME", "EMAILADDR"]
 
     def producedEvents(self):
-        return ["EMAILADDR", "HUMAN_NAME", "PHONE_NUMBER", "SOCIAL_MEDIA", "RAW_RIR_DATA"]
+        return ["EMAILADDR", "PHONE_NUMBER", "SOCIAL_MEDIA", "RAW_RIR_DATA"]
 
     def query(self, qry, querytype, page=1):
         if self.errorState:
