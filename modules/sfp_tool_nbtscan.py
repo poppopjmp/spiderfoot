@@ -109,7 +109,7 @@ class sfp_tool_nbtscan(SpiderFootPlugin):
                     self.debug(f"Skipping scanning of {eventData}, too big.")
                     return
                 timeout = timeout * net.size
-        except BaseException as e:
+        except Exception as e:
             self.error(f"Strange netblock identified, unable to parse: {eventData} ({e})")
             return
 

@@ -12,7 +12,6 @@
 
 import json
 import time
-import urllib
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
@@ -112,7 +111,7 @@ class sfp_rocketreach(SpiderFootPlugin):
             self.error(f"Error processing JSON response from RocketReach: {e}")
             return None
 
-        if info.get('total') > info.get('size', 10) * page:
+        if info.get('total', 0) > info.get('size', 10) * page:
             page += 1
             if page > self.opts['max_pages']:
                 self.error("Maximum number of pages reached.")

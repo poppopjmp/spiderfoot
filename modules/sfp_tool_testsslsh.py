@@ -125,7 +125,7 @@ class sfp_tool_testsslsh(SpiderFootPlugin):
                     return
                 for addr in net.iter_hosts():
                     targets.append(str(addr))
-        except BaseException as e:
+        except Exception as e:
             self.error(f"Strange netblock identified, unable to parse: {eventData} ({e})")
             return
 
@@ -141,7 +141,7 @@ class sfp_tool_testsslsh(SpiderFootPlugin):
                     if IPNetwork(eventData) in IPNetwork(addr):
                         self.debug(f"Skipping {eventData} as already within a scanned range.")
                         return
-                except BaseException:
+                except Exception:
                     # self.results will also contain hostnames
                     continue
 

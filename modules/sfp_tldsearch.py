@@ -170,7 +170,7 @@ class sfp_tldsearch(SpiderFootPlugin):
         # Look through all TLDs for the existence of this target keyword
         targetList = list()
         for tld in self.opts['_internettlds']:
-            if type(tld) != str:
+            if not isinstance(tld, str):
                 tld = str(tld.strip(), errors='ignore')
             else:
                 tld = tld.strip()
