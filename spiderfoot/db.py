@@ -214,6 +214,7 @@ class SpiderFootDb:
         ['LEAKSITE_URL', 'Leak Site URL', 0, 'ENTITY'],
         ['LEAKSITE_CONTENT', 'Leak Site Content', 1, 'DATA'],
         ['PASSWORD_COMPROMISED', 'Compromised Password', 0, 'DATA'],
+        ['PERSON_NAME', 'Person Name', 0, 'ENTITY'],
         ['PHONE_NUMBER', 'Phone Number', 0, 'ENTITY'],
         ['PHONE_NUMBER_COMPROMISED', 'Phone Number Compromised', 0, 'DESCRIPTOR'],
         ['PHONE_NUMBER_TYPE', 'Phone Number Type', 0, 'DESCRIPTOR'],
