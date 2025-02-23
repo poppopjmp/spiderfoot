@@ -38,8 +38,6 @@
 FROM debian:bullseye-slim AS build
 ARG REQUIREMENTS=requirements.txt
 RUN apt-get update && apt-get install -y gcc git curl swig libxml2-dev libxslt-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev cargo rustc python3 python3-venv python3-pip
-RUN python3 -m venv /opt/venv
-ENV PATH="/opt/venv/bin":$PATH
 COPY $REQUIREMENTS requirements.txt ./
 RUN ls
 RUN echo "$REQUIREMENTS"
