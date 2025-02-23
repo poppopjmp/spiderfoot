@@ -43,8 +43,15 @@ jobs:
 
       - name: Test with pytest
         run: |
-          python -m pytest -n auto --dist loadfile --ignore=test/integration/modules/ --durations=5 --cov-report term --cov=. .
+          pytest --cov --junitxml=junit.xml -o junit_family=legacy -n auto --dist loadfile --ignore=test/integration/modules/ --durations=5
       - uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: false
           verbose: true
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: poppopjmp/spiderfoot
+
+
