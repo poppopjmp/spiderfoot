@@ -66,6 +66,8 @@ USER spiderfoot
 
 EXPOSE 5001
 
+RUN pwd
+WORKDIR ${{ github.workspace }}
 # Run the application.
 ENTRYPOINT ["python3"]
 CMD ["sf.py", "-l", "0.0.0.0:5001"]
