@@ -35,7 +35,7 @@
 #   sudo docker run --rm spiderfoot-test -m pytest --flake8 .
  
 
-FROM debian:bullseye-slim AS build
+FROM debian:bullseye-slim
 ARG REQUIREMENTS=requirements.txt
 RUN apt-get update && apt-get install -y gcc git curl swig libxml2-dev libxslt-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev cargo rustc python3 python3-venv python3-pip
 COPY $REQUIREMENTS requirements.txt ./
@@ -43,10 +43,6 @@ RUN ls
 RUN echo "$REQUIREMENTS"
 RUN pip install -U pip
 RUN pip install -r requirements.txt
-
-
-FROM debian:bullseye-slim
-WORKDIR /home/spiderfoot
 
 # Place database and logs outside installation directory
 ENV SPIDERFOOT_DATA /var/lib/spiderfoot
@@ -66,14 +62,12 @@ RUN apt-get update && apt-get install -y libxml2 libxslt1.1 libjpeg62-turbo zlib
     && chown spiderfoot:spiderfoot $SPIDERFOOT_LOGS \
     && chown spiderfoot:spiderfoot $SPIDERFOOT_CACHE
 
-COPY . .
-COPY --from=build /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+COPY . 
 
 USER spiderfoot
 
 EXPOSE 5001
 
 # Run the application.
-ENTRYPOINT ["/opt/venv/bin/python"]
+ENTRYPOINT ["python"]
 CMD ["sf.py", "-l", "0.0.0.0:5001"]
