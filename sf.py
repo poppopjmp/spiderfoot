@@ -91,7 +91,7 @@ def main() -> None:
         }
 
 
-        p = argparse.ArgumentParser(description="SpiderFoot 5.0: Open Source Intelligence Automation.")  # Define p first
+        p = argparse.ArgumentParser(description="SpiderFoot v5.0.1: Open Source Intelligence Automation.")  # Define p first
         p.add_argument("-d", "--debug", action='store_true', help="Enable debug output.")
         p.add_argument("-l", metavar="IP:port", help="IP and port to listen on.")
         p.add_argument("-m", metavar="mod1,mod2,...", type=str, help="Modules to enable.")
@@ -117,7 +117,7 @@ def main() -> None:
         args = p.parse_args()  # Parse arguments after defining p
 
         if args.version:
-            print("SpiderFoot 5.0: Open Source Intelligence Automation.")  # Removed f-string as no place holders are used.
+            print("SpiderFoot v5.0.1: Open Source Intelligence Automation.")  # Removed f-string as no place holders are used.
             sys.exit(0)
 
         if args.max_threads:
