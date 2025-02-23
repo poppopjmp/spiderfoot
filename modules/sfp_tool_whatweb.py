@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
-# Name:        sfp_tool_whatweb
-# Purpose:     SpiderFoot plug-in for using the 'WhatWeb' tool.
-#              Tool: https://github.com/urbanadventurer/whatweb
+# Name:         sfp_tool_whatweb
+# Purpose:      SpiderFoot plug-in for using the 'WhatWeb' tool.
+#               Tool: https://github.com/urbanadventurer/whatweb
 #
-# Author:      <bcoles@gmail.com>
+# Author:       <bcoles@gmail.com>
 #
-# Created:     2019-08-31
-# Copyright:   (c) bcoles 2019
-# Licence:     MIT
+# Created:      2019-08-31
+# Modified:     2025-02-23
+# Copyright:    (c) bcoles 2019 / poppopjmp 2025
+# Licence:      MIT
 # -------------------------------------------------------------------------------
 
 import json
@@ -41,14 +42,12 @@ class sfp_tool_whatweb(SpiderFootPlugin):
     # Default options
     opts = {
         'aggression': 1,
-        'ruby_path': 'ruby',
         'whatweb_path': ''
     }
 
     # Option descriptions
     optdescs = {
         'aggression': 'Set WhatWeb aggression level (1-4)',
-        'ruby_path': "Path to Ruby interpreter to use for WhatWeb. If just 'ruby' then it must be in your $PATH.",
         'whatweb_path': "Path to the whatweb executable file. Must be set."
     }
 
@@ -92,8 +91,6 @@ class sfp_tool_whatweb(SpiderFootPlugin):
             return
 
         exe = self.opts['whatweb_path']
-        if self.opts['whatweb_path'].endswith('/'):
-            exe = exe + 'whatweb'
 
         # If tool is not found, abort
         if not os.path.isfile(exe):
@@ -118,7 +115,6 @@ class sfp_tool_whatweb(SpiderFootPlugin):
 
         # Run WhatWeb
         args = [
-            self.opts['ruby_path'],
             exe,
             "--quiet",
             "--aggression=" + str(aggression),
@@ -139,9 +135,9 @@ class sfp_tool_whatweb(SpiderFootPlugin):
             self.error(f"Unable to run WhatWeb: {e}")
             return
 
-        if p.returncode != 0:
+        if p.returncode!= 0:
             self.error("Unable to read WhatWeb output.")
-            self.debug("Error running WhatWeb: " + stderr + ", " + stdout)
+            self.debug("Error running WhatWeb: " + stderr.decode('utf-8') + ", " + stdout.decode('utf-8'))
             return
 
         if not stdout:

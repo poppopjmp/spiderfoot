@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
-# Name:        sfp_rocketreach
-# Purpose:     Search RocketReach for contact information.
+# Name:         sfp_rocketreach
+# Purpose:      Search RocketReach for contact information.
 #
-# Author:      Your Name <your.email@example.com>
+# Author:       Agostino Panico <van1sh@van1shland.io>
 #
-# Created:     01/01/2023
-# Copyright:   (c) Your Name
-# Licence:     MIT
+# Created:      01/02/2025
+# Copyright:    (c) poppopjmp 
+# Licence:      MIT
 # -------------------------------------------------------------------------------
 
 import json
@@ -100,6 +100,14 @@ class sfp_rocketreach(SpiderFootPlugin):
             self.error("RocketReach API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
+        elif res['code'] == 401: 
+            self.error("RocketReach API key is invalid.")
+            self.errorState = True
+            return None
+        elif res['code'] == 400:
+            self.error("Invalid request to RocketReach API (bad query syntax or missing parameters).")
+            self.errorState = True
+            return None
 
         if not res['content']:
             self.info(f"No RocketReach info found for {qry}")
@@ -107,7 +115,7 @@ class sfp_rocketreach(SpiderFootPlugin):
 
         try:
             info = json.loads(res['content'])
-        except Exception as e:
+        except json.JSONDecodeError as e:
             self.error(f"Error processing JSON response from RocketReach: {e}")
             return None
 
