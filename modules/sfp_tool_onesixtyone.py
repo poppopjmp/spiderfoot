@@ -69,7 +69,7 @@ class sfp_tool_onesixtyone(SpiderFootPlugin):
             with open(self.communitiesFile, "w") as f:
                 for community in self.opts['communities'].split(","):
                     f.write(community.strip() + "\n")
-        except BaseException as e:
+        except Exception as e:
             self.error(f"Unable to write communities file ({self.communitiesFile}): {e}")
             self.errorState = True
 
@@ -124,7 +124,7 @@ class sfp_tool_onesixtyone(SpiderFootPlugin):
                     return
                 for addr in net.iter_hosts():
                     targets.append(str(addr))
-        except BaseException as e:
+        except Exception as e:
             self.error(f"Strange netblock identified, unable to parse: {eventData} ({e})")
             return
 

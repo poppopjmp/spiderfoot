@@ -112,10 +112,10 @@ class sfp_riskiq(SpiderFootPlugin):
             post = '{"field": "email", "query": "' + qry + '"}'
 
         api_key_login = self.opts['api_key_login']
-        if type(api_key_login) == str:
+        if not isinstance(api_key_login, str):
             api_key_login = api_key_login.encode('utf-8')
         api_key_password = self.opts['api_key_password']
-        if type(api_key_password) == str:
+        if not isinstance(api_key_password, str):
             api_key_password = api_key_password.encode('utf-8')
         cred = base64.b64encode(api_key_login + ":".encode('utf-8') + api_key_password)
         headers = {

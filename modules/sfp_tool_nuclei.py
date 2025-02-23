@@ -147,7 +147,7 @@ class sfp_tool_nuclei(SpiderFootPlugin):
                 for addr in IPNetwork(eventData).iter_hosts():
                     target += str(addr) + "\n"
                     timeout += 240
-        except BaseException as e:
+        except Exception as e:
             self.error(f"Strange netblock identified, unable to parse: {eventData} ({e})")
             return
 
@@ -182,7 +182,7 @@ class sfp_tool_nuclei(SpiderFootPlugin):
                 stdout, stderr = p.communicate()
                 self.debug("Timed out waiting for Nuclei to finish")
                 return
-        except BaseException as e:
+        except Exception as e:
             self.error(f"Unable to run Nuclei: {e}")
             return
 

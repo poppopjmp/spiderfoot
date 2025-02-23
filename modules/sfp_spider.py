@@ -238,13 +238,13 @@ class sfp_spider(SpiderFootPlugin):
 
     # Notify listening modules about links
     def linkNotify(self, url: str, parentEvent=None):
+        if not isinstance(url, str):
+            url = str(url, "utf-8", errors='replace')
         if self.getTarget().matches(self.sf.urlFQDN(url)):
             utype = "LINKED_URL_INTERNAL"
         else:
             utype = "LINKED_URL_EXTERNAL"
 
-        if type(url) != str:
-            url = str(url, "utf-8", errors='replace')
         event = SpiderFootEvent(utype, url, self.__name__, parentEvent)
         self.notifyListeners(event)
         return event

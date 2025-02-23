@@ -143,7 +143,7 @@ class sfp_arin(SpiderFootPlugin):
                 if "pocRef" in ret['pocs']:
                     ref = list()
                     # Might be a list or a dictionary
-                    if type(ret['pocs']['pocRef']) == dict:
+                    if isinstance(ret['pocs']['pocRef'], dict):
                         ref = [ret['pocs']['pocRef']]
                     else:
                         ref = ret['pocs']['pocRef']
@@ -169,7 +169,7 @@ class sfp_arin(SpiderFootPlugin):
                 if "pocRef" in ret['pocs']:
                     ref = list()
                     # Might be a list or a dictionary
-                    if type(ret['pocs']['pocRef']) == dict:
+                    if isinstance(ret['pocs']['pocRef'], dict):
                         ref = [ret['pocs']['pocRef']]
                     else:
                         ref = ret['pocs']['pocRef']
