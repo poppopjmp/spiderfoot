@@ -34,7 +34,6 @@ from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootCorrelator
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 from spiderfoot import sfConfig
-from spiderfoot import __version__
 
 scanId = None
 dbh = None
@@ -238,6 +237,37 @@ def main() -> None:
         log.critical(f"Unhandled exception in main: {e}", exc_info=True)
         sys.exit(-1)
 
+    def execute_scan(loggingQueue, target, targetType, modlist, cfg, log):
+        # Start running a new scan
+        scanName = target
+        scanId = SpiderFootHelpers.genScanInstanceId()
+        try:
+            p = mp.Process(target=startSpiderFootScanner, args=(loggingQueue, scanName, scanId, target, targetType, modlist, cfg))
+            p.daemon = True
+            p.start()
+        except Exception as e:
+            log.error(f"Scan [{scanId}] failed: {e}")
+            sys.exit(-1)
+
+        # Poll for scan status until completion
+        while True:
+            time.sleep(1)
+            info = dbh.scanInstanceGet(scanId)
+            if not info:
+                continue
+            if info[5] in ["ERROR-FAILED", "ABORT-REQUESTED", "ABORTED", "FINISHED"]:
+                # allow 60 seconds for post-scan correlations to complete
+                timeout = 60
+                p.join(timeout=timeout)
+                if (p.is_alive()):
+                    log.error(f"Timeout reached ({timeout}s) waiting for scan {scanId} post-processing to complete.")
+                    sys.exit(-1)
+
+                if sfConfig['__logging']:
+                    log.info(f"Scan completed with status {info[5]}")
+                if args.o == "json":
+                    print("]")
+                sys.exit(0)
 
 def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
     """
@@ -643,36 +673,5 @@ if __name__ == '__main__':
         print(f"The passwd file is now loaded from your home directory: {Path.home()}/.spiderfoot/passwd")
         print(f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
         sys.exit(-1)
-    def execute_scan(loggingQueue, target, targetType, modlist, cfg, log):
-        # Start running a new scan
-        scanName = target
-        scanId = SpiderFootHelpers.genScanInstanceId()
-        try:
-            p = mp.Process(target=startSpiderFootScanner, args=(loggingQueue, scanName, scanId, target, targetType, modlist, cfg))
-            p.daemon = True
-            p.start()
-        except Exception as e:
-            log.error(f"Scan [{scanId}] failed: {e}")
-            sys.exit(-1)
-
-        # Poll for scan status until completion
-        while True:
-            time.sleep(1)
-            info = dbh.scanInstanceGet(scanId)
-            if not info:
-                continue
-            if info[5] in ["ERROR-FAILED", "ABORT-REQUESTED", "ABORTED", "FINISHED"]:
-                # allow 60 seconds for post-scan correlations to complete
-                timeout = 60
-                p.join(timeout=timeout)
-                if (p.is_alive()):
-                    log.error(f"Timeout reached ({timeout}s) waiting for scan {scanId} post-processing to complete.")
-                    sys.exit(-1)
-
-                if sfConfig['__logging']:
-                    log.info(f"Scan completed with status {info[5]}")
-                if args.o == "json":
-                    print("]")
-                sys.exit(0)
 
     main()
