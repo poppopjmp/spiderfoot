@@ -477,9 +477,7 @@ class SpiderFootDb:
         """
         with self.dbhLock:
             try:
-                if self.db_type == 'sqlite':
-                    self.dbh.execute("VACUUM")
-                elif self.db_type == 'postgresql':
+                if ((self.db_type == 'sqlite') or (self.db_type == 'postgresql')):
                     self.dbh.execute("VACUUM")
                 self.conn.commit()
                 return True

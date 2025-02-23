@@ -17,7 +17,7 @@ phonenumbers==8.13.6
 psycopg2-binary
 publicsuffixlist==0.9.3
 pygexf==0.2.2
-pyopenssl==21.0.0
+pyopenssl
 pypdf2==2.10.6
 pysocks==1.7.1
 python-docx==0.8.11
