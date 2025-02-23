@@ -126,7 +126,7 @@ class sfp_tool_nuclei(SpiderFootPlugin):
                     if IPNetwork(eventData) in IPNetwork(addr):
                         self.debug(f"Skipping {eventData} as already within a scanned range.")
                         return
-                except BaseException:
+                except Exception:
                     # self.results will also contain hostnames
                     continue
 

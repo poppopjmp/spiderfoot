@@ -12,7 +12,6 @@
 
 import json
 import time
-import urllib
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
@@ -118,8 +117,7 @@ class sfp_zoomeye(SpiderFootPlugin):
                 self.error("Maximum number of pages reached.")
                 return [info]
             return [info] + self.query(qry, querytype, page)
-        else:
-            return [info]
+        return [info]
 
     def handleEvent(self, event):
         eventName = event.eventType

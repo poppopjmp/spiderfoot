@@ -99,7 +99,7 @@ class sfp_tool_trufflehog(SpiderFootPlugin):
                 hostname = urlparse(url).hostname
                 if hostname not in ["github.com", "gitlab.com", "bitbucket.org"]:
                     return
-            except BaseException:
+            except Exception:
                 self.debug("Unable to extract repository URL, skipping.")
                 return
 
@@ -109,7 +109,7 @@ class sfp_tool_trufflehog(SpiderFootPlugin):
                 hostname = urlparse(url).hostname
                 if hostname not in ["github.com", "gitlab.com", "bitbucket.org"]:
                     return
-            except BaseException:
+            except Exception:
                 self.debug("Unable to extract repository URL, skipping.")
                 return
 
@@ -157,7 +157,7 @@ class sfp_tool_trufflehog(SpiderFootPlugin):
                 continue
             try:
                 rowjson = json.loads(row)
-            except BaseException as e:
+            except Exception as e:
                 self.error(f"Could not parse trufflehog output as JSON: {row}\nException: {e}")
                 continue
 
