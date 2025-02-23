@@ -422,7 +422,7 @@ class SpiderFootScanner():
             self.__sf.status(f"Scan [{self.__scanId}] aborted.")
             self.__setStatus("ABORTED", None, time.time() * 1000)
 
-        except BaseException as e:
+        except Exception as e:
             self.__sf.error(
                 f"Unhandled exception ({e.__class__.__name__}) encountered during scan. Please report this as a bug",
                 exc_info=True

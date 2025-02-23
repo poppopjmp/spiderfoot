@@ -310,7 +310,7 @@ class SpiderFootDb:
 
         self.db_type = opts.get('__dbtype', 'sqlite')
 
-        if self.db_type == 'sqlite':
+        if ((self.db_type == 'sqlite') or (self.db_type == 'postgresql')):
             database_path = opts['__database']
 
             # create database directory

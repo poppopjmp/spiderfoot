@@ -133,7 +133,7 @@ class sfp_xforce(SpiderFootPlugin):
 
         xforce_url = "https://api.xforce.ibmcloud.com"
 
-           api_key = self.opts['xforce_api_key']
+        api_key = self.opts['xforce_api_key']
         if isinstance(api_key, str):
             api_key = api_key.encode('utf-8')
         api_key_password = self.opts['xforce_api_key_password']

@@ -363,7 +363,7 @@ class SpiderFootHelpers():
                 with resources.open_text('spiderfoot.dicts.ispell', f"{d}.dict", errors='ignore') as dict_file:
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
-            except BaseException as e:
+            except Exception as e:
                 raise IOError(f"Could not read wordlist file '{d}.dict'") from e
 
         return words
@@ -391,7 +391,7 @@ class SpiderFootHelpers():
                 with resources.open_text('spiderfoot.dicts.ispell', f"{d}.dict", errors='ignore') as dict_file:
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
-            except BaseException as e:
+            except Exception as e:
                 raise IOError(f"Could not read wordlist file '{d}.dict'") from e
 
         return words
@@ -419,7 +419,7 @@ class SpiderFootHelpers():
                 with resources.open_text('spiderfoot.dicts', f"{d}.txt", errors='ignore') as dict_file:
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
-            except BaseException as e:
+            except Exception as e:
                 raise IOError(f"Could not read wordlist file '{d}.txt'") from e
 
         return words
@@ -823,12 +823,12 @@ class SpiderFootHelpers():
                 for lnk in BeautifulSoup(data, features="lxml", parse_only=SoupStrainer(t)).find_all(t):
                     if lnk.has_attr(tags[t]):
                         links.append(lnk[tags[t]])
-        except BaseException:
+        except Exception:
             return returnLinks
 
         try:
             proto = url.split(":")[0]
-        except BaseException:
+        except Exception:
             proto = "http"
 
         # Loop through all the URLs/links found
