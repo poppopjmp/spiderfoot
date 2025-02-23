@@ -67,5 +67,5 @@ USER spiderfoot
 EXPOSE 5001
 
 # Run the application.
-ENTRYPOINT ["python3", "./sf.py"]
-CMD ["-l", "0.0.0.0:5001"]
+ENTRYPOINT ["python3"]
+CMD ["./sf.py", "-l", "0.0.0.0:5001"]
