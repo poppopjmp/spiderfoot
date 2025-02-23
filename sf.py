@@ -258,131 +258,11 @@ def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
         dbh = SpiderFootDb(sfConfig, init=True)
         sf = SpiderFoot(sfConfig)
 
-        if not args.s:
-            log.error("You must specify a target when running in scan mode. Try --help for guidance.")
-            sys.exit(-1)
+        validate_arguments(args, log)
 
-        if args.x and not args.t:
-            log.error("-x can only be used with -t. Use --help for guidance.")
-            sys.exit(-1)
+        target, targetType = process_target(args, log)
 
-        if args.x and args.m:
-            log.error("-x can only be used with -t and not with -m. Use --help for guidance.")
-            sys.exit(-1)
-
-        if args.r and (args.o and args.o not in ["tab", "csv"]):
-            log.error("-r can only be used when your output format is tab or csv.")
-            sys.exit(-1)
-
-        if args.H and (args.o and args.o not in ["tab", "csv"]):
-            log.error("-H can only be used when your output format is tab or csv.")
-            sys.exit(-1)
-
-        if args.D and args.o != "csv":
-            log.error("-D can only be used when using the csv output format.")
-            sys.exit(-1)
-
-        target = args.s
-        # Usernames and names - quoted on the commandline - won't have quotes,
-        # so add them.
-        if " " in target:
-            target = f"\"{target}\""
-        if "." not in target and not target.startswith("+") and '"' not in target:
-            target = f"\"{target}\""
-        targetType = SpiderFootHelpers.targetTypeFromString(target)
-
-        if not targetType:
-            log.error(f"Could not determine target type. Invalid target: {target}")
-            sys.exit(-1)
-
-        target = target.strip('"')
-
-        modlist = list()
-        if not args.t and not args.m and not args.u:
-            log.warning("You didn't specify any modules, types or use case, so all modules will be enabled.")
-            for m in list(sfModules.keys()):
-                if "__" in m:
-                    continue
-                modlist.append(m)
-
-        signal.signal(signal.SIGINT, handle_abort)
-        # If the user is scanning by type..
-        # 1. Find modules producing that type
-        if args.t:
-            types = args.t
-            modlist = sf.modulesProducing(types)
-            newmods = deepcopy(modlist)
-            newmodcpy = deepcopy(newmods)
-
-            # 2. For each type those modules consume, get modules producing
-            while len(newmodcpy) > 0:
-                for etype in sf.eventsToModules(newmodcpy):
-                    xmods = sf.modulesProducing([etype])
-                    for mod in xmods:
-                        if mod not in modlist:
-                            modlist.append(mod)
-                            newmods.append(mod)
-                newmodcpy = deepcopy(newmods)
-                newmods = list()
-
-        # Easier if scanning by module
-        if args.m:
-            modlist = list(filter(None, args.m.split(",")))
-
-        # Select modules if the user selected usercase
-        if args.u:
-            usecase = args.u[0].upper() + args.u[1:]  # Make the first Letter Uppercase
-            for mod in sfConfig['__modules__']:
-                if usecase == 'All' or usecase in sfConfig['__modules__'][mod]['group']:
-                    modlist.append(mod)
-
-        # Add sfp__stor_stdout to the module list
-        typedata = dbh.eventTypes()
-        types = dict()
-        for r in typedata:
-            types[r[1]] = r[0]
-
-        sfp__stor_stdout_opts = sfConfig['__modules__']['sfp__stor_stdout']['opts']
-        sfp__stor_stdout_opts['_eventtypes'] = types
-        if args.f:
-            if args.f and not args.t:
-                log.error("You can only use -f with -t. Use --help for guidance.")
-                sys.exit(-1)
-            sfp__stor_stdout_opts['_showonlyrequested'] = True
-        if args.F:
-            sfp__stor_stdout_opts['_requested'] = args.F.split(",")
-            sfp__stor_stdout_opts['_showonlyrequested'] = True
-        if args.o:
-            if args.o not in ["tab", "csv", "json"]:
-                log.error("Invalid output format selected. Must be 'tab', 'csv' or 'json'.")
-                sys.exit(-1)
-            sfp__stor_stdout_opts['_format'] = args.o
-        if args.t:
-            sfp__stor_stdout_opts['_requested'] = args.t.split(",")
-        if args.n:
-            sfp__stor_stdout_opts['_stripnewline'] = True
-        if args.r:
-            sfp__stor_stdout_opts['_showsource'] = True
-        if args.S:
-            sfp__stor_stdout_opts['_maxlength'] = args.S
-        if args.D:
-            sfp__stor_stdout_opts['_csvdelim'] = args.D
-        if args.x:
-            tmodlist = list()
-            modlist = list()
-            xmods = sf.modulesConsuming([targetType])
-            for mod in xmods:
-                if mod not in modlist:
-                    tmodlist.append(mod)
-
-            # Remove any modules not producing the type requested
-            rtypes = args.t.split(",")
-            for mod in tmodlist:
-                for r in rtypes:
-                    if not sfModules[mod]['provides']:
-                        continue
-                    if r in sfModules[mod].get('provides', []) and mod not in modlist:
-                        modlist.append(mod)
+        modlist = prepare_modules(args, sf, sfModules, log, targetType)
 
         if len(modlist) == 0:
             log.error("Based on your criteria, no modules were enabled.")
@@ -405,69 +285,211 @@ def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
         if args.x and args.t:
             cfg['__outputfilter'] = args.t.split(",")
 
-        # Prepare scan output headers
-        if args.o == "json":
-            print("[", end='')
-        elif not args.H:
-            delim = "\t"
+        prepare_scan_output(args)
 
-            if args.o == "tab":
-                delim = "\t"
-
-            if args.o == "csv":
-                if args.D:
-                    delim = args.D
-                else:
-                    delim = ","
-
-            if args.r:
-                if delim == "\t":
-                    headers = delim.join(["Source".ljust(30), "Type".ljust(45), "Source Data", "Data"])
-                else:
-                    headers = delim.join(["Source", "Type", "Source Data", "Data"])
-            else:
-                if delim == "\t":
-                    headers = delim.join(["Source".ljust(30), "Type".ljust(45), "Data"])
-                else:
-                    headers = delim.join(["Source", "Type", "Data"])
-
-            print(headers)
-
-        # Start running a new scan
-        scanName = target
-        scanId = SpiderFootHelpers.genScanInstanceId()
-        try:
-            p = mp.Process(target=startSpiderFootScanner, args=(loggingQueue, scanName, scanId, target, targetType, modlist, cfg))
-            p.daemon = True
-            p.start()
-        except Exception as e:
-            log.error(f"Scan [{scanId}] failed: {e}")
-            sys.exit(-1)
-
-        # Poll for scan status until completion
-        while True:
-            time.sleep(1)
-            info = dbh.scanInstanceGet(scanId)
-            if not info:
-                continue
-            if info[5] in ["ERROR-FAILED", "ABORT-REQUESTED", "ABORTED", "FINISHED"]:
-                # allow 60 seconds for post-scan correlations to complete
-                timeout = 60
-                p.join(timeout=timeout)
-                if (p.is_alive()):
-                    log.error(f"Timeout reached ({timeout}s) waiting for scan {scanId} post-processing to complete.")
-                    sys.exit(-1)
-
-                if sfConfig['__logging']:
-                    log.info(f"Scan completed with status {info[5]}")
-                if args.o == "json":
-                    print("]")
-                sys.exit(0)
+        execute_scan(loggingQueue, target, targetType, modlist, cfg, log)
 
         return
     except Exception as e:
         log.critical(f"Unhandled exception in start_scan: {e}", exc_info=True)
         sys.exit(-1)
+
+
+def validate_arguments(args, log):
+    if not args.s:
+        log.error("You must specify a target when running in scan mode. Try --help for guidance.")
+        sys.exit(-1)
+
+    if args.x and not args.t:
+        log.error("-x can only be used with -t. Use --help for guidance.")
+        sys.exit(-1)
+
+    if args.x and args.m:
+        log.error("-x can only be used with -t and not with -m. Use --help for guidance.")
+        sys.exit(-1)
+
+    if args.r and (args.o and args.o not in ["tab", "csv"]):
+        log.error("-r can only be used when your output format is tab or csv.")
+        sys.exit(-1)
+
+    if args.H and (args.o and args.o not in ["tab", "csv"]):
+        log.error("-H can only be used when your output format is tab or csv.")
+        sys.exit(-1)
+
+    if args.D and args.o != "csv":
+        log.error("-D can only be used when using the csv output format.")
+        sys.exit(-1)
+
+
+def process_target(args, log):
+    target = args.s
+    # Usernames and names - quoted on the commandline - won't have quotes,
+    # so add them.
+    if " " in target:
+        target = f"\"{target}\""
+    if "." not in target and not target.startswith("+") and '"' not in target:
+        target = f"\"{target}\""
+    targetType = SpiderFootHelpers.targetTypeFromString(target)
+
+    if not targetType:
+        log.error(f"Could not determine target type. Invalid target: {target}")
+        sys.exit(-1)
+
+    target = target.strip('"')
+    return target, targetType
+
+
+def prepare_modules(args, sf, sfModules, log, targetType):
+    modlist = list()
+    if not args.t and not args.m and not args.u:
+        log.warning("You didn't specify any modules, types or use case, so all modules will be enabled.")
+        for m in list(sfModules.keys()):
+            if "__" in m:
+                continue
+            modlist.append(m)
+
+    signal.signal(signal.SIGINT, handle_abort)
+    # If the user is scanning by type..
+    # 1. Find modules producing that type
+    if args.t:
+        types = args.t
+        modlist = sf.modulesProducing(types)
+        newmods = deepcopy(modlist)
+        newmodcpy = deepcopy(newmods)
+
+        # 2. For each type those modules consume, get modules producing
+        while len(newmodcpy) > 0:
+            for etype in sf.eventsToModules(newmodcpy):
+                xmods = sf.modulesProducing([etype])
+                for mod in xmods:
+                    if mod not in modlist:
+                        modlist.append(mod)
+                        newmods.append(mod)
+            newmodcpy = deepcopy(newmods)
+            newmods = list()
+
+    # Easier if scanning by module
+    if args.m:
+        modlist = list(filter(None, args.m.split(",")))
+
+    # Select modules if the user selected usercase
+    if args.u:
+        usecase = args.u[0].upper() + args.u[1:]  # Make the first Letter Uppercase
+        for mod in sfConfig['__modules__']:
+            if usecase == 'All' or usecase in sfConfig['__modules__'][mod]['group']:
+                modlist.append(mod)
+
+    # Add sfp__stor_stdout to the module list
+    typedata = dbh.eventTypes()
+    types = dict()
+    for r in typedata:
+        types[r[1]] = r[0]
+
+    sfp__stor_stdout_opts = sfConfig['__modules__']['sfp__stor_stdout']['opts']
+    sfp__stor_stdout_opts['_eventtypes'] = types
+    if args.f:
+        if args.f and not args.t:
+            log.error("You can only use -f with -t. Use --help for guidance.")
+            sys.exit(-1)
+        sfp__stor_stdout_opts['_showonlyrequested'] = True
+    if args.F:
+        sfp__stor_stdout_opts['_requested'] = args.F.split(",")
+        sfp__stor_stdout_opts['_showonlyrequested'] = True
+    if args.o:
+        if args.o not in ["tab", "csv", "json"]:
+            log.error("Invalid output format selected. Must be 'tab', 'csv' or 'json'.")
+            sys.exit(-1)
+        sfp__stor_stdout_opts['_format'] = args.o
+    if args.t:
+        sfp__stor_stdout_opts['_requested'] = args.t.split(",")
+    if args.n:
+        sfp__stor_stdout_opts['_stripnewline'] = True
+    if args.r:
+        sfp__stor_stdout_opts['_showsource'] = True
+    if args.S:
+        sfp__stor_stdout_opts['_maxlength'] = args.S
+    if args.D:
+        sfp__stor_stdout_opts['_csvdelim'] = args.D
+    if args.x:
+        tmodlist = list()
+        modlist = list()
+        xmods = sf.modulesConsuming([targetType])
+        for mod in xmods:
+            if mod not in modlist:
+                tmodlist.append(mod)
+
+        # Remove any modules not producing the type requested
+        rtypes = args.t.split(",")
+        for mod in tmodlist:
+            for r in rtypes:
+                if not sfModules[mod]['provides']:
+                    continue
+                if r in sfModules[mod].get('provides', []) and mod not in modlist:
+                    modlist.append(mod)
+
+    return modlist
+
+
+def prepare_scan_output(args):
+    if args.o == "json":
+        print("[", end='')
+    elif not args.H:
+        delim = "\t"
+
+        if args.o == "tab":
+            delim = "\t"
+
+        if args.o == "csv":
+            if args.D:
+                delim = args.D
+            else:
+                delim = ","
+
+        if args.r:
+            if delim == "\t":
+                headers = delim.join(["Source".ljust(30), "Type".ljust(45), "Source Data", "Data"])
+            else:
+                headers = delim.join(["Source", "Type", "Source Data", "Data"])
+        else:
+            if delim == "\t":
+                headers = delim.join(["Source".ljust(30), "Type".ljust(45), "Data"])
+            else:
+                headers = delim.join(["Source", "Type", "Data"])
+
+        print(headers)
+
+
+def execute_scan(loggingQueue, target, targetType, modlist, cfg, log):
+    # Start running a new scan
+    scanName = target
+    scanId = SpiderFootHelpers.genScanInstanceId()
+    try:
+        p = mp.Process(target=startSpiderFootScanner, args=(loggingQueue, scanName, scanId, target, targetType, modlist, cfg))
+        p.daemon = True
+        p.start()
+    except Exception as e:
+        log.error(f"Scan [{scanId}] failed: {e}")
+        sys.exit(-1)
+
+    # Poll for scan status until completion
+    while True:
+        time.sleep(1)
+        info = dbh.scanInstanceGet(scanId)
+        if not info:
+            continue
+        if info[5] in ["ERROR-FAILED", "ABORT-REQUESTED", "ABORTED", "FINISHED"]:
+            # allow 60 seconds for post-scan correlations to complete
+            timeout = 60
+            p.join(timeout=timeout)
+            if (p.is_alive()):
+                log.error(f"Timeout reached ({timeout}s) waiting for scan {scanId} post-processing to complete.")
+                sys.exit(-1)
+
+            if sfConfig['__logging']:
+                log.info(f"Scan completed with status {info[5]}")
+            if args.o == "json":
+                print("]")
+            sys.exit(0)
 
 
 def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> None:
