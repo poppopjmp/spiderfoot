@@ -62,6 +62,18 @@ RUN apt-get update && apt-get install -y libxml2 libxslt1.1 libjpeg62-turbo zlib
     && chown spiderfoot:spiderfoot $SPIDERFOOT_LOGS \
     && chown spiderfoot:spiderfoot $SPIDERFOOT_CACHE
 
+
+# Install tools/dependencies from apt
+RUN apt-get -y update && apt-get -y install nbtscan onesixtyone nmap whatweb bsdmainutils dnsutils coreutils
+
+# Install Python tools
+
+RUN mkdir /tools
+RUN pip install dnstwist snallygaster trufflehog wafw00f -t /tools
+RUN cd /tools
+RUN git clone --depth 1 https://github.com/testssl/testssl.sh.git
+RUN git clone https://github.com/Tuhinshubhra/CMSeeK && cd CMSeeK && pip install -r requirements.txt && mkdir Results
+
 USER spiderfoot
 
 EXPOSE 5001

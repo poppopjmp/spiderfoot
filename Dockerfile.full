@@ -4,7 +4,8 @@
 # http://www.spiderfoot.net
 #
 # Written by: TheTechromancer
-#
+
+# Deprecated ---- The main dockerfile contain also some cli tools - poppopjmp
 
 FROM python:3.13.2-slim
 

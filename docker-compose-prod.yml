@@ -1,0 +1,53 @@
+# Initial Configuration for docker compose in production env with Postgresql support
+# WiP 
+# Written by poppopjmp
+
+
+version: "3.9"
+
+services:
+  spiderfoot:
+    volumes:
+      - spiderfoot-data:/var/lib/spiderfoot
+      -./new_directory:/var/lib/spiderfoot/new_directory
+      - spiderfoot-logs:/var/lib/spiderfoot/log
+      - spiderfoot-cache:/var/lib/spiderfoot/cache
+    image: ghcr.io/poppopjmp/spiderfoot:v5.0.0
+    container_name: spiderfoot
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=spiderfoot
+      - POSTGRES_USER=spiderfoot
+      - POSTGRES_PASSWORD=your_password
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=spiderfoot
+      - POSTGRES_USER=spiderfoot
+      - POSTGRES_PASSWORD=your_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+### Generate Certificate with generate-certificate script that will populate certs folder with the key
+### If you have you own CA generate from there and populate accordingly
+
+  nginx:  # Add Nginx service
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "443:443"  # Expose port 80 on the host
+      - "80:80"
+    volumes:
+      -./docker-compose-production-files/nginx.conf:/etc/nginx/nginx.conf:ro 
+      -./docker-compose-production-files/certs:/etc/nginx/certs:ro 
+    depends_on:  # Ensure Nginx starts after SpiderFoot
+      - spiderfoot
+
+volumes:
+  spiderfoot-data:
+  spiderfoot-logs:
+  spiderfoot-cache:
+  postgres-data:
+  certs:
