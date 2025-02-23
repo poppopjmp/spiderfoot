@@ -97,7 +97,7 @@ Poppopjmp <van1sh@van1shland.io>
 
 ## Release Notes
 
-### Version 5.0.0
+### Version 5.0.1
 
 - Added new modules for enhanced data extraction and analysis.
 - Improved performance and stability of existing modules.
