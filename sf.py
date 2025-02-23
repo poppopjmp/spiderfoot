@@ -94,9 +94,7 @@ def main() -> None:
             '_modulesenabled': "Modules enabled for the scan."  # This is a hack to get a description for an option not actually available.
         }
 
-        # Legacy way to run the server
-        args = p.parse_args()
-        p = argparse.ArgumentParser(description=f"SpiderFoot 5.0: Open Source Intelligence Automation.")
+        p = argparse.ArgumentParser(description="SpiderFoot 5.0: Open Source Intelligence Automation.")  # Define p first
         p.add_argument("-d", "--debug", action='store_true', help="Enable debug output.")
         p.add_argument("-l", metavar="IP:port", help="IP and port to listen on.")
         p.add_argument("-m", metavar="mod1,mod2,...", type=str, help="Modules to enable.")
@@ -118,10 +116,11 @@ def main() -> None:
         p.add_argument("-q", action='store_true', help="Disable logging. This will also hide errors!")
         p.add_argument("-V", "--version", action='store_true', help="Display the version of SpiderFoot and exit.")
         p.add_argument("-max-threads", type=int, help="Max number of modules to run concurrently.")
-        
+
+        args = p.parse_args()  # Parse arguments after defining p
 
         if args.version:
-            print(f"SpiderFoot {__version__}: Open Source Intelligence Automation.")
+            print("SpiderFoot 5.0: Open Source Intelligence Automation.")  # Removed f-string as no place holders are used.
             sys.exit(0)
 
         if args.max_threads:
@@ -460,37 +459,6 @@ def prepare_scan_output(args):
         print(headers)
 
 
-def execute_scan(loggingQueue, target, targetType, modlist, cfg, log):
-    # Start running a new scan
-    scanName = target
-    scanId = SpiderFootHelpers.genScanInstanceId()
-    try:
-        p = mp.Process(target=startSpiderFootScanner, args=(loggingQueue, scanName, scanId, target, targetType, modlist, cfg))
-        p.daemon = True
-        p.start()
-    except Exception as e:
-        log.error(f"Scan [{scanId}] failed: {e}")
-        sys.exit(-1)
-
-    # Poll for scan status until completion
-    while True:
-        time.sleep(1)
-        info = dbh.scanInstanceGet(scanId)
-        if not info:
-            continue
-        if info[5] in ["ERROR-FAILED", "ABORT-REQUESTED", "ABORTED", "FINISHED"]:
-            # allow 60 seconds for post-scan correlations to complete
-            timeout = 60
-            p.join(timeout=timeout)
-            if (p.is_alive()):
-                log.error(f"Timeout reached ({timeout}s) waiting for scan {scanId} post-processing to complete.")
-                sys.exit(-1)
-
-            if sfConfig['__logging']:
-                log.info(f"Scan completed with status {info[5]}")
-            if args.o == "json":
-                print("]")
-            sys.exit(0)
 
 
 def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> None:
@@ -675,5 +643,36 @@ if __name__ == '__main__':
         print(f"The passwd file is now loaded from your home directory: {Path.home()}/.spiderfoot/passwd")
         print(f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
         sys.exit(-1)
+    def execute_scan(loggingQueue, target, targetType, modlist, cfg, log):
+        # Start running a new scan
+        scanName = target
+        scanId = SpiderFootHelpers.genScanInstanceId()
+        try:
+            p = mp.Process(target=startSpiderFootScanner, args=(loggingQueue, scanName, scanId, target, targetType, modlist, cfg))
+            p.daemon = True
+            p.start()
+        except Exception as e:
+            log.error(f"Scan [{scanId}] failed: {e}")
+            sys.exit(-1)
+
+        # Poll for scan status until completion
+        while True:
+            time.sleep(1)
+            info = dbh.scanInstanceGet(scanId)
+            if not info:
+                continue
+            if info[5] in ["ERROR-FAILED", "ABORT-REQUESTED", "ABORTED", "FINISHED"]:
+                # allow 60 seconds for post-scan correlations to complete
+                timeout = 60
+                p.join(timeout=timeout)
+                if (p.is_alive()):
+                    log.error(f"Timeout reached ({timeout}s) waiting for scan {scanId} post-processing to complete.")
+                    sys.exit(-1)
+
+                if sfConfig['__logging']:
+                    log.info(f"Scan completed with status {info[5]}")
+                if args.o == "json":
+                    print("]")
+                sys.exit(0)
 
     main()
