@@ -16,5 +16,5 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag spiderfoot:$(date +%s)
-- name: Build the Docker image Full
+    - name: Build the Docker image Full
       run: docker build . --file Dockerfile.full --tag spiderfoot-full:$(date +%s)
