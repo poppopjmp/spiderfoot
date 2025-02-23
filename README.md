@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.7+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.0.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0)
+[![Stable Release](https://img.shields.io/badge/version-5.0.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.1)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
 [![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
 [![codecov](https://codecov.io/github/poppopjmp/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/poppopjmp/spiderfoot)
@@ -37,9 +37,8 @@ SpiderFoot has an embedded web-server for providing a clean and intuitive web-ba
 - [Actively developed since 2012!](https://medium.com/@micallst/lessons-learned-from-my-10-year-open-source-project-4a4c8c2b4f64)
 
 ### WANT MORE?
-
-Need more from SpiderFoot? Check out [SpiderFoot HX](https://www.spiderfoot.net/hx) for:
-- 100% Cloud-based and managed for you
+**This extra feature are in roadmap integrating them in the opensource project**
+Need more from SpiderFoot?
 - Attack Surface Monitoring with change notifications by email, REST and Slack
 - Multiple targets per scan
 - Multi-user collaboration
@@ -52,8 +51,6 @@ Need more from SpiderFoot? Check out [SpiderFoot HX](https://www.spiderfoot.net/
 - Screenshotting
 - Bring your own Python SpiderFoot modules
 - Feed scan data to Splunk, ElasticSearch and REST endpoints
-
-See the full set of differences between SpiderFoot HX and the open source version [here](https://www.spiderfoot.net/open-source-vs-hx/).
 
 ### USES
 
@@ -98,9 +95,9 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 #### Stable build (packaged release):
 
 ```
- wget https://github.com/smicallef/spiderfoot/archive/v5.0.tar.gz
- tar zxvf v5.0.tar.gz
- cd spiderfoot-5.0
+ wget https://github.com/smicallef/spiderfoot/archive/v5.0.1.tar.gz
+ tar zxvf v5.0.1.tar.gz
+ cd spiderfoot-5.0.1
  pip3 install -r requirements.txt
  python3 ./sf.py -l 127.0.0.1:5001
 ```
