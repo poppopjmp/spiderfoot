@@ -37,30 +37,45 @@ from spiderfoot.logger import logListenerSetup, logWorkerSetup
 scanId = None
 dbh = None
 
-        # 'Global' configuration options
-        # These can be overriden on a per-module basis, and some will
-        # be overridden from saved configuration settings stored in the DB.
+# 'Global' configuration options
+# These can be overriden on a per-module basis, and some will
+# be overridden from saved configuration settings stored in the DB.
 sfConfig = {
-            '_debug': False,  # Debug
-            '_maxthreads': 3,  # Number of modules to run concurrently
-            '__logging': True,  # Logging in general
-            '__outputfilter': None,  # Event types to filter from modules' output
-            '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',  # User-Agent to use for HTTP requests
-            '_dnsserver': '',  # Override the default resolver
-            '_fetchtimeout': 5,  # number of seconds before giving up on a fetch
-            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
-            '_internettlds_cache': 72,
-            '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
-            '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
-            '__modules__': None,  # List of modules. Will be set after start-up.
-            '__correlationrules__': None,  # List of correlation rules. Will be set after start-up.
-            '_socks1type': '',
-            '_socks2addr': '',
-            '_socks3port': '',
-            '_socks4user': '',
-            '_socks5pwd': '',
+    '_debug': False,  # Debug
+    '_maxthreads': 3,  # Number of modules to run concurrently
+    '__logging': True,  # Logging in general
+    '__outputfilter': None,  # Event types to filter from modules' output
+    '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',  # User-Agent to use for HTTP requests
+    '_dnsserver': '',  # Override the default resolver
+    '_fetchtimeout': 5,  # number of seconds before giving up on a fetch
+    '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+    '_internettlds_cache': 72,
+    '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
+    '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
+    '__modules__': None,  # List of modules. Will be set after start-up.
+    '__correlationrules__': None,  # List of correlation rules. Will be set after start-up.
+    '_socks1type': '',
+    '_socks2addr': '',
+    '_socks3port': '',
+    '_socks4user': '',
+    '_socks5pwd': '',
 }
-
+sfOptdescs = {
+    '_debug': "Enable debugging?",
+    '_maxthreads': "Max number of modules to run concurrently",
+    '_useragent': "User-Agent string to use for HTTP requests. Prefix with an '@' to randomly select the User Agent from a file containing user agent strings for each request, e.g. @C:\\useragents.txt or @/home/bob/useragents.txt. Or supply a URL to load the list from there.",
+    '_dnsserver': "Override the default resolver with another DNS server. For example, 8.8.8.8 is Google's open DNS server.",
+    '_fetchtimeout': "Number of seconds before giving up on a HTTP request.",
+    '_internettlds': "List of Internet TLDs.",
+    '_internettlds_cache': "Hours to cache the Internet TLD list. This can safely be quite a long time given that the list doesn't change too often.",
+    '_genericusers': "List of usernames that if found as usernames or as part of e-mail addresses, should be treated differently to non-generics.",
+    '_socks1type': "SOCKS Server Type. Can be '4', '5', 'HTTP' or 'TOR'",
+    '_socks2addr': 'SOCKS Server IP Address.',
+    '_socks3port': 'SOCKS Server TCP Port. Usually 1080 for 4/5, 8080 for HTTP and 9050 for TOR.',
+    '_socks4user': 'SOCKS Username. Valid only for SOCKS4 and SOCKS5 servers.',
+    '_socks5pwd': "SOCKS Password. Valid only for SOCKS5 servers.",
+    '_modulesenabled': "Modules enabled for the scan."  # This is a hack to get a description for an option not actually available.
+}
 
 def main() -> None:
     """
@@ -75,23 +90,6 @@ def main() -> None:
             'cors_origins': [],
         }
 
-
-        sfOptdescs = {
-            '_debug': "Enable debugging?",
-            '_maxthreads': "Max number of modules to run concurrently",
-            '_useragent': "User-Agent string to use for HTTP requests. Prefix with an '@' to randomly select the User Agent from a file containing user agent strings for each request, e.g. @C:\\useragents.txt or @/home/bob/useragents.txt. Or supply a URL to load the list from there.",
-            '_dnsserver': "Override the default resolver with another DNS server. For example, 8.8.8.8 is Google's open DNS server.",
-            '_fetchtimeout': "Number of seconds before giving up on a HTTP request.",
-            '_internettlds': "List of Internet TLDs.",
-            '_internettlds_cache': "Hours to cache the Internet TLD list. This can safely be quite a long time given that the list doesn't change too often.",
-            '_genericusers': "List of usernames that if found as usernames or as part of e-mail addresses, should be treated differently to non-generics.",
-            '_socks1type': "SOCKS Server Type. Can be '4', '5', 'HTTP' or 'TOR'",
-            '_socks2addr': 'SOCKS Server IP Address.',
-            '_socks3port': 'SOCKS Server TCP Port. Usually 1080 for 4/5, 8080 for HTTP and 9050 for TOR.',
-            '_socks4user': 'SOCKS Username. Valid only for SOCKS4 and SOCKS5 servers.',
-            '_socks5pwd': "SOCKS Password. Valid only for SOCKS5 servers.",
-            '_modulesenabled': "Modules enabled for the scan."  # This is a hack to get a description for an option not actually available.
-        }
 
         p = argparse.ArgumentParser(description="SpiderFoot 5.0: Open Source Intelligence Automation.")  # Define p first
         p.add_argument("-d", "--debug", action='store_true', help="Enable debug output.")
