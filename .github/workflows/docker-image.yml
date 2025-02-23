@@ -33,7 +33,7 @@ jobs:
         push: true
         tags: |
           ghcr.io/${{ github.repository }}:latest
-          ghcr.io/${{ github.repository }}:v5.0.0
+          ghcr.io/${{ github.repository }}:v5.0.1
           ghcr.io/${{ github.repository }}:${{ github.sha }}
 
     - name: Run container tests
