@@ -10,6 +10,8 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/spiderfoot?label=follow&style=social)](https://twitter.com/spiderfoot)
 [![Discord](https://img.shields.io/discord/770524432464216074)](https://discord.gg/vyvztrG)
 
+**This fork aim to keep the project mantained and try to add more functionality to the project**
+
 **SpiderFoot** is an open source intelligence (OSINT) automation tool. It integrates with just about every data source available and utilises a range of methods for data analysis, making that data easy to navigate. 
 
 SpiderFoot has an embedded web-server for providing a clean and intuitive web-based interface but can also be used completely via the command-line.  It's written in **Python 3** and **MIT-licensed**.
@@ -418,6 +420,10 @@ Maintainers: Steve Micallef <steve@binarypool.com>, Poppopjmp <van1sh@van1shland
 - Updated dependencies to ensure compatibility with the latest versions.
 - Fixed various bugs and issues reported by the community.
 - Enhanced documentation and added new tutorials for better user experience.
+- Added initial support for Postgresql
+- Container Autocreation
+- Testing Integration
+- Codecoverage and quality
 
 ### TRIGGERING A RELEASE BUILD
 
@@ -430,4 +436,4 @@ To trigger a release build manually using the GitHub Actions workflow, follow th
 5. Select the branch you want to release from (e.g., `main`).
 6. Click on the "Run workflow" button to start the release build process.
 
-The GitHub Actions workflow will handle the rest, including checking out the repository, setting up Python, installing dependencies, running tests, building the Docker image, and pushing the Docker image to Docker Hub.
+The GitHub Actions workflow will handle the rest, including checking out the repository, setting up Python, installing dependencies, running tests, building the Docker image, and pushing the Github Content Registry
