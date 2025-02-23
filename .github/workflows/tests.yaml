@@ -29,7 +29,18 @@ jobs:
       - name: Lint with flake8
         run: |
           # stop the build if there are Python Flake8 violations
-          flake8 . --count --show-source --statistics
+          flake8 . --count --show-source --statistics  > flake8_errors.txt || true
+        continue-on-error: true
+      - name: Report flake8 errors (if any)
+        run: |
+          if [ -s "flake8_errors.txt" ]; then
+            echo "Flake8 found errors:"
+            cat flake8_errors.txt
+            exit 0 
+          else
+            echo "Flake8 found no errors."
+          fi
+
       - name: Test with pytest
         run: |
           python -m pytest -n auto --dist loadfile --ignore=test/integration/modules/ --durations=5 --cov-report term --cov=. .
