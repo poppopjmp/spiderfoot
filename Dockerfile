@@ -62,8 +62,6 @@ RUN apt-get update && apt-get install -y libxml2 libxslt1.1 libjpeg62-turbo zlib
     && chown spiderfoot:spiderfoot $SPIDERFOOT_LOGS \
     && chown spiderfoot:spiderfoot $SPIDERFOOT_CACHE
 
-COPY . 
-
 USER spiderfoot
 
 EXPOSE 5001
