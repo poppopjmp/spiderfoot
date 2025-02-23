@@ -74,6 +74,9 @@ RUN cd /tools
 RUN git clone --depth 1 https://github.com/testssl/testssl.sh.git
 RUN git clone https://github.com/Tuhinshubhra/CMSeeK && cd CMSeeK && pip install -r requirements.txt && mkdir Results
 
+## Enable NMAP into the container to be fully used
+RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
+
 USER spiderfoot
 
 EXPOSE 5001
