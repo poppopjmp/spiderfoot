@@ -3,10 +3,10 @@
 # Name:         sfp__stor_elasticsearch
 # Purpose:      SpiderFoot plug-in for storing events to an ElasticSearch cluster.
 #
-# Author:      Your Name <your.email@example.com>
+# Author:      Agostino Panico <van1sh@van1shland.io>
 #
-# Created:     14/05/2023
-# Copyright:   (c) Your Name 2023
+# Created:     24/02/2025
+# Copyright:   (c) poppopjmp 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
@@ -32,8 +32,7 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
     opts = {
         'host': 'localhost',
         'port': 9200,
-        'index': 'spiderfoot',
-        '_store': True
+        'index': 'spiderfoot'
     }
 
     # Option descriptions
