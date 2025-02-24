@@ -14,7 +14,7 @@ mako==1.2.4
 netaddr==0.8.0
 networkx==2.6.3
 openpyxl==3.1.1
-phonenumbers==8.13.6
+phonenumbers==8.13.55
 psycopg2-binary
 publicsuffixlist==0.9.3
 pygexf==0.2.2
