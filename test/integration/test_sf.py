@@ -66,7 +66,6 @@ class TestSf(unittest.TestCase):
         self.assertIn(b"Types available:", err)
         self.assertEqual(0, code)
 
-    @unittest.skip("todo")
     def test_l_arg_should_start_web_server(self):
         listen = "127.0.0.1:5001"
         out, err, code = self.execute([sys.executable, "sf.py", "-l", listen])
@@ -121,7 +120,6 @@ class TestSf(unittest.TestCase):
             with self.subTest(module=module):
                 self.assertIn(module.encode(), err)
 
-    @unittest.skip("output buffering sometimes causes this test to fail")
     def test_run_scan_should_print_scan_result_and_exit(self):
         target = "spiderfoot.net"
         out, err, code = self.execute([sys.executable, "sf.py", "-m", ",".join(self.default_modules), "-s", target, "-o", "csv"])

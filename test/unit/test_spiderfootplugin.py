@@ -196,6 +196,127 @@ class TestSpiderFootPlugin(unittest.TestCase):
         self.plugin.setSharedThreadPool(sharedThreadPool)
         self.assertEqual(self.plugin.sharedThreadPool, sharedThreadPool)
 
+    def test_notifyListeners_with_output_filter(self):
+        self.plugin.__outputFilter__ = ["FILTERED_EVENT"]
+        sfEvent = SpiderFootEvent("FILTERED_EVENT", "data", "module", None)
+        listener = MagicMock()
+        listener.watchedEvents.return_value = ["FILTERED_EVENT"]
+        self.plugin._listenerModules = [listener]
+        self.plugin.notifyListeners(sfEvent)
+        listener.handleEvent.assert_called_once_with(sfEvent)
+
+    def test_notifyListeners_with_storeOnly(self):
+        source_event = SpiderFootEvent("ROOT", "data", "module", None)
+        sfEvent = SpiderFootEvent("FILTERED_EVENT", "data", "module", source_event)
+        source_event.sourceEvent = sfEvent
+        listener = MagicMock()
+        listener.watchedEvents.return_value = ["FILTERED_EVENT"]
+        self.plugin._listenerModules = [listener]
+        self.plugin.notifyListeners(sfEvent)
+        listener.handleEvent.assert_not_called()
+
+    def test_notifyListeners_with_outgoingEventQueue(self):
+        self.plugin.outgoingEventQueue = MagicMock()
+        sfEvent = SpiderFootEvent("ROOT", "data", "module", None)
+        self.plugin.notifyListeners(sfEvent)
+        self.plugin.outgoingEventQueue.put.assert_called_once_with(sfEvent)
+
+    def test_notifyListeners_with_incomingEventQueue(self):
+        self.plugin.incomingEventQueue = MagicMock()
+        self.plugin.outgoingEventQueue = MagicMock()
+        sfEvent = SpiderFootEvent("ROOT", "data", "module", None)
+        self.plugin.notifyListeners(sfEvent)
+        self.plugin.outgoingEventQueue.put.assert_called_once_with(sfEvent)
+
+    def test_checkForStop_with_threading(self):
+        self.plugin.outgoingEventQueue = MagicMock()
+        self.plugin.incomingEventQueue = MagicMock()
+        self.plugin._stopScanning = True
+        self.assertTrue(self.plugin.checkForStop())
+
+    def test_checkForStop_with_scanId(self):
+        self.plugin.__scanId__ = "test_scan"
+        self.plugin.__sfdb__ = MagicMock()
+        self.plugin.__sfdb__.scanInstanceGet.return_value = [None, None, None, None, None, "ABORT-REQUESTED"]
+        self.assertTrue(self.plugin.checkForStop())
+
+    def test_checkForStop_without_scanId(self):
+        self.plugin.__scanId__ = None
+        self.assertFalse(self.plugin.checkForStop())
+
+    def test_checkForStop_with_running_scan(self):
+        self.plugin.__scanId__ = "test_scan"
+        self.plugin.__sfdb__ = MagicMock()
+        self.plugin.__sfdb__.scanInstanceGet.return_value = [None, None, None, None, None, "RUNNING"]
+        self.assertFalse(self.plugin.checkForStop())
+
+    def test_checkForStop_with_no_scan_status(self):
+        self.plugin.__scanId__ = "test_scan"
+        self.plugin.__sfdb__ = MagicMock()
+        self.plugin.__sfdb__.scanInstanceGet.return_value = None
+        self.assertFalse(self.plugin.checkForStop())
+
+    def test_threadWorker_with_incomingEventQueue(self):
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute') as mock_poolExecute:
+            self.plugin.incomingEventQueue = MagicMock()
+            self.plugin.outgoingEventQueue = MagicMock()
+            self.plugin.incomingEventQueue.get_nowait.side_effect = [SpiderFootEvent("ROOT", "data", "module", None), "FINISHED", queue.Empty]
+            self.plugin.threadWorker()
+            mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
+            self.assertEqual(mock_poolExecute.call_count, 2)
+
+    def test_threadWorker_with_exception(self):
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute') as mock_poolExecute, patch.object(self.plugin, 'sf') as mock_sf:
+            self.plugin.incomingEventQueue = MagicMock()
+            self.plugin.outgoingEventQueue = MagicMock()
+            self.plugin.incomingEventQueue.get_nowait.side_effect = Exception("Test exception")
+            self.plugin.threadWorker()
+            mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
+            mock_sf.error.assert_called_once()
+            self.assertTrue(self.plugin.errorState)
+            self.plugin.incomingEventQueue.get_nowait.assert_called()
+
+    def test_threadWorker_with_keyboard_interrupt(self):
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'sf') as mock_sf:
+            self.plugin.incomingEventQueue = MagicMock()
+            self.plugin.outgoingEventQueue = MagicMock()
+            self.plugin.incomingEventQueue.get_nowait.side_effect = KeyboardInterrupt
+            self.plugin.threadWorker()
+            mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
+            mock_sf.debug.assert_called_once_with(f"Interrupted module {self.plugin.__name__}.")
+            self.assertTrue(self.plugin._stopScanning)
+
+    def test_poolExecute_with_shared_thread_pool(self):
+        callback = MagicMock()
+        self.plugin.__name__ = "sfp_test"
+        self.plugin.sharedThreadPool = MagicMock()
+        self.plugin.poolExecute(callback)
+        self.plugin.sharedThreadPool.submit.assert_called_once_with(callback, taskName=f"{self.plugin.__name__}_threadWorker", maxThreads=self.plugin.maxThreads)
+
+    def test_poolExecute_with_storage_module(self):
+        callback = MagicMock()
+        self.plugin.__name__ = "sfp__stor_test"
+        self.plugin.poolExecute(callback)
+        callback.assert_called_once()
+
+    def test_poolExecute_with_non_storage_module(self):
+        callback = MagicMock()
+        self.plugin.__name__ = "sfp_test"
+        self.plugin.sharedThreadPool = MagicMock()
+        self.plugin.poolExecute(callback)
+        self.plugin.sharedThreadPool.submit.assert_called_once_with(callback, taskName=f"{self.plugin.__name__}_threadWorker", maxThreads=self.plugin.maxThreads)
+
+    def test_threadPool_with_arguments(self):
+        with patch('spiderfoot.plugin.SpiderFootThreadPool') as mock_SpiderFootThreadPool:
+            pool = self.plugin.threadPool(5, 10)
+            mock_SpiderFootThreadPool.assert_called_once_with(5, 10)
+            self.assertEqual(pool, mock_SpiderFootThreadPool.return_value)
+
+    def test_setSharedThreadPool_with_argument(self):
+        sharedThreadPool = MagicMock()
+        self.plugin.setSharedThreadPool(sharedThreadPool)
+        self.assertEqual(self.plugin.sharedThreadPool, sharedThreadPool)
+
 
 if __name__ == "__main__":
     unittest.main()
