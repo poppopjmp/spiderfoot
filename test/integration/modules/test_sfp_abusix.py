@@ -20,7 +20,6 @@ class TestModuleIntegrationAbusix(unittest.TestCase):
             "ip": "1.2.3.4",
             "abuseTypes": ["Spamming", "Malware"],
             "lastSeen": "2023-10-26",
-            #... other data
         }
         mock_get.return_value.json.return_value = mock_response_data
 

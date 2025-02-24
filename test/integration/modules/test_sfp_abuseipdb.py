@@ -29,7 +29,6 @@ class TestModuleIntegrationAbuseIPDB(unittest.TestCase):
                 "hostnames": ["host1.example.com", "host2.example.com"],
                 "totalReports": 5,
                 "lastReportedAt": "2023-10-26T12:00:00Z",
-                #... other data
             }
         }
         mock_get.return_value.json.return_value = mock_response_data

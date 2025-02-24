@@ -193,5 +193,3 @@ class sfp_zoomeye(SpiderFootPlugin):
 
                     e = SpiderFootEvent("RAW_RIR_DATA", str(match), self.__name__, event)
                     self.notifyListeners(e)
-
-# End of sfp_zoomeye class

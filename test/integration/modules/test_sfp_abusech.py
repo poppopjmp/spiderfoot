@@ -9,20 +9,19 @@ from sflib import SpiderFoot
 class TestModuleIntegrationAbusech(unittest.TestCase):
 
     def setUp(self):
-        self.sf = SpiderFoot(self.default_options)  # Assuming default_options is defined
+        self.sf = SpiderFoot(self.default_options) 
         self.module = sfp_abusech()
         self.module.setup(self.sf, dict())
 
     @patch('modules.sfp_abusech.requests.get')
     def test_handleEvent_malicious_ip(self, mock_get):
         """
-        Test handleEvent() with a malicious IP address.
+        Test handleEvent(mock_get) with a malicious IP address.
         """
         mock_response_data = {
             "ip": "1.2.3.4",
             "malware": "Example Malware",
             "firstseen": "2023-01-01",
-            #... other data
         }
         mock_get.return_value.json.return_value = mock_response_data
 
@@ -43,7 +42,7 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
     @patch('modules.sfp_abusech.requests.get')
     def test_handleEvent_benign_ip(self, mock_get):
         """
-        Test handleEvent() with a benign IP address.
+        Test handleEvent(mock_get) with a benign IP address.
         """
         mock_get.return_value.json.return_value = None  # No data for benign IP
 
@@ -62,7 +61,7 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
     @patch('modules.sfp_abusech.requests.get')
     def test_handleEvent_api_error(self, mock_get):
         """
-        Test handleEvent() when the API request returns an error.
+        Test handleEvent(mock_get) when the API request returns an error.
         """
         mock_get.return_value.status_code = 500  # Simulate an API error
 
@@ -95,8 +94,3 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
         # Check that no events were produced
         events = self.sf.getEvents()
         self.assertEqual(len(events), 0)
-
-    # Add more tests for other scenarios like:
-    # - Empty API response
-    # - Unexpected data format in the API response
-    # - Invalid IP address format

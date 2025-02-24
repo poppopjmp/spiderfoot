@@ -1,6 +1,5 @@
 import unittest
 import logging
-import sys
 from logging.handlers import QueueHandler, QueueListener
 from unittest.mock import MagicMock, patch
 from spiderfoot.logger import SpiderFootSqliteLogHandler, logListenerSetup, logWorkerSetup, stop_listener

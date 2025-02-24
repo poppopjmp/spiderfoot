@@ -1,10 +1,10 @@
 import unittest
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 
 class TestSpiderFootStaticJS(unittest.TestCase):
+
 
     @classmethod
     def setUpClass(cls):
@@ -36,4 +36,5 @@ class TestSpiderFootStaticJS(unittest.TestCase):
         self.assertEqual(result, "expected result")
 
 if __name__ == "__main__":
+    
     unittest.main()

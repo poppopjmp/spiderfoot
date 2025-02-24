@@ -6,7 +6,7 @@
 # Author:       Agostino Panico <van1sh@van1shland.io>
 #
 # Created:      01/02/2025
-# Copyright: (c) poppopjmp 
+# Copyright: (c) poppopjmp
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
@@ -100,11 +100,11 @@ class sfp_rocketreach(SpiderFootPlugin):
             self.error("RocketReach API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
-        elif res['code'] == 401: 
+        if res['code'] == 401: 
             self.error("RocketReach API key is invalid.")
             self.errorState = True
             return None
-        elif res['code'] == 400:
+        if res['code'] == 400:
             self.error("Invalid request to RocketReach API (bad query syntax or missing parameters).")
             self.errorState = True
             return None
@@ -221,5 +221,3 @@ class sfp_rocketreach(SpiderFootPlugin):
 
                     e = SpiderFootEvent("RAW_RIR_DATA", str(match), self.__name__, event)
                     self.notifyListeners(e)
-
-# End of sfp_rocketreach class

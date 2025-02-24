@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from spiderfoot.plugin import SpiderFootPlugin, SpiderFootPluginLogger
-from spiderfoot import SpiderFootEvent, SpiderFootTarget, SpiderFootDb
+from spiderfoot.plugin import SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 import queue
 
 

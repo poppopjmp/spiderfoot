@@ -21,7 +21,6 @@ class TestModuleIntegrationC99(unittest.TestCase):
                 "detected": True,
                 "badips": 10,
                 "blacklists": ["bl1", "bl2"],
-                #... other data
             }
         }
         mock_get.return_value.json.return_value = mock_response_data
