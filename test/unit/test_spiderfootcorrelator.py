@@ -180,6 +180,124 @@ class TestSpiderFootCorrelator(unittest.TestCase):
         result = self.correlator.check_rule_validity(rule)
         self.assertTrue(result)
 
+    def test_analysis_match_all_to_first_collection(self):
+        rule = {
+            "method": "match_all_to_first_collection",
+            "field": "type",
+            "match_method": "exact"
+        }
+        buckets = {
+            "bucket1": [{"type": "IP_ADDRESS", "_collection": 0}],
+            "bucket2": [{"type": "IP_ADDRESS", "_collection": 1}]
+        }
+        self.correlator.analysis_match_all_to_first_collection(rule, buckets)
+        self.assertEqual(len(buckets), 1)
+
+    def test_analysis_first_collection_only(self):
+        rule = {
+            "method": "first_collection_only",
+            "field": "type"
+        }
+        buckets = {
+            "bucket1": [{"type": "IP_ADDRESS", "_collection": 0}],
+            "bucket2": [{"type": "IP_ADDRESS", "_collection": 1}]
+        }
+        self.correlator.analysis_first_collection_only(rule, buckets)
+        self.assertEqual(len(buckets), 1)
+
+    def test_analysis_outlier(self):
+        rule = {
+            "method": "outlier",
+            "field": "type",
+            "maximum_percent": 50,
+            "noisy_percent": 10
+        }
+        buckets = {
+            "bucket1": [{"type": "IP_ADDRESS"}],
+            "bucket2": [{"type": "IP_ADDRESS"}]
+        }
+        self.correlator.analysis_outlier(rule, buckets)
+        self.assertEqual(len(buckets), 2)
+
+    def test_analysis_threshold(self):
+        rule = {
+            "method": "threshold",
+            "field": "type",
+            "minimum": 1,
+            "maximum": 10
+        }
+        buckets = {
+            "bucket1": [{"type": "IP_ADDRESS"}],
+            "bucket2": [{"type": "IP_ADDRESS"}]
+        }
+        self.correlator.analysis_threshold(rule, buckets)
+        self.assertEqual(len(buckets), 2)
+
+    def test_analyze_field_scope(self):
+        field = "type"
+        result = self.correlator.analyze_field_scope(field)
+        self.assertEqual(result, [False, False, False])
+
+    def test_analyze_rule_scope(self):
+        rule = {
+            "collections": [
+                {
+                    "collect": [
+                        {
+                            "field": "type",
+                            "method": "exact",
+                            "value": "IP_ADDRESS"
+                        }
+                    ]
+                }
+            ],
+            "aggregation": {
+                "field": "type"
+            },
+            "analysis": [
+                {
+                    "method": "threshold",
+                    "field": "type",
+                    "minimum": 1,
+                    "maximum": 10
+                }
+            ]
+        }
+        result = self.correlator.analyze_rule_scope(rule)
+        self.assertEqual(result, [False, False, False])
+
+    def test_process_rule(self):
+        rule = {
+            "id": "rule1",
+            "collections": [
+                {
+                    "collect": [
+                        {
+                            "field": "type",
+                            "method": "exact",
+                            "value": "IP_ADDRESS"
+                        }
+                    ]
+                }
+            ],
+            "aggregation": {
+                "field": "type"
+            },
+            "analysis": [
+                {
+                    "method": "threshold",
+                    "field": "type",
+                    "minimum": 1,
+                    "maximum": 10
+                }
+            ]
+        }
+        self.dbh.scanResultEvent.return_value = [
+            [None, "data", None, "module", "type", None, None, None, "id"]
+        ]
+        result = self.correlator.process_rule(rule)
+        self.assertEqual(len(result), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
