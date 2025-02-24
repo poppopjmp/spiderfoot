@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
-# Name:     sfp_zoomeye
-# Purpose:   Search ZoomEye for domain, IP address, and other information.
+# Name:   sfp_zoomeye
+# Purpose:  Search ZoomEye for domain, IP address, and other information.
 #
-# Author:    Agostino Panico <van1sh@van1shland.io>
+# Author:   Agostino Panico <van1sh@van1shland.io>
 #
-# Created:   01/02/2025
+# Created:  01/02/2025
 # Copyright:  (c) poppopjmp
-# Licence:   MIT
+# Licence:  MIT
 # -------------------------------------------------------------------------------
 
 import json
 import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+
+try:
+    from zoomeye import ZoomEye
+except ImportError:
+    ZoomEye = None
 
 
 class sfp_zoomeye(SpiderFootPlugin):
@@ -56,6 +61,7 @@ class sfp_zoomeye(SpiderFootPlugin):
 
     results = None
     errorState = False
+    zoomeye_api = None
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
@@ -65,6 +71,12 @@ class sfp_zoomeye(SpiderFootPlugin):
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
+        if ZoomEye and self.opts['api_key']:
+            self.zoomeye_api = ZoomEye(api_key=self.opts['api_key'])
+        elif not ZoomEye:
+            self.error("ZoomEye-python library not found. Install it using 'pip install zoomeye'.")
+            self.errorState = True
+
     def watchedEvents(self):
         return ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"]
 
@@ -72,60 +84,36 @@ class sfp_zoomeye(SpiderFootPlugin):
         return ["INTERNET_NAME", "DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS", "RAW_RIR_DATA"]
 
     def query(self, qry, querytype, page=1):
-        if self.errorState:
-            return None
-
-        headers = {
-            'API-KEY': self.opts['api_key']
-        }
-
-        if querytype == "host":
-            queryurl = f"https://api.zoomeye.org/host/search?query={qry}&page={page}"
-        elif querytype == "web":
-            queryurl = f"https://api.zoomeye.org/web/search?query={qry}&page={page}"
-        else:
-            self.error(f"Invalid query type: {querytype}")
-            return None
-
-        res = self.sf.fetchUrl(
-            queryurl,
-            timeout=self.opts['_fetchtimeout'],
-            useragent="SpiderFoot",
-            headers=headers
-        )
-
-        time.sleep(self.opts['delay'])
-
-        if res['code'] in ["429", "500"]:
-            self.error("ZoomEye API key seems to have been rejected or you have exceeded usage limits.")
-            self.errorState = True
-            return None
-        if res['code'] == "401":
-            self.error("ZoomEye API key is invalid.")
-            self.errorState = True
-            return None
-        if res['code'] == "400":
-            self.error("ZoomEye API query syntax error.")
-            self.errorState = True
-            return None
-
-        if not res['content']:
-            self.info(f"No ZoomEye info found for {qry}")
+        if self.errorState or not self.zoomeye_api:
             return None
 
         try:
-            info = json.loads(res['content'])
-        except Exception as e:
-            self.error(f"Error processing JSON response from ZoomEye: {e}")
-            return None
+            if querytype == "host":
+                res = self.zoomeye_api.host_search(qry, page=page)
+            elif querytype == "web":
+                res = self.zoomeye_api.web_search(qry, page=page)
+            else:
+                self.error(f"Invalid query type: {querytype}")
+                return None
 
-        if info.get('total') > info.get('size', 10) * page:
-            page += 1
-            if page > self.opts['max_pages']:
-                self.error("Maximum number of pages reached.")
-                return [info]
-            return [info] + self.query(qry, querytype, page)
-        return [info]
+            time.sleep(self.opts['delay'])
+
+            if not res or not res.get('matches'):
+                self.info(f"No ZoomEye info found for {qry}")
+                return None
+
+            if res.get('total') > res.get('size', 10) * page:
+                page += 1
+                if page > self.opts['max_pages']:
+                    self.error("Maximum number of pages reached.")
+                    return [res]
+                return [res] + self.query(qry, querytype, page)
+            return [res]
+
+        except Exception as e:
+            self.error(f"Error querying ZoomEye API: {e}")
+            self.errorState = True
+            return None
 
     def handleEvent(self, event):
         eventName = event.eventType
