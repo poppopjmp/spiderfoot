@@ -3,6 +3,7 @@ from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootThreadPool, Spid
 
 class TestSpiderFootInit(unittest.TestCase):
 
+
     def test_imports(self):
         self.assertIsNotNone(SpiderFootDb)
         self.assertIsNotNone(SpiderFootEvent)
@@ -14,4 +15,5 @@ class TestSpiderFootInit(unittest.TestCase):
         self.assertIsNotNone(__version__)
 
 if __name__ == "__main__":
+
     unittest.main()

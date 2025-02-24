@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from spiderfoot.threadpool import SpiderFootThreadPool, ThreadPoolWorker
-
+import queue
 
 class TestSpiderFootThreadPool(unittest.TestCase):
 
@@ -23,14 +23,14 @@ class TestSpiderFootThreadPool(unittest.TestCase):
             self.assertTrue(all(isinstance(t, mock_worker) for t in self.pool.pool))
 
     def test_stop_setter(self):
-        with patch('spiderfoot.threadpool.ThreadPoolWorker') as mock_worker:
+        with patch('spiderfoot.threadpool.ThreadPoolWorker'):
             self.pool.start()
             self.pool.stop = True
             self.assertTrue(self.pool.stop)
             self.assertTrue(all(t.stop for t in self.pool.pool))
 
     def test_shutdown(self):
-        with patch('spiderfoot.threadpool.ThreadPoolWorker') as mock_worker:
+        with patch('spiderfoot.threadpool.ThreadPoolWorker'):
             self.pool.start()
             results = self.pool.shutdown()
             self.assertIsInstance(results, dict)

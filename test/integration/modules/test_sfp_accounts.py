@@ -38,5 +38,3 @@ class TestModuleIntegrationAccounts(unittest.TestCase):
         social_media_event = next((e for e in events if e.eventType == 'SOCIAL_MEDIA'), None)
         self.assertIsNotNone(social_media_event)
         self.assertEqual(social_media_event.data, "Twitter: johndoe")
-
-    # Add more tests for targets without accounts, API errors, etc.

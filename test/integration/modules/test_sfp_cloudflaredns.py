@@ -17,6 +17,8 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
     def test_handleEvent_safe_domain(self, mock_getaddrinfo):
         """
         Test handleEvent() with a safe domain.
+        Args:
+        mock_get: Mock for requests.get
         """
         # Mock the DNS response for a safe domain
         mock_getaddrinfo.return_value = [(2, 1, 6, '', ('1.1.1.1', 53))]  # Simulate a normal IP address response
@@ -37,6 +39,8 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
     def test_handleEvent_blocked_domain(self, mock_getaddrinfo):
         """
         Test handleEvent() with a blocked domain.
+        Args:
+        mock_get: Mock for requests.get
         """
         # Mock the DNS response for a blocked domain (adult category)
         mock_getaddrinfo.return_value = [(2, 1, 6, '', ('1.1.1.2', 53))]  # Simulate a blocked IP response
@@ -57,5 +61,3 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
         blocked_event = next((e for e in events if e.eventType == 'BLACKLISTED_INTERNET_NAME'), None)
         self.assertIsNotNone(blocked_event)
         self.assertEqual(blocked_event.data, 'CloudFlare - Family [pornhub.com]')
-
-    # Add more test cases for other categories, invalid domains, etc.

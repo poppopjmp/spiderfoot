@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from spiderfoot.correlation import SpiderFootCorrelator
 from spiderfoot import SpiderFootDb
 

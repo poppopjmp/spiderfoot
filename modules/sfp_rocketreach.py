@@ -100,7 +100,7 @@ class sfp_rocketreach(SpiderFootPlugin):
             self.error("RocketReach API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
-        if res['code'] == 401: 
+        if res['code'] == 401:
             self.error("RocketReach API key is invalid.")
             self.errorState = True
             return None

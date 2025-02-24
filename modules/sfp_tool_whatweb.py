@@ -190,5 +190,3 @@ class sfp_tool_whatweb(SpiderFootPlugin):
         if found:
             evt = SpiderFootEvent('RAW_RIR_DATA', str(result_json), self.__name__, event)
             self.notifyListeners(evt)
-
-# End of sfp_tool_whatweb class

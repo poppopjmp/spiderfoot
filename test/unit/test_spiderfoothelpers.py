@@ -194,7 +194,6 @@ class TestSpiderFootHelpers(unittest.TestCase):
         with patch('spiderfoot.helpers.nx.Graph') as mock_graph, patch('spiderfoot.helpers.GEXFWriter') as mock_gexf:
             mock_graph.return_value = MagicMock()
             mock_gexf.return_value = MagicMock()
-            gexf = SpiderFootHelpers.buildGraphGexf('root', 'title', ['data'])
             self.assertTrue(mock_graph.called)
             self.assertTrue(mock_gexf.called)
 
@@ -202,7 +201,6 @@ class TestSpiderFootHelpers(unittest.TestCase):
         with patch('spiderfoot.helpers.nx.Graph') as mock_graph, patch('spiderfoot.helpers.json.dumps') as mock_json:
             mock_graph.return_value = MagicMock()
             mock_json.return_value = MagicMock()
-            json = SpiderFootHelpers.buildGraphJson('root', ['data'])
             self.assertTrue(mock_graph.called)
             self.assertTrue(mock_json.called)
 

@@ -78,6 +78,7 @@ sfOptdescs = {
 }
 
 def main() -> None:
+
     """
     Main function to parse command-line arguments and start the appropriate SpiderFoot functionality.
     """
@@ -89,7 +90,6 @@ def main() -> None:
             'root': '/',
             'cors_origins': [],
         }
-
 
         p = argparse.ArgumentParser(description="SpiderFoot v5.0.1: Open Source Intelligence Automation.")  # Define p first
         p.add_argument("-d", "--debug", action='store_true', help="Enable debug output.")

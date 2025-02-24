@@ -3,6 +3,7 @@ from spiderfoot.dicts import generic_usernames, ispell
 
 class TestSpiderFootDicts(unittest.TestCase):
 
+
     def test_generic_usernames(self):
         self.assertIsInstance(generic_usernames, list)
         self.assertGreater(len(generic_usernames), 0)
@@ -28,4 +29,5 @@ class TestSpiderFootDicts(unittest.TestCase):
         self.assertGreater(len(ispell.spanish_dict), 0)
 
 if __name__ == "__main__":
+
     unittest.main()

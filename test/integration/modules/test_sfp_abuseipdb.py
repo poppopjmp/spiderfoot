@@ -16,7 +16,9 @@ class TestModuleIntegrationAbuseIPDB(unittest.TestCase):
     @patch('modules.sfp_abuseipdb.requests.get')
     def test_handleEvent_malicious_ip(self, mock_get):
         """
-        Test handleEvent() with a malicious IP address.
+        Test handleEvent(mock_get) with a malicious IP address.
+        Args:
+        mock_get: Mock for requests.get
         """
         mock_response_data = {
             "data": {
@@ -52,6 +54,3 @@ class TestModuleIntegrationAbuseIPDB(unittest.TestCase):
         raw_data_event = next((e for e in events if e.eventType == 'RAW_RIR_DATA'), None)
         self.assertIsNotNone(raw_data_event)
         self.assertEqual(raw_data_event.data, str(mock_response_data))
-
-    # Add more tests for benign IPs, API errors, invalid target types, etc.
-    #... (similar to the previous example)

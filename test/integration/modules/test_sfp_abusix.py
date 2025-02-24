@@ -40,10 +40,8 @@ class TestModuleIntegrationAbusix(unittest.TestCase):
         malicious_ip_event = next((e for e in events if e.eventType == 'MALICIOUS_IPADDR'), None)
         self.assertIsNotNone(malicious_ip_event)
         # Adjust assertion based on how sfp_abusix formats event data
-        self.assertIn("1.2.3.4", malicious_ip_event.data)  
+        self.assertIn("1.2.3.4", malicious_ip_event.data)
 
         raw_data_event = next((e for e in events if e.eventType == 'RAW_RIR_DATA'), None)
         self.assertIsNotNone(raw_data_event)
         self.assertEqual(raw_data_event.data, str(mock_response_data))
-
-    # Add more tests for benign IPs, API errors, etc.

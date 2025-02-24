@@ -4,6 +4,7 @@ import os
 
 class TestSpiderFootTemplates(unittest.TestCase):
 
+
     def setUp(self):
         self.template_dir = os.path.join(os.path.dirname(__file__), '../../spiderfoot/templates')
 
@@ -42,4 +43,5 @@ class TestSpiderFootTemplates(unittest.TestCase):
         self.assertIn('scan list', rendered.lower())
 
 if __name__ == '__main__':
+
     unittest.main()
