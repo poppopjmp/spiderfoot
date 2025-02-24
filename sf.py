@@ -571,7 +571,7 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
         using_ssl = False
         key_path = SpiderFootHelpers.dataPath() + '/spiderfoot.key'
         crt_path = SpiderFootHelpers.dataPath() + '/spiderfoot.crt'
-        if os.path.isfile(key_path) and os.path.isfile(crt_path)):
+        if os.path.isfile(key_path) and os.path.isfile(crt_path):
             if not os.access(crt_path, os.R_OK):
                 log.critical(f"Could not read {crt_path} file. Permission denied.")
                 sys.exit(-1)
