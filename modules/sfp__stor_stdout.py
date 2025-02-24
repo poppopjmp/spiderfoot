@@ -12,7 +12,7 @@
 # -------------------------------------------------------------------------------
 
 import json
-
+from elasticsearch import Elasticsearch
 from spiderfoot import SpiderFootPlugin
 
 
@@ -40,11 +40,19 @@ class sfp__stor_stdout(SpiderFootPlugin):
         "_showsource": False,
         "_csvdelim": ",",
         "_maxlength": 0,
-        "_eventtypes": dict()
+        "_eventtypes": dict(),
+        'use_elasticsearch': False,
+        'elasticsearch_host': 'localhost',
+        'elasticsearch_port': 9200,
+        'elasticsearch_index': 'spiderfoot'
     }
 
     # Option descriptions
     optdescs = {
+        'use_elasticsearch': "Store events in ElasticSearch instead of standard output.",
+        'elasticsearch_host': "ElasticSearch host.",
+        'elasticsearch_port': "ElasticSearch port.",
+        'elasticsearch_index': "ElasticSearch index name."
     }
 
     def setup(self, sfc, userOpts=dict()):
@@ -59,6 +67,9 @@ class sfp__stor_stdout(SpiderFootPlugin):
 
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
+
+        if self.opts['use_elasticsearch']:
+            self.es = Elasticsearch([{'host': self.opts['elasticsearch_host'], 'port': self.opts['elasticsearch_port']}])
 
     def watchedEvents(self):
         """
@@ -133,6 +144,17 @@ class sfp__stor_stdout(SpiderFootPlugin):
             sfEvent: SpiderFoot event
         """
         if sfEvent.eventType == "ROOT":
+            return
+
+        if self.opts['use_elasticsearch']:
+            event_data = {
+                'eventType': sfEvent.eventType,
+                'data': sfEvent.data,
+                'module': sfEvent.module,
+                'sourceEvent': sfEvent.sourceEvent.data if sfEvent.sourceEvent else None,
+                'generated': sfEvent.generated
+            }
+            self.es.index(index=self.opts['elasticsearch_index'], body=event_data)
             return
 
         if self.opts['_showonlyrequested']:
