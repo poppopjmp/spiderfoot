@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from spiderfoot.plugin import SpiderFootPlugin, SpiderFootPluginLogger
 from spiderfoot import SpiderFootEvent, SpiderFootTarget, SpiderFootDb
+import queue
 
 
 class TestSpiderFootPlugin(unittest.TestCase):

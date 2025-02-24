@@ -56,7 +56,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         # Note: The API key here is a placeholder, replace with your actual key for testing
         module.opts['api_key'] = 'API_KEY'
         result = module.query('thisdomaindoesnotexist.com')
-        self.assertEqual(result, {'domain': 'thisdomaindoesnotexist.com', 'data':})
+        self.assertEqual(result, {'domain': 'thisdomaindoesnotexist.com', 'data': None})
 
     def test_query_domain_found(self):
         """

@@ -58,7 +58,7 @@ class TestSFPRrocketreach(unittest.TestCase):
         # Note: Replace with your actual API key
         module.opts['api_key'] = 'API_KEY'
         result = module.query('thisdomaindoesnotexist.com', 'domain')
-        self.assertEqual(result, [{'matches':, 'total': 0, 'page': 1, 'size': 10}])
+        self.assertEqual(result, [{'matches': [], 'total': 0, 'page': 1, 'size': 10}])
 
     def test_query_domain_found(self):
         """

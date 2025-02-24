@@ -135,7 +135,7 @@ class sfp_tool_whatweb(SpiderFootPlugin):
             self.error(f"Unable to run WhatWeb: {e}")
             return
 
-        if p.returncode!= 0:
+        if p.returncode != 0:
             self.error("Unable to read WhatWeb output.")
             self.debug("Error running WhatWeb: " + stderr.decode('utf-8') + ", " + stdout.decode('utf-8'))
             return

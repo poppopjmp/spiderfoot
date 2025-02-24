@@ -6,7 +6,7 @@
 # Author:       Agostino Panico <van1sh@van1shland.io>
 #
 # Created:      01/02/2025
-# Copyright:    (c) poppopjmp 
+# Copyright: (c) poppopjmp 
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 

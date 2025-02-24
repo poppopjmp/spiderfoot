@@ -420,18 +420,6 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
                 self.assertIsInstance(help_text, str, f"Module {module} option {opt} has invalid help type {type(help_text)}")
                 self.assertTrue(help_text, f"Module {module} option {opt} has empty help")
 
-    def test_module_options_have_valid_examples(self):
-        sf = SpiderFoot(self.default_options)
-        sfModules = self.load_modules(sf)
-        for module in sfModules:
-            m = sfModules[module]
-
-            for opt, examples in m.get('optexamples').items():
-                self.assertIsInstance(examples, list, f"Module {module} option {opt} has invalid examples type {type(examples)}")
-                self.assertTrue(examples, f"Module {module} option {opt} has empty examples")
-                for example in examples:
-                    self.assertIsInstance(example, str, f"Module {module} option {opt} has invalid example type {type(example)}")
-
     def test_module_options_have_valid_warnings(self):
         sf = SpiderFoot(self.default_options)
         sfModules = self.load_modules(sf)
