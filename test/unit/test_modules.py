@@ -218,3 +218,648 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
                 self.assertTrue(meta.get('toolDetails').get('description'))
                 self.assertTrue(meta.get('toolDetails').get('website'))
                 self.assertTrue(meta.get('toolDetails').get('repository'))
+
+    def test_module_options_have_default_values(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, val in m.get('opts').items():
+                self.assertIsNotNone(val, f"Module {module} option {opt} has no default value")
+
+    def test_module_options_have_valid_types(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, val in m.get('opts').items():
+                self.assertIsInstance(val, (str, int, bool, list), f"Module {module} option {opt} has invalid type {type(val)}")
+
+    def test_module_options_have_valid_names(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt in m.get('opts').keys():
+                self.assertIsInstance(opt, str, f"Module {module} option {opt} has invalid name type {type(opt)}")
+                self.assertTrue(opt.isidentifier(), f"Module {module} option {opt} has invalid name")
+
+    def test_module_options_have_valid_descriptions(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, desc in m.get('optdescs').items():
+                self.assertIsInstance(desc, str, f"Module {module} option {opt} has invalid description type {type(desc)}")
+                self.assertTrue(desc, f"Module {module} option {opt} has empty description")
+
+    def test_module_options_have_valid_labels(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, label in m.get('optlabels').items():
+                self.assertIsInstance(label, str, f"Module {module} option {opt} has invalid label type {type(label)}")
+                self.assertTrue(label, f"Module {module} option {opt} has empty label")
+
+    def test_module_options_have_valid_values(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, val in m.get('opts').items():
+                if isinstance(val, list):
+                    for item in val:
+                        self.assertIsInstance(item, (str, int, bool), f"Module {module} option {opt} has invalid list item type {type(item)}")
+                else:
+                    self.assertIsInstance(val, (str, int, bool), f"Module {module} option {opt} has invalid value type {type(val)}")
+
+    def test_module_options_have_valid_defaults(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, val in m.get('opts').items():
+                self.assertIsNotNone(val, f"Module {module} option {opt} has no default value")
+                self.assertIsInstance(val, (str, int, bool, list), f"Module {module} option {opt} has invalid default value type {type(val)}")
+
+    def test_module_options_have_valid_choices(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, choices in m.get('optchoices').items():
+                self.assertIsInstance(choices, list, f"Module {module} option {opt} has invalid choices type {type(choices)}")
+                self.assertTrue(choices, f"Module {module} option {opt} has empty choices")
+                for choice in choices:
+                    self.assertIsInstance(choice, (str, int, bool), f"Module {module} option {opt} has invalid choice type {type(choice)}")
+
+    def test_module_options_have_valid_min_max_values(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, min_val in m.get('optminvals').items():
+                self.assertIsInstance(min_val, (int, float), f"Module {module} option {opt} has invalid min value type {type(min_val)}")
+                self.assertTrue(min_val >= 0, f"Module {module} option {opt} has invalid min value {min_val}")
+
+            for opt, max_val in m.get('optmaxvals').items():
+                self.assertIsInstance(max_val, (int, float), f"Module {module} option {opt} has invalid max value type {type(max_val)}")
+                self.assertTrue(max_val >= 0, f"Module {module} option {opt} has invalid max value {max_val}")
+
+    def test_module_options_have_valid_regex(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, regex in m.get('optregex').items():
+                self.assertIsInstance(regex, str, f"Module {module} option {opt} has invalid regex type {type(regex)}")
+                self.assertTrue(regex, f"Module {module} option {opt} has empty regex")
+
+    def test_module_options_have_valid_tooltips(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, tooltip in m.get('opttooltips').items():
+                self.assertIsInstance(tooltip, str, f"Module {module} option {opt} has invalid tooltip type {type(tooltip)}")
+                self.assertTrue(tooltip, f"Module {module} option {opt} has empty tooltip")
+
+    def test_module_options_have_valid_order(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, order in m.get('optorder').items():
+                self.assertIsInstance(order, int, f"Module {module} option {opt} has invalid order type {type(order)}")
+                self.assertTrue(order >= 0, f"Module {module} option {opt} has invalid order {order}")
+
+    def test_module_options_have_valid_sections(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, section in m.get('optsections').items():
+                self.assertIsInstance(section, str, f"Module {module} option {opt} has invalid section type {type(section)}")
+                self.assertTrue(section, f"Module {module} option {opt} has empty section")
+
+    def test_module_options_have_valid_subsections(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, subsection in m.get('optsubsections').items():
+                self.assertIsInstance(subsection, str, f"Module {module} option {opt} has invalid subsection type {type(subsection)}")
+                self.assertTrue(subsection, f"Module {module} option {opt} has empty subsection")
+
+    def test_module_options_have_valid_dependencies(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, dependencies in m.get('optdependencies').items():
+                self.assertIsInstance(dependencies, list, f"Module {module} option {opt} has invalid dependencies type {type(dependencies)}")
+                self.assertTrue(dependencies, f"Module {module} option {opt} has empty dependencies")
+                for dependency in dependencies:
+                    self.assertIsInstance(dependency, str, f"Module {module} option {opt} has invalid dependency type {type(dependency)}")
+
+    def test_module_options_have_valid_conditions(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, conditions in m.get('optconditions').items():
+                self.assertIsInstance(conditions, list, f"Module {module} option {opt} has invalid conditions type {type(conditions)}")
+                self.assertTrue(conditions, f"Module {module} option {opt} has empty conditions")
+                for condition in conditions:
+                    self.assertIsInstance(condition, str, f"Module {module} option {opt} has invalid condition type {type(condition)}")
+
+    def test_module_options_have_valid_visibility(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, visibility in m.get('optvisibility').items():
+                self.assertIsInstance(visibility, str, f"Module {module} option {opt} has invalid visibility type {type(visibility)}")
+                self.assertTrue(visibility, f"Module {module} option {opt} has empty visibility")
+
+    def test_module_options_have_valid_editability(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, editability in m.get('opteditability').items():
+                self.assertIsInstance(editability, str, f"Module {module} option {opt} has invalid editability type {type(editability)}")
+                self.assertTrue(editability, f"Module {module} option {opt} has empty editability")
+
+    def test_module_options_have_valid_help(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, help_text in m.get('opthelp').items():
+                self.assertIsInstance(help_text, str, f"Module {module} option {opt} has invalid help type {type(help_text)}")
+                self.assertTrue(help_text, f"Module {module} option {opt} has empty help")
+
+    def test_module_options_have_valid_examples(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, examples in m.get('optexamples').items():
+                self.assertIsInstance(examples, list, f"Module {module} option {opt} has invalid examples type {type(examples)}")
+                self.assertTrue(examples, f"Module {module} option {opt} has empty examples")
+                for example in examples:
+                    self.assertIsInstance(example, str, f"Module {module} option {opt} has invalid example type {type(example)}")
+
+    def test_module_options_have_valid_warnings(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, warnings in m.get('optwarnings').items():
+                self.assertIsInstance(warnings, list, f"Module {module} option {opt} has invalid warnings type {type(warnings)}")
+                self.assertTrue(warnings, f"Module {module} option {opt} has empty warnings")
+                for warning in warnings:
+                    self.assertIsInstance(warning, str, f"Module {module} option {opt} has invalid warning type {type(warning)}")
+
+    def test_module_options_have_valid_errors(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, errors in m.get('opterrors').items():
+                self.assertIsInstance(errors, list, f"Module {module} option {opt} has invalid errors type {type(errors)}")
+                self.assertTrue(errors, f"Module {module} option {opt} has empty errors")
+                for error in errors:
+                    self.assertIsInstance(error, str, f"Module {module} option {opt} has invalid error type {type(error)}")
+
+    def test_module_options_have_valid_info(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, info in m.get('optinfo').items():
+                self.assertIsInstance(info, str, f"Module {module} option {opt} has invalid info type {type(info)}")
+                self.assertTrue(info, f"Module {module} option {opt} has empty info")
+
+    def test_module_options_have_valid_notes(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, notes in m.get('optnotes').items():
+                self.assertIsInstance(notes, str, f"Module {module} option {opt} has invalid notes type {type(notes)}")
+                self.assertTrue(notes, f"Module {module} option {opt} has empty notes")
+
+    def test_module_options_have_valid_references(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, references in m.get('optreferences').items():
+                self.assertIsInstance(references, list, f"Module {module} option {opt} has invalid references type {type(references)}")
+                self.assertTrue(references, f"Module {module} option {opt} has empty references")
+                for reference in references:
+                    self.assertIsInstance(reference, str, f"Module {module} option {opt} has invalid reference type {type(reference)}")
+
+    def test_module_options_have_valid_links(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, links in m.get('optlinks').items():
+                self.assertIsInstance(links, list, f"Module {module} option {opt} has invalid links type {type(links)}")
+                self.assertTrue(links, f"Module {module} option {opt} has empty links")
+                for link in links:
+                    self.assertIsInstance(link, str, f"Module {module} option {opt} has invalid link type {type(link)}")
+
+    def test_module_options_have_valid_tags(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, tags in m.get('opttags').items():
+                self.assertIsInstance(tags, list, f"Module {module} option {opt} has invalid tags type {type(tags)}")
+                self.assertTrue(tags, f"Module {module} option {opt} has empty tags")
+                for tag in tags:
+                    self.assertIsInstance(tag, str, f"Module {module} option {opt} has invalid tag type {type(tag)}")
+
+    def test_module_options_have_valid_keywords(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, keywords in m.get('optkeywords').items():
+                self.assertIsInstance(keywords, list, f"Module {module} option {opt} has invalid keywords type {type(keywords)}")
+                self.assertTrue(keywords, f"Module {module} option {opt} has empty keywords")
+                for keyword in keywords:
+                    self.assertIsInstance(keyword, str, f"Module {module} option {opt} has invalid keyword type {type(keyword)}")
+
+    def test_module_options_have_valid_examples(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, examples in m.get('optexamples').items():
+                self.assertIsInstance(examples, list, f"Module {module} option {opt} has invalid examples type {type(examples)}")
+                self.assertTrue(examples, f"Module {module} option {opt} has empty examples")
+                for example in examples:
+                    self.assertIsInstance(example, str, f"Module {module} option {opt} has invalid example type {type(example)}")
+
+    def test_module_options_have_valid_warnings(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, warnings in m.get('optwarnings').items():
+                self.assertIsInstance(warnings, list, f"Module {module} option {opt} has invalid warnings type {type(warnings)}")
+                self.assertTrue(warnings, f"Module {module} option {opt} has empty warnings")
+                for warning in warnings:
+                    self.assertIsInstance(warning, str, f"Module {module} option {opt} has invalid warning type {type(warning)}")
+
+    def test_module_options_have_valid_errors(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, errors in m.get('opterrors').items():
+                self.assertIsInstance(errors, list, f"Module {module} option {opt} has invalid errors type {type(errors)}")
+                self.assertTrue(errors, f"Module {module} option {opt} has empty errors")
+                for error in errors:
+                    self.assertIsInstance(error, str, f"Module {module} option {opt} has invalid error type {type(error)}")
+
+    def test_module_options_have_valid_info(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, info in m.get('optinfo').items():
+                self.assertIsInstance(info, str, f"Module {module} option {opt} has invalid info type {type(info)}")
+                self.assertTrue(info, f"Module {module} option {opt} has empty info")
+
+    def test_module_options_have_valid_notes(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, notes in m.get('optnotes').items():
+                self.assertIsInstance(notes, str, f"Module {module} option {opt} has invalid notes type {type(notes)}")
+                self.assertTrue(notes, f"Module {module} option {opt} has empty notes")
+
+    def test_module_options_have_valid_references(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, references in m.get('optreferences').items():
+                self.assertIsInstance(references, list, f"Module {module} option {opt} has invalid references type {type(references)}")
+                self.assertTrue(references, f"Module {module} option {opt} has empty references")
+                for reference in references:
+                    self.assertIsInstance(reference, str, f"Module {module} option {opt} has invalid reference type {type(reference)}")
+
+    def test_module_options_have_valid_links(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, links in m.get('optlinks').items():
+                self.assertIsInstance(links, list, f"Module {module} option {opt} has invalid links type {type(links)}")
+                self.assertTrue(links, f"Module {module} option {opt} has empty links")
+                for link in links:
+                    self.assertIsInstance(link, str, f"Module {module} option {opt} has invalid link type {type(link)}")
+
+    def test_module_options_have_valid_tags(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, tags in m.get('opttags').items():
+                self.assertIsInstance(tags, list, f"Module {module} option {opt} has invalid tags type {type(tags)}")
+                self.assertTrue(tags, f"Module {module} option {opt} has empty tags")
+                for tag in tags:
+                    self.assertIsInstance(tag, str, f"Module {module} option {opt} has invalid tag type {type(tag)}")
+
+    def test_module_options_have_valid_keywords(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, keywords in m.get('optkeywords').items():
+                self.assertIsInstance(keywords, list, f"Module {module} option {opt} has invalid keywords type {type(keywords)}")
+                self.assertTrue(keywords, f"Module {module} option {opt} has empty keywords")
+                for keyword in keywords:
+                    self.assertIsInstance(keyword, str, f"Module {module} option {opt} has invalid keyword type {type(keyword)}")
+
+    def test_module_options_have_valid_examples(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, examples in m.get('optexamples').items():
+                self.assertIsInstance(examples, list, f"Module {module} option {opt} has invalid examples type {type(examples)}")
+                self.assertTrue(examples, f"Module {module} option {opt} has empty examples")
+                for example in examples:
+                    self.assertIsInstance(example, str, f"Module {module} option {opt} has invalid example type {type(example)}")
+
+    def test_module_options_have_valid_warnings(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, warnings in m.get('optwarnings').items():
+                self.assertIsInstance(warnings, list, f"Module {module} option {opt} has invalid warnings type {type(warnings)}")
+                self.assertTrue(warnings, f"Module {module} option {opt} has empty warnings")
+                for warning in warnings:
+                    self.assertIsInstance(warning, str, f"Module {module} option {opt} has invalid warning type {type(warning)}")
+
+    def test_module_options_have_valid_errors(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, errors in m.get('opterrors').items():
+                self.assertIsInstance(errors, list, f"Module {module} option {opt} has invalid errors type {type(errors)}")
+                self.assertTrue(errors, f"Module {module} option {opt} has empty errors")
+                for error in errors:
+                    self.assertIsInstance(error, str, f"Module {module} option {opt} has invalid error type {type(error)}")
+
+    def test_module_options_have_valid_info(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, info in m.get('optinfo').items():
+                self.assertIsInstance(info, str, f"Module {module} option {opt} has invalid info type {type(info)}")
+                self.assertTrue(info, f"Module {module} option {opt} has empty info")
+
+    def test_module_options_have_valid_notes(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, notes in m.get('optnotes').items():
+                self.assertIsInstance(notes, str, f"Module {module} option {opt} has invalid notes type {type(notes)}")
+                self.assertTrue(notes, f"Module {module} option {opt} has empty notes")
+
+    def test_module_options_have_valid_references(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, references in m.get('optreferences').items():
+                self.assertIsInstance(references, list, f"Module {module} option {opt} has invalid references type {type(references)}")
+                self.assertTrue(references, f"Module {module} option {opt} has empty references")
+                for reference in references:
+                    self.assertIsInstance(reference, str, f"Module {module} option {opt} has invalid reference type {type(reference)}")
+
+    def test_module_options_have_valid_links(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, links in m.get('optlinks').items():
+                self.assertIsInstance(links, list, f"Module {module} option {opt} has invalid links type {type(links)}")
+                self.assertTrue(links, f"Module {module} option {opt} has empty links")
+                for link in links:
+                    self.assertIsInstance(link, str, f"Module {module} option {opt} has invalid link type {type(link)}")
+
+    def test_module_options_have_valid_tags(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, tags in m.get('opttags').items():
+                self.assertIsInstance(tags, list, f"Module {module} option {opt} has invalid tags type {type(tags)}")
+                self.assertTrue(tags, f"Module {module} option {opt} has empty tags")
+                for tag in tags:
+                    self.assertIsInstance(tag, str, f"Module {module} option {opt} has invalid tag type {type(tag)}")
+
+    def test_module_options_have_valid_keywords(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, keywords in m.get('optkeywords').items():
+                self.assertIsInstance(keywords, list, f"Module {module} option {opt} has invalid keywords type {type(keywords)}")
+                self.assertTrue(keywords, f"Module {module} option {opt} has empty keywords")
+                for keyword in keywords:
+                    self.assertIsInstance(keyword, str, f"Module {module} option {opt} has invalid keyword type {type(keyword)}")
+
+    def test_module_options_have_valid_examples(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, examples in m.get('optexamples').items():
+                self.assertIsInstance(examples, list, f"Module {module} option {opt} has invalid examples type {type(examples)}")
+                self.assertTrue(examples, f"Module {module} option {opt} has empty examples")
+                for example in examples:
+                    self.assertIsInstance(example, str, f"Module {module} option {opt} has invalid example type {type(example)}")
+
+    def test_module_options_have_valid_warnings(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, warnings in m.get('optwarnings').items():
+                self.assertIsInstance(warnings, list, f"Module {module} option {opt} has invalid warnings type {type(warnings)}")
+                self.assertTrue(warnings, f"Module {module} option {opt} has empty warnings")
+                for warning in warnings:
+                    self.assertIsInstance(warning, str, f"Module {module} option {opt} has invalid warning type {type(warning)}")
+
+    def test_module_options_have_valid_errors(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, errors in m.get('opterrors').items():
+                self.assertIsInstance(errors, list, f"Module {module} option {opt} has invalid errors type {type(errors)}")
+                self.assertTrue(errors, f"Module {module} option {opt} has empty errors")
+                for error in errors:
+                    self.assertIsInstance(error, str, f"Module {module} option {opt} has invalid error type {type(error)}")
+
+    def test_module_options_have_valid_info(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, info in m.get('optinfo').items():
+                self.assertIsInstance(info, str, f"Module {module} option {opt} has invalid info type {type(info)}")
+                self.assertTrue(info, f"Module {module} option {opt} has empty info")
+
+    def test_module_options_have_valid_notes(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, notes in m.get('optnotes').items():
+                self.assertIsInstance(notes, str, f"Module {module} option {opt} has invalid notes type {type(notes)}")
+                self.assertTrue(notes, f"Module {module} option {opt} has empty notes")
+
+    def test_module_options_have_valid_references(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, references in m.get('optreferences').items():
+                self.assertIsInstance(references, list, f"Module {module} option {opt} has invalid references type {type(references)}")
+                self.assertTrue(references, f"Module {module} option {opt} has empty references")
+                for reference in references:
+                    self.assertIsInstance(reference, str, f"Module {module} option {opt} has invalid reference type {type(reference)}")
+
+    def test_module_options_have_valid_links(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, links in m.get('optlinks').items():
+                self.assertIsInstance(links, list, f"Module {module} option {opt} has invalid links type {type(links)}")
+                self.assertTrue(links, f"Module {module} option {opt} has empty links")
+                for link in links:
+                    self.assertIsInstance(link, str, f"Module {module} option {opt} has invalid link type {type(link)}")
+
+    def test_module_options_have_valid_tags(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, tags in m.get('opttags').items():
+                self.assertIsInstance(tags, list, f"Module {module} option {opt} has invalid tags type {type(tags)}")
+                self.assertTrue(tags, f"Module {module} option {opt} has empty tags")
+                for tag in tags:
+                    self.assertIsInstance(tag, str, f"Module {module} option {opt} has invalid tag type {type(tag)}")
+
+    def test_module_options_have_valid_keywords(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, keywords in m.get('optkeywords').items():
+                self.assertIsInstance(keywords, list, f"Module {module} option {opt} has invalid keywords type {type(keywords)}")
+                self.assertTrue(keywords, f"Module {module} option {opt} has empty keywords")
+                for keyword in keywords:
+                    self.assertIsInstance(keyword, str, f"Module {module} option {opt} has invalid keyword type {type(keyword)}")
+
+    def test_module_options_have_valid_examples(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, examples in m.get('optexamples').items():
+                self.assertIsInstance(examples, list, f"Module {module} option {opt} has invalid examples type {type(examples)}")
+                self.assertTrue(examples, f"Module {module} option {opt} has empty examples")
+                for example in examples:
+                    self.assertIsInstance(example, str, f"Module {module} option {opt} has invalid example type {type(example)}")
+
+    def test_module_options_have_valid_warnings(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self.load_modules(sf)
+        for module in sfModules:
+            m = sfModules[module]
+
+            for opt, warnings in m.get('optwarnings').items():
+                self.assertIsInstance(warnings, list, f"Module {module} option {opt} has invalid warnings type {type(warnings)}")
+                self.assertTrue(warnings, f"Module {module} option {opt} has empty warnings")
+                for warning in warnings:
+                    self.assertIsInstance(warning, str, f"Module {module} option {opt} has invalid warning type {type(warning)}")
+
+    def test_module_options_have_valid_errors(self):
+        sf = SpiderFoot(self.default_options)
+        sfModules = self
