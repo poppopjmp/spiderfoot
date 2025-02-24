@@ -11,7 +11,7 @@
 # -------------------------------------------------------------------------------
 
 from elasticsearch import Elasticsearch
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootPlugin
 
 
 class sfp__stor_elasticsearch(SpiderFootPlugin):
