@@ -79,7 +79,7 @@ class TestSFPRrocketreach(unittest.TestCase):
         # Note: Replace with your actual API key
         module.opts['api_key'] = 'API_KEY'
         result = module.query('thisdoesnotexist@example.com', 'email')
-        self.assertEqual(result, [{'matches':, 'total': 0, 'page': 1, 'size': 10}])
+        self.assertEqual(result, [{'matches': [], 'total': 0, 'page': 1, 'size': 10}])
 
     def test_query_email_found(self):
         """
