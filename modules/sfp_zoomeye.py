@@ -89,9 +89,9 @@ class sfp_zoomeye(SpiderFootPlugin):
 
         try:
             if querytype == "host":
-                res = self.zoomeye_api.host_search(qry, page=page)
+                res = self.zoomeye_api.search(qry, page=page, pagesize=20, sub_type='all', fields='', facets='')
             elif querytype == "web":
-                res = self.zoomeye_api.web_search(qry, page=page)
+                res = self.zoomeye_api.search(qry, page=page, pagesize=20, sub_type='all', fields='', facets='')
             else:
                 self.error(f"Invalid query type: {querytype}")
                 return None
