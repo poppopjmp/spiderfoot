@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.7+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.0.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.1)
+[![Stable Release](https://img.shields.io/badge/version-5.0.2-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.2)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
 [![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
 [![codecov](https://codecov.io/github/poppopjmp/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/poppopjmp/spiderfoot)
@@ -95,9 +95,9 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 #### Stable build (packaged release):
 
 ```
- wget https://github.com/smicallef/spiderfoot/archive/v5.0.1.tar.gz
- tar zxvf v5.0.1.tar.gz
- cd spiderfoot-5.0.1
+ wget https://github.com/smicallef/spiderfoot/archive/v5.0.2.tar.gz
+ tar zxvf v5.0.2.tar.gz
+ cd spiderfoot-5.0.2
  pip3 install -r requirements.txt
  python3 ./sf.py -l 127.0.0.1:5001
 ```
@@ -398,6 +398,7 @@ Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 [ZoomEye](https://www.zoomeye.org/)|Look up domain, IP address, and other information from ZoomEye.|Tiered API
 [Fofa](https://fofa.so/)|Look up domain, IP address, and other information from Fofa.|Tiered API
 [RocketReach](https://rocketreach.co/)|Look up email addresses, phone numbers, and social media profiles from RocketReach.|Tiered API
+[Netlas](https://netlas.io/)|Look up domain and IP address information from Netlas API.|Tiered API
 
 ### DOCUMENTATION
 
