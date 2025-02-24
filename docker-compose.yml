@@ -18,8 +18,7 @@ version: "3"
 
 services:
   spiderfoot:
-    build:
-      context: .
+  image: ghcr.io/poppopjmp/spiderfoot:v5.0.1
     volumes:
       - spiderfoot-data:/var/lib/spiderfoot
       - ./new_directory:/var/lib/spiderfoot/new_directory
