@@ -32,3 +32,4 @@ setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerabil
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 zoomeye
 queue
+idna>=3.7 # not directly required, pinned by Snyk to avoid a vulnerability
