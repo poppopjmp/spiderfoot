@@ -25,7 +25,7 @@ python-docx==0.8.11
 python-pptx==0.6.21
 python-whois==0.7.3
 pyyaml==6.0.0
-requests==2.26.0
+requests==2.32.2
 secure==0.3.0
 pillow>=10.3.0 # not directly required, pinned by Snyk to avoid a vulnerability
 setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
