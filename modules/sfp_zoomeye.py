@@ -16,7 +16,7 @@ import time
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 try:
-    from zoomeye import ZoomEye
+    from zoomeyeai.sdk import ZoomEye
 except ImportError:
     ZoomEye = None
 
