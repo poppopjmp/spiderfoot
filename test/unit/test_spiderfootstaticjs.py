@@ -5,7 +5,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 class TestSpiderFootStaticJS(unittest.TestCase):
 
-
     @classmethod
     def setUpClass(cls):
         cls.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
@@ -36,5 +35,5 @@ class TestSpiderFootStaticJS(unittest.TestCase):
         self.assertEqual(result, "expected result")
 
 if __name__ == "__main__":
-
+    
     unittest.main()

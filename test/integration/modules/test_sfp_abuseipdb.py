@@ -18,7 +18,7 @@ class TestModuleIntegrationAbuseIPDB(unittest.TestCase):
         """
         Test handleEvent(mock_get) with a malicious IP address.
         Args:
-        mock_get: Mock for requests.get
+            mock_get: Mock for requests.get
         """
         mock_response_data = {
             "data": {

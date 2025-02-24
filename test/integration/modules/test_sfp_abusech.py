@@ -18,7 +18,7 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
         """
         Test handleEvent(mock_get) with a malicious IP address.
         Args:
-        mock_get: Mock for requests.get
+            mock_get: Mock for requests.get
         """
         mock_response_data = {
             "ip": "1.2.3.4",
@@ -46,7 +46,7 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
         """
         Test handleEvent(mock_get) with a benign IP address.
         Args:
-        mock_get: Mock for requests.get
+            mock_get: Mock for requests.get
         """
         mock_get.return_value.json.return_value = None  # No data for benign IP
 
@@ -67,7 +67,7 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
         """
         Test handleEvent(mock_get) when the API request returns an error.
         Args:
-        mock_get: Mock for requests.get
+            mock_get: Mock for requests.get
         """
         mock_get.return_value.status_code = 500  # Simulate an API error
 
