@@ -188,6 +188,182 @@ class TestSpiderFootDb(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.db.correlationResultCreate(123, 'ruleId', 'ruleName', 'ruleDescr', 'ruleRisk', 'ruleYaml', 'correlationTitle', ['eventHash'])
 
+    def test_scanLogEvents(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.executemany.return_value = None
+            batch = [
+                ('instanceId', 'classification', 'message', 'component', 1234567890)
+            ]
+            result = self.db.scanLogEvents(batch)
+            self.assertTrue(result)
+            self.assertTrue(mock_sqlite3.connect.return_value.cursor.return_value.executemany.called)
+
+    def test_scanLogEvent(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
+            self.db.scanLogEvent('instanceId', 'classification', 'message')
+            self.assertTrue(mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
+
+    def test_scanInstanceCreate(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
+            self.db.scanInstanceCreate('instanceId', 'scanName', 'scanTarget')
+            self.assertTrue(mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
+
+    def test_scanInstanceSet(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
+            self.db.scanInstanceSet('instanceId', started='started', ended='ended', status='status')
+            self.assertTrue(mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
+
+    def test_scanInstanceGet(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchone.return_value = [
+                'name', 'seed_target', 1234567890, 1234567890, 1234567890, 'status'
+            ]
+            result = self.db.scanInstanceGet('instanceId')
+            self.assertEqual(result, ['name', 'seed_target', 1234567890, 1234567890, 1234567890, 'status'])
+
+    def test_scanResultSummary(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                ('type', 'event_descr', 1234567890, 1, 1)
+            ]
+            result = self.db.scanResultSummary('instanceId')
+            self.assertEqual(result, [('type', 'event_descr', 1234567890, 1, 1)])
+
+    def test_scanCorrelationSummary(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                ('rule_risk', 1)
+            ]
+            result = self.db.scanCorrelationSummary('instanceId')
+            self.assertEqual(result, [('rule_risk', 1)])
+
+    def test_scanCorrelationList(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                ('id', 'title', 'rule_id', 'rule_risk', 'rule_name', 'rule_descr', 'rule_logic', 1)
+            ]
+            result = self.db.scanCorrelationList('instanceId')
+            self.assertEqual(result, [('id', 'title', 'rule_id', 'rule_risk', 'rule_name', 'rule_descr', 'rule_logic', 1)])
+
+    def test_scanResultEvent(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                (1234567890, 'data', 'source_data', 'module', 'type', 100, 100, 0, 'hash', 'source_event_hash', 'event_descr', 'event_type', 'scan_instance_id', 0, 0)
+            ]
+            result = self.db.scanResultEvent('instanceId')
+            self.assertEqual(result, [(1234567890, 'data', 'source_data', 'module', 'type', 100, 100, 0, 'hash', 'source_event_hash', 'event_descr', 'event_type', 'scan_instance_id', 0, 0)])
+
+    def test_scanResultEventUnique(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                ('data', 'type', 1)
+            ]
+            result = self.db.scanResultEventUnique('instanceId')
+            self.assertEqual(result, [('data', 'type', 1)])
+
+    def test_scanLogs(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                (1234567890, 'component', 'type', 'message', 1)
+            ]
+            result = self.db.scanLogs('instanceId')
+            self.assertEqual(result, [(1234567890, 'component', 'type', 'message', 1)])
+
+    def test_scanErrors(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                (1234567890, 'component', 'message')
+            ]
+            result = self.db.scanErrors('instanceId')
+            self.assertEqual(result, [(1234567890, 'component', 'message')])
+
+    def test_scanInstanceDelete(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
+            result = self.db.scanInstanceDelete('instanceId')
+            self.assertTrue(result)
+            self.assertTrue(mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
+
+    def test_scanResultsUpdateFP(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
+            result = self.db.scanResultsUpdateFP('instanceId', ['resultHash'], 1)
+            self.assertTrue(result)
+            self.assertTrue(mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
+
+    def test_scanConfigSet(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
+            self.db.scanConfigSet('scan_id', {'opt': 'val'})
+            self.assertTrue(mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
+
+    def test_scanConfigGet(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                ('component', 'opt', 'val')
+            ]
+            result = self.db.scanConfigGet('instanceId')
+            self.assertEqual(result, {'opt': 'val'})
+
+    def test_scanEventStore(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
+            sfEvent = MagicMock()
+            sfEvent.generated = 1234567890.0
+            sfEvent.eventType = 'type'
+            sfEvent.data = 'data'
+            sfEvent.module = 'module'
+            sfEvent.confidence = 100
+            sfEvent.visibility = 100
+            sfEvent.risk = 0
+            sfEvent.sourceEvent = MagicMock()
+            sfEvent.sourceEventHash = 'source_event_hash'
+            sfEvent.hash = 'hash'
+            self.db.scanEventStore('instanceId', sfEvent)
+            self.assertTrue(mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
+
+    def test_scanElementSourcesDirect(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                (1234567890, 'data', 'source_data', 'module', 'type', 100, 100, 0, 'hash', 'source_event_hash', 'event_descr', 'event_type', 'scan_instance_id', 0, 0, 'type', 'module', 'source_entity_type')
+            ]
+            result = self.db.scanElementSourcesDirect('instanceId', ['elementId'])
+            self.assertEqual(result, [(1234567890, 'data', 'source_data', 'module', 'type', 100, 100, 0, 'hash', 'source_event_hash', 'event_descr', 'event_type', 'scan_instance_id', 0, 0, 'type', 'module', 'source_entity_type')])
+
+    def test_scanElementChildrenDirect(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                (1234567890, 'data', 'source_data', 'module', 'type', 100, 100, 0, 'hash', 'source_event_hash', 'event_descr', 'event_type', 'scan_instance_id', 0, 0)
+            ]
+            result = self.db.scanElementChildrenDirect('instanceId', ['elementId'])
+            self.assertEqual(result, [(1234567890, 'data', 'source_data', 'module', 'type', 100, 100, 0, 'hash', 'source_event_hash', 'event_descr', 'event_type', 'scan_instance_id', 0, 0)])
+
+    def test_scanElementSourcesAll(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                (1234567890, 'data', 'source_data', 'module', 'type', 100, 100, 0, 'hash', 'source_event_hash', 'event_descr', 'event_type', 'scan_instance_id', 0, 0, 'type', 'module', 'source_entity_type')
+            ]
+            result = self.db.scanElementSourcesAll('instanceId', ['childData'])
+            self.assertEqual(result, [{'hash': (1234567890, 'data', 'source_data', 'module', 'type', 100, 100, 0, 'hash', 'source_event_hash', 'event_descr', 'event_type', 'scan_instance_id', 0, 0, 'type', 'module', 'source_entity_type')}, {'source_event_hash': ['hash']}])
+
+    def test_scanElementChildrenAll(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value.fetchall.return_value = [
+                (1234567890, 'data', 'source_data', 'module', 'type', 100, 100, 0, 'hash', 'source_event_hash', 'event_descr', 'event_type', 'scan_instance_id', 0, 0)
+            ]
+            result = self.db.scanElementChildrenAll('instanceId', ['parentIds'])
+            self.assertEqual(result, ['hash'])
+
+    def test_correlationResultCreate(self):
+        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
+            result = self.db.correlationResultCreate('instanceId', 'ruleId', 'ruleName', 'ruleDescr', 'ruleRisk', 'ruleYaml', 'correlationTitle', ['eventHash'])
+            self.assertEqual(result, 'correlation_id')
+            self.assertTrue(mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
+
 
 if __name__ == "__main__":
     unittest.main()
