@@ -94,7 +94,7 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
             self.error("Umbrella Investigate API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
-        elif res['code'] == 401:
+        if res['code'] == 401:
             self.error("Umbrella Investigate API key is invalid.")
             self.errorState = True
             return None
