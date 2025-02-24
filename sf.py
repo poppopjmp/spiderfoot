@@ -93,7 +93,7 @@ def main() -> None:
 
         p = argparse.ArgumentParser(description="SpiderFoot v5.0.1: Open Source Intelligence Automation.")  # Define p first
         p.add_argument("-d", "--debug", action='store_true', help="Enable debug output.")
-        p.add_argument("-l", metavar="IP:port", help="IP and port to listen on.")
+        p.add_argument("-l", "--listen", metavar="IP:port", help="IP and port to listen on.")
         p.add_argument("-m", metavar="mod1,mod2,...", type=str, help="Modules to enable.")
         p.add_argument("-M", "--modules", action='store_true', help="List available modules.")
         p.add_argument("-C", "--correlate", metavar="scanID", help="Run correlation rules against a scan ID.")
@@ -217,9 +217,9 @@ def main() -> None:
                 print(f"{t.ljust(45)}  {types[t]}")
             sys.exit(0)
 
-        if args.l:
+        if args.listen:
             try:
-                (host, port) = args.l.split(":")
+                (host, port) = args.listen.split(":")
             except Exception:
                 log.critical("Invalid ip:port format.")
                 sys.exit(-1)
@@ -265,7 +265,7 @@ def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
             log.error("Based on your criteria, no modules were enabled.")
             sys.exit(-1)
 
-        modlist += ["sfp__stor_db", "sfp__stor_stdout"]
+        modlist += ["sfp__stor_db", "sfp__stor_stdout", "sfp__stor_elasticsearch"]
 
         if sfConfig['__logging']:
             log.info(f"Modules enabled ({len(modlist)}): {','.join(modlist)}")
@@ -571,7 +571,7 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
         using_ssl = False
         key_path = SpiderFootHelpers.dataPath() + '/spiderfoot.key'
         crt_path = SpiderFootHelpers.dataPath() + '/spiderfoot.crt'
-        if os.path.isfile(key_path) and os.path.isfile(crt_path):
+        if os.path.isfile(key_path) and os.path.isfile(crt_path)):
             if not os.access(crt_path, os.R_OK):
                 log.critical(f"Could not read {crt_path} file. Permission denied.")
                 sys.exit(-1)
