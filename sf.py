@@ -34,6 +34,7 @@ from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootCorrelator
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 from spiderfoot import __version__
+from spiderfoot.api import app  # Pd207
 
 scanId = None
 dbh = None
