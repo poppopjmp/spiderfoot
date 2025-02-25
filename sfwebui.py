@@ -21,9 +21,6 @@ from copy import deepcopy
 from io import BytesIO, StringIO
 from operator import itemgetter
 
-import cherrypy
-from cherrypy import _cperror
-
 from mako.lookup import TemplateLookup
 from mako.template import Template
 
@@ -92,12 +89,6 @@ class SpiderFootWebUi:
         logWorkerSetup(self.loggingQueue)
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
 
-        cherrypy.config.update({
-            'error_page.401': self.error_page_401,
-            'error_page.404': self.error_page_404,
-            'request.error_response': self.error_page
-        })
-
         csp = (
             secure.ContentSecurityPolicy()
             .default_src("'self'")
@@ -115,11 +106,6 @@ class SpiderFootWebUi:
             csp=csp,
             referrer=secure.ReferrerPolicy().no_referrer(),
         )
-
-        cherrypy.config.update({
-            "tools.response_headers.on": True,
-            "tools.response_headers.headers": secure_headers.framework.cherrypy()
-        })
 
     def error_page(self: 'SpiderFootWebUi') -> None:
         """Error page."""

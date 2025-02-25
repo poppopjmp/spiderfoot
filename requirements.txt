@@ -7,6 +7,7 @@ cryptography==44.0.1
 dnspython==2.6.1; python_version >= '3.8'
 elasticsearch==7.13.4
 exifread==2.3.2
+fastapi
 ipaddr==2.2.0
 ipwhois==1.3.0
 lxml==4.9.2
@@ -29,6 +30,7 @@ requests==2.26.0
 secure==0.3.0
 pillow>=10.3.0 # not directly required, pinned by Snyk to avoid a vulnerability
 setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
+uvicorn
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 zoomeyeai
 netlas
