@@ -117,6 +117,23 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
  docker-compose up
 ```
 
+#### Building the npm project:
+
+1. Navigate to the `spiderfoot/static` directory:
+   ```
+   cd spiderfoot/static
+   ```
+
+2. Install the necessary dependencies using `npm install`:
+   ```
+   npm install
+   ```
+
+3. Run the build script using `npm run build`:
+   ```
+   npm run build
+   ```
+
 Check out the [documentation](https://www.spiderfoot.net/documentation) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
 
 ### CONFIGURING POSTGRESQL
