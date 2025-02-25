@@ -40,7 +40,7 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
         """
         Test handleEvent() with a blocked domain.
         Args:
-            mock_getaddrinfo (MagicMock): Mock for mock_getaddrinfo.
+            mock_getaddrinfo (MagicMock): Mock for requests.getaddrinfo.
         """
         # Mock the DNS response for a blocked domain (adult category)
         mock_getaddrinfo.return_value = [(2, 1, 6, '', ('1.1.1.2', 53))]  # Simulate a blocked IP response

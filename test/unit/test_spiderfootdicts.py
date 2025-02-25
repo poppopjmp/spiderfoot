@@ -27,6 +27,6 @@ class TestSpiderFootDicts(unittest.TestCase):
         self.assertIsInstance(ispell.spanish_dict, list)
         self.assertGreater(len(ispell.spanish_dict), 0)
 
+
 if __name__ == "__main__":
-    
     unittest.main()

@@ -3,7 +3,10 @@ import unittest
 
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from modules import *
+from modules.sfp_fofa import sfp_fofa
+from modules.sfp_netlas import sfp_netlas
+from modules.sfp_rocketreach import sfp_rocketreach
+from modules.sfp_zoomeye import sfp_zoomeye
 
 
 @pytest.mark.usefixtures

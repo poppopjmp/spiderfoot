@@ -14,5 +14,4 @@ class TestSpiderFootInit(unittest.TestCase):
         self.assertIsNotNone(__version__)
 
 if __name__ == "__main__":
-    
     unittest.main()

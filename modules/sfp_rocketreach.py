@@ -46,7 +46,7 @@ class sfp_rocketreach(SpiderFootPlugin):
     opts = {
         "api_key": "",
         "delay": 1,
-        "max_results": 100, # Adapting to official API limit/pagination.
+        "max_results": 100,  # Adapting to official API limit/pagination.
     }
 
     optdescs = {
