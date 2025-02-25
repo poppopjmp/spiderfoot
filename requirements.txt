@@ -24,7 +24,7 @@ pypdf2==2.10.6
 pysocks==1.7.1
 python-docx==1.1.2
 python-pptx==0.6.21
-python-whois==0.7.3
+python-whois==0.9.5
 pyyaml==6.0.0
 requests==2.26.0
 secure==0.3.0
