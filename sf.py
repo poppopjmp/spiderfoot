@@ -80,8 +80,6 @@ sfOptdescs = {
 }
 
 def main() -> None:
-
-
     """
     Main function to parse command-line arguments and start the appropriate SpiderFoot functionality.
     """

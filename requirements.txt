@@ -33,4 +33,4 @@ setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerabil
 uvicorn
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 zoomeyeai
-netlas==1.0.0
+netlas

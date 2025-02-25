@@ -1,6 +1,5 @@
 # test_sfwebui.py
 import os
-import unittest
 
 import cherrypy
 from cherrypy.test import helper

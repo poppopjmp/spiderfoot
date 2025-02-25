@@ -11,7 +11,6 @@
 import json
 import time
 import urllib
-from urllib.parse import urlparse
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
@@ -217,7 +216,7 @@ class sfp_netlas(SpiderFootPlugin):
             self.notifyListeners(e)
 
             geoinfo = data.get('geoinfo')
-            if geoinfo:
+            if (geoinfo):
                 e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
                 self.notifyListeners(e)
 

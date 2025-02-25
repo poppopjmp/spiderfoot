@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from modules.sfp_netlas import sfp_netlas
 from sflib import SpiderFoot, SpiderFootEvent, SpiderFootTarget
 
