@@ -117,6 +117,32 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
  docker-compose up
 ```
 
+#### Starting the web interface:
+
+1. Ensure you have Node.js and npm installed on your system. If not, download and install them from [Node.js](https://nodejs.org/).
+
+2. Navigate to the `spiderfoot/static` directory:
+   ```
+   cd spiderfoot/static
+   ```
+
+3. Install the required npm packages:
+   ```
+   npm install
+   ```
+
+4. Build the React application:
+   ```
+   npm run build
+   ```
+
+5. Start the Python backend:
+   ```
+   python3 ./sf.py -l 127.0.0.1:5001
+   ```
+
+6. Open your web browser and go to `http://127.0.0.1:5001` to access the SpiderFoot web interface.
+
 Check out the [documentation](https://www.spiderfoot.net/documentation) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
 
 ### CONFIGURING POSTGRESQL
