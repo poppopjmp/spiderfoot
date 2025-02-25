@@ -47,7 +47,7 @@ class sfp_fofa(SpiderFootPlugin):
     opts = {
         "api_email": "",
         "api_key": "",
-        "max_age_days": 30, #limit results to the past X days.
+        "max_age_days": 30,  # limit results to the past X days.
     }
 
     optdescs = {
@@ -88,9 +88,9 @@ class sfp_fofa(SpiderFootPlugin):
             'email': api_email,
             'key': api_key,
             'qbase64': query_encoded,
-            'size': 100, #Get a reasonable amount of data.
-            'fields': 'host,ip,domain,ipv6', #retrieve only the fields we care about.
-            'time': f'-{max_age_days}d', #limit to max_age_days
+            'size': 100,  # Get a reasonable amount of data.
+            'fields': 'host,ip,domain,ipv6',  # retrieve only the fields we care about.
+            'time': f'-{max_age_days}d',  # limit to max_age_days
         })
 
         url = f"https://fofa.info/api/v1/search/all?{params}"

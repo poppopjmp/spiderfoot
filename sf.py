@@ -33,7 +33,6 @@ from spiderfoot import SpiderFootHelpers
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootCorrelator
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
-from spiderfoot import __version__
 
 scanId = None
 dbh = None
@@ -79,8 +78,6 @@ sfOptdescs = {
 }
 
 def main() -> None:
-
-
     """
     Main function to parse command-line arguments and start the appropriate SpiderFoot functionality.
     """

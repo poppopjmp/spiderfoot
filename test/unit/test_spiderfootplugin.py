@@ -171,13 +171,13 @@ class TestSpiderFootPlugin(unittest.TestCase):
         # No assertions as finish is meant to be overridden
 
     def test_threadWorker(self):
-        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute') as mock_poolExecute:
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute'):
             self.plugin.incomingEventQueue = MagicMock()
             self.plugin.outgoingEventQueue = MagicMock()
             self.plugin.incomingEventQueue.get_nowait.side_effect = ["FINISHED", queue.Empty]
             self.plugin.threadWorker()
             mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
-            mock_poolExecute.assert_called_once_with(self.plugin.finish)
+            self.plugin.poolExecute.assert_called_once_with(self.plugin.finish)
 
     def test_poolExecute(self):
         callback = MagicMock()
@@ -252,38 +252,37 @@ class TestSpiderFootPlugin(unittest.TestCase):
 
     def test_checkForStop_with_no_scan_status(self):
         self.plugin.__scanId__ = "test_scan"
-        self.plugin.__sfdb__ = MagicMock()
         self.plugin.__sfdb__.scanInstanceGet.return_value = None
         self.assertFalse(self.plugin.checkForStop())
 
     def test_threadWorker_with_incomingEventQueue(self):
-        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute') as mock_poolExecute:
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute'):
             self.plugin.incomingEventQueue = MagicMock()
             self.plugin.outgoingEventQueue = MagicMock()
             self.plugin.incomingEventQueue.get_nowait.side_effect = [SpiderFootEvent("ROOT", "data", "module", None), "FINISHED", queue.Empty]
             self.plugin.threadWorker()
             mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
-            self.assertEqual(mock_poolExecute.call_count, 2)
+            self.assertEqual(self.plugin.poolExecute.call_count, 2)
 
     def test_threadWorker_with_exception(self):
-        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute') as mock_poolExecute, patch.object(self.plugin, 'sf') as mock_sf:
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute'), patch.object(self.plugin, 'sf'):
             self.plugin.incomingEventQueue = MagicMock()
             self.plugin.outgoingEventQueue = MagicMock()
             self.plugin.incomingEventQueue.get_nowait.side_effect = Exception("Test exception")
             self.plugin.threadWorker()
             mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
-            mock_sf.error.assert_called_once()
+            self.plugin.sf.error.assert_called_once()
             self.assertTrue(self.plugin.errorState)
             self.plugin.incomingEventQueue.get_nowait.assert_called()
 
     def test_threadWorker_with_keyboard_interrupt(self):
-        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'sf') as mock_sf:
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'sf'):
             self.plugin.incomingEventQueue = MagicMock()
             self.plugin.outgoingEventQueue = MagicMock()
             self.plugin.incomingEventQueue.get_nowait.side_effect = KeyboardInterrupt
             self.plugin.threadWorker()
             mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
-            mock_sf.debug.assert_called_once_with(f"Interrupted module {self.plugin.__name__}.")
+            self.plugin.sf.debug.assert_called_once_with(f"Interrupted module {self.plugin.__name__}.")
             self.assertTrue(self.plugin._stopScanning)
 
     def test_poolExecute_with_shared_thread_pool(self):

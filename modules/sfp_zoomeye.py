@@ -10,7 +10,6 @@
 # Licence:  MIT
 # -------------------------------------------------------------------------------
 
-import json
 import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
