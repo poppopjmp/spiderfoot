@@ -5,7 +5,7 @@ cherrypy==18.8.0
 cherrypy-cors==1.6
 cryptography==44.0.1
 dnspython==2.6.1; python_version >= '3.8'
-elasticsearch==7.13.4
+elasticsearch==8.17.1
 exifread==2.3.2
 fastapi
 ipaddr==2.2.0
