@@ -145,3 +145,40 @@ Contributions are welcome! Please open an issue or submit a pull request with yo
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.
+
+## Building and Serving the Production Version
+
+To build the React app for production, run the following command:
+
+```bash
+npm run build
+```
+
+This will create a `build` directory inside the `client` directory with the production build of the React app.
+
+To serve the production version of the React app, run the following command:
+
+```bash
+npm start
+```
+
+This will start the Express.js server and serve the static files from the `client/build` directory.
+
+## Integrating the Spiderfoot Logo
+
+To integrate the Spiderfoot logo in the React web app, follow these steps:
+
+1. Add the Spiderfoot logo image file to the `client/src` directory.
+2. Import the logo image in the `App.js` file:
+
+```javascript
+import logo from './logo.png';
+```
+
+3. Add the logo image to the JSX in the `App.js` file:
+
+```javascript
+<img src={logo} alt="Spiderfoot Logo" />
+```
+
+This will display the Spiderfoot logo in the React web app.

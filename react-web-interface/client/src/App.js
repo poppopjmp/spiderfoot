@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import logo from './logo.png';
 
 const App = () => {
   const [target, setTarget] = useState('');
@@ -114,6 +115,7 @@ const App = () => {
   return (
     <div>
       <h1>SpiderFoot React Web Interface</h1>
+      <img src={logo} alt="Spiderfoot Logo" />
       <div>
         <h2>Start Scan</h2>
         <input
