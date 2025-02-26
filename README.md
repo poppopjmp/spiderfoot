@@ -35,6 +35,7 @@ SpiderFoot has an embedded web-server for providing a clean and intuitive web-ba
 - Dockerfile for Docker-based deployments
 - Can call other tools like DNSTwist, Whatweb, Nmap and CMSeeK
 - [Actively developed since 2012!](https://medium.com/@micallst/lessons-learned-from-my-10-year-open-source-project-4a4c8c2b4f64)
+- REST API for programmatic access to all functionalities
 
 ### WANT MORE?
 **This extra feature are in roadmap integrating them in the opensource project**
@@ -115,6 +116,14 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 
 ```
  docker-compose up
+```
+
+#### Running the REST API server:
+
+To run the REST API server, use the following command:
+
+```
+python3 ./sf.py --rest-api
 ```
 
 Check out the [documentation](https://www.spiderfoot.net/documentation) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
@@ -436,3 +445,42 @@ To trigger a release build manually using the GitHub Actions workflow, follow th
 6. Click on the "Run workflow" button to start the release build process.
 
 The GitHub Actions workflow will handle the rest, including checking out the repository, setting up Python, installing dependencies, running tests, building the Docker image, and pushing the Github Content Registry
+
+### REST API USAGE
+
+The SpiderFoot REST API allows you to interact with SpiderFoot programmatically. The API provides endpoints for starting scans, stopping scans, retrieving scan results, listing available modules, listing active scans, getting scan status, listing scan history, exporting scan results, importing API keys, and exporting API keys.
+
+#### Available Endpoints
+
+- `GET /api/scan/start`: Start a new scan
+- `POST /api/scan/stop`: Stop an ongoing scan
+- `GET /api/scan/results`: Retrieve scan results
+- `GET /api/modules`: List available modules
+- `GET /api/scans/active`: List active scans
+- `GET /api/scan/status`: Get the status of a specific scan
+- `GET /api/scans/history`: List the history of all scans performed
+- `GET /api/scan/export`: Export scan results in various formats (e.g., CSV, JSON)
+- `POST /api/keys/import`: Import API keys for various modules
+- `GET /api/keys/export`: Export API keys for various modules
+
+#### Example Usage
+
+To start a new scan, send a `GET` request to the `/api/scan/start` endpoint with the required parameters:
+
+```bash
+curl -X GET "http://127.0.0.1:8000/api/scan/start?target=example.com&modules=module1,module2"
+```
+
+To stop an ongoing scan, send a `POST` request to the `/api/scan/stop` endpoint with the scan ID:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/scan/stop" -d '{"scan_id": "12345"}'
+```
+
+To retrieve scan results, send a `GET` request to the `/api/scan/results` endpoint with the scan ID:
+
+```bash
+curl -X GET "http://127.0.0.1:8000/api/scan/results?scan_id=12345"
+```
+
+For more detailed instructions and examples, refer to the API documentation.
