@@ -246,3 +246,11 @@ class TestSpiderFootWebUiRoutes(helper.CPWebCase):
     def test_scanelementtypediscovery_invalid_scan_id_returns_200(self):
         self.getPage("/scanelementtypediscovery?id=doesnotexist&eventType=anything")
         self.assertStatus('200 OK')
+
+    def test_scanexportlogs_invalid_scan_id_returns_200(self):
+        self.getPage("/scanexportlogs?id=doesnotexist")
+        self.assertStatus('200 OK')
+
+    def test_scancorrelationsexport_invalid_scan_id_returns_200(self):
+        self.getPage("/scancorrelationsexport?id=doesnotexist")
+        self.assertStatus('200 OK')

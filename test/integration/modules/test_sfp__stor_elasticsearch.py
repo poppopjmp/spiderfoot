@@ -1,5 +1,7 @@
 import pytest
 import unittest
+import time
+from elasticsearch import Elasticsearch, ElasticsearchException
 
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
 from sflib import SpiderFoot
@@ -9,12 +11,25 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 @pytest.mark.usefixtures
 class TestModuleIntegration_stor_elasticsearch(unittest.TestCase):
 
+    def setup_elasticsearch_with_retries(self, timeout, retries=3, backoff_factor=0.3):
+        for i in range(retries):
+            try:
+                es = Elasticsearch(timeout=timeout)
+                es.info()  # Check if the connection is successful
+                return es
+            except ElasticsearchException as e:
+                if i < retries - 1:
+                    time.sleep(backoff_factor * (2 ** i))
+                else:
+                    raise e
+
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp__stor_elasticsearch()
         module.setup(sf, dict())
 
+        module.es = self.setup_elasticsearch_with_retries(timeout=10)
         self.assertIsNotNone(module.es)
 
     def test_watchedEvents(self):

@@ -1,5 +1,7 @@
 import unittest
 from unittest.mock import patch
+import requests
+import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_abusech import sfp_abusech
@@ -13,6 +15,18 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
         self.module = sfp_abusech()
         self.module.setup(self.sf, dict())
 
+    def requests_get_with_retries(self, url, timeout, retries=3, backoff_factor=0.3):
+        for i in range(retries):
+            try:
+                response = requests.get(url, timeout=timeout)
+                response.raise_for_status()
+                return response
+            except requests.RequestException as e:
+                if i < retries - 1:
+                    time.sleep(backoff_factor * (2 ** i))
+                else:
+                    raise e
+
     @patch('modules.sfp_abusech.requests.get')
     def test_handleEvent_malicious_ip(self, mock_get):
         """
@@ -25,7 +39,7 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
             "malware": "Example Malware",
             "firstseen": "2023-01-01",
         }
-        mock_get.return_value.json.return_value = mock_response_data
+        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(url, timeout)
 
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
@@ -48,7 +62,7 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
         Args:
             mock_get: Mock for requests.get
         """
-        mock_get.return_value.json.return_value = None  # No data for benign IP
+        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(url, timeout)
 
         target_value = '192.168.1.1'  # Example benign IP
         target_type = 'IP_ADDRESS'
@@ -69,7 +83,7 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
         Args:
             mock_get: Mock for requests.get
         """
-        mock_get.return_value.status_code = 500  # Simulate an API error
+        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(url, timeout)
 
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
