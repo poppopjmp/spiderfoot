@@ -35,6 +35,7 @@ SpiderFoot has an embedded web-server for providing a clean and intuitive web-ba
 - Dockerfile for Docker-based deployments
 - Can call other tools like DNSTwist, Whatweb, Nmap and CMSeeK
 - [Actively developed since 2012!](https://medium.com/@micallst/lessons-learned-from-my-10-year-open-source-project-4a4c8c2b4f64)
+- REST API for programmatic access to all functionalities
 
 ### WANT MORE?
 **This extra feature are in roadmap integrating them in the opensource project**
@@ -115,6 +116,14 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 
 ```
  docker-compose up
+```
+
+#### Running the REST API server:
+
+To run the REST API server, use the following command:
+
+```
+python3 ./sf.py --rest-api
 ```
 
 Check out the [documentation](https://www.spiderfoot.net/documentation) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
@@ -436,3 +445,169 @@ To trigger a release build manually using the GitHub Actions workflow, follow th
 6. Click on the "Run workflow" button to start the release build process.
 
 The GitHub Actions workflow will handle the rest, including checking out the repository, setting up Python, installing dependencies, running tests, building the Docker image, and pushing the Github Content Registry
+
+### REST API USAGE
+
+The SpiderFoot REST API allows you to interact with SpiderFoot programmatically. The API provides endpoints for starting scans, stopping scans, retrieving scan results, listing available modules, listing active scans, getting scan status, listing scan history, exporting scan results, importing API keys, and exporting API keys.
+
+#### Available Endpoints
+
+- `GET /api/scan/start`: Start a new scan
+- `POST /api/scan/stop`: Stop an ongoing scan
+- `GET /api/scan/results`: Retrieve scan results
+- `GET /api/modules`: List available modules
+- `GET /api/scans/active`: List active scans
+- `GET /api/scan/status`: Get the status of a specific scan
+- `GET /api/scans/history`: List the history of all scans performed
+- `GET /api/scan/export`: Export scan results in various formats (e.g., CSV, JSON)
+- `POST /api/keys/import`: Import API keys for various modules
+- `GET /api/keys/export`: Export API keys for various modules
+
+#### Example Usage
+
+To start a new scan, send a `GET` request to the `/api/scan/start` endpoint with the required parameters:
+
+```bash
+curl -X GET "http://127.0.0.1:8000/api/scan/start?target=example.com&modules=module1,module2"
+```
+
+To stop an ongoing scan, send a `POST` request to the `/api/scan/stop` endpoint with the scan ID:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/scan/stop" -d '{"scan_id": "12345"}'
+```
+
+To retrieve scan results, send a `GET` request to the `/api/scan/results` endpoint with the scan ID:
+
+```bash
+curl -X GET "http://127.0.0.1:8000/api/scan/results?scan_id=12345"
+```
+
+For more detailed instructions and examples, refer to the API documentation.
+
+### BUILD PROCESS OF REACT WEB INTERFACE
+
+The React web interface for SpiderFoot provides an alternative web interface with a completely new design. Follow the steps below to set up and run the React web interface.
+
+#### Prerequisites
+
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+
+#### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/poppopjmp/spiderfoot.git
+cd spiderfoot/react-web-interface
+```
+
+2. Install the dependencies:
+
+```bash
+npm install
+```
+
+3. Start the development server:
+
+```bash
+npm run dev
+```
+
+This will start both the Express.js server and the React development server concurrently.
+
+#### Available Scripts
+
+In the project directory, you can run the following scripts:
+
+- `npm start`: Runs the Express.js server.
+- `npm run client`: Runs the React development server.
+- `npm run server`: Runs the Express.js server with nodemon for automatic restarts.
+- `npm run dev`: Runs both the Express.js server and the React development server concurrently.
+
+#### Project Structure
+
+The project structure is as follows:
+
+```
+react-web-interface/
+├── client/
+│   ├── public/
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── index.js
+│   │   └── ...
+│   └── package.json
+├── server.js
+├── package.json
+└── README.md
+```
+
+- `client/`: Contains the React front-end code.
+- `server.js`: Contains the Express.js server code.
+- `package.json`: Contains the project dependencies and scripts.
+- `README.md`: This file.
+
+#### Usage
+
+The React web interface provides the following functionalities:
+
+- Start a scan
+- Stop a scan
+- Retrieve scan results
+- List available modules
+- List active scans
+- Get scan status
+- List scan history
+- Export scan results
+- Import API keys
+- Export API keys
+
+##### Start a Scan
+
+To start a new scan, enter the target and select the modules you want to use, then click the "Start Scan" button.
+
+##### Stop a Scan
+
+To stop an ongoing scan, enter the scan ID and click the "Stop Scan" button.
+
+##### Retrieve Scan Results
+
+To retrieve the results of a completed scan, enter the scan ID and click the "Get Scan Results" button.
+
+##### List Available Modules
+
+The available modules are listed in the "Start Scan" section. You can select multiple modules to use in a scan.
+
+##### List Active Scans
+
+The active scans are listed in the "Active Scans" section.
+
+##### Get Scan Status
+
+To get the status of a specific scan, enter the scan ID and click the "Get Scan Status" button.
+
+##### List Scan History
+
+The scan history is listed in the "Scan History" section.
+
+##### Export Scan Results
+
+To export the results of a completed scan, enter the scan ID and click the "Export as CSV" or "Export as JSON" button.
+
+##### Import API Keys
+
+To import an API key for a module, enter the API key and click the "Import API Key" button.
+
+##### Export API Keys
+
+The exported API keys are listed in the "API Keys" section.
+
+#### Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request with your changes.
+
+#### License
+
+This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.

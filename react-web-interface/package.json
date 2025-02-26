@@ -1,0 +1,24 @@
+{
+  "name": "react-web-interface",
+  "version": "1.0.0",
+  "description": "Alternative web interface for SpiderFoot using React",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "client": "cd client && npm start",
+    "server": "nodemon server.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "axios": "^0.21.1",
+    "concurrently": "^5.3.0",
+    "nodemon": "^2.0.7"
+  },
+  "devDependencies": {
+    "eslint": "^7.20.0",
+    "eslint-plugin-react": "^7.22.0"
+  },
+  "author": "",
+  "license": "ISC"
+}
