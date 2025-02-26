@@ -43,7 +43,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest --cov --junitxml=junit.xml -o junit_family=legacy -n auto --dist loadfile --ignore=test/integration/modules/ --durations=5
+          pytest --cov -n auto --dist loadfile --ignore=test/integration/modules/ --durations=5 --cov-report term
       - uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: false
