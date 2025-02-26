@@ -1,5 +1,0 @@
-- name: Generate Code Climate report
-  uses: irongut/CodeClimatePublisher@master
-  with: 
-    coverageCommand: pytest --cov=spiderfoot tests/
-    token: ${{ secrets.GITHUB_TOKEN }}
