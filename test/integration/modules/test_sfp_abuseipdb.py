@@ -1,5 +1,7 @@
 import unittest
 from unittest.mock import patch
+import requests
+import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_abuseipdb import sfp_abuseipdb
@@ -12,6 +14,18 @@ class TestModuleIntegrationAbuseIPDB(unittest.TestCase):
         self.sf = SpiderFoot(self.default_options)  # Assuming default_options is defined
         self.module = sfp_abuseipdb()
         self.module.setup(self.sf, dict())
+
+    def requests_get_with_retries(self, url, timeout, retries=3, backoff_factor=0.3):
+        for i in range(retries):
+            try:
+                response = requests.get(url, timeout=timeout)
+                response.raise_for_status()
+                return response
+            except requests.RequestException as e:
+                if i < retries - 1:
+                    time.sleep(backoff_factor * (2 ** i))
+                else:
+                    raise e
 
     @patch('modules.sfp_abuseipdb.requests.get')
     def test_handleEvent_malicious_ip(self, mock_get):
@@ -33,7 +47,7 @@ class TestModuleIntegrationAbuseIPDB(unittest.TestCase):
                 "lastReportedAt": "2023-10-26T12:00:00Z",
             }
         }
-        mock_get.return_value.json.return_value = mock_response_data
+        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(url, timeout)
 
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
