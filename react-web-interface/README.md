@@ -22,13 +22,19 @@ cd spiderfoot/react-web-interface
 npm install
 ```
 
-3. Start the development server:
+3. Build the React app:
 
 ```bash
-npm run dev
+npm run build
 ```
 
-This will start both the Express.js server and the React development server concurrently.
+4. Start the production server:
+
+```bash
+npm start
+```
+
+This will build the React app and start the Express.js server to serve the production version of the app.
 
 ## Available Scripts
 
@@ -49,6 +55,10 @@ Runs the Express.js server with nodemon for automatic restarts.
 ### `npm run dev`
 
 Runs both the Express.js server and the React development server concurrently.
+
+### `npm run build`
+
+Builds the React app for production.
 
 ## Project Structure
 
