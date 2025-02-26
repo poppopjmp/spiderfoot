@@ -484,3 +484,130 @@ curl -X GET "http://127.0.0.1:8000/api/scan/results?scan_id=12345"
 ```
 
 For more detailed instructions and examples, refer to the API documentation.
+
+### BUILD PROCESS OF REACT WEB INTERFACE
+
+The React web interface for SpiderFoot provides an alternative web interface with a completely new design. Follow the steps below to set up and run the React web interface.
+
+#### Prerequisites
+
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+
+#### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/poppopjmp/spiderfoot.git
+cd spiderfoot/react-web-interface
+```
+
+2. Install the dependencies:
+
+```bash
+npm install
+```
+
+3. Start the development server:
+
+```bash
+npm run dev
+```
+
+This will start both the Express.js server and the React development server concurrently.
+
+#### Available Scripts
+
+In the project directory, you can run the following scripts:
+
+- `npm start`: Runs the Express.js server.
+- `npm run client`: Runs the React development server.
+- `npm run server`: Runs the Express.js server with nodemon for automatic restarts.
+- `npm run dev`: Runs both the Express.js server and the React development server concurrently.
+
+#### Project Structure
+
+The project structure is as follows:
+
+```
+react-web-interface/
+├── client/
+│   ├── public/
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── index.js
+│   │   └── ...
+│   └── package.json
+├── server.js
+├── package.json
+└── README.md
+```
+
+- `client/`: Contains the React front-end code.
+- `server.js`: Contains the Express.js server code.
+- `package.json`: Contains the project dependencies and scripts.
+- `README.md`: This file.
+
+#### Usage
+
+The React web interface provides the following functionalities:
+
+- Start a scan
+- Stop a scan
+- Retrieve scan results
+- List available modules
+- List active scans
+- Get scan status
+- List scan history
+- Export scan results
+- Import API keys
+- Export API keys
+
+##### Start a Scan
+
+To start a new scan, enter the target and select the modules you want to use, then click the "Start Scan" button.
+
+##### Stop a Scan
+
+To stop an ongoing scan, enter the scan ID and click the "Stop Scan" button.
+
+##### Retrieve Scan Results
+
+To retrieve the results of a completed scan, enter the scan ID and click the "Get Scan Results" button.
+
+##### List Available Modules
+
+The available modules are listed in the "Start Scan" section. You can select multiple modules to use in a scan.
+
+##### List Active Scans
+
+The active scans are listed in the "Active Scans" section.
+
+##### Get Scan Status
+
+To get the status of a specific scan, enter the scan ID and click the "Get Scan Status" button.
+
+##### List Scan History
+
+The scan history is listed in the "Scan History" section.
+
+##### Export Scan Results
+
+To export the results of a completed scan, enter the scan ID and click the "Export as CSV" or "Export as JSON" button.
+
+##### Import API Keys
+
+To import an API key for a module, enter the API key and click the "Import API Key" button.
+
+##### Export API Keys
+
+The exported API keys are listed in the "API Keys" section.
+
+#### Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request with your changes.
+
+#### License
+
+This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.
