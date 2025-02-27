@@ -205,3 +205,31 @@ window.addEventListener("resize", () => {
     document.body.style.fontSize = "1rem";
   }
 });
+
+// Add a new function for geo visualization using d3
+sf.geoVisualization = function (data) {
+  const width = 960;
+  const height = 500;
+
+  const projection = d3.geoMercator()
+    .scale(150)
+    .translate([width / 2, height / 2]);
+
+  const path = d3.geoPath().projection(projection);
+
+  const svg = d3.select("#geo-visualization").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  d3.json("https://d3js.org/world-50m.v1.json").then(world => {
+    svg.append("path")
+      .datum(topojson.feature(world, world.objects.countries))
+      .attr("d", path);
+
+    svg.selectAll(".pin")
+      .data(data)
+      .enter().append("circle", ".pin")
+      .attr("r", 5)
+      .attr("transform", d => `translate(${projection([d.longitude, d.latitude])})`);
+  });
+};
