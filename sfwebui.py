@@ -101,19 +101,13 @@ class SpiderFootWebUi:
             .img_src("'self'", "data:")
         )
 
-        secure_headers = secure.Secure(
-            server=secure.Server().set("server"),
-            cache=secure.CacheControl().must_revalidate(),
-            csp=csp,
-            referrer=secure.ReferrerPolicy().no_referrer(),
-        )
 
     def error_page(self: 'SpiderFootWebUi') -> None:
         """Error page."""
         cherrypy.response.status = 500
 
         if self.config.get('_debug'):
-            cherrypy.response.body = _cperror.get_error_page(status=500, traceback=_cperror.format_exc())
+            cherrypy.response.body = cherrypy._cperror.get_error_page(status=500, traceback=cherrypy._cperror.format_exc())
         else:
             cherrypy.response.body = b"<html><body>Error</body></html>"
 

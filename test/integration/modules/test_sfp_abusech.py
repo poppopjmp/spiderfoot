@@ -34,11 +34,6 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
         Args:
             mock_get: Mock for requests.get
         """
-        mock_response_data = {
-            "ip": "1.2.3.4",
-            "malware": "Example Malware",
-            "firstseen": "2023-01-01",
-        }
         mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(url, timeout)
 
         target_value = '1.2.3.4'

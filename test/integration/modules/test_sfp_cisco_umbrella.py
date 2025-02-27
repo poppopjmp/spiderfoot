@@ -69,7 +69,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         result = module.query('google.com')
         self.assertTrue(isinstance(result, dict))
         self.assertTrue(result.get('domain', ''))
-        self.assertTrue(isinstance(result.get('data', None), list))
+        self.assertTrue(isinstance(result.get("data"), list))
 
     def test_handleEvent_no_api_key(self):
         sf = SpiderFootHelpers.SpiderFootHelpers()
