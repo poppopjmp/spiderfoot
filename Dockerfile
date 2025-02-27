@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libxml2 libxslt
 RUN apt-get -y update && apt-get -y install nbtscan onesixtyone nmap whatweb bsdmainutils dnsutils coreutils libcap2-bin
 RUN mkdir /tools 
 WORKDIR /tools
-RUN pip install --no-cache-dir dnstwist==20200707 snallygaster==0.0.8 trufflehog==2.0.9 wafw00f==2.1.0 -t /tools \
+RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tools \
     && git clone --depth 1 https://github.com/testssl/testssl.sh.git \
     && git clone https://github.com/Tuhinshubhra/CMSeeK && cd CMSeeK && pip install --no-cache-dir -r requirements.txt && mkdir Results
 
