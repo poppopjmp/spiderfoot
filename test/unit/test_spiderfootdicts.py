@@ -1,6 +1,7 @@
 import unittest
 from spiderfoot.dicts import generic_usernames, ispell
 
+
 class TestSpiderFootDicts(unittest.TestCase):
 
     def test_generic_usernames(self):

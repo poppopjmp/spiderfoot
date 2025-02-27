@@ -1,6 +1,7 @@
 import unittest
 from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootThreadPool, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootCorrelator, __version__
 
+
 class TestSpiderFootInit(unittest.TestCase):
 
     def test_imports(self):
@@ -12,6 +13,7 @@ class TestSpiderFootInit(unittest.TestCase):
         self.assertIsNotNone(SpiderFootHelpers)
         self.assertIsNotNone(SpiderFootCorrelator)
         self.assertIsNotNone(__version__)
+
 
 if __name__ == "__main__":
     unittest.main()
