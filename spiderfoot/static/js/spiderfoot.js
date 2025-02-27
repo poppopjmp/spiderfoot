@@ -70,6 +70,24 @@ sf.replace_sfurltag = function (data) {
       "<a target=_new href='$1'>$1</a>"
     );
   }
+
+  // Use sigma for data visualization
+  const s = new sigma({
+    graph: {
+      nodes: [
+        { id: 'n0', label: 'Node 0', x: 0, y: 0, size: 1, color: '#f00' },
+        { id: 'n1', label: 'Node 1', x: 1, y: 1, size: 1, color: '#0f0' },
+        { id: 'n2', label: 'Node 2', x: 2, y: 2, size: 1, color: '#00f' }
+      ],
+      edges: [
+        { id: 'e0', source: 'n0', target: 'n1', color: '#ccc' },
+        { id: 'e1', source: 'n1', target: 'n2', color: '#ccc' },
+        { id: 'e2', source: 'n2', target: 'n0', color: '#ccc' }
+      ]
+    },
+    container: 'sigma-container'
+  });
+
   return data;
 };
 
