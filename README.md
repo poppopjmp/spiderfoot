@@ -3,7 +3,7 @@
 ### **This fork aim to keep the project mantained and try to add more functionality to the project**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
-[![Python Version](https://img.shields.io/badge/python-3.7+-green)](https://www.python.org)
+[![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
 [![Stable Release](https://img.shields.io/badge/version-5.0.2-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.2)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
 [![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
