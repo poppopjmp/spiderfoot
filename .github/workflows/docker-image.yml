@@ -17,7 +17,7 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Lint Dockerfile with Hadolint
-      uses: hadolint/hadolint-action@v31.2.0
+      uses: hadolint/hadolint-action@v3.1.0
       with:
         dockerfile: Dockerfile
         
