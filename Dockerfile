@@ -5,7 +5,7 @@
 
 FROM debian:bullseye-slim
 ARG REQUIREMENTS=requirements.txt
-RUN apt-get update && apt-get install -y gcc git curl swig libxml2-dev libxslt-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev python3 python3-pip
+RUN apt-get update && apt-get install -y --no-install-recommends gcc git curl swig libxml2-dev libxslt-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev python3 python3-pip
 WORKDIR /home/spiderfoot
 COPY $REQUIREMENTS requirements.txt ./
 RUN pip install --no-cache-dir -U pip==25.0.1 && pip install --no-cache-dir -r requirements.txt
@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libxml2 libxslt
     && chown spiderfoot:spiderfoot $SPIDERFOOT_CACHE
 
 # Install tools/dependencies from apt
-RUN apt-get -y update && apt-get -y install nbtscan onesixtyone nmap whatweb bsdmainutils dnsutils coreutils libcap2-bin
+RUN apt-get -y update && apt-get install -y --no-install-recommends nbtscan onesixtyone nmap whatweb bsdmainutils dnsutils coreutils libcap2-bin
 RUN mkdir /tools 
 WORKDIR /tools
 RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tools \
