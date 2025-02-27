@@ -16,3 +16,8 @@ spiderfoot.test.db
 __pycache__
 htmlcov/
 docs/
+
+.github
+react-web-interface
+test
+docker-compose*
