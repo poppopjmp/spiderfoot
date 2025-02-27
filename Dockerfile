@@ -5,7 +5,7 @@
 
 FROM debian:bullseye-slim
 ARG REQUIREMENTS=requirements.txt
-RUN apt-get update && apt-get install -y --no-install-recommends gcc=4:10.2.1-1 git=1:2.30.2-1+deb11u2 curl=7.74.0-1.3+deb11u7 swig=4.0.2-1 libxml2-dev=2.9.10+dfsg-6.7+deb11u5 libxslt-dev=1.1.34-4+deb11u1 libjpeg-dev=1:2.0.6-4 zlib1g-dev=1:1.2.11.dfsg-2+deb11u2 libffi-dev=3.3-6 libssl-dev=1.1.1n-0+deb11u3 cargo=0.55.0-1 rustc=1.48.0+dfsg1-2~deb11u1 python3=3.9.2-3 python3-venv=3.9.2-3 python3-pip=20.3.4-4+deb11u1 nbtscan=1.5.1-1 onesixtyone=0.3.3-1 nmap=7.91+dfsg1+really7.80+dfsg1-2+deb11u1 whatweb=0.5.3-0.1 bsdmainutils=12.1.7+nmu3 dnsutils=1:9.16.22-1~deb11u1 coreutils=8.32-4 libcap2-bin=1:2.44-1 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y gcc git curl swig libxml2-dev libxslt-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev cargo rustc python3 python3-venv python3-pip
 WORKDIR /home/spiderfoot
 #COPY $REQUIREMENTS requirements.txt ./
 RUN pip install --no-cache-dir -U pip==25.0.1 && pip install --no-cache-dir -r requirements.txt
@@ -16,7 +16,7 @@ ENV SPIDERFOOT_LOGS /var/lib/spiderfoot/log
 ENV SPIDERFOOT_CACHE /var/lib/spiderfoot/cache
 
 # Run everything as one command so that only one layer is created
-RUN apt-get update && apt-get install -y --no-install-recommends libxml2=2.9.10+dfsg-6.7+deb11u5 libxslt1.1=1.1.34-4+deb11u1 libjpeg62-turbo=1:2.0.6-4 zlib1g=1:1.2.11.dfsg-2+deb11u2 python3=3.9.2-3 \
+RUN apt-get update && apt-get install -y --no-install-recommends libxml2 libxslt1.1 libjpeg62-turbo zlib1g \
     && addgroup --system spiderfoot \
     && adduser --system --ingroup spiderfoot --home /home/spiderfoot --shell /usr/sbin/nologin \
                --gecos "SpiderFoot User" spiderfoot \
@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libxml2=2.9.10+
     && chown spiderfoot:spiderfoot $SPIDERFOOT_CACHE
 
 # Install tools/dependencies from apt
+RUN apt-get -y update && apt-get -y install nbtscan onesixtyone nmap whatweb bsdmainutils dnsutils coreutils libcap2-bin
 RUN mkdir /tools 
 WORKDIR /tools
 RUN pip install --no-cache-dir dnstwist==20200707 snallygaster==0.0.8 trufflehog==2.0.9 wafw00f==2.1.0 -t /tools \
