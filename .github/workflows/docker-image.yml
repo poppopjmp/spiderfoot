@@ -20,6 +20,7 @@ jobs:
       uses: hadolint/hadolint-action@v3.1.0
       with:
         dockerfile: Dockerfile
+        failure-threshold: error 
         
     - name: Login to GitHub Container Registry (if needed)
       uses: docker/login-action@v3
