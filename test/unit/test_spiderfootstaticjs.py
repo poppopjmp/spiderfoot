@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 
+
 class TestSpiderFootStaticJS(unittest.TestCase):
 
     @classmethod
@@ -34,6 +35,6 @@ class TestSpiderFootStaticJS(unittest.TestCase):
         result = self.driver.execute_script("return vizFunction();")
         self.assertEqual(result, "expected result")
 
+
 if __name__ == "__main__":
-    
     unittest.main()

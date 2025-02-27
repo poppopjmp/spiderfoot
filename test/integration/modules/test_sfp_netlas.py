@@ -3,6 +3,7 @@ from modules.sfp_netlas import sfp_netlas
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
+
 class TestModuleIntegrationNetlas(unittest.TestCase):
 
     def setUp(self):
