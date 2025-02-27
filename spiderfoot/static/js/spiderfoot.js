@@ -8,6 +8,13 @@
  * Licence: MIT
  */
 
+import alertify from 'alertifyjs';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import * as d3 from 'd3';
+import $ from 'jquery';
+import sigma from 'sigma';
+import 'tablesorter';
+
 // Toggler for theme
 document.addEventListener("DOMContentLoaded", () => {
   const themeToggler = document.getElementById("theme-toggler");

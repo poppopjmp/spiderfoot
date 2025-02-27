@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import alertify from 'alertifyjs';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import * as d3 from 'd3';
+import $ from 'jquery';
+import sigma from 'sigma';
+import 'tablesorter';
+
 import logo from './logo.png';
 
 const App = () => {
@@ -62,8 +69,10 @@ const App = () => {
     try {
       const response = await axios.post('/api/start_scan', { target, modules });
       setScanId(response.data.scan_id);
+      alertify.success('Scan started successfully');
     } catch (error) {
       console.error('Error starting scan:', error);
+      alertify.error('Error starting scan');
     }
   };
 
@@ -71,8 +80,10 @@ const App = () => {
     try {
       await axios.post('/api/stop_scan', { scan_id: scanId });
       setScanId('');
+      alertify.success('Scan stopped successfully');
     } catch (error) {
       console.error('Error stopping scan:', error);
+      alertify.error('Error stopping scan');
     }
   };
 
@@ -80,8 +91,10 @@ const App = () => {
     try {
       const response = await axios.get(`/api/scan_results/${scanId}`);
       setScanResults(response.data.results);
+      alertify.success('Scan results fetched successfully');
     } catch (error) {
       console.error('Error fetching scan results:', error);
+      alertify.error('Error fetching scan results');
     }
   };
 
@@ -89,8 +102,10 @@ const App = () => {
     try {
       const response = await axios.get(`/api/scan_status/${scanId}`);
       setScanStatus(response.data.status);
+      alertify.success('Scan status fetched successfully');
     } catch (error) {
       console.error('Error fetching scan status:', error);
+      alertify.error('Error fetching scan status');
     }
   };
 
@@ -98,8 +113,10 @@ const App = () => {
     try {
       const response = await axios.get(`/api/export_scan_results/${scanId}?format=${format}`);
       setExportedResults(response.data.exported_results);
+      alertify.success('Scan results exported successfully');
     } catch (error) {
       console.error('Error exporting scan results:', error);
+      alertify.error('Error exporting scan results');
     }
   };
 
@@ -107,74 +124,81 @@ const App = () => {
     try {
       await axios.post('/api/import_api_key', { module: 'module_name', key: apiKey });
       fetchApiKeys();
+      alertify.success('API key imported successfully');
     } catch (error) {
       console.error('Error importing API key:', error);
+      alertify.error('Error importing API key');
     }
   };
 
   return (
-    <div>
-      <h1>SpiderFoot React Web Interface</h1>
-      <img src={logo} alt="Spiderfoot Logo" />
-      <div>
+    <div className="container">
+      <h1 className="text-center my-4">SpiderFoot React Web Interface</h1>
+      <img src={logo} alt="Spiderfoot Logo" className="mx-auto d-block mb-4" />
+      <div className="mb-4">
         <h2>Start Scan</h2>
         <input
           type="text"
+          className="form-control mb-2"
           placeholder="Target"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
         />
-        <select multiple value={modules} onChange={(e) => setModules([...e.target.selectedOptions].map(option => option.value))}>
+        <select multiple className="form-control mb-2" value={modules} onChange={(e) => setModules([...e.target.selectedOptions].map(option => option.value))}>
           {availableModules.map((module) => (
             <option key={module} value={module}>
               {module}
             </option>
           ))}
         </select>
-        <button onClick={startScan}>Start Scan</button>
+        <button className="btn btn-primary" onClick={startScan}>Start Scan</button>
       </div>
-      <div>
+      <div className="mb-4">
         <h2>Stop Scan</h2>
         <input
           type="text"
+          className="form-control mb-2"
           placeholder="Scan ID"
           value={scanId}
           onChange={(e) => setScanId(e.target.value)}
         />
-        <button onClick={stopScan}>Stop Scan</button>
+        <button className="btn btn-danger" onClick={stopScan}>Stop Scan</button>
       </div>
-      <div>
+      <div className="mb-4">
         <h2>Scan Results</h2>
-        <button onClick={getScanResults}>Get Scan Results</button>
-        <pre>{JSON.stringify(scanResults, null, 2)}</pre>
+        <button className="btn btn-info mb-2" onClick={getScanResults}>Get Scan Results</button>
+        <div id="scan-results">
+          <pre>{JSON.stringify(scanResults, null, 2)}</pre>
+        </div>
       </div>
-      <div>
+      <div className="mb-4">
         <h2>Scan Status</h2>
-        <button onClick={getScanStatus}>Get Scan Status</button>
+        <button className="btn btn-info mb-2" onClick={getScanStatus}>Get Scan Status</button>
         <pre>{scanStatus}</pre>
       </div>
-      <div>
+      <div className="mb-4">
         <h2>Export Scan Results</h2>
-        <button onClick={() => exportScanResults('csv')}>Export as CSV</button>
-        <button onClick={() => exportScanResults('json')}>Export as JSON</button>
+        <button className="btn btn-secondary mb-2" onClick={() => exportScanResults('csv')}>Export as CSV</button>
+        <button className="btn btn-secondary mb-2" onClick={() => exportScanResults('json')}>Export as JSON</button>
         <pre>{exportedResults}</pre>
       </div>
-      <div>
+      <div className="mb-4">
         <h2>API Keys</h2>
         <input
           type="text"
+          className="form-control mb-2"
           placeholder="API Key"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
         />
-        <button onClick={importApiKey}>Import API Key</button>
+        <button className="btn btn-success" onClick={importApiKey}>Import API Key</button>
         <pre>{JSON.stringify(apiKeys, null, 2)}</pre>
       </div>
-      <div>
+      <div className="mb-4">
         <h2>Active Scans</h2>
         <pre>{JSON.stringify(activeScans, null, 2)}</pre>
       </div>
-      <div>
+      <div className="mb-4">
         <h2>Scan History</h2>
         <pre>{JSON.stringify(scanHistory, null, 2)}</pre>
       </div>
