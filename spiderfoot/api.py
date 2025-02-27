@@ -70,7 +70,7 @@ async def list_active_scans():
     try:
         sf = SpiderFoot()
         active_scans = sf.listActiveScans()
-        return {"active_scans": active scans}
+        return {"active_scans": active_scans}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
