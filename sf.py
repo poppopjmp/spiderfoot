@@ -33,8 +33,6 @@ from spiderfoot import SpiderFootHelpers
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootCorrelator
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
-from spiderfoot import __version__
-from spiderfoot.api import app  # Pd207
 
 scanId = None
 dbh = None
@@ -79,10 +77,9 @@ sfOptdescs = {
     '_modulesenabled': "Modules enabled for the scan."  # This is a hack to get a description for an option not actually available.
 }
 
+
 def main() -> None:
-    """
-    Main function to parse command-line arguments and start the appropriate SpiderFoot functionality.
-    """
+
     try:
         # web server config
         sfWebUiConfig = {

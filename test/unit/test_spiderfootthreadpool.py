@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 from spiderfoot.threadpool import SpiderFootThreadPool, ThreadPoolWorker
 import queue
 
+
 class TestSpiderFootThreadPool(unittest.TestCase):
 
     def setUp(self):
@@ -114,5 +115,4 @@ class TestThreadPoolWorker(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    
     unittest.main()

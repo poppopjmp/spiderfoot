@@ -8,6 +8,13 @@
  * Licence: MIT
  */
 
+import alertify from 'alertifyjs';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import * as d3 from 'd3';
+import $ from 'jquery';
+import sigma from 'sigma';
+import 'tablesorter';
+
 // Toggler for theme
 document.addEventListener("DOMContentLoaded", () => {
   const themeToggler = document.getElementById("theme-toggler");
@@ -63,6 +70,24 @@ sf.replace_sfurltag = function (data) {
       "<a target=_new href='$1'>$1</a>"
     );
   }
+
+  // Use sigma for data visualization
+  const s = new sigma({
+    graph: {
+      nodes: [
+        { id: 'n0', label: 'Node 0', x: 0, y: 0, size: 1, color: '#f00' },
+        { id: 'n1', label: 'Node 1', x: 1, y: 1, size: 1, color: '#0f0' },
+        { id: 'n2', label: 'Node 2', x: 2, y: 2, size: 1, color: '#00f' }
+      ],
+      edges: [
+        { id: 'e0', source: 'n0', target: 'n1', color: '#ccc' },
+        { id: 'e1', source: 'n1', target: 'n2', color: '#ccc' },
+        { id: 'e2', source: 'n2', target: 'n0', color: '#ccc' }
+      ]
+    },
+    container: 'sigma-container'
+  });
+
   return data;
 };
 
@@ -180,3 +205,31 @@ window.addEventListener("resize", () => {
     document.body.style.fontSize = "1rem";
   }
 });
+
+// Add a new function for geo visualization using d3
+sf.geoVisualization = function (data) {
+  const width = 960;
+  const height = 500;
+
+  const projection = d3.geoMercator()
+    .scale(150)
+    .translate([width / 2, height / 2]);
+
+  const path = d3.geoPath().projection(projection);
+
+  const svg = d3.select("#geo-visualization").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  d3.json("https://d3js.org/world-50m.v1.json").then(world => {
+    svg.append("path")
+      .datum(topojson.feature(world, world.objects.countries))
+      .attr("d", path);
+
+    svg.selectAll(".pin")
+      .data(data)
+      .enter().append("circle", ".pin")
+      .attr("r", 5)
+      .attr("transform", d => `translate(${projection([d.longitude, d.latitude])})`);
+  });
+};

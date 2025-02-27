@@ -16,6 +16,7 @@ import time
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 import requests
 
+
 class sfp_rocketreach(SpiderFootPlugin):
 
     meta = {

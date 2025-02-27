@@ -1,22 +1,26 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict, Any
+
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootDb, SpiderFootHelpers, SpiderFootEvent, SpiderFootTarget
+
 
 app = FastAPI()
+
 
 class ScanRequest(BaseModel):
     target: str
     modules: List[str]
 
+
 class APIKeyRequest(BaseModel):
     module: str
     key: str
 
+
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to SpiderFoot API"}
+
 
 @app.post("/start_scan")
 async def start_scan(scan_request: ScanRequest):
@@ -30,6 +34,7 @@ async def start_scan(scan_request: ScanRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/stop_scan/{scan_id}")
 async def stop_scan(scan_id: str):
     try:
@@ -38,6 +43,7 @@ async def stop_scan(scan_id: str):
         return {"message": "Scan stopped successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/scan_results/{scan_id}")
 async def get_scan_results(scan_id: str):
@@ -48,6 +54,7 @@ async def get_scan_results(scan_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/modules")
 async def list_modules():
     try:
@@ -57,14 +64,16 @@ async def list_modules():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/active_scans")
 async def list_active_scans():
     try:
         sf = SpiderFoot()
         active_scans = sf.listActiveScans()
-        return {"active_scans": active_scans}
+        return {"active_scans": active scans}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/scan_status/{scan_id}")
 async def get_scan_status(scan_id: str):
@@ -75,6 +84,7 @@ async def get_scan_status(scan_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/scan_history")
 async def list_scan_history():
     try:
@@ -84,14 +94,16 @@ async def list_scan_history():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/export_scan_results/{scan_id}")
-async def export_scan_results(scan_id: str, format: str):
+async def export_scan_results(scan_id: str, export_format: str):
     try:
         sf = SpiderFoot()
-        exported_results = sf.exportScanResults(scan_id, format)
+        exported_results = sf.exportScanResults(scan_id, export_format)
         return {"exported_results": exported_results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/import_api_key")
 async def import_api_key(api_key_request: APIKeyRequest):
@@ -101,6 +113,7 @@ async def import_api_key(api_key_request: APIKeyRequest):
         return {"message": "API key imported successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/export_api_keys")
 async def export_api_keys():

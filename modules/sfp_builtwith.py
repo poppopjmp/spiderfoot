@@ -154,7 +154,7 @@ class sfp_builtwith(SpiderFootPlugin):
                         e = SpiderFootEvent("RAW_RIR_DATA", "Possible full name: " + nb['Name'],
                                             self.__name__, event)
                         self.notifyListeners(e)
-                        if nb.get('Email', None):
+                        if nb.get("Email"):
                             if SpiderFootHelpers.validEmail(nb['Email']):
                                 if nb['Email'].split("@")[0] in self.opts['_genericusers'].split(","):
                                     evttype = "EMAILADDR_GENERIC"

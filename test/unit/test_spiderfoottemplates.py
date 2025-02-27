@@ -2,6 +2,7 @@ import unittest
 from jinja2 import Template
 import os
 
+
 class TestSpiderFootTemplates(unittest.TestCase):
     
     def setUp(self):
@@ -41,6 +42,6 @@ class TestSpiderFootTemplates(unittest.TestCase):
         rendered = self.render_template('scanlist.tmpl')
         self.assertIn('scan list', rendered.lower())
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     unittest.main()
