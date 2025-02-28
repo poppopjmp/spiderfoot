@@ -3,7 +3,7 @@ FROM node:14
 
 # Set the working directory
 WORKDIR /app
-COPY react-web-interface/ .
+COPY ./react-web-interface/ .
 # Copy the package.json and package-lock.json files to the container
 
 # Install the dependencies
