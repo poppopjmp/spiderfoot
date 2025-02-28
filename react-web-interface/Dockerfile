@@ -3,15 +3,14 @@ FROM node:14
 
 # Set the working directory
 WORKDIR /app
-
+COPY react-web-interface/ .
 # Copy the package.json and package-lock.json files to the container
-COPY package.json package-lock.json ./
 
 # Install the dependencies
 RUN npm install
 
 # Copy the rest of the application code to the container
-COPY . .
+
 
 # Build the React app
 RUN npm run build
