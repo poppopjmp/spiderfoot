@@ -7,12 +7,9 @@ WORKDIR /app
 COPY . .
 WORKDIR /app/react-web-interface
 # Install the dependencies
-RUN npm install
+RUN npm install --only=dev
 
 # Copy the rest of the application code to the container
-
-# Ensure react-scripts is installed
-RUN npm install react-scripts
 
 # Build the React app
 RUN npm run build
