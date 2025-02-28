@@ -21,5 +21,6 @@
     "eslint-plugin-react": "^7.22.0"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "package-lock.json": {}
 }
