@@ -35,3 +35,4 @@ zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 zoomeyeai
 netlas
 urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
+logging
