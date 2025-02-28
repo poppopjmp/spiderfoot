@@ -157,3 +157,7 @@ async def export_api_keys():
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+@app.get("/docs")
+async def get_docs():
+    return {"message": "Swagger-like documentation page"}
