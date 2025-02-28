@@ -419,9 +419,11 @@
         },
         "phonenumbers": {
             "hashes": [
-                "sha256:4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5"
+                "sha256:25feaf46135f0fb1e61b69513dc97c477285ba98a69204bf5a8cf241a844a718",
+                "sha256:57c989dda3eabab1b5a9e3d24438a39ebd032fa0172bf68bfd90ab70b3d5e08b"
             ],
-            "version": "==8.13.6"
+            "index": "pypi",
+            "version": "==8.13.55"
         },
         "portend": {
             "hashes": [
