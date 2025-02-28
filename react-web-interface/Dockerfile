@@ -11,6 +11,8 @@ RUN npm install
 
 # Copy the rest of the application code to the container
 
+# Ensure react-scripts is installed
+RUN npm install react-scripts
 
 # Build the React app
 RUN npm run build
