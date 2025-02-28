@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { fetchModules, fetchActiveScans, fetchScanHistory, fetchApiKeys, startScan, stopScan, getScanResults, getScanStatus, exportScanResults, importApiKey } from './api';
 
 const App = () => {
   const [target, setTarget] = useState('');
@@ -15,97 +15,61 @@ const App = () => {
   const [apiKeys, setApiKeys] = useState([]);
 
   useEffect(() => {
-    fetchModules();
-    fetchActiveScans();
-    fetchScanHistory();
-    fetchApiKeys();
+    fetchModules().then(setAvailableModules);
+    fetchActiveScans().then(setActiveScans);
+    fetchScanHistory().then(setScanHistory);
+    fetchApiKeys().then(setApiKeys);
   }, []);
 
-  const fetchModules = async () => {
+  const handleStartScan = async () => {
     try {
-      const response = await axios.get('/api/modules');
-      setAvailableModules(response.data.modules);
-    } catch (error) {
-      console.error('Error fetching modules:', error);
-    }
-  };
-
-  const fetchActiveScans = async () => {
-    try {
-      const response = await axios.get('/api/active_scans');
-      setActiveScans(response.data.active_scans);
-    } catch (error) {
-      console.error('Error fetching active scans:', error);
-    }
-  };
-
-  const fetchScanHistory = async () => {
-    try {
-      const response = await axios.get('/api/scan_history');
-      setScanHistory(response.data.history);
-    } catch (error) {
-      console.error('Error fetching scan history:', error);
-    }
-  };
-
-  const fetchApiKeys = async () => {
-    try {
-      const response = await axios.get('/api/export_api_keys');
-      setApiKeys(response.data.api_keys);
-    } catch (error) {
-      console.error('Error fetching API keys:', error);
-    }
-  };
-
-  const startScan = async () => {
-    try {
-      const response = await axios.post('/api/start_scan', { target, modules });
-      setScanId(response.data.scan_id);
+      const scanId = await startScan(target, modules);
+      setScanId(scanId);
     } catch (error) {
       console.error('Error starting scan:', error);
     }
   };
 
-  const stopScan = async () => {
+  const handleStopScan = async () => {
     try {
-      await axios.post('/api/stop_scan', { scan_id: scanId });
+      await stopScan(scanId);
       setScanId('');
     } catch (error) {
       console.error('Error stopping scan:', error);
     }
   };
 
-  const getScanResults = async () => {
+  const handleGetScanResults = async () => {
     try {
-      const response = await axios.get(`/api/scan_results/${scanId}`);
-      setScanResults(response.data.results);
+      const results = await getScanResults(scanId);
+      setScanResults(results);
     } catch (error) {
       console.error('Error fetching scan results:', error);
     }
   };
 
-  const getScanStatus = async () => {
+  const handleGetScanStatus = async () => {
     try {
-      const response = await axios.get(`/api/scan_status/${scanId}`);
-      setScanStatus(response.data.status);
+      const status = await getScanStatus(scanId);
+      setScanStatus(status);
     } catch (error) {
       console.error('Error fetching scan status:', error);
     }
   };
 
-  const exportScanResults = async (format) => {
+  const handleExportScanResults = async (format) => {
     try {
-      const response = await axios.get(`/api/export_scan_results/${scanId}?format=${format}`);
-      setExportedResults(response.data.exported_results);
+      const exportedResults = await exportScanResults(scanId, format);
+      setExportedResults(exportedResults);
     } catch (error) {
       console.error('Error exporting scan results:', error);
     }
   };
 
-  const importApiKey = async () => {
+  const handleImportApiKey = async () => {
     try {
-      await axios.post('/api/import_api_key', { module: 'module_name', key: apiKey });
-      fetchApiKeys();
+      await importApiKey('module_name', apiKey);
+      fetchApiKeys().then(setApiKeys);
     } catch (error) {
       console.error('Error importing API key:', error);
     }
@@ -129,7 +93,7 @@ const App = () => {
             </option>
           ))}
         </select>
-        <button onClick={startScan}>Start Scan</button>
+        <button onClick={handleStartScan}>Start Scan</button>
       </div>
       <div>
         <h2>Stop Scan</h2>
@@ -139,22 +103,22 @@ const App = () => {
           value={scanId}
           onChange={(e) => setScanId(e.target.value)}
         />
-        <button onClick={stopScan}>Stop Scan</button>
+        <button onClick={handleStopScan}>Stop Scan</button>
       </div>
       <div>
         <h2>Scan Results</h2>
-        <button onClick={getScanResults}>Get Scan Results</button>
+        <button onClick={handleGetScanResults}>Get Scan Results</button>
         <pre>{JSON.stringify(scanResults, null, 2)}</pre>
       </div>
       <div>
         <h2>Scan Status</h2>
-        <button onClick={getScanStatus}>Get Scan Status</button>
+        <button onClick={handleGetScanStatus}>Get Scan Status</button>
         <pre>{scanStatus}</pre>
       </div>
       <div>
         <h2>Export Scan Results</h2>
-        <button onClick={() => exportScanResults('csv')}>Export as CSV</button>
-        <button onClick={() => exportScanResults('json')}>Export as JSON</button>
+        <button onClick={() => handleExportScanResults('csv')}>Export as CSV</button>
+        <button onClick={() => handleExportScanResults('json')}>Export as JSON</button>
         <pre>{exportedResults}</pre>
       </div>
       <div>
@@ -165,7 +129,7 @@ const App = () => {
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
         />
-        <button onClick={importApiKey}>Import API Key</button>
+        <button onClick={handleImportApiKey}>Import API Key</button>
         <pre>{JSON.stringify(apiKeys, null, 2)}</pre>
       </div>
       <div>
