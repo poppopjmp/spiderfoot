@@ -17,7 +17,7 @@ networkx==3.2.1
 openpyxl==3.1.1
 phonenumbers==8.13.55
 psycopg2-binary
-publicsuffixlist==1.0.2.20250227
+publicsuffixlist==1.0.2.20250228
 pygexf==0.2.2
 pyopenssl
 pypdf2==2.10.6
