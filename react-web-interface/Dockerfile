@@ -1,9 +1,11 @@
 # Use a Node.js base image
 FROM node:14
 
+WORKDIR /app
 # Set the working directory
 # Copy the package.json and package-lock.json files to the container
-
+COPY . .
+WORKDIR /app/react-web-interface
 # Install the dependencies
 RUN npm install
 
