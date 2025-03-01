@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "604d515f4271ad5690a5b1e0ba5b83b036d625d92132bef04c5d549f684b4a99"
+            "sha256": "2558d7b623862b8e5e1bdf8db6e138fc40356c63b7e0f65e09e55cc780ace7a9"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -675,9 +675,12 @@
         },
         "python-docx": {
             "hashes": [
-                "sha256:0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1"
+                "sha256:08c20d6058916fb19853fcf080f7f42b6270d89eac9fa5f8c15f691c0017fabe",
+                "sha256:0cf1f22e95b9002addca7948e16f2cd7acdfd498047f1941ca5d293db7762efd"
             ],
-            "version": "==0.8.11"
+            "index": "pypi",
+            "markers": "python_version >= '3.7'",
+            "version": "==1.1.2"
         },
         "python-pptx": {
             "hashes": [
