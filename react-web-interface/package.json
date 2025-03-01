@@ -9,7 +9,7 @@
     "server": "nodemon server.js",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "build": "cd client && npm run build"
-  },
+  }
   "dependencies": {
     "express": "^4.17.1",
     "axios": "^1.7.9",
@@ -18,7 +18,7 @@
     "react-scripts": "^5.0.1",
     "eslint": "^7.20.0",
     "eslint-plugin-react": "^7.22.0"
-  },
+  }
   "author": "",
   "license": "ISC",
   "package-lock.json": {}
