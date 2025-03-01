@@ -5,11 +5,16 @@ WORKDIR /app
 # Set the working directory
 # Copy the package.json and package-lock.json files to the container
 COPY . .
-WORKDIR /app/react-web-interface
-# Install the dependencies
+
+# Install the dependencies for the main project
 RUN npm install
 
-# Copy the rest of the application code to the container
+WORKDIR /app/client 
+
+# Install the dependencies for the client project
+RUN npm install
+
+WORKDIR /app
 
 # Build the React app
 RUN npm run build
