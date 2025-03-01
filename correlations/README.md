@@ -90,15 +90,16 @@ cert_expired.yaml                    host_only_from_certificatetransparency.yaml
 cloud_bucket_open.yaml               http_errors.yaml                             outlier_registrar.yaml
 cloud_bucket_open_related.yaml       human_name_in_whois.yaml                     outlier_webserver.yaml
 data_from_base64.yaml                internal_host.yaml                           remote_desktop_exposed.yaml
-data_from_docmeta.yaml               multiple_malicious.yaml                      root_path_needs_auth.yaml
-database_exposed.yaml                multiple_malicious_affiliate.yaml            stale_host.yaml
-dev_or_test_system.yaml              multiple_malicious_cohost.yaml               strong_affiliate_certs.yaml
-dns_zone_transfer_possible.yaml      name_only_from_pasteleak_site.yaml           strong_similardomain_crossref.yaml
-egress_ip_from_wikipedia.yaml        open_port_version.yaml                       template.yaml
-email_in_multiple_breaches.yaml      outlier_cloud.yaml                           vulnerability_critical.yaml
-email_in_whois.yaml                  outlier_country.yaml                         vulnerability_high.yaml
-email_only_from_pasteleak_site.yaml  outlier_email.yaml                           vulnerability_mediumlow.yaml
-host_only_from_bruteforce.yaml       outlier_hostname.yaml
+data_from_docmeta.yaml               internal_service_exposed.yaml                root_path_needs_auth.yaml
+database_exposed.yaml                multiple_malicious.yaml                      rocketreach_exposed_contacts.yaml
+dev_or_test_system.yaml              multiple_malicious_affiliate.yaml            stale_host.yaml
+dns_zone_transfer_possible.yaml      multiple_malicious_cohost.yaml               strong_affiliate_certs.yaml
+egress_ip_from_wikipedia.yaml        name_only_from_pasteleak_site.yaml           strong_similardomain_crossref.yaml
+email_in_multiple_breaches.yaml      open_port_version.yaml                       template.yaml
+email_in_whois.yaml                  outlier_cloud.yaml                           vulnerability_critical.yaml
+email_only_from_pasteleak_site.yaml  outlier_country.yaml                         vulnerability_high.yaml
+fofa_exposed_services.yaml           outlier_email.yaml                           vulnerability_mediumlow.yaml
+host_only_from_bruteforce.yaml       outlier_hostname.yaml                        zoomeye_exposed_services.yaml
 ```
 ### Rule components
 
@@ -373,27 +374,6 @@ aggregation:
 headline: "Exposed service detected using Fofa: {data}"
 ```
 
-#### `zoomeye_exposed_services.yaml`
-```yaml
-id: zoomeye_exposed_services
-version: 1
-meta:
-  name: Exposed services detected using ZoomEye
-  description: >
-    Services exposed to the internet were detected using the ZoomEye module.
-    This may pose a risk to the security of the service exposed and/or
-    cause connecting services to fail due to being unable to verify the certificate.
-  risk: HIGH
-collections:
-  - collect:
-      - method: exact
-        field: type
-        value: ZOOMEYE_SERVICE
-aggregation:
-  field: data
-headline: "Exposed service detected using ZoomEye: {data}"
-```
-
 #### `rocketreach_exposed_contacts.yaml`
 ```yaml
 id: rocketreach_exposed_contacts
@@ -413,6 +393,27 @@ collections:
 aggregation:
   field: data
 headline: "Exposed contact detected using RocketReach: {data}"
+```
+
+#### `zoomeye_exposed_services.yaml`
+```yaml
+id: zoomeye_exposed_services
+version: 1
+meta:
+  name: Exposed services detected using ZoomEye
+  description: >
+    Services exposed to the internet were detected using the ZoomEye module.
+    This may pose a risk to the security of the service exposed and/or
+    cause connecting services to fail due to being unable to verify the certificate.
+  risk: HIGH
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: ZOOMEYE_SERVICE
+aggregation:
+  field: data
+headline: "Exposed service detected using ZoomEye: {data}"
 ```
 
 ## Maintainers

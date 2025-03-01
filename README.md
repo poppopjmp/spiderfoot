@@ -408,6 +408,18 @@ Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 [Fofa](https://fofa.so/)|Look up domain, IP address, and other information from Fofa.|Tiered API
 [RocketReach](https://rocketreach.co/)|Look up email addresses, phone numbers, and social media profiles from RocketReach.|Tiered API
 [Netlas](https://netlas.io/)|Look up domain and IP address information from Netlas API.|Tiered API
+[sfp__stor_db.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_db.py)|SpiderFoot plug-in for storing events to the local SpiderFoot SQLite database.|Internal
+[sfp__stor_elasticsearch.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_elasticsearch.py)|SpiderFoot plug-in for storing events to an ElasticSearch cluster.|Internal
+[sfp__stor_stdout.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_stdout.py)|SpiderFoot plug-in for dumping events to standard output.|Internal
+[sfp_abusech.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_abusech.py)|Check if a host/domain, IP address or netblock is malicious according to Abuse.ch.|Internal
+[sfp_abuseipdb.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_abuseipdb.py)|Check if an IP address is malicious according to AbuseIPDB.com blacklist.|Internal
+[sfp_accounts.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_accounts.py)|Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc.|Internal
+[sfp_adguard_dns.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_adguard_dns.py)|Check if a host would be blocked by AdGuard DNS.|Internal
+[sfp_ahmia.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_ahmia.py)|Search Tor 'Ahmia' search engine for mentions of the target.|Internal
+[sfp_alienvault.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_alienvault.py)|Obtain information from AlienVault Open Threat Exchange (OTX)|Internal
+[sfp_apple_itunes.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_apple_itunes.py)|Search Apple iTunes for mobile apps.|Internal
+[sfp_archiveorg.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_archiveorg.py)|Identifies historic versions of interesting files/pages from the Wayback Machine.|Internal
+[sfp_azureblobstorage.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_azureblobstorage.py)|Search for potential Azure blobs associated with the target and attempt to list their contents.|Internal
 
 ### DOCUMENTATION
 
