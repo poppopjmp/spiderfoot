@@ -53,6 +53,28 @@ Need more from SpiderFoot?
 - Bring your own Python SpiderFoot modules
 - Feed scan data to Splunk, ElasticSearch and REST endpoints
 
+### Roadmap
+
+The following features are in the roadmap for SpiderFoot:
+
+- Attack Surface Monitoring with change notifications by email, REST, and Slack
+- Multiple targets per scan
+- Multi-user collaboration
+  - Implement shared scan projects
+  - Allow users to create and share scan projects with other users
+  - Store project information, including scan configurations and results, in a shared database
+  - Provide an interface for users to manage project members and their permissions
+  - Enable notifications for project updates and scan results
+- Authenticated and 2FA
+- Investigations
+- Customer support
+- Third party tools pre-installed & configured
+- Drive it with a fully RESTful API
+- TOR integration built-in
+- Screenshotting
+- Bring your own Python SpiderFoot modules
+- Feed scan data to Splunk, ElasticSearch, and REST endpoints
+
 ### USES
 
 SpiderFoot can be used offensively (e.g. in a red team exercise or penetration test) for reconnaissance of your target or defensively to gather information about what you or your organisation might have exposed over the Internet.
