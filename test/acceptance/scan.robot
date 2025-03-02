@@ -12,7 +12,7 @@ ${TIMEOUT}        5s  # Consistent timeout
 ***Keywords***
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
-    Open browser              ${URL}/newscan  ${BROWSER} 
+    Open browser              ${URL}/newscan  ${BROWSER} executable_path=/usr/bin/firefox
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:moduletab
