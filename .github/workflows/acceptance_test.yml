@@ -2,9 +2,9 @@ name: SpiderFoot Acceptance Tests
 
 on:
   push:
-    branches: [ main ] # Trigger on pushes to the main branch
+    branches: [ master ]
   pull_request:
-    branches: [ main ] # Trigger on pull requests to the main branch
+    branches: [ master ]
 
 jobs:
   acceptance-tests:
