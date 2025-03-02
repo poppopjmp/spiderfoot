@@ -24,7 +24,7 @@ jobs:
 
       - name: Start SpiderFoot container
         run: |
-          docker run -d -p 5001:5001 spiderfoot/spiderfoot:v5.0.1
+          docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.0.1
 
       - name: Wait for SpiderFoot to start
         run: |
@@ -44,7 +44,7 @@ jobs:
           robot --variable BROWSER:Firefox --outputdir results scan.robot
 
       - name: Stop SpiderFoot container
-        run: docker stop $(docker ps -q --filter ancestor=spiderfoot/spiderfoot)
+        run: docker stop $(docker ps -q --filter ancestor=ghcr.io/poppopjmp/spiderfoot)
 
       - name: Upload Robot Framework results
         uses: actions/upload-artifact@v4
