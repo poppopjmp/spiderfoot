@@ -23,7 +23,7 @@ jobs:
         run: pip3 install -r test/acceptance/requirements.txt
 
       - name: Install Acceptance Test dependencies
-        run: apt install -y firefox
+        run: sudo apt install -y firefox
 
 
       - name: Start SpiderFoot container
