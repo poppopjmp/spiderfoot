@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.0.2-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.2)
+[![Stable Release](https://img.shields.io/badge/version-5.0.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.1)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
 [![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
 [![codecov](https://codecov.io/github/poppopjmp/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/poppopjmp/spiderfoot)
@@ -430,6 +430,10 @@ Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 [Fofa](https://fofa.so/)|Look up domain, IP address, and other information from Fofa.|Tiered API
 [RocketReach](https://rocketreach.co/)|Look up email addresses, phone numbers, and social media profiles from RocketReach.|Tiered API
 [Netlas](https://netlas.io/)|Look up domain and IP address information from Netlas API.|Tiered API
+[Cisco Umbrella](https://umbrella.cisco.com/) | Check if a domain is categorized as malicious or unsafe by Cisco Umbrella. | Tiered API
+[Deepinfo](https://deepinfo.com/) | Search Deepinfo.com for historical DNS records, WHOIS data, and associated domains. | Tiered API
+[WhoisFreaks](https://whoisfreaks.com/) | Perform WHOIS lookups and identify historical WHOIS records using WhoisFreaks.com. | Tiered API
+[LeakCheck](https://leakcheck.net/) | Check LeakCheck.net for data breaches associated with a domain or email address. | Free API
 [sfp__stor_db.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_db.py)|SpiderFoot plug-in for storing events to the local SpiderFoot SQLite database.|Internal
 [sfp__stor_elasticsearch.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_elasticsearch.py)|SpiderFoot plug-in for storing events to an ElasticSearch cluster.|Internal
 [sfp__stor_stdout.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_stdout.py)|SpiderFoot plug-in for dumping events to standard output.|Internal
