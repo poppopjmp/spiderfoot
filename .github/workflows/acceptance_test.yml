@@ -1,0 +1,43 @@
+name: SpiderFoot Acceptance Tests
+
+on:
+  push:
+    branches: [ main ] # Trigger on pushes to the main branch
+  pull_request:
+    branches: [ main ] # Trigger on pull requests to the main branch
+
+jobs:
+  acceptance-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install SpiderFoot dependencies
+      run: pip3 install -r requirements.txt
+
+    - name: Install Acceptance Test dependencies
+      run: pip3 install -r test/acceptance/requirements.txt
+
+    - name: Start SpiderFoot web server (background)
+      run: python3 ./sf.py -l 127.0.0.1:5001 &
+
+    - name: Wait for SpiderFoot to start
+      run: sleep 5 # Adjust this time if needed
+
+    - name: Run Robot Framework tests
+      run: |
+        cd test/acceptance
+        robot --variable BROWSER:Firefox --outputdir results scan.robot
+
+    - name: Upload Robot Framework results
+      uses: actions/upload-artifact@v3
+      with:
+        name: robot-results
+        path: test/acceptance/results

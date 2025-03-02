@@ -96,7 +96,7 @@ class sfp_deepinfo(SpiderFootPlugin):
 
         try:
             info = json.loads(res['content'])
-            self.info("result_count {0}, page {1}".format(info.get("result_count"), page))
+            self.info(f"result_count {info.get('result_count')}, page {page}")
             if info.get("result_count", 0) > 100:
                 domains = [item.get("punycode", "") for item in info.get("results", [])]
                 if len(domains) >= 100:

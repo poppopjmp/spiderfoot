@@ -16,7 +16,8 @@ import time
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 class sfp_leakcheck(SpiderFootPlugin):
-
+    
+    
     meta = {
         'name': "LeakCheck.io",
         'summary': "Gather breach data from LeakCheck API.",
@@ -181,10 +182,10 @@ class sfp_leakcheck(SpiderFootPlugin):
             phone = entry.get('phone')
             leakSource = entry.get('source', {}).get('name', 'N/A')
             breachDate = entry.get('source', {}).get('breach_date', 'Unknown Date')
-            country = entry.get('country', None)
-            ip_address = entry.get('ip', None)
-            dob = entry.get('dob', None)
-            password = entry.get('password', None)
+            country = entry.get('country')
+            ip_address = entry.get('ip')
+            dob = entry.get('dob')
+            password = entry.get('password')
 
             # Check for human name fields
             first_name = entry.get('first_name')

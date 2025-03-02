@@ -408,7 +408,7 @@ class SpiderFootCorrelator:
             return ret
 
         if field not in event:
-            return [] # return empty list if field is not in the event.
+            return []  # return empty list if field is not in the event.
 
         return [event[field]]
 
@@ -426,13 +426,13 @@ class SpiderFootCorrelator:
         """
 
         if "." in field:
-            key, field = field.split(".", 1)  # Split only the first occurrence
+            key, field = field.split(".", 1)   # Split only the first occurrence
             if key not in event or not isinstance(event[key], list):
-                return False # if the key does not exist or is not a list, return false.
+                return False  # if the key does not exist or is not a list, return false.
             return any(self.event_keep(subevent, field, patterns, patterntype) for subevent in event[key])
 
         if field not in event:
-            return False # if the field does not exist, return false.
+            return False  # if the field does not exist, return false.
 
         value = event[field]
 
@@ -445,7 +445,7 @@ class SpiderFootCorrelator:
                         return False
                 elif value == pattern:
                     return True
-            return negate # if the pattern was negated, and no matches were found, return True. Otherwise return false.
+            return negate  # if the pattern was negated, and no matches were found, return True. Otherwise return false.
 
         if patterntype == "regex":
             for pattern in patterns:
@@ -456,7 +456,7 @@ class SpiderFootCorrelator:
                         return False
                 elif re.search(pattern, str(value), re.IGNORECASE):
                     return True
-            return negate # if the pattern was negated, and no matches were found, return True. Otherwise return false.
+            return negate  # if the pattern was negated, and no matches were found, return True. Otherwise return false.
 
         return False
 
@@ -486,51 +486,48 @@ class SpiderFootCorrelator:
         self.log.debug(f"Remaining events after refinement: {len(events)}")
 
     def collect_events(self, collection: dict, fetchChildren: bool, fetchSources: bool, fetchEntities: bool, collectIndex: int) -> list:
-            """Collect data for aggregation and analysis.
+        """Collect data for aggregation and analysis.
 
-            Args:
-                collection (dict): A dictionary representing a collection of match rules. Each key-value pair defines a rule for filtering events.
-                fetchChildren (bool): If True, fetch and include child events associated with the main events.
-                fetchSources (bool): If True, fetch and include source information associated with the main events.
-                fetchEntities (bool): If True, fetch and include entity information associated with the main events.
-                collectIndex (int): An integer identifier for this collection, used to tag events for later analysis.
+        Args:
+            collection (dict): A dictionary representing a collection of match rules. Each key-value pair defines a rule for filtering events.
+            fetchChildren (bool): If True, fetch and include child events associated with the main events.
+            fetchSources (bool): If True, fetch and include source information associated with the main events.
+            fetchEntities (bool): If True, fetch and include entity information associated with the main events.
+            collectIndex (int): An integer identifier for this collection, used to tag events for later analysis.
 
-            Returns:
-                list: A list of event dictionaries that match the specified collection rules.
-            """
-            step = 0
-            events = []  # Initialize an empty list for events
+        Returns:
+            list: A list of event dictionaries that match the specified collection rules.
+        """
+        step = 0
+        events = []   # Initialize an empty list for events
 
-            for matchrule in collection:
-                # First match rule means we fetch from the database, every
-                # other step happens locally to avoid burdening the db.
-                if step == 0:
-                    events = self.collect_from_db(matchrule,
-                                                    fetchEntities=fetchEntities,
-                                                    fetchChildren=fetchChildren,
-                                                    fetchSources=fetchSources)
-                    step += 1
-                    continue
+        for matchrule in collection:
+            # First match rule means we fetch from the database, every
+            # other step happens locally to avoid burdening the db.
+            if step == 0:
+                events = self.collect_from_db(matchrule, fetchEntities=fetchEntities, fetchChildren=fetchChildren, fetchSources=fetchSources)
+                step += 1
+                continue
 
-                # Remove events in-place based on subsequent match-rules
-                self.refine_collection(matchrule, events)
+            # Remove events in-place based on subsequent match-rules
+            self.refine_collection(matchrule, events)
 
-            # Stamp events with this collection ID for potential
-            # use in analysis later.
-            for e in events:
-                e['_collection'] = collectIndex
-                if fetchEntities and 'entity' in e:
-                    for ee in e['entity']:
-                        ee['_collection'] = collectIndex
-                if fetchChildren and 'child' in e:
-                    for ce in e['child']:
-                        ce['_collection'] = collectIndex
-                if fetchSources and 'source' in e:
-                    for se in e['source']:
-                        se['_collection'] = collectIndex
+        # Stamp events with this collection ID for potential
+        # use in analysis later.
+        for e in events:
+            e['_collection'] = collectIndex
+            if fetchEntities and 'entity' in e:
+                for ee in e['entity']:
+                    ee['_collection'] = collectIndex
+            if fetchChildren and 'child' in e:
+                for ce in e['child']:
+                    ce['_collection'] = collectIndex
+            if fetchSources and 'source' in e:
+                for se in e['source']:
+                    se['_collection'] = collectIndex
 
-            self.log.debug(f"returning collection ({len(events)})...")
-            return events
+        self.log.debug(f"returning collection ({len(events)})...")
+        return events
 
     def aggregate_events(self, rule: dict, events: list) -> dict:
         """Aggregate events according to the rule.
@@ -707,7 +704,6 @@ class SpiderFootCorrelator:
 
     def analysis_outlier(self, rule: dict, buckets: dict) -> None:
         """Analyze buckets to remove those that contain outlier events based on event counts.
-
         Args:
             rule (dict): The correlation rule containing:
                 - 'maximum_percent': The maximum percentage of events allowed in a bucket relative to the total.
@@ -743,7 +739,6 @@ class SpiderFootCorrelator:
         This method filters buckets by checking if the number of occurrences of a specified field's value 
         falls within a defined threshold (minimum and maximum values). It can count occurrences of all values 
         or only unique values of the field.
-
         Args:
             rule (dict): A dictionary containing the analysis rule:
                 - 'field' (str): The event field to analyze.
