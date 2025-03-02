@@ -31,12 +31,6 @@ jobs:
           timeout 60 bash -c 'until curl --output /dev/null --silent --head --fail http://127.0.0.1:5001; do printf "."; sleep 1; done'
           echo "SpiderFoot is up!"
 
-      - name: Install Firefox
-        uses: mozilla-actions/setup-firefox@v2
-        id: setup-firefox
-        with:
-          firefox-version: latest # Or a specific version
-
       - name: Install geckodriver
         run: |
           wget "https://github.com/mozilla/geckodriver/releases/latest/download/geckodriver-v0.34.0-linux64.tar.gz" #or latest
