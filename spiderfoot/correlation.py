@@ -338,19 +338,19 @@ class SpiderFootCorrelator:
             entity_missing = deepcopy(new_missing)
 
     def collect_from_db(self, matchrule: dict, fetchChildren: bool, fetchSources: bool, fetchEntities: bool) -> list:
-        """Collect event values from database.
+        """Collect event values from the database based on a match rule.
 
         Args:
-            matchrule (dict): correlation rule
-            fetchChildren (bool): TBD
-            fetchSources (bool): TBD
-            fetchEntities (bool): TBD
+            matchrule (dict): A dictionary representing the correlation rule used to filter events from the database.
+            fetchChildren (bool): If True, fetch and include child events associated with the main events.
+            fetchSources (bool): If True, fetch and include source information associated with the main events.
+            fetchEntities (bool): If True, fetch and include entity information associated with the main events.
 
         Returns:
-            list: event values
+            list: A list of event dictionaries matching the match rule. Returns None if an error occurs during query parsing.
         """
 
-        events = dict()
+        events = {}  # Use a dictionary to store events with event IDs as keys
 
         self.log.debug(f"match rule: {matchrule}")
         # Parse the criteria from the match rule
@@ -388,148 +388,149 @@ class SpiderFootCorrelator:
         return list(events.values())
 
     def event_extract(self, event: dict, field: str) -> list:
-        """Event event field.
+        """Extract a field's value(s) from an event, handling nested fields.
 
         Args:
-            event (dict): event
-            field (str): TBD
+            event (dict): The event dictionary from which to extract the field.
+            field (str): The field to extract. Supports nested fields using dot notation (e.g., "details.location").
 
         Returns:
-            list: event data
+            list: A list containing the extracted field value(s). If the field is nested and represents a list of sub-events, it returns a flattened list of extracted values from all sub-events. Returns an empty list if the field is not found or an error occurs.
         """
 
         if "." in field:
-            ret = list()
-            key, field = field.split(".")
+            ret = []
+            key, field = field.split(".", 1)  # Split only the first dot
+            if key not in event or not isinstance(event[key], list):
+                return []  # Return empty list if key doesn't exist or isn't a list
             for subevent in event[key]:
                 ret.extend(self.event_extract(subevent, field))
             return ret
 
+        if field not in event:
+            return [] # return empty list if field is not in the event.
+
         return [event[field]]
 
-    def event_keep(self, event: dict, field: str, patterns: str, patterntype: str) -> bool:
-        """Keep event field.
+    def event_keep(self, event: dict, field: str, patterns: list, patterntype: str) -> bool:
+        """Determine whether to keep an event based on field matching patterns.
 
         Args:
-            event (dict): event
-            field (str): TBD
-            patterns (str): TBD
-            patterntype (str): TBD
+            event (dict): The event dictionary to check.
+            field (str): The field within the event to compare against patterns. Supports nested fields separated by dots (e.g., "details.location").
+            patterns (list): A list of patterns to match against the field value. Patterns can be exact strings or regular expressions. Patterns can be negated by starting with "not ".
+            patterntype (str): The type of pattern matching to use: "exact" for exact string matching or "regex" for regular expression matching.
 
         Returns:
-            bool: TBD
+            bool: True if the event should be kept, False otherwise.
         """
 
         if "." in field:
-            key, field = field.split(".")
+            key, field = field.split(".", 1)  # Split only the first occurrence
+            if key not in event or not isinstance(event[key], list):
+                return False # if the key does not exist or is not a list, return false.
             return any(self.event_keep(subevent, field, patterns, patterntype) for subevent in event[key])
+
+        if field not in event:
+            return False # if the field does not exist, return false.
 
         value = event[field]
 
         if patterntype == "exact":
-            ret = False
             for pattern in patterns:
-                if pattern.startswith("not "):
-                    ret = True
+                negate = pattern.startswith("not ")
+                if negate:
                     pattern = re.sub(r"^not\s+", "", pattern)
                     if value == pattern:
                         return False
-                else:
-                    ret = False
-                    if value == pattern:
-                        return True
-            if ret:
-                return True
-            return False
+                elif value == pattern:
+                    return True
+            return negate # if the pattern was negated, and no matches were found, return True. Otherwise return false.
 
         if patterntype == "regex":
-            ret = False
             for pattern in patterns:
-                if pattern.startswith("not "):
-                    ret = True
+                negate = pattern.startswith("not ")
+                if negate:
                     pattern = re.sub(r"^not\s+", "", pattern)
-                    if re.search(pattern, value, re.IGNORECASE):
+                    if re.search(pattern, str(value), re.IGNORECASE):
                         return False
-                else:
-                    ret = False
-                    if re.search(pattern, value, re.IGNORECASE):
-                        return True
-            if ret:
-                return True
-            return False
+                elif re.search(pattern, str(value), re.IGNORECASE):
+                    return True
+            return negate # if the pattern was negated, and no matches were found, return True. Otherwise return false.
 
         return False
 
     def refine_collection(self, matchrule: dict, events: list) -> None:
-        """Cull events from the events list if they don't meet the match criteria.
+        """Filter events in the provided list based on the given match rule.
 
         Args:
-            matchrule (dict): TBD
-            events (list): TBD
+            matchrule (dict): A dictionary containing the match criteria:
+                - 'field' (str): The field within the event to compare.
+                - 'value' (str or list): The pattern(s) to match against the field.
+                - 'method' (str): The matching method ('exact' or 'regex').
+            events (list): The list of event dictionaries to filter.
         """
-        patterns = list()
+        patterns = []
 
         if isinstance(matchrule['value'], list):
-            for r in matchrule['value']:
-                patterns.append(str(r))
+            patterns = [str(r) for r in matchrule['value']]
         else:
             patterns = [str(matchrule['value'])]
 
         field = matchrule['field']
         self.log.debug(f"attempting to match {patterns} against the {field} field in {len(events)} events")
 
-        # Go through each event, remove it if we shouldn't keep it
-        # according to the match rule patterns.
-        for event in events[:]:
-            if not self.event_keep(event, field, patterns, matchrule['method']):
-                self.log.debug(f"removing {event} because of {field}")
-                events.remove(event)
+        # Iterate through the events and remove those that don't match
+        events[:] = [event for event in events if self.event_keep(event, field, patterns, matchrule['method'])]
+
+        self.log.debug(f"Remaining events after refinement: {len(events)}")
 
     def collect_events(self, collection: dict, fetchChildren: bool, fetchSources: bool, fetchEntities: bool, collectIndex: int) -> list:
-        """Collect data for aggregation and analysis.
+            """Collect data for aggregation and analysis.
 
-        Args:
-            collection (dict): TBD
-            fetchChildren (bool): TBD
-            fetchSources (bool): TBD
-            fetchEntities (bool): TBD
-            collectIndex (int): TBD
+            Args:
+                collection (dict): A dictionary representing a collection of match rules. Each key-value pair defines a rule for filtering events.
+                fetchChildren (bool): If True, fetch and include child events associated with the main events.
+                fetchSources (bool): If True, fetch and include source information associated with the main events.
+                fetchEntities (bool): If True, fetch and include entity information associated with the main events.
+                collectIndex (int): An integer identifier for this collection, used to tag events for later analysis.
 
-        Returns:
-            list: TBD
-        """
-        step = 0
+            Returns:
+                list: A list of event dictionaries that match the specified collection rules.
+            """
+            step = 0
+            events = []  # Initialize an empty list for events
 
-        for matchrule in collection:
-            # First match rule means we fetch from the database, every
-            # other step happens locally to avoid burdening the db.
-            if step == 0:
-                events = self.collect_from_db(matchrule,
-                                              fetchEntities=fetchEntities,
-                                              fetchChildren=fetchChildren,
-                                              fetchSources=fetchSources)
-                step += 1
-                continue
+            for matchrule in collection:
+                # First match rule means we fetch from the database, every
+                # other step happens locally to avoid burdening the db.
+                if step == 0:
+                    events = self.collect_from_db(matchrule,
+                                                    fetchEntities=fetchEntities,
+                                                    fetchChildren=fetchChildren,
+                                                    fetchSources=fetchSources)
+                    step += 1
+                    continue
 
-            # Remove events in-place based on subsequent match-rules
-            self.refine_collection(matchrule, events)
+                # Remove events in-place based on subsequent match-rules
+                self.refine_collection(matchrule, events)
 
-        # Stamp events with this collection ID for potential
-        # use in analysis later.
-        for e in events:
-            e['_collection'] = collectIndex
-            if fetchEntities:
-                for ee in e['entity']:
-                    ee['_collection'] = collectIndex
-            if fetchChildren:
-                for ce in e['child']:
-                    ce['_collection'] = collectIndex
-            if fetchSources:
-                for se in e['source']:
-                    se['_collection'] = collectIndex
+            # Stamp events with this collection ID for potential
+            # use in analysis later.
+            for e in events:
+                e['_collection'] = collectIndex
+                if fetchEntities and 'entity' in e:
+                    for ee in e['entity']:
+                        ee['_collection'] = collectIndex
+                if fetchChildren and 'child' in e:
+                    for ce in e['child']:
+                        ce['_collection'] = collectIndex
+                if fetchSources and 'source' in e:
+                    for se in e['source']:
+                        se['_collection'] = collectIndex
 
-        self.log.debug(f"returning collection ({len(events)})...")
-        return events
+            self.log.debug(f"returning collection ({len(events)})...")
+            return events
 
     def aggregate_events(self, rule: dict, events: list) -> dict:
         """Aggregate events according to the rule.
@@ -580,49 +581,47 @@ class SpiderFootCorrelator:
         """Analyze events according to the rule. Modifies buckets in place.
 
         Args:
-            rule (dict): correlation rule
-            buckets (dict): TBD
-
-        Todo:
-            Implement support for 'both_collections'
-
-        Returns:
-            None
+            rule (dict): A dictionary representing the correlation rule, containing the analysis method and parameters.
+            buckets (dict): A dictionary containing event collections, where keys are collection IDs and values are lists of events.
         """
         self.log.debug(f"applying {rule}")
 
-        if rule['method'] == "threshold":
-            return self.analysis_threshold(rule, buckets)
-        if rule['method'] == "outlier":
-            return self.analysis_outlier(rule, buckets)
-        if rule['method'] == "first_collection_only":
-            return self.analysis_first_collection_only(rule, buckets)
-        if rule['method'] == "match_all_to_first_collection":
-            return self.analysis_match_all_to_first_collection(rule, buckets)
-        if rule['method'] == "both_collections":
-            # TODO: Implement when genuine case appears
-            pass
+        method = rule.get('method')
 
-        return None
+        if method == "threshold":
+            self.analysis_threshold(rule, buckets)
+        elif method == "outlier":
+            self.analysis_outlier(rule, buckets)
+        elif method == "first_collection_only":
+            self.analysis_first_collection_only(rule, buckets)
+        elif method == "match_all_to_first_collection":
+            self.analysis_match_all_to_first_collection(rule, buckets)
+        elif method == "both_collections":
+            # TODO: Implement when genuine case appears
+            self.log.warning("Method 'both_collections' is not yet implemented.")
+        else:
+            self.log.warning(f"Unknown analysis method: {method}")
+
+    import netaddr
 
     def analysis_match_all_to_first_collection(self, rule: dict, buckets: dict) -> None:
-        """Find buckets that are in the first collection.
+        """Filter buckets to keep only events that match the first collection.
 
         Args:
-            rule (dict): correlation rule
-            buckets (dict): TBD
+            rule (dict): A dictionary containing the correlation rule with 'match_method' (subnet, exact, contains) and 'field'.
+            buckets (dict): A dictionary containing event collections, where keys are collection IDs and values are lists of events.
         """
         self.log.debug(f"called with buckets {buckets}")
 
         def check_event(events: list, reference: list) -> bool:
-            """Check event.
+            """Check if any event in 'events' matches any value in 'reference'.
 
             Args:
-                events (list): TBD
-                reference (list): TBD
+                events (list): List of event field values to check.
+                reference (list): List of reference values from the first collection.
 
             Returns:
-                bool: TBD
+                bool: True if a match is found, False otherwise.
             """
             for event_data in events:
                 if rule['match_method'] == 'subnet':
@@ -635,11 +634,11 @@ class SpiderFootCorrelator:
                         except Exception:
                             pass
 
-                if rule['match_method'] == 'exact' and event_data in reference:
+                elif rule['match_method'] == 'exact' and event_data in reference:
                     self.log.debug(f"found exact match: {event_data} in {reference}")
                     return True
 
-                if rule['match_method'] == 'contains':
+                elif rule['match_method'] == 'contains':
                     for r in reference:
                         if event_data in r:
                             self.log.debug(f"found pattern match: {event_data} in {r}")
@@ -647,197 +646,184 @@ class SpiderFootCorrelator:
 
             return False
 
-        # 1. Build up the list of values from collection 0
-        # 2. Go through each event in each collection > 0 and drop any events that aren't
-        #    in collection 0.
-        # 3. For each bucket, if there are no events from collection > 0, drop them.
+        if 0 not in buckets:
+            self.log.warning("First collection (0) not found in buckets.")
+            return
 
-        reference = set()
-        for bucket in buckets:
-            for event in buckets[bucket]:
-                if event['_collection'] == 0:
-                    reference.update(self.event_extract(event, rule['field']))
+        reference_values = [self.event_extract(event, rule['field'])[0] for event in buckets[0] if self.event_extract(event, rule['field'])]
 
-        for bucket in list(buckets.keys()):
-            pluszerocount = 0
-            for event in buckets[bucket][:]:
-                if event['_collection'] == 0:
-                    continue
-                pluszerocount += 1
+        # Filter other collections
+        for collection_id in list(buckets.keys()):
+            if collection_id == 0:
+                continue
 
-                if not check_event(self.event_extract(event, rule['field']), reference):
-                    buckets[bucket].remove(event)
-                    pluszerocount -= 1
+            buckets[collection_id][:] = [
+                event
+                for event in buckets[collection_id]
+                if check_event(self.event_extract(event, rule['field']), reference_values)
+            ]
 
-            # delete the bucket if there are no events > collection 0
-            if pluszerocount == 0:
-                del (buckets[bucket])
+        # Remove empty collections
+        for collection_id in list(buckets.keys()):
+            if collection_id != 0 and not buckets[collection_id]:
+                del buckets[collection_id]
+
+            reference = set()
+            for bucket in buckets:
+                for event in buckets[bucket]:
+                    if event['_collection'] == 0:
+                        reference.update(self.event_extract(event, rule['field']))
+
+            for bucket in list(buckets.keys()):
+                pluszerocount = 0
+                for event in buckets[bucket][:]:
+                    if event['_collection'] == 0:
+                        continue
+                    pluszerocount += 1
+
+                    if not check_event(self.event_extract(event, rule['field']), reference):
+                        buckets[bucket].remove(event)
+                        pluszerocount -= 1
+
+                # delete the bucket if there are no events > collection 0
+                if pluszerocount == 0:
+                    del (buckets[bucket])
 
     def analysis_first_collection_only(self, rule: dict, buckets: dict) -> None:
-        """analysis_first_collection_only TBD
+        """Analyze buckets to keep only events from the first collection (collection 0).
 
         Args:
-            rule (dict): TBD
-            buckets (dict): TBD
+            rule (dict): The correlation rule (not used in this method, but kept for consistency).
+            buckets (dict): A dictionary containing event collections, where keys are collection IDs and values are lists of events.
         """
 
-        colzero = set()
+        # Filter buckets to keep only events from collection 0
+        for bucket_id, bucket in list(buckets.items()):  # Use items() to get both key and value
+            buckets[bucket_id] = [event for event in bucket if event['_collection'] == 0]
 
-        for bucket in buckets:
-            for e in buckets[bucket]:
-                if e['_collection'] == 0:
-                    colzero.add(e[rule['field']])
+        # Remove empty buckets
+        buckets = {bucket_id: bucket for bucket_id, bucket in buckets.items() if bucket}
 
-        for bucket in list(buckets.keys()):
-            delete = False
-            for e in buckets[bucket]:
-                if e['_collection'] > 0 and e[rule['field']] in colzero:
-                    delete = True
-                    break
-            if delete:
-                del (buckets[bucket])
-
-        # Remove buckets with collection > 0 values
-        for bucket in list(buckets.keys()):
-            for e in buckets[bucket]:
-                if e['_collection'] > 0:
-                    del (buckets[bucket])
-                    break
 
     def analysis_outlier(self, rule: dict, buckets: dict) -> None:
-        """analysis_outlier TBD
+        """Analyze buckets to remove those that contain outlier events based on event counts.
 
         Args:
-            rule (dict): TBD
-            buckets (dict): TBD
+            rule (dict): The correlation rule containing:
+                - 'maximum_percent': The maximum percentage of events allowed in a bucket relative to the total.
+                - 'noisy_percent' (optional): The minimum average percentage of events per bucket to consider the data non-anomalous. Defaults to 10.
+            buckets (dict): A dictionary containing event collections, where keys are collection IDs and values are lists of events.
         """
 
-        countmap = dict()
-        for bucket in list(buckets.keys()):
-            countmap[bucket] = len(buckets[bucket])
+        countmap = {bucket: len(buckets[bucket]) for bucket in buckets}
 
-        if len(list(countmap.keys())) == 0:
-            for bucket in list(buckets.keys()):
-                del (buckets[bucket])
+        if not countmap:  # Check if countmap is empty
+            buckets.clear()  # Clear the buckets dictionary
             return
 
         total = float(sum(countmap.values()))
-        avg = total / float(len(list(countmap.keys())))
+        avg = total / float(len(countmap))
         avgpct = (avg / total) * 100.0
 
         self.log.debug(f"average percent is {avgpct} based on {avg} / {total} * 100.0")
         if avgpct < rule.get('noisy_percent', 10):
             self.log.debug(f"Not correlating because the average percent is {avgpct} (too anomalous)")
-            for bucket in list(buckets.keys()):
-                del (buckets[bucket])
+            buckets.clear()  # Clear the buckets dictionary
             return
 
         # Figure out which buckets don't contain outliers and delete them
-        delbuckets = list()
-        for bucket in buckets:
-            if (countmap[bucket] / total) * 100.0 > rule['maximum_percent']:
-                delbuckets.append(bucket)
+        delbuckets = [bucket for bucket in buckets if (countmap[bucket] / total) * 100.0 > rule['maximum_percent']]
 
         for bucket in set(delbuckets):
             del (buckets[bucket])
 
     def analysis_threshold(self, rule: dict, buckets: dict) -> None:
-        """analysis_treshold TBD
+        """Analyze event buckets based on the occurrence frequency of a specific field.
+
+        This method filters buckets by checking if the number of occurrences of a specified field's value 
+        falls within a defined threshold (minimum and maximum values). It can count occurrences of all values 
+        or only unique values of the field.
 
         Args:
-            rule (dict): TBD
-            buckets (dict): TBD
+            rule (dict): A dictionary containing the analysis rule:
+                - 'field' (str): The event field to analyze.
+                - 'minimum' (int, optional): The minimum threshold for occurrences (default: 0).
+                - 'maximum' (int, optional): The maximum threshold for occurrences (default: 999999999).
+                - 'count_unique_only' (bool, optional): Whether to count only unique values (default: False).
+            buckets (dict): A dictionary containing event collections, where keys are collection IDs and values are lists of events.
         """
 
         for bucket in list(buckets.keys()):
-            countmap = dict()
+            countmap = {}
             for event in buckets[bucket]:
-                e = self.event_extract(event, rule['field'])
-                for ef in e:
-                    if ef not in countmap:
-                        countmap[ef] = 0
-                    countmap[ef] += 1
+                extracted_values = self.event_extract(event, rule['field'])
+                for value in extracted_values:
+                    countmap[value] = countmap.get(value, 0) + 1
 
-            if not rule.get('count_unique_only'):
-                for v in countmap:
-                    if countmap[v] >= rule.get('minimum', 0) and countmap[v] <= rule.get('maximum', 999999999):
-                        continue
-                    # Delete the bucket of events if it didn't meet the
-                    # analysis criteria.
-                    if bucket in buckets:
-                        del (buckets[bucket])
-                continue
+            if not rule.get('count_unique_only', False):
+                for value, count in countmap.items():
+                    if not (rule.get('minimum', 0) <= count <= rule.get('maximum', 999999999)):
+                        # Delete the bucket if any value doesn't meet the criteria
+                        del buckets[bucket]
+                        break  # Move to the next bucket
+            else:
+                unique_count = len(countmap)
+                if not (rule.get('minimum', 0) <= unique_count <= rule.get('maximum', 999999999)):
+                    del buckets[bucket]
 
-            # If we're only looking at the number of times the requested
-            # field appears in the bucket...
-            uniques = len(list(countmap.keys()))
-            if uniques < rule.get('minimum', 0) or uniques > rule.get('maximum', 999999999):
-                del (buckets[bucket])
+        def analyze_field_scope(self, field: str) -> list:
+            """Analysis field scope.
 
-    def analyze_field_scope(self, field: str) -> list:
-        """Analysis field scope.
+            Args:
+                field (str): TBD
 
-        Args:
-            field (str): TBD
+            Returns:
+                list: TBD
+            """
 
-        Returns:
-            list: TBD
-        """
+            return [
+                field.startswith('child.'),
+                field.startswith('source.'),
+                field.startswith('entity.')
+            ]
 
-        return [
-            field.startswith('child.'),
-            field.startswith('source.'),
-            field.startswith('entity.')
-        ]
-
-    def analyze_rule_scope(self, rule: dict) -> list:
-        """Analyze the rule for use of children, sources or entities
-        so that they can be fetched during collection.
+    def analyze_rule_scope(self, rule: dict) -> tuple:
+        """Analyze the rule to determine if child events, sources, or entities need to be fetched during collection.
 
         Args:
-            rule (dict): TBD
+            rule (dict): The correlation rule dictionary to analyze.
 
         Returns:
-            list: TBD
+            tuple: A tuple of booleans (fetchChildren, fetchSources, fetchEntities) indicating whether children, sources, or entities need to be fetched.
         """
 
-        children = False
-        source = False
-        entity = False
+        fetchChildren = False
+        fetchSources = False
+        fetchEntities = False
 
-        if rule.get('collections'):
+        if 'collections' in rule:
             for collection in rule['collections']:
                 for method in collection['collect']:
                     c, s, e = self.analyze_field_scope(method['field'])
-                    if c:
-                        children = True
-                    if s:
-                        source = True
-                    if e:
-                        entity = True
+                    fetchChildren |= c  # Use |= to set to True if any field requires it
+                    fetchSources |= s
+                    fetchEntities |= e
 
-        if rule.get('aggregation'):
+        if 'aggregation' in rule:
             c, s, e = self.analyze_field_scope(rule['aggregation']['field'])
-            if c:
-                children = True
-            if s:
-                source = True
-            if e:
-                entity = True
+            fetchChildren |= c
+            fetchSources |= s
+            fetchEntities |= e
 
-        if rule.get('analysis'):
+        if 'analysis' in rule:
             for analysis in rule['analysis']:
-                if 'field' not in analysis:
-                    continue
-                c, s, e = self.analyze_field_scope(analysis['field'])
-                if c:
-                    children = True
-                if s:
-                    source = True
-                if e:
-                    entity = True
+                if 'field' in analysis:
+                    c, s, e = self.analyze_field_scope(analysis['field'])
+                    fetchChildren |= c
+                    fetchSources |= s
+                    fetchEntities |= e
 
-        return children, source, entity
+        return fetchChildren, fetchSources, fetchEntities
 
     def process_rule(self, rule: dict) -> list:
         """Work through all the components of the rule to produce a final

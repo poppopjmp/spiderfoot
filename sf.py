@@ -34,6 +34,8 @@ from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootCorrelator
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 
+from spiderfoot import __version__
+
 scanId = None
 dbh = None
 
@@ -89,7 +91,7 @@ def main() -> None:
             'cors_origins': [],
         }
 
-        p = argparse.ArgumentParser(description="SpiderFoot v5.0.1: Open Source Intelligence Automation.")  # Define p first
+        p = argparse.ArgumentParser(description="SpiderFoot {__version__}: Open Source Intelligence Automation.")  # Define p first
         p.add_argument("-d", "--debug", action='store_true', help="Enable debug output.")
         p.add_argument("-l", "--listen", metavar="IP:port", help="IP and port to listen on.")
         p.add_argument("-m", metavar="mod1,mod2,...", type=str, help="Modules to enable.")
@@ -116,7 +118,7 @@ def main() -> None:
         args = p.parse_args()  # Parse arguments after defining p
 
         if args.version:
-            print("SpiderFoot v5.0.1: Open Source Intelligence Automation.")  # Removed f-string as no place holders are used.
+            print("SpiderFoot {__version__}: Open Source Intelligence Automation.")  # Removed f-string as no place holders are used.
             sys.exit(0)
 
         if args.max_threads:

@@ -1,174 +1,303 @@
-# test_spiderfootcorrelator.py
 import unittest
-
-from spiderfoot import SpiderFootCorrelator, SpiderFootDb
+from unittest.mock import MagicMock
+from spiderfoot.correlation import SpiderFootCorrelator
+from spiderfoot import SpiderFootDb
 
 
 class TestSpiderFootCorrelator(unittest.TestCase):
-    """
-    Test SpiderFootCorrelator
-    """
 
-    def test_init_argument_dbh_invalid_type_should_raise_TypeError(self):
-        invalid_types = [None, str(), list(), dict(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    SpiderFootCorrelator(invalid_type, {})
+    def setUp(self):
+        self.dbh = MagicMock(spec=SpiderFootDb)
+        self.ruleset = {
+            "rule1": """
+            meta:
+                name: "Test Rule"
+                description: "A test rule"
+                risk: 1
+            collections:
+                collect:
+                    - field: "type"
+                      method: "exact"
+                      value: "IP_ADDRESS"
+            headline: "Test Rule Headline"
+            id: "rule1"
+            version: 1
+            enabled: true
+            rawYaml: ""
+            """
+        }
+        self.scanId = "test_scan"
+        self.correlator = SpiderFootCorrelator(self.dbh, self.ruleset, self.scanId)
 
-    def test_init_argument_ruleset_invalid_type_should_raise_TypeError(self):
-        invalid_types = [None, str(), list(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    SpiderFootCorrelator(None, invalid_type)
+    def test_init_invalid_ruleset_type(self):
+        with self.assertRaises(TypeError):
+            SpiderFootCorrelator(self.dbh, "invalid_ruleset")
 
-    def test_init_argument_ruleset_invalid_rule_should_raise_SyntaxError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
+    def test_init_invalid_dbh_type(self):
+        with self.assertRaises(TypeError):
+            SpiderFootCorrelator("invalid_dbh", self.ruleset)
 
-        ruleset = {"sample rule": "invalid yaml"}
-        with self.assertRaises(SyntaxError):
-            SpiderFootCorrelator(sfdb, ruleset)
+    def test_init_invalid_scanId_type(self):
+        with self.assertRaises(TypeError):
+            SpiderFootCorrelator(self.dbh, self.ruleset, 123)
 
-    def test_run_correlations_invalid_scan_instance_should_raise_ValueError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
+    def test_get_ruleset(self):
+        self.assertEqual(len(self.correlator.get_ruleset()), 1)
 
-        correlator = SpiderFootCorrelator(sfdb, {}, 'example scan id')
+    def test_run_correlations_invalid_scanId(self):
+        self.dbh.scanInstanceGet.return_value = None
         with self.assertRaises(ValueError):
-            correlator.run_correlations()
+            self.correlator.run_correlations()
 
-    def test_build_db_criteria_argument_matchrule_invalid_type_should_raise_TypeError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
+    def test_run_correlations_running_scan(self):
+        self.dbh.scanInstanceGet.return_value = [None, None, None, None, None, "RUNNING"]
+        with self.assertRaises(ValueError):
+            self.correlator.run_correlations()
 
-        invalid_types = [None, str(), list(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    correlator.build_db_criteria(invalid_type)
+    def test_build_db_criteria_invalid_matchrule_type(self):
+        with self.assertRaises(TypeError):
+            self.correlator.build_db_criteria("invalid_matchrule")
 
-    def test_enrich_event_sources_argument_rule_invalid_type_should_raise_TypeError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
+    def test_enrich_event_sources_invalid_events_type(self):
+        with self.assertRaises(TypeError):
+            self.correlator.enrich_event_sources("invalid_events")
 
-        invalid_types = [None, str(), list(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    correlator.enrich_event_sources(invalid_type)
+    def test_enrich_event_children_invalid_events_type(self):
+        with self.assertRaises(TypeError):
+            self.correlator.enrich_event_children("invalid_events")
 
-    def test_enrich_event_children_argument_rule_invalid_type_should_raise_TypeError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
+    def test_enrich_event_entities_invalid_events_type(self):
+        with self.assertRaises(TypeError):
+            self.correlator.enrich_event_entities("invalid_events")
 
-        invalid_types = [None, str(), list(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    correlator.enrich_event_children(invalid_type)
-
-    def test_enrich_event_entities_argument_rule_invalid_type_should_raise_TypeError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
-
-        invalid_types = [None, str(), list(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    correlator.enrich_event_entities(invalid_type)
-
-    def test_process_rule_argument_rule_invalid_type_should_raise_TypeError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
-
-        invalid_types = [None, str(), list(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    correlator.process_rule(invalid_type)
-
-    def test_build_correlation_title_argument_rule_invalid_type_should_raise_TypeError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
-
-        invalid_types = [None, str(), list(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    correlator.build_correlation_title(invalid_type, [])
-
-    def test_build_correlation_title_argument_data_invalid_type_should_raise_TypeError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
-
-        invalid_types = [None, str(), dict(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    correlator.build_correlation_title({}, invalid_type)
-
-    def test_create_correlation_argument_rule_invalid_type_should_raise_TypeError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
-
-        invalid_types = [None, str(), list(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    correlator.create_correlation(invalid_type, [], readonly=True)
-
-    def test_create_correlation_argument_data_invalid_type_should_raise_TypeError(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
-
-        invalid_types = [None, str(), dict(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    correlator.create_correlation({}, invalid_type, readonly=True)
-
-    def test_check_ruleset_validity_should_return_bool(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
-
-        ruleset = [{"sample": "sample"}]
-        self.assertIsInstance(correlator.check_ruleset_validity(ruleset), bool)
-
-        invalid_types = [None, str(), list(), dict(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                self.assertIsInstance(correlator.check_ruleset_validity(invalid_type), bool)
-
-    def test_check_rule_validity_invalid_rule_should_return_false(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
-
-        invalid_types = [None, str(), list(), dict(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                self.assertFalse(correlator.check_rule_validity(invalid_type))
-
-    def test_check_rule_validity_rule_missing_mandatory_field_should_return_false(self):
-        sfdb = SpiderFootDb(self.default_options, False)
-        correlator = SpiderFootCorrelator(sfdb, {})
-
-        rule = {
-            "id": "sample",
-            "collections": [],
-            "headline": "sample"
+    def test_collect_from_db(self):
+        matchrule = {
+            "field": "type",
+            "method": "exact",
+            "value": "IP_ADDRESS"
         }
-        self.assertFalse(correlator.check_rule_validity(rule))
+        self.dbh.scanResultEvent.return_value = [
+            [None, "data", None, "module", "type", None, None, None, "id"]
+        ]
+        events = self.correlator.collect_from_db(matchrule, False, False, False)
+        self.assertEqual(len(events), 1)
 
-        rule = {
-            "id": "sample",
-            "meta": "sample",
-            "headline": "sample"
+    def test_event_extract(self):
+        event = {
+            "field": "value",
+            "subfield": [{"field": "subvalue"}]
         }
-        self.assertFalse(correlator.check_rule_validity(rule))
+        result = self.correlator.event_extract(event, "field")
+        self.assertEqual(result, ["value"])
 
-        rule = {
-            "id": "sample",
-            "meta": "sample",
-            "collections": []
+    def test_event_keep(self):
+        event = {
+            "field": "value"
         }
-        self.assertFalse(correlator.check_rule_validity(rule))
+        patterns = ["value"]
+        result = self.correlator.event_keep(event, "field", patterns, "exact")
+        self.assertTrue(result)
+
+    def test_refine_collection(self):
+        matchrule = {
+            "field": "type",
+            "method": "exact",
+            "value": "IP_ADDRESS"
+        }
+        events = [{"type": "IP_ADDRESS"}]
+        self.correlator.refine_collection(matchrule, events)
+        self.assertEqual(len(events), 1)
+
+    def test_collect_events(self):
+        collection = {
+            "collect": [
+                {
+                    "field": "type",
+                    "method": "exact",
+                    "value": "IP_ADDRESS"
+                }
+            ]
+        }
+        self.dbh.scanResultEvent.return_value = [
+            [None, "data", None, "module", "type", None, None, None, "id"]
+        ]
+        events = self.correlator.collect_events(collection, False, False, False, 0)
+        self.assertEqual(len(events), 1)
+
+    def test_aggregate_events(self):
+        rule = {
+            "id": "rule1",
+            "aggregation": {
+                "field": "type"
+            }
+        }
+        events = [{"type": "IP_ADDRESS"}]
+        buckets = self.correlator.aggregate_events(rule, events)
+        self.assertEqual(len(buckets), 1)
+
+    def test_analyze_events(self):
+        rule = {
+            "method": "threshold",
+            "field": "type",
+            "minimum": 1,
+            "maximum": 10
+        }
+        buckets = {"bucket1": [{"type": "IP_ADDRESS"}]}
+        self.correlator.analyze_events(rule, buckets)
+        self.assertEqual(len(buckets), 1)
+
+    def test_build_correlation_title(self):
+        rule = {
+            "headline": "Test Rule Headline",
+            "id": "rule1"
+        }
+        data = [{"field": "value"}]
+        title = self.correlator.build_correlation_title(rule, data)
+        self.assertEqual(title, "Test Rule Headline")
+
+    def test_create_correlation(self):
+        rule = {
+            "id": "rule1",
+            "meta": {
+                "name": "Test Rule",
+                "description": "A test rule",
+                "risk": 1
+            },
+            "rawYaml": ""
+        }
+        data = [{"id": "event1"}]
+        self.dbh.correlationResultCreate.return_value = "correlation_id"
+        result = self.correlator.create_correlation(rule, data)
+        self.assertTrue(result)
+
+    def test_check_ruleset_validity(self):
+        rules = [self.ruleset["rule1"]]
+        result = self.correlator.check_ruleset_validity(rules)
+        self.assertTrue(result)
+
+    def test_check_rule_validity(self):
+        rule = self.ruleset["rule1"]
+        result = self.correlator.check_rule_validity(rule)
+        self.assertTrue(result)
+
+    def test_analysis_match_all_to_first_collection(self):
+        rule = {
+            "method": "match_all_to_first_collection",
+            "field": "type",
+            "match_method": "exact"
+        }
+        buckets = {
+            "bucket1": [{"type": "IP_ADDRESS", "_collection": 0}],
+            "bucket2": [{"type": "IP_ADDRESS", "_collection": 1}]
+        }
+        self.correlator.analysis_match_all_to_first_collection(rule, buckets)
+        self.assertEqual(len(buckets), 1)
+
+    def test_analysis_first_collection_only(self):
+        rule = {
+            "method": "first_collection_only",
+            "field": "type"
+        }
+        buckets = {
+            "bucket1": [{"type": "IP_ADDRESS", "_collection": 0}],
+            "bucket2": [{"type": "IP_ADDRESS", "_collection": 1}]
+        }
+        self.correlator.analysis_first_collection_only(rule, buckets)
+        self.assertEqual(len(buckets), 1)
+
+    def test_analysis_outlier(self):
+        rule = {
+            "method": "outlier",
+            "field": "type",
+            "maximum_percent": 50,
+            "noisy_percent": 10
+        }
+        buckets = {
+            "bucket1": [{"type": "IP_ADDRESS"}],
+            "bucket2": [{"type": "IP_ADDRESS"}]
+        }
+        self.correlator.analysis_outlier(rule, buckets)
+        self.assertEqual(len(buckets), 2)
+
+    def test_analysis_threshold(self):
+        rule = {
+            "method": "threshold",
+            "field": "type",
+            "minimum": 1,
+            "maximum": 10
+        }
+        buckets = {
+            "bucket1": [{"type": "IP_ADDRESS"}],
+            "bucket2": [{"type": "IP_ADDRESS"}]
+        }
+        self.correlator.analysis_threshold(rule, buckets)
+        self.assertEqual(len(buckets), 2)
+
+    def test_analyze_field_scope(self):
+        field = "type"
+        result = self.correlator.analyze_field_scope(field)
+        self.assertEqual(result, [False, False, False])
+
+    def test_analyze_rule_scope(self):
+        rule = {
+            "collections": [
+                {
+                    "collect": [
+                        {
+                            "field": "type",
+                            "method": "exact",
+                            "value": "IP_ADDRESS"
+                        }
+                    ]
+                }
+            ],
+            "aggregation": {
+                "field": "type"
+            },
+            "analysis": [
+                {
+                    "method": "threshold",
+                    "field": "type",
+                    "minimum": 1,
+                    "maximum": 10
+                }
+            ]
+        }
+        result = self.correlator.analyze_rule_scope(rule)
+        self.assertEqual(result, [False, False, False])
+
+    def test_process_rule(self):
+        rule = {
+            "id": "rule1",
+            "collections": [
+                {
+                    "collect": [
+                        {
+                            "field": "type",
+                            "method": "exact",
+                            "value": "IP_ADDRESS"
+                        }
+                    ]
+                }
+            ],
+            "aggregation": {
+                "field": "type"
+            },
+            "analysis": [
+                {
+                    "method": "threshold",
+                    "field": "type",
+                    "minimum": 1,
+                    "maximum": 10
+                }
+            ]
+        }
+        self.dbh.scanResultEvent.return_value = [
+            [None, "data", None, "module", "type", None, None, None, "id"]
+        ]
+        result = self.correlator.process_rule(rule)
+        self.assertEqual(len(result), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

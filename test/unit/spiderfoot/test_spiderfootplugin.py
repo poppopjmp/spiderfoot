@@ -1,371 +1,321 @@
-# test_spiderfootplugin.py
-import pytest
 import unittest
+from unittest.mock import MagicMock, patch
+from spiderfoot.plugin import SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
+import queue
 
-from sflib import SpiderFoot
-from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget
 
-
-@pytest.mark.usefixtures
 class TestSpiderFootPlugin(unittest.TestCase):
-    """
-    Test SpiderFoot
-    """
+
+    def setUp(self):
+        self.plugin = SpiderFootPlugin()
 
     def test_init(self):
-        """
-        Test __init__(self)
-        """
-        sfp = SpiderFootPlugin()
-        self.assertIsInstance(sfp, SpiderFootPlugin)
+        self.assertIsNone(self.plugin.thread)
+        self.assertIsNone(self.plugin._log)
+        self.assertIsNone(self.plugin.sharedThreadPool)
+
+    def test_log(self):
+        with patch('spiderfoot.plugin.logging.getLogger') as mock_getLogger:
+            log = self.plugin.log
+            self.assertIsNotNone(log)
+            mock_getLogger.assert_called_once_with(f"spiderfoot.{self.plugin.__name__}")
 
     def test_updateSocket(self):
-        """
-        Test _updateSocket(self, sock)
-        """
-        sfp = SpiderFootPlugin()
-
-        sfp._updateSocket(None)
-        self.assertEqual('TBD', 'TBD')
+        socksProxy = "socks5://localhost:1080"
+        self.plugin._updateSocket(socksProxy)
+        self.assertEqual(self.plugin.socksProxy, socksProxy)
 
     def test_clearListeners(self):
-        """
-        Test clearListeners(self)
-        """
-        sfp = SpiderFootPlugin()
-
-        sfp.clearListeners()
-        self.assertEqual('TBD', 'TBD')
+        self.plugin._listenerModules = ["listener1", "listener2"]
+        self.plugin._stopScanning = True
+        self.plugin.clearListeners()
+        self.assertEqual(self.plugin._listenerModules, [])
+        self.assertFalse(self.plugin._stopScanning)
 
     def test_setup(self):
-        """
-        Test setup(self, sf, userOpts=dict())
-        """
-        sfp = SpiderFootPlugin()
+        sf = MagicMock()
+        userOpts = {"option1": "value1"}
+        self.plugin.setup(sf, userOpts)
+        # No assertions as setup is meant to be overridden
 
-        sfp.setup(None)
-        sfp.setup(None, None)
-        self.assertEqual('TBD', 'TBD')
+    def test_debug(self):
+        with patch.object(self.plugin, 'log') as mock_log:
+            self.plugin.debug("Debug message")
+            mock_log.debug.assert_called_once_with("Debug message", extra={'scanId': self.plugin.__scanId__})
 
-    def test_enrichTargetargument_target_should_enrih_target(self):
-        """
-        Test enrichTarget(self, target)
-        """
-        sfp = SpiderFootPlugin()
+    def test_info(self):
+        with patch.object(self.plugin, 'log') as mock_log:
+            self.plugin.info("Info message")
+            mock_log.info.assert_called_once_with("Info message", extra={'scanId': self.plugin.__scanId__})
 
-        sfp.enrichTarget(None)
-        self.assertEqual('TBD', 'TBD')
+    def test_error(self):
+        with patch.object(self.plugin, 'log') as mock_log:
+            self.plugin.error("Error message")
+            mock_log.error.assert_called_once_with("Error message", extra={'scanId': self.plugin.__scanId__})
 
-    def test_setTarget_should_set_a_target(self):
-        """
-        Test setTarget(self, target)
-        """
-        sfp = SpiderFootPlugin()
+    def test_enrichTarget(self):
+        target = "example.com"
+        self.plugin.enrichTarget(target)
+        # No assertions as enrichTarget is meant to be overridden
 
-        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
-        sfp.setTarget(target)
+    def test_setTarget(self):
+        target = SpiderFootTarget("example.com", "INTERNET_NAME")
+        self.plugin.setTarget(target)
+        self.assertEqual(self.plugin._currentTarget, target)
 
-        get_target = sfp.getTarget().targetValue
-        self.assertIsInstance(get_target, str)
-        self.assertEqual("spiderfoot.net", get_target)
-
-    def test_setTarget_argument_target_invalid_type_should_raise_TypeError(self):
-        """
-        Test setTarget(self, target)
-        """
-        sfp = SpiderFootPlugin()
-
-        invalid_types = [None, "", list(), dict(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    sfp.setTarget(invalid_type)
-
-    def test_set_dbhargument_dbh_should_set_database_handle(self):
-        """
-        Test setDbh(self, dbh)
-        """
-        sfdb = SpiderFootDb(self.default_options, False)
-        sfp = SpiderFootPlugin()
-
-        sfp.setDbh(sfdb)
-        self.assertIsInstance(sfp.__sfdb__, SpiderFootDb)
-
-    def test_setScanId_argument_id_should_set_a_scan_id(self):
-        """
-        Test setScanId(self, id)
-        """
-        sfp = SpiderFootPlugin()
-
-        scan_id = '1234'
-        sfp.setScanId(scan_id)
-
-        get_scan_id = sfp.getScanId()
-        self.assertIsInstance(get_scan_id, str)
-        self.assertEqual(scan_id, get_scan_id)
-
-    def test_setScanId_argument_id_invalid_type_should_raise_TypeError(self):
-        """
-        Test setScanId(self, id)
-        """
-        sfp = SpiderFootPlugin()
-
-        invalid_types = [None, list(), dict(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    sfp.setScanId(invalid_type)
-
-    def test_getScanId_should_return_a_string(self):
-        """
-        Test getScanId(self)
-        """
-        sfp = SpiderFootPlugin()
-
-        scan_id = 'example scan id'
-        sfp.setScanId(scan_id)
-
-        get_scan_id = sfp.getScanId()
-        self.assertIsInstance(get_scan_id, str)
-        self.assertEqual(scan_id, get_scan_id)
-
-    def test_getScanId_unitialised_scanid_should_raise_TypeError(self):
-        """
-        Test getScanId(self)
-        """
-        sfp = SpiderFootPlugin()
-
+    def test_setTarget_invalid_type(self):
         with self.assertRaises(TypeError):
-            sfp.getScanId()
+            self.plugin.setTarget("invalid_target")
 
-    def test_getTarget_should_return_a_string(self):
-        """
-        Test getTarget(self)
-        """
-        sfp = SpiderFootPlugin()
+    def test_setDbh(self):
+        dbh = MagicMock()
+        self.plugin.setDbh(dbh)
+        self.assertEqual(self.plugin.__sfdb__, dbh)
 
-        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
-        sfp.setTarget(target)
+    def test_setScanId(self):
+        scanId = "test_scan"
+        self.plugin.setScanId(scanId)
+        self.assertEqual(self.plugin.__scanId__, scanId)
 
-        get_target = sfp.getTarget().targetValue
-        self.assertIsInstance(get_target, str)
-        self.assertEqual("spiderfoot.net", get_target)
-
-    def test_getTarget_unitialised_target_should_raise(self):
-        """
-        Test getTarget(self)
-        """
-        sfp = SpiderFootPlugin()
-
+    def test_setScanId_invalid_type(self):
         with self.assertRaises(TypeError):
-            sfp.getTarget()
+            self.plugin.setScanId(123)
 
-    def test_register_listener(self):
-        """
-        Test registerListener(self, listener)
-        """
-        sfp = SpiderFootPlugin()
-        sfp.registerListener(None)
+    def test_getScanId(self):
+        self.plugin.__scanId__ = "test_scan"
+        self.assertEqual(self.plugin.getScanId(), "test_scan")
 
-        self.assertEqual('TBD', 'TBD')
+    def test_getScanId_not_set(self):
+        self.plugin.__scanId__ = None
+        with self.assertRaises(TypeError):
+            self.plugin.getScanId()
 
-    def test_setOutputFilter_should_set_output_filter(self):
-        """
-        Test setOutputFilter(self, types)
-        """
-        sfp = SpiderFootPlugin()
+    def test_getTarget(self):
+        target = SpiderFootTarget("example.com", "INTERNET_NAME")
+        self.plugin._currentTarget = target
+        self.assertEqual(self.plugin.getTarget(), target)
 
-        output_filter = "test filter"
-        sfp.setOutputFilter("test filter")
-        self.assertEqual(output_filter, sfp.__outputFilter__)
+    def test_getTarget_not_set(self):
+        self.plugin._currentTarget = None
+        with self.assertRaises(TypeError):
+            self.plugin.getTarget()
 
-    def test_tempStorage_should_return_a_dict(self):
-        """
-        Test tempStorage(self)
-        """
-        sfp = SpiderFootPlugin()
+    def test_registerListener(self):
+        listener = MagicMock()
+        self.plugin.registerListener(listener)
+        self.assertIn(listener, self.plugin._listenerModules)
 
-        temp_storage = sfp.tempStorage()
-        self.assertIsInstance(temp_storage, dict)
+    def test_setOutputFilter(self):
+        types = ["type1", "type2"]
+        self.plugin.setOutputFilter(types)
+        self.assertEqual(self.plugin.__outputFilter__, types)
 
-    def test_notifyListeners_should_notify_listener_modules(self):
-        """
-        Test notifyListeners(self, sfEvent)
-        """
-        sfp = SpiderFootPlugin()
-        sfdb = SpiderFootDb(self.default_options, False)
-        sfp.setDbh(sfdb)
+    def test_tempStorage(self):
+        self.assertEqual(self.plugin.tempStorage(), {})
 
-        event_type = 'ROOT'
-        event_data = 'test data'
-        module = 'test module'
-        source_event = None
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-        sfp.notifyListeners(evt)
-
-        self.assertEqual('TBD', 'TBD')
-
-    def test_notifyListeners_output_filter_matched_should_notify_listener_modules(self):
-        """
-        Test notifyListeners(self, sfEvent)
-        """
-        sfp = SpiderFootPlugin()
-        sfdb = SpiderFootDb(self.default_options, False)
-        sfp.setDbh(sfdb)
-
-        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
-        sfp.setTarget(target)
-
-        event_type = 'ROOT'
-        event_data = 'test data'
-        module = 'test module'
-        source_event = None
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        event_type = 'test event type'
-        event_data = 'test data'
-        module = 'test module'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        sfp.__outputFilter__ = event_type
-
-        sfp.notifyListeners(evt)
-
-        self.assertEqual('TBD', 'TBD')
-
-    def test_notifyListeners_output_filter_unmatched_should_not_notify_listener_modules(self):
-        """
-        Test notifyListeners(self, sfEvent)
-        """
-        sfp = SpiderFootPlugin()
-        sfdb = SpiderFootDb(self.default_options, False)
-        sfp.setDbh(sfdb)
-
-        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
-        sfp.setTarget(target)
-
-        event_type = 'ROOT'
-        event_data = 'test data'
-        module = 'test module'
-        source_event = None
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        event_type = 'test event type'
-        event_data = 'test data'
-        module = 'test module'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        sfp.__outputFilter__ = "example unmatched event type"
-
-        sfp.notifyListeners(evt)
-
-        self.assertEqual('TBD', 'TBD')
-
-    def test_notifyListeners_event_type_and_data_same_as_source_event_source_event_should_story_only(self):
-        """
-        Test notifyListeners(self, sfEvent)
-        """
-        sfp = SpiderFootPlugin()
-        sfdb = SpiderFootDb(self.default_options, False)
-        sfp.setDbh(sfdb)
-
-        event_type = 'ROOT'
-        event_data = 'test data'
-        module = 'test module'
-        source_event = None
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        event_type = 'test event type'
-        event_data = 'test data'
-        module = 'test module'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        sfp.notifyListeners(evt)
-
-        self.assertEqual('TBD', 'TBD')
-
-    def test_notifyListeners_argument_sfEvent_invalid_event_should_raise_TypeError(self):
-        """
-        Test notifyListeners(self, sfEvent)
-        """
-        sfp = SpiderFootPlugin()
-
-        invalid_types = [None, "", list(), dict(), int()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    sfp.notifyListeners(invalid_type)
+    def test_notifyListeners(self):
+        sfEvent = SpiderFootEvent("ROOT", "data", "module", None)
+        listener = MagicMock()
+        listener.watchedEvents.return_value = ["ROOT"]
+        self.plugin._listenerModules = [listener]
+        self.plugin.notifyListeners(sfEvent)
+        listener.handleEvent.assert_called_once_with(sfEvent)
 
     def test_checkForStop(self):
-        """
-        Test checkForStop(self)
-        """
-        sfp = SpiderFootPlugin()
+        self.plugin.errorState = True
+        self.assertTrue(self.plugin.checkForStop())
 
-        class DatabaseStub:
-            def scanInstanceGet(self, scanId):
-                return [None, None, None, None, None, status]
+    def test_running(self):
+        self.plugin.sharedThreadPool = MagicMock()
+        self.plugin.sharedThreadPool.countQueuedTasks.return_value = 1
+        self.assertTrue(self.plugin.running)
 
-        sfp.__sfdb__ = DatabaseStub()
-        sfp.__scanId__ = 'example scan id'
+    def test_watchedEvents(self):
+        self.assertEqual(self.plugin.watchedEvents(), ["*"])
 
-        # pseudo-parameterized test
-        scan_statuses = [
-            (None, False),
-            ("anything", False),
-            ("RUNNING", False),
-            ("ABORT-REQUESTED", True)
-        ]
-        for status, expectedReturnValue in scan_statuses:
-            returnValue = sfp.checkForStop()
-            self.assertEqual(returnValue, expectedReturnValue, status)
-
-    def test_watchedEvents_should_return_a_list(self):
-        """
-        Test watchedEvents(self)
-        """
-        sfp = SpiderFootPlugin()
-
-        watched_events = sfp.watchedEvents()
-        self.assertIsInstance(watched_events, list)
-
-    def test_producedEvents_should_return_a_list(self):
-        """
-        Test producedEvents(self)
-        """
-        sfp = SpiderFootPlugin()
-
-        produced_events = sfp.producedEvents()
-        self.assertIsInstance(produced_events, list)
+    def test_producedEvents(self):
+        self.assertEqual(self.plugin.producedEvents(), [])
 
     def test_handleEvent(self):
-        """
-        Test handleEvent(self, sfEvent)
-        """
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
+        sfEvent = SpiderFootEvent("ROOT", "data", "module", None)
+        self.plugin.handleEvent(sfEvent)
+        # No assertions as handleEvent is meant to be overridden
 
-        sfp = SpiderFootPlugin()
-        sfp.handleEvent(evt)
+    def test_asdict(self):
+        self.plugin.meta = {"name": "Test Plugin", "summary": "A test plugin", "categories": ["cat1"], "useCases": ["useCase1"], "flags": ["flag1"]}
+        self.plugin.opts = {"opt1": "value1"}
+        self.plugin.optdescs = {"opt1": "Option 1"}
+        expected_dict = {
+            'name': "Test Plugin",
+            'descr': "A test plugin",
+            'cats': ["cat1"],
+            'group': ["useCase1"],
+            'labels': ["flag1"],
+            'provides': [],
+            'consumes': ["*"],
+            'meta': self.plugin.meta,
+            'opts': self.plugin.opts,
+            'optdescs': self.plugin.optdescs,
+        }
+        self.assertEqual(self.plugin.asdict(), expected_dict)
 
     def test_start(self):
-        """
-        Test start(self)
-        """
-        sf = SpiderFoot(self.default_options)
-        sfp = SpiderFootPlugin()
-        sfp.sf = sf
+        with patch('threading.Thread') as mock_thread:
+            self.plugin.start()
+            mock_thread.assert_called_once_with(target=self.plugin.threadWorker)
+            mock_thread.return_value.start.assert_called_once()
 
-        sfp.start()
+    def test_finish(self):
+        self.plugin.finish()
+        # No assertions as finish is meant to be overridden
+
+    def test_threadWorker(self):
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute'):
+            self.plugin.incomingEventQueue = MagicMock()
+            self.plugin.outgoingEventQueue = MagicMock()
+            self.plugin.incomingEventQueue.get_nowait.side_effect = ["FINISHED", queue.Empty]
+            self.plugin.threadWorker()
+            mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
+            self.plugin.poolExecute.assert_called_once_with(self.plugin.finish)
+
+    def test_poolExecute(self):
+        callback = MagicMock()
+        self.plugin.__name__ = "sfp__stor_test"
+        self.plugin.poolExecute(callback)
+        callback.assert_called_once()
+
+    def test_threadPool(self):
+        with patch('spiderfoot.plugin.SpiderFootThreadPool') as mock_SpiderFootThreadPool:
+            pool = self.plugin.threadPool()
+            mock_SpiderFootThreadPool.assert_called_once()
+            self.assertEqual(pool, mock_SpiderFootThreadPool.return_value)
+
+    def test_setSharedThreadPool(self):
+        sharedThreadPool = MagicMock()
+        self.plugin.setSharedThreadPool(sharedThreadPool)
+        self.assertEqual(self.plugin.sharedThreadPool, sharedThreadPool)
+
+    def test_notifyListeners_with_output_filter(self):
+        self.plugin.__outputFilter__ = ["FILTERED_EVENT"]
+        sfEvent = SpiderFootEvent("FILTERED_EVENT", "data", "module", None)
+        listener = MagicMock()
+        listener.watchedEvents.return_value = ["FILTERED_EVENT"]
+        self.plugin._listenerModules = [listener]
+        self.plugin.notifyListeners(sfEvent)
+        listener.handleEvent.assert_called_once_with(sfEvent)
+
+    def test_notifyListeners_with_storeOnly(self):
+        source_event = SpiderFootEvent("ROOT", "data", "module", None)
+        sfEvent = SpiderFootEvent("FILTERED_EVENT", "data", "module", source_event)
+        source_event.sourceEvent = sfEvent
+        listener = MagicMock()
+        listener.watchedEvents.return_value = ["FILTERED_EVENT"]
+        self.plugin._listenerModules = [listener]
+        self.plugin.notifyListeners(sfEvent)
+        listener.handleEvent.assert_not_called()
+
+    def test_notifyListeners_with_outgoingEventQueue(self):
+        self.plugin.outgoingEventQueue = MagicMock()
+        sfEvent = SpiderFootEvent("ROOT", "data", "module", None)
+        self.plugin.notifyListeners(sfEvent)
+        self.plugin.outgoingEventQueue.put.assert_called_once_with(sfEvent)
+
+    def test_notifyListeners_with_incomingEventQueue(self):
+        self.plugin.incomingEventQueue = MagicMock()
+        self.plugin.outgoingEventQueue = MagicMock()
+        sfEvent = SpiderFootEvent("ROOT", "data", "module", None)
+        self.plugin.notifyListeners(sfEvent)
+        self.plugin.outgoingEventQueue.put.assert_called_once_with(sfEvent)
+
+    def test_checkForStop_with_threading(self):
+        self.plugin.outgoingEventQueue = MagicMock()
+        self.plugin.incomingEventQueue = MagicMock()
+        self.plugin._stopScanning = True
+        self.assertTrue(self.plugin.checkForStop())
+
+    def test_checkForStop_with_scanId(self):
+        self.plugin.__scanId__ = "test_scan"
+        self.plugin.__sfdb__ = MagicMock()
+        self.plugin.__sfdb__.scanInstanceGet.return_value = [None, None, None, None, None, "ABORT-REQUESTED"]
+        self.assertTrue(self.plugin.checkForStop())
+
+    def test_checkForStop_without_scanId(self):
+        self.plugin.__scanId__ = None
+        self.assertFalse(self.plugin.checkForStop())
+
+    def test_checkForStop_with_running_scan(self):
+        self.plugin.__scanId__ = "test_scan"
+        self.plugin.__sfdb__ = MagicMock()
+        self.plugin.__sfdb__.scanInstanceGet.return_value = [None, None, None, None, None, "RUNNING"]
+        self.assertFalse(self.plugin.checkForStop())
+
+    def test_checkForStop_with_no_scan_status(self):
+        self.plugin.__scanId__ = "test_scan"
+        self.plugin.__sfdb__.scanInstanceGet.return_value = None
+        self.assertFalse(self.plugin.checkForStop())
+
+    def test_threadWorker_with_incomingEventQueue(self):
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute'):
+            self.plugin.incomingEventQueue = MagicMock()
+            self.plugin.outgoingEventQueue = MagicMock()
+            self.plugin.incomingEventQueue.get_nowait.side_effect = [SpiderFootEvent("ROOT", "data", "module", None), "FINISHED", queue.Empty]
+            self.plugin.threadWorker()
+            mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
+            self.assertEqual(self.plugin.poolExecute.call_count, 2)
+
+    def test_threadWorker_with_exception(self):
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute'), patch.object(self.plugin, 'sf'):
+            self.plugin.incomingEventQueue = MagicMock()
+            self.plugin.outgoingEventQueue = MagicMock()
+            self.plugin.incomingEventQueue.get_nowait.side_effect = Exception("Test exception")
+            self.plugin.threadWorker()
+            mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
+            self.plugin.sf.error.assert_called_once()
+            self.assertTrue(self.plugin.errorState)
+            self.plugin.incomingEventQueue.get_nowait.assert_called()
+
+    def test_threadWorker_with_keyboard_interrupt(self):
+        with patch('spiderfoot.plugin.SpiderFootDb') as mock_SpiderFootDb, patch.object(self.plugin, 'sf'):
+            self.plugin.incomingEventQueue = MagicMock()
+            self.plugin.outgoingEventQueue = MagicMock()
+            self.plugin.incomingEventQueue.get_nowait.side_effect = KeyboardInterrupt
+            self.plugin.threadWorker()
+            mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
+            self.plugin.sf.debug.assert_called_once_with(f"Interrupted module {self.plugin.__name__}.")
+            self.assertTrue(self.plugin._stopScanning)
+
+    def test_poolExecute_with_shared_thread_pool(self):
+        callback = MagicMock()
+        self.plugin.__name__ = "sfp_test"
+        self.plugin.sharedThreadPool = MagicMock()
+        self.plugin.poolExecute(callback)
+        self.plugin.sharedThreadPool.submit.assert_called_once_with(callback, taskName=f"{self.plugin.__name__}_threadWorker", maxThreads=self.plugin.maxThreads)
+
+    def test_poolExecute_with_storage_module(self):
+        callback = MagicMock()
+        self.plugin.__name__ = "sfp__stor_test"
+        self.plugin.poolExecute(callback)
+        callback.assert_called_once()
+
+    def test_poolExecute_with_non_storage_module(self):
+        callback = MagicMock()
+        self.plugin.__name__ = "sfp_test"
+        self.plugin.sharedThreadPool = MagicMock()
+        self.plugin.poolExecute(callback)
+        self.plugin.sharedThreadPool.submit.assert_called_once_with(callback, taskName=f"{self.plugin.__name__}_threadWorker", maxThreads=self.plugin.maxThreads)
+
+    def test_threadPool_with_arguments(self):
+        with patch('spiderfoot.plugin.SpiderFootThreadPool') as mock_SpiderFootThreadPool:
+            pool = self.plugin.threadPool(5, 10)
+            mock_SpiderFootThreadPool.assert_called_once_with(5, 10)
+            self.assertEqual(pool, mock_SpiderFootThreadPool.return_value)
+
+    def test_setSharedThreadPool_with_argument(self):
+        sharedThreadPool = MagicMock()
+        self.plugin.setSharedThreadPool(sharedThreadPool)
+        self.assertEqual(self.plugin.sharedThreadPool, sharedThreadPool)
+
+
+if __name__ == "__main__":
+    unittest.main()

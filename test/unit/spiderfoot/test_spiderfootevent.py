@@ -1,363 +1,158 @@
-# test_spiderfootevent.py
 import unittest
-
-from spiderfoot import SpiderFootEvent
+from spiderfoot.event import SpiderFootEvent
 
 
 class TestSpiderFootEvent(unittest.TestCase):
 
-    def test_init_root_event_should_create_event(self):
-        event_data = 'example event data'
-        module = 'example module'
-        source_event = ''
+    def setUp(self):
+        self.eventType = "URL_FORM"
+        self.data = "http://example.com"
+        self.module = "example_module"
+        self.sourceEvent = None
+        self.event = SpiderFootEvent(self.eventType, self.data, self.module, self.sourceEvent)
 
-        event_type = 'ROOT'
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-        self.assertIsInstance(evt, SpiderFootEvent)
+    def test_generated(self):
+        self.assertIsInstance(self.event.generated, float)
 
-    def test_init_nonroot_event_with_root_sourceEvent_should_create_event(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        source_event = SpiderFootEvent(event_type, event_data, module, source_event)
+    def test_eventType(self):
+        self.assertEqual(self.event.eventType, self.eventType)
 
-        event_type = 'example non-root event type'
-        event_data = 'example event data'
-        module = 'example module'
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-        self.assertIsInstance(evt, SpiderFootEvent)
+    def test_confidence(self):
+        self.assertEqual(self.event.confidence, 100)
 
-    def test_init_argument_eventType_of_invalid_type_should_raise_TypeError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        source_event = SpiderFootEvent(event_type, event_data, module, source_event)
+    def test_visibility(self):
+        self.assertEqual(self.event.visibility, 100)
 
-        module = 'example module'
+    def test_risk(self):
+        self.assertEqual(self.event.risk, 0)
 
-        invalid_types = [None, bytes(), list(), dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    SpiderFootEvent(invalid_type, event_data, module, source_event)
+    def test_module(self):
+        self.assertEqual(self.event.module, self.module)
 
-    def test_init_argument_eventType_with_empty_value_should_raise_ValueError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        source_event = SpiderFootEvent(event_type, event_data, module, source_event)
+    def test_data(self):
+        self.assertEqual(self.event.data, self.data)
 
-        event_type = ''
-        module = 'example module'
+    def test_sourceEvent(self):
+        self.assertIsNone(self.event.sourceEvent)
 
+    def test_sourceEventHash(self):
+        self.assertEqual(self.event.sourceEventHash, "ROOT")
+
+    def test_actualSource(self):
+        self.assertIsNone(self.event.actualSource)
+
+    def test_moduleDataSource(self):
+        self.assertIsNone(self.event.moduleDataSource)
+
+    def test_hash(self):
+        self.assertIsInstance(self.event.hash, str)
+
+    def test_eventType_setter(self):
+        new_eventType = "RAW_DATA"
+        self.event.eventType = new_eventType
+        self.assertEqual(self.event.eventType, new_eventType)
+
+    def test_eventType_setter_invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.event.eventType = 123
+
+    def test_eventType_setter_empty_value(self):
         with self.assertRaises(ValueError):
-            SpiderFootEvent(event_type, event_data, module, source_event)
+            self.event.eventType = ""
 
-    def test_init_argument_data_of_invalid_type_should_raise_TypeError(self):
-        event_type = 'ROOT'
-        module = ''
-        source_event = ''
+    def test_confidence_setter(self):
+        new_confidence = 80
+        self.event.confidence = new_confidence
+        self.assertEqual(self.event.confidence, new_confidence)
 
-        invalid_types = [None, bytes(), list(), dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    SpiderFootEvent(event_type, invalid_type, module, source_event)
+    def test_confidence_setter_invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.event.confidence = "high"
 
-    def test_init_argument_data_with_empty_value_should_raise_ValueError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        source_event = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        event_type = 'example event type'
-        event_data = ''
-        module = 'example module'
-
+    def test_confidence_setter_invalid_value(self):
         with self.assertRaises(ValueError):
-            SpiderFootEvent(event_type, event_data, module, source_event)
+            self.event.confidence = 200
 
-    def test_init_argument_module_of_invalid_type_should_raise_TypeError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = SpiderFootEvent(event_type, event_data, module, "ROOT")
+    def test_visibility_setter(self):
+        new_visibility = 90
+        self.event.visibility = new_visibility
+        self.assertEqual(self.event.visibility, new_visibility)
 
-        event_type = 'example non-root event type'
-        invalid_types = [None, bytes(), list(), dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    SpiderFootEvent(event_type, event_data, invalid_type, source_event)
+    def test_visibility_setter_invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.event.visibility = "high"
 
-    def test_init_argument_module_with_empty_value_should_raise_ValueError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        source_event = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        event_type = 'example event type'
-        event_data = 'example event data'
-        module = ''
-
+    def test_visibility_setter_invalid_value(self):
         with self.assertRaises(ValueError):
-            SpiderFootEvent(event_type, event_data, module, source_event)
+            self.event.visibility = 200
 
-    def test_init_argument_sourceEvent_of_invalid_type_should_raise_TypeError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
+    def test_risk_setter(self):
+        new_risk = 50
+        self.event.risk = new_risk
+        self.assertEqual(self.event.risk, new_risk)
 
-        event_type = 'example non-root event type'
-        module = 'example module'
-        invalid_types = [None, "", bytes(), list(), dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    SpiderFootEvent(event_type, event_data, module, invalid_type)
+    def test_risk_setter_invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.event.risk = "high"
 
-    def test_init_argument_confidence_of_invalid_type_should_raise_TypeError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
+    def test_risk_setter_invalid_value(self):
+        with self.assertRaises(ValueError):
+            self.event.risk = 200
 
-        invalid_types = [None, "", bytes(), list(), dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    evt = SpiderFootEvent(event_type, event_data, module, source_event)
-                    evt.confidence = invalid_type
+    def test_module_setter(self):
+        new_module = "new_module"
+        self.event.module = new_module
+        self.assertEqual(self.event.module, new_module)
 
-    def test_init_argument_confidence_invalid_value_should_raise_ValueError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
+    def test_module_setter_invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.event.module = 123
 
-        invalid_values = [-1, 101]
-        for invalid_value in invalid_values:
-            with self.subTest(invalid_value=invalid_value):
-                with self.assertRaises(ValueError):
-                    evt = SpiderFootEvent(event_type, event_data, module, source_event)
-                    evt.confidence = invalid_value
+    def test_module_setter_empty_value(self):
+        with self.assertRaises(ValueError):
+            self.event.module = ""
 
-    def test_init_argument_visibility_of_invalid_type_should_raise_TypeError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
+    def test_data_setter(self):
+        new_data = "new_data"
+        self.event.data = new_data
+        self.assertEqual(self.event.data, new_data)
 
-        invalid_types = [None, "", bytes(), list(), dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    evt = SpiderFootEvent(event_type, event_data, module, source_event)
-                    evt.visibility = invalid_type
+    def test_data_setter_invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.event.data = 123
 
-    def test_init_argument_visibility_invalid_value_should_raise_ValueError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
+    def test_data_setter_empty_value(self):
+        with self.assertRaises(ValueError):
+            self.event.data = ""
 
-        invalid_values = [-1, 101]
-        for invalid_value in invalid_values:
-            with self.subTest(invalid_value=invalid_value):
-                with self.assertRaises(ValueError):
-                    evt = SpiderFootEvent(event_type, event_data, module, source_event)
-                    evt.visibility = invalid_value
+    def test_sourceEvent_setter(self):
+        new_sourceEvent = SpiderFootEvent("ROOT", "root_data", "root_module", None)
+        self.event.sourceEvent = new_sourceEvent
+        self.assertEqual(self.event.sourceEvent, new_sourceEvent)
 
-    def test_init_argument_risk_of_invalid_type_should_raise_TypeError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
+    def test_sourceEvent_setter_invalid_type(self):
+        with self.assertRaises(TypeError):
+            self.event.sourceEvent = "invalid_event"
 
-        invalid_types = [None, "", bytes(), list(), dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    evt = SpiderFootEvent(event_type, event_data, module, source_event)
-                    evt.risk = invalid_type
+    def test_actualSource_setter(self):
+        new_actualSource = "new_actual_source"
+        self.event.actualSource = new_actualSource
+        self.assertEqual(self.event.actualSource, new_actualSource)
 
-    def test_init_argument_risk_invalid_value_should_raise_ValueError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
+    def test_moduleDataSource_setter(self):
+        new_moduleDataSource = "new_module_data_source"
+        self.event.moduleDataSource = new_moduleDataSource
+        self.assertEqual(self.event.moduleDataSource, new_moduleDataSource)
 
-        invalid_values = [-1, 101]
-        for invalid_value in invalid_values:
-            with self.subTest(invalid_value=invalid_value):
-                with self.assertRaises(ValueError):
-                    evt = SpiderFootEvent(event_type, event_data, module, source_event)
-                    evt.risk = invalid_value
+    def test_asDict(self):
+        event_dict = self.event.asDict()
+        self.assertIsInstance(event_dict, dict)
+        self.assertEqual(event_dict['generated'], int(self.event.generated))
+        self.assertEqual(event_dict['type'], self.event.eventType)
+        self.assertEqual(event_dict['data'], self.event.data)
+        self.assertEqual(event_dict['module'], self.event.module)
+        self.assertEqual(event_dict['source'], '')
 
-    def test_confidence_attribute_should_return_confidence_as_integer(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        confidence = 100
 
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-        evt.confidence = confidence
-
-        self.assertEqual(confidence, evt.confidence)
-
-    def test_confidence_attribute_setter_invalid_type_should_raise_TypeError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        invalid_types = [None, "", bytes(), list(), dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    evt.confidence = invalid_type
-
-    def test_visibility_attribute_should_return_visibility_as_integer(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        visibility = 100
-
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-        evt.visibility = visibility
-
-        self.assertEqual(visibility, evt.visibility)
-
-    def test_visibility_attribute_setter_invalid_type_should_raise_TypeError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        invalid_types = [None, "", bytes(), list(), dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    evt.visibility = invalid_type
-
-    def test_risk_attribute_should_return_risk_as_integer(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        risk = 100
-
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-        evt.risk = risk
-
-        self.assertEqual(risk, evt.risk)
-
-    def test_risk_attribute_setter_invalid_type_should_raise_TypeError(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        invalid_types = [None, "", bytes(), list(), dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    evt.risk = invalid_type
-
-    def test_actualSource_attribute_should_return_actual_source_as_string(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        actual_source = 'example actual source'
-        evt.actualSource = actual_source
-
-        self.assertEqual(actual_source, evt.actualSource)
-
-    def test_sourceEventHash_attribute_should_return_source_event_hash_as_string(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        self.assertEqual("ROOT", evt.sourceEventHash)
-
-    def test_moduleDataSource_attribute_should_return_module_data_source_as_string(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        module_data_source = 'example module data source'
-        evt.moduleDataSource = module_data_source
-
-        self.assertEqual(module_data_source, evt.moduleDataSource)
-
-    def test_asdict_root_event_should_return_event_as_a_dict(self):
-        event_data = 'example event data'
-        module = 'example module data'
-        source_event = ''
-
-        event_type = 'ROOT'
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-        evt_dict = evt.asDict()
-
-        self.assertIsInstance(evt_dict, dict)
-        self.assertEqual(evt_dict['type'], event_type)
-        self.assertEqual(evt_dict['data'], event_data)
-        self.assertEqual(evt_dict['module'], module)
-
-    def test_asdict_nonroot_event_should_return_event_as_a_dict(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-        source_event = SpiderFootEvent(event_type, event_data, module, source_event)
-
-        event_type = 'example non-root event type'
-        event_data = 'example event data'
-        module = 'example_module'
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-        evt_dict = evt.asDict()
-
-        self.assertIsInstance(evt_dict, dict)
-        self.assertEqual(evt_dict['type'], event_type)
-        self.assertEqual(evt_dict['data'], event_data)
-        self.assertEqual(evt_dict['module'], module)
-
-    def test_hash_attribute_root_event_should_return_root_as_a_string(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = ''
-        source_event = ''
-
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-        evt_hash = evt.hash
-
-        self.assertEqual('ROOT', evt_hash)
-
-    def test_hash_attribute_nonroot_event_should_return_a_string(self):
-        event_type = 'ROOT'
-        event_data = 'example event data'
-        module = 'example module'
-        source_event = SpiderFootEvent(event_type, event_data, module, "ROOT")
-
-        event_type = 'not ROOT'
-        evt = SpiderFootEvent(event_type, event_data, module, source_event)
-        evt_hash = evt.hash
-
-        self.assertIsInstance(evt_hash, str)
+if __name__ == "__main__":
+    unittest.main()

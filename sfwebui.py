@@ -255,17 +255,16 @@ class SpiderFootWebUi:
                             row[11], row[4], row[13], row[14]])
 
         return retdata
-
-    def buildExcel(self: 'SpiderFootWebUi', data: list, columnNames: list, sheetNameIndex: int = 0) -> str:
-        """Convert supplied raw data into GEXF (Graph Exchange XML Format) format (e.g. for Gephi).
+    def buildExcel(self, data: list, columnNames: list, sheetNameIndex: int = 0) -> bytes:
+        """Convert supplied raw data into Excel format.
 
         Args:
             data (list): Scan result as list
             columnNames (list): column names
-            sheetNameIndex (int): TBD
+            sheetNameIndex (int): Index of the column to use as sheet names
 
         Returns:
-            str: Excel workbook
+            bytes: Excel workbook as bytes
         """
         rowNums = dict()
         workbook = openpyxl.Workbook()
