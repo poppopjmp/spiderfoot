@@ -8,11 +8,11 @@ from modules.sfp_abuseipdb import sfp_abuseipdb
 from sflib import SpiderFoot
 
 
-class TestModuleIntegrationAbuseIPDB(unittest.TestCase):
+class BaseTestModuleIntegration(unittest.TestCase):
 
     def setUp(self):
-        self.sf = SpiderFoot(self.default_options)  # Assuming default_options is defined
-        self.module = sfp_abuseipdb()
+        self.sf = SpiderFoot(self.default_options)
+        self.module = self.module_class()
         self.module.setup(self.sf, dict())
 
     def requests_get_with_retries(self, url, timeout, retries=3, backoff_factor=0.3):
@@ -26,6 +26,16 @@ class TestModuleIntegrationAbuseIPDB(unittest.TestCase):
                     time.sleep(backoff_factor * (2 ** i))
                 else:
                     raise e
+
+    def create_event(self, target_value, target_type, event_type, event_data):
+        target = SpiderFootTarget(target_value, target_type)
+        evt = SpiderFootEvent(event_type, event_data, '', '')
+        return target, evt
+
+
+class TestModuleIntegrationAbuseIPDB(BaseTestModuleIntegration):
+
+    module_class = sfp_abuseipdb
 
     @patch('modules.sfp_abuseipdb.requests.get')
     def test_handleEvent_malicious_ip(self, mock_get):
@@ -51,10 +61,9 @@ class TestModuleIntegrationAbuseIPDB(unittest.TestCase):
 
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
-        target = SpiderFootTarget(target_value, target_type)
-        self.module.setTarget(target)
+        target, evt = self.create_event(target_value, target_type, 'ROOT', '')
 
-        evt = SpiderFootEvent('ROOT', '', '', '')
+        self.module.setTarget(target)
         self.module.handleEvent(evt)
 
         events = self.sf.getEvents()
