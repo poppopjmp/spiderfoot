@@ -25,7 +25,7 @@ Create a module scan
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
-    Open browser              ${URL}/newscan  ${BROWSER}
+    Open browser              ${URL}/newscan  ${BROWSER} executable_path=/usr/bin/firefox
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:usecase_${use_case}
@@ -105,7 +105,7 @@ Wait For Scan To Finish
 
 ***Test Cases***
 Main navigation pages should render correctly
-    Open browser                  ${URL}            ${BROWSER}
+    Open browser                  ${URL}            ${BROWSER} executable_path=/usr/bin/firefox
     Click Element                 id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=${TIMEOUT}
     New scan page should render
