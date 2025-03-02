@@ -6,12 +6,8 @@ This is an alternative web interface for SpiderFoot using React. It provides a c
 
 - Node.js (v14 or higher)
 - npm (v6 or higher)
-- alertifyjs
 - bootstrap
 - d3
-- jquery
-- sigma
-- tablesorter
 
 ## Installation
 
