@@ -8,11 +8,11 @@ from modules.sfp_abusech import sfp_abusech
 from sflib import SpiderFoot
 
 
-class TestModuleIntegrationAbusech(unittest.TestCase):
+class BaseTestModuleIntegration(unittest.TestCase):
 
     def setUp(self):
         self.sf = SpiderFoot(self.default_options)
-        self.module = sfp_abusech()
+        self.module = self.module_class()
         self.module.setup(self.sf, dict())
 
     def requests_get_with_retries(self, url, timeout, retries=3, backoff_factor=0.3):
@@ -27,6 +27,16 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
                 else:
                     raise e
 
+    def create_event(self, target_value, target_type, event_type, event_data):
+        target = SpiderFootTarget(target_value, target_type)
+        evt = SpiderFootEvent(event_type, event_data, '', '')
+        return target, evt
+
+
+class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
+
+    module_class = sfp_abusech
+
     @patch('modules.sfp_abusech.requests.get')
     def test_handleEvent_malicious_ip(self, mock_get):
         """
@@ -38,10 +48,9 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
 
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
-        target = SpiderFootTarget(target_value, target_type)
-        self.module.setTarget(target)
+        target, evt = self.create_event(target_value, target_type, 'ROOT', '')
 
-        evt = SpiderFootEvent('ROOT', '', '', '')
+        self.module.setTarget(target)
         self.module.handleEvent(evt)
 
         events = self.sf.getEvents()
@@ -61,10 +70,9 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
 
         target_value = '192.168.1.1'  # Example benign IP
         target_type = 'IP_ADDRESS'
-        target = SpiderFootTarget(target_value, target_type)
-        self.module.setTarget(target)
+        target, evt = self.create_event(target_value, target_type, 'ROOT', '')
 
-        evt = SpiderFootEvent('ROOT', '', '', '')
+        self.module.setTarget(target)
         self.module.handleEvent(evt)
 
         # Check that no MALICIOUS_IPADDR event was produced
@@ -82,10 +90,9 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
 
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
-        target = SpiderFootTarget(target_value, target_type)
-        self.module.setTarget(target)
+        target, evt = self.create_event(target_value, target_type, 'ROOT', '')
 
-        evt = SpiderFootEvent('ROOT', '', '', '')
+        self.module.setTarget(target)
         self.module.handleEvent(evt)
 
         # Check that no MALICIOUS_IPADDR event was produced
@@ -100,10 +107,9 @@ class TestModuleIntegrationAbusech(unittest.TestCase):
         """
         target_value = 'example.com'
         target_type = 'INTERNET_NAME'  # Invalid target type for this module
-        target = SpiderFootTarget(target_value, target_type)
-        self.module.setTarget(target)
+        target, evt = self.create_event(target_value, target_type, 'ROOT', '')
 
-        evt = SpiderFootEvent('ROOT', '', '', '')
+        self.module.setTarget(target)
         self.module.handleEvent(evt)
 
         # Check that no events were produced
