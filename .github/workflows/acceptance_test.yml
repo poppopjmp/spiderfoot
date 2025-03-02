@@ -2,49 +2,58 @@ name: SpiderFoot Acceptance Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   acceptance-tests:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: Install SpiderFoot dependencies
-      run: pip3 install -r requirements.txt
+      - name: Install Acceptance Test dependencies
+        run: pip3 install -r test/acceptance/requirements.txt
 
-    - name: Install Acceptance Test dependencies
-      run: pip3 install -r test/acceptance/requirements.txt
+      - name: Start SpiderFoot container
+        run: |
+          docker run -d -p 5001:5001 spiderfoot/spiderfoot:v5.0.1
 
-    - name: Install correct geckodriver
-      run: |
-        wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux64.tar.gz
-        tar -xzf geckodriver-v0.36.0-linux64.tar.gz
-        sudo mv geckodriver /usr/local/bin/
-        sudo chmod +x /usr/local/bin/geckodriver
+      - name: Wait for SpiderFoot to start
+        run: |
+          timeout 60 bash -c 'until curl --output /dev/null --silent --head --fail http://127.0.0.1:5001; do printf "."; sleep 1; done'
+          echo "SpiderFoot is up!"
 
-    - name: Start SpiderFoot web server (background)
-      run: python3 ./sf.py -l 127.0.0.1:5001 &
+      - name: Install Firefox
+        uses: mozilla-actions/setup-firefox@v2
+        id: setup-firefox
+        with:
+          firefox-version: latest # Or a specific version
 
-    - name: Wait for SpiderFoot to start
-      run: sleep 5 # Adjust this time if needed
+      - name: Install geckodriver
+        run: |
+          wget "https://github.com/mozilla/geckodriver/releases/latest/download/geckodriver-v0.34.0-linux64.tar.gz" #or latest
+          tar -xzf geckodriver-v0.34.0-linux64.tar.gz
+          sudo mv geckodriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/geckodriver
 
-    - name: Run Robot Framework tests
-      run: |
-        cd test/acceptance
-        robot --variable BROWSER:Firefox --outputdir results scan.robot
+      - name: Run Robot Framework tests
+        run: |
+          cd test/acceptance
+          robot --variable BROWSER:Firefox --outputdir results scan.robot
 
-    - name: Upload Robot Framework results
-      uses: actions/upload-artifact@v4
-      with:
-        name: robot-results
-        path: test/acceptance/results
+      - name: Stop SpiderFoot container
+        run: docker stop $(docker ps -q --filter ancestor=spiderfoot/spiderfoot)
+
+      - name: Upload Robot Framework results
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-results
+          path: test/acceptance/results
