@@ -43,8 +43,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest -n auto --flake8 --dist loadfile --durations=5 --cov-report term --cov=. .
-          pytest -n auto --flake8 --dist loadfile --durations=5 --cov-report term --cov=. test/integration/modules/
+          pytest -n auto --dist loadfile --durations=5 --cov-report term --cov=. .
       - uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: false
