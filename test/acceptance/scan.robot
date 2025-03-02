@@ -12,7 +12,7 @@ ${TIMEOUT}        5s  # Consistent timeout
 ***Keywords***
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
-    Open browser              ${URL}/newscan  ${BROWSER}
+    Open browser              ${URL}/newscan  ${BROWSER} options=add_argument("--headless")
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:moduletab
@@ -25,7 +25,7 @@ Create a module scan
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
-    Open browser              ${URL}/newscan  ${BROWSER}
+    Open browser              ${URL}/newscan  ${BROWSER} options=add_argument("--headless")
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:usecase_${use_case}
@@ -34,7 +34,7 @@ Create a use case scan
 
 Scan info page should render tabs
     Element Should Be Visible     id:btn-status
-    Element Should Be Visible     id:btn-browse
+    Element Should Be Visible     id:btn-browse 
     Element Should Be Visible     id:btn-correlations
     Element Should Be Visible     id:btn-graph
     Element Should Be Visible     id:btn-info
@@ -105,7 +105,7 @@ Wait For Scan To Finish
 
 ***Test Cases***
 Main navigation pages should render correctly
-    Open browser                  ${URL}            ${BROWSER}
+    Open browser                  ${URL}            ${BROWSER} options=add_argument("--headless")
     Click Element                 id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=${TIMEOUT}
     New scan page should render
