@@ -22,6 +22,10 @@ jobs:
       - name: Install Acceptance Test dependencies
         run: pip3 install -r test/acceptance/requirements.txt
 
+      - name: Install Acceptance Test dependencies
+        run: apt install -y firefox
+
+
       - name: Start SpiderFoot container
         run: |
           docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.0.1
