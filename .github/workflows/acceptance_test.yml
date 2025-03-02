@@ -25,6 +25,13 @@ jobs:
     - name: Install Acceptance Test dependencies
       run: pip3 install -r test/acceptance/requirements.txt
 
+    - name: Install correct geckodriver
+      run: |
+        wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux64.tar.gz
+        tar -xzf geckodriver-v0.36.0-linux64.tar.gz
+        sudo mv geckodriver /usr/local/bin/
+        sudo chmod +x /usr/local/bin/geckodriver
+
     - name: Start SpiderFoot web server (background)
       run: python3 ./sf.py -l 127.0.0.1:5001 &
 
