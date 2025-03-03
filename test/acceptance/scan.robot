@@ -159,3 +159,18 @@ A passive scan with unresolvable target internet name should fail
     Wait Until Element Contains     scanstatusbadge   ERROR     timeout=60s
     Click Element                   id:btn-log
     Page Should Contain             Could not resolve
+
+Handle SessionNotCreatedException by specifying unique --user-data-dir
+    [Documentation]    Verify that the SessionNotCreatedException error is handled by specifying a unique value for the --user-data-dir argument.
+    Create a module scan           session test    spiderfoot.net    sfp_countryname
+    Wait For Scan To Finish        session test
+    Click Element                 id:btn-status
+    Scan info Summary tab should render
+    Click Element                 id:btn-browse
+    Scan info Browse tab should render
+    Click Element                 id:btn-graph
+    Scan info Graph tab should render
+    Click Element                 id:btn-info
+    Scan info Settings tab should render
+    Click Element                 id:btn-log
+    Scan info Log tab should render
