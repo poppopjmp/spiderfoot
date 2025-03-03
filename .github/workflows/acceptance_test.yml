@@ -22,9 +22,10 @@ jobs:
       - name: Install Acceptance Test dependencies
         run: pip3 install -r test/acceptance/requirements.txt
 
-      - name: Install Acceptance Test dependencies
-        run: sudo apt install -y firefox
-
+      - name: Install Google Chrome
+        run: |
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt install -y ./google-chrome-stable_current_amd64.deb
 
       - name: Start SpiderFoot container
         run: |
@@ -35,17 +36,17 @@ jobs:
           timeout 60 bash -c 'until curl --output /dev/null --silent --head --fail http://127.0.0.1:5001; do printf "."; sleep 1; done'
           echo "SpiderFoot is up!"
 
-      - name: Install geckodriver
+      - name: Install chromedriver
         run: |
-          wget "https://github.com/mozilla/geckodriver/releases/latest/download/geckodriver-v0.36.0-linux64.tar.gz" #or latest
-          tar -xzf geckodriver-v0.36.0-linux64.tar.gz
-          sudo mv geckodriver /usr/local/bin/
-          sudo chmod +x /usr/local/bin/geckodriver
+          wget "https://chromedriver.storage.googleapis.com/91.0.4472.101/chromedriver_linux64.zip"
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
 
       - name: Run Robot Framework tests
         run: |
           cd test/acceptance
-          robot --variable BROWSER:Firefox --outputdir results scan.robot
+          robot --variable BROWSER:Chrome --outputdir results scan.robot
 
       - name: Stop SpiderFoot container
         run: docker stop $(docker ps -q --filter ancestor=ghcr.io/poppopjmp/spiderfoot)

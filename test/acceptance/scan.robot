@@ -3,7 +3,7 @@ Library           SeleniumLibrary
 Test Teardown     Close All Browsers
 
 ***Variables***
-${BROWSER}        Firefox
+${BROWSER}        Chrome
 ${HOST}           127.0.0.1
 ${PORT}           5001
 ${URL}           http://${HOST}:${PORT}
@@ -12,7 +12,7 @@ ${TIMEOUT}        5s  # Consistent timeout
 ***Keywords***
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
-    Open browser              ${URL}/newscan  ${BROWSER} executable_path=/usr/bin/firefox
+    Open browser              ${URL}/newscan  ${BROWSER}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:moduletab
@@ -25,7 +25,7 @@ Create a module scan
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
-    Open browser              ${URL}/newscan  ${BROWSER} executable_path=/usr/bin/firefox
+    Open browser              ${URL}/newscan  ${BROWSER}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:usecase_${use_case}
@@ -105,7 +105,7 @@ Wait For Scan To Finish
 
 ***Test Cases***
 Main navigation pages should render correctly
-    Open browser                  ${URL}            ${BROWSER} executable_path=/usr/bin/firefox
+    Open browser                  ${URL}            ${BROWSER}
     Click Element                 id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=${TIMEOUT}
     New scan page should render
