@@ -11,7 +11,7 @@
     "jquery": "^3.7.1",
     "sigma": "^3.0.1",
     "tablesorter": "^2.31.3",
-    "react-scripts": "^5.0.2"
+    "react-scripts": "5.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
