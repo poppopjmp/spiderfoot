@@ -2641,4 +2641,4 @@ const App = () => {
               defaultLabelWeightHoverColor: '#ff0000',
               defaultLabelWeightActiveColor: '#00ff00',
               defaultLabelWeightBGColor: '#ffffff',
-              defaultLabel
+              defaultLabel,
