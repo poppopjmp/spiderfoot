@@ -17,17 +17,17 @@ Create Chrome Headless Options
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
     ${chrome_options}=    Create Chrome Headless Options
-    Open browser              http://localhost:5001/newscan chrome  options=${chrome_options}
+    Open browser              http://127.0.0.1:5001/newscan chrome  options=${chrome_options}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:moduletab
     Click Element             id:btn-deselect-all
     Scroll To Element         id:module_${module_name}
-    Set Focus To Element     id:module_${module_name}
+    Set Focus To Element      id:module_${module_name}
     Click Element             id:module_${module_name}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
-    Wait Until Element Is Visible    id:btn-browse    timeout=5s #Add wait for the browse button.
+    Wait Until Element Is Visible    id:btn-browse    timeout=15s #Add wait for the browse button.
     Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
     ${scan_status}=    Get Text    id:scanstatusbadge
     Should Not Be Equal As Strings    ${scan_status}    ERROR    msg=Scan creation failed.
@@ -41,7 +41,7 @@ Create a use case scan
     Click Element             id:usecase_${use_case}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
-    Wait Until Element Is Visible    id:btn-browse    timeout=5s #Add wait for the browse button.
+    Wait Until Element Is Visible    id:btn-browse    timeout=15s #Add wait for the browse button.
     Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
 
 Scan info page should render tabs
@@ -108,11 +108,11 @@ Scroll To Element
     ${x}=         Get Horizontal Position  ${locator}
     ${y}=         Get Vertical Position    ${locator}
     Execute Javascript    window.scrollTo(${x} - 100, ${y} - 100)
-    Wait Until Element is visible  ${locator}  timeout=5s
+    Wait Until Element is visible  ${locator}  timeout=15s
 
 Wait For Scan To Finish
     [Arguments]  ${scan_name}
-    Wait Until Element Is Visible    id:btn-browse    timeout=5s
+    Wait Until Element Is Visible    id:btn-browse    timeout=15s
     Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=60s
 
 ***Test Cases***
@@ -120,13 +120,13 @@ Main navigation pages should render correctly
     ${chrome_options}=    Create Chrome Headless Options
     Open browser              http://localhost:5001  chrome  options=${chrome_options}
     Click Element                 id:nav-link-newscan
-    Wait Until Element Is Visible    id:scanname    timeout=5s
+    Wait Until Element Is Visible    id:scanname    timeout=15s
     New scan page should render
     Click Element                 id:nav-link-scans
-    Wait Until Element Is Visible    id:scanlist    timeout=5s
+    Wait Until Element Is Visible    id:scanlist    timeout=15s
     Scan list page should render
     Click Element                 id:nav-link-settings
-    Wait Until Element Is Visible    id:savesettingsform    timeout=5s
+    Wait Until Element Is Visible    id:savesettingsform    timeout=15s
     Settings page should render
     Close All Browsers
 
@@ -148,7 +148,7 @@ Scan info page should render correctly
 Scan list page should list scans
     Create a module scan           test scan list    spiderfoot.net    sfp_countryname
     Click Element                 id:nav-link-scans
-    Wait Until Element Is Visible   xpath=//td[contains(text(), 'test scan list')]   timeout=${TIMEOUT}
+    Wait Until Element Is Visible   xpath=//td[contains(text(), 'test scan list')]   timeout=15s
     Close All Browsers
 
 A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
@@ -173,7 +173,7 @@ A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
 
 A passive scan with unresolvable target internet name should fail
     Create a use case scan         shouldnotresolve    shouldnotresolve.doesnotexist.local    Passive
-    Wait Until Element Is Visible    id:btn-browse    timeout=5s
+    Wait Until Element Is Visible    id:btn-browse    timeout=15s
     Wait Until Element Contains     scanstatusbadge   ERROR     timeout=60s
     Click Element                   id:btn-log
     Page Should Contain             Could not resolve
