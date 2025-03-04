@@ -18,16 +18,29 @@ version: "3"
 
 services:
   spiderfoot:
-  image: ghcr.io/poppopjmp/spiderfoot:v5.0.1
+    image: ghcr.io/poppopjmp/spiderfoot
     volumes:
       - spiderfoot-data:/var/lib/spiderfoot
       - ./new_directory:/var/lib/spiderfoot/new_directory
-    image: spiderfoot
     container_name: spiderfoot
     ports:
       - "5001:5001"
       - "5002:5002"
+      - "8000:8000"
     restart: unless-stopped
+    command: ["python3", "sf.py", "--rest-api"]
+
+  react-web-interface:
+    build:
+      context: ./react-web-interface
+      dockerfile: Dockerfile
+    container_name: react-web-interface
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_BASE_URL=http://spiderfoot:8000
+    depends_on:
+      - spiderfoot
 
 volumes:
   spiderfoot-data:
