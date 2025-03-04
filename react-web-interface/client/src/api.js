@@ -108,3 +108,33 @@ export const configureModule = async (module, config) => {
     throw error;
   }
 };
+
+export const fetchScanCorrelations = async (scanId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/scan_correlations/${scanId}`);
+    return response.data.correlations;
+  } catch (error) {
+    console.error('Error fetching scan correlations:', error);
+    throw error;
+  }
+};
+
+export const fetchScanLogs = async (scanId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/scan_logs/${scanId}`);
+    return response.data.logs;
+  } catch (error) {
+    console.error('Error fetching scan logs:', error);
+    throw error;
+  }
+};
+
+export const fetchScanSummary = async (scanId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/scan_summary/${scanId}`);
+    return response.data.summary;
+  } catch (error) {
+    console.error('Error fetching scan summary:', error);
+    throw error;
+  }
+};

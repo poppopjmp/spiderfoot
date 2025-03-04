@@ -47,6 +47,27 @@ app.options('/api/export_scan_results', (req, res) => {
   res.sendStatus(200);
 });
 
+app.options('/api/scan_correlations', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(200);
+});
+
+app.options('/api/scan_logs', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(200);
+});
+
+app.options('/api/scan_summary', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(200);
+});
+
 app.post('/api/start_scan', async (req, res) => {
   try {
     const response = await axios.post('http://127.0.0.1:8000/start_scan', req.body);
@@ -131,6 +152,33 @@ app.post('/api/import_api_key', async (req, res) => {
 app.get('/api/export_api_keys', async (req, res) => {
   try {
     const response = await axios.get('http://127.0.0.1:8000/export_api_keys');
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/scan_correlations/:scan_id', async (req, res) => {
+  try {
+    const response = await axios.get(`http://127.0.0.1:8000/scan_correlations/${req.params.scan_id}`);
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/scan_logs/:scan_id', async (req, res) => {
+  try {
+    const response = await axios.get(`http://127.0.0.1:8000/scan_logs/${req.params.scan_id}`);
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/scan_summary/:scan_id', async (req, res) => {
+  try {
+    const response = await axios.get(`http://127.0.0.1:8000/scan_summary/${req.params.scan_id}`);
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: error.message });

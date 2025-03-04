@@ -23,6 +23,9 @@ const App = () => {
   const [apiKeys, setApiKeys] = useState([]);
   const [selectedModule, setSelectedModule] = useState('');
   const [apiBaseUrl, setApiBaseUrl] = useState(''); // Pb299
+  const [scanCorrelations, setScanCorrelations] = useState([]); // Pfae5
+  const [scanLogs, setScanLogs] = useState([]); // Pfae5
+  const [scanSummary, setScanSummary] = useState([]); // Pfae5
 
   useEffect(() => {
     const fetchApiBaseUrl = async () => {
@@ -149,6 +152,39 @@ const App = () => {
     }
   };
 
+  const fetchScanCorrelations = async () => {
+    try {
+      const response = await axios.get(`${apiBaseUrl}/api/scan_correlations/${scanId}`);
+      setScanCorrelations(response.data.correlations);
+      alertify.success('Scan correlations fetched successfully');
+    } catch (error) {
+      console.error('Error fetching scan correlations:', error);
+      alertify.error('Error fetching scan correlations');
+    }
+  };
+
+  const fetchScanLogs = async () => {
+    try {
+      const response = await axios.get(`${apiBaseUrl}/api/scan_logs/${scanId}`);
+      setScanLogs(response.data.logs);
+      alertify.success('Scan logs fetched successfully');
+    } catch (error) {
+      console.error('Error fetching scan logs:', error);
+      alertify.error('Error fetching scan logs');
+    }
+  };
+
+  const fetchScanSummary = async () => {
+    try {
+      const response = await axios.get(`${apiBaseUrl}/api/scan_summary/${scanId}`);
+      setScanSummary(response.data.summary);
+      alertify.success('Scan summary fetched successfully');
+    } catch (error) {
+      console.error('Error fetching scan summary:', error);
+      alertify.error('Error fetching scan summary');
+    }
+  };
+
   const handleModuleChange = (e) => {
     setSelectedModule(e.target.value);
   };
@@ -272,6 +308,21 @@ const App = () => {
           ))}
         </select>
         <button className="btn btn-info mb-2" onClick={() => configureModule(selectedModule, { key: apiKey })}>Configure Module</button>
+      </div>
+      <div className="mb-4">
+        <h2>Scan Correlations</h2>
+        <button className="btn btn-info mb-2" onClick={fetchScanCorrelations}>Get Scan Correlations</button>
+        <pre>{JSON.stringify(scanCorrelations, null, 2)}</pre>
+      </div>
+      <div className="mb-4">
+        <h2>Scan Logs</h2>
+        <button className="btn btn-info mb-2" onClick={fetchScanLogs}>Get Scan Logs</button>
+        <pre>{JSON.stringify(scanLogs, null, 2)}</pre>
+      </div>
+      <div className="mb-4">
+        <h2>Scan Summary</h2>
+        <button className="btn btn-info mb-2" onClick={fetchScanSummary}>Get Scan Summary</button>
+        <pre>{JSON.stringify(scanSummary, null, 2)}</pre>
       </div>
     </div>
   );
