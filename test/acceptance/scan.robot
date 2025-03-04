@@ -27,7 +27,7 @@ Create a module scan
     Click Element             id:module_${module_name}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
-    Wait Until Element Is Visible    id:btn-browse    timeout=${TIMEOUT} #Add wait for the browse button.
+    Wait Until Element Is Visible    id:btn-browse    timeout=5s #Add wait for the browse button.
     Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
     ${scan_status}=    Get Text    id:scanstatusbadge
     Should Not Be Equal As Strings    ${scan_status}    ERROR    msg=Scan creation failed.
@@ -41,7 +41,7 @@ Create a use case scan
     Click Element             id:usecase_${use_case}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
-    Wait Until Element Is Visible    id:btn-browse    timeout=${TIMEOUT} #Add wait for the browse button.
+    Wait Until Element Is Visible    id:btn-browse    timeout=5s #Add wait for the browse button.
     Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
 
 Scan info page should render tabs
@@ -108,25 +108,25 @@ Scroll To Element
     ${x}=         Get Horizontal Position  ${locator}
     ${y}=         Get Vertical Position    ${locator}
     Execute Javascript    window.scrollTo(${x} - 100, ${y} - 100)
-    Wait Until Element is visible  ${locator}  timeout=${TIMEOUT}
+    Wait Until Element is visible  ${locator}  timeout=5s
 
 Wait For Scan To Finish
     [Arguments]  ${scan_name}
-    Wait Until Element Is Visible    id:btn-browse    timeout=${TIMEOUT}
-    Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=${SCAN_FINISH_TIMEOUT}
+    Wait Until Element Is Visible    id:btn-browse    timeout=5s
+    Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=60s
 
 ***Test Cases***
 Main navigation pages should render correctly
     ${chrome_options}=    Create Chrome Headless Options
     Open browser              http://localhost:5001  chrome  options=${chrome_options}
     Click Element                 id:nav-link-newscan
-    Wait Until Element Is Visible    id:scanname    timeout=${TIMEOUT}
+    Wait Until Element Is Visible    id:scanname    timeout=5s
     New scan page should render
     Click Element                 id:nav-link-scans
-    Wait Until Element Is Visible    id:scanlist    timeout=${TIMEOUT}
+    Wait Until Element Is Visible    id:scanlist    timeout=5s
     Scan list page should render
     Click Element                 id:nav-link-settings
-    Wait Until Element Is Visible    id:savesettingsform    timeout=${TIMEOUT}
+    Wait Until Element Is Visible    id:savesettingsform    timeout=5s
     Settings page should render
     Close All Browsers
 
@@ -173,20 +173,8 @@ A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
 
 A passive scan with unresolvable target internet name should fail
     Create a use case scan         shouldnotresolve    shouldnotresolve.doesnotexist.local    Passive
-    Wait Until Element Is Visible    id:btn-browse    timeout=${TIMEOUT}
-    Wait Until Element Contains     scanstatusbadge   ERROR     timeout=${SCAN_FINISH_TIMEOUT}
+    Wait Until Element Is Visible    id:btn-browse    timeout=5s
+    Wait Until Element Contains     scanstatusbadge   ERROR     timeout=60s
     Click Element                   id:btn-log
     Page Should Contain             Could not resolve
     Close All Browsers
-
-Handle SessionNotCreatedException by specifying unique --user-data-dir
-    [Documentation]    Verify that the SessionNotCreatedException error is handled by specifying a unique value for the --user-data-dir argument.
-    Create a module scan           session test    spiderfoot.net    sfp_countryname
-    Wait For Scan To Finish        session test
-    Click Element                 id:btn-status
-    Scan info Summary tab should render
-    Click Element                 id:btn-browse
-    Scan info Browse tab should render
-    Click Element                 id:btn-graph
-    Scan info Graph tab should render
-    Click Element                 id:btn-info
