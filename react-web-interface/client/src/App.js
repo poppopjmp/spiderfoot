@@ -171,41 +171,76 @@ const App = () => {
           <pre>{JSON.stringify(scanResults, null, 2)}</pre>
         </div>
         <div id="sigma-container" style={{ height: '500px', width: '100%' }}>
-        <sigma
-    graph={scanResults}
-    settings={{
-        drawEdges: true,
-        drawNodes: true,
-        defaultNodeColor: '#ec5148',
-        defaultEdgeColor: '#c0c0c0',
-        edgeColor: 'default',
-        nodeColor: 'default',
-        labelThreshold: 10,
-        defaultLabelColor: '#000000',
-        defaultLabelSize: 14,
-        defaultLabelBGColor: '#ffffff',
-        defaultLabelHoverColor: '#ff0000',
-        defaultLabelHoverBGColor: '#ffffff',
-        defaultLabelActiveColor: '#00ff00',
-        defaultLabelActiveBGColor: '#ffffff',
-        defaultLabelAlignment: 'center',
-        defaultLabelWeight: 'normal',
-        defaultLabelWeightHover: 'bold',
-        defaultLabelWeightActive: 'bold',
-        defaultLabelWeightBGColor: '#ffffff',
-        defaultLabelWeightHoverBGColor: '#ffffff',
-        defaultLabelWeightActiveBGColor: '#ffffff',
-        defaultLabelWeightAlignment: 'center',
-        defaultLabelWeightHoverAlignment: 'center',
-        defaultLabelWeightActiveAlignment: 'center',
-        defaultLabelWeightHoverSize: 14,
-        defaultLabelWeightActiveSize: 14,
-        defaultLabelWeightColor: '#000000',
-        defaultLabelWeightHoverColor: '#ff0000',
-        defaultLabelWeightActiveColor: '#00ff00',
-        defaultLabelWeightBGColor: '#ffffff' 
-        // Removed the incomplete defaultLabel setting
-    }} 
-> 
-    {/* ... */}
-</sigma>
+          <sigma
+            graph={scanResults}
+            settings={{
+              drawEdges: true,
+              drawNodes: true,
+              defaultNodeColor: '#ec5148',
+              defaultEdgeColor: '#c0c0c0',
+              edgeColor: 'default',
+              nodeColor: 'default',
+              labelThreshold: 10,
+              defaultLabelColor: '#000000',
+              defaultLabelSize: 14,
+              defaultLabelBGColor: '#ffffff',
+              defaultLabelHoverColor: '#ff0000',
+              defaultLabelHoverBGColor: '#ffffff',
+              defaultLabelActiveColor: '#00ff00',
+              defaultLabelActiveBGColor: '#ffffff',
+              defaultLabelAlignment: 'center',
+              defaultLabelWeight: 'normal',
+              defaultLabelWeightHover: 'bold',
+              defaultLabelWeightActive: 'bold',
+              defaultLabelWeightBGColor: '#ffffff',
+              defaultLabelWeightHoverBGColor: '#ffffff',
+              defaultLabelWeightActiveBGColor: '#ffffff',
+              defaultLabelWeightAlignment: 'center',
+              defaultLabelWeightHoverAlignment: 'center',
+              defaultLabelWeightActiveAlignment: 'center',
+              defaultLabelWeightHoverSize: 14,
+              defaultLabelWeightActiveSize: 14,
+              defaultLabelWeightColor: '#000000',
+              defaultLabelWeightHoverColor: '#ff0000',
+              defaultLabelWeightActiveColor: '#00ff00',
+              defaultLabelWeightBGColor: '#ffffff'
+            }}
+          />
+        </div>
+      </div>
+      <div className="mb-4">
+        <h2>Scan Status</h2>
+        <button className="btn btn-info mb-2" onClick={getScanStatus}>Get Scan Status</button>
+        <pre>{scanStatus}</pre>
+      </div>
+      <div className="mb-4">
+        <h2>Export Scan Results</h2>
+        <button onClick={() => exportScanResults('csv')} className="btn btn-info mb-2">Export as CSV</button>
+        <button onClick={() => exportScanResults('json')} className="btn btn-info mb-2">Export as JSON</button>
+        <pre>{exportedResults}</pre>
+      </div>
+      <div className="mb-4">
+        <h2>API Keys</h2>
+        <input
+          type="text"
+          className="form-control mb-2"
+          placeholder="API Key"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+        />
+        <button className="btn btn-info mb-2" onClick={importApiKey}>Import API Key</button>
+        <pre>{JSON.stringify(apiKeys, null, 2)}</pre>
+      </div>
+      <div className="mb-4">
+        <h2>Active Scans</h2>
+        <pre>{JSON.stringify(activeScans, null, 2)}</pre>
+      </div>
+      <div className="mb-4">
+        <h2>Scan History</h2>
+        <pre>{JSON.stringify(scanHistory, null, 2)}</pre>
+      </div>
+    </div>
+  );
+};
+
+export default App;
