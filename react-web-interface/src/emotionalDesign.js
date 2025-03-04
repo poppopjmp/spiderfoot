@@ -14,6 +14,9 @@ export const applyEmotionalDesign = (Component, options) => {
       padding: options.padding || '10px',
       boxShadow: options.boxShadow || '0 4px 8px rgba(0, 0, 0, 0.1)',
       transition: options.transition || 'all 0.3s ease',
+      fontSize: options.fontSize || '16px',
+      fontWeight: options.fontWeight || 'normal',
+      textAlign: options.textAlign || 'center',
     };
 
     // Apply emotional design class names
@@ -33,4 +36,7 @@ export const EmotionalButton = applyEmotionalDesign(Button, {
   padding: '12px 20px',
   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
   transition: 'background-color 0.3s ease',
+  fontSize: '14px',
+  fontWeight: 'bold',
+  textAlign: 'center',
 });
