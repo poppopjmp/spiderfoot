@@ -7,7 +7,7 @@ import $ from 'jquery';
 import sigma from 'sigma';
 import 'tablesorter';
 
-import logo from './img/spiderfoot-icon.png';
+import logo from './img/spiderfoot-header.png';
 
 const App = () => {
   const [target, setTarget] = useState('');
