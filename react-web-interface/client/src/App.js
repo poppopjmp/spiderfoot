@@ -21,8 +21,16 @@ const App = () => {
   const [exportedResults, setExportedResults] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [apiKeys, setApiKeys] = useState([]);
+  const [selectedModule, setSelectedModule] = useState('');
+  const [apiBaseUrl, setApiBaseUrl] = useState(''); // Pb299
 
   useEffect(() => {
+    const fetchApiBaseUrl = async () => {
+      const baseUrl = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000';
+      setApiBaseUrl(baseUrl);
+    };
+
+    fetchApiBaseUrl();
     fetchModules();
     fetchActiveScans();
     fetchScanHistory();
@@ -31,7 +39,7 @@ const App = () => {
 
   const fetchModules = async () => {
     try {
-      const response = await axios.get('/api/modules');
+      const response = await axios.get(`${apiBaseUrl}/api/modules`);
       setAvailableModules(response.data.modules);
     } catch (error) {
       console.error('Error fetching modules:', error);
@@ -40,7 +48,7 @@ const App = () => {
 
   const fetchActiveScans = async () => {
     try {
-      const response = await axios.get('/api/active_scans');
+      const response = await axios.get(`${apiBaseUrl}/api/active_scans`);
       setActiveScans(response.data.active_scans);
     } catch (error) {
       console.error('Error fetching active scans:', error);
@@ -49,7 +57,7 @@ const App = () => {
 
   const fetchScanHistory = async () => {
     try {
-      const response = await axios.get('/api/scan_history');
+      const response = await axios.get(`${apiBaseUrl}/api/scan_history`);
       setScanHistory(response.data.history);
     } catch (error) {
       console.error('Error fetching scan history:', error);
@@ -58,7 +66,7 @@ const App = () => {
 
   const fetchApiKeys = async () => {
     try {
-      const response = await axios.get('/api/export_api_keys');
+      const response = await axios.get(`${apiBaseUrl}/api/export_api_keys`);
       setApiKeys(response.data.api_keys);
     } catch (error) {
       console.error('Error fetching API keys:', error);
@@ -67,7 +75,7 @@ const App = () => {
 
   const startScan = async () => {
     try {
-      const response = await axios.post('/api/start_scan', { target, modules });
+      const response = await axios.post(`${apiBaseUrl}/api/start_scan`, { target, modules });
       setScanId(response.data.scan_id);
       alertify.success('Scan started successfully');
     } catch (error) {
@@ -78,7 +86,7 @@ const App = () => {
 
   const stopScan = async () => {
     try {
-      await axios.post('/api/stop_scan', { scan_id: scanId });
+      await axios.post(`${apiBaseUrl}/api/stop_scan`, { scan_id: scanId });
       setScanId('');
       alertify.success('Scan stopped successfully');
     } catch (error) {
@@ -89,7 +97,7 @@ const App = () => {
 
   const getScanResults = async () => {
     try {
-      const response = await axios.get(`/api/scan_results/${scanId}`);
+      const response = await axios.get(`${apiBaseUrl}/api/scan_results/${scanId}`);
       setScanResults(response.data.results);
       alertify.success('Scan results fetched successfully');
     } catch (error) {
@@ -100,7 +108,7 @@ const App = () => {
 
   const getScanStatus = async () => {
     try {
-      const response = await axios.get(`/api/scan_status/${scanId}`);
+      const response = await axios.get(`${apiBaseUrl}/api/scan_status/${scanId}`);
       setScanStatus(response.data.status);
       alertify.success('Scan status fetched successfully');
     } catch (error) {
@@ -111,7 +119,7 @@ const App = () => {
 
   const exportScanResults = async (format) => {
     try {
-      const response = await axios.get(`/api/export_scan_results/${scanId}?format=${format}`);
+      const response = await axios.get(`${apiBaseUrl}/api/export_scan_results/${scanId}?format=${format}`);
       setExportedResults(response.data.exported_results);
       alertify.success('Scan results exported successfully');
     } catch (error) {
@@ -122,13 +130,27 @@ const App = () => {
 
   const importApiKey = async () => {
     try {
-      await axios.post('/api/import_api_key', { module: 'module_name', key: apiKey });
+      await axios.post(`${apiBaseUrl}/api/import_api_key`, { module: selectedModule, key: apiKey });
       fetchApiKeys();
       alertify.success('API key imported successfully');
     } catch (error) {
       console.error('Error importing API key:', error);
       alertify.error('Error importing API key');
     }
+  };
+
+  const configureModule = async (module, config) => {
+    try {
+      await axios.post(`${apiBaseUrl}/api/configure_module`, { module, config });
+      alertify.success('Module configured successfully');
+    } catch (error) {
+      console.error('Error configuring module:', error);
+      alertify.error('Error configuring module');
+    }
+  };
+
+  const handleModuleChange = (e) => {
+    setSelectedModule(e.target.value);
   };
 
   return (
@@ -238,6 +260,18 @@ const App = () => {
       <div className="mb-4">
         <h2>Scan History</h2>
         <pre>{JSON.stringify(scanHistory, null, 2)}</pre>
+      </div>
+      <div className="mb-4">
+        <h2>Configure Module</h2>
+        <select className="form-control mb-2" value={selectedModule} onChange={handleModuleChange}>
+          <option value="">Select a module</option>
+          {availableModules.map((module) => (
+            <option key={module} value={module}>
+              {module}
+            </option>
+          ))}
+        </select>
+        <button className="btn btn-info mb-2" onClick={() => configureModule(selectedModule, { key: apiKey })}>Configure Module</button>
       </div>
     </div>
   );
