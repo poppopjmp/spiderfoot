@@ -6,7 +6,9 @@ Resource          variables.robot  # Externalize variables
 ***Keywords***
 Capture Failure Screenshot
     Capture Page Screenshot  failure-${TEST NAME}.png
-
+Test Module Functionality
+    ${module_name} =    Set Variable    sfp_dnsresolve
+    Run Keyword    Module Action    ${module_name}
 Create Chrome Headless Options
     ${options}=    Evaluate    selenium.webdriver.ChromeOptions()    modules=selenium.webdriver
     Call Method    ${options}    add_argument    --headless
@@ -18,8 +20,8 @@ Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
     ${chrome_options}=    Create Chrome Headless Options
     Open browser              http://127.0.0.1:5001/newscan chrome  options=${chrome_options}
-    Press Keys                name:scanname            ${scan_name}
-    Press Keys                name:scantarget          ${scan_target}
+    Press Keys                name:scanname            van1shland
+    Press Keys                name:scantarget          van1shland.io
     Click Element             id:moduletab
     Click Element             id:btn-deselect-all
     Scroll To Element         id:module_${module_name}
@@ -36,8 +38,8 @@ Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
     ${chrome_options}=    Create Chrome Headless Options
     Open browser              http://localhost:5001/newscan  chrome  options=${chrome_options}
-    Press Keys                name:scanname            ${scan_name}
-    Press Keys                name:scantarget          ${scan_target}
+    Press Keys                name:scanname            van1shland
+    Press Keys                name:scantarget          van1shland.io
     Click Element             id:usecase_${use_case}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
@@ -131,7 +133,7 @@ Main navigation pages should render correctly
     Close All Browsers
 
 Scan info page should render correctly
-    Create a module scan           test scan info    spiderfoot.net    sfp_countryname
+    Create a module scan           test scan info    van1shland.io    sfp_countryname
     Wait For Scan To Finish        test scan info
     Click Element                 id:btn-status
     Scan info Summary tab should render
@@ -146,13 +148,13 @@ Scan info page should render correctly
     Close All Browsers
 
 Scan list page should list scans
-    Create a module scan           test scan list    spiderfoot.net    sfp_countryname
+    Create a module scan           test scan list    van1shland.io    sfp_countryname
     Click Element                 id:nav-link-scans
     Wait Until Element Is Visible   xpath=//td[contains(text(), 'test scan list')]   timeout=15s
     Close All Browsers
 
 A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
-    Create a module scan           dns resolve     spiderfoot.net    sfp_dnsresolve
+    Create a module scan           dns resolve     van1shland.io    sfp_dnsresolve
     Wait For Scan To Finish       dns resolve
     Click Element                 id:btn-browse
     Scan info Browse tab should render
