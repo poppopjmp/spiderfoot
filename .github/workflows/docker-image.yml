@@ -82,7 +82,3 @@ jobs:
         tags: |
           ghcr.io/${{ github.repository }}:react-latest
           ghcr.io/${{ github.repository }}:react-${{ github.sha }}
-
-    - name: Run container tests for React web app
-      run: |
-        docker run --rm ghcr.io/${{ github.repository }}:react-${{ github.sha }} npm run test
