@@ -14,9 +14,16 @@ ${TIMEOUT}        5s
 Capture Failure Screenshot
     Capture Page Screenshot  failure-${TEST NAME}.png
 
+Create Chrome Headless Options
+    ${options}=    Evaluate    SeleniumLibrary.ChromeOptions()
+    Call Method    ${options}    add_argument    --headless
+    Call Method    ${options}    add_argument    --no-sandbox
+    Call Method    ${options}    add_argument    --disable-dev-shm-usage
+    [Return]    ${options}
+
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
-    Open browser              ${URL}/newscan  ${BROWSER}  options=add_argument("--headless") add_argument("--no-sandbox") add_argument("--disable-dev-shm-usage")
+    Open browser              ${URL}/newscan chrome  options=${chrome_options}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:moduletab
@@ -33,7 +40,7 @@ Create a module scan
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
-    Open browser              ${URL}/newscan  ${BROWSER} options=add_argument("--headless") add_argument("--no-sandbox") add_argument("--disable-dev-shm-usage")
+    Open browser              ${URL}/newscan  chrome  options=${chrome_options}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:usecase_${use_case}
