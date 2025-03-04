@@ -18,6 +18,51 @@ class APIKeyRequest(BaseModel):
 async def read_root():
     return {"message": "Welcome to SpiderFoot API"}
 
+@app.options("/start_scan")
+async def options_start_scan():
+    return {
+        "Allow": "POST, OPTIONS",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+
+@app.options("/active_scans")
+async def options_active_scans():
+    return {
+        "Allow": "GET, OPTIONS",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+
+@app.options("/modules")
+async def options_modules():
+    return {
+        "Allow": "GET, OPTIONS",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+
+@app.options("/configure_module")
+async def options_configure_module():
+    return {
+        "Allow": "POST, OPTIONS",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+
+@app.options("/export_scan_results")
+async def options_export_scan_results():
+    return {
+        "Allow": "GET, OPTIONS",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+
 @app.post("/start_scan")
 async def start_scan(scan_request: ScanRequest):
     try:
@@ -64,7 +109,7 @@ async def get_scan_results(scan_id: str):
         raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail.str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -100,10 +145,10 @@ async def get_scan_status(scan_id: str):
         raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail.str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail.str(e)) from e
 
 @app.get("/scan_history")
 async def list_scan_history():
@@ -126,10 +171,10 @@ async def export_scan_results(scan_id: str, export_format: str):
         raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail.str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail.str(e)) from e
 
 @app.post("/import_api_key")
 async def import_api_key(api_key_request: APIKeyRequest):
@@ -142,7 +187,7 @@ async def import_api_key(api_key_request: APIKeyRequest):
         raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail.str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
