@@ -8,7 +8,7 @@ Capture Failure Screenshot
     Capture Page Screenshot  failure-${TEST NAME}.png
 
 Create Chrome Headless Options
-    ${options}=    Evaluate    SeleniumLibrary.ChromeOptions()
+    ${options}=    Evaluate    selenium.webdriver.ChromeOptions()    modules=selenium.webdriver
     Call Method    ${options}    add_argument    --headless
     Call Method    ${options}    add_argument    --no-sandbox
     Call Method    ${options}    add_argument    --disable-dev-shm-usage
