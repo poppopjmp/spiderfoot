@@ -99,3 +99,22 @@ export const importApiKey = async (module, key) => {
     throw error;
   }
 };
+
+export const fetchSettings = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/settings`);
+    return response.data.settings;
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    throw error;
+  }
+};
+
+export const saveSettings = async (settings) => {
+  try {
+    await axios.post(`${API_BASE_URL}/settings`, settings);
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    throw error;
+  }
+};
