@@ -17,7 +17,7 @@ Create Chrome Headless Options
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
     ${chrome_options}=    Create Chrome Headless Options
-    Open browser              ${URL}/newscan chrome  options=${chrome_options}
+    Open browser              http://localhost:5001/newscan chrome  options=${chrome_options}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:moduletab
@@ -35,7 +35,7 @@ Create a module scan
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
     ${chrome_options}=    Create Chrome Headless Options
-    Open browser              ${URL}/newscan  chrome  options=${chrome_options}
+    Open browser              http://localhost:5001/newscan  chrome  options=${chrome_options}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:usecase_${use_case}
@@ -118,7 +118,7 @@ Wait For Scan To Finish
 ***Test Cases***
 Main navigation pages should render correctly
     ${chrome_options}=    Create Chrome Headless Options
-    Open browser              ${URL}  chrome  options=${chrome_options}
+    Open browser              http://localhost:5001  chrome  options=${chrome_options}
     Click Element                 id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=${TIMEOUT}
     New scan page should render
