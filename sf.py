@@ -658,6 +658,39 @@ def start_rest_api_server() -> None:  # P3926
     uvicorn.run(app, host="0.0.0.0", port=8000)  # P3926
 
 
+def check_rest_api_implementation() -> None:
+    """
+    Check if the implementation of the REST API is aligned and correctly linked to the core SpiderFoot functionality.
+    """
+    import requests
+
+    api_endpoints = [
+        "/start_scan",
+        "/stop_scan/{scan_id}",
+        "/scan_results/{scan_id}",
+        "/modules",
+        "/active_scans",
+        "/scan_status/{scan_id}",
+        "/scan_history",
+        "/export_scan_results/{scan_id}",
+        "/import_api_key",
+        "/export_api_keys",
+        "/scan_correlations/{scan_id}",
+        "/scan_logs/{scan_id}",
+        "/scan_summary/{scan_id}"
+    ]
+
+    base_url = "http://127.0.0.1:8000"
+
+    for endpoint in api_endpoints:
+        try:
+            response = requests.options(f"{base_url}{endpoint}")
+            if response.status_code != 200:
+                logging.error(f"Endpoint {endpoint} is not correctly linked. Status code: {response.status_code}")
+        except Exception as e:
+            logging.error(f"Error checking endpoint {endpoint}: {e}")
+
+
 if __name__ == '__main__':
     if sys.version_info < (3, 7):
         print("SpiderFoot requires Python 3.7 or higher.")
@@ -685,4 +718,5 @@ if __name__ == '__main__':
         print(f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
         sys.exit(-1)
 
+    check_rest_api_implementation()
     main()
