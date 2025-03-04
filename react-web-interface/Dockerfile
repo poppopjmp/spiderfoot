@@ -8,7 +8,7 @@ WORKDIR /app/client
 COPY ./client/package*.json ./
 
 # Install the dependencies for the main project
-RUN npm ic
+RUN npm install
 
 # Copy the rest of the client files
 COPY ./client .
