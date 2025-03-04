@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchModules, fetchActiveScans, fetchScanHistory, fetchApiKeys, startScan, stopScan, getScanResults, getScanStatus, exportScanResults, importApiKey } from './api';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import Settings from './components/Settings';
 
 const App = () => {
   const [target, setTarget] = useState('');
@@ -76,71 +78,88 @@ const App = () => {
   };
 
   return (
-    <div>
-      <h1>SpiderFoot React Web Interface</h1>
+    <Router>
       <div>
-        <h2>Start Scan</h2>
-        <input
-          type="text"
-          placeholder="Target"
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-        />
-        <select multiple value={modules} onChange={(e) => setModules([...e.target.selectedOptions].map(option => option.value))}>
-          {availableModules.map((module) => (
-            <option key={module} value={module}>
-              {module}
-            </option>
-          ))}
-        </select>
-        <button onClick={handleStartScan}>Start Scan</button>
+        <h1>SpiderFoot React Web Interface</h1>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/settings">Settings</Link>
+            </li>
+          </ul>
+        </nav>
+        <Route path="/" exact>
+          <div>
+            <h2>Start Scan</h2>
+            <input
+              type="text"
+              placeholder="Target"
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+            />
+            <select multiple value={modules} onChange={(e) => setModules([...e.target.selectedOptions].map(option => option.value))}>
+              {availableModules.map((module) => (
+                <option key={module} value={module}>
+                  {module}
+                </option>
+              ))}
+            </select>
+            <button onClick={handleStartScan}>Start Scan</button>
+          </div>
+          <div>
+            <h2>Stop Scan</h2>
+            <input
+              type="text"
+              placeholder="Scan ID"
+              value={scanId}
+              onChange={(e) => setScanId(e.target.value)}
+            />
+            <button onClick={handleStopScan}>Stop Scan</button>
+          </div>
+          <div>
+            <h2>Scan Results</h2>
+            <button onClick={handleGetScanResults}>Get Scan Results</button>
+            <pre>{JSON.stringify(scanResults, null, 2)}</pre>
+          </div>
+          <div>
+            <h2>Scan Status</h2>
+            <button onClick={handleGetScanStatus}>Get Scan Status</button>
+            <pre>{scanStatus}</pre>
+          </div>
+          <div>
+            <h2>Export Scan Results</h2>
+            <button onClick={() => handleExportScanResults('csv')}>Export as CSV</button>
+            <button onClick={() => handleExportScanResults('json')}>Export as JSON</button>
+            <pre>{exportedResults}</pre>
+          </div>
+          <div>
+            <h2>API Keys</h2>
+            <input
+              type="text"
+              placeholder="API Key"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+            />
+            <button onClick={handleImportApiKey}>Import API Key</button>
+            <pre>{JSON.stringify(apiKeys, null, 2)}</pre>
+          </div>
+          <div>
+            <h2>Active Scans</h2>
+            <pre>{JSON.stringify(activeScans, null, 2)}</pre>
+          </div>
+          <div>
+            <h2>Scan History</h2>
+            <pre>{JSON.stringify(scanHistory, null, 2)}</pre>
+          </div>
+        </Route>
+        <Route path="/settings">
+          <Settings />
+        </Route>
       </div>
-      <div>
-        <h2>Stop Scan</h2>
-        <input
-          type="text"
-          placeholder="Scan ID"
-          value={scanId}
-          onChange={(e) => setScanId(e.target.value)}
-        />
-        <button onClick={handleStopScan}>Stop Scan</button>
-      </div>
-      <div>
-        <h2>Scan Results</h2>
-        <button onClick={handleGetScanResults}>Get Scan Results</button>
-        <pre>{JSON.stringify(scanResults, null, 2)}</pre>
-      </div>
-      <div>
-        <h2>Scan Status</h2>
-        <button onClick={handleGetScanStatus}>Get Scan Status</button>
-        <pre>{scanStatus}</pre>
-      </div>
-      <div>
-        <h2>Export Scan Results</h2>
-        <button onClick={() => handleExportScanResults('csv')}>Export as CSV</button>
-        <button onClick={() => handleExportScanResults('json')}>Export as JSON</button>
-        <pre>{exportedResults}</pre>
-      </div>
-      <div>
-        <h2>API Keys</h2>
-        <input
-          type="text"
-          placeholder="API Key"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-        />
-        <button onClick={handleImportApiKey}>Import API Key</button>
-        <pre>{JSON.stringify(apiKeys, null, 2)}</pre>
-      </div>
-      <div>
-        <h2>Active Scans</h2>
-        <pre>{JSON.stringify(activeScans, null, 2)}</pre>
-      </div>
-      <div>
-        <h2>Scan History</h2>
-        <pre>{JSON.stringify(scanHistory, null, 2)}</pre>
-      </div>
-    </div>
+    </Router>
   );
 };
 
