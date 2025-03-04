@@ -21,6 +21,7 @@ const App = () => {
   const [exportedResults, setExportedResults] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [apiKeys, setApiKeys] = useState([]);
+  const [selectedModule, setSelectedModule] = useState(''); // Pa8a5
 
   useEffect(() => {
     fetchModules();
@@ -122,13 +123,27 @@ const App = () => {
 
   const importApiKey = async () => {
     try {
-      await axios.post('/api/import_api_key', { module: 'module_name', key: apiKey });
+      await axios.post('/api/import_api_key', { module: selectedModule, key: apiKey }); // Pef64
       fetchApiKeys();
       alertify.success('API key imported successfully');
     } catch (error) {
       console.error('Error importing API key:', error);
       alertify.error('Error importing API key');
     }
+  };
+
+  const configureModule = async (module, config) => { // Pf840
+    try {
+      await axios.post('/api/configure_module', { module, config });
+      alertify.success('Module configured successfully');
+    } catch (error) {
+      console.error('Error configuring module:', error);
+      alertify.error('Error configuring module');
+    }
+  };
+
+  const handleModuleChange = (e) => { // P01ed
+    setSelectedModule(e.target.value);
   };
 
   return (
@@ -238,6 +253,18 @@ const App = () => {
       <div className="mb-4">
         <h2>Scan History</h2>
         <pre>{JSON.stringify(scanHistory, null, 2)}</pre>
+      </div>
+      <div className="mb-4"> {/* Pcaf3 */}
+        <h2>Configure Module</h2>
+        <select className="form-control mb-2" value={selectedModule} onChange={handleModuleChange}>
+          <option value="">Select a module</option>
+          {availableModules.map((module) => (
+            <option key={module} value={module}>
+              {module}
+            </option>
+          ))}
+        </select>
+        <button className="btn btn-info mb-2" onClick={() => configureModule(selectedModule, { key: apiKey })}>Configure Module</button>
       </div>
     </div>
   );
