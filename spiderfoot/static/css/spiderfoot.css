@@ -226,3 +226,59 @@ input:checked + .slider:before {
     font-size: 0.6rem;
   }
 }
+
+/* Emotional Design Styles */
+body {
+  background-color: #f0f0f0;
+  color: #333;
+  font-family: 'Arial', sans-serif;
+}
+
+button {
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 4px;
+  padding: 12px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.panel-default {
+  background-color: #fff;
+  border-color: #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-default {
+  background-color: #fff;
+  border-color: #ddd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-default .navbar-nav > li > a {
+  color: #333 !important;
+}
+
+.alert-info {
+  background-color: #e7f3fe;
+  border-color: #b3e5fc;
+  color: #31708f;
+}
+
+.modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.tablesorter-default {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
