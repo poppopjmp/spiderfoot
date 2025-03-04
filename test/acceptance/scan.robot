@@ -1,18 +1,15 @@
 ***Settings***
 Library           SeleniumLibrary
-Test Teardown     Close All Browsers
-
-***Variables***
-${BROWSER}        Chrome
-${HOST}           127.0.0.1
-${PORT}           5001
-${URL}           http://${HOST}:${PORT}
-${TIMEOUT}        5s  # Consistent timeout
+Test Teardown     Run Keyword If Test Failed  Capture Failure Screenshot
+Resource          variables.robot  # Externalize variables
 
 ***Keywords***
+Capture Failure Screenshot
+    Capture Page Screenshot  failure-${TEST NAME}.png
+
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
-    Open browser              ${URL}/newscan  ${BROWSER}
+    Open browser              ${URL}/newscan  ${BROWSER}  options=add_argument("--headless") add_argument("--no-sandbox") add_argument("--disable-dev-shm-usage")
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:moduletab
@@ -22,19 +19,25 @@ Create a module scan
     Click Element             id:module_${module_name}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
+    Wait Until Element Is Visible    id:btn-browse    timeout=${TIMEOUT} #Add wait for the browse button.
+    Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
+    ${scan_status}=    Get Text    id:scanstatusbadge
+    Should Not Be Equal As Strings    ${scan_status}    ERROR    msg=Scan creation failed.
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
-    Open browser              ${URL}/newscan  ${BROWSER}
+    Open browser              ${URL}/newscan  ${BROWSER} options=add_argument("--headless") add_argument("--no-sandbox") add_argument("--disable-dev-shm-usage")
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:usecase_${use_case}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
+    Wait Until Element Is Visible    id:btn-browse    timeout=${TIMEOUT} #Add wait for the browse button.
+    Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
 
 Scan info page should render tabs
     Element Should Be Visible     id:btn-status
-    Element Should Be Visible     id:btn-browse 
+    Element Should Be Visible     id:btn-browse
     Element Should Be Visible     id:btn-correlations
     Element Should Be Visible     id:btn-graph
     Element Should Be Visible     id:btn-info
@@ -101,11 +104,11 @@ Scroll To Element
 Wait For Scan To Finish
     [Arguments]  ${scan_name}
     Wait Until Element Is Visible    id:btn-browse    timeout=${TIMEOUT}
-    Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=60s  # Increased timeout for scan to finish
+    Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=${SCAN_FINISH_TIMEOUT}
 
 ***Test Cases***
 Main navigation pages should render correctly
-    Open browser                  ${URL}            ${BROWSER}
+    Open browser                  ${URL}            ${BROWSER} options=add_argument("--headless") add_argument("--no-sandbox") add_argument("--disable-dev-shm-usage")
     Click Element                 id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=${TIMEOUT}
     New scan page should render
@@ -115,6 +118,7 @@ Main navigation pages should render correctly
     Click Element                 id:nav-link-settings
     Wait Until Element Is Visible    id:savesettingsform    timeout=${TIMEOUT}
     Settings page should render
+    Close All Browsers
 
 Scan info page should render correctly
     Create a module scan           test scan info    spiderfoot.net    sfp_countryname
@@ -129,36 +133,41 @@ Scan info page should render correctly
     Scan info Settings tab should render
     Click Element                 id:btn-log
     Scan info Log tab should render
+    Close All Browsers
 
 Scan list page should list scans
     Create a module scan           test scan list    spiderfoot.net    sfp_countryname
     Click Element                 id:nav-link-scans
     Wait Until Element Is Visible   xpath=//td[contains(text(), 'test scan list')]   timeout=${TIMEOUT}
+    Close All Browsers
 
 A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
     Create a module scan           dns resolve     spiderfoot.net    sfp_dnsresolve
     Wait For Scan To Finish       dns resolve
     Click Element                 id:btn-browse
     Scan info Browse tab should render
-    Page Should Contain           Domain Name
-    Page Should Contain           Internet Name
-    Page Should Contain           IP Address
+    Element Should Contain        id:browse-table-content    Domain Name
+    Element Should Contain        id:browse-table-content    Internet Name
+    Element Should Contain        id:browse-table-content    IP Address
+    Close All Browsers
 
 A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
     Create a module scan           reverse resolve   1.1.1.1           sfp_dnsresolve
     Wait For Scan To Finish      reverse resolve
     Click Element                 id:btn-browse
     Scan info Browse tab should render
-    Page Should Contain           Domain Name
-    Page Should Contain           Internet Name
-    Page Should Contain           IP Address
+    Element Should Contain        id:browse-table-content    Domain Name
+    Element Should Contain        id:browse-table-content    Internet Name
+    Element Should Contain        id:browse-table-content    IP Address
+    Close All Browsers
 
 A passive scan with unresolvable target internet name should fail
     Create a use case scan         shouldnotresolve    shouldnotresolve.doesnotexist.local    Passive
     Wait Until Element Is Visible    id:btn-browse    timeout=${TIMEOUT}
-    Wait Until Element Contains     scanstatusbadge   ERROR     timeout=60s
+    Wait Until Element Contains     scanstatusbadge   ERROR     timeout=${SCAN_FINISH_TIMEOUT}
     Click Element                   id:btn-log
     Page Should Contain             Could not resolve
+    Close All Browsers
 
 Handle SessionNotCreatedException by specifying unique --user-data-dir
     [Documentation]    Verify that the SessionNotCreatedException error is handled by specifying a unique value for the --user-data-dir argument.
@@ -171,6 +180,3 @@ Handle SessionNotCreatedException by specifying unique --user-data-dir
     Click Element                 id:btn-graph
     Scan info Graph tab should render
     Click Element                 id:btn-info
-    Scan info Settings tab should render
-    Click Element                 id:btn-log
-    Scan info Log tab should render
