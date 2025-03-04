@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from typing import List
 from spiderfoot import SpiderFootTarget
 from sflib import SpiderFoot
+from sfscan import startSpiderFootScanner
+from spiderfoot import SpiderFootDb
 
 app = FastAPI()
 
@@ -97,7 +99,7 @@ async def start_scan(scan_request: ScanRequest):
         target = SpiderFootTarget(scan_request.target)
         sf.setTarget(target)
         sf.setModules(scan_request.modules)
-        scan_id = sf.startScan()
+        scan_id = startSpiderFootScanner(sf)
         return {"scan_id": scan_id}
     except ValueError as e:
         print(f"ValueError: {e}")
@@ -112,8 +114,8 @@ async def start_scan(scan_request: ScanRequest):
 @app.post("/stop_scan/{scan_id}")
 async def stop_scan(scan_id: str):
     try:
-        sf = SpiderFoot()
-        sf.stopScan(scan_id)
+        dbh = SpiderFootDb()
+        dbh.scanInstanceSet(scan_id, status="ABORTED")
         return {"message": "Scan stopped successfully"}
     except ValueError as e:
         print(f"ValueError: {e}")
@@ -123,13 +125,13 @@ async def stop_scan(scan_id: str):
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail.str(e)) from e
 
 @app.get("/scan_results/{scan_id}")
 async def get_scan_results(scan_id: str):
     try:
-        sf = SpiderFoot()
-        results = sf.getScanResults(scan_id)
+        dbh = SpiderFootDb()
+        results = dbh.scanResultEvent(scan_id)
         return {"results": results}
     except ValueError as e:
         print(f"ValueError: {e}")
@@ -154,8 +156,8 @@ async def list_modules():
 @app.get("/active_scans")
 async def list_active_scans():
     try:
-        sf = SpiderFoot()
-        active_scans = sf.listActiveScans()
+        dbh = SpiderFootDb()
+        active_scans = dbh.scanInstanceList()
         return {"active_scans": active_scans}
     except Exception as e:
         print(f"Unexpected error: {e}")
@@ -172,10 +174,10 @@ async def get_scan_status(scan_id: str):
         raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail.str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail.str(e)) from e
+        raise HTTPException(status.code=500, detail=str(e)) from e
 
 @app.get("/scan_history")
 async def list_scan_history():
@@ -185,7 +187,7 @@ async def list_scan_history():
         return {"history": history}
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status.code=500, detail=str(e)) from e
 
 @app.get("/export_scan_results/{scan_id}")
 async def export_scan_results(scan_id: str, export_format: str):
@@ -198,10 +200,10 @@ async def export_scan_results(scan_id: str, export_format: str):
         raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail.str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail.str(e)) from e
+        raise HTTPException(status.code=500, detail=str(e)) from e
 
 @app.post("/import_api_key")
 async def import_api_key(api_key_request: APIKeyRequest):
@@ -214,10 +216,10 @@ async def import_api_key(api_key_request: APIKeyRequest):
         raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail.str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status.code=500, detail=str(e)) from e
 
 @app.get("/export_api_keys")
 async def export_api_keys():
@@ -227,7 +229,7 @@ async def export_api_keys():
         return {"api_keys": api_keys}
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status.code=500, detail=str(e)) from e
 
 @app.get("/scan_correlations/{scan_id}")
 async def get_scan_correlations(scan_id: str):
@@ -240,10 +242,10 @@ async def get_scan_correlations(scan_id: str):
         raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status.code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status.code=500, detail=str(e)) from e
 
 @app.get("/scan_logs/{scan_id}")
 async def get_scan_logs(scan_id: str):
@@ -253,13 +255,13 @@ async def get_scan_logs(scan_id: str):
         return {"logs": logs}
     except ValueError as e:
         print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status.code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status.code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status.code=500, detail=str(e)) from e
 
 @app.get("/scan_summary/{scan_id}")
 async def get_scan_summary(scan_id: str):
@@ -269,13 +271,13 @@ async def get_scan_summary(scan_id: str):
         return {"summary": summary}
     except ValueError as e:
         print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status.code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status.code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status.code=500, detail=str(e)) from e
 
 @app.get("/docs")
 async def get_docs():
