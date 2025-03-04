@@ -80,5 +80,5 @@ jobs:
         file: react-web-interface/Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}:react-latest
-          ghcr.io/${{ github.repository }}:react-${{ github.sha }}
+          ghcr.io/${{ github.repository }}:spiderfoot-react-latest
+          ghcr.io/${{ github.repository }}:spiderfoot-react-${{ github.sha }}
