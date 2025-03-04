@@ -3,6 +3,13 @@ Library           SeleniumLibrary
 Test Teardown     Run Keyword If Test Failed  Capture Failure Screenshot
 Resource          variables.robot  # Externalize variables
 
+***Variables***
+${BROWSER}        Chrome
+${HOST}           127.0.0.1
+${PORT}           5001
+${URL}           http://${HOST}:${PORT}
+${TIMEOUT}        5s
+
 ***Keywords***
 Capture Failure Screenshot
     Capture Page Screenshot  failure-${TEST NAME}.png
