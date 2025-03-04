@@ -6,9 +6,7 @@ Resource          variables.robot  # Externalize variables
 ***Keywords***
 Capture Failure Screenshot
     Capture Page Screenshot  failure-${TEST NAME}.png
-Test Module Functionality
-    ${module_name} =    Set Variable    sfp_dnsresolve
-    Run Keyword    Module Action    ${module_name}
+
 Create Chrome Headless Options
     ${options}=    Evaluate    selenium.webdriver.ChromeOptions()    modules=selenium.webdriver
     Call Method    ${options}    add_argument    --headless
