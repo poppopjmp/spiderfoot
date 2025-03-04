@@ -63,6 +63,33 @@ async def options_export_scan_results():
         "Access-Control-Allow-Headers": "Content-Type"
     }
 
+@app.options("/scan_correlations")
+async def options_scan_correlations():
+    return {
+        "Allow": "GET, OPTIONS",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+
+@app.options("/scan_logs")
+async def options_scan_logs():
+    return {
+        "Allow": "GET, OPTIONS",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+
+@app.options("/scan_summary")
+async def options_scan_summary():
+    return {
+        "Allow": "GET, OPTIONS",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+
 @app.post("/start_scan")
 async def start_scan(scan_request: ScanRequest):
     try:
@@ -198,6 +225,54 @@ async def export_api_keys():
         sf = SpiderFoot()
         api_keys = sf.exportApiKeys()
         return {"api_keys": api_keys}
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+@app.get("/scan_correlations/{scan_id}")
+async def get_scan_correlations(scan_id: str):
+    try:
+        sf = SpiderFoot()
+        correlations = sf.getScanCorrelations(scan_id)
+        return {"correlations": correlations}
+    except ValueError as e:
+        print(f"ValueError: {e}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except TypeError as e:
+        print(f"TypeError: {e}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+@app.get("/scan_logs/{scan_id}")
+async def get_scan_logs(scan_id: str):
+    try:
+        sf = SpiderFoot()
+        logs = sf.getScanLogs(scan_id)
+        return {"logs": logs}
+    except ValueError as e:
+        print(f"ValueError: {e}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except TypeError as e:
+        print(f"TypeError: {e}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+@app.get("/scan_summary/{scan_id}")
+async def get_scan_summary(scan_id: str):
+    try:
+        sf = SpiderFoot()
+        summary = sf.getScanSummary(scan_id)
+        return {"summary": summary}
+    except ValueError as e:
+        print(f"ValueError: {e}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except TypeError as e:
+        print(f"TypeError: {e}")
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
