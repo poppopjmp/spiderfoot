@@ -37,6 +37,7 @@ jobs:
         file: Dockerfile
         push: true
         tags: |
+          ghcr.io/${{ github.repository }}:v5.0.2
           ghcr.io/${{ github.repository }}:${{ github.sha }}
     - name: Trivy vulnerability scan
       uses: aquasecurity/trivy-action@master
@@ -80,5 +81,5 @@ jobs:
         file: react-web-interface/Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}:spiderfoot-react-latest
+          ghcr.io/${{ github.repository }}:spiderfoot-react-v5.0.2
           ghcr.io/${{ github.repository }}:spiderfoot-react-${{ github.sha }}
