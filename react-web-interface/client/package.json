@@ -11,12 +11,11 @@
     "jquery": "^3.7.1",
     "sigma": "^3.0.1",
     "tablesorter": "^2.31.3",
-    "react-scripts": "^5.0.2"
+    "react-scripts": "5.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "browserslist": {
@@ -32,5 +31,5 @@
     ]
   },
   "homepage": ".",
-  "proxy": "http://localhost:3000"
+  "proxy": "http://localhost:5000"
 }

@@ -1,20 +1,29 @@
 # Use a Node.js base image
-FROM node:18
+FROM node:18 AS builder
 
 # Set the working directory
 WORKDIR /app/client
 
 # Copy the package.json and package-lock.json files to the container
-COPY ./client /app/client
+COPY ./client/package*.json ./
 
 # Install the dependencies for the main project
-RUN npm install --prefix /app/client
+RUN npm install
+
+# Copy the rest of the client files
+COPY ./client .
 
 # Build the React app
-RUN npm run build --prefix /app/client
+RUN npm run build
 
-# Install a simple HTTP server to serve the React app
-RUN npm install -g serve
+# Use a smaller base image for the final stage
+FROM nginx:alpine
 
-# Serve the React app
-CMD ["serve", "-s", "client/build"]
+# Copy the build output to the nginx html directory
+COPY --from=builder /app/client/build /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
