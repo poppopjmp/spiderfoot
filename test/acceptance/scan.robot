@@ -3,13 +3,6 @@ Library           SeleniumLibrary
 Test Teardown     Run Keyword If Test Failed  Capture Failure Screenshot
 Resource          variables.robot  # Externalize variables
 
-***Variables***
-${BROWSER}        Chrome
-${HOST}           127.0.0.1
-${PORT}           5001
-${URL}           http://${HOST}:${PORT}
-${TIMEOUT}        5s
-
 ***Keywords***
 Capture Failure Screenshot
     Capture Page Screenshot  failure-${TEST NAME}.png
@@ -23,6 +16,7 @@ Create Chrome Headless Options
 
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
+    ${chrome_options}=    Create Chrome Headless Options
     Open browser              ${URL}/newscan chrome  options=${chrome_options}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
@@ -40,6 +34,7 @@ Create a module scan
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
+    ${chrome_options}=    Create Chrome Headless Options
     Open browser              ${URL}/newscan  chrome  options=${chrome_options}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
@@ -122,7 +117,8 @@ Wait For Scan To Finish
 
 ***Test Cases***
 Main navigation pages should render correctly
-    Open browser                  ${URL}            ${BROWSER} options=add_argument("--headless") add_argument("--no-sandbox") add_argument("--disable-dev-shm-usage")
+    ${chrome_options}=    Create Chrome Headless Options
+    Open browser              ${URL}  chrome  options=${chrome_options}
     Click Element                 id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=${TIMEOUT}
     New scan page should render
