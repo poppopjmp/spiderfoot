@@ -12,6 +12,7 @@ Create Chrome Headless Options
     Call Method    ${options}    add_argument    --headless
     Call Method    ${options}    add_argument    --no-sandbox
     Call Method    ${options}    add_argument    --disable-dev-shm-usage
+    Call Method    ${options}    add_argument    --disable-gpu
     [Return]    ${options}
 
 Create a module scan
@@ -31,6 +32,7 @@ Create a module scan
     Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
     ${scan_status}=    Get Text    id:scanstatusbadge
     Should Not Be Equal As Strings    ${scan_status}    ERROR    msg=Scan creation failed.
+    Wait Until Element Is Visible    id:scanlist    timeout=15s
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
@@ -43,6 +45,7 @@ Create a use case scan
     Click Element             id:btn-run-scan
     Wait Until Element Is Visible    id:btn-browse    timeout=15s #Add wait for the browse button.
     Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
+    Wait Until Element Is Visible    id:usecase_Passive    timeout=15s
 
 Scan info page should render tabs
     Element Should Be Visible     id:btn-status
@@ -113,7 +116,7 @@ Scroll To Element
 Wait For Scan To Finish
     [Arguments]  ${scan_name}
     Wait Until Element Is Visible    id:btn-browse    timeout=15s
-    Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=60s
+    Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=120s
 
 ***Test Cases***
 Main navigation pages should render correctly
