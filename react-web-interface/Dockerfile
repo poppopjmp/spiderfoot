@@ -9,7 +9,7 @@ COPY ./client/package*.json ./
 
 # Install the dependencies for the main project
 RUN npm install
-
+RUN npm install react-router-dom@^6.0.0
 # Copy the rest of the client files
 COPY ./client .
 
