@@ -2,9 +2,9 @@ name: SpiderFoot Acceptance Tests
 
 on:
   push:
-    branches: [master]
+    branches: [master, v5.0.3-dev]
   pull_request:
-    branches: [master]
+    branches: [master, v5.0.3-dev]
 
 jobs:
   acceptance-tests:
@@ -38,11 +38,10 @@ jobs:
 
       - name: Install chromedriver
         run: |
-          wget "https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip"
+          wget "https://storage.googleapis.com/chrome-for-testing-public/134.0.6998.35/linux64/chromedriver-linux64.zip"
           unzip chromedriver-linux64.zip
           sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
-
       - name: Run Robot Framework tests
         run: |
           cd test/acceptance
