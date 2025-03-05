@@ -10,7 +10,7 @@ Capture Failure Screenshot
 Create Firefox Headless Options
     ${options}=    Evaluate    selenium.webdriver.FirefoxOptions()    modules=selenium.webdriver
     Call Method    ${options}    add_argument    --headless
-    [Return]    ${options}
+    RETURN    ${options}
 
 Create a module scan
     [Arguments]    ${scan_name}    ${scan_target}    ${module_name}
