@@ -6,8 +6,17 @@ import * as d3 from 'd3';
 import $ from 'jquery';
 import sigma from 'sigma';
 import 'tablesorter';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 
 import logo from './img/spiderfoot-header.png';
+import StartScan from './components/StartScan';
+import StopScan from './components/StopScan';
+import ScanResults from './components/ScanResults';
+import ScanStatus from './components/ScanStatus';
+import ExportScanResults from './components/ExportScanResults';
+import ApiKeys from './components/ApiKeys';
+import ActiveScans from './components/ActiveScans';
+import ScanHistory from './components/ScanHistory';
 
 const App = () => {
   const [target, setTarget] = useState('');
@@ -190,141 +199,187 @@ const App = () => {
   };
 
   return (
-    <div className="container">
-      <h1 className="text-center my-4">SpiderFoot React Web Interface</h1>
-      <img src={logo} alt="Spiderfoot Logo" className="mx-auto d-block mb-4" />
-      <div className="mb-4">
-        <h2>Start Scan</h2>
-        <input
-          type="text"
-          className="form-control mb-2"
-          placeholder="Target"
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-        />
-        <select multiple className="form-control mb-2" value={modules} onChange={(e) => setModules([...e.target.selectedOptions].map(option => option.value))}>
-          {availableModules.map((module) => (
-            <option key={module} value={module}>
-              {module}
-            </option>
-          ))}
-        </select>
-        <button className="btn btn-primary" onClick={startScan}>Start Scan</button>
+    <Router>
+      <div className="container">
+        <h1 className="text-center my-4">SpiderFoot React Web Interface</h1>
+        <img src={logo} alt="Spiderfoot Logo" className="mx-auto d-block mb-4" />
+        <nav className="navbar navbar-expand-lg navbar-light bg-light">
+          <div className="container-fluid">
+            <Link className="navbar-brand" to="/">SpiderFoot</Link>
+            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+              <span className="navbar-toggler-icon"></span>
+            </button>
+            <div className="collapse navbar-collapse" id="navbarNav">
+              <ul className="navbar-nav">
+                <li className="nav-item">
+                  <Link className="nav-link" to="/">Home</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/settings">Settings</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/start-scan">Start Scan</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/stop-scan">Stop Scan</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/scan-results">Scan Results</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/scan-status">Scan Status</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/export-scan-results">Export Scan Results</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/api-keys">API Keys</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/active-scans">Active Scans</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/scan-history">Scan History</Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+        <Route path="/" exact>
+          <div>
+            <h2>Start Scan</h2>
+            <input
+              type="text"
+              className="form-control mb-2"
+              placeholder="Target"
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+            />
+            <select multiple className="form-control mb-2" value={modules} onChange={(e) => setModules([...e.target.selectedOptions].map(option => option.value))}>
+              {availableModules.map((module) => (
+                <option key={module} value={module}>
+                  {module}
+                </option>
+              ))}
+            </select>
+            <button className="btn btn-primary" onClick={startScan}>Start Scan</button>
+          </div>
+          <div>
+            <h2>Stop Scan</h2>
+            <input
+              type="text"
+              className="form-control mb-2"
+              placeholder="Scan ID"
+              value={scanId}
+              onChange={(e) => setScanId(e.target.value)}
+            />
+            <button className="btn btn-danger" onClick={stopScan}>Stop Scan</button>
+          </div>
+          <div>
+            <h2>Scan Results</h2>
+            <button className="btn btn-info mb-2" onClick={getScanResults}>Get Scan Results</button>
+            <div id="scan-results">
+              <pre>{JSON.stringify(scanResults, null, 2)}</pre>
+            </div>
+            <div id="sigma-container" style={{ height: '500px', width: '100%' }}>
+              <sigma
+                graph={scanResults}
+                settings={{
+                  drawEdges: true,
+                  drawNodes: true,
+                  defaultNodeColor: '#ec5148',
+                  defaultEdgeColor: '#c0c0c0',
+                  edgeColor: 'default',
+                  nodeColor: 'default',
+                  labelThreshold: 10,
+                  defaultLabelColor: '#000000',
+                  defaultLabelSize: 14,
+                  defaultLabelBGColor: '#ffffff',
+                  defaultLabelHoverColor: '#ff0000',
+                  defaultLabelHoverBGColor: '#ffffff',
+                  defaultLabelActiveColor: '#00ff00',
+                  defaultLabelActiveBGColor: '#ffffff',
+                  defaultLabelAlignment: 'center',
+                  defaultLabelWeight: 'normal',
+                  defaultLabelWeightHover: 'bold',
+                  defaultLabelWeightActive: 'bold',
+                  defaultLabelWeightBGColor: '#ffffff',
+                  defaultLabelWeightHoverBGColor: '#ffffff',
+                  defaultLabelWeightActiveBGColor: '#ffffff',
+                  defaultLabelWeightAlignment: 'center',
+                  defaultLabelWeightHoverAlignment: 'center',
+                  defaultLabelWeightActiveAlignment: 'center',
+                  defaultLabelWeightHoverSize: 14,
+                  defaultLabelWeightActiveSize: 14,
+                  defaultLabelWeightColor: '#000000',
+                  defaultLabelWeightHoverColor: '#ff0000',
+                  defaultLabelWeightActiveColor: '#00ff00',
+                  defaultLabelWeightBGColor: '#ffffff'
+                }}
+              />
+            </div>
+          </div>
+          <div>
+            <h2>Scan Status</h2>
+            <button className="btn btn-info mb-2" onClick={getScanStatus}>Get Scan Status</button>
+            <pre>{scanStatus}</pre>
+          </div>
+          <div>
+            <h2>Export Scan Results</h2>
+            <button onClick={() => exportScanResults('csv')} className="btn btn-info mb-2">Export as CSV</button>
+            <button onClick={() => exportScanResults('json')} className="btn btn-info mb-2">Export as JSON</button>
+            <pre>{exportedResults}</pre>
+          </div>
+          <div>
+            <h2>API Keys</h2>
+            <input
+              type="text"
+              className="form-control mb-2"
+              placeholder="API Key"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+            />
+            <button className="btn btn-info mb-2" onClick={importApiKey}>Import API Key</button>
+            <pre>{JSON.stringify(apiKeys, null, 2)}</pre>
+          </div>
+          <div>
+            <h2>Active Scans</h2>
+            <pre>{JSON.stringify(activeScans, null, 2)}</pre>
+          </div>
+          <div>
+            <h2>Scan History</h2>
+            <pre>{JSON.stringify(scanHistory, null, 2)}</pre>
+          </div>
+        </Route>
+        <Route path="/settings">
+          <Settings />
+        </Route>
+        <Route path="/start-scan">
+          <StartScan />
+        </Route>
+        <Route path="/stop-scan">
+          <StopScan />
+        </Route>
+        <Route path="/scan-results">
+          <ScanResults />
+        </Route>
+        <Route path="/scan-status">
+          <ScanStatus />
+        </Route>
+        <Route path="/export-scan-results">
+          <ExportScanResults />
+        </Route>
+        <Route path="/api-keys">
+          <ApiKeys />
+        </Route>
+        <Route path="/active-scans">
+          <ActiveScans />
+        </Route>
+        <Route path="/scan-history">
+          <ScanHistory />
+        </Route>
       </div>
-      <div className="mb-4">
-        <h2>Stop Scan</h2>
-        <input
-          type="text"
-          className="form-control mb-2"
-          placeholder="Scan ID"
-          value={scanId}
-          onChange={(e) => setScanId(e.target.value)}
-        />
-        <button className="btn btn-danger" onClick={stopScan}>Stop Scan</button>
-      </div>
-      <div className="mb-4">
-        <h2>Scan Results</h2>
-        <button className="btn btn-info mb-2" onClick={getScanResults}>Get Scan Results</button>
-        <div id="scan-results">
-          <pre>{JSON.stringify(scanResults, null, 2)}</pre>
-        </div>
-        <div id="sigma-container" style={{ height: '500px', width: '100%' }}>
-          <sigma
-            graph={scanResults}
-            settings={{
-              drawEdges: true,
-              drawNodes: true,
-              defaultNodeColor: '#ec5148',
-              defaultEdgeColor: '#c0c0c0',
-              edgeColor: 'default',
-              nodeColor: 'default',
-              labelThreshold: 10,
-              defaultLabelColor: '#000000',
-              defaultLabelSize: 14,
-              defaultLabelBGColor: '#ffffff',
-              defaultLabelHoverColor: '#ff0000',
-              defaultLabelHoverBGColor: '#ffffff',
-              defaultLabelActiveColor: '#00ff00',
-              defaultLabelActiveBGColor: '#ffffff',
-              defaultLabelAlignment: 'center',
-              defaultLabelWeight: 'normal',
-              defaultLabelWeightHover: 'bold',
-              defaultLabelWeightActive: 'bold',
-              defaultLabelWeightBGColor: '#ffffff',
-              defaultLabelWeightHoverBGColor: '#ffffff',
-              defaultLabelWeightActiveBGColor: '#ffffff',
-              defaultLabelWeightAlignment: 'center',
-              defaultLabelWeightHoverAlignment: 'center',
-              defaultLabelWeightActiveAlignment: 'center',
-              defaultLabelWeightHoverSize: 14,
-              defaultLabelWeightActiveSize: 14,
-              defaultLabelWeightColor: '#000000',
-              defaultLabelWeightHoverColor: '#ff0000',
-              defaultLabelWeightActiveColor: '#00ff00',
-              defaultLabelWeightBGColor: '#ffffff'
-            }}
-          />
-        </div>
-      </div>
-      <div className="mb-4">
-        <h2>Scan Status</h2>
-        <button className="btn btn-info mb-2" onClick={getScanStatus}>Get Scan Status</button>
-        <pre>{scanStatus}</pre>
-      </div>
-      <div className="mb-4">
-        <h2>Export Scan Results</h2>
-        <button onClick={() => exportScanResults('csv')} className="btn btn-info mb-2">Export as CSV</button>
-        <button onClick={() => exportScanResults('json')} className="btn btn-info mb-2">Export as JSON</button>
-        <pre>{exportedResults}</pre>
-      </div>
-      <div className="mb-4">
-        <h2>API Keys</h2>
-        <input
-          type="text"
-          className="form-control mb-2"
-          placeholder="API Key"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-        />
-        <button className="btn btn-info mb-2" onClick={importApiKey}>Import API Key</button>
-        <pre>{JSON.stringify(apiKeys, null, 2)}</pre>
-      </div>
-      <div className="mb-4">
-        <h2>Active Scans</h2>
-        <pre>{JSON.stringify(activeScans, null, 2)}</pre>
-      </div>
-      <div className="mb-4">
-        <h2>Scan History</h2>
-        <pre>{JSON.stringify(scanHistory, null, 2)}</pre>
-      </div>
-      <div className="mb-4">
-        <h2>Configure Module</h2>
-        <select className="form-control mb-2" value={selectedModule} onChange={handleModuleChange}>
-          <option value="">Select a module</option>
-          {availableModules.map((module) => (
-            <option key={module} value={module}>
-              {module}
-            </option>
-          ))}
-        </select>
-        <button className="btn btn-info mb-2" onClick={() => configureModule(selectedModule, { key: apiKey })}>Configure Module</button>
-      </div>
-      <div className="mb-4">
-        <h2>Scan Correlations</h2>
-        <button className="btn btn-info mb-2" onClick={fetchScanCorrelations}>Get Scan Correlations</button>
-        <pre>{JSON.stringify(scanCorrelations, null, 2)}</pre>
-      </div>
-      <div className="mb-4">
-        <h2>Scan Logs</h2>
-        <button className="btn btn-info mb-2" onClick={fetchScanLogs}>Get Scan Logs</button>
-        <pre>{JSON.stringify(scanLogs, null, 2)}</pre>
-      </div>
-      <div className="mb-4">
-        <h2>Scan Summary</h2>
-        <button className="btn btn-info mb-2" onClick={fetchScanSummary}>Get Scan Summary</button>
-        <pre>{JSON.stringify(scanSummary, null, 2)}</pre>
-      </div>
-    </div>
+    </Router>
   );
 };
 
