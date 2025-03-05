@@ -12,7 +12,7 @@ Create Chrome Headless Options
     Call Method    ${options}    add_argument    --headless
     Call Method    ${options}    add_argument    --no-sandbox
     Call Method    ${options}    add_argument    --disable-dev-shm-usage
-    [Return]    ${options}
+    RETURN    ${options}
 
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
