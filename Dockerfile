@@ -53,6 +53,7 @@ RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tool
     && if [ -x /usr/bin/nmap ]; then echo "nmap: /usr/bin/nmap (OK)"; else echo "nmap: NOT FOUND"; fi \
     && if [ -x /usr/bin/whatweb ]; then echo "whatweb: /usr/bin/whatweb (OK)"; else echo "whatweb: NOT FOUND"; fi \
     && if [ -x /usr/bin/dig ]; then echo "dnsutils: /usr/bin/dig (OK)"; else echo "dnsutils: NOT FOUND"; fi \
+    # Check in /tools/bin/ for pip-installed tools
     && if [ -x /tools/bin/dnstwist ]; then echo "dnstwist: /tools/bin/dnstwist (OK)"; else echo "dnstwist: NOT FOUND"; fi \
     && if [ -x /tools/bin/snallygaster ]; then echo "snallygaster: /tools/bin/snallygaster (OK)"; else echo "snallygaster: NOT FOUND"; fi \
     && if [ -x /tools/bin/trufflehog ]; then echo "trufflehog: /tools/bin/trufflehog (OK)"; else echo "trufflehog: NOT FOUND"; fi \
@@ -62,6 +63,7 @@ RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tool
     && if [ -x /tools/bin/retire ]; then echo "retire.js: /tools/bin/retire (OK)"; else echo "retire.js: NOT FOUND"; fi \
     && if [ -x /tools/bin/wappalyzer ]; then echo "wappalyzer: /tools/bin/wappalyzer (OK)"; else echo "wappalyzer: NOT FOUND"; fi \
     && if [ -x /tools/bin/nuclei ]; then echo "nuclei: /tools/bin/nuclei (OK)"; else echo "nuclei: NOT FOUND"; fi
+    
 
 ## Enable NMAP into the container to be fully used
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap

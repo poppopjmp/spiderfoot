@@ -7,7 +7,7 @@ from sfscan import startSpiderFootScanner
 from spiderfoot import SpiderFootDb
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
-import asyncio, logger
+import asyncio, logging
 
 app = FastAPI()
 
@@ -172,10 +172,10 @@ async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTask
         return {"scan_id": scan_id}
 
     except TypeError as e:
-        logger.error(f"TypeError during start_scan: {e}")
+        logging.error(f"TypeError during start_scan: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        logger.error(f"Unexpected error during start_scan: {e}")
+        logging.error(f"Unexpected error during start_scan: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.post("/stop_scan/{scan_id}")
@@ -189,10 +189,10 @@ async def stop_scan(scan_id: str):
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid scan_id format. Must be UUID.")
     except TypeError as e:
-        logger.error(f"TypeError during stop_scan: {e}")
+        logging.error(f"TypeError during stop_scan: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        logger.error(f"Unexpected error during stop_scan: {e}")
+        logging.error(f"Unexpected error during stop_scan: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/modules")
@@ -208,7 +208,7 @@ async def list_modules():
         modules = sf.listModules()
         return {"modules": modules}
     except Exception as e:
-        logger.error(f"Unexpected error in list_modules: {e}", exc_info=True)
+        logging.error(f"Unexpected error in list_modules: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_results/{scan_id}")
@@ -234,7 +234,7 @@ async def get_scan_results(scan_id: str):
 
         return {"results": formatted_results}
     except Exception as e:
-        logger.error(f"Unexpected error in get_scan_results: {e}", exc_info=True)
+        logging.error(f"Unexpected error in get_scan_results: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/active_scans")
