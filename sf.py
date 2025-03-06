@@ -113,7 +113,7 @@ def main() -> None:
         p.add_argument("-q", action='store_true', help="Disable logging. This will also hide errors!")
         p.add_argument("-V", "--version", action='store_true', help="Display the version of SpiderFoot and exit.")
         p.add_argument("-max-threads", type=int, help="Max number of modules to run concurrently.")
-        p.add_argument("--rest-api", action='store_true', help="Start the REST API server using FastAPI.")  # P9f5e
+        p.add_argument("--rest-api", action='store_false', help="Stop the REST API.")  # P9f5e
 
         args = p.parse_args()  # Parse arguments after defining p
 
@@ -233,7 +233,8 @@ def main() -> None:
 
         if args.rest_api:  # P217d
             start_rest_api_server()  # P217d
-            sys.exit(0)  # P217d
+            log.info("REST API server started successfully.")
+            sys.exit(0)
 
         start_scan(sfConfig, sfModules, args, loggingQueue)
     except Exception as e:
@@ -646,30 +647,12 @@ def handle_abort(signal, frame) -> None:
         log.critical(f"Unhandled exception in handle_abort: {e}", exc_info=True)
         sys.exit(-1)
 
-
-def start_rest_api_server() -> None:  # P3926
-    """
-    Start the REST API server using FastAPI.
-
-    This function initializes and starts the REST API server using FastAPI.
-    The server will listen on all available network interfaces (0.0.0.0) and port 8000.
-
-    Returns:
-        None
-    """
-    import uvicorn
-    from spiderfoot.api import app
-
-    uvicorn.run(app, host="127.0.0.1", port=8000)  # P3926
-
-
 def check_rest_api_implementation() -> None:
     """
     Check if the implementation of the REST API is aligned and correctly linked to the core SpiderFoot functionality.
     """
     import requests
-    start_rest_api_server()
-    log.info("REST API server started successfully.")
+
     
     time.sleep(10)
 
@@ -698,6 +681,28 @@ def check_rest_api_implementation() -> None:
                 logging.error(f"Endpoint {endpoint} is not correctly linked. Status code: {response.status_code}")
         except Exception as e:
             logging.error(f"Error checking endpoint {endpoint}: {e}")
+            
+def start_rest_api_server() -> None:  # P3926
+    """
+    Start the REST API server using FastAPI.
+
+    This function initializes and starts the REST API server using FastAPI.
+    The server will listen on all available network interfaces (0.0.0.0) and port 8000.
+
+    Returns:
+        None
+    """
+    import uvicorn
+    from spiderfoot.api import app
+
+    uvicorn.run(app, host="127.0.0.1", port=8000)  # P3926
+    check_rest_api_implementation()
+    except Exception as e:
+        log.critical(f"Unhandled exception in REST API Server Start: {e}", exc_info=True)
+        sys.exit(-1)
+
+
+
 
 
 def generate_openapi_schema() -> dict:
@@ -767,5 +772,4 @@ if __name__ == '__main__':
         print(f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
         sys.exit(-1)
 
-    check_rest_api_implementation()
     main()
