@@ -681,7 +681,7 @@ def check_rest_api_implementation() -> None:
                 logging.error(f"Endpoint {endpoint} is not correctly linked. Status code: {response.status_code}")
         except Exception as e:
             logging.error(f"Error checking endpoint {endpoint}: {e}")
-            
+
 def start_rest_api_server() -> None:  # P3926
     """
     Start the REST API server using FastAPI.
@@ -697,13 +697,6 @@ def start_rest_api_server() -> None:  # P3926
 
     uvicorn.run(app, host="127.0.0.1", port=8000)  # P3926
     check_rest_api_implementation()
-    except Exception as e:
-        log.critical(f"Unhandled exception in REST API Server Start: {e}", exc_info=True)
-        sys.exit(-1)
-
-
-
-
 
 def generate_openapi_schema() -> dict:
     """

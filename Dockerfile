@@ -34,7 +34,21 @@ RUN mkdir /tools
 WORKDIR /tools
 RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tools \
     && git clone --depth 1 https://github.com/testssl/testssl.sh.git \
-    && git clone https://github.com/Tuhinshubhra/CMSeeK && cd CMSeeK && pip install --no-cache-dir -r requirements.txt && mkdir Results
+    && git clone https://github.com/Tuhinshubhra/CMSeeK \
+    && pip install --no-cache-dir -r CMSeeK/requirements.txt -t /tools \
+    && mkdir CMSeeK/Results \
+    && echo "Checking installation paths..." \
+    && if [ -x /usr/bin/nbtscan ]; then echo "nbtscan: /usr/bin/nbtscan (OK)"; else echo "nbtscan: NOT FOUND"; fi \
+    && if [ -x /usr/bin/onesixtyone ]; then echo "onesixtyone: /usr/bin/onesixtyone (OK)"; else echo "onesixtyone: NOT FOUND"; fi \
+    && if [ -x /usr/bin/nmap ]; then echo "nmap: /usr/bin/nmap (OK)"; else echo "nmap: NOT FOUND"; fi \
+    && if [ -x /usr/bin/whatweb ]; then echo "whatweb: /usr/bin/whatweb (OK)"; else echo "whatweb: NOT FOUND"; fi \
+    && if [ -x /usr/bin/dig ]; then echo "dnsutils: /usr/bin/dig (OK)"; else echo "dnsutils: NOT FOUND"; fi \
+    && if [ -x /tools/bin/dnstwist ]; then echo "dnstwist: /tools/bin/dnstwist (OK)"; else echo "dnstwist: NOT FOUND"; fi \
+    && if [ -x /tools/bin/snallygaster ]; then echo "snallygaster: /tools/bin/snallygaster (OK)"; else echo "snallygaster: NOT FOUND"; fi \
+    && if [ -x /tools/bin/trufflehog ]; then echo "trufflehog: /tools/bin/trufflehog (OK)"; else echo "trufflehog: NOT FOUND"; fi \
+    && if [ -x /tools/bin/wafw00f ]; then echo "wafw00f: /tools/bin/wafw00f (OK)"; else echo "wafw00f: NOT FOUND"; fi \
+    && if [ -x /tools/testssl.sh/testssl.sh ]; then echo "testssl.sh: /tools/testssl.sh/testssl.sh (OK)"; else echo "testssl.sh: NOT FOUND"; fi \
+    && if [ -f /tools/CMSeeK/cmseek.py ]; then echo "CMSeeK: /tools/CMSeeK/cmseek.py (OK)"; else echo "CMSeeK: NOT FOUND"; fi
 
 ## Enable NMAP into the container to be fully used
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
