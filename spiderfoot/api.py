@@ -28,6 +28,7 @@ async def read_root():
     """
     return {"message": "Welcome to SpiderFoot API"}
 
+
 @app.options("/start_scan")
 async def options_start_scan():
     """
@@ -148,83 +149,73 @@ async def options_scan_summary():
         "Access-Control-Allow-Headers": "Content-Type"
     }
 
+def run_spiderfoot_scan(target: str, modules: List[str]):
+    """Runs the SpiderFoot scan synchronously."""
+    sf = SpiderFoot()
+    target_obj = SpiderFootTarget(target)
+    sf.setTarget(target_obj)
+    sf.setModules(modules)
+    scan_id = startSpiderFootScanner(sf)
+    return scan_id
+
+async def run_spiderfoot_scan_async(target: str, modules: List[str]):
+    """Runs the SpiderFoot scan in a separate thread/process."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, run_spiderfoot_scan, target, modules)
+
 @app.post("/start_scan")
-async def start_scan(scan_request: ScanRequest):
-    """
-    Start a new scan with the specified target and modules.
-
-    Args:
-        scan_request (ScanRequest): The scan request containing the target and modules.
-
-    Returns:
-        dict: The scan ID of the started scan.
-    """
+async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks):
+    """Start a new scan with the specified target and modules."""
     try:
-        sf = SpiderFoot()
-        target = SpiderFootTarget(scan_request.target)
-        sf.setTarget(target)
-        sf.setModules(scan_request.modules)
-        scan_id = startSpiderFootScanner(sf)
+        scan_id = await run_spiderfoot_scan_async(scan_request.target, scan_request.modules)
         return {"scan_id": scan_id}
-    except ValueError as e:
-        print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+
     except TypeError as e:
-        print(f"TypeError: {e}")
+        logger.error(f"TypeError during start_scan: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error during start_scan: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.post("/stop_scan/{scan_id}")
 async def stop_scan(scan_id: str):
-    """
-    Stop a running scan with the specified scan ID.
-
-    Args:
-        scan_id (str): The scan ID of the scan to stop.
-
-    Returns:
-        dict: A message indicating the scan was stopped successfully.
-    """
+    """Stop a running scan with the specified scan ID."""
     try:
+        uuid.UUID(scan_id) #validate UUID
         dbh = SpiderFootDb()
         dbh.scanInstanceSet(scan_id, status="ABORTED")
         return {"message": "Scan stopped successfully"}
-    except ValueError as e:
-        print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid scan_id format. Must be UUID.")
     except TypeError as e:
-        print(f"TypeError: {e}")
+        logger.error(f"TypeError during stop_scan: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error during stop_scan: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_results/{scan_id}")
 async def get_scan_results(scan_id: str):
-    """
-    Get the scan results for the specified scan ID.
-
-    Args:
-        scan_id (str): The scan ID of the scan to retrieve results for.
-
-    Returns:
-        dict: The scan results.
-    """
+    """Get the scan results for the specified scan ID."""
     try:
+        uuid.UUID(scan_id)  # Validate UUID
         dbh = SpiderFootDb()
         results = dbh.scanResultEvent(scan_id)
-        return {"results": results}
-    except ValueError as e:
-        print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
-    except TypeError as e:
-        print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+
+        formatted_results = []
+        for result in results:
+            formatted_result = {
+                "module": result[0],
+                "data": result[1],
+                "type": result[2],
+                "source": result[3],
+                "falsescore": result[4],
+                "generated": result[5],
+                "updated": result[6],
+            }
+            formatted_results.append(formatted_result)
+
+        return {"results": formatted_results}
 
 @app.get("/modules")
 async def list_modules():
@@ -273,9 +264,6 @@ async def get_scan_status(scan_id: str):
         sf = SpiderFoot()
         status = sf.getScanStatus(scan_id)
         return {"status": status}
-    except ValueError as e:
-        print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -315,9 +303,6 @@ async def export_scan_results(scan_id: str, export_format: str):
         sf = SpiderFoot()
         exported_results = sf.exportScanResults(scan_id, export_format)
         return {"exported_results": exported_results}
-    except ValueError as e:
-        print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -340,9 +325,6 @@ async def import_api_key(api_key_request: APIKeyRequest):
         sf = SpiderFoot()
         sf.importApiKey(api_key_request.module, api_key_request.key)
         return {"message": "API key imported successfully"}
-    except ValueError as e:
-        print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail.str(e)) from e
@@ -381,9 +363,6 @@ async def get_scan_correlations(scan_id: str):
         sf = SpiderFoot()
         correlations = sf.getScanCorrelations(scan_id)
         return {"correlations": correlations}
-    except ValueError as e:
-        print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -406,9 +385,6 @@ async def get_scan_logs(scan_id: str):
         sf = SpiderFoot()
         logs = sf.getScanLogs(scan_id)
         return {"logs": logs}
-    except ValueError as e:
-        print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail.str(e)) from e
@@ -431,9 +407,6 @@ async def get_scan_summary(scan_id: str):
         sf = SpiderFoot()
         summary = sf.getScanSummary(scan_id)
         return {"summary": summary}
-    except ValueError as e:
-        print(f"ValueError: {e}")
-        raise HTTPException(status_code=400, detail.str(e)) from e
     except TypeError as e:
         print(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail.str(e)) from e
@@ -453,25 +426,15 @@ async def get_docs():
 
 @app.get("/openapi.json")
 async def get_openapi_schema():
-    """
-    Get the OpenAPI schema for the API.
-
-    Returns:
-        dict: The OpenAPI schema.
-    """
+    """Get the OpenAPI schema for the REST API."""
     return get_openapi(
-        title="SpiderFoot API",
+        title="SpiderFoot REST API",
         version="5.0.3",
-        description="API documentation for SpiderFoot",
+        description="REST API documentation for SpiderFoot",
         routes=app.routes,
     )
 
 @app.get("/docs")
 async def get_swagger_ui():
-    """
-    Get the Swagger UI for the API.
-
-    Returns:
-        HTMLResponse: The Swagger UI.
-    """
-    return get_swagger_ui_html(openapi_url="/openapi.json", title="SpiderFoot API")
+    """Get the Swagger UI for the API."""
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="SpiderFoot REST API")
