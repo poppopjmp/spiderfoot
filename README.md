@@ -1,4 +1,8 @@
-<a href="https://www.van1shland.io/spiderfoot"><img src="https://www.spiderfoot.net/wp-content/themes/spiderfoot/img/spiderfoot-wide.png"></a>
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+  <a href="https://www.van1shland.io/spiderfoot">
+    <img src="./docs/images/spiderfoot-wide.png" alt="Spiderfoot Link">
+  </a>
+</div>
 
 ### **This fork aim to keep the project mantained and try to add more functionality to the project**
 
@@ -19,7 +23,7 @@
 
 SpiderFoot has an embedded web-server for providing a clean and intuitive web-based interface but can also be used completely via the command-line.  It's written in **Python 3** and **MIT-licensed**.
 
-<img src="https://www.spiderfoot.net/wp-content/uploads/2022/04/opensource-screenshot-v4.png" />
+<img src="./docs/images/spiderfoot-screenshot-v5.png" />
 
 ### FEATURES
 
@@ -149,7 +153,7 @@ To run the REST API server, use the following command:
 python3 ./sf.py --rest-api
 ```
 
-Check out the [documentation](https://www.spiderfoot.net/documentation) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
+Check out the [documentation](https://github.com/poppopjmp/spiderfoot/wiki) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
 
 ### CONFIGURING POSTGRESQL
 
@@ -450,9 +454,7 @@ Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 
 ### DOCUMENTATION
 
-Read more at the [project website](https://www.spiderfoot.net/r.php?u=aHR0cHM6Ly93d3cuc3BpZGVyZm9vdC5uZXQv&s=os_gh), including more complete documentation, blog posts with tutorials/guides, plus information about [SpiderFoot HX](https://www.spiderfoot.net/r.php?u=aHR0cHM6Ly93d3cuc3BpZGVyZm9vdC5uZXQvaHgvCg==&s=os_gh).
-
-Latest updates announced on [Twitter](https://twitter.com/spiderfoot).
+Read more at the [project website](https://github.com/poppopjmp/spiderfoot/wiki), including more complete documentation, blog posts with tutorials/guides.
 
 ### ACTIVE MAINTENANCE STATUS
 
