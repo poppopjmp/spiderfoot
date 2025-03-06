@@ -330,7 +330,7 @@ async def import_api_key(api_key_request: APIKeyRequest):
         return {"message": "API key imported successfully"}
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail.str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -390,10 +390,10 @@ async def get_scan_logs(scan_id: str):
         return {"logs": logs}
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail.str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail.str(e)) from e
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_summary/{scan_id}")
 async def get_scan_summary(scan_id: str):
@@ -412,10 +412,10 @@ async def get_scan_summary(scan_id: str):
         return {"summary": summary}
     except TypeError as e:
         print(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail.str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         print(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail.str(e)) from e
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/docs")
 async def get_docs():
