@@ -41,7 +41,7 @@ class sfp_tool_testsslsh(SpiderFootPlugin):
     }
 
     opts = {
-        'testsslsh_path': '',
+        'testsslsh_path': '/tools/testssl.sh/testssl.sh',
         'netblockscan': True,
         'netblockscanmax': 24,
         'mincve': 'LOW'

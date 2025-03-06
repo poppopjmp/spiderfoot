@@ -43,8 +43,8 @@ class sfp_tool_nuclei(SpiderFootPlugin):
 
     # Default options
     opts = {
-        "nuclei_path": "",
-        "template_path": "",
+        "nuclei_path": "/tools/bin/nuclei",
+        "template_path": "/tools/nuclei-templates/",
         'netblockscan': True,
         'netblockscanmax': 24
     }

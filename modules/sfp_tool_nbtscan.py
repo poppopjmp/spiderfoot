@@ -40,7 +40,7 @@ class sfp_tool_nbtscan(SpiderFootPlugin):
     }
 
     opts = {
-        'nbtscan_path': '',
+        'nbtscan_path': '/usr/bin/nbtscan',
         'netblockscan': True,
         'netblockscanmax': 24
     }

@@ -34,12 +34,10 @@ class sfp_tool_wafw00f(SpiderFootPlugin):
     }
 
     opts = {
-        'python_path': 'python3',
-        'wafw00f_path': ''
+        'wafw00f_path': '/tools/bin/wafw00f'
     }
 
     optdescs = {
-        'python_path': "Path to Python 3 interpreter to use for wafw00f. If just 'python3' then it must be in your $PATH.",
         'wafw00f_path': "Path to the wafw00f executable file. Must be set."
     }
 

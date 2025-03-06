@@ -108,7 +108,7 @@ class sfp_dns_for_family(SpiderFootPlugin):
 
         for result in res:
             k = str(result)
-            if k != '159.69.10.249':
+            if k != '0.0.0.0':
                 continue
 
             self.debug(f"{eventData} blocked by DNS for Family")

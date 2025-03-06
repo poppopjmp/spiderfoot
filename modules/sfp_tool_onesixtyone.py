@@ -37,7 +37,7 @@ class sfp_tool_onesixtyone(SpiderFootPlugin):
     }
 
     opts = {
-        'onesixtyone_path': '',
+        'onesixtyone_path': '/usr/bin/onesixtyone',
         'communities': '1234,2read,4changes,CISCO,IBM,OrigEquipMfr,SNMP,SUN,access,admin,agent,all,cisco,community,default,enable,field,guest,hello,ibm,manager,mngt,monitor,netman,network,none,openview,pass,password,private,proxy,public,read,read-only,read-write,root,router,secret,security,snmp,snmpd,solaris,sun,switch,system,tech,test,world,write',
         'netblockscan': True,
         'netblockscanmax': 24

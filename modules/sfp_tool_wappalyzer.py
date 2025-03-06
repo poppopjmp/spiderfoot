@@ -37,8 +37,7 @@ class sfp_tool_wappalyzer(SpiderFootPlugin):
 
     # Default options
     opts = {
-        "node_path": "/usr/bin/node",
-        "wappalyzer_path": ""
+        "wappalyzer_path": "/tools/bin/wappalyzer"
     }
 
     # Option descriptions

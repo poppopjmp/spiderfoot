@@ -42,7 +42,7 @@ class sfp_tool_whatweb(SpiderFootPlugin):
     # Default options
     opts = {
         'aggression': 1,
-        'whatweb_path': ''
+        'whatweb_path': '/usr/bin/whatweb'
     }
 
     # Option descriptions

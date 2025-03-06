@@ -5,7 +5,7 @@
 
 FROM debian:bullseye-slim
 ARG REQUIREMENTS=requirements.txt
-RUN apt-get update && apt-get install -y --no-install-recommends gcc git curl swig libxml2-dev libxslt-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev python3 python3-pip
+RUN apt-get update && apt-get install -y --no-install-recommends gcc git curl zip wget npm swig libxml2-dev libxslt-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev python3 python3-pip
 WORKDIR /home/spiderfoot
 COPY $REQUIREMENTS requirements.txt ./
 RUN pip install --no-cache-dir -U pip==25.0.1 && pip install --no-cache-dir -r requirements.txt
@@ -30,7 +30,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends libxml2 libxslt
 
 # Install tools/dependencies from apt
 RUN apt-get -y update && apt-get install -y --no-install-recommends nbtscan onesixtyone nmap whatweb bsdmainutils dnsutils coreutils libcap2-bin
-RUN mkdir /tools 
+RUN mkdir -p /tools/bin
+WORKDIR /tools/bin
+RUN wget https://github.com/projectdiscovery/nuclei/releases/download/v3.3.9/nuclei_3.3.9_linux_amd64.zip \
+    && unzip nuclei_3.3.9_linux_amd64.zip \
+    && rm nuclei_3.3.9_linux_amd64.zip \
+    && chmod +x nuclei
+
+# Download nuclei-templates
+RUN git clone https://github.com/projectdiscovery/nuclei-templates.git /tools/nuclei-templates
+
+RUN npm config set prefix /tools \
+    && npm install -g retire @wappalyzer/cli
+
 WORKDIR /tools
 RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tools \
     && git clone --depth 1 https://github.com/testssl/testssl.sh.git \
@@ -49,6 +61,9 @@ RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tool
     && if [ -x /tools/bin/wafw00f ]; then echo "wafw00f: /tools/bin/wafw00f (OK)"; else echo "wafw00f: NOT FOUND"; fi \
     && if [ -x /tools/testssl.sh/testssl.sh ]; then echo "testssl.sh: /tools/testssl.sh/testssl.sh (OK)"; else echo "testssl.sh: NOT FOUND"; fi \
     && if [ -f /tools/CMSeeK/cmseek.py ]; then echo "CMSeeK: /tools/CMSeeK/cmseek.py (OK)"; else echo "CMSeeK: NOT FOUND"; fi
+    && if [ -x /tools/bin/retire ]; then echo "retire.js: /tools/bin/retire (OK)"; else echo "retire.js: NOT FOUND"; fi \
+    && if [ -x /tools/bin/wappalyzer ]; then echo "wappalyzer: /tools/bin/wappalyzer (OK)"; else echo "wappalyzer: NOT FOUND"; fi \
+    && if [ -x /tools/bin/nuclei ]; then echo "nuclei: /tools/bin/nuclei (OK)"; else echo "nuclei: NOT FOUND"; fi
 
 ## Enable NMAP into the container to be fully used
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
