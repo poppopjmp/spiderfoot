@@ -1,4 +1,4 @@
-<a href="https://www.spiderfoot.net/r.php?u=aHR0cHM6Ly93d3cuc3BpZGVyZm9vdC5uZXQv&s=os_gh"><img src="https://www.spiderfoot.net/wp-content/themes/spiderfoot/img/spiderfoot-wide.png"></a>
+<a href="https://www.van1shland.io/spiderfoot"><img src="https://www.spiderfoot.net/wp-content/themes/spiderfoot/img/spiderfoot-wide.png"></a>
 
 ### **This fork aim to keep the project mantained and try to add more functionality to the project**
 
@@ -6,9 +6,11 @@
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
 [![Stable Release](https://img.shields.io/badge/version-5.0.2-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.2)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
+[![Docker CI Build](https://github.com/poppopjmp/spiderfoot/workflows/Docker%20Image%20CI/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Docker%20Image%20CI")
+[![Browser Acceptance status](https://github.com/poppopjmp/spiderfoot/workflows/SpiderFoot%20Acceptance%20Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"SpiderFoot%20Acceptance%20Tests")
+[![Code QL](https://github.com/poppopjmp/spiderfoot/workflows/CodeQL/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"CodeQL")
 [![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
 [![codecov](https://codecov.io/github/poppopjmp/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/poppopjmp/spiderfoot)
-[![Twitter Follow](https://img.shields.io/twitter/follow/spiderfoot?label=follow&style=social)](https://twitter.com/spiderfoot)
 [![Discord](https://img.shields.io/discord/770524432464216074)](https://discord.gg/vyvztrG)
 
 
@@ -23,7 +25,7 @@ SpiderFoot has an embedded web-server for providing a clean and intuitive web-ba
 
 - Web based UI or CLI
 - Over 200 modules (see below)
-- Python 3.7+
+- Python 3.9+
 - YAML-configurable [correlation engine](/correlations/README.md) with [37 pre-defined rules](/correlations)
 - CSV/JSON/GEXF export
 - API key export/import
@@ -34,7 +36,7 @@ SpiderFoot has an embedded web-server for providing a clean and intuitive web-ba
 - TOR integration for dark web searching
 - Dockerfile for Docker-based deployments
 - Can call other tools like DNSTwist, Whatweb, Nmap and CMSeeK
-- [Actively developed since 2012!](https://medium.com/@micallst/lessons-learned-from-my-10-year-open-source-project-4a4c8c2b4f64)
+- Actively developed since 2012!
 - REST API for programmatic access to all functionalities
 
 ### WANT MORE?
@@ -67,7 +69,6 @@ The following features are in the roadmap for SpiderFoot:
   - Enable notifications for project updates and scan results
 - Authenticated and 2FA
 - Investigations
-- Customer support
 - Third party tools pre-installed & configured
 - Drive it with a fully RESTful API
 - TOR integration built-in
