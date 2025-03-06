@@ -194,6 +194,22 @@ async def stop_scan(scan_id: str):
         logger.error(f"Unexpected error during stop_scan: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+@app.get("/modules")
+async def list_modules():
+    """
+    List all available modules.
+
+    Returns:
+        dict: A list of available modules.
+    """
+    try:
+        sf = SpiderFoot()
+        modules = sf.listModules()
+        return {"modules": modules}
+    except Exception as e:
+        logger.error(f"Unexpected error in list_modules: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
 @app.get("/scan_results/{scan_id}")
 async def get_scan_results(scan_id: str):
     """Get the scan results for the specified scan ID."""
@@ -216,21 +232,8 @@ async def get_scan_results(scan_id: str):
             formatted_results.append(formatted_result)
 
         return {"results": formatted_results}
-
-@app.get("/modules")
-async def list_modules():
-    """
-    List all available modules.
-
-    Returns:
-        dict: A list of available modules.
-    """
-    try:
-        sf = SpiderFoot()
-        modules = sf.listModules()
-        return {"modules": modules}
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error in get_scan_results: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/active_scans")
