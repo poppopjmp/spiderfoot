@@ -23,7 +23,7 @@
 
 SpiderFoot has an embedded web-server for providing a clean and intuitive web-based interface but can also be used completely via the command-line.  It's written in **Python 3** and **MIT-licensed**.
 
-<img src="./docs/images/spiderfoot-screenshot-v5.png" />
+<img src="./docs/images/v4.png" />
 
 ### FEATURES
 
