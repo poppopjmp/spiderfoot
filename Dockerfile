@@ -60,7 +60,7 @@ RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tool
     && if [ -x /tools/bin/trufflehog ]; then echo "trufflehog: /tools/bin/trufflehog (OK)"; else echo "trufflehog: NOT FOUND"; fi \
     && if [ -x /tools/bin/wafw00f ]; then echo "wafw00f: /tools/bin/wafw00f (OK)"; else echo "wafw00f: NOT FOUND"; fi \
     && if [ -x /tools/testssl.sh/testssl.sh ]; then echo "testssl.sh: /tools/testssl.sh/testssl.sh (OK)"; else echo "testssl.sh: NOT FOUND"; fi \
-    && if [ -f /tools/CMSeeK/cmseek.py ]; then echo "CMSeeK: /tools/CMSeeK/cmseek.py (OK)"; else echo "CMSeeK: NOT FOUND"; fi
+    && if [ -f /tools/CMSeeK/cmseek.py ]; then echo "CMSeeK: /tools/CMSeeK/cmseek.py (OK)"; else echo "CMSeeK: NOT FOUND"; fi \
     && if [ -x /tools/bin/retire ]; then echo "retire.js: /tools/bin/retire (OK)"; else echo "retire.js: NOT FOUND"; fi \
     && if [ -x /tools/bin/wappalyzer ]; then echo "wappalyzer: /tools/bin/wappalyzer (OK)"; else echo "wappalyzer: NOT FOUND"; fi \
     && if [ -x /tools/bin/nuclei ]; then echo "nuclei: /tools/bin/nuclei (OK)"; else echo "nuclei: NOT FOUND"; fi
