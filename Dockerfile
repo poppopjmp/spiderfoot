@@ -39,7 +39,7 @@ RUN wget https://github.com/projectdiscovery/nuclei/releases/download/v3.3.9/nuc
 RUN git clone https://github.com/projectdiscovery/nuclei-templates.git /tools/nuclei-templates
 
 RUN npm config set prefix /tools \
-    && npm install -g retire @wappalyzer/cli
+    && npm install -g retire
 
 WORKDIR /tools
 RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tools \

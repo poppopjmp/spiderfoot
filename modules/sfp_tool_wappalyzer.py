@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
+# Tool Out of Support -------------- To Be Deleted
+#
 # Name:         sfp_tool_wappalyzer
 # Purpose:      SpiderFoot plug-in for using the 'Wappalyzer' tool.
 #               Tool: https://github.com/EnableSecurity/wappalyzer
-#
+# 
 # Author:      Steve Micallef <steve@binarypool.com>
 #
 # Created:     2022-04-02
@@ -22,7 +24,7 @@ from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
 class sfp_tool_wappalyzer(SpiderFootPlugin):
 
     meta = {
-        "name": "Tool - Wappalyzer",
+        "name": "Out of Support ---------------------Tool - Wappalyzer",
         "summary": "Wappalyzer indentifies technologies on websites.",
         "flags": ["tool"],
         "useCases": ["Footprint", "Investigate"],
@@ -42,7 +44,6 @@ class sfp_tool_wappalyzer(SpiderFootPlugin):
 
     # Option descriptions
     optdescs = {
-        "node_path": "Path to your NodeJS binary. Must be set.",
         "wappalyzer_path": "Path to your wappalyzer cli.js file. Must be set.",
     }
 

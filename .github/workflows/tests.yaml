@@ -41,9 +41,9 @@ jobs:
             echo "Flake8 found no errors."
           fi
 
-      #- name: Test with pytest
-      #  run: |
-      #    pytest -n auto --dist loadfile --durations=5 --cov-report term --cov=. .
+      - name: Test with pytest
+        run: |
+          pytest -n auto --dist loadfile --durations=5 --cov-report term --cov=. .
       - uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: false

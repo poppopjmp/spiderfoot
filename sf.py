@@ -91,7 +91,7 @@ def main() -> None:
             'cors_origins': [],
         }
 
-        p = argparse.ArgumentParser(description="SpiderFoot __version__ : Open Source Intelligence Automation.")  # Define p first
+        p = argparse.ArgumentParser(description="SpiderFoot {__version__}: Open Source Intelligence Automation.")  # Define p first
         p.add_argument("-d", "--debug", action='store_true', help="Enable debug output.")
         p.add_argument("-l", "--listen", metavar="IP:port", help="IP and port to listen on.")
         p.add_argument("-m", metavar="mod1,mod2,...", type=str, help="Modules to enable.")
@@ -113,12 +113,12 @@ def main() -> None:
         p.add_argument("-q", action='store_true', help="Disable logging. This will also hide errors!")
         p.add_argument("-V", "--version", action='store_true', help="Display the version of SpiderFoot and exit.")
         p.add_argument("-max-threads", type=int, help="Max number of modules to run concurrently.")
-        p.add_argument("--rest-api", action='store_false', help="Stop the REST API.")  # P9f5e
+        p.add_argument("--rest-api", action='store_true', help="Start the REST API.")  # P9f5e
 
         args = p.parse_args()  # Parse arguments after defining p
 
         if args.version:
-            print("SpiderFoot __version__: Open Source Intelligence Automation.")  # Removed f-string as no place holders are used.
+            print("SpiderFoot {__version__}: Open Source Intelligence Automation.")  # Removed f-string as no place holders are used.
             sys.exit(0)
 
         if args.max_threads:
