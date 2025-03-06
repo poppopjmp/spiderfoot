@@ -665,7 +665,7 @@ def start_rest_api_server() -> None:  # P3926
     import uvicorn
     from spiderfoot.api import app
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)  # P3926
+    uvicorn.run(app, host="127.0.0.1", port=8000)  # P3926
 
 
 def check_rest_api_implementation() -> None:
@@ -739,9 +739,6 @@ def serve_swagger_ui() -> None:
     @app.get("/docs", response_class=HTMLResponse)
     async def get_swagger_ui():
         return get_swagger_ui_html(openapi_url="/openapi.json", title="SpiderFoot API")
-
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
 
 
 if __name__ == '__main__':
