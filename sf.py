@@ -240,11 +240,6 @@ def main() -> None:
         log.critical(f"Unhandled exception in main: {e}", exc_info=True)
         sys.exit(-1)
 
-    # Start the REST API server when the application starts
-    start_rest_api_server()
-    log.info("REST API server started successfully.")
-
-
 def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
     """
     Start a scan based on the provided configuration and command-line arguments.
@@ -673,6 +668,10 @@ def check_rest_api_implementation() -> None:
     Check if the implementation of the REST API is aligned and correctly linked to the core SpiderFoot functionality.
     """
     import requests
+    start_rest_api_server()
+    log.info("REST API server started successfully.")
+    
+    time.sleep(10)
 
     api_endpoints = [
         "/start_scan",

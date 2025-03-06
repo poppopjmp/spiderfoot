@@ -14,8 +14,10 @@ RUN npm install react-router-dom@^6.0.0
 COPY ./client .
 
 # Build the React app
-RUN npm run build
 
+COPY ./src .
+
+RUN npm run build
 # Use a smaller base image for the final stage
 FROM nginx:alpine
 
