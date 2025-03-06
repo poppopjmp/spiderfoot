@@ -240,6 +240,10 @@ def main() -> None:
         log.critical(f"Unhandled exception in main: {e}", exc_info=True)
         sys.exit(-1)
 
+    # Start the REST API server when the application starts
+    start_rest_api_server()
+    log.info("REST API server started successfully.")
+
 
 def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
     """
