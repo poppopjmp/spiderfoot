@@ -649,3 +649,59 @@ Contributions are welcome! Please open an issue or submit a pull request with yo
 #### License
 
 This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.
+
+### REST API Documentation
+
+The SpiderFoot REST API allows you to interact with SpiderFoot programmatically. The API provides endpoints for starting scans, stopping scans, retrieving scan results, listing available modules, listing active scans, getting scan status, listing scan history, exporting scan results, importing API keys, and exporting API keys.
+
+#### Available Endpoints
+
+- `POST /start_scan`: Start a new scan
+- `POST /stop_scan/{scan_id}`: Stop an ongoing scan
+- `GET /scan_results/{scan_id}`: Retrieve scan results
+- `GET /modules`: List available modules
+- `GET /active_scans`: List active scans
+- `GET /scan_status/{scan_id}`: Get the status of a specific scan
+- `GET /scan_history`: List the history of all scans performed
+- `GET /export_scan_results/{scan_id}`: Export scan results in various formats (e.g., CSV, JSON)
+- `POST /import_api_key`: Import API keys for various modules
+- `GET /export_api_keys`: Export API keys for various modules
+- `GET /scan_correlations/{scan_id}`: Get scan correlations
+- `GET /scan_logs/{scan_id}`: Get scan logs
+- `GET /scan_summary/{scan_id}`: Get scan summary
+
+#### Example Usage
+
+To start a new scan, send a `POST` request to the `/start_scan` endpoint with the required parameters:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/start_scan" -H "Content-Type: application/json" -d '{"target": "example.com", "modules": ["module1", "module2"]}'
+```
+
+To stop an ongoing scan, send a `POST` request to the `/stop_scan/{scan_id}` endpoint with the scan ID:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/stop_scan/12345"
+```
+
+To retrieve scan results, send a `GET` request to the `/scan_results/{scan_id}` endpoint with the scan ID:
+
+```bash
+curl -X GET "http://127.0.0.1:8000/scan_results/12345"
+```
+
+For more detailed instructions and examples, refer to the API documentation.
+
+#### Accessing the Swagger UI
+
+The SpiderFoot REST API includes a Swagger UI for testing and exploring the API endpoints. To access the Swagger UI, follow these steps:
+
+1. Start the REST API server using the following command:
+
+```bash
+python3 ./sf.py --rest-api
+```
+
+2. Open your web browser and navigate to `http://127.0.0.1:8000/docs`.
+
+The Swagger UI provides an interactive interface for testing the API endpoints, viewing request and response details, and exploring the available API documentation.

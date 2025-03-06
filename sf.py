@@ -651,6 +651,12 @@ def handle_abort(signal, frame) -> None:
 def start_rest_api_server() -> None:  # P3926
     """
     Start the REST API server using FastAPI.
+
+    This function initializes and starts the REST API server using FastAPI.
+    The server will listen on all available network interfaces (0.0.0.0) and port 8000.
+
+    Returns:
+        None
     """
     import uvicorn
     from spiderfoot.api import app
@@ -689,6 +695,49 @@ def check_rest_api_implementation() -> None:
                 logging.error(f"Endpoint {endpoint} is not correctly linked. Status code: {response.status_code}")
         except Exception as e:
             logging.error(f"Error checking endpoint {endpoint}: {e}")
+
+
+def generate_openapi_schema() -> dict:
+    """
+    Generate the OpenAPI schema for the SpiderFoot API.
+
+    This function generates the OpenAPI schema for the SpiderFoot API using FastAPI's get_openapi utility.
+
+    Returns:
+        dict: The OpenAPI schema.
+    """
+    from fastapi.openapi.utils import get_openapi
+    from spiderfoot.api import app
+
+    return get_openapi(
+        title="SpiderFoot API",
+        version="1.0.0",
+        description="API documentation for SpiderFoot",
+        routes=app.routes,
+    )
+
+
+def serve_swagger_ui() -> None:
+    """
+    Serve the Swagger UI for the SpiderFoot API.
+
+    This function serves the Swagger UI for the SpiderFoot API using FastAPI's get_swagger_ui_html utility.
+
+    Returns:
+        None
+    """
+    from fastapi.openapi.docs import get_swagger_ui_html
+    from fastapi.responses import HTMLResponse
+    from fastapi import FastAPI
+
+    app = FastAPI()
+
+    @app.get("/docs", response_class=HTMLResponse)
+    async def get_swagger_ui():
+        return get_swagger_ui_html(openapi_url="/openapi.json", title="SpiderFoot API")
+
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
 
 
 if __name__ == '__main__':
