@@ -695,7 +695,7 @@ def start_rest_api_server() -> None:  # P3926
     import uvicorn
     from spiderfoot.api import app
 
-    uvicorn.run(app, host="127.0.0.1", port=8000)  # P3926
+    uvicorn.run(app, host="0.0.0.0", port=8000)  # P3926
     check_rest_api_implementation()
 
 def generate_openapi_schema() -> dict:
@@ -739,15 +739,14 @@ def serve_swagger_ui() -> None:
 
 
 if __name__ == '__main__':
-    if sys.version_info < (3, 7):
-        print("SpiderFoot requires Python 3.7 or higher.")
+    if sys.version_info < (3, 9):
+        print("SpiderFoot requires Python 3.9 or higher.")
         sys.exit(-1)
 
     if len(sys.argv) <= 1:
         print("SpiderFoot requires -l <ip>:<port> to start the web server. Try --help for guidance.")
         sys.exit(-1)
 
-    # TODO: remove this after a few releases (added in 3.5 pre-release 2021-09-05)
     from pathlib import Path
     if os.path.exists('spiderfoot.db'):
         print(f"ERROR: spiderfoot.db file exists in {os.path.dirname(__file__)}")
@@ -756,7 +755,6 @@ if __name__ == '__main__':
         print(f"This message will go away once you move or remove spiderfoot.db from {os.path.dirname(__file__)}")
         sys.exit(-1)
 
-    # TODO: remove this after a few releases (added in 3.5 pre-release 2021-09-05)
     from pathlib import Path
     if os.path.exists('passwd'):
         print(f"ERROR: passwd file exists in {os.path.dirname(__file__)}")

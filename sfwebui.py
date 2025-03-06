@@ -940,13 +940,17 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     def index(self: 'SpiderFootWebUi') -> str:
-        """Show scan list page.
+        """Show New Scan page.
 
         Returns:
-            str: Scan list page HTML
+            str: New Scan page HTML
         """
-        templ = Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
-        return templ.render(pageid='SCANLIST', docroot=self.docroot, version=__version__)
+        dbh = SpiderFootDb(self.config)
+        types = dbh.eventTypes()
+        templ = Template(filename='spiderfoot/templates/newscan.tmpl', lookup=self.lookup)
+        return templ.render(pageid='NEWSCAN', types=types, docroot=self.docroot,
+                            modules=self.config['__modules__'], scanname="",
+                            selectedmods="", scantarget="", version=__version__)
 
     @cherrypy.expose
     def scaninfo(self: 'SpiderFootWebUi', id: str) -> str:
