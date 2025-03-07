@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
 from pydantic import BaseModel
 from typing import List
 from spiderfoot import SpiderFootTarget
@@ -9,6 +9,11 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
 import asyncio, logging
 from spiderfoot import SpiderFootHelpers
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.responses import JSONResponse, StreamingResponse
+import csv
+import io
+import uuid
 
 app = FastAPI()
 
@@ -40,6 +45,14 @@ class ScanRequest(BaseModel):
 class APIKeyRequest(BaseModel):
     module: str
     key: str
+
+security = HTTPBasic()
+
+def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = "admin"
+    correct_password = "password"
+    if credentials.username != correct_username or credentials.password != correct_password:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 @app.get("/")
 async def read_root():
@@ -187,7 +200,7 @@ async def run_spiderfoot_scan_async(target: str, modules: List[str]):
     return await loop.run_in_executor(None, run_spiderfoot_scan, target, modules)
 
 @app.post("/start_scan")
-async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks):
+async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks, credentials: HTTPBasicCredentials = Depends(authenticate)):
     """Start a new scan with the specified target and modules."""
     try:
         scan_id = await run_spiderfoot_scan_async(scan_request.target, scan_request.modules)
@@ -201,7 +214,7 @@ async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTask
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.post("/stop_scan/{scan_id}")
-async def stop_scan(scan_id: str):
+async def stop_scan(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
     """Stop a running scan with the specified scan ID."""
     try:
         uuid.UUID(scan_id) #validate UUID
@@ -218,7 +231,7 @@ async def stop_scan(scan_id: str):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/modules")
-async def list_modules():
+async def list_modules(credentials: HTTPBasicCredentials = Depends(authenticate)):
     """
     List all available modules.
 
@@ -234,7 +247,7 @@ async def list_modules():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_results/{scan_id}")
-async def get_scan_results(scan_id: str):
+async def get_scan_results(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
     """Get the scan results for the specified scan ID."""
     try:
         uuid.UUID(scan_id)  # Validate UUID
@@ -260,7 +273,7 @@ async def get_scan_results(scan_id: str):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/active_scans")
-async def list_active_scans():
+async def list_active_scans(credentials: HTTPBasicCredentials = Depends(authenticate)):
     """
     List all active scans.
 
@@ -276,7 +289,7 @@ async def list_active_scans():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_status/{scan_id}")
-async def get_scan_status(scan_id: str):
+async def get_scan_status(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
     """
     Get the status of a scan with the specified scan ID.
 
@@ -298,7 +311,7 @@ async def get_scan_status(scan_id: str):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_history")
-async def list_scan_history():
+async def list_scan_history(credentials: HTTPBasicCredentials = Depends(authenticate)):
     """
     List the history of all scans.
 
@@ -314,7 +327,7 @@ async def list_scan_history():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/export_scan_results/{scan_id}")
-async def export_scan_results(scan_id: str, export_format: str):
+async def export_scan_results(scan_id: str, export_format: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
     """
     Export the scan results for the specified scan ID in the specified format.
 
@@ -337,7 +350,7 @@ async def export_scan_results(scan_id: str, export_format: str):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.post("/import_api_key")
-async def import_api_key(api_key_request: APIKeyRequest):
+async def import_api_key(api_key_request: APIKeyRequest, credentials: HTTPBasicCredentials = Depends(authenticate)):
     """
     Import an API key for a specific module.
 
@@ -359,7 +372,7 @@ async def import_api_key(api_key_request: APIKeyRequest):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/export_api_keys")
-async def export_api_keys():
+async def export_api_keys(credentials: HTTPBasicCredentials = Depends(authenticate)):
     """
     Export all API keys.
 
@@ -375,7 +388,7 @@ async def export_api_keys():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_correlations/{scan_id}")
-async def get_scan_correlations(scan_id: str):
+async def get_scan_correlations(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
     """
     Get the scan correlations for the specified scan ID.
 
@@ -397,7 +410,7 @@ async def get_scan_correlations(scan_id: str):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_logs/{scan_id}")
-async def get_scan_logs(scan_id: str):
+async def get_scan_logs(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
     """
     Get the scan logs for the specified scan ID.
 
@@ -419,7 +432,7 @@ async def get_scan_logs(scan_id: str):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_summary/{scan_id}")
-async def get_scan_summary(scan_id: str):
+async def get_scan_summary(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
     """
     Get the scan summary for the specified scan ID.
 
@@ -464,3 +477,98 @@ async def get_openapi_schema():
 async def get_swagger_ui():
     """Get the Swagger UI for the API."""
     return get_swagger_ui_html(openapi_url="/openapi.json", title="SpiderFoot REST API")
+
+@app.get("/export_scan_results/{scan_id}/csv")
+async def export_scan_results_csv(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+    """
+    Export the scan results for the specified scan ID in CSV format.
+
+    Args:
+        scan_id (str): The scan ID of the scan to export results for.
+
+    Returns:
+        StreamingResponse: The exported scan results in CSV format.
+    """
+    try:
+        dbh = SpiderFootDb()
+        results = dbh.scanResultEvent(scan_id)
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["module", "data", "type", "source", "falsescore", "generated", "updated"])
+
+        for result in results:
+            writer.writerow(result)
+
+        output.seek(0)
+        return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=scan_results_{scan_id}.csv"})
+    except Exception as e:
+        logging.error(f"Unexpected error in export_scan_results_csv: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+@app.get("/export_scan_results/{scan_id}/json")
+async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+    """
+    Export the scan results for the specified scan ID in JSON format.
+
+    Args:
+        scan_id (str): The scan ID of the scan to export results for.
+
+    Returns:
+        JSONResponse: The exported scan results in JSON format.
+    """
+    try:
+        dbh = SpiderFootDb()
+        results = dbh.scanResultEvent(scan_id)
+
+        formatted_results = []
+        for result in results:
+            formatted_result = {
+                "module": result[0],
+                "data": result[1],
+                "type": result[2],
+                "source": result[3],
+                "falsescore": result[4],
+                "generated": result[5],
+                "updated": result[6],
+            }
+            formatted_results.append(formatted_result)
+
+        return JSONResponse(content={"results": formatted_results})
+    except Exception as e:
+        logging.error(f"Unexpected error in export_scan_results_json: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+@app.exception_handler(HTTPException)
+async def custom_http_exception_handler(request, exc):
+    """
+    Custom HTTP exception handler.
+
+    Args:
+        request: The request object.
+        exc: The HTTP exception.
+
+    Returns:
+        JSONResponse: The custom error response.
+    """
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail},
+    )
+
+@app.exception_handler(Exception)
+async def custom_exception_handler(request, exc):
+    """
+    Custom exception handler.
+
+    Args:
+        request: The request object.
+        exc: The exception.
+
+    Returns:
+        JSONResponse: The custom error response.
+    """
+    return JSONResponse(
+        status_code=500,
+        content={"message": "An unexpected error occurred."},
+    )
