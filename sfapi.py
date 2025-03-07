@@ -2,9 +2,9 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
 from pydantic import BaseModel
 from typing import List
 from spiderfoot import SpiderFootTarget
-from sflib import SpiderFoot
-from sfscan import startSpiderFootScanner
-from spiderfoot import SpiderFootDb
+from sf import SpiderFoot
+from spiderfoot.db import SpiderFootDb
+from spiderfoot.logger import logListenerSetup, logWorkerSetup
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
 import asyncio, logging
@@ -37,6 +37,9 @@ sfConfig_API = {
     '_socks4user': '',
     '_socks5pwd': '',
 }
+
+log_listener = logListenerSetup(loggingQueue=None, opts=sfConfig_API)
+log = logWorkerSetup(loggingQueue=None)
 
 class ScanRequest(BaseModel):
     target: str
@@ -207,10 +210,10 @@ async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTask
         return {"scan_id": scan_id}
 
     except TypeError as e:
-        logging.error(f"TypeError during start_scan: {e}")
+        log.error(f"TypeError during start_scan: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        logging.error(f"Unexpected error during start_scan: {e}")
+        log.error(f"Unexpected error during start_scan: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.post("/stop_scan/{scan_id}")
@@ -224,10 +227,10 @@ async def stop_scan(scan_id: str, credentials: HTTPBasicCredentials = Depends(au
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid scan_id format. Must be UUID.")
     except TypeError as e:
-        logging.error(f"TypeError during stop_scan: {e}")
+        log.error(f"TypeError during stop_scan: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        logging.error(f"Unexpected error during stop_scan: {e}")
+        log.error(f"Unexpected error during stop_scan: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/modules")
@@ -243,7 +246,7 @@ async def list_modules(credentials: HTTPBasicCredentials = Depends(authenticate)
         modules = sf.listModules()
         return {"modules": modules}
     except Exception as e:
-        logging.error(f"Unexpected error in list_modules: {e}", exc_info=True)
+        log.error(f"Unexpected error in list_modules: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_results/{scan_id}")
@@ -269,7 +272,7 @@ async def get_scan_results(scan_id: str, credentials: HTTPBasicCredentials = Dep
 
         return {"results": formatted_results}
     except Exception as e:
-        logging.error(f"Unexpected error in get_scan_results: {e}", exc_info=True)
+        log.error(f"Unexpected error in get_scan_results: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/active_scans")
@@ -285,7 +288,7 @@ async def list_active_scans(credentials: HTTPBasicCredentials = Depends(authenti
         active_scans = dbh.scanInstanceList()
         return {"active_scans": active_scans}
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        log.error(f"Unexpected error in list_active_scans: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_status/{scan_id}")
@@ -304,10 +307,10 @@ async def get_scan_status(scan_id: str, credentials: HTTPBasicCredentials = Depe
         status = sf.getScanStatus(scan_id)
         return {"status": status}
     except TypeError as e:
-        print(f"TypeError: {e}")
+        log.error(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_history")
@@ -323,7 +326,7 @@ async def list_scan_history(credentials: HTTPBasicCredentials = Depends(authenti
         history = sf.listScanHistory()
         return {"history": history}
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/export_scan_results/{scan_id}")
@@ -343,10 +346,10 @@ async def export_scan_results(scan_id: str, export_format: str, credentials: HTT
         exported_results = sf.exportScanResults(scan_id, export_format)
         return {"exported_results": exported_results}
     except TypeError as e:
-        print(f"TypeError: {e}")
+        log.error(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.post("/import_api_key")
@@ -365,10 +368,10 @@ async def import_api_key(api_key_request: APIKeyRequest, credentials: HTTPBasicC
         sf.importApiKey(api_key_request.module, api_key_request.key)
         return {"message": "API key imported successfully"}
     except TypeError as e:
-        print(f"TypeError: {e}")
+        log.error(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/export_api_keys")
@@ -384,7 +387,7 @@ async def export_api_keys(credentials: HTTPBasicCredentials = Depends(authentica
         api_keys = sf.exportApiKeys()
         return {"api_keys": api_keys}
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_correlations/{scan_id}")
@@ -403,10 +406,10 @@ async def get_scan_correlations(scan_id: str, credentials: HTTPBasicCredentials 
         correlations = sf.getScanCorrelations(scan_id)
         return {"correlations": correlations}
     except TypeError as e:
-        print(f"TypeError: {e}")
+        log.error(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_logs/{scan_id}")
@@ -425,10 +428,10 @@ async def get_scan_logs(scan_id: str, credentials: HTTPBasicCredentials = Depend
         logs = sf.getScanLogs(scan_id)
         return {"logs": logs}
     except TypeError as e:
-        print(f"TypeError: {e}")
+        log.error(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_summary/{scan_id}")
@@ -447,10 +450,10 @@ async def get_scan_summary(scan_id: str, credentials: HTTPBasicCredentials = Dep
         summary = sf.getScanSummary(scan_id)
         return {"summary": summary}
     except TypeError as e:
-        print(f"TypeError: {e}")
+        log.error(f"TypeError: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/docs")
