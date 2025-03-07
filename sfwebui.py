@@ -1886,3 +1886,23 @@ class SpiderFootWebUi:
         """
         templ = Template(filename='spiderfoot/templates/footer.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, version=__version__)
+
+    def serve_swagger_ui(self):
+        """Serve the Swagger UI for the REST API."""
+        return cherrypy.lib.static.serve_file("path/to/swagger-ui.html", "text/html")
+
+    def generate_openapi_schema(self):
+        """Generate the OpenAPI schema for the REST API."""
+        return cherrypy.lib.static.serve_file("path/to/openapi-schema.json", "application/json")
+
+    def check_rest_api_implementation(self):
+        """Check the implementation of the REST API."""
+        # Add your implementation here
+        pass
+
+    def start_rest_api_server(self):
+        """Start the REST API server using FastAPI."""
+        import uvicorn
+        from sfapi import app
+
+        uvicorn.run(app, host="0.0.0.0", port=8000)
