@@ -8,8 +8,30 @@ from spiderfoot import SpiderFootDb
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
 import asyncio, logging
+from spiderfoot import SpiderFootHelpers
 
 app = FastAPI()
+
+sfConfig_API = {
+    '_debug': False,  # Debug
+    '_maxthreads': 3,  # Number of modules to run concurrently
+    '__logging': True,  # Logging in general
+    '__outputfilter': None,  # Event types to filter from modules' output
+    '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',  # User-Agent to use for HTTP requests
+    '_dnsserver': '',  # Override the default resolver
+    '_fetchtimeout': 5,  # number of seconds before giving up on a fetch
+    '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+    '_internettlds_cache': 72,
+    '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
+    '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
+    '__modules__': None,  # List of modules. Will be set after start-up.
+    '__correlationrules__': None,  # List of correlation rules. Will be set after start-up.
+    '_socks1type': '',
+    '_socks2addr': '',
+    '_socks3port': '',
+    '_socks4user': '',
+    '_socks5pwd': '',
+}
 
 class ScanRequest(BaseModel):
     target: str
@@ -152,7 +174,7 @@ async def options_scan_summary():
 
 def run_spiderfoot_scan(target: str, modules: List[str]):
     """Runs the SpiderFoot scan synchronously."""
-    sf = SpiderFoot()
+    sf = SpiderFoot(sfConfig_API)
     target_obj = SpiderFootTarget(target)
     sf.setTarget(target_obj)
     sf.setModules(modules)
@@ -204,7 +226,7 @@ async def list_modules():
         dict: A list of available modules.
     """
     try:
-        sf = SpiderFoot()
+        sf = SpiderFoot(sfConfig_API)
         modules = sf.listModules()
         return {"modules": modules}
     except Exception as e:
@@ -265,7 +287,7 @@ async def get_scan_status(scan_id: str):
         dict: The status of the scan.
     """
     try:
-        sf = SpiderFoot()
+        sf = SpiderFoot(sfConfig_API)
         status = sf.getScanStatus(scan_id)
         return {"status": status}
     except TypeError as e:
@@ -284,7 +306,7 @@ async def list_scan_history():
         dict: A list of scan history.
     """
     try:
-        sf = SpiderFoot()
+        sf = SpiderFoot(sfConfig_API)
         history = sf.listScanHistory()
         return {"history": history}
     except Exception as e:
@@ -304,7 +326,7 @@ async def export_scan_results(scan_id: str, export_format: str):
         dict: The exported scan results.
     """
     try:
-        sf = SpiderFoot()
+        sf = SpiderFoot(sfConfig_API)
         exported_results = sf.exportScanResults(scan_id, export_format)
         return {"exported_results": exported_results}
     except TypeError as e:
@@ -326,7 +348,7 @@ async def import_api_key(api_key_request: APIKeyRequest):
         dict: A message indicating the API key was imported successfully.
     """
     try:
-        sf = SpiderFoot()
+        sf = SpiderFoot(sfConfig_API)
         sf.importApiKey(api_key_request.module, api_key_request.key)
         return {"message": "API key imported successfully"}
     except TypeError as e:
@@ -345,7 +367,7 @@ async def export_api_keys():
         dict: A list of exported API keys.
     """
     try:
-        sf = SpiderFoot()
+        sf = SpiderFoot(sfConfig_API)
         api_keys = sf.exportApiKeys()
         return {"api_keys": api_keys}
     except Exception as e:
@@ -364,7 +386,7 @@ async def get_scan_correlations(scan_id: str):
         dict: The scan correlations.
     """
     try:
-        sf = SpiderFoot()
+        sf = SpiderFoot(sfConfig_API)
         correlations = sf.getScanCorrelations(scan_id)
         return {"correlations": correlations}
     except TypeError as e:
@@ -386,7 +408,7 @@ async def get_scan_logs(scan_id: str):
         dict: The scan logs.
     """
     try:
-        sf = SpiderFoot()
+        sf = SpiderFoot(sfConfig_API)
         logs = sf.getScanLogs(scan_id)
         return {"logs": logs}
     except TypeError as e:
@@ -408,7 +430,7 @@ async def get_scan_summary(scan_id: str):
         dict: The scan summary.
     """
     try:
-        sf = SpiderFoot()
+        sf = SpiderFoot(sfConfig_API)
         summary = sf.getScanSummary(scan_id)
         return {"summary": summary}
     except TypeError as e:

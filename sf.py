@@ -22,10 +22,12 @@ import sys
 import time
 from copy import deepcopy
 
+import uvicorn
 import cherrypy
 import cherrypy_cors
 from cherrypy.lib import auth_digest
 
+from sfapi import app
 from sflib import SpiderFoot
 from sfscan import startSpiderFootScanner
 from sfwebui import SpiderFootWebUi
@@ -692,8 +694,6 @@ def start_rest_api_server() -> None:  # P3926
     Returns:
         None
     """
-    import uvicorn
-    from spiderfoot.api import app
 
     uvicorn.run(app, host="0.0.0.0", port=8000)  # P3926
     check_rest_api_implementation()
