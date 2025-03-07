@@ -738,7 +738,7 @@ def serve_swagger_ui() -> None:
 
 
 if __name__ == '__main__':
-    if sys.version_info < (3.9):
+    if sys.version_info < (3, 9):
         print("SpiderFoot requires Python 3.9 or higher.")
         sys.exit(-1)
 

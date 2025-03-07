@@ -160,3 +160,9 @@ def stop_listener(listener: 'logging.handlers.QueueListener') -> None:
     """
     with suppress(Exception):
         listener.stop()
+
+class SafeQueueListener(QueueListener):
+    def dequeue(self, block):
+        if self.queue is not None:
+            return self.queue.get(block)
+        return None
