@@ -3,8 +3,8 @@ from pydantic import BaseModel
 from typing import List
 from spiderfoot import SpiderFootTarget
 from sflib import SpiderFoot
-from sfscan import startSpiderFootScanner
-from spiderfoot import SpiderFootDb
+from spiderfoot.db import SpiderFootDb
+from spiderfoot.logger import logListenerSetup, logWorkerSetup
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
 import asyncio, logging
@@ -32,6 +32,9 @@ sfConfig_API = {
     '_socks4user': '',
     '_socks5pwd': '',
 }
+
+log_listener = logListenerSetup(loggingQueue=None, opts=sfConfig_API)
+log = logWorkerSetup(loggingQueue=None)
 
 class ScanRequest(BaseModel):
     target: str
