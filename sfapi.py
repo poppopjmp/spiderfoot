@@ -67,124 +67,21 @@ async def read_root():
     """
     return {"message": "Welcome to SpiderFoot API"}
 
-
-@app.options("/start_scan")
-async def options_start_scan():
+@app.options("/{path:path}")
+async def options_handler(path: str):
     """
-    Options endpoint for the start_scan route.
+    Options endpoint for handling HTTP OPTIONS requests.
 
-    Returns:
-        dict: Allowed methods and headers for the start_scan route.
-    """
-    return {
-        "Allow": "POST, OPTIONS",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-    }
-
-@app.options("/active_scans")
-async def options_active_scans():
-    """
-    Options endpoint for the active_scans route.
+    Args:
+        path (str): The path for which the OPTIONS request is made.
 
     Returns:
-        dict: Allowed methods and headers for the active_scans route.
+        dict: Allowed methods and headers for the specified path.
     """
     return {
-        "Allow": "GET, OPTIONS",
+        "Allow": "GET, POST, OPTIONS",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-    }
-
-@app.options("/modules")
-async def options_modules():
-    """
-    Options endpoint for the modules route.
-
-    Returns:
-        dict: Allowed methods and headers for the modules route.
-    """
-    return {
-        "Allow": "GET, OPTIONS",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-    }
-
-@app.options("/configure_module")
-async def options_configure_module():
-    """
-    Options endpoint for the configure_module route.
-
-    Returns:
-        dict: Allowed methods and headers for the configure_module route.
-    """
-    return {
-        "Allow": "POST, OPTIONS",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-    }
-
-@app.options("/export_scan_results")
-async def options_export_scan_results():
-    """
-    Options endpoint for the export_scan_results route.
-
-    Returns:
-        dict: Allowed methods and headers for the export_scan_results route.
-    """
-    return {
-        "Allow": "GET, OPTIONS",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-    }
-
-@app.options("/scan_correlations")
-async def options_scan_correlations():
-    """
-    Options endpoint for the scan_correlations route.
-
-    Returns:
-        dict: Allowed methods and headers for the scan_correlations route.
-    """
-    return {
-        "Allow": "GET, OPTIONS",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-    }
-
-@app.options("/scan_logs")
-async def options_scan_logs():
-    """
-    Options endpoint for the scan_logs route.
-
-    Returns:
-        dict: Allowed methods and headers for the scan_logs route.
-    """
-    return {
-        "Allow": "GET, OPTIONS",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-    }
-
-@app.options("/scan_summary")
-async def options_scan_summary():
-    """
-    Options endpoint for the scan_summary route.
-
-    Returns:
-        dict: Allowed methods and headers for the scan_summary route.
-    """
-    return {
-        "Allow": "GET, OPTIONS",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
     }
 
