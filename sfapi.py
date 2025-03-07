@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import List
 from spiderfoot import SpiderFootTarget
-from sflib import SpiderFoot
+from sf import SpiderFoot
 from spiderfoot.db import SpiderFootDb
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 from fastapi.openapi.utils import get_openapi
