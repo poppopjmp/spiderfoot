@@ -6,6 +6,8 @@ import sys
 import time
 from contextlib import suppress
 from logging.handlers import QueueHandler, QueueListener, TimedRotatingFileHandler
+from queue import Queue
+from threading import Thread
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
 
@@ -34,6 +36,9 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         self.log_file = os.path.join(SpiderFootHelpers.logPath(), "spiderfoot.sqlite.log")
         self.backup_count = 30
         self.rotate_logs()
+        self.log_queue = Queue()
+        self.logging_thread = Thread(target=self.process_log_queue)
+        self.logging_thread.start()
         super().__init__()
 
     def emit(self, record: 'logging.LogRecord') -> None:
@@ -49,12 +54,17 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         component = getattr(record, "module", None)
         if scanId:
             level = ("STATUS" if record.levelname == "INFO" else record.levelname)
-            self.batch.append((scanId, level, record.getMessage(), component, time.time()))
-            if len(self.batch) >= self.batch_size:
-                self.logBatch()
+            self.log_queue.put((scanId, level, record.getMessage(), component, time.time()))
 
     def logBatch(self):
         """Log a batch of records to the database."""
+        while not self.log_queue.empty():
+            self.batch.append(self.log_queue.get())
+            if len(self.batch) >= self.batch_size:
+                self.process_log_batch()
+
+    def process_log_batch(self):
+        """Process a batch of log records."""
         batch = self.batch
         self.batch = []
         if self.dbh is None:
@@ -106,6 +116,11 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         """
         formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(module)s : %(message)s")
         return formatter.format(record)
+
+    def process_log_queue(self):
+        """Process log records from the queue."""
+        while True:
+            self.logBatch()
 
 
 def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.QueueListener':
