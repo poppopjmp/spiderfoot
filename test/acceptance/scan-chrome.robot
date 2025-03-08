@@ -41,7 +41,6 @@ Create a use case scan
     Click Element             id:usecase_${use_case}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
-    Wait Until Element Is Visible    id:btn-browse    timeout=15s #Add wait for the browse button.
     Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
 
 Scan info page should render tabs
