@@ -15,7 +15,7 @@ Create Firefox Headless Options
 Create a module scan
     [Arguments]    ${scan_name}    ${scan_target}    ${module_name}
     ${firefox_options}=    Create Firefox Headless Options
-    Open browser    http://127.0.0.1:5001/newscan    firefox    options=${firefox_options}
+    Open browser    http://localhost:5001/newscan   firefox    options=${firefox_options}
     Press Keys    name:scanname    van1shland
     Press Keys    name:scantarget    van1shland.io
     Click Element    id:moduletab
