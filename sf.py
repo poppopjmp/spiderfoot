@@ -26,7 +26,7 @@ import cherrypy
 import cherrypy_cors
 from cherrypy.lib import auth_digest
 
-from sfapi import app
+from sfapi import app, initialize_spiderfoot, handle_database_interactions, handle_scan_status, handle_correlation_rules, handle_logging_and_error_handling
 from sflib import SpiderFoot
 from sfscan import startSpiderFootScanner
 from sfwebui import SpiderFootWebUi
@@ -693,6 +693,11 @@ def start_rest_api_server() -> None:  # P3926
     Returns:
         None
     """
+    initialize_spiderfoot()
+    handle_database_interactions()
+    handle_scan_status()
+    handle_correlation_rules()
+    handle_logging_and_error_handling()
 
     uvicorn.run(app, host="0.0.0.0", port=8000)  # P3926
     check_rest_api_implementation()
