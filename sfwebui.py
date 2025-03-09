@@ -27,8 +27,6 @@ from mako.template import Template
 
 import openpyxl
 
-import secure
-
 from sflib import SpiderFoot
 
 from sfscan import startSpiderFootScanner

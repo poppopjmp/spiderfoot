@@ -1,0 +1,6 @@
+import os  # Remove this line
+import sqlite3  # Remove this line
+// ...existing code...
+# Add a blank line before the class definition
+class SafeQueueListener(QueueListener):
+// ...existing code...

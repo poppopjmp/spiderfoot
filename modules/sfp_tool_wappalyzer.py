@@ -5,7 +5,7 @@
 # Name:         sfp_tool_wappalyzer
 # Purpose:      SpiderFoot plug-in for using the 'Wappalyzer' tool.
 #               Tool: https://github.com/EnableSecurity/wappalyzer
-# 
+#
 # Author:      Steve Micallef <steve@binarypool.com>
 #
 # Created:     2022-04-02

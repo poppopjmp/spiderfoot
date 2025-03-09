@@ -16,7 +16,6 @@ import logging
 import multiprocessing as mp
 import os
 import os.path
-import random
 import signal
 import sys
 import time
@@ -24,7 +23,6 @@ from copy import deepcopy
 
 import cherrypy
 import cherrypy_cors
-from cherrypy.lib import auth_digest
 
 from sfapi import app, initialize_spiderfoot, handle_database_interactions, handle_scan_status, handle_correlation_rules, handle_logging_and_error_handling
 from sflib import SpiderFoot
@@ -42,6 +40,11 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional
+from fastapi import HTTPException, status
+from fastapi.openapi.utils import get_openapi
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import HTMLResponse
+import uvicorn
 
 __version__ = "5.0.3-dev"
 
@@ -120,11 +123,14 @@ app.add_middleware(
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_password_hash(password):
     return pwd_context.hash(password)
+
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -133,12 +139,12 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
-        status_code=HTTP_401_UNAUTHORIZED,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
@@ -154,12 +160,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return user
 
+
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(fake_users_db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
-            status_code=HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
@@ -168,6 +175,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 def main() -> None:
 
@@ -351,6 +359,7 @@ def main() -> None:
     except Exception as e:
         log.critical(f"Unhandled exception in main: {e}", exc_info=True)
         sys.exit(-1)
+
 
 def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
     """
@@ -753,13 +762,13 @@ def handle_abort(signal, frame) -> None:
         log.critical(f"Unhandled exception in handle_abort: {e}", exc_info=True)
         sys.exit(-1)
 
+
 def check_rest_api_implementation() -> None:
     """
     Check if the implementation of the REST API is aligned and correctly linked to the core SpiderFoot functionality.
     """
     import requests
 
-    
     time.sleep(10)
 
     api_endpoints = [
@@ -788,15 +797,13 @@ def check_rest_api_implementation() -> None:
         except Exception as e:
             logging.error(f"Error checking endpoint {endpoint}: {e}")
 
+
 def start_rest_api_server() -> None:  # P3926
     """
     Start the REST API server using FastAPI.
 
     This function initializes and starts the REST API server using FastAPI.
     The server will listen on all available network interfaces (0.0.0.0) and port 8000.
-
-    Returns:
-        None
     """
     initialize_spiderfoot()
     handle_database_interactions()
@@ -807,6 +814,7 @@ def start_rest_api_server() -> None:  # P3926
     uvicorn.run(app, host="0.0.0.0", port=8000)  # P3926
     check_rest_api_implementation()
 
+
 def generate_openapi_schema() -> dict:
     """
     Generate the OpenAPI schema for the SpiderFoot API.
@@ -816,9 +824,6 @@ def generate_openapi_schema() -> dict:
     Returns:
         dict: The OpenAPI schema.
     """
-    from fastapi.openapi.utils import get_openapi
-    from spiderfoot.api import app
-
     return get_openapi(
         title="SpiderFoot API",
         version="5.0.3",
@@ -832,14 +837,7 @@ def serve_swagger_ui() -> None:
     Serve the Swagger UI for the SpiderFoot API.
 
     This function serves the Swagger UI for the SpiderFoot API using FastAPI's get_swagger_ui_html utility.
-
-    Returns:
-        None
     """
-    from fastapi.openapi.docs import get_swagger_ui_html
-    from fastapi.responses import HTMLResponse
-    from fastapi import FastAPI
-
     app = FastAPI()
 
     @app.get("/docs", response_class=HTMLResponse)

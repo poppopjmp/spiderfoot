@@ -16,6 +16,12 @@ class BaseTestModuleIntegration(unittest.TestCase):
     def setup_module(self, module_class):
         """
         Set up the module for testing.
+
+        Args:
+            module_class (type): The module class to set up.
+
+        Returns:
+            None
         """
         sf = SpiderFoot(self.default_options)
         module = module_class()
@@ -25,6 +31,15 @@ class BaseTestModuleIntegration(unittest.TestCase):
     def create_event(self, target_value, target_type, event_type, event_data):
         """
         Create a SpiderFoot event for testing.
+
+        Args:
+            event_type (str): The type of the event.
+            event_data (str): The data of the event.
+            target_type (str): The type of the target.
+            target_value (str): The value of the target.
+
+        Returns:
+            SpiderFootEvent: The created event.
         """
         target = SpiderFootTarget(target_value, target_type)
         event = SpiderFootEvent(event_type, event_data, '', '')
@@ -52,6 +67,17 @@ class TestModuleIntegration_stor_elasticsearch(BaseTestModuleIntegration):
     def setup_elasticsearch_with_retries(self, timeout, retries=3, backoff_factor=0.3):
         """
         Set up an Elasticsearch connection with retries.
+
+        Args:
+            retries (int): The number of retries.
+            timeout (int): The timeout for each retry.
+            backoff_factor (float): The backoff factor for retries.
+
+        Returns:
+            Elasticsearch: The Elasticsearch connection.
+
+        Raises:
+            ElasticsearchException: If the connection fails.
         """
         for attempt in range(retries):
             try:

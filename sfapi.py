@@ -374,7 +374,7 @@ async def get_scan_logs(scan_id: str, credentials: HTTPBasicCredentials = Depend
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         log.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail:str(e)) from e
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_summary/{scan_id}")
 async def get_scan_summary(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
@@ -393,10 +393,10 @@ async def get_scan_summary(scan_id: str, credentials: HTTPBasicCredentials = Dep
         return {"summary": summary}
     except TypeError as e:
         log.error(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail:str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         log.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail:str(e)) from e
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/docs")
 async def get_docs():
@@ -449,7 +449,7 @@ async def export_scan_results_csv(scan_id: str, credentials: HTTPBasicCredential
         return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=scan_results_{scan_id}.csv"})
     except Exception as e:
         logging.error(f"Unexpected error in export_scan_results_csv: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail:str(e)) from e
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/export_scan_results/{scan_id}/json")
 async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
@@ -482,7 +482,7 @@ async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentia
         return JSONResponse(content={"results": formatted_results})
     except Exception as e:
         logging.error(f"Unexpected error in export_scan_results_json: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail:str(e)) from e
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.exception_handler(HTTPException)
 async def custom_http_exception_handler(request, exc):

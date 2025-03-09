@@ -13,7 +13,6 @@
 import unittest
 import pytest
 
-from sfp_cisco_umbrella import sfp_cisco_umbrella
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
