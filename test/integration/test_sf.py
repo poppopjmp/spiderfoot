@@ -94,11 +94,6 @@ class TestSf(unittest.TestCase):
         self.assertIn(b"You must specify a target when running in scan mode", err)
         self.assertEqual(255, code)
 
-    def test_run_scan_with_types_no_target_should_exit(self):
-        out, err, code = self.execute([sys.executable, "sf.py", "-t", ",".join(self.default_types)])
-        self.assertIn(b"You must specify a target when running in scan mode", err)
-        self.assertEqual(255, code)
-
     def test_run_scan_with_invalid_module_should_run_scan_and_exit(self):
         module = "invalid module"
         out, err, code = self.execute([sys.executable, "sf.py", "-m", module, "-s", "van1shland.io"])

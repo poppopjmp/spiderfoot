@@ -167,7 +167,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 
-@app.post("/token", response_model=token)
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+
+
+@app.post("/token", response_model=TokenResponse)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(fake_users_db, form_data.username, form_data.password)
     if not user:
@@ -192,11 +197,6 @@ fake_users_db = {
         "disabled": False,
     }
 }
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
 class TokenData(BaseModel):
     username: Union[str, None] = None
 
