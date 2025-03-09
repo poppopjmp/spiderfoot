@@ -168,3 +168,15 @@ class SafeQueueListener(QueueListener):
         if self.queue is not None:
             return self.queue.get(block)
         return None
+
+    def _monitor(self):
+        try:
+            while True:
+                if self.queue is not None:
+                    record = self.dequeue(True)
+                    if record is not None:
+                        self.handle(record)
+                else:
+                    break
+        except Exception:
+            self.handleError(None)
