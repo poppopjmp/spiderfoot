@@ -43,7 +43,9 @@ from spiderfoot.logconfig import get_module_logger
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # noqa: DUO131
 
 # Initialize the custom logger
-logWorkerSetup()
+import multiprocessing
+loggingQueue = multiprocessing.Queue()
+logWorkerSetup(loggingQueue)
 log = get_module_logger(__name__)
 
 
