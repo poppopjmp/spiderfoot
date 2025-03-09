@@ -27,6 +27,10 @@ class SafeQueueListener(QueueListener):
         except Exception:
             self.handleError(None)
 
+    def enqueue(self, record):
+        if self.queue is not None:
+            self.queue.put_nowait(record)
+
 class SpiderFootSqliteLogHandler(logging.Handler):
     """Handler for logging to SQLite database.
 

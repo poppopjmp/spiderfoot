@@ -1585,11 +1585,11 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanlist(self: 'SpiderFootWebUi') -> list:
+    def scanlist(self: 'SpiderFootWebUi') -> str:
         """Produce a list of scans.
 
         Returns:
-            list: scan list
+            str: scan list page HTML
         """
         dbh = SpiderFootDb(self.config)
         data = dbh.scanInstanceList()
@@ -1620,7 +1620,8 @@ class SpiderFootWebUi:
 
             retdata.append([row[0], row[1], row[2], created, started, finished, row[6], row[7], riskmatrix])
 
-        return retdata
+        templ = Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
+        return templ.render(scans=retdata, docroot=self.docroot, pageid="SCANLIST", version=__version__)
 
     @cherrypy.expose
     @cherrypy.tools.json_out()

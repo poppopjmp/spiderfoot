@@ -52,11 +52,15 @@ import uvicorn
 from pydantic import BaseModel
 from spiderfoot.__version__ import __version__
 
+import logging
+import logging.handlers
+import queue
+import requests
+
 scanId = None
 dbh = None
 
 # 'Global' configuration options
-# These can be overriden on a per-module basis, and some will
 # be overridden from saved configuration settings stored in the DB.
 sfConfig = {
     '_debug': False,  # Debug
@@ -300,6 +304,11 @@ def main() -> None:
             sfConfig['_dbuser'] = args.dbuser
         if args.dbpassword:
             sfConfig['_dbpassword'] = args.dbpassword
+
+        loggingQueue = queue.Queue()
+        queueHandler = logging.handlers.QueueHandler(loggingQueue)
+        rootLogger = logging.getLogger()
+        rootLogger.addHandler(queueHandler)
 
         loggingQueue = mp.Queue()
         logListener = logListenerSetup(loggingQueue, sfConfig)
@@ -788,6 +797,10 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None, ena
 
         # Disable auto-reloading of content
         cherrypy.engine.autoreload.unsubscribe()
+
+        queueListener = logging.handlers.QueueListener(loggingQueue, *log.handlers)
+        queueListener.start()
+        log.info(f"Starting web server at {web_host}:{web_port} ...")
 
         cherrypy.quickstart(SpiderFootWebUi(sfWebUiConfig, sfConfig, loggingQueue), script_name=web_root, config=conf)
     except Exception as e:
