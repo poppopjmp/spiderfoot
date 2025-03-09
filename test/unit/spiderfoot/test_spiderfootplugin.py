@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 from spiderfoot.db import SpiderFootDb
 from spiderfoot.event import SpiderFootEvent
 from spiderfoot.plugin import SpiderFootPlugin
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 class TestSpiderFootPlugin(SpiderFootModuleTestCase):
     """Test SpiderFootPlugin."""

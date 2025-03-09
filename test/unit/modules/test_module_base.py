@@ -1,6 +1,6 @@
 import unittest
 
-class SpiderFootModuleTestCase(SpiderFootModuleTestCase):
+class SpiderFootModuleTestCase(unittest.TestCase):
     """Base test case for SpiderFoot modules"""
 
     default_options = {

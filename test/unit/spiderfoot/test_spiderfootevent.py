@@ -1,6 +1,7 @@
 import unittest
 
 from spiderfoot.event import SpiderFootEvent
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 class TestSpiderFootEvent(SpiderFootModuleTestCase):
     """Test SpiderFootEvent."""

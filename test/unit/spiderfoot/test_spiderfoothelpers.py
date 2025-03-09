@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock, mock_open, Mock
 
 import spiderfoot.helpers
 from spiderfoot.helpers import SpiderFootHelpers
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 class TestSpiderFootHelpers(SpiderFootModuleTestCase):

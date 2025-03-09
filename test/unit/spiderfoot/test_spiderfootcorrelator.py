@@ -4,6 +4,7 @@ import uuid
 from unittest.mock import MagicMock, Mock, patch
 
 from spiderfoot import SpiderFootCorrelator, SpiderFootDb, SpiderFootEvent
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 @pytest.mark.usefixtures
 class TestSpiderFootCorrelator(SpiderFootModuleTestCase):
