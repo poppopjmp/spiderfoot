@@ -9,6 +9,23 @@ from logging.handlers import QueueHandler, QueueListener, TimedRotatingFileHandl
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
 
+class SafeQueueListener(QueueListener):
+    def dequeue(self, block):
+        if self.queue is not None:
+            return self.queue.get(block)
+        return None
+
+    def _monitor(self):
+        try:
+            while True:
+                if self.queue is not None:
+                    record = self.dequeue(True)
+                    if record is not None:
+                        self.handle(record)
+                else:
+                    break
+        except Exception:
+            self.handleError(None)
 
 class SpiderFootSqliteLogHandler(logging.Handler):
     """Handler for logging to SQLite database.
@@ -130,7 +147,7 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
         sqlite_handler.setLevel(logLevel)
         sqlite_handler.setFormatter(log_format)
         handlers.append(sqlite_handler)
-    spiderFootLogListener = QueueListener(loggingQueue, *handlers)
+    spiderFootLogListener = SafeQueueListener(loggingQueue, *handlers)
     spiderFootLogListener.start()
     atexit.register(stop_listener, spiderFootLogListener)
     return spiderFootLogListener
@@ -162,21 +179,3 @@ def stop_listener(listener: 'logging.handlers.QueueListener') -> None:
     """
     with suppress(Exception):
         listener.stop()
-
-class SafeQueueListener(QueueListener):
-    def dequeue(self, block):
-        if self.queue is not None:
-            return self.queue.get(block)
-        return None
-
-    def _monitor(self):
-        try:
-            while True:
-                if self.queue is not None:
-                    record = self.dequeue(True)
-                    if record is not None:
-                        self.handle(record)
-                else:
-                    break
-        except Exception:
-            self.handleError(None)

@@ -33,7 +33,7 @@ from sfwebui import SpiderFootWebUi
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootCorrelator
-from spiderfoot.logger import logListenerSetup, logWorkerSetup
+from spiderfoot.logger import logListenerSetup, logWorkerSetup, SafeQueueListener
 
 from fastapi import FastAPI, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -304,9 +304,11 @@ def main() -> None:
             sfConfig['_dbpassword'] = args.dbpassword
 
         loggingQueue = mp.Queue()
-        logListenerSetup(loggingQueue, sfConfig)
+        logListener = logListenerSetup(loggingQueue, sfConfig)
         logWorkerSetup(loggingQueue)
         log = logging.getLogger(f"spiderfoot.{__name__}")
+        # Ensure logListener is called to start logging
+        logListener.start()
 
         # Add descriptions of the global config options
         sfConfig['__globaloptdescs__'] = sfOptdescs
