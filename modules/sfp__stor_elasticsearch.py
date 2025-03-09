@@ -32,14 +32,18 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
     opts = {
         'host': 'localhost',
         'port': 9200,
-        'index': 'spiderfoot'
+        'index': 'spiderfoot',
+        'use_https': False,  # Add option to use HTTPS
+        'skip_cert_verification': False  # Add option to skip certificate verification
     }
 
     # Option descriptions
     optdescs = {
         'host': "ElasticSearch host.",
         'port': "ElasticSearch port.",
-        'index': "ElasticSearch index name."
+        'index': "ElasticSearch index name.",
+        'use_https': "Use HTTPS to connect to ElasticSearch.",
+        'skip_cert_verification': "Skip certificate verification when using HTTPS."
     }
 
     def setup(self, sfc, userOpts=dict()):
@@ -55,7 +59,14 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
-        self.es = Elasticsearch([{'host': self.opts['host'], 'port': self.opts['port']}])
+        scheme = 'https' if self.opts['use_https'] else 'http'
+        verify_certs = not self.opts['skip_cert_verification']
+
+        self.es = Elasticsearch([{
+            'host': self.opts['host'],
+            'port': self.opts['port'],
+            'scheme': scheme
+        }], verify_certs=verify_certs)
 
     def watchedEvents(self):
         """
