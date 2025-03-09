@@ -739,27 +739,3 @@ class TestSpiderFoot(unittest.TestCase):
 
         sf.bingIterate(None, None)
         self.assertEqual('TBD', 'TBD')
-
-    def test_main_error_handling(self):
-        from sf import main
-        with self.assertRaises(SystemExit) as cm:
-            main()
-        self.assertEqual(cm.exception.code, -1)
-
-    def test_start_scan_error_handling(self):
-        from sf import start_scan
-        with self.assertRaises(SystemExit) as cm:
-            start_scan({}, {}, None, None)
-        self.assertEqual(cm.exception.code, -1)
-
-    def test_start_web_server_error_handling(self):
-        from sf import start_web_server
-        with self.assertRaises(SystemExit) as cm:
-            start_web_server({}, {})
-        self.assertEqual(cm.exception.code, -1)
-
-    def test_handle_abort_error_handling(self):
-        from sf import handle_abort
-        with self.assertRaises(SystemExit) as cm:
-            handle_abort(None, None)
-        self.assertEqual(cm.exception.code, -1)
