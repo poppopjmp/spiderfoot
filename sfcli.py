@@ -1344,7 +1344,7 @@ class SpiderFootCli(cmd.Cmd):
     def do_EOF(self, line):
         """EOF (Ctrl-D)
         Exit the SpiderFoot CLI."""
-        print("\n")
+        self.dprint("\n", plain=True)
         return True
 
 
@@ -1372,7 +1372,8 @@ if __name__ == "__main__":
             with open(args.e, 'r') as f:
                 cin = f.read()
         except Exception as e:
-            print(f"Unable to open {args.e}: ({e})")
+            s = SpiderFootCli()
+            s.edprint(f"Unable to open {args.e}: ({e})")
             sys.exit(-1)
     else:
         cin = sys.stdin
@@ -1389,7 +1390,7 @@ if __name__ == "__main__":
             with open(args.P, 'r') as f:
                 s.ownopts['cli.password'] = f.readlines()[0].strip('\n')
         except Exception as e:
-            print(f"Unable to open {args.P}: ({e})")
+            s.edprint(f"Unable to open {args.P}: ({e})")
             sys.exit(-1)
     if args.i:
         s.ownopts['cli.ssl_verify'] = False
@@ -1450,5 +1451,5 @@ if __name__ == "__main__":
         s.dprint("Type 'help' or '?'.")
         s.cmdloop()
     except KeyboardInterrupt:
-        print("\n")
+        s.dprint("\n", plain=True)
         sys.exit(0)

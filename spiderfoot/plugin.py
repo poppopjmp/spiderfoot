@@ -7,8 +7,11 @@ import sys
 import threading
 from time import sleep
 import traceback
+import inspect
+from typing import Any, Dict, Optional
 
 from .threadpool import SpiderFootThreadPool
+from spiderfoot import SpiderFootDb, SpiderFootEvent
 
 # begin logging overrides
 # these are copied from the python logging module
@@ -24,39 +27,40 @@ _srcfile = os.path.normcase(_srcfile)
 
 
 class SpiderFootPluginLogger(logging.Logger):
-    """Used only in SpiderFootPlugin to prevent modules
-    from having to initialize their own loggers.
-
-    Preserves filename, module, line numbers, etc. from the caller.
+    """Logger class for SpiderFoot plugins.
+    
+    This class extends the standard Logger to provide additional context
+    for plugin-specific logging, making debugging and monitoring easier.
     """
-
-    def findCaller(self, stack_info: bool = False, stacklevel: int = 1) -> tuple:
-        """Find the stack frame of the caller so that we can note the source
-        file name, line number and function name.
-
+    
+    def findCaller(self, stack_info=False, stacklevel=1):
+        """Find the caller of the logging method.
+        
+        Overrides the standard findCaller to skip over this file when determining
+        the calling file and line number, ensuring logs show the actual plugin
+        code location rather than logger implementation details.
+        
         Args:
-            stack_info (bool): TBD
-            stacklevel (int): TBD
-
+            stack_info: If true, include stack information
+            stacklevel: Number of frames to skip
+            
         Returns:
-            tuple: filename, line number, module name, and stack trace
+            tuple: (filename, line number, function name, stack info)
         """
         f = logging.currentframe()
-        # On some versions of IronPython, currentframe() returns None if
-        # IronPython isn't run with -X:Frames.
         if f is not None:
             f = f.f_back
         orig_f = f
         while f and stacklevel > 1:
             f = f.f_back
             stacklevel -= 1
-        if not f:
-            f = orig_f
+        if f is not None:
+            f = f.f_back
         rv = "(unknown file)", 0, "(unknown function)", None
         while hasattr(f, "f_code"):
             co = f.f_code
             filename = os.path.normcase(co.co_filename)
-            if filename in (logging._srcfile, _srcfile):  # This is the only change
+            if filename == _srcfile:
                 f = f.f_back
                 continue
             sinfo = None
@@ -70,29 +74,121 @@ class SpiderFootPluginLogger(logging.Logger):
                 sio.close()
             rv = (co.co_filename, f.f_lineno, co.co_name, sinfo)
             break
-        return rv  # noqa R504
+        return rv
 
+    def makeRecord(self, name, level, fn, lno, msg, args, exc_info,
+                   func=None, extra=None, sinfo=None):
+        """Create a LogRecord with plugin-specific context.
+        
+        Args:
+            name: Logger name
+            level: Log level
+            fn: Filename
+            lno: Line number
+            msg: Log message
+            args: Message arguments
+            exc_info: Exception information
+            func: Function name
+            extra: Extra information
+            sinfo: Stack information
+            
+        Returns:
+            LogRecord: Record with plugin context
+        """
+        rv = logging.LogRecord(name, level, fn, lno, msg, args, exc_info, func, sinfo)
+        if extra is not None:
+            for key in extra:
+                if (key in ["message", "asctime"]) or (key in rv.__dict__):
+                    raise KeyError(f"Attempt to overwrite {key} in LogRecord")
+                rv.__dict__[key] = extra[key]
+        return rv
 # end of logging overrides
 
 
-class SpiderFootPlugin():
-    """SpiderFootPlugin module object
+class SpiderFootPlugin:
+    """Base class for SpiderFoot plugins."""
 
-    Attributes:
-        _stopScanning (bool): Will be set to True by the controller if the user aborts scanning
-        listenerModules (list): Modules that will be notified when this module produces events
-        _currentEvent (SpiderFootEvent): Current event being processed
-        _currentTarget (str): Target currently being acted against
-        _name_: Name of this module, set at startup time
-        __sfdb__: Direct handle to the database - not to be directly used
-                  by modules except the sfp__stor_db module.
-        __scanId__: ID of the scan the module is running against
-        __datasource__: (Unused) tracking of data sources
-        __outputFilter: If set, events not matching this list are dropped
-        _priority (int): Priority, smaller numbers should run first
-        errorState (bool): error state of the module
-        socksProxy (str): SOCKS proxy
-    """
+    # Will be set by the controller
+    __sfdb__: Optional[SpiderFootDb] = None
+    __scanId__: Optional[str] = None
+    __dataSource__: Optional[str] = None
+    __outputFilter__: Optional[str] = None
+
+    meta: Dict[str, Any] = {
+        'name': "Plugin Base",
+        'summary': "This is the base class that all SpiderFoot plugins inherit from.",
+        'useCases': [],
+        'categories': [],
+        'flags': []
+    }
+
+    opts: Dict[str, Any] = {}
+    optdescs: Dict[str, str] = {}
+    errorState = False
+
+    def _log(self, level: int, message: str) -> None:
+        """Log a message to the SpiderFoot log facility.
+
+        Args:
+            level: Logging level (logging.ERROR|WARNING|INFO|DEBUG)
+            message: Message string to log
+        """
+        # Get the logger
+        log = logging.getLogger("spiderfoot")
+        
+        # Get the calling function name (debug, info, error, etc.)
+        frame = inspect.currentframe().f_back
+        func_name = frame.f_code.co_name if frame else "unknown"
+        
+        # Get the module name for context
+        extra = {
+            "module": self.__class__.__name__,
+            "scanId": self.__scanId__ if hasattr(self, "__scanId__") else None
+        }
+        
+        # Log with extra context that will be used by handlers
+        log.log(level, message, extra=extra)
+
+    def debug(self, message: str) -> None:
+        """Log a debug message.
+
+        Args:
+            message: Message string to log
+        """
+        self._log(logging.DEBUG, message)
+
+    def info(self, message: str) -> None:
+        """Log an info message.
+
+        Args:
+            message: Message string to log
+        """
+        self._log(logging.INFO, message)
+
+    def error(self, message: str) -> None:
+        """Log an error message.
+
+        Args:
+            message: Message string to log
+        """
+        self._log(logging.ERROR, message)
+        
+    def log(self, message: str) -> None:
+        """Log a message.
+
+        Args:
+            message: Message string to log
+        """
+        self._log(logging.INFO, message)
+
+    def status(self, message: str) -> None:
+        """Log a status message.
+
+        Args:
+            message: Message string to log
+        """
+        # Status messages are treated as INFO in the logging system
+        self._log(logging.INFO, f"STATUS: {message}")
 
     # Will be set to True by the controller if the user aborts scanning
     _stopScanning = False
@@ -142,11 +238,27 @@ class SpiderFootPlugin():
 
     @property
     def log(self):
-        if self._log is None:
-            logging.setLoggerClass(SpiderFootPluginLogger)  # temporarily set logger class
-            self._log = logging.getLogger(f"spiderfoot.{self.__name__}")  # init SpiderFootPluginLogger
-            logging.setLoggerClass(logging.Logger)  # reset logger class to default
+        """Get a module-specific logger instance."""
+        if not hasattr(self, '_log'):
+            self._log = get_module_logger(self.__module__)
         return self._log
+    
+    # For backward compatibility
+    def debug(self, message):
+        """Log a debug message."""
+        self.log.debug(message)
+        
+    def info(self, message):
+        """Log an info message."""
+        self.log.info(message)
+        
+    def warning(self, message):
+        """Log a warning message.""" 
+        self.log.warning(message)
+        
+    def error(self, message):
+        """Log an error message."""
+        self.log.error(message)
 
     def _updateSocket(self, socksProxy: str) -> None:
         """Hack to override module's use of socket, replacing it with
@@ -172,36 +284,6 @@ class SpiderFootPlugin():
             userOpts (dict): TBD
         """
         pass
-
-    def debug(self, *args, **kwargs) -> None:
-        """For logging.
-        A wrapper around logging.debug() that adds the scanId to LogRecord
-
-        Args:
-            *args: passed through to logging.debug()
-            *kwargs: passed through to logging.debug()
-        """
-        self.log.debug(*args, extra={'scanId': self.__scanId__}, **kwargs)
-
-    def info(self, *args, **kwargs) -> None:
-        """For logging.
-        A wrapper around logging.info() that adds the scanId to LogRecord
-
-        Args:
-            *args: passed through to logging.info()
-            *kwargs: passed through to logging.info()
-        """
-        self.log.info(*args, extra={'scanId': self.__scanId__}, **kwargs)
-
-    def error(self, *args, **kwargs) -> None:
-        """For logging.
-        A wrapper around logging.error() that adds the scanId to LogRecord
-
-        Args:
-            *args: passed through to logging.error()
-            *kwargs: passed through to logging.error()
-        """
-        self.log.error(*args, extra={'scanId': self.__scanId__}, **kwargs)
 
     def enrichTarget(self, target: str) -> None:
         """Find aliases for a target.

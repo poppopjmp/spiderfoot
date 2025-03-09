@@ -1,9 +1,9 @@
-import logging
 from copy import deepcopy
 import re
 import netaddr
 import yaml
 from spiderfoot import SpiderFootDb
+from spiderfoot.logger import logWorkerSetup
 
 
 class SpiderFootCorrelator:
@@ -13,7 +13,6 @@ class SpiderFootCorrelator:
         Make the rule checking per analysis method
     """
 
-    log = logging.getLogger("spiderfoot.correlator")
     dbh = None
     scanId = None
     types = None
@@ -46,13 +45,14 @@ class SpiderFootCorrelator:
         "rawYaml": {}
     }
 
-    def __init__(self, dbh: SpiderFootDb, ruleset: dict, scanId: str = None) -> None:
+    def __init__(self, dbh: SpiderFootDb, ruleset: dict, scanId: str = None, log_queue=None) -> None:
         """Initialize SpiderFoot correlator engine with scan ID and ruleset.
 
         Args:
             dbh (SpiderFootDb): database handle
             ruleset (dict): correlation rule set
             scanId (str): scan instance ID
+            log_queue: Queue for logging (if None, will use standard logging)
 
         Raises:
             TypeError: argument type was invalid
@@ -70,6 +70,13 @@ class SpiderFootCorrelator:
             raise TypeError(f"scanId is {type(scanId)}; expected str()")
 
         self.scanId = scanId
+
+        # Set up logging
+        if log_queue:
+            self.log = logWorkerSetup(log_queue)
+        else:
+            import logging
+            self.log = logging.getLogger("spiderfoot.correlator")
 
         self.types = self.dbh.eventTypes()
         for t in self.types:
@@ -599,8 +606,6 @@ class SpiderFootCorrelator:
         else:
             self.log.warning(f"Unknown analysis method: {method}")
 
-    import netaddr
-
     def analysis_match_all_to_first_collection(self, rule: dict, buckets: dict) -> None:
         """Filter buckets to keep only events that match the first collection.
 
@@ -765,21 +770,21 @@ class SpiderFootCorrelator:
                 if not (rule.get('minimum', 0) <= unique_count <= rule.get('maximum', 999999999)):
                     del buckets[bucket]
 
-        def analyze_field_scope(self, field: str) -> list:
-            """Analysis field scope.
+    def analyze_field_scope(self, field: str) -> list:
+        """Analysis field scope.
 
-            Args:
-                field (str): TBD
+        Args:
+            field (str): TBD
 
-            Returns:
-                list: TBD
-            """
+        Returns:
+            list: TBD
+        """
 
-            return [
-                field.startswith('child.'),
-                field.startswith('source.'),
-                field.startswith('entity.')
-            ]
+        return [
+            field.startswith('child.'),
+            field.startswith('source.'),
+            field.startswith('entity.')
+        ]
 
     def analyze_rule_scope(self, rule: dict) -> tuple:
         """Analyze the rule to determine if child events, sources, or entities need to be fetched during collection.

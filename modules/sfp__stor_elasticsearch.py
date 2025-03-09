@@ -12,6 +12,7 @@
 
 from elasticsearch import Elasticsearch
 from spiderfoot import SpiderFootPlugin
+# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp__stor_elasticsearch(SpiderFootPlugin):
@@ -62,11 +63,16 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
         scheme = 'https' if self.opts['use_https'] else 'http'
         verify_certs = not self.opts['skip_cert_verification']
 
-        self.es = Elasticsearch([{
-            'host': self.opts['host'],
-            'port': self.opts['port'],
-            'scheme': scheme
-        }], verify_certs=verify_certs)
+        try:
+            self.es = Elasticsearch([{
+                'host': self.opts['host'],
+                'port': self.opts['port'],
+                'scheme': scheme
+            }], verify_certs=verify_certs)
+            self.self.debug(f"Connected to ElasticSearch at {scheme}://{self.opts['host']}:{self.opts['port']}")
+        except Exception as e:
+            self.self.error(f"Failed to connect to ElasticSearch: {e}")
+            self.errorState = True
 
     def watchedEvents(self):
         """
@@ -86,6 +92,9 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
         """
         if not self.opts['_store']:
             return
+            
+        if self.errorState:
+            return
 
         event_data = {
             'eventType': sfEvent.eventType,
@@ -95,6 +104,11 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
             'generated': sfEvent.generated
         }
 
-        self.es.index(index=self.opts['index'], body=event_data)
+        try:
+            self.es.index(index=self.opts['index'], body=event_data)
+            self.self.debug(f"Stored event {sfEvent.eventType} to ElasticSearch")
+        except Exception as e:
+            self.self.error(f"Failed to store event to ElasticSearch: {e}")
+            self.errorState = True
 
 # End of sfp__stor_elasticsearch class

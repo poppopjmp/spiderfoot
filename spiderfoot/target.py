@@ -1,7 +1,11 @@
 import sys
 import typing
+import logging
 
 import netaddr
+
+# Import logger functionality
+from spiderfoot.logger import logWorkerSetup
 
 
 if sys.version_info >= (3, 8):  # PEP 589 support (TypedDict)
@@ -26,6 +30,7 @@ class SpiderFootTarget():
     _targetType: str
     _targetValue: str
     _targetAliases: typing.List[TargetAlias]
+    _log: logging.Logger
 
     def __init__(self, targetValue: str, typeName: str) -> None:
         """Initialize SpiderFoot target.
@@ -34,6 +39,10 @@ class SpiderFootTarget():
             targetValue (str): target value
             typeName (str): target type
         """
+        # Initialize logger
+        self._log = logging.getLogger("spiderfoot.target")
+        
+        self._log.debug(f"Initializing target with value '{targetValue}' and type '{typeName}'")
         self.targetType = typeName
         self.targetValue = targetValue
         self.targetAliases = list()
@@ -45,11 +54,14 @@ class SpiderFootTarget():
     @targetType.setter
     def targetType(self, targetType: str) -> None:
         if not isinstance(targetType, str):
+            self._log.error(f"Invalid targetType: {type(targetType)}; expected str()")
             raise TypeError(f"targetType is {type(targetType)}; expected str()")
 
         if targetType not in self._validTypes:
+            self._log.error(f"Invalid targetType value: {targetType}; expected one of {self._validTypes}")
             raise ValueError(f"targetType value is {targetType}; expected {self._validTypes}")
 
+        self._log.debug(f"Setting targetType to '{targetType}'")
         self._targetType = targetType
 
     @property
@@ -59,10 +71,13 @@ class SpiderFootTarget():
     @targetValue.setter
     def targetValue(self, targetValue: str) -> None:
         if not isinstance(targetValue, str):
+            self._log.error(f"Invalid targetValue: {type(targetValue)}; expected str()")
             raise TypeError(f"targetValue is {type(targetValue)}; expected str()")
         if not targetValue:
+            self._log.error("targetValue cannot be blank")
             raise ValueError("targetValue value is blank")
 
+        self._log.debug(f"Setting targetValue to '{targetValue}'")
         self._targetValue = targetValue
 
     @property
@@ -71,6 +86,7 @@ class SpiderFootTarget():
 
     @targetAliases.setter
     def targetAliases(self, value: typing.List[TargetAlias]) -> None:
+        self._log.debug(f"Setting targetAliases to list of {len(value)} items")
         self._targetAliases = value
 
     def setAlias(self, value: str, typeName: str) -> None:
@@ -86,22 +102,28 @@ class SpiderFootTarget():
             typeName (str): Target alias data type
         """
         if not isinstance(value, (str, bytes)):
+            self._log.debug(f"Ignoring alias: value is not str/bytes but {type(value)}")
             return
 
         if not value:
+            self._log.debug("Ignoring alias: value is empty")
             return
 
         if not isinstance(typeName, (str, bytes)):
+            self._log.debug(f"Ignoring alias: typeName is not str/bytes but {type(typeName)}")
             return
 
         if not typeName:
+            self._log.debug("Ignoring alias: typeName is empty")
             return
 
         alias: TargetAlias = {'type': typeName, 'value': value.lower()}
 
         if alias in self.targetAliases:
+            self._log.debug(f"Ignoring duplicate alias: {alias}")
             return
 
+        self._log.info(f"Adding alias: {alias}")
         self.targetAliases.append(alias)
 
     def _getEquivalents(self, typeName: str) -> typing.List[str]:
@@ -113,10 +135,12 @@ class SpiderFootTarget():
         Returns:
             typing.List[str]: target aliases
         """
+        self._log.debug(f"Getting equivalents for type '{typeName}'")
         ret: typing.List[str] = list()
         for item in self.targetAliases:
             if item['type'] == typeName:
                 ret.append(item['value'].lower())
+        self._log.debug(f"Found {len(ret)} equivalents for type '{typeName}'")
         return ret
 
     def getNames(self) -> typing.List[str]:
@@ -125,8 +149,10 @@ class SpiderFootTarget():
         Returns:
             typing.List[str]: domains associated with the target
         """
+        self._log.debug("Getting all domain names associated with the target")
         e = self._getEquivalents("INTERNET_NAME")
         if self.targetType in ["INTERNET_NAME", "EMAILADDR"] and self.targetValue.lower() not in e:
+            self._log.debug(f"Adding target value '{self.targetValue.lower()}' to names list")
             e.append(self.targetValue.lower())
 
         names: typing.List[str] = list()
@@ -136,6 +162,7 @@ class SpiderFootTarget():
             else:
                 names.append(name)
 
+        self._log.info(f"Found {len(names)} domain names associated with target")
         return names
 
     def getAddresses(self) -> typing.List[str]:
@@ -144,12 +171,15 @@ class SpiderFootTarget():
         Returns:
             typing.List[str]: List of IP subnets and addresses
         """
+        self._log.debug("Getting all IP addresses associated with the target")
         e = self._getEquivalents("IP_ADDRESS")
         if self.targetType == "IP_ADDRESS":
+            self._log.debug(f"Adding target value '{self.targetValue}' to IP address list")
             e.append(self.targetValue)
 
         e = self._getEquivalents("IPV6_ADDRESS")
         if self.targetType == "IPV6_ADDRESS":
+            self._log.debug(f"Adding target value '{self.targetValue}' to IP address list")
             e.append(self.targetValue)
 
         return e

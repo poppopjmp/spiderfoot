@@ -7,13 +7,13 @@ from spiderfoot.db import SpiderFootDb
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
-import asyncio, logging
+import asyncio
+import uuid
 from spiderfoot import SpiderFootHelpers
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import JSONResponse, StreamingResponse
 import csv
 import io
-import uuid
 from spiderfoot.__version__ import __version__
 
 app = FastAPI()
@@ -449,7 +449,7 @@ async def export_scan_results_csv(scan_id: str, credentials: HTTPBasicCredential
         output.seek(0)
         return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=scan_results_{scan_id}.csv"})
     except Exception as e:
-        logging.error(f"Unexpected error in export_scan_results_csv: {e}", exc_info=True)
+        log.error(f"Unexpected error in export_scan_results_csv: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/export_scan_results/{scan_id}/json")
@@ -482,7 +482,7 @@ async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentia
 
         return JSONResponse(content={"results": formatted_results})
     except Exception as e:
-        logging.error(f"Unexpected error in export_scan_results_json: {e}", exc_info=True)
+        log.error(f"Unexpected error in export_scan_results_json: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.exception_handler(HTTPException)

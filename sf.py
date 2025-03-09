@@ -51,11 +51,7 @@ from fastapi.responses import HTMLResponse
 import uvicorn
 from pydantic import BaseModel
 from spiderfoot.__version__ import __version__
-
-import logging
-import logging.handlers
 import queue
-import requests
 
 scanId = None
 dbh = None
@@ -233,6 +229,57 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
+def setup_logging(config: dict) -> queue.Queue:
+    """
+    Set up logging for SpiderFoot using the customized logger.py implementation.
+    
+    Args:
+        config (dict): SpiderFoot configuration options
+        
+    Returns:
+        queue.Queue: The logging queue for passing log records
+    """
+    try:
+        # Create the logging queue
+        loggingQueue = queue.Queue(-1)  # No limit on size
+        
+        # Set log level based on debug setting
+        log_level = logging.DEBUG if config.get('_debug', False) else logging.INFO
+        
+        # Disable logging if specified
+        if not config.get('__logging', True):
+            logging.disable(logging.CRITICAL)
+            return loggingQueue
+        
+        # Set up the queue handler and listener
+        queueHandler = logging.handlers.QueueHandler(loggingQueue)
+        handler = logging.StreamHandler()
+        handler.setLevel(log_level)
+        
+        # Create a formatter
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        
+        # Set up the queue listener with the handler
+        listener = SafeQueueListener(loggingQueue, handler)
+        
+        # Configure the root logger to use our queue handler
+        logging.basicConfig(level=log_level, handlers=[queueHandler])
+        
+        # Start the listener
+        listener.start()
+        
+        # Set up logListener and logWorker from spiderfoot.logger module
+        logListener = logListenerSetup(loggingQueue, config)
+        logWorkerSetup(loggingQueue)
+        
+        return loggingQueue
+    except Exception as e:
+        print(f"Failed to set up logging: {e}")
+        # Fall back to basic logging in case of failure
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        return queue.Queue(-1)
+
 def main() -> None:
 
     try:
@@ -305,17 +352,17 @@ def main() -> None:
         if args.dbpassword:
             sfConfig['_dbpassword'] = args.dbpassword
 
-        loggingQueue = queue.Queue()
-        queueHandler = logging.handlers.QueueHandler(loggingQueue)
-        rootLogger = logging.getLogger()
-        rootLogger.addHandler(queueHandler)
+        # Initialize the logging system
+        logging_queue = multiprocessing.Queue(-1) if sfConfig.get('__multiprocessing', False) else queue.Queue(-1)
+        log_listener = logListenerSetup(logging_queue, sfConfig)
+        logger = logWorkerSetup(logging_queue)
+        
+        # Add queue to config so it can be passed to modules
+        sfConfig['__logging_queue'] = logging_queue
 
-        loggingQueue = mp.Queue()
-        logListener = logListenerSetup(loggingQueue, sfConfig)
-        logWorkerSetup(loggingQueue)
+        # Set up logging
+        loggingQueue = setup_logging(sfConfig)
         log = logging.getLogger(f"spiderfoot.{__name__}")
-        # Ensure logListener is called to start logging
-        logListener.start()
 
         # Add descriptions of the global config options
         sfConfig['__globaloptdescs__'] = sfOptdescs
@@ -420,6 +467,10 @@ def main() -> None:
             sys.exit(0)
 
         start_scan(sfConfig, sfModules, args, loggingQueue)
+
+        # Stop the listener when done
+        listener.stop()
+
     except Exception as e:
         log.critical(f"Unhandled exception in main: {e}", exc_info=True)
         sys.exit(-1)
@@ -798,8 +849,11 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None, ena
         # Disable auto-reloading of content
         cherrypy.engine.autoreload.unsubscribe()
 
-        queueListener = logging.handlers.QueueListener(loggingQueue, *log.handlers)
-        queueListener.start()
+        # Set up queue listener if we have a logging queue
+        if loggingQueue:
+            queueListener = logging.handlers.QueueListener(loggingQueue, *log.handlers)
+            queueListener.start()
+        
         log.info(f"Starting web server at {web_host}:{web_port} ...")
 
         cherrypy.quickstart(SpiderFootWebUi(sfWebUiConfig, sfConfig, loggingQueue), script_name=web_root, config=conf)
@@ -838,6 +892,7 @@ def check_rest_api_implementation() -> None:
     Check if the implementation of the REST API is aligned and correctly linked to the core SpiderFoot functionality.
     """
     import requests
+    log = logging.getLogger(f"spiderfoot.{__name__}")
 
     time.sleep(10)
 
@@ -863,9 +918,9 @@ def check_rest_api_implementation() -> None:
         try:
             response = requests.options(f"{base_url}{endpoint}")
             if response.status_code != 200:
-                logging.error(f"Endpoint {endpoint} is not correctly linked. Status code: {response.status_code}")
+                log.error(f"Endpoint {endpoint} is not correctly linked. Status code: {response.status_code}")
         except Exception as e:
-            logging.error(f"Error checking endpoint {endpoint}: {e}")
+            log.error(f"Error checking endpoint {endpoint}: {e}")
 
 
 def start_rest_api_server(enable_oauth=False) -> None:  # P3926
@@ -880,7 +935,9 @@ def start_rest_api_server(enable_oauth=False) -> None:  # P3926
     handle_scan_status()
     handle_correlation_rules()
     handle_logging_and_error_handling()
-
+    
+    log = logging.getLogger(f"spiderfoot.{__name__}")
+    
     if enable_oauth:
         log.info("Enabling OAuth2 authentication for REST API.")
         app.include_router(router, prefix="/api")

@@ -14,6 +14,8 @@ import re
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
+# Module now uses the logging from the SpiderFootPlugin base class
+
 
 class sfp_names(SpiderFootPlugin):
 
@@ -111,7 +113,7 @@ class sfp_names(SpiderFootPlugin):
                 return
 
         # Stage 1: Find things that look (very vaguely) like names
-        rx = re.compile(r"([A-Z][a-z�������������]+)\s+.?.?\s?([A-Z][�������������a-zA-Z\'\-]+)")
+        rx = re.compile(r"([A-Z][a-zÀ-ÿ]+)\s+.?.?\s?([A-Z][À-ÿa-zA-Z\'\-]+)")
         m = re.findall(rx, eventData)
         for r in m:
             # Start off each match as 0 points.

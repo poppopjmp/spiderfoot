@@ -10,34 +10,35 @@
 # Copyright:   (c) bcoles 2021
 # Licence:     MIT
 # -------------------------------------------------------------------------------
-
-import json
-import os.path
 from subprocess import PIPE, Popen, TimeoutExpired
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootHelpers
 
+# Module now uses the logging from the SpiderFootPlugin base class
 
 class sfp_tool_wafw00f(SpiderFootPlugin):
     meta = {
         'name': "Tool - WAFW00F",
-        'summary': "Identify what web application firewall (WAF) is in use on the specified website.",
-        'flags': ["tool"],
+        'summary': "Identify what Web Application Firewall (WAF) is in use on the target website.",
+        'flags': ["tool", "slow", "invasive"],
         'useCases': ["Footprint", "Investigate"],
         'categories': ["Crawling and Scanning"],
         'toolDetails': {
             'name': "WAFW00F",
-            'description': "WAFW00F allows one to identify and fingerprint Web Application Firewall (WAF) products protecting a website.",
+            'description': "WAFW00F allows one to identify and fingerprint "
+                           "Web Application Firewall (WAF) products protecting a website.",
             'website': 'https://github.com/EnableSecurity/wafw00f',
             'repository': 'https://github.com/EnableSecurity/wafw00f'
-        },
+        }
     }
 
     opts = {
-        'wafw00f_path': '/tools/bin/wafw00f'
+        'pythonbinary': 'python3',
+        'wafw00f_path': ''
     }
 
     optdescs = {
+        'pythonbinary': "Path to Python 3 binary for WAFW00F. If WAFW00F is installed in a Python environment with other versions, specify 'python3' here.",
         'wafw00f_path': "Path to the wafw00f executable file. Must be set."
     }
 
@@ -46,15 +47,15 @@ class sfp_tool_wafw00f(SpiderFootPlugin):
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
-        self.results = dict()
+        self.results = self.tempStorage()
         self.errorState = False
         self.__dataSource__ = "Target Website"
 
-        for opt in userOpts.keys():
+        for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return ['INTERNET_NAME']
+        return ['INTERNET_NAME', 'IP_ADDRESS']
 
     def producedEvents(self):
         return ['RAW_RIR_DATA', 'WEBSERVER_TECHNOLOGY']
@@ -70,7 +71,7 @@ class sfp_tool_wafw00f(SpiderFootPlugin):
             return
 
         if eventData in self.results:
-            self.debug(f"Skipping {eventData} as already scanned.")
+            self.debug(f"Skipping {eventData}, already checked.")
             return
 
         self.results[eventData] = True
@@ -80,81 +81,65 @@ class sfp_tool_wafw00f(SpiderFootPlugin):
             self.errorState = True
             return
 
-        exe = self.opts['wafw00f_path']
-        if self.opts['wafw00f_path'].endswith('/'):
-            exe = exe + 'wafw00f'
+        tool_path = self.opts['wafw00f_path']
+        tool_name = self.meta['toolDetails']['name']
+        pythonBinary = self.opts['pythonbinary']
 
-        if not os.path.isfile(exe):
-            self.error(f"File does not exist: {exe}")
-            self.errorState = True
-            return
-
-        url = eventData
-
-        if not SpiderFootHelpers.sanitiseInput(url):
-            self.error("Invalid input, refusing to run.")
+        if not SpiderFootHelpers.sanitiseInput(eventData):
+            self.error(f"Invalid input, refusing to run {tool_name}: {eventData}")
             return
 
         args = [
-            self.opts['python_path'],
-            exe,
+            pythonBinary,
+            tool_path,
             '-a',
-            '-o-',
-            '-f',
-            'json',
-            url
+            '-v',
+            eventData
         ]
+        
         try:
             p = Popen(args, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = p.communicate(input=None, timeout=300)
+            stdout, stderr = p.communicate(input=None, timeout=60)
         except TimeoutExpired:
             p.kill()
             stdout, stderr = p.communicate()
-            self.debug(f"Timed out waiting for wafw00f to finish on {eventData}")
+            self.error(f"{tool_name} took too long to complete for {eventData}")
             return
         except Exception as e:
-            self.error(f"Unable to run wafw00f: {e}")
+            self.error(f"Error running {tool_name}: {e}")
             return
 
         if p.returncode != 0:
-            self.error(f"Unable to read wafw00f output\nstderr: {stderr}\nstdout: {stdout}")
+            self.error(f"{tool_name} failed to run: {stderr.decode('utf-8').strip() if stderr else ''}")
             return
 
-        if not stdout:
-            self.debug(f"wafw00f returned no output for {eventData}")
-            return
-
-        try:
-            result_json = json.loads(stdout)
-        except Exception as e:
-            self.error(f"Could not parse wafw00f output as JSON: {e}\nstdout: {stdout}")
-            return
-
-        if not result_json:
-            self.debug(f"wafw00f returned no output for {eventData}")
-            return
-
-        evt = SpiderFootEvent('RAW_RIR_DATA', json.dumps(result_json), self.__name__, event)
-        self.notifyListeners(evt)
-
-        for waf in result_json:
-            if not waf:
-                continue
-
-            firewall = waf.get('firewall')
-            if not firewall:
-                continue
-            if firewall == 'Generic':
-                continue
-
-            manufacturer = waf.get('manufacturer')
-            if not manufacturer:
-                continue
-
-            software = ' '.join(filter(None, [manufacturer, firewall]))
-
-            if software:
-                evt = SpiderFootEvent('WEBSERVER_TECHNOLOGY', software, self.__name__, event)
+        if stdout:
+            output = stdout.decode('utf-8')
+            found_waf = False
+            firewall_name = None
+            
+            for line in output.splitlines():
+                if "No WAF detected" in line:
+                    found_waf = False
+                    break
+                
+                if "is behind a" in line or "seems to be behind" in line:
+                    found_waf = True
+                    firewall_name = line.strip()
+                
+                if "No WAF detected by" in line:
+                    found_waf = False
+                    
+            if found_waf and firewall_name:
+                evt = SpiderFootEvent('RAW_RIR_DATA', f"{tool_name} detected: {firewall_name}", self.__name__, event)
                 self.notifyListeners(evt)
+
+                tech = ' '.join(firewall_name.split(' ')[4:])
+                evt = SpiderFootEvent('WEBSERVER_TECHNOLOGY', f"WAF: {tech}", self.__name__, event)
+                self.notifyListeners(evt)
+            else:
+                self.debug(f"{tool_name} did not detect a WAF for {eventData}")
+        else:
+            self.debug(f"{tool_name} did not produce any output for {eventData}")
 
 # End of sfp_tool_wafw00f class

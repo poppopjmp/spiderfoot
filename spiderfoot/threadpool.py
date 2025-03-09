@@ -3,6 +3,7 @@ import logging
 import threading
 from time import sleep
 from contextlib import suppress
+from .logger import logWorkerSetup
 
 
 class SpiderFootThreadPool:
@@ -31,15 +32,17 @@ class SpiderFootThreadPool:
                 yield result
     """
 
-    def __init__(self, threads: int = 100, qsize: int = 10, name: str = '') -> None:
+    def __init__(self, threads: int = 100, qsize: int = 10, name: str = '', logging_queue=None) -> None:
         """Initialize the SpiderFootThreadPool class.
 
         Args:
             threads (int): Max number of threads
             qsize (int): Queue size
             name (str): Name
+            logging_queue: Queue for thread-safe logging
         """
-        self.log = logging.getLogger(f"spiderfoot.{__name__}")
+        self.logging_queue = logging_queue
+        self.log = logWorkerSetup(logging_queue) if logging_queue else logging.getLogger(f"spiderfoot.{__name__}")
         self.threads = int(threads)
         self.qsize = int(qsize)
         self.pool = [None] * self.threads
@@ -53,7 +56,7 @@ class SpiderFootThreadPool:
     def start(self) -> None:
         self.log.debug(f'Starting thread pool "{self.name}" with {self.threads:,} threads')
         for i in range(self.threads):
-            t = ThreadPoolWorker(pool=self, name=f"{self.name}_worker_{i + 1}")
+            t = ThreadPoolWorker(pool=self, name=f"{self.name}_worker_{i + 1}", logging_queue=self.logging_queue)
             t.start()
             self.pool[i] = t
 
@@ -227,9 +230,9 @@ class SpiderFootThreadPool:
 
 class ThreadPoolWorker(threading.Thread):
 
-    def __init__(self, pool, name: str = None) -> None:
-
-        self.log = logging.getLogger(f"spiderfoot.{__name__}")
+    def __init__(self, pool, name: str = None, logging_queue=None) -> None:
+        self.logging_queue = logging_queue
+        self.log = logWorkerSetup(logging_queue) if logging_queue else logging.getLogger(f"spiderfoot.{__name__}")
         self.pool = pool
         self.taskName = ""  # which module submitted the callback
         self.busy = False

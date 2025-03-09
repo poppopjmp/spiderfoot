@@ -36,9 +36,15 @@ import requests
 import urllib3
 from publicsuffixlist import PublicSuffixList
 from spiderfoot import SpiderFootHelpers
+from spiderfoot.logger import logWorkerSetup
+from spiderfoot.logconfig import get_module_logger
 
 # For hiding the SSL warnings coming from the requests lib
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # noqa: DUO131
+
+# Initialize the custom logger
+logWorkerSetup()
+log = get_module_logger(__name__)
 
 
 class SpiderFoot:
@@ -68,7 +74,8 @@ class SpiderFoot:
             raise TypeError(f"options is {type(options)}; expected dict()")
 
         self.opts = deepcopy(options)
-        self.log = logging.getLogger(f"spiderfoot.{__name__}")
+        self.log = get_module_logger(__name__)
+        self.log.debug(f"Initializing SpiderFoot with options: {options}")
 
         # This is ugly but we don't want any fetches to fail - we expect
         # to encounter unverified SSL certs!

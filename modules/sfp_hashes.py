@@ -12,6 +12,7 @@
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp_hashes(SpiderFootPlugin):
@@ -57,7 +58,7 @@ class sfp_hashes(SpiderFootPlugin):
         srcModuleName = event.module
         eventData = event.data
 
-        self.debug(f"Received event, {eventName}, from {srcModuleName}")
+        self.self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         hashes = SpiderFootHelpers.extractHashesFromText(eventData)
         for hashtup in hashes:

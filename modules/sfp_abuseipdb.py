@@ -17,6 +17,7 @@ import urllib.parse
 import urllib.request
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp_abuseipdb(SpiderFootPlugin):
@@ -121,22 +122,17 @@ class sfp_abuseipdb(SpiderFootPlugin):
         time.sleep(1)
 
         if res['code'] == '429':
-            self.error("You are being rate-limited by AbuseIPDB")
+            self.self.error("You are being rate-limited by AbuseIPDB")
             self.errorState = True
             return None
 
         if res['code'] != "200":
-            self.error(f"Error retrieving search results, code {res['code']}")
-            self.errorState = True
-            return None
-
-        if res['code'] != "200":
-            self.error("Error retrieving search results from AbuseIPDB")
+            self.self.error(f"Error retrieving search results, code {res['code']}")
             self.errorState = True
             return None
 
         if res['content'] is None:
-            self.error("Received no content from AbuseIPDB")
+            self.self.error("Received no content from AbuseIPDB")
             self.errorState = True
             return None
 
@@ -280,17 +276,17 @@ class sfp_abuseipdb(SpiderFootPlugin):
         srcModuleName = event.module
         eventData = event.data
 
-        self.debug(f"Received event, {eventName}, from {srcModuleName}")
+        self.self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts["api_key"] == "":
-            self.error(
+            self.log.error(
                 f"You enabled {self.__class__.__name__} but did not set an API key!"
             )
             self.errorState = True
             return
 
         if eventData in self.results:
-            self.debug(f"Skipping {eventData}, already checked.")
+            self.self.debug(f"Skipping {eventData}, already checked.")
             return
 
         self.results[eventData] = True
@@ -308,7 +304,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of IP address {eventData} with AbuseIPDB")
+        self.self.debug(f"Checking maliciousness of IP address {eventData} with AbuseIPDB")
 
         blacklist = self.queryBlacklist()
 
@@ -318,7 +314,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
         if eventData not in blacklist:
             return
 
-        self.info(f"Malicious IP address {eventData} found in AbuseIPDB blacklist")
+        self.self.info(f"Malicious IP address {eventData} found in AbuseIPDB blacklist")
 
         url = f"https://www.abuseipdb.com/check/{eventData}"
 

@@ -168,7 +168,7 @@ class SpiderFootScanner():
             proxy_host = self.__config.get('_socks2addr', '')
 
             if not proxy_host:
-                self.__sf.status(f"Scan [{self.__scanId}] failed: Proxy type is set ({proxy_type}) but proxy address value is blank")
+                logger.error(f"Scan [{self.__scanId}] failed: Proxy type is set ({proxy_type}) but proxy address value is blank")
                 self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
                 raise ValueError(f"Proxy type is set ({proxy_type}) but proxy address value is blank")
 
@@ -191,7 +191,7 @@ class SpiderFootScanner():
             else:
                 proxy = f"{proxy_proto}{proxy_host}:{proxy_port}"
 
-            self.__sf.debug(f"Using proxy: {proxy}")
+            logger.debug(f"Using proxy: {proxy}")
             self.__sf.socksProxy = proxy
         else:
             self.__sf.socksProxy = None
@@ -213,7 +213,7 @@ class SpiderFootScanner():
         if tld_data is None:
             tld_data = self.__sf.optValueToData(self.__config['_internettlds'])
             if tld_data is None:
-                self.__sf.status(f"Scan [{self.__scanId}] failed: Could not update TLD list")
+                logger.error(f"Scan [{self.__scanId}] failed: Could not update TLD list")
                 self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
                 raise ValueError("Could not update TLD list")
             self.__sf.cachePut("internet_tlds", tld_data)

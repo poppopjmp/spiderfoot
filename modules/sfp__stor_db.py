@@ -13,6 +13,7 @@
 
 from elasticsearch import Elasticsearch
 from spiderfoot import SpiderFootPlugin
+# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp__stor_db(SpiderFootPlugin):
@@ -62,7 +63,12 @@ class sfp__stor_db(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
         if self.opts['use_elasticsearch']:
-            self.es = Elasticsearch([{'host': self.opts['elasticsearch_host'], 'port': self.opts['elasticsearch_port']}])
+            try:
+                self.es = Elasticsearch([{'host': self.opts['elasticsearch_host'], 'port': self.opts['elasticsearch_port']}])
+                self.self.debug(f"Connected to ElasticSearch at {self.opts['elasticsearch_host']}:{self.opts['elasticsearch_port']}")
+            except Exception as e:
+                self.self.error(f"Failed to connect to ElasticSearch: {e}")
+                self.errorState = True
 
     def watchedEvents(self):
         """
@@ -91,15 +97,22 @@ class sfp__stor_db(SpiderFootPlugin):
                 'sourceEvent': sfEvent.sourceEvent.data if sfEvent.sourceEvent else None,
                 'generated': sfEvent.generated
             }
-            self.es.index(index=self.opts['elasticsearch_index'], body=event_data)
+            try:
+                self.es.index(index=self.opts['elasticsearch_index'], body=event_data)
+                self.self.debug(f"Stored event {sfEvent.eventType} to ElasticSearch")
+            except Exception as e:
+                self.self.error(f"Failed to store event to ElasticSearch: {e}")
             return
 
-        if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
-            self.debug("Storing an event: " + sfEvent.eventType)
-            self.__sfdb__.scanEventStore(self.getScanId(), sfEvent, self.opts['maxstorage'])
-            return
+        try:
+            if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
+                self.self.debug(f"Storing an event: {sfEvent.eventType} (truncated)")
+                self.__sfdb__.scanEventStore(self.getScanId(), sfEvent, self.opts['maxstorage'])
+                return
 
-        self.debug("Storing an event: " + sfEvent.eventType)
-        self.__sfdb__.scanEventStore(self.getScanId(), sfEvent)
+            self.self.debug(f"Storing an event: {sfEvent.eventType}")
+            self.__sfdb__.scanEventStore(self.getScanId(), sfEvent)
+        except Exception as e:
+            self.self.error(f"Error storing event to database: {e}")
 
 # End of sfp__stor_db class

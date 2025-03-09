@@ -15,6 +15,7 @@ import urllib
 from urllib.parse import urlparse
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp_abstractapi(SpiderFootPlugin):

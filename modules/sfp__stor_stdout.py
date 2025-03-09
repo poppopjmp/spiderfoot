@@ -14,6 +14,7 @@
 import json
 from elasticsearch import Elasticsearch
 from spiderfoot import SpiderFootPlugin
+# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp__stor_stdout(SpiderFootPlugin):
@@ -154,7 +155,10 @@ class sfp__stor_stdout(SpiderFootPlugin):
                 'sourceEvent': sfEvent.sourceEvent.data if sfEvent.sourceEvent else None,
                 'generated': sfEvent.generated
             }
-            self.es.index(index=self.opts['elasticsearch_index'], body=event_data)
+            try:
+                self.es.index(index=self.opts['elasticsearch_index'], body=event_data)
+            except Exception as e:
+                self.self.error(f"Error indexing to ElasticSearch: {e}")
             return
 
         if self.opts['_showonlyrequested']:
