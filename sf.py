@@ -51,6 +51,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 import uvicorn
+from pydantic import BaseModel
 
 __version__ = "5.0.3-dev"
 
