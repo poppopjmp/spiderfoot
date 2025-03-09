@@ -36,7 +36,11 @@ from spiderfoot.logger import logListenerSetup, logWorkerSetup
 from fastapi import FastAPI, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from jose import JWTError, jwt
+try:
+    from jose import JWTError, jwt
+except ImportError as e:
+    print("Error: The 'jose' module is not installed. Please install it using 'pip install python-jose'.")
+    raise e
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional
