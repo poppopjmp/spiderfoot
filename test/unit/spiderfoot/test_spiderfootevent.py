@@ -1,15 +1,15 @@
 import unittest
-from spiderfoot.event import SpiderFootEvent
+
+from spiderfoot import SpiderFootEvent
 
 
 class TestSpiderFootEvent(unittest.TestCase):
+    """Test SpiderFootEvent."""
 
     def setUp(self):
-        self.eventType = "URL_FORM"
-        self.data = "http://example.com"
-        self.module = "example_module"
-        self.sourceEvent = None
-        self.event = SpiderFootEvent(self.eventType, self.data, self.module, self.sourceEvent)
+        """Set up test case."""
+        self.root_event = SpiderFootEvent("ROOT", "Root Event", "", "", None)
+        self.event = SpiderFootEvent("IP_ADDRESS", "192.168.0.1", "example module", "example data", self.root_event)
 
     def test_generated(self):
         self.assertIsInstance(self.event.generated, float)

@@ -74,7 +74,8 @@ class SpiderFootWebUi:
 
         # 'config' supplied will be the defaults, let's supplement them
         # now with any configuration which may have previously been saved.
-        self.defaultConfig = deepcopy(config)
+        from spiderfoot.sflib import safe_deepcopy
+        self.defaultConfig = safe_deepcopy(config)
         dbh = SpiderFootDb(self.defaultConfig, init=True)
         sf = SpiderFoot(self.defaultConfig)
         self.config = sf.configUnserialize(dbh.configGet(), self.defaultConfig)

@@ -48,6 +48,50 @@ loggingQueue = multiprocessing.Queue()
 logWorkerSetup(loggingQueue)
 log = get_module_logger(__name__)
 
+def safe_deepcopy(obj):
+    """
+    Safely deep copy an object, handling non-picklable objects like thread locks.
+    
+    Args:
+        obj: The object to copy
+        
+    Returns:
+        A deep copy of the object with non-picklable items removed or handled
+    """
+    if isinstance(obj, dict):
+        return {k: safe_deepcopy(v) for k, v in obj.items() 
+                if not str(type(v)).find('_thread.lock') > -1}
+    elif isinstance(obj, list):
+        return [safe_deepcopy(i) for i in obj]
+    elif isinstance(obj, tuple):
+        return tuple(safe_deepcopy(i) for i in obj)
+    elif isinstance(obj, set):
+        return {safe_deepcopy(i) for i in obj}
+    elif hasattr(obj, '__dict__') and not callable(obj):
+        # For custom objects that aren't functions/methods
+        try:
+            from copy import deepcopy
+            return deepcopy(obj)
+        except TypeError:
+            # If the object can't be deepcopied, return a new instance
+            # with copied attributes where possible
+            cls = obj.__class__
+            result = cls.__new__(cls)
+            for k, v in obj.__dict__.items():
+                if not str(type(v)).find('_thread.lock') > -1:
+                    try:
+                        setattr(result, k, safe_deepcopy(v))
+                    except (TypeError, AttributeError):
+                        setattr(result, k, None)
+            return result
+    else:
+        # For primitive types or types we don't need to copy
+        try:
+            from copy import deepcopy
+            return deepcopy(obj)
+        except TypeError:
+            return obj
+
 
 class SpiderFoot:
     """SpiderFoot

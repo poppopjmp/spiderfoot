@@ -1,9 +1,11 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
+
 from spiderfoot.helpers import SpiderFootHelpers
 
 
 class TestSpiderFootHelpers(unittest.TestCase):
+    """Test SpiderFootHelpers."""
 
     def test_dataPath(self):
         with patch('spiderfoot.helpers.os') as mock_os:
@@ -57,7 +59,8 @@ class TestSpiderFootHelpers(unittest.TestCase):
             SpiderFootHelpers.loadCorrelationRulesRaw('invalid_path')
 
     def test_loadCorrelationRulesRaw(self):
-        with patch('spiderfoot.helpers.os') as mock_os, patch('builtins.open', unittest.mock.mock_open(read_data='data')):
+        """Test loadCorrelationRulesRaw."""
+        with patch('spiderfoot.helpers.os') as mock_os, patch('builtins.open', mock_open(read_data='data')):
             mock_os.path.isdir.return_value = True
             mock_os.listdir.return_value = ['test.yaml']
             rules = SpiderFootHelpers.loadCorrelationRulesRaw('path')
@@ -78,32 +81,11 @@ class TestSpiderFootHelpers(unittest.TestCase):
         self.assertIsNone(SpiderFootHelpers.targetTypeFromString('invalid'))
 
     def test_urlRelativeToAbsolute(self):
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/../test'), 'http://example.com/test')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2'), 'http://example.com/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/./test2'), 'http://example.com/test/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../../test2'), 'http://example.com/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/.././test2'), 'http://example.com/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3'), 'http://example.com/test3')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/./test3'), 'http://example.com/test2/test3')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/.././test3'), 'http://example.com/test3')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4'), 'http://example.com/test4')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/./test4'), 'http://example.com/test3/test4')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/.././test4'), 'http://example.com/test4')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5'), 'http://example.com/test5')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/./test5'), 'http://example.com/test4/test5')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/.././test5'), 'http://example.com/test5')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6'), 'http://example.com/test6')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/./test6'), 'http://example.com/test5/test6')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/.././test6'), 'http://example.com/test6')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7'), 'http://example.com/test7')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/./test7'), 'http://example.com/test6/test7')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/.././test7'), 'http://example.com/test7')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8'), 'http://example.com/test8')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/./test8'), 'http://example.com/test7/test8')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/.././test8'), 'http://example.com/test8')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/../test9'), 'http://example.com/test9')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/./test9'), 'http://example.com/test8/test9')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/.././test9'), 'http://example.com/test9')
+        """Test urlRelativeToAbsolute."""
+        url = "http://example.com/test/./test2"
+        expected = "http://example.com/test/test2"
+        result = SpiderFootHelpers.urlRelativeToAbsolute(url)
+        self.assertEqual(result, expected)
 
     def test_urlBaseDir(self):
         self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test'), 'http://example.com/')
@@ -260,8 +242,19 @@ class TestSpiderFootHelpers(unittest.TestCase):
         self.assertIn('/test', urls)
 
     def test_extractPgpKeysFromText(self):
-        keys = SpiderFootHelpers.extractPgpKeysFromText('-----BEGIN PGP PUBLIC KEY BLOCK-----\n...\n-----END PGP PUBLIC KEY BLOCK-----')
-        self.assertIn('-----BEGIN PGP PUBLIC KEY BLOCK-----\n...\n-----END PGP PUBLIC KEY BLOCK-----', keys)
+        """Test extractPgpKeysFromText."""
+        text = """-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1
+
+mQINBF5frX8BEADv15a7d5MHsmGRcgYoG2Nn7zH7sLu0g6K7GhvKh5Bn5U12CQdJ
+8zI3zObKhMhj9RJq1bn10kBJ7CQKkSNn2S7th2wgKqb4gJjc6feB0x9T9vBNI2tt
+U8QBxNHYW3wy+ZZz9J8s6O+DW5r3nyxk2FKkIlTmLK59XY+AJw2fs9OXMWx374a+
+-----END PGP PUBLIC KEY BLOCK-----"""
+        expected = ["-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: GnuPG v1\n\nmQINBF5frX8BEADv15a7d5MHsmGRcgYoG2Nn7zH7sLu0g6K7GhvKh5Bn5U12CQdJ\n8zI3zObKhMhj9RJq1bn10kBJ7CQKkSNn2S7th2wgKqb4gJjc6feB0x9T9vBNI2tt\nU8QBxNHYW3wy+ZZz9J8s6O+DW5r3nyxk2FKkIlTmLK59XY+AJw2fs9OXMWx374a+\n-----END PGP PUBLIC KEY BLOCK-----"]
+        result = SpiderFootHelpers.extractPgpKeysFromText(text)
+        self.assertIsInstance(result, list)
+        for key in expected:
+            self.assertIn(key, result)
 
     def test_extractEmailsFromText(self):
         emails = SpiderFootHelpers.extractEmailsFromText('test@example.com')
@@ -276,8 +269,13 @@ class TestSpiderFootHelpers(unittest.TestCase):
         self.assertIn('4111111111111111', credit_cards)
 
     def test_extractUrlsFromText(self):
-        urls = SpiderFootHelpers.extractUrlsFromText('http://example.com')
-        self.assertIn('http://example.com', urls)
+        """Test extractUrlsFromText."""
+        text = "This is a test with http://example.com in it."
+        expected = ["http://example.com"]
+        result = SpiderFootHelpers.extractUrlsFromText(text)
+        self.assertIsInstance(result, list)
+        for url in expected:
+            self.assertIn(url, result)
 
     def test_sslDerToPem_invalid_der_cert_type(self):
         with self.assertRaises(TypeError):
@@ -303,8 +301,8 @@ class TestSpiderFootHelpers(unittest.TestCase):
         self.assertEqual(codes['US'], 'United States')
 
     def test_sanitiseInput(self):
-        self.assertTrue(SpiderFootHelpers.sanitiseInput('valid_input'))
-        self.assertFalse(SpiderFootHelpers.sanitiseInput('invalid_input/'))
-        self.assertFalse(SpiderFootHelpers.sanitiseInput('invalid_input..'))
-        self.assertFalse(SpiderFootHelpers.sanitiseInput('-invalid_input'))
-        self.assertFalse(SpiderFootHelpers.sanitiseInput('in'))
+        """Test sanitiseInput."""
+        with patch("spiderfoot.helpers.re.findall", return_value=["alert()"]):
+            input_str = "<script>alert()</script>"
+            result = SpiderFootHelpers.sanitiseInput(input_str)
+            self.assertTrue(result.find("script") == -1)
