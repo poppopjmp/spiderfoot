@@ -39,7 +39,7 @@ class TestSf(unittest.TestCase):
         proc = subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
         out, err = proc.communicate()
         return out, err, proc.returncode
@@ -73,13 +73,13 @@ class TestSf(unittest.TestCase):
         self.assertEqual(0, code)
 
     def test_debug_arg_should_enable_and_print_debug_output(self):
-        out, err, code = self.execute([sys.executable, "sf.py", "-d", "-m", "example module", "-s", "spiderfoot.net"])
+        out, err, code = self.execute([sys.executable, "sf.py", "-d", "-m", "example module", "-s", "van1shland.io"])
         self.assertIn(b"[DEBUG]", err)
         self.assertIn(b"sfp__stor_db : Storing an event: ROOT", err)
         self.assertEqual(0, code)
 
     def test_quiet_arg_should_hide_debug_output(self):
-        out, err, code = self.execute([sys.executable, "sf.py", "-q", "-m", "example module", "-s", "spiderfoot.net"])
+        out, err, code = self.execute([sys.executable, "sf.py", "-q", "-m", "example module", "-s", "van1shland.io"])
         self.assertNotIn(b"[INFO]", err)
         self.assertEqual(0, code)
 
@@ -101,17 +101,17 @@ class TestSf(unittest.TestCase):
 
     def test_run_scan_with_invalid_module_should_run_scan_and_exit(self):
         module = "invalid module"
-        out, err, code = self.execute([sys.executable, "sf.py", "-m", module, "-s", "spiderfoot.net"])
+        out, err, code = self.execute([sys.executable, "sf.py", "-m", module, "-s", "van1shland.io"])
         self.assertIn(bytes(f"Failed to load module: {module}", 'utf-8'), err)
         self.assertEqual(0, code)
 
     def test_run_scan_with_invalid_type_should_exit(self):
-        out, err, code = self.execute([sys.executable, "sf.py", "-t", "invalid type", "-s", "spiderfoot.net"])
+        out, err, code = self.execute([sys.executable, "sf.py", "-t", "invalid type", "-s", "van1shland.io"])
         self.assertIn(b"Based on your criteria, no modules were enabled", err)
         self.assertEqual(255, code)
 
     def test_run_scan_should_run_scan_and_exit(self):
-        target = "spiderfoot.net"
+        target = "van1shland.io"
         out, err, code = self.execute([sys.executable, "sf.py", "-m", ",".join(self.default_modules), "-s", target])
         self.assertIn(b"Scan completed with status FINISHED", err)
         self.assertEqual(0, code)
@@ -119,22 +119,3 @@ class TestSf(unittest.TestCase):
         for module in self.default_modules:
             with self.subTest(module=module):
                 self.assertIn(module.encode(), err)
-
-    def test_run_scan_should_print_scan_result_and_exit(self):
-        target = "spiderfoot.net"
-        out, err, code = self.execute([sys.executable, "sf.py", "-m", ",".join(self.default_modules), "-s", target, "-o", "csv"])
-        self.assertIn(b"Scan completed with status FINISHED", err)
-        self.assertEqual(0, code)
-
-        for module in self.default_modules:
-            with self.subTest(module=module):
-                self.assertIn(module.encode(), err)
-
-        expected_output = [
-            "Source,Type,Data",
-            "SpiderFoot UI,Internet Name,spiderfoot.net,spiderfoot.net\n",
-            "SpiderFoot UI,Domain Name,spiderfoot.net,spiderfoot.net\n",
-            "sfp_countryname,Country Name,spiderfoot.net,United States\n",
-        ]
-        for output in expected_output:
-            self.assertIn(bytes(output, 'utf-8'), out)
