@@ -22,19 +22,19 @@ import shlex
 import sys
 import time
 from os.path import expanduser
-
+from spiderfoot import __version__
 import requests
 
 
-ASCII_LOGO = r"""
+ASCII_LOGO = f"""
   _________      .__    .___          ___________            __
  /   _____/_____ |__| __| _/__________\_   _____/___   _____/  |_
  \_____  \\____ \|  |/ __ |/ __ \_  __ \    __)/  _ \ /  _ \   __\
  /        \  |_> >  / /_/ \  ___/|  | \/     \(  <_> |  <_> )  |
 /_______  /   __/|__\____ |\___  >__|  \___  / \____/ \____/|__|
         \/|__|           \/    \/          \/
-                Open Source Intelligence Automation."""
-COPYRIGHT_INFO = "               by Steve Micallef | @spiderfoot\n"
+                Open Source Intelligence Automation version {__version__}."""
+COPYRIGHT_INFO = f"               by Agostino Panico | @poppopjmp\n"
 
 try:
     import readline
@@ -54,7 +54,7 @@ class bcolors:
 
 
 class SpiderFootCli(cmd.Cmd):
-    version = "5.0.1"
+    version = __version__
     pipecmd = None
     output = None
     modules = []
@@ -360,7 +360,7 @@ class SpiderFootCli(cmd.Cmd):
         # requests_log.setLevel(logging.DEBUG)
         # requests_log.propagate = True
         headers = {
-            "User-agent": "SpiderFoot-CLI/" + self.version,
+            "User-agent": "SpiderFoot-CLI/" + __version__,
             "Accept": "application/json"
         }
 
@@ -1430,7 +1430,7 @@ if __name__ == "__main__":
         s.dprint(ASCII_LOGO, plain=True, color=bcolors.GREYBLUE)
         s.dprint(COPYRIGHT_INFO, plain=True,
                  color=bcolors.GREYBLUE_DARK)
-        s.dprint(f"Version {s.version}.")
+        s.dprint(f"Version {__version__}.")
         if args.b:
             sys.exit(0)
 

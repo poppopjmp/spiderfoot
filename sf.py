@@ -20,8 +20,6 @@ import signal
 import sys
 import time
 from copy import deepcopy
-import token
-import configparser
 
 import cherrypy
 import cherrypy_cors
@@ -52,8 +50,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 import uvicorn
 from pydantic import BaseModel
-
-version = "5.0.3-dev"
+from spiderfoot import __version__
 
 scanId = None
 dbh = None
@@ -243,7 +240,7 @@ def main() -> None:
             'cors_origins': [],
         }
 
-        p = argparse.ArgumentParser(description="SpiderFoot {version}: Open Source Intelligence Automation.")  # Define p first
+        p = argparse.ArgumentParser(description=f"SpiderFoot  {__version__}: Open Source Intelligence Automation.") 
         p.add_argument("-d", "--debug", action='store_true', help="Enable debug output.")
         p.add_argument("-l", "--listen", metavar="IP:port", help="IP and port to listen on.")
         p.add_argument("-m", metavar="mod1,mod2,...", type=str, help="Modules to enable.")
@@ -272,11 +269,12 @@ def main() -> None:
         p.add_argument("--dbname", type=str, help="PostgreSQL database name.")
         p.add_argument("--dbuser", type=str, help="PostgreSQL username.")
         p.add_argument("--dbpassword", type=str, help="PostgreSQL password.")
+        p.add_argument("--enable-oauth", action='store_true', help="Enable OAuth2 authentication.")
 
         args = p.parse_args()  # Parse arguments after defining p
 
         if args.version:
-            print("SpiderFoot {version}: Open Source Intelligence Automation.")  # Removed f-string as no place holders are used.
+            print(f"SpiderFoot {__version__}: Open Source Intelligence Automation.") 
             sys.exit(0)
 
         if args.max_threads:
@@ -404,11 +402,11 @@ def main() -> None:
             sfWebUiConfig['host'] = host
             sfWebUiConfig['port'] = port
 
-            start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
+            start_web_server(sfWebUiConfig, sfConfig, loggingQueue, args.enable_oauth)
             sys.exit(0)
 
         if args.rest_api:  # P217d
-            start_rest_api_server()  # P217d
+            start_rest_api_server(args.enable_oauth)  # P217d
             log.info("REST API server started successfully.")
             sys.exit(0)
 
@@ -701,7 +699,7 @@ def execute_scan(loggingQueue, target, targetType, modlist, cfg, log):
             sys.exit(0)
 
 
-def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> None:
+def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None, enable_oauth=False) -> None:
     """
     Start the web server so you can start looking at results
 
@@ -709,6 +707,7 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
         sfWebUiConfig (dict): web server options
         sfConfig (dict): SpiderFoot config options
         loggingQueue (Queue): main SpiderFoot logging queue
+        enable_oauth (bool): Flag to enable or disable OAuth2 authentication
     """
     try:
         log = logging.getLogger(f"spiderfoot.{__name__}")
@@ -739,9 +738,10 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
             }
         }
 
-        # Use OAuth2 for authentication
-        log.info("Enabling OAuth2 authentication.")
-        app.include_router(router, prefix="/api")
+        if enable_oauth:
+            # Use OAuth2 for authentication
+            log.info("Enabling OAuth2 authentication.")
+            app.include_router(router, prefix="/api")
 
         using_ssl = False
         key_path = SpiderFootHelpers.dataPath() + '/spiderfoot.key'
@@ -855,7 +855,7 @@ def check_rest_api_implementation() -> None:
             logging.error(f"Error checking endpoint {endpoint}: {e}")
 
 
-def start_rest_api_server() -> None:  # P3926
+def start_rest_api_server(enable_oauth=False) -> None:  # P3926
     """
     Start the REST API server using FastAPI.
 
@@ -867,6 +867,10 @@ def start_rest_api_server() -> None:  # P3926
     handle_scan_status()
     handle_correlation_rules()
     handle_logging_and_error_handling()
+
+    if enable_oauth:
+        log.info("Enabling OAuth2 authentication for REST API.")
+        app.include_router(router, prefix="/api")
 
     uvicorn.run(app, host="0.0.0.0", port=8000)  # P3926
     check_rest_api_implementation()
@@ -883,7 +887,7 @@ def generate_openapi_schema() -> dict:
     """
     return get_openapi(
         title="SpiderFoot API",
-        version="5.0.3",
+        version=__version__,
         description="API documentation for SpiderFoot",
         routes=app.routes,
     )

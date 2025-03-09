@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 import csv
 import io
 import uuid
+from spiderfoot import __version__
 
 app = FastAPI()
 
@@ -413,7 +414,7 @@ async def get_openapi_schema():
     """Get the OpenAPI schema for the REST API."""
     return get_openapi(
         title="SpiderFoot REST API",
-        version="5.0.3",
+        version=__version__,
         description="REST API documentation for SpiderFoot",
         routes=app.routes,
     )
