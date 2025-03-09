@@ -28,6 +28,26 @@ class TestSpiderFoot(unittest.TestCase):
 
     test_tlds = "// ===BEGIN ICANN DOMAINS===\n\ncom\nnet\norg\n\n// // ===END ICANN DOMAINS===\n"
 
+    def setUp(self):
+        """Set up test case."""
+        self.default_options = {
+            '_debug': False,
+            '__logging': True,
+            '__outputfilter': None,
+            '__blocknotif': False,
+            '_fatalerrors': False,
+            '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
+            '_dnsserver': '',
+            '_fetchtimeout': 5,
+            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+            '_internettlds_cache': 72,
+            '_genericusers': "abuse,admin,billing,compliance,devnull,dns,ftp,hostmaster,inoc,ispfeedback,ispsupport,list-request,list,maildaemon,marketing,noc,no-reply,noreply,null,peering,peering-notify,peering-request,phish,phishing,postmaster,privacy,registrar,registry,root,routing-registry,rr,sales,security,spam,support,sysadmin,tech,undisclosed-recipients,unsubscribe,usenet,uucp,webmaster,www",
+            '__version__': '3.0',
+            '__database': 'spiderfoot.test.db',  # Test database
+            '_password_list': '',
+        }
+        self.sf = SpiderFoot(self.default_options)
+
     def test_init_argument_options_of_invalid_type_should_raise_TypeError(self):
         invalid_types = [None, "", bytes(), list(), int()]
         for invalid_type in invalid_types:

@@ -1,6 +1,7 @@
 import unittest
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import patch, MagicMock, mock_open, Mock
 
+import spiderfoot.helpers
 from spiderfoot.helpers import SpiderFootHelpers
 
 
@@ -82,10 +83,10 @@ class TestSpiderFootHelpers(unittest.TestCase):
 
     def test_urlRelativeToAbsolute(self):
         """Test urlRelativeToAbsolute."""
-        url = "http://example.com/test/./test2"
-        expected = "http://example.com/test/test2"
-        result = SpiderFootHelpers.urlRelativeToAbsolute(url)
-        self.assertEqual(result, expected)
+        base_url = "http://example.com"
+        relative_url = "test/test2"
+        absolute_url = spiderfoot.helpers.urlRelativeToAbsolute(base_url, relative_url)
+        self.assertEqual(absolute_url, "http://example.com/test/test2")
 
     def test_urlBaseDir(self):
         self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test'), 'http://example.com/')
@@ -180,11 +181,12 @@ class TestSpiderFootHelpers(unittest.TestCase):
             self.assertTrue(mock_gexf.called)
 
     def test_buildGraphJson(self):
-        with patch('spiderfoot.helpers.nx.Graph') as mock_graph, patch('spiderfoot.helpers.json.dumps') as mock_json:
-            mock_graph.return_value = MagicMock()
-            mock_json.return_value = MagicMock()
-            self.assertTrue(mock_graph.called)
-            self.assertTrue(mock_json.called)
+        """Test buildGraphJson."""
+        root = "example data"
+        with patch("json.dumps") as mock_dumps:
+            mock_dumps.return_value = "{}"
+            result = spiderfoot.helpers.buildGraphJson(root, [])
+            self.assertTrue(result)
 
     def test_buildGraphData_invalid_data_type(self):
         with self.assertRaises(TypeError):
@@ -228,10 +230,11 @@ class TestSpiderFootHelpers(unittest.TestCase):
             SpiderFootHelpers.extractLinksFromHtml('url', 123, ['domain'])
 
     def test_extractLinksFromHtml(self):
-        with patch('spiderfoot.helpers.BeautifulSoup') as mock_bs:
-            mock_bs.return_value.find_all.return_value = [{'href': 'http://example.com'}]
-            links = SpiderFootHelpers.extractLinksFromHtml('http://example.com', '<a href="http://example.com">link</a>', ['example.com'])
-            self.assertIn('http://example.com', links)
+        """Test extractLinksFromHtml."""
+        html = """<a href="http://example.com">Example</a>"""
+        links = spiderfoot.helpers.extractLinksFromHtml(html)
+        self.assertIsInstance(links, list)
+        self.assertIn("http://example.com", links)
 
     def test_extractHashesFromText(self):
         hashes = SpiderFootHelpers.extractHashesFromText('d41d8cd98f00b204e9800998ecf8427e')

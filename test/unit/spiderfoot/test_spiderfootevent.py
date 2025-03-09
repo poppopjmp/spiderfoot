@@ -1,7 +1,6 @@
 import unittest
 
-from spiderfoot import SpiderFootEvent
-
+from spiderfoot.event import SpiderFootEvent
 
 class TestSpiderFootEvent(unittest.TestCase):
     """Test SpiderFootEvent."""
@@ -9,7 +8,7 @@ class TestSpiderFootEvent(unittest.TestCase):
     def setUp(self):
         """Set up test case."""
         self.root_event = SpiderFootEvent("ROOT", "Root Event", "", "", None)
-        self.event = SpiderFootEvent("IP_ADDRESS", "192.168.0.1", "example module", "example data", self.root_event)
+        self.event = SpiderFootEvent("IP_ADDRESS", "192.168.0.1", "example module", "example data", "192.168.0.1")
 
     def test_generated(self):
         self.assertIsInstance(self.event.generated, float)
@@ -30,7 +29,7 @@ class TestSpiderFootEvent(unittest.TestCase):
         self.assertEqual(self.event.module, self.module)
 
     def test_data(self):
-        self.assertEqual(self.event.data, self.data)
+        self.assertEqual(self.event.data, "192.168.0.1")
 
     def test_sourceEvent(self):
         self.assertIsNone(self.event.sourceEvent)

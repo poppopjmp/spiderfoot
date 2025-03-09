@@ -1,33 +1,50 @@
 import unittest
-from unittest.mock import MagicMock
-from spiderfoot.correlation import SpiderFootCorrelator
-from spiderfoot import SpiderFootDb
+from unittest.mock import MagicMock, Mock, patch
 
+from spiderfoot.correlator import SpiderFootCorrelator
+from spiderfoot.event import SpiderFootEvent
 
 class TestSpiderFootCorrelator(unittest.TestCase):
+    """Test SpiderFootCorrelator."""
 
     def setUp(self):
-        self.dbh = MagicMock(spec=SpiderFootDb)
-        self.ruleset = {
-            "rule1": """
-            meta:
-                name: "Test Rule"
-                description: "A test rule"
-                risk: 1
-            collections:
-                collect:
-                    - field: "type"
-                      method: "exact"
-                      value: "IP_ADDRESS"
-            headline: "Test Rule Headline"
-            id: "rule1"
-            version: 1
-            enabled: true
-            rawYaml: ""
-            """
-        }
-        self.scanId = "test_scan"
-        self.correlator = SpiderFootCorrelator(self.dbh, self.ruleset, self.scanId)
+        """Set up test case."""
+        dbh = MagicMock()
+        scanId = "scan-1234"
+        
+        event1 = MagicMock()
+        event1.data = "example data"
+        event1.eventType = "EXAMPLE_TYPE"
+        event1.module = "example module"
+        event1.confidence = 100
+        event1.visibility = 100
+        event1.risk = 50  # Add risk
+        event1.sourceEventHash = ""
+        
+        event2 = MagicMock()
+        event2.data = "example data 2"
+        event2.eventType = "EXAMPLE_TYPE"
+        event2.module = "example module"
+        event2.confidence = 100
+        event2.visibility = 100
+        event2.risk = 50  # Add risk
+        event2.sourceEventHash = ""
+        
+        self.events = [event1, event2]
+        
+        ruleset = [
+            {
+                "id": "example-rule-id",
+                "name": "Example Rule",
+                "description": "Example rule description",
+                "risk": 50,
+                "matches": [
+                    {"type": "EXAMPLE_TYPE"}
+                ]
+            }
+        ]
+        
+        self.correlator = SpiderFootCorrelator(dbh, ruleset, scanId)
 
     def test_init_invalid_ruleset_type(self):
         with self.assertRaises(TypeError):

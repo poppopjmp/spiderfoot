@@ -1,6 +1,7 @@
 # test_spiderfootwebui.py
 import pytest
 import unittest
+from unittest.mock import Mock, patch
 
 from sfwebui import SpiderFootWebUi
 
@@ -10,6 +11,40 @@ class TestSpiderFootWebUi(unittest.TestCase):
     """
     Test SpiderFootWebUi
     """
+
+    def setUp(self):
+        """Set up test case."""
+        self.default_options = {
+            '_debug': False,
+            '__logging': True,
+            '__outputfilter': None,
+            '__blocknotif': False,
+            '_fatalerrors': False,
+            '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
+            '_dnsserver': '',
+            '_fetchtimeout': 5,
+            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+            '_internettlds_cache': 72,
+            '_genericusers': "abuse,admin,billing,compliance,devnull,dns,ftp,hostmaster,inoc,ispfeedback,ispsupport,list-request,list,maildaemon,marketing,noc,no-reply,noreply,null,peering,peering-notify,peering-request,phish,phishing,postmaster,privacy,registrar,registry,root,routing-registry,rr,sales,security,spam,support,sysadmin,tech,undisclosed-recipients,unsubscribe,usenet,uucp,webmaster,www",
+            '__version__': '3.0',
+            '__database': 'spiderfoot.test.db',  # Test database
+        }
+        
+        self.web_default_options = {
+            'web.host': '127.0.0.1',
+            'web.port': 5001,
+            'web.root': '/',
+            'web.username': '',
+            'web.password': '',
+            'web.cors': '*',
+            'web.ssl_certificate': '',
+            'web.ssl_key': '',
+            'web.ssl_ca': ''
+        }
+        
+        self.opts = self.default_options.copy()
+        self.opts.update(self.web_default_options)
+        self.web = SpiderFootWebUi(self.opts, Mock())
 
     def test_init_config_invalid_type_should_raise_TypeError(self):
         """

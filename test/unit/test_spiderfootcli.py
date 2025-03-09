@@ -13,6 +13,21 @@ class TestSpiderFootCli(unittest.TestCase):
     Test TestSpiderFootCli
     """
 
+    def setUp(self):
+        """Set up test case."""
+        self.cli_default_options = {
+            'cli.debug': False,
+            'cli.silent': False,
+            'cli.color': True,
+            'cli.output': 'pretty',
+            'cli.history': True,
+            'cli.history_file': './test_cli_history.json',
+            'cli.server_baseurl': 'http://127.0.0.1:5001',
+            'cli.username': '',
+            'cli.password': '',
+        }
+        self.cli = SpiderFootCli(self.cli_default_options)
+
     def test_default(self):
         """
         Test default(self, line)
