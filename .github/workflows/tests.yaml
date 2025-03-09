@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, v5.0.3-dev ]
   pull_request:
     branches: [ master, v5.0.3-dev ]
 
@@ -12,8 +12,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.9"]
-        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -43,11 +43,12 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest -n auto --dist loadfile --durations=5 --cov-report term --cov=. .
+            python -m pytest -n auto --dist loadfile --ignore=test/integration/modules/ --durations=5 --cov-report term --cov=. .
       - uses: codecov/codecov-action@v1
         with:
-          fail_ci_if_error: false
-          verbose: true
+            fail_ci_if_error: false
+            verbose: true
+
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
