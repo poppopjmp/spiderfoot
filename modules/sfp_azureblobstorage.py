@@ -90,7 +90,7 @@ class sfp_azureblobstorage(SpiderFootPlugin):
             self.info("Spawning thread to check bucket: " + site)
             tname = str(random.SystemRandom().randint(0, 999999999))
             t.append(threading.Thread(name='thread_sfp_azureblobstorages_' + tname,
-                                      target=self.checkSite, args=(site,)))
+                                      target=self.checkSite, args=(site,),daemon=True))
             t[i].start()
             i += 1
 

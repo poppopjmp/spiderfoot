@@ -102,7 +102,7 @@ class sfp_tldsearch(SpiderFootPlugin):
         for i, pair in enumerate(tldList):
             (domain, tld) = pair
             tn = 'thread_sfp_tldsearch_' + str(random.SystemRandom().randint(0, 999999999))
-            t.append(threading.Thread(name=tn, target=self.tryTld, args=(domain, tld,)))
+            t.append(threading.Thread(name=tn, target=self.tryTld, args=(domain, tld,),daemon=True))
             t[i].start()
 
         # Block until all threads are finished
