@@ -5,7 +5,7 @@ from .logger import logListenerSetup, logWorkerSetup
 from .plugin import SpiderFootPlugin
 from .target import SpiderFootTarget
 from .threadpool import SpiderFootThreadPool
-from .correlation import SpiderFootCorrelation
+from .correlation import SpiderFootCorrelator
 
 __all__ = [
     'SpiderFootDb',
@@ -16,5 +16,5 @@ __all__ = [
     'logListenerSetup',
     'logWorkerSetup',
     'SpiderFootThreadPool',
-    'SpiderFootCorrelation'
+    'SpiderFootCorrelator'
 ]
