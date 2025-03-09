@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_alienvault import sfp_alienvault
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationalienvault(unittest.TestCase):
+class TestModuleIntegrationalienvault(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

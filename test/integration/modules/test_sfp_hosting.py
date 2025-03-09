@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_hosting import sfp_hosting
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationHosting(unittest.TestCase):
+class TestModuleIntegrationHosting(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent_event_data_ip_address_hosted_should_return_event(self):

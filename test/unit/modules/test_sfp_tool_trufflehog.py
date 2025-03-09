@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_tool_trufflehog import sfp_tool_trufflehog
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleToolTrufflehog(unittest.TestCase):
+class TestModuleToolTrufflehog(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_tool_trufflehog()

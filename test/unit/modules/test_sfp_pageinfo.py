@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_pageinfo import sfp_pageinfo
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModulePageInfo(unittest.TestCase):
+class TestModulePageInfo(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_pageinfo()

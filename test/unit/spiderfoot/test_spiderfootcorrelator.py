@@ -1,11 +1,47 @@
+import pytest
 import unittest
+import uuid
 from unittest.mock import MagicMock, Mock, patch
 
-from spiderfoot.correlator import SpiderFootCorrelator
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot import SpiderFootCorrelator, SpiderFootDb, SpiderFootEvent
 
-class TestSpiderFootCorrelator(unittest.TestCase):
-    """Test SpiderFootCorrelator."""
+@pytest.mark.usefixtures
+class TestSpiderFootCorrelator(SpiderFootModuleTestCase):
+    """Test SpiderFootCorrelator class"""
+
+    def test_init_no_db_should_raise(self):
+        """Test __init__(self, db) with no db"""
+        with self.assertRaises(TypeError):
+            SpiderFootCorrelator(None)
+
+    def test_init_invalid_db_should_raise(self):
+        """Test __init__(self, db) with invalid db"""
+        with self.assertRaises(TypeError):
+            SpiderFootCorrelator("invalid db")
+
+    def test_init_with_valid_db(self):
+        """Test __init__(self, db) with valid db"""
+        sfdb = SpiderFootDb(":memory:")
+        correlator = SpiderFootCorrelator(sfdb)
+        self.assertIsInstance(correlator, SpiderFootCorrelator)
+        
+    def test_correlated_ids(self):
+        """Test getting correlated IDs"""
+        sfdb = SpiderFootDb(":memory:")
+        correlator = SpiderFootCorrelator(sfdb)
+        event_id = str(uuid.uuid4())
+        
+        # This might need adjustments based on your actual implementation
+        ids = correlator.get_correlated_event_ids(event_id)
+        self.assertIsInstance(ids, list)
+        
+    def test_analyze_event_no_event_should_return_none(self):
+        """Test analyze_event with no event"""
+        sfdb = SpiderFootDb(":memory:")
+        correlator = SpiderFootCorrelator(sfdb)
+        
+        result = correlator.analyze_event(None)
+        self.assertIsNone(result)
 
     def setUp(self):
         """Set up test case."""

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_dnsneighbor import sfp_dnsneighbor
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationDnsneighbor(unittest.TestCase):
+class TestModuleIntegrationDnsneighbor(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

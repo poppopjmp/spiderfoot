@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_pgp import sfp_pgp
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModulePgp(unittest.TestCase):
+class TestModulePgp(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_pgp()

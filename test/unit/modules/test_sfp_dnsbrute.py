@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_dnsbrute import sfp_dnsbrute
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDnsBrute(unittest.TestCase):
+class TestModuleDnsBrute(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_dnsbrute()

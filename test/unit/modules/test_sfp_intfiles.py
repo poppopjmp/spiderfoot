@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_intfiles import sfp_intfiles
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntfiles(unittest.TestCase):
+class TestModuleIntfiles(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_intfiles()

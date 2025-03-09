@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_hostio import sfp_hostio
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleHostio(unittest.TestCase):
+class TestModuleHostio(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_hostio()

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_leakix import sfp_leakix
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationleakix(unittest.TestCase):
+class TestModuleIntegrationleakix(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

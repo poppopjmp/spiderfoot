@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_censys import sfp_censys
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleCensys(unittest.TestCase):
+class TestModuleCensys(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_censys()

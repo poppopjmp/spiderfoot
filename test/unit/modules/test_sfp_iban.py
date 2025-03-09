@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_iban import sfp_iban
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIban(unittest.TestCase):
+class TestModuleIban(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_iban()

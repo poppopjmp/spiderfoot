@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_fortinet import sfp_fortinet
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleFortinet(unittest.TestCase):
+class TestModuleFortinet(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_fortinet()

@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_digitaloceanspace import sfp_digitaloceanspace
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDigitaloceanspace(unittest.TestCase):
+class TestModuleDigitaloceanspace(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_digitaloceanspace()

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_fofa import sfp_fofa
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationFofa(unittest.TestCase):
+class TestModuleIntegrationFofa(SpiderFootModuleTestCase):
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)

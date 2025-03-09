@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_dnscommonsrv import sfp_dnscommonsrv
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDnsCommonsrv(unittest.TestCase):
+class TestModuleDnsCommonsrv(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_dnscommonsrv()

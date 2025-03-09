@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_junkfiles import sfp_junkfiles
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleJunkfiles(unittest.TestCase):
+class TestModuleJunkfiles(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_junkfiles()

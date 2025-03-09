@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_digitaloceanspace import sfp_digitaloceanspace
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationDigitaloceanspace(unittest.TestCase):
+class TestModuleIntegrationDigitaloceanspace(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

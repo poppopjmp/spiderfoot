@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_ipqualityscore import sfp_ipqualityscore
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationIpqualityscore(unittest.TestCase):
+class TestModuleIntegrationIpqualityscore(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

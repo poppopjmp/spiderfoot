@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_s3bucket import sfp_s3bucket
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationS3bucket(unittest.TestCase):
+class TestModuleIntegrationS3bucket(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

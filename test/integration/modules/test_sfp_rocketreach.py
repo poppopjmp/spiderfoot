@@ -15,11 +15,12 @@ import unittest
 
 from sfp_rocketreach import sfp_rocketreach
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestSFPRrocketreach(unittest.TestCase):
+class TestSFPRrocketreach(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

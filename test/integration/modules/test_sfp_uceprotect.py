@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_uceprotect import sfp_uceprotect
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationUceprotect(unittest.TestCase):
+class TestModuleIntegrationUceprotect(SpiderFootModuleTestCase):
 
     def test_handleEvent_event_data_safe_ip_address_not_blocked_should_not_return_event(self):
         sf = SpiderFoot(self.default_options)

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_talosintel import sfp_talosintel
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationTalosintel(unittest.TestCase):
+class TestModuleIntegrationTalosintel(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

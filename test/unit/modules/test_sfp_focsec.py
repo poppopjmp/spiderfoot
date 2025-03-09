@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_focsec import sfp_focsec
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleFocsec(unittest.TestCase):
+class TestModuleFocsec(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_focsec()

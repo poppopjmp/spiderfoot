@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_greensnow import sfp_greensnow
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationgreensnow(unittest.TestCase):
+class TestModuleIntegrationgreensnow(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

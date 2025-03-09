@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_socialprofiles import sfp_socialprofiles
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationSocialprofiles(unittest.TestCase):
+class TestModuleIntegrationSocialprofiles(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

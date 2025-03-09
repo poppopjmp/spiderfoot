@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_debounce import sfp_debounce
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationDebounce(unittest.TestCase):
+class TestModuleIntegrationDebounce(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

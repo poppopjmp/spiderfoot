@@ -5,10 +5,11 @@ from elasticsearch import Elasticsearch, ElasticsearchException
 
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class BaseTestModuleIntegration(unittest.TestCase):
+class BaseTestModuleIntegration(SpiderFootModuleTestCase):
     """
     Base class for module integration tests.
     """

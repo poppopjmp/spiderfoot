@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_coinblocker import sfp_coinblocker
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleCoinblocker(unittest.TestCase):
+class TestModuleCoinblocker(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_coinblocker()

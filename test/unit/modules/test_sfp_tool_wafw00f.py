@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_tool_wafw00f import sfp_tool_wafw00f
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleToolWafw00f(unittest.TestCase):
+class TestModuleToolWafw00f(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_tool_wafw00f()

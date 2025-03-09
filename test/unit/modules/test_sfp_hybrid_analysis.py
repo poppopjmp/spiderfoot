@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_hybrid_analysis import sfp_hybrid_analysis
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleHybridAnalysis(unittest.TestCase):
+class TestModuleHybridAnalysis(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_hybrid_analysis()

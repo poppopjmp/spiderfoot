@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_openstreetmap import sfp_openstreetmap
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleopenstreetmap(unittest.TestCase):
+class TestModuleopenstreetmap(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_openstreetmap()

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_bingsharedip import sfp_bingsharedip
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleBingsharedip(unittest.TestCase):
+class TestModuleBingsharedip(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_bingsharedip()

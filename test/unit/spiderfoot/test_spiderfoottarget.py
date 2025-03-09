@@ -2,7 +2,7 @@ import unittest
 from spiderfoot import SpiderFootTarget
 
 
-class TestSpiderFootTarget(unittest.TestCase):
+class TestSpiderFootTarget(SpiderFootModuleTestCase):
     """Test SpiderFootTarget."""
 
     def setUp(self):

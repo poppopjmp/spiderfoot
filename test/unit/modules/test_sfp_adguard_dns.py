@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_adguard_dns import sfp_adguard_dns
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleAdGuardDns(unittest.TestCase):
+class TestModuleAdGuardDns(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_adguard_dns()

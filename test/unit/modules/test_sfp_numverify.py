@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_numverify import sfp_numverify
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleNumverify(unittest.TestCase):
+class TestModuleNumverify(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_numverify()

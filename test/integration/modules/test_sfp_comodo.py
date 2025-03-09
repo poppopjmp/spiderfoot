@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_comodo import sfp_comodo
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationcomodo(unittest.TestCase):
+class TestModuleIntegrationcomodo(SpiderFootModuleTestCase):
 
     def test_handleEvent_event_data_safe_internet_name_not_blocked_should_not_return_event(self):
         sf = SpiderFoot(self.default_options)

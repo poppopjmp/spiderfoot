@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_botvrij import sfp_botvrij
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModulebotvrij(unittest.TestCase):
+class TestModulebotvrij(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_botvrij()

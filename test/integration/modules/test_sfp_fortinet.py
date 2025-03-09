@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_fortinet import sfp_fortinet
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationFortinet(unittest.TestCase):
+class TestModuleIntegrationFortinet(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

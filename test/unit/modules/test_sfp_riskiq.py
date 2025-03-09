@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_riskiq import sfp_riskiq
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleRiskiq(unittest.TestCase):
+class TestModuleRiskiq(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_riskiq()

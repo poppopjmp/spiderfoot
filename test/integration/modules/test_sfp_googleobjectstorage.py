@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_googleobjectstorage import sfp_googleobjectstorage
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationGoogleObjectStorage(unittest.TestCase):
+class TestModuleIntegrationGoogleObjectStorage(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

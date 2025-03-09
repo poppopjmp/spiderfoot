@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_stevenblack_hosts import sfp_stevenblack_hosts
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationStevenblackHosts(unittest.TestCase):
+class TestModuleIntegrationStevenblackHosts(SpiderFootModuleTestCase):
 
     def test_handleEvent_event_data_affiliate_internet_name_matching_ad_server_should_return_event(self):
         sf = SpiderFoot(self.default_options)

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_securitytrails import sfp_securitytrails
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleSecuritytrails(unittest.TestCase):
+class TestModuleSecuritytrails(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_securitytrails()

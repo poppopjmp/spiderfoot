@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_flickr import sfp_flickr
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleFlickr(unittest.TestCase):
+class TestModuleFlickr(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_flickr()

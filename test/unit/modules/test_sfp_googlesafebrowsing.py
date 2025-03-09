@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_googlesafebrowsing import sfp_googlesafebrowsing
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleGoogleSafebrowsing(unittest.TestCase):
+class TestModuleGoogleSafebrowsing(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_googlesafebrowsing()

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_crt import sfp_crt
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationCrt(unittest.TestCase):
+class TestModuleIntegrationCrt(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

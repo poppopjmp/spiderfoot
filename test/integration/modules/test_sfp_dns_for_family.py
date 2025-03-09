@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_dns_for_family import sfp_dns_for_family
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationDnsForFamily(unittest.TestCase):
+class TestModuleIntegrationDnsForFamily(SpiderFootModuleTestCase):
 
     def test_handleEvent_event_data_safe_internet_name_not_blocked_should_not_return_event(self):
         sf = SpiderFoot(self.default_options)

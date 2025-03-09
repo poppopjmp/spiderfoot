@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_emailrep import sfp_emailrep
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleEmailrep(unittest.TestCase):
+class TestModuleEmailrep(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_emailrep()

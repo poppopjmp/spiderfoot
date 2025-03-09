@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_trashpanda import sfp_trashpanda
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationTrashpanda(unittest.TestCase):
+class TestModuleIntegrationTrashpanda(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_errors import sfp_errors
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleErrors(unittest.TestCase):
+class TestModuleErrors(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_errors()

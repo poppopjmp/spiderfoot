@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_cleanbrowsing import sfp_cleanbrowsing
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationcleanbrowsing(unittest.TestCase):
+class TestModuleIntegrationcleanbrowsing(SpiderFootModuleTestCase):
 
     def test_handleEvent_event_data_adult_internet_name_blocked_should_return_event(self):
         sf = SpiderFoot(self.default_options)

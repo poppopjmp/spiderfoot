@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_honeypot import sfp_honeypot
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationHoneypot(unittest.TestCase):
+class TestModuleIntegrationHoneypot(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

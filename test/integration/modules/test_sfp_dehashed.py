@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_dehashed import sfp_dehashed
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationDehashed(unittest.TestCase):
+class TestModuleIntegrationDehashed(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

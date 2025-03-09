@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_s3bucket import sfp_s3bucket
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleS3bucket(unittest.TestCase):
+class TestModuleS3bucket(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_s3bucket()

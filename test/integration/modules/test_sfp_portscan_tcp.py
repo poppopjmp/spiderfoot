@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_portscan_tcp import sfp_portscan_tcp
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationPortscanTcp(unittest.TestCase):
+class TestModuleIntegrationPortscanTcp(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_sorbs import sfp_sorbs
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleSorbs(unittest.TestCase):
+class TestModuleSorbs(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_sorbs()

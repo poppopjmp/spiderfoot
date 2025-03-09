@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_wikipediaedits import sfp_wikipediaedits
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModulewikipediaedits(unittest.TestCase):
+class TestModulewikipediaedits(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_wikipediaedits()

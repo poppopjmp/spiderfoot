@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_pulsedive import sfp_pulsedive
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationPulsedive(unittest.TestCase):
+class TestModuleIntegrationPulsedive(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

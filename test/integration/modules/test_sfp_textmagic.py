@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_textmagic import sfp_textmagic
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationTextmagic(unittest.TestCase):
+class TestModuleIntegrationTextmagic(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_grayhatwarfare import sfp_grayhatwarfare
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleGrayhatWarfare(unittest.TestCase):
+class TestModuleGrayhatWarfare(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_grayhatwarfare()

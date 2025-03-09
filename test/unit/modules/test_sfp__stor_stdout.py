@@ -3,10 +3,12 @@ import unittest
 
 from modules.sfp__stor_stdout import sfp__stor_stdout
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleStor_stdout(unittest.TestCase):
+class TestModuleStor_stdout(SpiderFootModuleTestCase):
 
     @unittest.skip("This module contains an extra private option")
     def test_opts(self):

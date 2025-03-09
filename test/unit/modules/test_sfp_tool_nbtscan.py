@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_tool_nbtscan import sfp_tool_nbtscan
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleToolNbtscan(unittest.TestCase):
+class TestModuleToolNbtscan(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_tool_nbtscan()

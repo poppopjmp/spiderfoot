@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_webanalytics import sfp_webanalytics
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleWebAnalytics(unittest.TestCase):
+class TestModuleWebAnalytics(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_webanalytics()

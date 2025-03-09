@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_reversewhois import sfp_reversewhois
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationReversewhois(unittest.TestCase):
+class TestModuleIntegrationReversewhois(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_cybercrimetracker import sfp_cybercrimetracker
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationCybercrimetracker(unittest.TestCase):
+class TestModuleIntegrationCybercrimetracker(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

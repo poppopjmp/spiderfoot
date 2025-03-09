@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_dnsneighbor import sfp_dnsneighbor
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDnsNeighbor(unittest.TestCase):
+class TestModuleDnsNeighbor(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_dnsneighbor()

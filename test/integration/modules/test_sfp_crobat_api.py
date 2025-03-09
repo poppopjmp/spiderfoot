@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_crobat_api import sfp_crobat_api
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationCrobat_api(unittest.TestCase):
+class TestModuleIntegrationCrobat_api(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

@@ -112,7 +112,8 @@ class SpiderFootWebUi:
         Returns:
             str: HTML response
         """
-        return ""
+        templ = Template(filename='spiderfoot/templates/error.tmpl', lookup=self.lookup)
+        return templ.render(message='Unauthorized Access', docroot=self.docroot, status=status, version=__version__)
 
     def error_page_404(self: 'SpiderFootWebUi', status: str, message: str, traceback: str, version: str) -> str:
         """Not found error page 404.
@@ -148,14 +149,14 @@ class SpiderFootWebUi:
             }
         }
 
-    def error(self: 'SpiderFootWebUi', message: str) -> None:
+    def error(self: 'SpiderFootWebUi', message: str) -> str:
         """Show generic error page with error message.
 
         Args:
             message (str): error message
 
         Returns:
-            None
+            str: rendered error template
         """
         self.log.error(f"Error: {message}")
         templ = Template(filename='spiderfoot/templates/error.tmpl', lookup=self.lookup)

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_twilio import sfp_twilio
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuletwilio(unittest.TestCase):
+class TestModuletwilio(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_twilio()

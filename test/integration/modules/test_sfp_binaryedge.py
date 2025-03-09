@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_binaryedge import sfp_binaryedge
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationBinaryedge(unittest.TestCase):
+class TestModuleIntegrationBinaryedge(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

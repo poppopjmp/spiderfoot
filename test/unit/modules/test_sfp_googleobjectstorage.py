@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_googleobjectstorage import sfp_googleobjectstorage
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleGoogleobjectstorage(unittest.TestCase):
+class TestModuleGoogleobjectstorage(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_googleobjectstorage()

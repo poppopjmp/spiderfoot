@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_mnemonic import sfp_mnemonic
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleMnemonic(unittest.TestCase):
+class TestModuleMnemonic(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_mnemonic()

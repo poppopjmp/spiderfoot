@@ -1,9 +1,10 @@
 import unittest
 from modules.sfp_whoisfreaks import sfp_whoisfreaks
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent
 
-class TestModuleIntegrationWhoisfreaks(unittest.TestCase):
+class TestModuleIntegrationWhoisfreaks(SpiderFootModuleTestCase):
 
     def setUp(self):
         self.sf = SpiderFoot(self.default_options)

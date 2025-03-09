@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_grep_app import sfp_grep_app
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationGrepApp(unittest.TestCase):
+class TestModuleIntegrationGrepApp(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

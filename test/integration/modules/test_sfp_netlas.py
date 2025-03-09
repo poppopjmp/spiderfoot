@@ -1,10 +1,11 @@
 import unittest
 from modules.sfp_netlas import sfp_netlas
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationNetlas(unittest.TestCase):
+class TestModuleIntegrationNetlas(SpiderFootModuleTestCase):
 
     def setUp(self):
         self.default_options = {

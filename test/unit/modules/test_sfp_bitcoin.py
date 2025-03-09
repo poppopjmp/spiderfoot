@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_bitcoin import sfp_bitcoin
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleBitcoin(unittest.TestCase):
+class TestModuleBitcoin(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_bitcoin()

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_fsecure_riddler import sfp_fsecure_riddler
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleFsecureRiddler(unittest.TestCase):
+class TestModuleFsecureRiddler(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_fsecure_riddler()

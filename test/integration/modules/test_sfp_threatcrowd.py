@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_threatcrowd import sfp_threatcrowd
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationThreatcrowd(unittest.TestCase):
+class TestModuleIntegrationThreatcrowd(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

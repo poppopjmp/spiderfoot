@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_google_tag_manager import sfp_google_tag_manager
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationGoogleTagManager(unittest.TestCase):
+class TestModuleIntegrationGoogleTagManager(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

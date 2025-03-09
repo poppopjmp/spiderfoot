@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_neutrinoapi import sfp_neutrinoapi
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationNeutrinoapi(unittest.TestCase):
+class TestModuleIntegrationNeutrinoapi(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

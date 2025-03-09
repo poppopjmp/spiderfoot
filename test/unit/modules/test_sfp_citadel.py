@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_citadel import sfp_citadel
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModulecitadel(unittest.TestCase):
+class TestModulecitadel(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_citadel()

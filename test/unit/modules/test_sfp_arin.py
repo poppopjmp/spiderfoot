@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_arin import sfp_arin
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleArin(unittest.TestCase):
+class TestModuleArin(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_arin()

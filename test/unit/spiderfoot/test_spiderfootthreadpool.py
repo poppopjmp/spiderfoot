@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from spiderfoot import SpiderFootThreadPool, SpiderFootTarget
 
 
-class TestSpiderFootThreadPool(unittest.TestCase):
+class TestSpiderFootThreadPool(SpiderFootModuleTestCase):
     """Test SpiderFootThreadPool."""
 
     def setUp(self):
@@ -40,7 +40,7 @@ class TestSpiderFootThreadPool(unittest.TestCase):
     # ... other test methods ...
 
 
-class TestThreadPoolWorker(unittest.TestCase):
+class TestThreadPoolWorker(SpiderFootModuleTestCase):
     """Test ThreadPoolWorker."""
 
     def setUp(self):

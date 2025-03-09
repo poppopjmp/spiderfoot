@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_skymem import sfp_skymem
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleSkymem(unittest.TestCase):
+class TestModuleSkymem(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_skymem()

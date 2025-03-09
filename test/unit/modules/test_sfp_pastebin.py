@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_pastebin import sfp_pastebin
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModulePastebin(unittest.TestCase):
+class TestModulePastebin(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_pastebin()

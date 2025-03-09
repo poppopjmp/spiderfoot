@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_bingsearch import sfp_bingsearch
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleBingsearch(unittest.TestCase):
+class TestModuleBingsearch(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_bingsearch()

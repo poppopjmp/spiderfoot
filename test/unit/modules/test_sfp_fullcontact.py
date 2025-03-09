@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_fullcontact import sfp_fullcontact
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleFullcontact(unittest.TestCase):
+class TestModuleFullcontact(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_fullcontact()

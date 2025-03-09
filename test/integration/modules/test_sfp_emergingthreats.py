@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_emergingthreats import sfp_emergingthreats
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationEmergingthreats(unittest.TestCase):
+class TestModuleIntegrationEmergingthreats(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

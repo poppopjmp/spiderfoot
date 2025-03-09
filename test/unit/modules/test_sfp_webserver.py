@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_webserver import sfp_webserver
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleWebserver(unittest.TestCase):
+class TestModuleWebserver(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_webserver()

@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_binstring import sfp_binstring
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleBinstring(unittest.TestCase):
+class TestModuleBinstring(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_binstring()

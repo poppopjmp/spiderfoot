@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_commoncrawl import sfp_commoncrawl
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationcommoncrawl(unittest.TestCase):
+class TestModuleIntegrationcommoncrawl(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_tool_snallygaster import sfp_tool_snallygaster
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleToolSnallygaster(unittest.TestCase):
+class TestModuleToolSnallygaster(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_tool_snallygaster()

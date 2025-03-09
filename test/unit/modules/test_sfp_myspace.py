@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_myspace import sfp_myspace
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleMyspace(unittest.TestCase):
+class TestModuleMyspace(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_myspace()

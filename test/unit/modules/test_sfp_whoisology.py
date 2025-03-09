@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_whoisology import sfp_whoisology
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleWhoisology(unittest.TestCase):
+class TestModuleWhoisology(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_whoisology()

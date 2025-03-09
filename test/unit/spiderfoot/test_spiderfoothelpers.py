@@ -5,7 +5,7 @@ import spiderfoot.helpers
 from spiderfoot.helpers import SpiderFootHelpers
 
 
-class TestSpiderFootHelpers(unittest.TestCase):
+class TestSpiderFootHelpers(SpiderFootModuleTestCase):
     """Test SpiderFootHelpers."""
 
     def test_dataPath(self):

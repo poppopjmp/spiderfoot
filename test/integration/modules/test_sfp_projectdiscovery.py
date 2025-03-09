@@ -2,11 +2,12 @@ import pytest
 import unittest
 from modules.sfp_projectdiscovery import sfp_projectdiscovery
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationProjectdiscovery(unittest.TestCase):
+class TestModuleIntegrationProjectdiscovery(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

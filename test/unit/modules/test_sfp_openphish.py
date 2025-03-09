@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_openphish import sfp_openphish
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleOpenphish(unittest.TestCase):
+class TestModuleOpenphish(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_openphish()

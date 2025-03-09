@@ -3,10 +3,11 @@ import pytest
 import unittest
 
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestSpiderFoot(unittest.TestCase):
+class TestSpiderFoot(SpiderFootModuleTestCase):
 
     default_modules = [
         "sfp_binstring",

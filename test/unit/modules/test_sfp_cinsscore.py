@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_cinsscore import sfp_cinsscore
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleCinsscore(unittest.TestCase):
+class TestModuleCinsscore(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_cinsscore()

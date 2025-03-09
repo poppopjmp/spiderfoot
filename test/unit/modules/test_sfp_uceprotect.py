@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_uceprotect import sfp_uceprotect
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleUceprotect(unittest.TestCase):
+class TestModuleUceprotect(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_uceprotect()

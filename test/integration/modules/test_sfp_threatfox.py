@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_threatfox import sfp_threatfox
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationThreatFox(unittest.TestCase):
+class TestModuleIntegrationThreatFox(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

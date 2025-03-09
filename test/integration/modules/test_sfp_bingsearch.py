@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_bingsearch import sfp_bingsearch
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationbingsearch(unittest.TestCase):
+class TestModuleIntegrationbingsearch(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

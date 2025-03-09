@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_dnsdb import sfp_dnsdb
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleDnsDb(unittest.TestCase):
+class TestModuleDnsDb(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_dnsdb()

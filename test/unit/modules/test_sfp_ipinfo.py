@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_ipinfo import sfp_ipinfo
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIpinfo(unittest.TestCase):
+class TestModuleIpinfo(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_ipinfo()

@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_h1nobbdde import sfp_h1nobbdde
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleH1nobbdde(unittest.TestCase):
+class TestModuleH1nobbdde(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_h1nobbdde()

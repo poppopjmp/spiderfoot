@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_slideshare import sfp_slideshare
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleSlideshare(unittest.TestCase):
+class TestModuleSlideshare(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_slideshare()

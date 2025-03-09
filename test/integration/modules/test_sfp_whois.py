@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_whois import sfp_whois
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationwhois(unittest.TestCase):
+class TestModuleIntegrationwhois(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

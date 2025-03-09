@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_threatminer import sfp_threatminer
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationThreatminer(unittest.TestCase):
+class TestModuleIntegrationThreatminer(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

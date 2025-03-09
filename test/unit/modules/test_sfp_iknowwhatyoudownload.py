@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_iknowwhatyoudownload import sfp_iknowwhatyoudownload
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIknowwhatyoudownload(unittest.TestCase):
+class TestModuleIknowwhatyoudownload(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_iknowwhatyoudownload()

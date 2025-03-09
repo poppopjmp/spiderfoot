@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_surbl import sfp_surbl
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationSurbl(unittest.TestCase):
+class TestModuleIntegrationSurbl(SpiderFootModuleTestCase):
 
     def test_handleEvent_event_data_safe_ip_address_not_blocked_should_not_return_event(self):
         sf = SpiderFoot(self.default_options)

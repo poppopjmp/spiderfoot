@@ -5,7 +5,7 @@ from spiderfoot.db import SpiderFootDb
 from spiderfoot.event import SpiderFootEvent
 from spiderfoot.plugin import SpiderFootPlugin
 
-class TestSpiderFootPlugin(unittest.TestCase):
+class TestSpiderFootPlugin(SpiderFootModuleTestCase):
     """Test SpiderFootPlugin."""
 
     def setUp(self):

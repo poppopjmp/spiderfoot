@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_searchcode import sfp_searchcode
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleCodesearch(unittest.TestCase):
+class TestModuleCodesearch(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_searchcode()

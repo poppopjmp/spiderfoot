@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_skymem import sfp_skymem
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationSkymem(unittest.TestCase):
+class TestModuleIntegrationSkymem(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

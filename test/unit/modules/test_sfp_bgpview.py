@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_bgpview import sfp_bgpview
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleBgpview(unittest.TestCase):
+class TestModuleBgpview(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_bgpview()

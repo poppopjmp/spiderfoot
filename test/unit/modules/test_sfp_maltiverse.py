@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_maltiverse import sfp_maltiverse
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleMaltiverse(unittest.TestCase):
+class TestModuleMaltiverse(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_maltiverse()

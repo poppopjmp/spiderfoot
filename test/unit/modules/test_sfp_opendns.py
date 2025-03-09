@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_opendns import sfp_opendns
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleOpendns(unittest.TestCase):
+class TestModuleOpendns(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_opendns()

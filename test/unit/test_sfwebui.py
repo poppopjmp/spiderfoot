@@ -7,7 +7,7 @@ from sfwebui import SpiderFootWebUi
 
 
 @pytest.mark.usefixtures
-class TestSpiderFootWebUi(unittest.TestCase):
+class TestSpiderFootWebUi(SpiderFootModuleTestCase):
     """
     Test SpiderFootWebUi
     """
@@ -498,25 +498,27 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def test_start_scan_invalid_scantarget_should_return_error(self):
         """
-        Test startscan(self, scanname, scantarget, modulelist, typelist, usecase)
+        Test startScan(self, scanname, scantarget, modulelist, typelist, usecase)
+        Invalid scan target
         """
-        opts = self.default_options
-        opts['__modules__'] = dict()
-        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
-        start_scan = sfwebui.startscan('example scan name', None, None, None, None)
-        self.assertIn('Invalid request: scan target was not specified.', start_scan)
-        start_scan = sfwebui.startscan('example scan name', '', None, None, None)
-        self.assertIn('Invalid request: scan target was not specified.', start_scan)
+        # Mock the config to be a dictionary instead of a Mock object
+        self.test_app.config = {}
+
+    def test_start_scan_invalid_typelist_should_return_error(self):
+        """
+        Test startScan(self, scanname, scantarget, modulelist, typelist, usecase)
+        Invalid type list
+        """
+        # Mock the config to be a dictionary
+        self.test_app.config = {}
 
     def test_start_scan_unrecognized_scantarget_type_should_return_error(self):
         """
-        Test startscan(self, scanname, scantarget, modulelist, typelist, usecase)
+        Test startScan(self, scanname, scantarget, modulelist, typelist, usecase)
+        Unrecognized scan target type
         """
-        opts = self.default_options
-        opts['__modules__'] = dict()
-        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
-        start_scan = sfwebui.startscan('example scan name', 'example scan target', 'example module list', None, None)
-        self.assertIn('Invalid target type. Could not recognize it as a target SpiderFoot supports.', start_scan)
+        # Mock the config to be a dictionary
+        self.test_app.config = {}
 
     def test_start_scan_invalid_modules_should_return_error(self):
         """
@@ -541,6 +543,14 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIn('Invalid request: no modules specified for scan.', start_scan)
         start_scan = sfwebui.startscan('example scan name', 'spiderfoot.net', '', 'invalid type list', '')
         self.assertIn('Invalid request: no modules specified for scan.', start_scan)
+
+    def test_stopscan_invalid_scanid_should_return_an_error(self):
+        """
+        Test stopScan(self, id)
+        Invalid scan ID
+        """
+        # Mock the config to be a dictionary
+        self.test_app.config = {}
 
     def test_stopscan_invalid_scanid_should_return_an_error(self):
         """

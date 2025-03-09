@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_opencorporates import sfp_opencorporates
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleOpencorporates(unittest.TestCase):
+class TestModuleOpencorporates(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_opencorporates()

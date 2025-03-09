@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_viewdns import sfp_viewdns
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationViewdns(unittest.TestCase):
+class TestModuleIntegrationViewdns(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

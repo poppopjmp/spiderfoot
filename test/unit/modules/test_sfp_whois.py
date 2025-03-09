@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_whois import sfp_whois
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleWhois(unittest.TestCase):
+class TestModuleWhois(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_whois()

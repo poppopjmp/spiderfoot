@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_blockchain import sfp_blockchain
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleBlockchain(unittest.TestCase):
+class TestModuleBlockchain(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_blockchain()

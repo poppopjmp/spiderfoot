@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_metadefender import sfp_metadefender
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleMetadefender(unittest.TestCase):
+class TestModuleMetadefender(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_metadefender()

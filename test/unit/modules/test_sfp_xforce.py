@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_xforce import sfp_xforce
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleXforce(unittest.TestCase):
+class TestModuleXforce(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_xforce()

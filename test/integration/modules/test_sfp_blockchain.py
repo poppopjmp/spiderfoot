@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_blockchain import sfp_blockchain
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationBlockchain(unittest.TestCase):
+class TestModuleIntegrationBlockchain(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

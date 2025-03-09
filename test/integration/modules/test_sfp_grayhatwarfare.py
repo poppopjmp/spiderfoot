@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_grayhatwarfare import sfp_grayhatwarfare
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationGrayhatWarfare(unittest.TestCase):
+class TestModuleIntegrationGrayhatWarfare(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_wikipediaedits import sfp_wikipediaedits
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationWikipediaedits(unittest.TestCase):
+class TestModuleIntegrationWikipediaedits(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

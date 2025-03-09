@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_haveibeenpwned import sfp_haveibeenpwned
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleHaveibeenpwned(unittest.TestCase):
+class TestModuleHaveibeenpwned(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_haveibeenpwned()

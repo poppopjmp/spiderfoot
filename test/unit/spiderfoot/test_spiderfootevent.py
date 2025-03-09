@@ -2,7 +2,7 @@ import unittest
 
 from spiderfoot.event import SpiderFootEvent
 
-class TestSpiderFootEvent(unittest.TestCase):
+class TestSpiderFootEvent(SpiderFootModuleTestCase):
     """Test SpiderFootEvent."""
 
     def setUp(self):

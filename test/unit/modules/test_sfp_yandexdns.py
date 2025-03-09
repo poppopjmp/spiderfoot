@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_yandexdns import sfp_yandexdns
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleYandexdns(unittest.TestCase):
+class TestModuleYandexdns(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_yandexdns()

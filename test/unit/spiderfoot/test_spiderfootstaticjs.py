@@ -1,40 +1,46 @@
+import pytest
 import unittest
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
+from unittest.mock import patch, MagicMock
 
+from spiderfoot import SpiderFootHelpers
+from spiderfoot import SpiderFootStaticJS
 
-class TestSpiderFootStaticJS(unittest.TestCase):
+@pytest.mark.usefixtures
+class TestSpiderFootStaticJS(SpiderFootModuleTestCase):
+    """Test SpiderFootStaticJS class"""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
-        cls.driver.get("file:///path/to/spiderfoot/static/js/spiderfoot.html")
+    def test_init_should_create_static_js_object(self):
+        """
+        Test __init__(self)
+        """
+        static_js = SpiderFootStaticJS()
+        self.assertIsInstance(static_js, SpiderFootStaticJS)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.quit()
-
-    def test_spiderfoot_js_function(self):
-        result = self.driver.execute_script("return spiderfootFunction();")
-        self.assertEqual(result, "expected result")
-
-    def test_spiderfoot_newscan_js_function(self):
-        result = self.driver.execute_script("return spiderfootNewScanFunction();")
-        self.assertEqual(result, "expected result")
-
-    def test_spiderfoot_opts_js_function(self):
-        result = self.driver.execute_script("return spiderfootOptsFunction();")
-        self.assertEqual(result, "expected result")
-
-    def test_spiderfoot_scanlist_js_function(self):
-        result = self.driver.execute_script("return spiderfootScanListFunction();")
-        self.assertEqual(result, "expected result")
-
-    def test_viz_js_function(self):
-        result = self.driver.execute_script("return vizFunction();")
-        self.assertEqual(result, "expected result")
-
-
-if __name__ == "__main__":
-    unittest.main()
+    @patch('spiderfoot.SpiderFootHelpers.log')
+    def test_get_js_each_available_static_js_should_return_js(self, log_mock):
+        """
+        Test get_js(self, name, cl, ids, selectors)
+        """
+        static_js = SpiderFootStaticJS()
+        js_types = ['d3', 'vis', 'plotly']
+        
+        for js_type in js_types:
+            js = static_js.get_js(js_type)
+            self.assertIsInstance(js, str)
+            
+    def test_get_js_invalid_name_should_return_empty_string(self):
+        """
+        Test get_js(self, name, cl, ids, selectors) with invalid name
+        """
+        static_js = SpiderFootStaticJS()
+        js = static_js.get_js("invalid name")
+        self.assertEqual("", js)
+        
+    def test_get_js_with_selectors(self):
+        """
+        Test get_js with custom selectors
+        """
+        static_js = SpiderFootStaticJS()
+        js = static_js.get_js("d3", cl="test-class", ids="test-id", selectors=["test-selector"])
+        self.assertIsInstance(js, str)
+        self.assertNotEqual("", js)

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_whatcms import sfp_whatcms
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleWhatCMS(unittest.TestCase):
+class TestModuleWhatCMS(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_whatcms()

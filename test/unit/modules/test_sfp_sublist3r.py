@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_sublist3r import sfp_sublist3r
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleSublist3r(unittest.TestCase):
+class TestModuleSublist3r(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_sublist3r()

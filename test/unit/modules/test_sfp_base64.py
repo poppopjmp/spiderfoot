@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_base64 import sfp_base64
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleBase64(unittest.TestCase):
+class TestModuleBase64(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_base64()

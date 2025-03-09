@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_multiproxy import sfp_multiproxy
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleMultiproxy(unittest.TestCase):
+class TestModuleMultiproxy(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_multiproxy()

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_bingsharedip import sfp_bingsharedip
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationbingsharedip(unittest.TestCase):
+class TestModuleIntegrationbingsharedip(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

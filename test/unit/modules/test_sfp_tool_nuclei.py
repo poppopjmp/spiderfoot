@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_tool_nuclei import sfp_tool_nuclei
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleToolNuclei(unittest.TestCase):
+class TestModuleToolNuclei(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_tool_nuclei()

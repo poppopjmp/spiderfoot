@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_emergingthreats import sfp_emergingthreats
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleEmergingthreats(unittest.TestCase):
+class TestModuleEmergingthreats(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_emergingthreats()

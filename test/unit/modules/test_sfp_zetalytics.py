@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_zetalytics import sfp_zetalytics
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleZetalytics(unittest.TestCase):
+class TestModuleZetalytics(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_zetalytics()

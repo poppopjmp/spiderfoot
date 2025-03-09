@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_ipapico import sfp_ipapico
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleipApico(unittest.TestCase):
+class TestModuleipApico(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_ipapico()

@@ -3,7 +3,7 @@ from jinja2 import Template
 import os
 
 
-class TestSpiderFootTemplates(unittest.TestCase):
+class TestSpiderFootTemplates(SpiderFootModuleTestCase):
     
     def setUp(self):
         self.template_dir = os.path.join(os.path.dirname(__file__), '../../spiderfoot/templates')

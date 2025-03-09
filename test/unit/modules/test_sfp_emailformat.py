@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_emailformat import sfp_emailformat
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleEmailformat(unittest.TestCase):
+class TestModuleEmailformat(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_emailformat()

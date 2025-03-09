@@ -3,11 +3,13 @@ import unittest
 
 from modules.sfp_tool_cmseek import sfp_tool_cmseek
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleToolCmseek(unittest.TestCase):
+class TestModuleToolCmseek(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_tool_cmseek()

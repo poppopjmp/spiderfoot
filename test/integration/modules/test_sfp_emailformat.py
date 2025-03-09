@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_emailformat import sfp_emailformat
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationEmailFormat(unittest.TestCase):
+class TestModuleIntegrationEmailFormat(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

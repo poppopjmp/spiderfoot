@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_quad9 import sfp_quad9
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleQuad9(unittest.TestCase):
+class TestModuleQuad9(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_quad9()

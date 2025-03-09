@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_duckduckgo import sfp_duckduckgo
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDuckduckgo(unittest.TestCase):
+class TestModuleDuckduckgo(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_duckduckgo()

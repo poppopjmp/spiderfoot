@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_projectdiscovery import sfp_projectdiscovery
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleProjectdiscovery(unittest.TestCase):
+class TestModuleProjectdiscovery(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_projectdiscovery()

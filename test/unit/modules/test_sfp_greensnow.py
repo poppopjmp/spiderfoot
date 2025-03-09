@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_greensnow import sfp_greensnow
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleGreensnow(unittest.TestCase):
+class TestModuleGreensnow(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_greensnow()

@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_vxvault import sfp_vxvault
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleVxvault(unittest.TestCase):
+class TestModuleVxvault(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_vxvault()

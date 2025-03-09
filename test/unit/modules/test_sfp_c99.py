@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_c99 import sfp_c99
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleC99(unittest.TestCase):
+class TestModuleC99(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_c99()

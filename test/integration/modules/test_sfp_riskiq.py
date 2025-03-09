@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_riskiq import sfp_riskiq
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationRiskiq(unittest.TestCase):
+class TestModuleIntegrationRiskiq(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

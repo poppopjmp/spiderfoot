@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_phishtank import sfp_phishtank
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModulePhishtank(unittest.TestCase):
+class TestModulePhishtank(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_phishtank()

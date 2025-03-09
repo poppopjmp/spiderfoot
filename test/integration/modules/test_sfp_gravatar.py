@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_gravatar import sfp_gravatar
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationGravatar(unittest.TestCase):
+class TestModuleIntegrationGravatar(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

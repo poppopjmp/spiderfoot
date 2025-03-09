@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_shodan import sfp_shodan
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationShodan(unittest.TestCase):
+class TestModuleIntegrationShodan(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

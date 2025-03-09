@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_cleanbrowsing import sfp_cleanbrowsing
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleCleanbrowsing(unittest.TestCase):
+class TestModuleCleanbrowsing(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_cleanbrowsing()

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_cookie import sfp_cookie
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleCookie(unittest.TestCase):
+class TestModuleCookie(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_cookie()

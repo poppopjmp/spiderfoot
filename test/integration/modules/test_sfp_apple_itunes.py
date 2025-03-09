@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_apple_itunes import sfp_apple_itunes
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationAppleItunes(unittest.TestCase):
+class TestModuleIntegrationAppleItunes(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

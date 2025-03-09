@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_sslcert import sfp_sslcert
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleSslCert(unittest.TestCase):
+class TestModuleSslCert(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_sslcert()

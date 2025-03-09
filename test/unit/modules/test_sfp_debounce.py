@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_debounce import sfp_debounce
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDebounce(unittest.TestCase):
+class TestModuleDebounce(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_debounce()

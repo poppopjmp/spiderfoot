@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_fraudguard import sfp_fraudguard
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleFraudguard(unittest.TestCase):
+class TestModuleFraudguard(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_fraudguard()

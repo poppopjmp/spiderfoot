@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_dnszonexfer import sfp_dnszonexfer
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDnsZonexfer(unittest.TestCase):
+class TestModuleDnsZonexfer(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_dnszonexfer()

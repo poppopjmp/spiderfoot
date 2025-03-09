@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_googlesearch import sfp_googlesearch
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleGoogleSearch(unittest.TestCase):
+class TestModuleGoogleSearch(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_googlesearch()

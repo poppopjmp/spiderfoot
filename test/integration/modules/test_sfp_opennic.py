@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_opennic import sfp_opennic
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationOpenNic(unittest.TestCase):
+class TestModuleIntegrationOpenNic(SpiderFootModuleTestCase):
 
     def test_handleEvent_event_data_internet_name_with_opennic_tld_should_return_ip_address_event(self):
         sf = SpiderFoot(self.default_options)

@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_crt import sfp_crt
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleCrt(unittest.TestCase):
+class TestModuleCrt(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_crt()

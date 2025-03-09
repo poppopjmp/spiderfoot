@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_cinsscore import sfp_cinsscore
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationCinsscore(unittest.TestCase):
+class TestModuleIntegrationCinsscore(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

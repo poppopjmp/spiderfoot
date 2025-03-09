@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_gleif import sfp_gleif
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleGleif(unittest.TestCase):
+class TestModuleGleif(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_gleif()

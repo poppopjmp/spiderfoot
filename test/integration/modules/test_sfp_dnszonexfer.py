@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_dnszonexfer import sfp_dnszonexfer
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationDnsZoneXfer(unittest.TestCase):
+class TestModuleIntegrationDnsZoneXfer(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

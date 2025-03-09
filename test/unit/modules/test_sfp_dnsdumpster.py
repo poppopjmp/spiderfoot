@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_dnsdumpster import sfp_dnsdumpster
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDnsDumpster(unittest.TestCase):
+class TestModuleDnsDumpster(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_dnsdumpster()

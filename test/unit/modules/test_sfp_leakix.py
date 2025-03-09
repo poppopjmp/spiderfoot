@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_leakix import sfp_leakix
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleLeakix(unittest.TestCase):
+class TestModuleLeakix(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_leakix()

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_fullhunt import sfp_fullhunt
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationFullhunt(unittest.TestCase):
+class TestModuleIntegrationFullhunt(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

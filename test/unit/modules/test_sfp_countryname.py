@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_countryname import sfp_countryname
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleCountryName(unittest.TestCase):
+class TestModuleCountryName(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_countryname()

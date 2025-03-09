@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_onionsearchengine import sfp_onionsearchengine
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationOnionsearchengine(unittest.TestCase):
+class TestModuleIntegrationOnionsearchengine(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

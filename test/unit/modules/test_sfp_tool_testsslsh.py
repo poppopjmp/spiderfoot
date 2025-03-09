@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_tool_testsslsh import sfp_tool_testsslsh
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleToolTestsslsh(unittest.TestCase):
+class TestModuleToolTestsslsh(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_tool_testsslsh()

@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_opennic import sfp_opennic
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleOpenNic(unittest.TestCase):
+class TestModuleOpenNic(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_opennic()

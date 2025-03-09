@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_phishtank import sfp_phishtank
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationPhishtank(unittest.TestCase):
+class TestModuleIntegrationPhishtank(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

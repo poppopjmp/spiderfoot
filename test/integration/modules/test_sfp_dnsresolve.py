@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_dnsresolve import sfp_dnsresolve
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationDnsResolve(unittest.TestCase):
+class TestModuleIntegrationDnsResolve(SpiderFootModuleTestCase):
 
     def test_enrichTarget_should_return_SpiderFootTarget(self):
         sf = SpiderFoot(self.default_options)

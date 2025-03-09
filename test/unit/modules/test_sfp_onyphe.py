@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_onyphe import sfp_onyphe
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleOnyphe(unittest.TestCase):
+class TestModuleOnyphe(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_onyphe()

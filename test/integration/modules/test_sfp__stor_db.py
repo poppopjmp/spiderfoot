@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp__stor_db import sfp__stor_db
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class BaseTestModuleIntegration(unittest.TestCase):
+class BaseTestModuleIntegration(SpiderFootModuleTestCase):
 
     def setup_module(self, module_class):
         sf = SpiderFoot(self.default_options)

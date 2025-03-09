@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_alienvaultiprep import sfp_alienvaultiprep
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleAlienvaultiprep(unittest.TestCase):
+class TestModuleAlienvaultiprep(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_alienvaultiprep()

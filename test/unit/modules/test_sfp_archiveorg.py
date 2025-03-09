@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_archiveorg import sfp_archiveorg
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleArchiveorg(unittest.TestCase):
+class TestModuleArchiveorg(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_archiveorg()

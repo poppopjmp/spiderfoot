@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_greynoise import sfp_greynoise
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleGreynoise(unittest.TestCase):
+class TestModuleGreynoise(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_greynoise()

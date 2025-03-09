@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_crossref import sfp_crossref
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationCrossref(unittest.TestCase):
+class TestModuleIntegrationCrossref(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

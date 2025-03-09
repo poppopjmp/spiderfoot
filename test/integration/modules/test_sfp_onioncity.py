@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_onioncity import sfp_onioncity
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationOnioncity(unittest.TestCase):
+class TestModuleIntegrationOnioncity(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_dnsdumpster import sfp_dnsdumpster
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationDnsDumpster(unittest.TestCase):
+class TestModuleIntegrationDnsDumpster(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

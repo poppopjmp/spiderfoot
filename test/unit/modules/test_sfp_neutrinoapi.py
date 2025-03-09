@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_neutrinoapi import sfp_neutrinoapi
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleNeutrinoapi(unittest.TestCase):
+class TestModuleNeutrinoapi(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_neutrinoapi()

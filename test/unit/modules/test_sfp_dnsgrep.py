@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_dnsgrep import sfp_dnsgrep
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDnsGrep(unittest.TestCase):
+class TestModuleDnsGrep(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_dnsgrep()

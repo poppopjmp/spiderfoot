@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_tool_dnstwist import sfp_tool_dnstwist
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleToolDnstwist(unittest.TestCase):
+class TestModuleToolDnstwist(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_tool_dnstwist()

@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_abstractapi import sfp_abstractapi
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleAbstractapi(unittest.TestCase):
+class TestModuleAbstractapi(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_abstractapi()

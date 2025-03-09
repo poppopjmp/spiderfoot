@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_torexits import sfp_torexits
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationTorExits(unittest.TestCase):
+class TestModuleIntegrationTorExits(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

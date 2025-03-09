@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_abusech import sfp_abusech
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleAbusech(unittest.TestCase):
+class TestModuleAbusech(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_abusech()

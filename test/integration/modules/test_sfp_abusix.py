@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_abusix import sfp_abusix
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationAbusix(unittest.TestCase):
+class TestModuleIntegrationAbusix(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

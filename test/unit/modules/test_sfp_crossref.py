@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_crossref import sfp_crossref
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleCrossref(unittest.TestCase):
+class TestModuleCrossref(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_crossref()

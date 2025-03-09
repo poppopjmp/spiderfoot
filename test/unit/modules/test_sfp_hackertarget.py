@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_hackertarget import sfp_hackertarget
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleHackertarget(unittest.TestCase):
+class TestModuleHackertarget(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_hackertarget()

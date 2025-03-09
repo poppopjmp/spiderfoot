@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_webframework import sfp_webframework
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleWebFramework(unittest.TestCase):
+class TestModuleWebFramework(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_webframework()

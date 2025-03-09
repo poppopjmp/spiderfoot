@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_ethereum import sfp_ethereum
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleEthereum(unittest.TestCase):
+class TestModuleEthereum(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_ethereum()

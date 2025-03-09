@@ -8,7 +8,7 @@ from sfcli import SpiderFootCli
 
 
 @pytest.mark.usefixtures
-class TestSpiderFootCli(unittest.TestCase):
+class TestSpiderFootCli(SpiderFootModuleTestCase):
     """
     Test TestSpiderFootCli
     """

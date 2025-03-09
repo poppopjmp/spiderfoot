@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_bitcoinabuse import sfp_bitcoinabuse
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationBitcoinAbuse(unittest.TestCase):
+class TestModuleIntegrationBitcoinAbuse(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

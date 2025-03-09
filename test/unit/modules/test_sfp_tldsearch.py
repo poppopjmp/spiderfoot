@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_tldsearch import sfp_tldsearch
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleTldsearch(unittest.TestCase):
+class TestModuleTldsearch(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_tldsearch()

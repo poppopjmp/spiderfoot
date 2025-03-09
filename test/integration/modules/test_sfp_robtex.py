@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_robtex import sfp_robtex
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationRobtex(unittest.TestCase):
+class TestModuleIntegrationRobtex(SpiderFootModuleTestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

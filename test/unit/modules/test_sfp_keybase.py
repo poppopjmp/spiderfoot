@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_keybase import sfp_keybase
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleKeybase(unittest.TestCase):
+class TestModuleKeybase(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_keybase()

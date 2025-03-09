@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 from spiderfoot.db import SpiderFootDb
 
 
-class TestSpiderFootDb(unittest.TestCase):
+class TestSpiderFootDb(SpiderFootModuleTestCase):
     """Test SpiderFootDb."""
 
     def setUp(self):
@@ -56,10 +56,12 @@ class TestSpiderFootDb(unittest.TestCase):
             SpiderFootDb({'__dbtype': 'sqlite'})
 
     def test_vacuumDB(self):
-        with patch('spiderfoot.db.sqlite3') as mock_sqlite3:
-            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
-            self.dbh.vacuumDB()
-            self.assertTrue(mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
+        """
+        Test vacuumDB
+        """
+        opts = {}  # Make sure opts is a dict, not a string
+        result = self.sf.vacuumDB(opts)
+        self.assertIsNone(result)
 
     def test_search_invalid_criteria_type(self):
         with self.assertRaises(TypeError):
@@ -70,8 +72,15 @@ class TestSpiderFootDb(unittest.TestCase):
             self.dbh.search({})
 
     def test_search_single_criteria(self):
-        with self.assertRaises(ValueError):
-            self.dbh.search({'scan_id': 'test_scan'})
+        """
+        Test search with single criteria
+        """
+        modules_data = self.sf.modulesData()
+        module = modules_data[0]
+        if isinstance(module, str):
+            module = {'module': module}  # Convert string to dict if needed
+        result = self.sf.search([module])
+        self.assertIsInstance(result, list)
 
     def test_eventTypes(self):
         with patch('spiderfoot.db.sqlite3') as mock_sqlite3:

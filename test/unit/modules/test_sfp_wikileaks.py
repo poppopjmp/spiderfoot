@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_wikileaks import sfp_wikileaks
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModulewikileaks(unittest.TestCase):
+class TestModulewikileaks(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_wikileaks()

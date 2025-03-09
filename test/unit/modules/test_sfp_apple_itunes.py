@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_apple_itunes import sfp_apple_itunes
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleAppleItunes(unittest.TestCase):
+class TestModuleAppleItunes(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_apple_itunes()

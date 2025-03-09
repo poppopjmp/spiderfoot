@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_email import sfp_email
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleEmail(unittest.TestCase):
+class TestModuleEmail(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_email()

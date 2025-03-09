@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_talosintel import sfp_talosintel
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleTalosintel(unittest.TestCase):
+class TestModuleTalosintel(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_talosintel()

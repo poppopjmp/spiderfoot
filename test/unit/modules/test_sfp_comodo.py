@@ -3,10 +3,11 @@ import unittest
 
 from modules.sfp_comodo import sfp_comodo
 from sflib import SpiderFoot
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleComodo(unittest.TestCase):
+class TestModuleComodo(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_comodo()
