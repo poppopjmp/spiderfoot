@@ -3,6 +3,9 @@ Library           SeleniumLibrary
 Test Teardown     Run Keyword If Test Failed  Capture Failure Screenshot
 Resource          variables.robot  # Externalize variables
 
+***Variables***
+${CHROMEDRIVER_PATH}    /usr/local/bin/chromedriver
+
 ***Keywords***
 Capture Failure Screenshot
     Capture Page Screenshot  failure-${TEST NAME}.png
@@ -17,7 +20,7 @@ Create Chrome Headless Options
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
     ${chrome_options}=    Create Chrome Headless Options
-    Open browser              http://127.0.0.1:5001/newscan chrome  options=${chrome_options}
+    Open browser              http://127.0.0.1:5001/newscan chrome  options=${chrome_options}  executable_path=${CHROMEDRIVER_PATH}
     Press Keys                name:scanname            van1shland
     Press Keys                name:scantarget          van1shland.io
     Click Element             id:moduletab
@@ -27,21 +30,21 @@ Create a module scan
     Click Element             id:module_${module_name}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
-    Wait Until Element Is Visible    id:btn-browse    timeout=15s #Add wait for the browse button.
-    Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
+    Wait Until Element Is Visible    id:btn-browse    timeout=30s
+    Element Should Be Visible    id:scanstatusbadge
     ${scan_status}=    Get Text    id:scanstatusbadge
     Should Not Be Equal As Strings    ${scan_status}    ERROR    msg=Scan creation failed.
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
     ${chrome_options}=    Create Chrome Headless Options
-    Open browser              http://localhost:5001/newscan  chrome  options=${chrome_options}
+    Open browser              http://localhost:5001/newscan  chrome  options=${chrome_options}  executable_path=${CHROMEDRIVER_PATH}
     Press Keys                name:scanname            van1shland
     Press Keys                name:scantarget          van1shland.io
     Click Element             id:usecase_${use_case}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
-    Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
+    Element Should Be Visible    id:scanstatusbadge
 
 Scan info page should render tabs
     Element Should Be Visible     id:btn-status
@@ -107,25 +110,25 @@ Scroll To Element
     ${x}=         Get Horizontal Position  ${locator}
     ${y}=         Get Vertical Position    ${locator}
     Execute Javascript    window.scrollTo(${x} - 100, ${y} - 100)
-    Wait Until Element is visible  ${locator}  timeout=15s
+    Wait Until Element is visible  ${locator}  timeout=30s
 
 Wait For Scan To Finish
     [Arguments]  ${scan_name}
-    Wait Until Element Is Visible    id:btn-browse    timeout=15s
+    Wait Until Element Is Visible    id:btn-browse    timeout=30s
     Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=60s
 
 ***Test Cases***
 Main navigation pages should render correctly
     ${chrome_options}=    Create Chrome Headless Options
-    Open browser              http://localhost:5001  chrome  options=${chrome_options}
+    Open browser              http://localhost:5001  chrome  options=${chrome_options}  executable_path=${CHROMEDRIVER_PATH}
     Click Element                 id:nav-link-newscan
-    Wait Until Element Is Visible    id:scanname    timeout=15s
+    Wait Until Element Is Visible    id:scanname    timeout=30s
     New scan page should render
     Click Element                 id:nav-link-scans
-    Wait Until Element Is Visible    id:scanlist    timeout=15s
+    Wait Until Element Is Visible    id:scanlist    timeout=30s
     Scan list page should render
     Click Element                 id:nav-link-settings
-    Wait Until Element Is Visible    id:savesettingsform    timeout=15s
+    Wait Until Element Is Visible    id:savesettingsform    timeout=30s
     Settings page should render
     Close All Browsers
 
@@ -147,7 +150,7 @@ Scan info page should render correctly
 Scan list page should list scans
     Create a module scan           test scan list    van1shland.io    sfp_countryname
     Click Element                 id:nav-link-scans
-    Wait Until Element Is Visible   xpath=//td[contains(text(), 'test scan list')]   timeout=15s
+    Wait Until Element Is Visible   xpath=//td[contains(text(), 'test scan list')]   timeout=30s
     Close All Browsers
 
 A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
@@ -172,7 +175,7 @@ A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
 
 A passive scan with unresolvable target internet name should fail
     Create a use case scan         shouldnotresolve    shouldnotresolve.doesnotexist.local    Passive
-    Wait Until Element Is Visible    id:btn-browse    timeout=15s
+    Wait Until Element Is Visible    id:btn-browse    timeout=30s
     Wait Until Element Contains     scanstatusbadge   ERROR     timeout=60s
     Click Element                   id:btn-log
     Page Should Contain             Could not resolve

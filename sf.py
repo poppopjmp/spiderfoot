@@ -50,7 +50,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 import uvicorn
 from pydantic import BaseModel
-from spiderfoot import __version__
+from spiderfoot.__version__ import __version__
 
 scanId = None
 dbh = None

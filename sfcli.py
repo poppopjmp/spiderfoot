@@ -22,7 +22,7 @@ import shlex
 import sys
 import time
 from os.path import expanduser
-from spiderfoot import __version__
+from spiderfoot.__version__ import __version__
 import requests
 
 

@@ -10,6 +10,7 @@ Capture Failure Screenshot
 Create Firefox Headless Options
     ${options}=    Evaluate    selenium.webdriver.FirefoxOptions()    modules=selenium.webdriver
     Call Method    ${options}    add_argument    --headless
+    Set Environment Variable    webdriver.gecko.driver    /usr/local/bin/geckodriver
     RETURN    ${options}
 
 Create a module scan

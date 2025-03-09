@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 import csv
 import io
 import uuid
-from spiderfoot import __version__
+from spiderfoot.__version__ import __version__
 
 app = FastAPI()
 

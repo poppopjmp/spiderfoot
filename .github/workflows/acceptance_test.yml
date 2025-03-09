@@ -74,7 +74,22 @@ jobs:
       - name: Install Firefox
         run: |
           sudo apt-get update
-          sudo apt-get install -y firefox firefox-geckodriver
+          sudo apt-get install -y firefox
+      - name: Download GeckoDriver
+        run: |
+            wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux64.tar.gz
+  
+      - name: Extract GeckoDriver
+        run: tar -xzf geckodriver-v0.36.0-linux64.tar.gz
+  
+      - name: Make GeckoDriver Executable
+        run: chmod +x geckodriver
+  
+      - name: Move GeckoDriver to PATH
+        run: sudo mv geckodriver /usr/local/bin/
+  
+      - name: Verify Installation
+        run: geckodriver --version
 
       - name: Start SpiderFoot container
         run: |
