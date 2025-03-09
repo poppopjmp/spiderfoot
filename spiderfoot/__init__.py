@@ -4,6 +4,7 @@ from .helpers import SpiderFootHelpers
 from .logger import logListenerSetup, logWorkerSetup
 from .plugin import SpiderFootPlugin
 from .target import SpiderFootTarget
+from .threadpool import SpiderFootThreadPool
 
 __all__ = [
     'SpiderFootDb',
@@ -12,5 +13,6 @@ __all__ = [
     'SpiderFootPlugin',
     'SpiderFootTarget',
     'logListenerSetup',
-    'logWorkerSetup'
+    'logWorkerSetup',
+    'SpiderFootThreadPool'
 ]
