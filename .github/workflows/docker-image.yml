@@ -52,15 +52,12 @@ jobs:
 
     - name: Start SpiderFoot container deamon mode
       run: |
-          docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.0.2
+          docker run -d -p 5001:5001 ghcr.io/${{ github.repository }}:${{ github.sha }}
 
     - name: Wait for SpiderFoot to start
       run: |
           timeout 60 bash -c 'until curl --output /dev/null --silent --head --fail http://127.0.0.1:5001; do printf "."; sleep 1; done'
           echo "SpiderFoot is up!"
-    - name: Start SpiderFoot container deamon mode
-      run: |
-          docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.0.2
     - name: Run container tests
       run: |
             curl http://localhost:5001/newscan 
@@ -102,5 +99,5 @@ jobs:
         file: react-web-interface/Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}:spiderfoot-react-v5.0.3-dev
-          ghcr.io/${{ github.repository }}:spiderfoot-react-${{ github.sha }}
+          ghcr.io/${{ github.repository }}-reactui:v5.0.3-dev
+          ghcr.io/${{ github.repository }}-reactui:${{ github.sha }}
