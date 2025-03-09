@@ -73,7 +73,7 @@ function sf_viz_countLevels(arg, levelsDeep, maxLevels) {
 
 function sf_viz_vbar(targetId, gdata) {
     var margin = {top: 20, right: 20, bottom: 220, left: 60},
-        width = 1100 - margin.left - margin.right,
+        width = parseInt(d3.select(targetId).style('width')) - margin.left - margin.right,
         height = 520 - margin.top - margin.bottom;
 
     var formatPercent = d3.format(".0%");
@@ -90,22 +90,15 @@ function sf_viz_vbar(targetId, gdata) {
 
     var yAxis = d3.svg.axis()
         .scale(y)
-        .orient("left")
+        .orient("left");
 
-/*    var tip = d3.tip()
-      .attr('class', 'd3-tip')
-      .offset([-10, 0])
-      .html(function(d) {
-        return "<strong>counter Elements:</strong> <span style='color:red'>" + d.counter + "</span>";
-      })
-*/
     var svg = d3.select(targetId).append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+        .attr("preserveAspectRatio", "xMidYMid meet")
       .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
- //   svg.call(tip);
 
     data = new Array();
     for (i = 0; i < gdata.length; i++) {
@@ -201,6 +194,8 @@ function sf_viz_dendrogram(targetId, data) {
     var svg = d3.select(targetId).append("svg")
         .attr("width", width)
         .attr("height", height)
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("preserveAspectRatio", "xMidYMid meet")
         .append("g")
         .attr("transform", "translate(40,0)");
 
@@ -281,7 +276,7 @@ function sf_viz_dendrogram(targetId, data) {
 // data points.
 // plotData should be an array of the items you want to plot
 function sf_viz_bubble(targetId, plotData) { 
-    var diameter = 900,
+    var diameter = parseInt(d3.select(targetId).style('width')),
         format = d3.format(",d"),
         color = d3.scale.category20c();
 
@@ -293,6 +288,8 @@ function sf_viz_bubble(targetId, plotData) {
     var svg = d3.select(targetId).append("svg")
         .attr("width", diameter)
         .attr("height", diameter)
+        .attr("viewBox", `0 0 ${diameter} ${diameter}`)
+        .attr("preserveAspectRatio", "xMidYMid meet");
 
     var wordList = []; //each word one entry and contains the total count [ {cnt:30,title_list:[3,5,9],
     var wordCount = [];

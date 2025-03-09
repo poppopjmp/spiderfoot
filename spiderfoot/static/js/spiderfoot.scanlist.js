@@ -155,7 +155,7 @@ function showlisttable(types, filter, data) {
     if (filter == null) {
         filter = "None";
     }
-    var buttons = "<div class='btn-toolbar'>";
+    var buttons = "<div class='btn-toolbar' role='toolbar'>";
     buttons += "<div class='btn-group'>";
     buttons += "<button id='btn-filter' class='btn btn-default'><i class='glyphicon glyphicon-filter'></i>&nbsp;Filter: " + filter + "</button>";
     buttons += "<button class='btn dropdown-toggle btn-default' data-toggle='dropdown'><span class='caret'></span></button>";
@@ -188,7 +188,7 @@ function showlisttable(types, filter, data) {
     buttons += "</div>";
 
     buttons += "</div>";
-    var table = "<table id='scanlist' class='table table-bordered table-striped'>";
+    var table = "<table id='scanlist' class='table table-bordered table-striped table-responsive'>";
     table += "<thead><tr><th class='sorter-false text-center'><input id='checkall' type='checkbox'></th> <th>Name</th> <th>Target</th> <th>Started</th> <th >Finished</th> <th class='text-center'>Status</th> <th class='text-center'>Elements</th><th class='text-center'>Correlations</th><th class='sorter-false text-center'>Action</th> </tr></thead><tbody>";
     filtered = 0;
     for (var i = 0; i < data.length; i++) {

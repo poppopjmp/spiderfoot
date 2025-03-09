@@ -35,6 +35,15 @@ $(document).ready(function() {
   $("#btn-reset-settings").click(function() { clearSettings(); });
   $("#btn-opt-export").click(function() { window.location.href=docroot + "/optsexport?pattern=api_key"; return false; });
   $("#tab_global").click(function() { switchTab("global"); });
+
+  // Make settings page responsive
+  $(window).resize(function() {
+    if ($(window).width() < 768) {
+      $(".settings-container").addClass("responsive");
+    } else {
+      $(".settings-container").removeClass("responsive");
+    }
+  }).resize();
 });
 
 $(function () {

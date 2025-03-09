@@ -1,4 +1,4 @@
-    tabs = [ "use", "type", "module" ];
+tabs = [ "use", "type", "module" ];
     activeTab = "use";
 
     function submitForm() {
@@ -47,4 +47,13 @@ $(document).ready(function() {
     $("#btn-run-scan").click(function() { submitForm(); });
 
     $('#scantarget').popover({ 'html': true, 'animation': true, 'trigger': 'focus'});
+
+    // Make new scan page responsive
+    $(window).resize(function() {
+        if ($(window).width() < 768) {
+            $(".scan-container").addClass("responsive");
+        } else {
+            $(".scan-container").removeClass("responsive");
+        }
+    }).resize();
 });

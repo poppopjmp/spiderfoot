@@ -1,5 +1,9 @@
 body {
   padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+  background-color: #f8f9fa; /* Light background for better readability */
+  color: #212529; /* Darker text color for better contrast */
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6; /* Improved line spacing */
 }
 
 .navbar-brand {
@@ -8,6 +12,8 @@ body {
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor; /* IE (non-standard property) */
   margin-top: -10px;
+  font-size: 1.5rem; /* Larger font size for better visibility */
+  font-weight: bold; /* Bold font for emphasis */
 }
 
 .brand-logo {
@@ -26,10 +32,15 @@ body {
 table {
   border-collapse: collapse;
   width: 100%;
+  margin-bottom: 1rem; /* Space below tables */
+  background-color: #fff; /* White background for tables */
+  border: 1px solid #dee2e6; /* Light border for tables */
 }
 
 table td {
   word-wrap: break-word;
+  padding: 0.75rem; /* Padding inside table cells */
+  border: 1px solid #dee2e6; /* Light border for table cells */
 }
 
 table td input {
@@ -46,6 +57,7 @@ table pre {
 
 .help-block {
   font-size: 10px;
+  color: #6c757d; /* Muted text color */
 }
 
 .graph-container {
@@ -76,6 +88,7 @@ table pre {
 
 a.link:hover {
   cursor: pointer;
+  text-decoration: underline; /* Underline on hover for better visibility */
 }
 
 .dend-node circle {
@@ -130,19 +143,19 @@ input[type="checkbox"] {
 
 /* THEME TOGGLER PROPERTIES */
 
-#toggler-text{
+#toggler-text {
   padding-left: 15px;
 }
+
 .switch {
   position: relative;
   display: inline-block;
   width: 42px;
   height: 21px;
   margin-top: 1.3rem;
-  
 }
 
-.switch input { 
+.switch input {
   opacity: 0;
   width: 0;
   height: 0;
@@ -196,10 +209,21 @@ input:checked + .slider:before {
 
 .footer {
   padding: 10px;
+  background-color: #f1f1f1; /* Light background for footer */
+  text-align: center; /* Centered text in footer */
 }
 
 .download-button {
   padding: 6px 12px !important;
+  background-color: #007bff; /* Primary button color */
+  color: #fff; /* White text color */
+  border: none; /* No border */
+  border-radius: 4px; /* Rounded corners */
+  transition: background-color 0.3s ease; /* Smooth transition */
+}
+
+.download-button:hover {
+  background-color: #0056b3; /* Darker button color on hover */
 }
 
 /* Media Queries for Responsiveness */
