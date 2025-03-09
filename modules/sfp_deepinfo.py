@@ -100,17 +100,14 @@ class sfp_deepinfo(SpiderFootPlugin):
             if info.get("result_count", 0) > 100:
                 domains = [item.get("punycode", "") for item in info.get("results", [])]
                 if len(domains) >= 100:
-                    # Avoid throttling
-                    time.sleep(1)
-                    if accum:
-                        accum.extend(domains)
-                    else:
-                        accum = domains
-                    return self.query(qry, page + 1, accum)
-                else:
-                    # We are at the last page
+                    return domains
+                # Avoid throttling
+                time.sleep(1)
+                if accum:
                     accum.extend(domains)
-                    return accum
+                else:
+                    accum = domains
+                return self.query(qry, page + 1, accum)
             else:
                 return info.get('results', [])
         except Exception as e:

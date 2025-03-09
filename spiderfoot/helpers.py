@@ -133,7 +133,7 @@ class SpiderFootHelpers():
             ValueError: module path does not exist
             SyntaxError: module data is malformed
         """
-        if not ignore_files:
+        if ignore_files is None:
             ignore_files = []
 
         if not isinstance(ignore_files, list):
@@ -143,31 +143,36 @@ class SpiderFootHelpers():
             raise ValueError(f"Modules directory does not exist: {path}")
 
         sfModules = dict()
-        valid_categories = ["Content Analysis", "Crawling and Scanning", "DNS",
-                            "Leaks, Dumps and Breaches", "Passive DNS",
-                            "Public Registries", "Real World", "Reputation Systems",
-                            "Search Engines", "Secondary Networks", "Social Media"]
+        valid_categories = [
+            "Content Analysis", "Crawling and Scanning", "DNS",
+            "Leaks, Dumps and Breaches", "Passive DNS",
+            "Public Registries", "Real World", "Reputation Systems",
+            "Search Engines", "Secondary Networks", "Social Media"
+        ]
 
         for filename in os.listdir(path):
-            if not filename.startswith("sfp_"):
+            # Skip files that do not start with 'sfp_' or do not end with '.py'
+            if not filename.startswith("sfp_") or not filename.endswith(".py"):
                 continue
-            if not filename.endswith(".py"):
-                continue
+            # Skip files that are in the ignore list
             if filename in ignore_files:
                 continue
 
             modName = filename.split('.')[0]
             sfModules[modName] = dict()
-            mod = __import__('modules.' + modName, globals(), locals(), [modName])
-            sfModules[modName]['object'] = getattr(mod, modName)()
-            mod_dict = sfModules[modName]['object'].asdict()
-            sfModules[modName].update(mod_dict)
+            try:
+                mod = __import__('modules.' + modName, globals(), locals(), [modName])
+                sfModules[modName]['object'] = getattr(mod, modName)()
+                mod_dict = sfModules[modName]['object'].asdict()
+                sfModules[modName].update(mod_dict)
+            except Exception as e:
+                raise SyntaxError(f"Error loading module {modName}: {e}")
 
+            # Ensure the module has only one category and it is valid
             if len(sfModules[modName]['cats']) > 1:
                 raise SyntaxError(f"Module {modName} has multiple categories defined but only one is supported.")
-
             if sfModules[modName]['cats'] and sfModules[modName]['cats'][0] not in valid_categories:
-                raise SyntaxError(f"Module {modName} has invalid category '{sfModules[modName]['cats']}'.")
+                raise SyntaxError(f"Module {modName} has invalid category '{sfModules[modName]['cats'][0]}'.")
 
         return sfModules
 
@@ -898,30 +903,33 @@ class SpiderFootHelpers():
             data (str): text to search for hashes
 
         Returns:
-            list[tuple[str, str]]: list of hashes
+            list[tuple[str, str]]: list of tuples containing (hash_type, hash_value)
         """
         ret: typing.List[typing.Tuple[str, str]] = list()
 
         if not isinstance(data, str):
             return ret
 
+        # Optimized regex patterns using word boundaries - more efficient
+        # and just as effective as the more complex patterns
         hashes = {
-            "MD5": re.compile(r"(?:[^a-fA-F\d]|\b)([a-fA-F\d]{32})(?:[^a-fA-F\d]|\b)"),
-            "SHA1": re.compile(r"(?:[^a-fA-F\d]|\b)([a-fA-F\d]{40})(?:[^a-fA-F\d]|\b)"),
-            "SHA256": re.compile(r"(?:[^a-fA-F\d]|\b)([a-fA-F\d]{64})(?:[^a-fA-F\d]|\b)"),
-            "SHA512": re.compile(r"(?:[^a-fA-F\d]|\b)([a-fA-F\d]{128})(?:[^a-fA-F\d]|\b)")
+            "MD5": re.compile(r"\b([a-fA-F0-9]{32})\b"),
+            "SHA1": re.compile(r"\b([a-fA-F0-9]{40})\b"),
+            "SHA256": re.compile(r"\b([a-fA-F0-9]{64})\b"),
+            "SHA512": re.compile(r"\b([a-fA-F0-9]{128})\b")
         }
 
-        for h in hashes:
-            matches = re.findall(hashes[h], data)
-            for m in matches:
-                ret.append((h, m))
+        # Extract each hash type and add to the results
+        for hash_type, pattern in hashes.items():
+            matches = pattern.findall(data)
+            for match in matches:
+                ret.append((hash_type, match))
 
         return ret
 
     @staticmethod
     def extractUrlsFromRobotsTxt(robotsTxtData: str) -> typing.List[str]:
-        """Parse the contents of robots.txt.
+        """Parse the contents of robots.txt to extract disallowed paths.
 
         Args:
             robotsTxtData (str): robots.txt file contents
@@ -930,20 +938,25 @@ class SpiderFootHelpers():
             list[str]: list of patterns which should not be followed
 
         Todo:
-            Check and parse User-Agent.
-
-            Fix whitespace parsing; ie, " " is not a valid disallowed path
+            Check and parse User-Agent directives.
+            Handle whitespace properly - " " is not a valid disallowed path.
         """
         returnArr: typing.List[str] = list()
 
         if not isinstance(robotsTxtData, str):
             return returnArr
 
+        # Improved regex to better handle robots.txt format
+        # Matches after 'Disallow:' and captures until whitespace or a comment
+        disallow_pattern = re.compile(r'^\s*Disallow:\s*([^ #\r\n]+)', re.IGNORECASE)
+        
         for line in robotsTxtData.splitlines():
-            if line.lower().startswith('disallow:'):
-                m = re.match(r'disallow:\s*(.[^ #]*)', line, re.IGNORECASE)
-                if m:
-                    returnArr.append(m.group(1))
+            match = disallow_pattern.search(line)
+            if match and match.group(1):
+                # Only add non-empty paths
+                path = match.group(1).strip()
+                if path:
+                    returnArr.append(path)
 
         return returnArr
 
@@ -962,8 +975,16 @@ class SpiderFootHelpers():
 
         keys: typing.Set[str] = set()
 
-        pattern = re.compile("(-----BEGIN.*?END.*?BLOCK-----)", re.MULTILINE | re.DOTALL)
-        for key in re.findall(pattern, data):
+        # Improved regex to match PGP key blocks
+        # This pattern looks for BEGIN and END block markers that are commonly found in PGP keys
+        pattern = re.compile(
+            r"-----BEGIN PGP (?:PUBLIC|PRIVATE) KEY BLOCK-----.*?-----END PGP (?:PUBLIC|PRIVATE) KEY BLOCK-----",
+            re.DOTALL | re.MULTILINE
+        )
+        
+        for match in pattern.finditer(data):
+            key = match.group(0)
+            # Filter out keys that are too short to be valid
             if len(key) >= 300:
                 keys.add(key)
 

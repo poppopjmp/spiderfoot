@@ -85,25 +85,70 @@ async def options_handler(path: str):
         "Access-Control-Allow-Headers": "Content-Type"
     }
 
-def run_spiderfoot_scan(target: str, modules: List[str]):
+def initialize_spiderfoot(use_postgresql: bool = False):
+    """
+    Initialize and configure the SpiderFoot instance.
+
+    Args:
+        use_postgresql (bool): Whether to use PostgreSQL as the database.
+
+    Returns:
+        SpiderFoot: The initialized SpiderFoot instance.
+    """
+    sfConfig_API = {
+        '_debug': False,
+        '_maxthreads': 3,
+        '__logging': True,
+        '__outputfilter': None,
+        '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
+        '_dnsserver': '',
+        '_fetchtimeout': 5,
+        '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+        '_internettlds_cache': 72,
+        '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
+        '__database': 'postgresql://user:password@localhost/spiderfoot' if use_postgresql else f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
+        '__modules__': None,
+        '__correlationrules__': None,
+        '_socks1type': '',
+        '_socks2addr': '',
+        '_socks3port': '',
+        '_socks4user': '',
+        '_socks5pwd': '',
+    }
+    return SpiderFoot(sfConfig_API)
+
+def handle_database_interactions(use_postgresql: bool = False):
+    """
+    Handle the database interactions required by SpiderFoot.
+
+    Args:
+        use_postgresql (bool): Whether to use PostgreSQL as the database.
+
+    Returns:
+        SpiderFootDb: The database handler.
+    """
+    sf = initialize_spiderfoot(use_postgresql)
+    return SpiderFootDb(sf.config)
+
+def run_spiderfoot_scan(target: str, modules: List[str], use_postgresql: bool = False):
     """Runs the SpiderFoot scan synchronously."""
-    sf = SpiderFoot(sfConfig_API)
+    sf = initialize_spiderfoot(use_postgresql)
     target_obj = SpiderFootTarget(target)
     sf.setTarget(target_obj)
     sf.setModules(modules)
     scan_id = startSpiderFootScanner(sf)
     return scan_id
 
-async def run_spiderfoot_scan_async(target: str, modules: List[str]):
+async def run_spiderfoot_scan_async(target: str, modules: List[str], use_postgresql: bool = False):
     """Runs the SpiderFoot scan in a separate thread/process."""
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, run_spiderfoot_scan, target, modules)
+    return await loop.run_in_executor(None, run_spiderfoot_scan, target, modules, use_postgresql)
 
 @app.post("/start_scan")
-async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """Start a new scan with the specified target and modules."""
     try:
-        scan_id = await run_spiderfoot_scan_async(scan_request.target, scan_request.modules)
+        scan_id = await run_spiderfoot_scan_async(scan_request.target, scan_request.modules, use_postgresql)
         return {"scan_id": scan_id}
 
     except TypeError as e:
@@ -114,11 +159,11 @@ async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTask
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.post("/stop_scan/{scan_id}")
-async def stop_scan(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def stop_scan(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """Stop a running scan with the specified scan ID."""
     try:
         uuid.UUID(scan_id) #validate UUID
-        dbh = SpiderFootDb()
+        dbh = handle_database_interactions(use_postgresql)
         dbh.scanInstanceSet(scan_id, status="ABORTED")
         return {"message": "Scan stopped successfully"}
     except ValueError:
@@ -131,7 +176,7 @@ async def stop_scan(scan_id: str, credentials: HTTPBasicCredentials = Depends(au
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/modules")
-async def list_modules(credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def list_modules(credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     List all available modules.
 
@@ -139,7 +184,7 @@ async def list_modules(credentials: HTTPBasicCredentials = Depends(authenticate)
         dict: A list of available modules.
     """
     try:
-        sf = SpiderFoot(sfConfig_API)
+        sf = initialize_spiderfoot(use_postgresql)
         modules = sf.listModules()
         return {"modules": modules}
     except Exception as e:
@@ -147,11 +192,11 @@ async def list_modules(credentials: HTTPBasicCredentials = Depends(authenticate)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_results/{scan_id}")
-async def get_scan_results(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def get_scan_results(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """Get the scan results for the specified scan ID."""
     try:
         uuid.UUID(scan_id)  # Validate UUID
-        dbh = SpiderFootDb()
+        dbh = handle_database_interactions(use_postgresql)
         results = dbh.scanResultEvent(scan_id)
 
         formatted_results = []
@@ -173,7 +218,7 @@ async def get_scan_results(scan_id: str, credentials: HTTPBasicCredentials = Dep
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/active_scans")
-async def list_active_scans(credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def list_active_scans(credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     List all active scans.
 
@@ -181,7 +226,7 @@ async def list_active_scans(credentials: HTTPBasicCredentials = Depends(authenti
         dict: A list of active scans.
     """
     try:
-        dbh = SpiderFootDb()
+        dbh = handle_database_interactions(use_postgresql)
         active_scans = dbh.scanInstanceList()
         return {"active_scans": active_scans}
     except Exception as e:
@@ -189,7 +234,7 @@ async def list_active_scans(credentials: HTTPBasicCredentials = Depends(authenti
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_status/{scan_id}")
-async def get_scan_status(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def get_scan_status(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     Get the status of a scan with the specified scan ID.
 
@@ -200,7 +245,7 @@ async def get_scan_status(scan_id: str, credentials: HTTPBasicCredentials = Depe
         dict: The status of the scan.
     """
     try:
-        sf = SpiderFoot(sfConfig_API)
+        sf = initialize_spiderfoot(use_postgresql)
         status = sf.getScanStatus(scan_id)
         return {"status": status}
     except TypeError as e:
@@ -211,7 +256,7 @@ async def get_scan_status(scan_id: str, credentials: HTTPBasicCredentials = Depe
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_history")
-async def list_scan_history(credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def list_scan_history(credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     List the history of all scans.
 
@@ -219,7 +264,7 @@ async def list_scan_history(credentials: HTTPBasicCredentials = Depends(authenti
         dict: A list of scan history.
     """
     try:
-        sf = SpiderFoot(sfConfig_API)
+        sf = initialize_spiderfoot(use_postgresql)
         history = sf.listScanHistory()
         return {"history": history}
     except Exception as e:
@@ -227,7 +272,7 @@ async def list_scan_history(credentials: HTTPBasicCredentials = Depends(authenti
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/export_scan_results/{scan_id}")
-async def export_scan_results(scan_id: str, export_format: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def export_scan_results(scan_id: str, export_format: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     Export the scan results for the specified scan ID in the specified format.
 
@@ -239,7 +284,7 @@ async def export_scan_results(scan_id: str, export_format: str, credentials: HTT
         dict: The exported scan results.
     """
     try:
-        sf = SpiderFoot(sfConfig_API)
+        sf = initialize_spiderfoot(use_postgresql)
         exported_results = sf.exportScanResults(scan_id, export_format)
         return {"exported_results": exported_results}
     except TypeError as e:
@@ -250,7 +295,7 @@ async def export_scan_results(scan_id: str, export_format: str, credentials: HTT
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.post("/import_api_key")
-async def import_api_key(api_key_request: APIKeyRequest, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def import_api_key(api_key_request: APIKeyRequest, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     Import an API key for a specific module.
 
@@ -261,7 +306,7 @@ async def import_api_key(api_key_request: APIKeyRequest, credentials: HTTPBasicC
         dict: A message indicating the API key was imported successfully.
     """
     try:
-        sf = SpiderFoot(sfConfig_API)
+        sf = initialize_spiderfoot(use_postgresql)
         sf.importApiKey(api_key_request.module, api_key_request.key)
         return {"message": "API key imported successfully"}
     except TypeError as e:
@@ -272,7 +317,7 @@ async def import_api_key(api_key_request: APIKeyRequest, credentials: HTTPBasicC
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/export_api_keys")
-async def export_api_keys(credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def export_api_keys(credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     Export all API keys.
 
@@ -280,7 +325,7 @@ async def export_api_keys(credentials: HTTPBasicCredentials = Depends(authentica
         dict: A list of exported API keys.
     """
     try:
-        sf = SpiderFoot(sfConfig_API)
+        sf = initialize_spiderfoot(use_postgresql)
         api_keys = sf.exportApiKeys()
         return {"api_keys": api_keys}
     except Exception as e:
@@ -288,7 +333,7 @@ async def export_api_keys(credentials: HTTPBasicCredentials = Depends(authentica
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_correlations/{scan_id}")
-async def get_scan_correlations(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def get_scan_correlations(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     Get the scan correlations for the specified scan ID.
 
@@ -299,7 +344,7 @@ async def get_scan_correlations(scan_id: str, credentials: HTTPBasicCredentials 
         dict: The scan correlations.
     """
     try:
-        sf = SpiderFoot(sfConfig_API)
+        sf = initialize_spiderfoot(use_postgresql)
         correlations = sf.getScanCorrelations(scan_id)
         return {"correlations": correlations}
     except TypeError as e:
@@ -310,7 +355,7 @@ async def get_scan_correlations(scan_id: str, credentials: HTTPBasicCredentials 
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.get("/scan_logs/{scan_id}")
-async def get_scan_logs(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def get_scan_logs(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     Get the scan logs for the specified scan ID.
 
@@ -321,7 +366,7 @@ async def get_scan_logs(scan_id: str, credentials: HTTPBasicCredentials = Depend
         dict: The scan logs.
     """
     try:
-        sf = SpiderFoot(sfConfig_API)
+        sf = initialize_spiderfoot(use_postgresql)
         logs = sf.getScanLogs(scan_id)
         return {"logs": logs}
     except TypeError as e:
@@ -329,10 +374,10 @@ async def get_scan_logs(scan_id: str, credentials: HTTPBasicCredentials = Depend
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         log.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail:str(e)) from e
 
 @app.get("/scan_summary/{scan_id}")
-async def get_scan_summary(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def get_scan_summary(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     Get the scan summary for the specified scan ID.
 
@@ -343,15 +388,15 @@ async def get_scan_summary(scan_id: str, credentials: HTTPBasicCredentials = Dep
         dict: The scan summary.
     """
     try:
-        sf = SpiderFoot(sfConfig_API)
+        sf = initialize_spiderfoot(use_postgresql)
         summary = sf.getScanSummary(scan_id)
         return {"summary": summary}
     except TypeError as e:
         log.error(f"TypeError: {e}")
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail:str(e)) from e
     except Exception as e:
         log.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail:str(e)) from e
 
 @app.get("/docs")
 async def get_docs():
@@ -379,7 +424,7 @@ async def get_swagger_ui():
     return get_swagger_ui_html(openapi_url="/openapi.json", title="SpiderFoot REST API")
 
 @app.get("/export_scan_results/{scan_id}/csv")
-async def export_scan_results_csv(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def export_scan_results_csv(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     Export the scan results for the specified scan ID in CSV format.
 
@@ -390,7 +435,7 @@ async def export_scan_results_csv(scan_id: str, credentials: HTTPBasicCredential
         StreamingResponse: The exported scan results in CSV format.
     """
     try:
-        dbh = SpiderFootDb()
+        dbh = handle_database_interactions(use_postgresql)
         results = dbh.scanResultEvent(scan_id)
 
         output = io.StringIO()
@@ -404,10 +449,10 @@ async def export_scan_results_csv(scan_id: str, credentials: HTTPBasicCredential
         return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=scan_results_{scan_id}.csv"})
     except Exception as e:
         logging.error(f"Unexpected error in export_scan_results_csv: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail:str(e)) from e
 
 @app.get("/export_scan_results/{scan_id}/json")
-async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate)):
+async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
     """
     Export the scan results for the specified scan ID in JSON format.
 
@@ -418,7 +463,7 @@ async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentia
         JSONResponse: The exported scan results in JSON format.
     """
     try:
-        dbh = SpiderFootDb()
+        dbh = handle_database_interactions(use_postgresql)
         results = dbh.scanResultEvent(scan_id)
 
         formatted_results = []
@@ -437,7 +482,7 @@ async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentia
         return JSONResponse(content={"results": formatted_results})
     except Exception as e:
         logging.error(f"Unexpected error in export_scan_results_json: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail:str(e)) from e
 
 @app.exception_handler(HTTPException)
 async def custom_http_exception_handler(request, exc):
@@ -472,39 +517,6 @@ async def custom_exception_handler(request, exc):
         status_code=500,
         content={"message": "An unexpected error occurred."},
     )
-
-def initialize_spiderfoot():
-    """
-    Initialize and configure the SpiderFoot instance.
-    """
-    global sfConfig_API
-    sfConfig_API = {
-        '_debug': False,
-        '_maxthreads': 3,
-        '__logging': True,
-        '__outputfilter': None,
-        '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
-        '_dnsserver': '',
-        '_fetchtimeout': 5,
-        '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
-        '_internettlds_cache': 72,
-        '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
-        '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
-        '__modules__': None,
-        '__correlationrules__': None,
-        '_socks1type': '',
-        '_socks2addr': '',
-        '_socks3port': '',
-        '_socks4user': '',
-        '_socks5pwd': '',
-    }
-
-def handle_database_interactions():
-    """
-    Handle the database interactions required by SpiderFoot.
-    """
-    dbh = SpiderFootDb(sfConfig_API)
-    return dbh
 
 def handle_scan_status(scan_id: str):
     """

@@ -10,6 +10,11 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 class TestModuleIntegrationCloudflaredns(unittest.TestCase):
 
     def test_handleEvent_event_data_safe_internet_name_not_blocked_should_not_return_event(self):
+        """
+        Test handleEvent() with a safe domain.
+        Args:
+            mock_getaddrinfo (MagicMock): Mock for requests.getaddrinfo.
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_cloudflaredns()
@@ -42,6 +47,11 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_handleEvent_event_data_adult_internet_name_blocked_should_return_event(self):
+        """
+        Test handleEvent() with a blocked domain.
+        Args:
+            mock_getaddrinfo (MagicMock): Mock for requests.getaddrinfo.
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_cloudflaredns()

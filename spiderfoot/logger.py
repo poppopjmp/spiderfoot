@@ -1,9 +1,11 @@
 import atexit
 import logging
+import os
+import sqlite3
 import sys
 import time
 from contextlib import suppress
-from logging.handlers import QueueHandler, QueueListener
+from logging.handlers import QueueHandler, QueueListener, TimedRotatingFileHandler
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
 
@@ -91,7 +93,7 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
 
     # Log debug messages to file
     log_dir = SpiderFootHelpers.logPath()
-    debug_handler = logging.handlers.TimedRotatingFileHandler(
+    debug_handler = TimedRotatingFileHandler(
         f"{log_dir}/spiderfoot.debug.log",
         when="d",
         interval=1,
@@ -99,7 +101,7 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
     )
 
     # Log error messages to file
-    error_handler = logging.handlers.TimedRotatingFileHandler(
+    error_handler = TimedRotatingFileHandler(
         f"{log_dir}/spiderfoot.error.log",
         when="d",
         interval=1,

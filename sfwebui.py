@@ -90,17 +90,6 @@ class SpiderFootWebUi:
         logWorkerSetup(self.loggingQueue)
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
 
-        csp = (
-            secure.ContentSecurityPolicy()
-            .default_src("'self'")
-            .script_src("'self'", "'unsafe-inline'", "blob:")
-            .style_src("'self'", "'unsafe-inline'")
-            .base_uri("'self'")
-            .connect_src("'self'", "data:")
-            .frame_src("'self'", 'data:')
-            .img_src("'self'", "data:")
-        )
-
 
     def error_page(self: 'SpiderFootWebUi') -> None:
         """Error page."""
@@ -255,6 +244,7 @@ class SpiderFootWebUi:
                             row[11], row[4], row[13], row[14]])
 
         return retdata
+
     def buildExcel(self, data: list, columnNames: list, sheetNameIndex: int = 0) -> bytes:
         """Convert supplied raw data into Excel format.
 

@@ -62,6 +62,12 @@ sfConfig = {
     '_socks3port': '',
     '_socks4user': '',
     '_socks5pwd': '',
+    '_dbtype': 'sqlite',  # Database type: sqlite or postgres
+    '_dbhost': 'localhost',  # PostgreSQL host
+    '_dbport': 5432,  # PostgreSQL port
+    '_dbname': 'spiderfoot',  # PostgreSQL database name
+    '_dbuser': '',  # PostgreSQL username
+    '_dbpassword': '',  # PostgreSQL password
 }
 sfOptdescs = {
     '_debug': "Enable debugging?",
@@ -77,7 +83,13 @@ sfOptdescs = {
     '_socks3port': 'SOCKS Server TCP Port. Usually 1080 for 4/5, 8080 for HTTP and 9050 for TOR.',
     '_socks4user': 'SOCKS Username. Valid only for SOCKS4 and SOCKS5 servers.',
     '_socks5pwd': "SOCKS Password. Valid only for SOCKS5 servers.",
-    '_modulesenabled': "Modules enabled for the scan."  # This is a hack to get a description for an option not actually available.
+    '_modulesenabled': "Modules enabled for the scan.",
+    '_dbtype': "Database type: sqlite or postgres",
+    '_dbhost': "PostgreSQL host",
+    '_dbport': "PostgreSQL port",
+    '_dbname': "PostgreSQL database name",
+    '_dbuser': "PostgreSQL username",
+    '_dbpassword': "PostgreSQL password",
 }
 
 
@@ -115,6 +127,12 @@ def main() -> None:
         p.add_argument("-V", "--version", action='store_true', help="Display the version of SpiderFoot and exit.")
         p.add_argument("-max-threads", type=int, help="Max number of modules to run concurrently.")
         p.add_argument("--rest-api", action='store_true', help="Start the REST API.")  # P9f5e
+        p.add_argument("--dbtype", choices=["sqlite", "postgres"], default="sqlite", help="Database type: sqlite or postgres.")
+        p.add_argument("--dbhost", type=str, help="PostgreSQL host.")
+        p.add_argument("--dbport", type=int, help="PostgreSQL port.")
+        p.add_argument("--dbname", type=str, help="PostgreSQL database name.")
+        p.add_argument("--dbuser", type=str, help="PostgreSQL username.")
+        p.add_argument("--dbpassword", type=str, help="PostgreSQL password.")
 
         args = p.parse_args()  # Parse arguments after defining p
 
@@ -132,6 +150,19 @@ def main() -> None:
 
         if args.q:
             sfConfig['__logging'] = False
+
+        if args.dbtype:
+            sfConfig['_dbtype'] = args.dbtype
+        if args.dbhost:
+            sfConfig['_dbhost'] = args.dbhost
+        if args.dbport:
+            sfConfig['_dbport'] = args.dbport
+        if args.dbname:
+            sfConfig['_dbname'] = args.dbname
+        if args.dbuser:
+            sfConfig['_dbuser'] = args.dbuser
+        if args.dbpassword:
+            sfConfig['_dbpassword'] = args.dbpassword
 
         loggingQueue = mp.Queue()
         logListenerSetup(loggingQueue, sfConfig)
@@ -164,7 +195,10 @@ def main() -> None:
 
         # Initialize database handle
         try:
-            dbh = SpiderFootDb(sfConfig)
+            if sfConfig['_dbtype'] == 'postgres':
+                dbh = SpiderFootDb(sfConfig, dbtype='postgres')
+            else:
+                dbh = SpiderFootDb(sfConfig)
         except Exception as e:
             log.critical(f"Failed to initialize database: {e}", exc_info=True)
             sys.exit(-1)
@@ -343,6 +377,19 @@ def process_target(args, log):
 
 
 def prepare_modules(args, sf, sfModules, log, targetType):
+    """
+    Prepare the list of modules to be used in the scan based on the provided arguments.
+
+    Args:
+        args (argparse.Namespace): Command-line arguments.
+        sf (SpiderFoot): SpiderFoot instance.
+        sfModules (dict): Dictionary of available modules.
+        log (logging.Logger): Logger instance.
+        targetType (str): Type of the target.
+
+    Returns:
+        list: List of modules to be used in the scan.
+    """
     modlist = list()
     if not args.t and not args.m and not args.u:
         log.warning("You didn't specify any modules, types or use case, so all modules will be enabled.")
@@ -375,9 +422,9 @@ def prepare_modules(args, sf, sfModules, log, targetType):
     if args.m:
         modlist = list(filter(None, args.m.split(",")))
 
-    # Select modules if the user selected usercase
+    # Select modules if the user selected use case
     if args.u:
-        usecase = args.u[0].upper() + args.u[1:]  # Make the first Letter Uppercase
+        usecase = args.u[0].upper() + args.u[1:]  # Make the first letter uppercase
         for mod in sfConfig['__modules__']:
             if usecase == 'All' or usecase in sfConfig['__modules__'][mod]['group']:
                 modlist.append(mod)
@@ -388,31 +435,43 @@ def prepare_modules(args, sf, sfModules, log, targetType):
     for r in typedata:
         types[r[1]] = r[0]
 
+    # Configure options for the sfp__stor_stdout module
     sfp__stor_stdout_opts = sfConfig['__modules__']['sfp__stor_stdout']['opts']
     sfp__stor_stdout_opts['_eventtypes'] = types
+
+    # Handle command-line arguments for filtering and output formatting
     if args.f:
         if args.f and not args.t:
             log.error("You can only use -f with -t. Use --help for guidance.")
             sys.exit(-1)
         sfp__stor_stdout_opts['_showonlyrequested'] = True
+
     if args.F:
         sfp__stor_stdout_opts['_requested'] = args.F.split(",")
         sfp__stor_stdout_opts['_showonlyrequested'] = True
+
     if args.o:
         if args.o not in ["tab", "csv", "json"]:
             log.error("Invalid output format selected. Must be 'tab', 'csv' or 'json'.")
             sys.exit(-1)
         sfp__stor_stdout_opts['_format'] = args.o
+
     if args.t:
         sfp__stor_stdout_opts['_requested'] = args.t.split(",")
+
     if args.n:
         sfp__stor_stdout_opts['_stripnewline'] = True
+
     if args.r:
         sfp__stor_stdout_opts['_showsource'] = True
+
     if args.S:
         sfp__stor_stdout_opts['_maxlength'] = args.S
+
     if args.D:
         sfp__stor_stdout_opts['_csvdelim'] = args.D
+
+    # Handle strict mode (-x) for module selection
     if args.x:
         tmodlist = list()
         modlist = list()
@@ -434,6 +493,12 @@ def prepare_modules(args, sf, sfModules, log, targetType):
 
 
 def prepare_scan_output(args):
+    """
+    Prepare the output format for the scan results based on command-line arguments.
+
+    Args:
+        args (argparse.Namespace): Command-line arguments.
+    """
     if args.o == "json":
         print("[", end='')
     elif not args.H:
@@ -448,6 +513,7 @@ def prepare_scan_output(args):
             else:
                 delim = ","
 
+        # Include headers if requested
         if args.r:
             if delim == "\t":
                 headers = delim.join(["Source".ljust(30), "Type".ljust(45), "Source Data", "Data"])
@@ -754,7 +820,6 @@ if __name__ == '__main__':
     from pathlib import Path
     if os.path.exists('spiderfoot.db'):
         print(f"ERROR: spiderfoot.db file exists in {os.path.dirname(__file__)}")
-        print("SpiderFoot no longer supports loading the spiderfoot.db database from the application directory.")
         print(f"The database is now loaded from your home directory: {Path.home()}/.spiderfoot/spiderfoot.db")
         print(f"This message will go away once you move or remove spiderfoot.db from {os.path.dirname(__file__)}")
         sys.exit(-1)
@@ -762,7 +827,6 @@ if __name__ == '__main__':
     from pathlib import Path
     if os.path.exists('passwd'):
         print(f"ERROR: passwd file exists in {os.path.dirname(__file__)}")
-        print("SpiderFoot no longer supports loading credentials from the application directory.")
         print(f"The passwd file is now loaded from your home directory: {Path.home()}/.spiderfoot/passwd")
         print(f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
         sys.exit(-1)

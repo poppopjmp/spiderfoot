@@ -701,7 +701,6 @@ class SpiderFootCorrelator:
         # Remove empty buckets
         buckets = {bucket_id: bucket for bucket_id, bucket in buckets.items() if bucket}
 
-
     def analysis_outlier(self, rule: dict, buckets: dict) -> None:
         """Analyze buckets to remove those that contain outlier events based on event counts.
         Args:
@@ -756,7 +755,7 @@ class SpiderFootCorrelator:
                     countmap[value] = countmap.get(value, 0) + 1
 
             if not rule.get('count_unique_only', False):
-                for value, count in countmap.items():
+                for _value, count in countmap.items():
                     if not (rule.get('minimum', 0) <= count <= rule.get('maximum', 999999999)):
                         # Delete the bucket if any value doesn't meet the criteria
                         del buckets[bucket]
