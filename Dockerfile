@@ -5,7 +5,7 @@
 
 FROM debian:bullseye-slim
 ARG REQUIREMENTS=requirements.txt
-RUN apt-get update && apt-get install -y --no-install-recommends gcc libxml2 libxslt1.1 libjpeg62-turbo zlib1g git curl unzip wget npm swig libxml2-dev libxslt-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev python3 python3-pip nbtscan onesixtyone nmap whatweb bsdmainutils dnsutils coreutils libcap2-bin && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libxml2 libxslt1.1 libjpeg62-turbo zlib1g git curl unzip wget npm swig libxml2-dev build-essential libxslt-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev python3 python3-dev python3-pip nbtscan onesixtyone nmap whatweb bsdmainutils dnsutils coreutils libcap2-bin && apt-get clean && rm -rf /var/lib/apt/lists/*
 WORKDIR /home/spiderfoot
 COPY $REQUIREMENTS requirements.txt ./
 RUN pip install --no-cache-dir -U pip==25.0.1 && pip install --no-cache-dir -r requirements.txt
