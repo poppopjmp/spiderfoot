@@ -391,6 +391,9 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
                     self.assertIsInstance(condition, str, f"Module {module} option {opt} has invalid condition type {type(condition)}")
 
     def test_module_options_have_valid_visibility(self):
+        """
+        Ensure that each module option has valid visibility.
+        """
         sf = SpiderFoot(self.default_options)
         sfModules = self.load_modules(sf)
         for module in sfModules:
@@ -401,6 +404,9 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
                 self.assertTrue(visibility, f"Module {module} option {opt} has empty visibility")
 
     def test_module_options_have_valid_editability(self):
+        """
+        Ensure that each module option has valid editability.
+        """
         sf = SpiderFoot(self.default_options)
         sfModules = self.load_modules(sf)
         for module in sfModules:
@@ -411,6 +417,9 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
                 self.assertTrue(editability, f"Module {module} option {opt} has empty editability")
 
     def test_module_options_have_valid_help(self):
+        """
+        Ensure that each module option has valid help text.
+        """
         sf = SpiderFoot(self.default_options)
         sfModules = self.load_modules(sf)
         for module in sfModules:

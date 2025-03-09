@@ -236,6 +236,7 @@ Bitcoin Finder|Identify bitcoin addresses in scraped webpages.|Internal
 [Censys](https://censys.io/)|Obtain host information from Censys.io.|Tiered API
 [Certificate Transparency](https://crt.sh/)|Gather hostnames from historical certificates in crt.sh.|Free API
 [CertSpotter](https://sslmate.com/certspotter/)|Gather information about SSL certificates from SSLMate CertSpotter API.|Tiered API
+[Cisco Umbrella](https://umbrella.cisco.com/) | Check if a domain is categorized as malicious or unsafe by Cisco Umbrella. | Tiered API
 [CINS Army List](https://cinsscore.com/)|Check if a netblock or IP address is malicious according to Collective Intelligence Network Security (CINS) Army list.|Free API
 [CIRCL.LU](https://www.circl.lu/)|Obtain information from CIRCL.LU's Passive DNS and Passive SSL databases.|Free API
 [CleanBrowsing.org](https://cleanbrowsing.org/)|Check if a host would be blocked by CleanBrowsing.org DNS content filters.|Free API
@@ -255,6 +256,7 @@ Cross-Referencer|Identify whether other domains are associated ('Affiliates') of
 Custom Threat Feed|Check if a host/domain, netblock, ASN or IP is malicious according to your custom feed.|Internal
 [CyberCrime-Tracker.net](https://cybercrime-tracker.net/)|Check if a host/domain or IP address is malicious according to CyberCrime-Tracker.net.|Free API
 [Debounce](https://debounce.io/)|Check whether an email is disposable|Free API
+[Deepinfo](https://deepinfo.com/) | Search Deepinfo.com for historical DNS records, WHOIS data, and associated domains. | Tiered API
 [Dehashed](https://www.dehashed.com/)|Gather breach data from Dehashed API.|Commercial API
 [Digital Ocean Space Finder](https://www.digitalocean.com/products/spaces/)|Search for potential Digital Ocean Spaces associated with the target and attempt to list their contents.|Free API
 DNS Brute-forcer|Attempts to identify hostnames through brute-forcing common names and iterations.|Internal
@@ -280,6 +282,7 @@ Ethereum Address Extractor|Identify ethereum addresses in scraped webpages.|Inte
 File Metadata Extractor|Extracts meta data from documents and images.|Internal
 [Flickr](https://www.flickr.com/)|Search Flickr for domains, URLs and emails related to the specified domain.|Free API
 [Focsec](https://focsec.com/)|Look up IP address information from Focsec.|Tiered API
+[Fofa](https://fofa.so/)|Look up domain, IP address, and other information from Fofa.|Tiered API
 [FortiGuard Antispam](https://www.fortiguard.com/)|Check if an IP address is malicious according to FortiGuard Antispam.|Free API
 [Fraudguard](https://fraudguard.io/)|Obtain threat information from Fraudguard.io|Tiered API
 [F-Secure Riddler.io](https://riddler.io/)|Obtain network information from F-Secure Riddler.io API.|Commercial API
@@ -321,6 +324,7 @@ Interesting File Finder|Identifies potential files of interest, e.g. office docu
 Junk File Finder|Looks for old/temporary and other similar files.|Internal
 [Keybase](https://keybase.io/)|Obtain additional information about domain names and identified usernames.|Free API
 [Koodous](https://koodous.com/apks/)|Search Koodous for mobile apps.|Tiered API
+[LeakCheck](https://leakcheck.net/) | Check LeakCheck.net for data breaches associated with a domain or email address. | Free API
 [LeakIX](https://leakix.net/)|Search LeakIX for host data leaks, open ports, software and geoip.|Free API
 [Leak-Lookup](https://leak-lookup.com/)|Searches Leak-Lookup.com's database of breaches.|Free API
 [Maltiverse](https://maltiverse.com)|Obtain information about any malicious activities involving IP addresses|Free API
@@ -330,6 +334,7 @@ Junk File Finder|Looks for old/temporary and other similar files.|Internal
 [multiproxy.org Open Proxies](https://multiproxy.org/)|Check if an IP address is an open proxy according to multiproxy.org open proxy list.|Free API
 [MySpace](https://myspace.com/)|Gather username and location from MySpace.com profiles.|Free API
 [NameAPI](https://www.nameapi.org/)|Check whether an email is disposable|Tiered API
+[Netlas](https://netlas.io/)|Look up domain and IP address information from Netlas API.|Tiered API
 [NetworksDB](https://networksdb.io/)|Search NetworksDB.io API for IP address and domain information.|Tiered API
 [NeutrinoAPI](https://www.neutrinoapi.com/)|Search NeutrinoAPI for phone location information, IP address information, and host reputation.|Tiered API
 [numverify](http://numverify.com/)|Lookup phone number location and carrier information from numverify.com.|Tiered API
@@ -359,6 +364,7 @@ Port Scanner - TCP|Scans for commonly open TCP ports on Internet-facing systems.
 [RIPE](https://www.ripe.net/)|Queries the RIPE registry (includes ARIN data) to identify netblocks and other info.|Free API
 [RiskIQ](https://community.riskiq.com/)|Obtain information from RiskIQ's (formerly PassiveTotal) Passive DNS and Passive SSL databases.|Tiered API
 [Robtex](https://www.robtex.com/)|Search Robtex.com for hosts sharing the same IP.|Free API
+[RocketReach](https://rocketreach.co/)|Look up email addresses, phone numbers, and social media profiles from RocketReach.|Tiered API
 [searchcode](https://searchcode.com/)|Search searchcode for code repositories mentioning the target domain.|Free API
 [SecurityTrails](https://securitytrails.com/)|Obtain Passive DNS and other information from SecurityTrails|Tiered API
 [Seon](https://seon.io/)|Queries seon.io to gather intelligence about IP Addresses, email addresses, and phone numbers|Commercial API
@@ -420,6 +426,7 @@ Web Framework Identifier|Identify the usage of popular web frameworks like jQuer
 Web Server Identifier|Obtain web server banners to identify versions of web servers being used.|Internal
 Web Spider|Spidering of web-pages to extract content for searching.|Internal
 [WhatCMS](https://whatcms.org/)|Check web technology using WhatCMS.org API.|Tiered API
+[WhoisFreaks](https://whoisfreaks.com/) | Perform WHOIS lookups and identify historical WHOIS records using WhoisFreaks.com. | Tiered API
 [Whoisology](https://whoisology.com/)|Reverse Whois lookups using Whoisology.com.|Commercial API
 Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 [Whoxy](https://www.whoxy.com/)|Reverse Whois lookups using Whoxy.com.|Commercial API
@@ -432,25 +439,6 @@ Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 [ZoneFile.io](https://zonefiles.io)|Search ZoneFiles.io Domain query API for domain information.|Tiered API
 [Zone-H Defacement Check](https://zone-h.org/)|Check if a hostname/domain appears on the zone-h.org 'special defacements' RSS feed.|Free API
 [ZoomEye](https://www.zoomeye.org/)|Look up domain, IP address, and other information from ZoomEye.|Tiered API
-[Fofa](https://fofa.so/)|Look up domain, IP address, and other information from Fofa.|Tiered API
-[RocketReach](https://rocketreach.co/)|Look up email addresses, phone numbers, and social media profiles from RocketReach.|Tiered API
-[Netlas](https://netlas.io/)|Look up domain and IP address information from Netlas API.|Tiered API
-[Cisco Umbrella](https://umbrella.cisco.com/) | Check if a domain is categorized as malicious or unsafe by Cisco Umbrella. | Tiered API
-[Deepinfo](https://deepinfo.com/) | Search Deepinfo.com for historical DNS records, WHOIS data, and associated domains. | Tiered API
-[WhoisFreaks](https://whoisfreaks.com/) | Perform WHOIS lookups and identify historical WHOIS records using WhoisFreaks.com. | Tiered API
-[LeakCheck](https://leakcheck.net/) | Check LeakCheck.net for data breaches associated with a domain or email address. | Free API
-[sfp__stor_db.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_db.py)|SpiderFoot plug-in for storing events to the local SpiderFoot SQLite database.|Internal
-[sfp__stor_elasticsearch.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_elasticsearch.py)|SpiderFoot plug-in for storing events to an ElasticSearch cluster.|Internal
-[sfp__stor_stdout.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_stdout.py)|SpiderFoot plug-in for dumping events to standard output.|Internal
-[sfp_abusech.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_abusech.py)|Check if a host/domain, IP address or netblock is malicious according to Abuse.ch.|Internal
-[sfp_abuseipdb.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_abuseipdb.py)|Check if an IP address is malicious according to AbuseIPDB.com blacklist.|Internal
-[sfp_accounts.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_accounts.py)|Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc.|Internal
-[sfp_adguard_dns.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_adguard_dns.py)|Check if a host would be blocked by AdGuard DNS.|Internal
-[sfp_ahmia.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_ahmia.py)|Search Tor 'Ahmia' search engine for mentions of the target.|Internal
-[sfp_alienvault.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_alienvault.py)|Obtain information from AlienVault Open Threat Exchange (OTX)|Internal
-[sfp_apple_itunes.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_apple_itunes.py)|Search Apple iTunes for mobile apps.|Internal
-[sfp_archiveorg.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_archiveorg.py)|Identifies historic versions of interesting files/pages from the Wayback Machine.|Internal
-[sfp_azureblobstorage.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_azureblobstorage.py)|Search for potential Azure blobs associated with the target and attempt to list their contents.|Internal
 
 ### DOCUMENTATION
 

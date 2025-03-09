@@ -2,7 +2,6 @@
 
 SpiderFoot includes various test suites.
 
-
 ## Unit and Integration Tests
 
 Unit and integration tests require test dependencies to be installed:
@@ -23,7 +22,6 @@ To run all unit and integration tests, including module integration tests, run:
 python3 -m pytest -n auto --flake8 --dist loadfile --durations=5 --cov-report html --cov=. .
 ```
 
-
 ## Module Integration Tests
 
 The module integration tests check module integration with remote third-party data sources.
@@ -34,11 +32,10 @@ To run the tests:
 python3 -m pytest -n auto --flake8 --dist loadfile --durations=5 --cov-report html --cov=. test/integration/modules/
 ```
 
-
 ## Acceptance Tests
 
-The acceptance tests check that the web intereface is working as
-intended and that SpiderFooot is operating correctly as a whole.
+The acceptance tests check that the web interface is working as
+intended and that SpiderFoot is operating correctly as a whole.
 
 These tests use a headless browser (Firefox by default), and
 must be run with `./test/acceptance` as current working directory.

@@ -35,6 +35,14 @@ from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootCorrelator
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 
+from fastapi import FastAPI, Depends
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from datetime import datetime, timedelta
+from typing import Optional
+
 __version__ = "5.0.3-dev"
 
 scanId = None
@@ -92,6 +100,74 @@ sfOptdescs = {
     '_dbpassword': "PostgreSQL password",
 }
 
+# OAuth2 configuration
+SECRET_KEY = "your_secret_key"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+app = FastAPI()
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = get_user(fake_users_db, username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+@app.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 def main() -> None:
 
@@ -597,48 +673,9 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
             }
         }
 
-        secrets = dict()
-        passwd_file = SpiderFootHelpers.dataPath() + '/passwd'
-        if os.path.isfile(passwd_file):
-            if not os.access(passwd_file, os.R_OK):
-                log.error("Could not read passwd file. Permission denied.")
-                sys.exit(-1)
-
-            with open(passwd_file, 'r') as f:
-                passwd_data = f.readlines()
-
-            for line in passwd_data:
-                if line.strip() == '':
-                    continue
-
-                if ':' not in line:
-                    log.error("Incorrect format of passwd file, must be username:password on each line.")
-                    sys.exit(-1)
-
-                u = line.strip().split(":")[0]
-                p = ':'.join(line.strip().split(":")[1:])
-
-                if not u or not p:
-                    log.error("Incorrect format of passwd file, must be username:password on each line.")
-                    sys.exit(-1)
-
-                secrets[u] = p
-
-        if secrets:
-            log.info("Enabling authentication based on supplied passwd file.")
-            conf['/'] = {
-                'tools.auth_digest.on': True,
-                'tools.auth_digest.realm': web_host,
-                'tools.auth_digest.get_ha1': auth_digest.get_ha1_dict_plain(secrets),
-                'tools.auth_digest.key': random.SystemRandom().randint(0, 99999999)
-            }
-        else:
-            warn_msg = "\n********************************************************************\n"
-            warn_msg += "Warning: passwd file contains no passwords. Authentication disabled.\n"
-            warn_msg += "Please consider adding authentication to protect this instance!\n"
-            warn_msg += "Refer to https://www.spiderfoot.net/documentation/#security.\n"
-            warn_msg += "********************************************************************\n"
-            log.warning(warn_msg)
+        # Use OAuth2 for authentication
+        log.info("Enabling OAuth2 authentication.")
+        app.include_router(router, prefix="/api")
 
         using_ssl = False
         key_path = SpiderFootHelpers.dataPath() + '/spiderfoot.key'
@@ -697,8 +734,8 @@ def handle_abort(signal, frame) -> None:
     Handle interrupt and abort scan.
 
     Args:
-        signal: TBD
-        frame: TBD
+        signal: Signal number.
+        frame: Current stack frame.
     """
     try:
         log = logging.getLogger(f"spiderfoot.{__name__}")
@@ -706,8 +743,10 @@ def handle_abort(signal, frame) -> None:
         global dbh
         global scanId
 
+        # Check if scanId and dbh are set
         if scanId and dbh:
             log.info(f"Aborting scan [{scanId}] ...")
+            # Update scan status to "ABORTED"
             dbh.scanInstanceSet(scanId, None, None, "ABORTED")
         sys.exit(-1)
     except Exception as e:
@@ -782,7 +821,7 @@ def generate_openapi_schema() -> dict:
 
     return get_openapi(
         title="SpiderFoot API",
-        version="1.0.0",
+        version="5.0.3",
         description="API documentation for SpiderFoot",
         routes=app.routes,
     )
