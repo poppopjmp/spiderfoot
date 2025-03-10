@@ -21,7 +21,6 @@ class TestSpiderFootPlugin(SpiderFootModuleTestCase):
         }
     def setUp(self):
         """Set up test case."""
-        self.module.opts = self.default_opts.copy()
         self.options = {
             '_debug': False,
             '__logging': True,
@@ -43,7 +42,10 @@ class TestSpiderFootPlugin(SpiderFootModuleTestCase):
         # Create a mock log
         self.mock_log = MagicMock()
         
+        # Initialize the module first
         self.module = SpiderFootPlugin()
+        # Then set its properties
+        self.module.opts = self.default_opts.copy()
         self.module.__name__ = "example module"
         self.module._stopScanning = False
         self.module.setDbh(dbh)
@@ -223,11 +225,8 @@ class TestSpiderFootPlugin(SpiderFootModuleTestCase):
         # No assertions as handleEvent is meant to be overridden
 
     def test_asdict(self):
-        module = SpiderFootPlugin()
-        module.opts = self.default_opts.copy()
-        
-        result = module.asdict()
-        
+        # Use the existing self.module instead of creating a new instance
+        result = self.module.asdict()
         self.assertIsInstance(result, dict)
 
     def test_finish(self):

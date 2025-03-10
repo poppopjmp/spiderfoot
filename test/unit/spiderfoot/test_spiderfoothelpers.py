@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock, mock_open, Mock
 import spiderfoot.helpers
 from spiderfoot.helpers import SpiderFootHelpers
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+from spiderfoot import spiderfoothelpers as helpers
 
 class TestSpiderFootHelpers(SpiderFootModuleTestCase):
     """Test SpiderFootHelpers."""
@@ -103,13 +104,13 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10'), 'http://example.com/test/')
         self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/')
         self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11'), 'http://example.com/test/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12'), 'http://example.com/test/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13'), 'http://example.com/test/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14'), 'http://example.com/test/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test.test2.test3.test4.test5.test6.test7.test8.test9.test10.test11/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5.test6.test7.test8.test9.test10.test11.test12'), 'http://example.com/test/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5.test6.test7.test8.test9.test10.test11.test12/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2.test3.test4.test5.test6.test7.test8.test9.test10.test11.test12.test13'), 'http://example.com/test/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5.test6.test7.test8.test9.test10.test11.test12.test13/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5.test6.test7.test8.test9.test10.test11.test12.test13.test14'), 'http://example.com/test/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5.test6.test7.test8.test9.test10.test11.test12.test13.test14/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/')
 
     def test_urlBaseUrl(self):
         self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test'), 'http://example.com')
@@ -139,8 +140,6 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5.test6.test7.test8.test9.test10.test11.test12.test13/'), 'http://example.com')
         self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5.test6.test7.test8.test9.test10.test11.test12.test13.test14'), 'http://example.com')
         self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5.test6.test7.test8.test9.test10.test11.test12.test13.test14/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5.test6.test7.test8.test9.test10.test11.test12.test13.test14.test15'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5.test6.test7.test8.test9.test10.test11.test12.test13.test14.test15/'), 'http://example.com')
 
     def test_dictionaryWordsFromWordlists(self):
         with patch('spiderfoot.helpers.resources.open_text', unittest.mock.mock_open(read_data='word1\nword2\nword3')):

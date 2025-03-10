@@ -13,6 +13,7 @@
 
 import re
 import time
+import requests
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
@@ -50,7 +51,8 @@ class sfp_zoneh(SpiderFootPlugin):
         'checkaffiliates': True,
         'feeds': ["specialdefacements", "published=0"],
         'cachetime': 48,
-        'fetchtimeout': 30
+        'fetchtimeout': 30,
+        'delay': 1,  # Added delay option like in zoomeye
     }
 
     # Option descriptions
@@ -59,36 +61,26 @@ class sfp_zoneh(SpiderFootPlugin):
         'checkaffiliates': "Check affiliates?",
         'feeds': "Zone-H RSS feeds to check: specialdefacements and/or published=0",
         'cachetime': "Hours to cache the feeds for (0 = no caching)",
-        'fetchtimeout': "Timeout for fetch operations in seconds"
+        'fetchtimeout': "Timeout for fetch operations in seconds",
+        'delay': "Delay between API requests (in seconds)",  # Added description
     }
-
-    # Be sure to completely clear any class variables in setup()
-    # or you run the risk of data persisting between scan runs.
 
     results = None
     errorState = False
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
-        self.results = self.tempStorage()
         self.errorState = False
-
-        # Clear / reset any other class member variables here
-        # or you risk them persisting between threads.
+        self.results = self.tempStorage()
 
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
-    # What events is this module interested in for input
-    # * = be notified about all events.
     def watchedEvents(self):
         return ["INTERNET_NAME", "IP_ADDRESS", "IPV6_ADDRESS",
                 "AFFILIATE_INTERNET_NAME", "AFFILIATE_IPADDR", "AFFILIATE_IPV6_ADDRESS",
                 "CO_HOSTED_SITE"]
 
-    # What events this module produces
-    # This is to support the end user in selecting modules based on events
-    # produced.
     def producedEvents(self):
         return ["DEFACED_INTERNET_NAME", "DEFACED_IPADDR",
                 "DEFACED_AFFILIATE_INTERNET_NAME",
@@ -107,6 +99,9 @@ class sfp_zoneh(SpiderFootPlugin):
         return False
 
     def fetchFeed(self, feed_name):
+        if self.errorState:
+            return None
+            
         feed_url = f"https://www.zone-h.org/rss/{feed_name}"
         cache_key = f"sfzoneh_{feed_name}"
         
@@ -115,37 +110,52 @@ class sfp_zoneh(SpiderFootPlugin):
             return content
             
         self.debug(f"Fetching Zone-H feed: {feed_url}")
-        data = self.sf.fetchUrl(
-            feed_url, 
-            useragent=self.opts['_useragent'],
-            timeout=self.opts['fetchtimeout']
-        )
         
-        if not data:
-            self.debug(f"Failed to fetch data from {feed_url}")
-            return None
+        try:
+            headers = {
+                'User-Agent': self.opts['_useragent'],
+                'Accept': 'application/rss+xml'
+            }
             
-        if data.get('code') not in [200, 201]:
-            self.debug(f"HTTP response code {data.get('code')} from {feed_url}")
-            return None
+            response = requests.get(
+                feed_url, 
+                headers=headers,
+                timeout=self.opts['fetchtimeout']
+            )
+            time.sleep(self.opts['delay'])
             
-        if not data.get('content'):
-            self.debug(f"Empty content from {feed_url}")
-            return None
+            if response.status_code != 200:
+                self.error(f"Zone-H API returned HTTP status {response.status_code}: {response.text}")
+                self.errorState = True
+                return None
+                
+            content = response.text
             
-        self.sf.cachePut(cache_key, data['content'])
-        return data['content']
+            if not content:
+                self.debug(f"Empty content from {feed_url}")
+                return None
+                
+            self.sf.cachePut(cache_key, content)
+            return content
+            
+        except requests.exceptions.RequestException as e:
+            self.error(f"Error fetching Zone-H feed: {e}")
+            self.errorState = True
+            return None
+        except Exception as e:
+            self.error(f"Unexpected error fetching Zone-H feed: {e}")
+            self.errorState = True
+            return None
 
-    # Handle events sent to this module
     def handleEvent(self, event):
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
 
-        self.debug(f"Received event, {eventName}, from {srcModuleName}")
-
         if self.errorState:
             return
+
+        self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventData in self.results:
             self.debug(f"Skipping {eventData}, already checked.")
@@ -185,6 +195,7 @@ class sfp_zoneh(SpiderFootPlugin):
                 
             content = self.fetchFeed(feed)
             if not content:
+                self.info(f"No content found for feed {feed}")
                 continue
                 
             ret = self.lookupItem(eventData, content)

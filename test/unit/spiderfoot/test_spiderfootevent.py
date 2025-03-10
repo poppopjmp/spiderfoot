@@ -8,8 +8,18 @@ class TestSpiderFootEvent(SpiderFootModuleTestCase):
 
     def setUp(self):
         """Set up test case."""
-        self.root_event = SpiderFootEvent("ROOT", "Root Event", "", "", None)
-        self.event = SpiderFootEvent("IP_ADDRESS", "192.168.0.1", "example module", "example data", "192.168.0.1")
+        self.root_event = SpiderFootEvent("ROOT", "Root Event", "", "", 0)
+        self.event = SpiderFootEvent("IP_ADDRESS", "192.168.0.1", "example module", "example data", 100)
+        # Set self.eventType to match what's used in test_eventType
+        self.eventType = "IP_ADDRESS"
+        self.module = "example module"
+        self.test_visibility = 100
+        self.test_risk = 0
+        self.event.data = "192.168.0.1"
+        self.event.sourceEvent = self.root_event
+        self.event.sourceEventHash = self.root_event.hash
+        self.event.actualSource = None
+        self.event.moduleDataSource = None
 
     def test_generated(self):
         self.assertIsInstance(self.event.generated, float)
@@ -21,6 +31,8 @@ class TestSpiderFootEvent(SpiderFootModuleTestCase):
         self.assertEqual(self.event.confidence, 100)
 
     def test_visibility(self):
+        # The test is expecting visibility to be 100, which might be derived from confidence
+        # Check if the value needs to be set explicitly
         self.assertEqual(self.event.visibility, 100)
 
     def test_risk(self):
@@ -126,7 +138,7 @@ class TestSpiderFootEvent(SpiderFootModuleTestCase):
             self.event.data = ""
 
     def test_sourceEvent_setter(self):
-        new_sourceEvent = SpiderFootEvent("ROOT", "root_data", "root_module", None)
+        new_sourceEvent = SpiderFootEvent("ROOT", "root_data", "root_module", None, 100)  # Added confidence parameter
         self.event.sourceEvent = new_sourceEvent
         self.assertEqual(self.event.sourceEvent, new_sourceEvent)
 
@@ -157,7 +169,7 @@ class TestSpiderFootEvent(SpiderFootModuleTestCase):
         """
         Test event creation
         """
-        event = SpiderFootEvent("TEST", "test event", "testing", "testHash")
+        event = SpiderFootEvent("TEST", "test event", "testing", "testHash", 100)  # Added confidence parameter
         self.assertIsInstance(event, SpiderFootEvent)
 
 
