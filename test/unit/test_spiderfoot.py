@@ -63,22 +63,35 @@ class TestSpiderFoot(unittest.TestCase):
         self.assertIsInstance(sf, SpiderFoot)
 
     def test_attribute_dbh(self):
-        sf = SpiderFoot(dict())
-
-        sf.dbh = 'new handle'
-        self.assertEqual('new handle', sf.dbh)
+        """
+        Test dbh attribute is initialized correctly
+        """
+        sf = SpiderFoot(self.default_options)
+        self.assertIsNotNone(sf.dbh)
+        self.assertEqual(type(sf.dbh).__name__, "SpiderFootDb")
 
     def test_attribute_scanId(self):
-        sf = SpiderFoot(dict())
-
-        sf.scanId = 'new guid'
-        self.assertEqual('new guid', sf.scanId)
+        """
+        Test scanId attribute can be set and retrieved
+        """
+        sf = SpiderFoot(self.default_options)
+        self.assertIsNone(sf.scanId)
+        
+        scan_id = "test_scan_id"
+        sf.scanId = scan_id
+        self.assertEqual(sf.scanId, scan_id)
 
     def test_attribute_socksProxy(self):
-        sf = SpiderFoot(dict())
-
-        sf.socksProxy = 'new socket'
-        self.assertEqual('new socket', sf.socksProxy)
+        """
+        Test socksProxy attribute is correctly formed from options
+        """
+        opts = self.default_options.copy()
+        opts['_socks1type'] = '5'
+        opts['_socks2addr'] = '127.0.0.1'
+        opts['_socks3port'] = '9050'
+        
+        sf = SpiderFoot(opts)
+        self.assertEqual(sf.socksProxy, "socks5://127.0.0.1:9050")
 
     def test_optValueToData_should_return_data_as_string(self):
         sf = SpiderFoot(self.default_options)

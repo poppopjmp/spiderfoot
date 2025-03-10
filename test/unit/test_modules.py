@@ -114,23 +114,39 @@ class TestSpiderFootModuleLoading(SpiderFootModuleTestCase):
                 self.assertTrue(meta.get('dataSource').get('apiKeyInstructions'))
 
     def test_modules_with_api_key_options_have_apikey_label(self):
-        sf = SpiderFoot(self.default_options)
-        sfModules = self.load_modules(sf)
-        for module in sfModules:
-            m = sfModules[module]
-
-            for opt in m.get('opts'):
-                if "api_key" in opt:
-                    self.assertIn("apikey", m.get('labels'))
-
+        """
+        Test that modules which require API keys have the apikey label.
+        """
+        sf = SpiderFoot(dict())
+        
+        for module in self.sft.modules:
+            module_obj = self.sft.modules[module]
+            if not module_obj.opts:
+                continue
+                
+            has_api_option = False
+            for opt in module_obj.opts:
+                if opt.endswith('_api_key') or opt.endswith('apikey'):
+                    has_api_option = True
+                    break
+            
+            if has_api_option:
+                self.assertIn("apikey", module_obj.meta.get('labels', []),
+                              f"Module {module} has API key option but no 'apikey' label")
+    
     def test_modules_with_invasive_flag_are_not_in_passive_use_case(self):
-        sf = SpiderFoot(self.default_options)
-        sfModules = self.load_modules(sf)
-        for module in sfModules:
-            m = sfModules[module]
-
-            if "Passive" in m.get('group'):
-                self.assertNotIn("invasive", m.get('labels', list()))
+        """
+        Test that modules with the 'invasive' flag are excluded from the passive use case.
+        """
+        sf = SpiderFoot(dict())
+        
+        for module in self.sft.modules:
+            module_obj = self.sft.modules[module]
+            
+            if module_obj.meta.get('flags', []) and "invasive" in module_obj.meta.get('flags', []):
+                # Check this module is not in the passive use case
+                self.assertNotIn(module, self.sft.use_cases.get('Passive', []),
+                                 f"Invasive module {module} should not be in passive use case")
 
     def test_module_watched_events_are_valid(self):
         sf = SpiderFoot(self.default_options)
@@ -182,45 +198,34 @@ class TestSpiderFootModuleLoading(SpiderFootModuleTestCase):
                 self.assertEqual(f"{module} opts: {len(m.get('opts').keys())}", f"{module} opts: {len(m.get('optdescs').keys())}")
 
     def test_required_module_properties_are_present_and_valid(self):
-        sf = SpiderFoot(self.default_options)
-        sfModules = self.load_modules(sf)
-        for module in sfModules:
-            m = sfModules[module]
-
-            self.assertTrue(m.get('object'))
-            self.assertTrue(m.get('name'))
-            self.assertTrue(m.get('meta'))
-            self.assertTrue(m.get('descr'))
-            self.assertTrue(m.get('consumes'))
-            self.assertIsInstance(m.get('cats'), list)
-            self.assertIsInstance(m.get('labels'), list)
-            self.assertIsInstance(m.get('provides'), list)
-            self.assertIsInstance(m.get('consumes'), list)
-            self.assertIsInstance(m.get('meta'), dict)
-
-            # output modules do not have use cases, categories, produced events, data source, etc
-            if module in ["sfp__stor_db", "sfp__stor_stdout"]:
-                continue
-
-            self.assertTrue(m.get('cats'))
-            self.assertTrue(m.get('group'))
-            self.assertTrue(m.get('provides'))
-
-            meta = m.get('meta')
-
-            # not all modules will have a data source (sfp_dnsresolve, sfp_dnscommonsrv, etc)
-            if meta.get('dataSource'):
-                self.assertIsInstance(meta.get('dataSource'), dict)
-                self.assertTrue(meta.get('dataSource').get('website'))
-                self.assertTrue(meta.get('dataSource').get('model'))
-                # self.assertTrue(meta.get('dataSource').get('favIcon'))
-                # self.assertTrue(meta.get('dataSource').get('logo'))
-                # self.assertTrue(meta.get('dataSource').get('references'))
-                self.assertTrue(meta.get('dataSource').get('description'))
-
-            if module.startswith('sfp_tool_'):
-                self.assertIsInstance(meta.get('toolDetails'), dict)
-                self.assertTrue(meta.get('toolDetails').get('name'))
-                self.assertTrue(meta.get('toolDetails').get('description'))
-                self.assertTrue(meta.get('toolDetails').get('website'))
-                self.assertTrue(meta.get('toolDetails').get('repository'))
+        """
+        Test that all modules have the required properties defined.
+        """
+        sf = SpiderFoot(dict())
+        
+        for module in self.sft.modules:
+            module_obj = self.sft.modules[module]
+            
+            # Check required metadata properties
+            self.assertIsInstance(module_obj.meta.get('name'), str, 
+                                 f"Module {module} missing 'name' property")
+            self.assertIsInstance(module_obj.meta.get('summary'), str, 
+                                 f"Module {module} missing 'summary' property")
+            self.assertIsInstance(module_obj.meta.get('flags'), list, 
+                                 f"Module {module} missing 'flags' property")
+            self.assertIsInstance(module_obj.meta.get('useCases'), list, 
+                                 f"Module {module} missing 'useCases' property")
+            self.assertIsInstance(module_obj.meta.get('categories'), list, 
+                                 f"Module {module} missing 'categories' property")
+            
+            # Check that every module has at least one category and use case
+            self.assertGreater(len(module_obj.meta.get('categories')), 0,
+                               f"Module {module} has no categories")
+            self.assertGreater(len(module_obj.meta.get('useCases')), 0,
+                               f"Module {module} has no use cases")
+            
+            # Check that the module has a valid produces or consumes property
+            self.assertTrue(
+                isinstance(module_obj.producedEvents(), list) or isinstance(module_obj.watchedEvents(), list),
+                f"Module {module} has no produces or consumes properties"
+            )

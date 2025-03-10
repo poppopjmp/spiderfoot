@@ -97,15 +97,28 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIsInstance(clean_user_input, list)
 
     def test_clean_user_input_invalid_input_should_raise(self):
+        """
+        Test cleanUserInput raises an exception when given invalid input.
+        """
         opts = self.default_options
         opts['__modules__'] = dict()
-        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+        sfwebui = SpiderFootWebUi(self.default_options, opts)
 
-        invalid_types = [None, "", dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    sfwebui.cleanUserInput(invalid_type)
+        invalid_inputs = [
+            None,           # None value
+            "",             # Empty string
+            dict(),         # Wrong type (dictionary)
+            123,            # Wrong type (integer)
+            True,           # Wrong type (boolean)
+            b"test",        # Wrong type (bytes)
+            set(),          # Wrong type (set)
+            0.1             # Wrong type (float)
+        ]
+
+        for invalid_input in invalid_inputs:
+            with self.subTest(invalid_input=invalid_input):
+                with self.assertRaises((TypeError, ValueError)):
+                    sfwebui.cleanUserInput(invalid_input)
 
     def test_clean_user_input_should_clean_user_input(self):
         opts = self.default_options
