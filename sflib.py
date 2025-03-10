@@ -1788,21 +1788,16 @@ class SpiderFootPlugin():
     def setup(self):
         """Initialize any required resources."""
         return True
-
+    
     @property
     def log(self):
-        if self.__name__ == "SpiderFoot":
-            raise AttributeError("Use self.error(), self.fatal(), etc. instead.")
-        return self._logger
-    
-    @log.setter
-    def log(self, logger):
-        """Set the logger object.
+        """Handle to the logger object for this module."""
+        return self._log
         
-        Args:
-            logger: Logger object
-        """
-        self._logger = logger
+    @log.setter
+    def log(self, value):
+        """Set the log property to allow tests to inject mock loggers."""
+        self._log = value
 
 class SpiderFootCorrelator():
     """SpiderFoot correlator class.
