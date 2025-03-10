@@ -8,6 +8,25 @@ from sflib import SpiderFoot
 @pytest.mark.usefixtures
 class TestModuleZoneh(unittest.TestCase):
 
+    @property
+    def watchedEvents(self):
+        return ["DOMAIN_NAME", "INTERNET_NAME"]
+
+    @property
+    def producedEvents(self):
+        return ["DEFACED_INTERNET_NAME", "DEFACED_IPADDR"]
+
+    @property
+    def opts(self):
+        return {
+            # Add any necessary options here
+        }
+    
+    def setUp(self):
+        self.default_options = {
+            # Add default options required by tests
+        }
+
     def test_opts(self):
         module = sfp_zoneh()
         self.assertEqual(len(module.opts), len(module.optdescs))

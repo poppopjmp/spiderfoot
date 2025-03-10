@@ -8,6 +8,25 @@ from sflib import SpiderFoot
 @pytest.mark.usefixtures
 class TestModuleYandexdns(unittest.TestCase):
 
+    @property
+    def watchedEvents(self):
+        return ["INTERNET_NAME", "DOMAIN_NAME"]
+
+    @property
+    def producedEvents(self):
+        return ["IP_ADDRESS"]
+
+    @property
+    def opts(self):
+        return {
+            # Add any necessary options here
+        }
+    
+    def setUp(self):
+        self.default_options = {
+            # Add default options required by tests
+        }
+
     def test_opts(self):
         module = sfp_yandexdns()
         self.assertEqual(len(module.opts), len(module.optdescs))

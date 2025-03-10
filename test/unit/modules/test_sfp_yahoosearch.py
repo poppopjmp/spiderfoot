@@ -8,7 +8,26 @@ from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleYahoosearch(SpiderFootModuleTestCase):
+class TestModuleYahoosearch(SpiderFootModuleTestCase, unittest.TestCase):
+
+    @property
+    def watchedEvents(self):
+        return ["DOMAIN_NAME"]
+
+    @property
+    def producedEvents(self):
+        return ["LINKED_URL_INTERNAL", "SEARCH_ENGINE_WEB_CONTENT"]
+
+    @property
+    def opts(self):
+        return {
+            # Add any necessary options here
+        }
+    
+    def setUp(self):
+        self.default_options = {
+            # Add default options required by tests
+        }
 
     def test_opts(self):
         module = sfp_yahoosearch()

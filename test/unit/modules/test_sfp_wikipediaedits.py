@@ -8,6 +8,25 @@ from sflib import SpiderFoot
 @pytest.mark.usefixtures
 class TestModulewikipediaedits(unittest.TestCase):
 
+    @property
+    def watchedEvents(self):
+        return ["IP_ADDRESS", "USERNAME"]
+
+    @property
+    def producedEvents(self):
+        return ["WIKIPEDIA_PAGE_EDIT"]
+
+    @property
+    def opts(self):
+        return {
+            # Add any necessary options here
+        }
+    
+    def setUp(self):
+        self.default_options = {
+            # Add default options required by tests
+        }
+
     def test_opts(self):
         module = sfp_wikipediaedits()
         self.assertEqual(len(module.opts), len(module.optdescs))
