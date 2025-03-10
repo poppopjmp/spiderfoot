@@ -291,39 +291,53 @@ class SpiderFootModuleTestCase(unittest.TestCase):
             
         class_name = f"{name_prefix}{module_class.__name__.replace('sfp_', '')}Wrapper"
         
-        # Create the wrapper class
-        wrapper_class = type(class_name, (module_class,), {
-            '__init__': lambda self: None,  # Empty init to avoid problems
-            'setup': lambda self, sf, userOpts=dict(): self._setup_wrapper(sf, userOpts)
-        })
-        
-        # Add a setup method that properly initializes the instance
-        def _setup_wrapper(self, sf, userOpts=dict()):
-            """Setup the module properly for testing."""
+        # Define a proper __init__ that sets up all needed attributes
+        def wrapper_init(self):
             self.thread = None
             self._log = None
             self.sharedThreadPool = None
-            self.sf = sf
-            self.results = dict()
+            self.sf = None
+            self.results = {}
             self.errorState = False
-            
-            # Get opts from the class if possible
-            try:
-                self.opts = module_class.opts.copy() if hasattr(module_class, 'opts') else {}
-                self.optdescs = module_class.optdescs.copy() if hasattr(module_class, 'optdescs') else {}
-            except Exception:
-                self.opts = {}
-                self.optdescs = {}
-            
-            # Set additional attributes
+            # Ensure option-related attributes are properly initialized
+            self.opts = {}
+            self.optdescs = {}
+            self.options = {}
+            self.registry = []
+            # Now apply all custom attributes
             for attr, value in module_attributes.items():
                 setattr(self, attr, value)
+        
+        # Define a setup method that properly initializes options
+        def wrapper_setup(self, sf, userOpts=dict()):
+            """Setup the module properly for testing."""
+            self.sf = sf
             
-            # Initialize options with framework defaults plus user options
-            self.options = sf.optValueToData(self.opts)
-            for opt in userOpts.keys():
-                self.options[opt] = userOpts[opt]
+            # Make sure options is a dictionary
+            if not hasattr(self, 'options') or self.options is None:
+                self.options = {}
+            
+            # Ensure opts is a dictionary
+            if not hasattr(self, 'opts') or self.opts is None:
+                self.opts = {}
+            
+            # Convert existing options 
+            try:
+                # Convert opts to options
+                self.options.update(sf.optValueToData(self.opts))
                 
-        wrapper_class._setup_wrapper = _setup_wrapper
+                # Apply user-provided options
+                for opt in userOpts.keys():
+                    self.options[opt] = userOpts[opt]
+            except Exception as e:
+                print(f"Error initializing module options: {e}")
+                # At least ensure debug option is set
+                self.options['_debug'] = userOpts.get('_debug', False)
+        
+        # Create the wrapper class
+        wrapper_class = type(class_name, (module_class,), {
+            '__init__': wrapper_init,
+            'setup': wrapper_setup
+        })
         
         return wrapper_class

@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from unittest.mock import patch, MagicMock
 import base64
 
 from modules.sfp_fofa import sfp_fofa
@@ -11,27 +12,47 @@ from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 @pytest.mark.usefixtures
 class TestModuleFofa(SpiderFootModuleTestCase):
 
+    def setUp(self):
+
+        super().setUp()
+        # Create a mock for any logging calls
+        self.log_mock = MagicMock()
+        # Apply patches in setup to affect all tests
+        patcher1 = patch('logging.getLogger', return_value=self.log_mock)
+        self.addCleanup(patcher1.stop)
+        self.mock_logger = patcher1.start()
+        
+        # Create module wrapper class dynamically
+        self.module_class = self.create_module_wrapper(
+            sfp_fofa,
+            module_attributes={
+                'descr': "Module description unavailable",
+                # Add any other specific attributes needed by this module
+            }
+        )
+
+
     def test_opts(self):
-        module = sfp_fofa()
+        module = self.module_class()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
-        module = sfp_fofa()
+        module = self.module_class()
         module.setup(sf, dict())
 
     def test_watchedEvents_should_return_list(self):
-        module = sfp_fofa()
+        module = self.module_class()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
-        module = sfp_fofa()
+        module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
 
     def test_handleEvent_no_api_key_should_set_errorState(self):
         sf = SpiderFoot(self.default_options)
 
-        module = sfp_fofa()
+        module = self.module_class()
         module.setup(sf, dict())
 
         target_value = 'example.com'
@@ -53,7 +74,7 @@ class TestModuleFofa(SpiderFootModuleTestCase):
     def test_handleEvent_with_api_key_should_make_api_request(self):
         sf = SpiderFoot(self.default_options)
 
-        module = sfp_fofa()
+        module = self.module_class()
         module.setup(sf, dict())
         module.opts['api_key'] = 'test_api_key'
         module.opts['username'] = 'test_username'

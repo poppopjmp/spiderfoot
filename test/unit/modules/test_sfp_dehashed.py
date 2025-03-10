@@ -22,6 +22,23 @@ class TestModuleDehashed(SpiderFootModuleTestCase):
             sfp_dehashed,
             module_attributes={
                 'descr': "Search DeHashed for breach data related to identified e-mail addresses.",
+                # Add specific options needed by this module
+                'opts': {
+                    'api_key_dehashed': '',
+                    'api_secret_dehashed': '',
+                    'paid_plan': False,
+                    'age_limit_days': 0,
+                    'emailonlyphones': False,
+                    'friendlyonly': False
+                },
+                'optdescs': {
+                    'api_key_dehashed': 'DeHashed API key.',
+                    'api_secret_dehashed': 'DeHashed API secret.',
+                    'paid_plan': 'Are you using a paid DeHashed plan? If so, more data will be fetched.',
+                    'age_limit_days': 'Ignore any records older than this many days. 0 = unlimited.',
+                    'emailonlyphones': 'Only show phone numbers that were found with an email. Others are likely junk.',
+                    'friendlyonly': 'Only show domains that are considered friendly for reporting abuse.'
+                }
             }
         )
 
@@ -52,16 +69,19 @@ class TestModuleDehashed(SpiderFootModuleTestCase):
         """Test handleEvent method with no API key."""
         sf = SpiderFoot(self.default_options)
         
-        options = self.default_options.copy()
-        options['api_key_dehashed'] = ''
-        
+        # Create module with empty API key
         module = self.module_class()
-        module.setup(sf, options)
+        # Initialize options in the module
+        module.setup(sf, self.default_options)
+        # Make sure the API key is empty
+        module.opts['api_key_dehashed'] = ''
+        module.options['api_key_dehashed'] = ''
         
+        # Create and process the test event
         event_type = "EMAILADDR"
         event_data = "test@example.com"
         event_module = "test"
-        source_event = ""
+        source_event = None
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
         result = module.handleEvent(evt)
         

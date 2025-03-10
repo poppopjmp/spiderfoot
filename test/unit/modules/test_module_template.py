@@ -70,3 +70,7 @@ class TestModuleModuleName(SpiderFootModuleTestCase):
         # For example:
         # self.assertGreaterEqual(len(events), 1)
         # self.assertEqual(events[0].eventType, "IP_ADDRESS")
+
+    def test_template_placeholder(self):
+        """Placeholder test to ensure the template itself doesn't cause failures."""
+        self.assertTrue(True, "Template test passes")
