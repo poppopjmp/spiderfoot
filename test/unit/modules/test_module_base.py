@@ -21,6 +21,9 @@ class SpiderFootModuleTestCase(unittest.TestCase):
         self.sf = None
         self.module = None
         self.opts = self.default_options.copy()
+        
+        # Create a mock for any logging calls that can be used by subclasses
+        self.log_mock = MagicMock()
 
     def __init__(self, *args, **kwargs):
         super(SpiderFootModuleTestCase, self).__init__(*args, **kwargs)
@@ -199,6 +202,19 @@ class SpiderFootModuleTestCase(unittest.TestCase):
              patch('logging.Logger.error'):
             
             sf = SpiderFoot(self.default_options)
+            module = module_class()
+            module.setup(sf, self.default_options)
+            return module, sf
+
+    def setup_test_module(self, module_class):
+        """
+        Set up a module for testing with patched logging.
+        This should be the preferred way to create module instances in tests.
+        """
+        from sflib import SpiderFoot
+        sf = SpiderFoot(self.default_options)
+        
+        with patch('logging.getLogger', return_value=self.log_mock):
             module = module_class()
             module.setup(sf, self.default_options)
             return module, sf

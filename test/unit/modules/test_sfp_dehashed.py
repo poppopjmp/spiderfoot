@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_dehashed import sfp_dehashed
@@ -7,46 +7,36 @@ from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 class TestModuleDehashed(SpiderFootModuleTestCase):
     """Test Dehashed module."""
 
-    @patch('logging.Logger.debug')
-    @patch('logging.Logger.info')
-    @patch('logging.Logger.warning')
-    @patch('logging.Logger.error')
-    def test_opts(self, *args):
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Create a mock for any logging calls
+        self.log_mock = MagicMock()
+        # Apply patches in setup to affect all tests
+        patcher1 = patch('logging.getLogger', return_value=self.log_mock)
+        self.addCleanup(patcher1.stop)
+        self.mock_logger = patcher1.start()
+
+    def test_opts(self):
         module = sfp_dehashed()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
-    @patch('logging.Logger.debug')
-    @patch('logging.Logger.info')
-    @patch('logging.Logger.warning')
-    @patch('logging.Logger.error')
-    def test_setup(self, *args):
+    def test_setup(self):
         """Test setup function."""
         sf = SpiderFoot(self.default_options)
         module = sfp_dehashed()
         module.setup(sf, self.default_options)
         self.assertEqual(module.options['_debug'], False)
 
-    @patch('logging.Logger.debug')
-    @patch('logging.Logger.info')
-    @patch('logging.Logger.warning')
-    @patch('logging.Logger.error')
-    def test_watchedEvents_should_return_list(self, *args):
+    def test_watchedEvents_should_return_list(self):
         module = sfp_dehashed()
         self.assertIsInstance(module.watchedEvents(), list)
 
-    @patch('logging.Logger.debug')
-    @patch('logging.Logger.info')
-    @patch('logging.Logger.warning')
-    @patch('logging.Logger.error')
-    def test_producedEvents_should_return_list(self, *args):
+    def test_producedEvents_should_return_list(self):
         module = sfp_dehashed()
         self.assertIsInstance(module.producedEvents(), list)
 
-    @patch('logging.Logger.debug')
-    @patch('logging.Logger.info')
-    @patch('logging.Logger.warning')
-    @patch('logging.Logger.error')
-    def test_handleEvent_no_api_key_should_set_errorState(self, *args):
+    def test_handleEvent_no_api_key_should_set_errorState(self):
         """Test handleEvent method with no API key."""
         sf = SpiderFoot(self.default_options)
         
