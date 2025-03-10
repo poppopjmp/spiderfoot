@@ -1,10 +1,12 @@
 from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
-from modules.sfp_stevenblack_hosts import sfp_stevenblack_hosts
+from spiderfoot import SpiderFootEvent
+# Replace with your module import
+from modules.sfp_modulename import sfp_modulename
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-class TestModuleStevenblackHosts(SpiderFootModuleTestCase):
-    """Test StevenBlack Hosts module."""
+class TestModuleModuleName(SpiderFootModuleTestCase):
+    """Test ModuleName module."""
 
     def setUp(self):
         """Set up before each test."""
@@ -18,9 +20,10 @@ class TestModuleStevenblackHosts(SpiderFootModuleTestCase):
         
         # Create module wrapper class dynamically
         self.module_class = self.create_module_wrapper(
-            sfp_stevenblack_hosts,
+            sfp_modulename,
             module_attributes={
-                'descr': "Queries the stevenblack hosts blocklist.",
+                # Add module-specific attributes here
+                'descr': "Module description here.",
             }
         )
 
@@ -46,3 +49,24 @@ class TestModuleStevenblackHosts(SpiderFootModuleTestCase):
         """Test the producedEvents function returns a list."""
         module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
+
+    def test_handleEvent_sample(self):
+        """Test handleEvent with sample data."""
+        sf = SpiderFoot(self.default_options)
+        
+        module = self.module_class()
+        module.setup(sf, self.default_options)
+        
+        # Create a sample event - adjust event type based on what your module watches
+        sample_event = SpiderFootEvent("DOMAIN_NAME", "example.com", "TEST", None)
+        
+        # Capture events produced by the module
+        events, _ = self.capture_module_events(module)
+        
+        # Process the event
+        module.handleEvent(sample_event)
+        
+        # Add assertions about expected behavior
+        # For example:
+        # self.assertGreaterEqual(len(events), 1)
+        # self.assertEqual(events[0].eventType, "IP_ADDRESS")

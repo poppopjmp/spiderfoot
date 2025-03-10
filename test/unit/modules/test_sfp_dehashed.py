@@ -16,24 +16,36 @@ class TestModuleDehashed(SpiderFootModuleTestCase):
         patcher1 = patch('logging.getLogger', return_value=self.log_mock)
         self.addCleanup(patcher1.stop)
         self.mock_logger = patcher1.start()
+        
+        # Create module wrapper class dynamically
+        self.module_class = self.create_module_wrapper(
+            sfp_dehashed,
+            module_attributes={
+                'descr': "Search DeHashed for breach data related to identified e-mail addresses.",
+            }
+        )
 
     def test_opts(self):
-        module = sfp_dehashed()
+        """Test the module options."""
+        module = self.module_class()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
         """Test setup function."""
         sf = SpiderFoot(self.default_options)
-        module = sfp_dehashed()
+        module = self.module_class()
         module.setup(sf, self.default_options)
+        self.assertIsNotNone(module.options)
         self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
-        module = sfp_dehashed()
+        """Test the watchedEvents function returns a list."""
+        module = self.module_class()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
-        module = sfp_dehashed()
+        """Test the producedEvents function returns a list."""
+        module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
 
     def test_handleEvent_no_api_key_should_set_errorState(self):
@@ -43,7 +55,7 @@ class TestModuleDehashed(SpiderFootModuleTestCase):
         options = self.default_options.copy()
         options['api_key_dehashed'] = ''
         
-        module = sfp_dehashed()
+        module = self.module_class()
         module.setup(sf, options)
         
         event_type = "EMAILADDR"

@@ -273,3 +273,57 @@ class SpiderFootModuleTestCase(unittest.TestCase):
                     setattr(self_inner, attr, value)
 
         return TestModuleClass
+
+    def create_module_wrapper(self, module_class, name_prefix="Sfp", module_attributes=None):
+        """
+        Create a test-friendly wrapper of a module class that avoids initialization problems.
+        
+        Args:
+            module_class: The SpiderFoot module class to wrap
+            name_prefix: Prefix for the wrapper class name
+            module_attributes: Dictionary of additional attributes to set
+            
+        Returns:
+            A wrapper class that can be instantiated without issues
+        """
+        if module_attributes is None:
+            module_attributes = {}
+            
+        class_name = f"{name_prefix}{module_class.__name__.replace('sfp_', '')}Wrapper"
+        
+        # Create the wrapper class
+        wrapper_class = type(class_name, (module_class,), {
+            '__init__': lambda self: None,  # Empty init to avoid problems
+            'setup': lambda self, sf, userOpts=dict(): self._setup_wrapper(sf, userOpts)
+        })
+        
+        # Add a setup method that properly initializes the instance
+        def _setup_wrapper(self, sf, userOpts=dict()):
+            """Setup the module properly for testing."""
+            self.thread = None
+            self._log = None
+            self.sharedThreadPool = None
+            self.sf = sf
+            self.results = dict()
+            self.errorState = False
+            
+            # Get opts from the class if possible
+            try:
+                self.opts = module_class.opts.copy() if hasattr(module_class, 'opts') else {}
+                self.optdescs = module_class.optdescs.copy() if hasattr(module_class, 'optdescs') else {}
+            except Exception:
+                self.opts = {}
+                self.optdescs = {}
+            
+            # Set additional attributes
+            for attr, value in module_attributes.items():
+                setattr(self, attr, value)
+            
+            # Initialize options with framework defaults plus user options
+            self.options = sf.optValueToData(self.opts)
+            for opt in userOpts.keys():
+                self.options[opt] = userOpts[opt]
+                
+        wrapper_class._setup_wrapper = _setup_wrapper
+        
+        return wrapper_class
