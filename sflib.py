@@ -131,6 +131,10 @@ class SpiderFoot:
             res.nameservers = [self.opts['_dnsserver']]
             dns.resolver.override_system_resolver(res)
 
+        # Set the socksProxy attribute based on the options
+        if self.opts.get('_socks1type') and self.opts.get('_socks2addr') and self.opts.get('_socks3port'):
+            self.socksProxy = f"socks{self.opts['_socks1type']}://{self.opts['_socks2addr']}:{self.opts['_socks3port']}"
+
     @property
     def dbh(self):
         """Database handle

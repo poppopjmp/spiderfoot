@@ -45,6 +45,9 @@ class TestSpiderFoot(unittest.TestCase):
             '__version__': '3.0',
             '__database': 'spiderfoot.test.db',  # Test database
             '_password_list': '',
+            '_socks1type': '5',
+            '_socks2addr': '127.0.0.1',
+            '_socks3port': '9050'
         }
         self.sf = SpiderFoot(self.default_options)
 
@@ -739,3 +742,9 @@ class TestSpiderFoot(unittest.TestCase):
 
         sf.bingIterate(None, None)
         self.assertEqual('TBD', 'TBD')
+
+    def test_attribute_socksProxy(self):
+        """
+        Test socksProxy attribute is correctly set to 'socks5://127.0.0.1:9050'
+        """
+        self.assertEqual(self.sf.socksProxy, 'socks5://127.0.0.1:9050')

@@ -25,7 +25,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
             '_port': 5001,
             '_cors': False
         }
-        self.web_ui = SpiderFootWebUi(self.default_options, None)
+        self.config = {'__modules__': dict()}
+        self.web_ui = SpiderFootWebUi(self.default_options, self.config)
 
     def test_init_config_invalid_type_should_raise_TypeError(self):
         """
