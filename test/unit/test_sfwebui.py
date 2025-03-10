@@ -4,6 +4,25 @@ import unittest
 from unittest.mock import Mock, patch, MagicMock
 import cherrypy
 
+# Define MockDbh class for testing
+class MockDbh:
+    """Mock database handler for testing."""
+    
+    def __init__(self, parent):
+        self.parent = parent
+        
+    def execute(self, query, args=None):
+        """Mock execute method that returns None"""
+        return None
+    
+    def search(self, *args, **kwargs):
+        """Mock search method that returns an empty list"""
+        return []
+        
+    def close(self):
+        """Mock close method"""
+        pass
+
 # Before importing SpiderFootWebUi, patch os.makedirs and os.path.isdir
 with patch('os.makedirs') as mock_makedirs, patch('os.path.isdir', return_value=True):
     from sfwebui import SpiderFootWebUi
