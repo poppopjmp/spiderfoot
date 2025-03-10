@@ -140,3 +140,4 @@ class TestModuleToolNuclei(SpiderFootModuleTestCase):
             
             # Check for VULNERABILITY events
             vuln_events = [e for e in generated_events if
+                  e[0].endswith("VULNERABILITY")]

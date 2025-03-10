@@ -37,7 +37,7 @@ from spiderfoot.logger import logListenerSetup, logWorkerSetup, SpiderFootLogger
 
 # Ensure log directory exists
 import os
-if not os.path.exists('log'):
+if not os.path.isdir('log'):
     os.makedirs('log')
 
 mp.set_start_method("spawn", force=True)

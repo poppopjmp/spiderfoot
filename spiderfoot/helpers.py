@@ -424,32 +424,35 @@ class SpiderFootHelpers():
         return words
 
     @staticmethod
-    def usernamesFromWordlists(wordlists: typing.Optional[typing.List[str]] = None) -> typing.Set[str]:
-        """Return list of usernames from wordlist file.
+    def usernamesFromWordlists(wordlists):
+        """Get common usernames from wordlists
 
         Args:
-            wordlists (list[str]): list of wordlist file names to read (excluding file extension).
+            wordlists (list): List of wordlists
 
         Returns:
-            set[str]: usernames from wordlists
-
-        Raises:
-            IOError: Error reading wordlist file
+            list: List of usernames
         """
-        words: typing.Set[str] = set()
-
-        if wordlists is None:
-            wordlists = ["generic-usernames"]
+        usernames = list()
+        
+        try:
+            from importlib.resources import files, as_file
+        except ImportError:
+            from importlib_resources import files, as_file
 
         for d in wordlists:
             try:
-                with files('spiderfoot.dicts').joinpath(f"{d}.txt").open(errors='ignore') as dict_file:
-                    for w in dict_file.readlines():
-                        words.add(w.strip().lower().split('/')[0])
+                resource = files('spiderfoot.dicts').joinpath(f"{d}.txt")
+                with as_file(resource) as path:
+                    with open(path, errors='ignore') as dict_file:
+                        for line in dict_file:
+                            username = line.strip()
+                            if username and not username.startswith('#'):
+                                usernames.append(username)
             except Exception as e:
                 raise IOError(f"Could not read wordlist file '{d}.txt'") from e
 
-        return words
+        return usernames
 
     @staticmethod
     def buildGraphGexf(root: str, title: str, data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> str:

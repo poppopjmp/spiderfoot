@@ -1,6 +1,6 @@
 import unittest
 
-from test.unit.test_base import SpiderFootModuleTestCase
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent
 
 class TestSpiderFootEvent(SpiderFootModuleTestCase):

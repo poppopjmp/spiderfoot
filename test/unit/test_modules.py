@@ -6,7 +6,7 @@ import unittest
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
-from test.unit.test_spiderfoot import SpiderFootModuleTestCase
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 class TestSpiderFootModuleLoading(SpiderFootModuleTestCase):
