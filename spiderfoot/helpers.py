@@ -11,7 +11,7 @@ import typing
 import urllib.parse
 import uuid
 from pathlib import Path
-from importlib import resources
+from importlib import resources, files
 
 import networkx as nx
 from bs4 import BeautifulSoup, SoupStrainer
@@ -75,6 +75,7 @@ class SpiderFootHelpers():
     Todo:
        Eventually split this class into separate files.
     """
+    log = None  # Added log attribute
 
     @staticmethod
     def dataPath() -> str:
@@ -366,7 +367,7 @@ class SpiderFootHelpers():
 
         for d in wordlists:
             try:
-                with resources.open_text('spiderfoot.dicts.ispell', f"{d}.dict", errors='ignore') as dict_file:
+                with files('spiderfoot.dicts.ispell').joinpath(f"{d}.dict").open(errors='ignore') as dict_file:
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
@@ -394,7 +395,7 @@ class SpiderFootHelpers():
 
         for d in wordlists:
             try:
-                with resources.open_text('spiderfoot.dicts.ispell', f"{d}.dict", errors='ignore') as dict_file:
+                with files('spiderfoot.dicts.ispell').joinpath(f"{d}.dict").open(errors='ignore') as dict_file:
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
@@ -422,7 +423,7 @@ class SpiderFootHelpers():
 
         for d in wordlists:
             try:
-                with resources.open_text('spiderfoot.dicts', f"{d}.txt", errors='ignore') as dict_file:
+                with files('spiderfoot.dicts').joinpath(f"{d}.txt").open(errors='ignore') as dict_file:
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:

@@ -5,82 +5,78 @@ from spiderfoot import SpiderFootThreadPool, SpiderFootTarget
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 class TestSpiderFootThreadPool(SpiderFootModuleTestCase):
-    """Test SpiderFootThreadPool."""
+    """
+    Test SpiderFoot
+    """
 
-    def setUp(self):
-        """Set up test case."""
-        self.threadpool = SpiderFootThreadPool(mockModule=True)
-        self.threadpool.module_name = "TestModule"  # Add module name to fix '__name__' attribute error
+    def test_threadPool(self):
+        """
+        Test ThreadPool(sfp, threads=10)
+        """
+        threads = 10
 
-    def test_submit(self):
-        """Test submit method."""
-        target = SpiderFootTarget("example.com", "DOMAIN_NAME")
-        function = lambda x: x
-        name = "test_function"
-        result = self.threadpool.submit(target, function, name, ["test_args"])
-        self.assertIsNotNone(result)
+        def callback(x, *args, **kwargs):
+            return (x, args, list(kwargs.items())[0])
 
-    def test_countQueuedTasks(self):
-        """Test countQueuedTasks method."""
-        self.assertEqual(self.threadpool.countQueuedTasks(), 0)
+        iterable = ["a", "b", "c"]
+        args = ("arg1",)
+        kwargs = {"kwarg1": "kwarg1"}
+        expectedOutput = [
+            ("a", ("arg1",), ("kwarg1", "kwarg1")),
+            ("b", ("arg1",), ("kwarg1", "kwarg1")),
+            ("c", ("arg1",), ("kwarg1", "kwarg1"))
+        ]
+        # Example 1: using map()
+        with SpiderFootThreadPool(threads) as pool:
+            map_results = sorted(
+                list(pool.map(
+                    callback,
+                    iterable,
+                    *args,
+                    saveResult=True,
+                    **kwargs
+                )),
+                key=lambda x: x[0]
+            )
+        self.assertEqual(map_results, expectedOutput)
 
-    def test_feedQueue(self):
-        """Test feedQueue method."""
-        # Setup a return value for the queue.unfinished_tasks attribute access
-        self.threadpool.queue = MagicMock()
-        self.threadpool.queue.unfinished_tasks = 1
-        result = self.threadpool.feedQueue()
-        self.assertEqual(result, 1)
+        # Example 2: using submit()
+        with SpiderFootThreadPool(threads) as pool:
+            pool.start()
+            for i in iterable:
+                pool.submit(callback, *((i,) + args), saveResult=True, **kwargs)
+            submit_results = sorted(
+                list(pool.shutdown()["default"]),
+                key=lambda x: x[0]
+            )
+        self.assertEqual(submit_results, expectedOutput)
 
-    def test_results(self):
-        """Test results method."""
-        result = self.threadpool.results()
-        self.assertIsInstance(result, list)
-        
-    # ... other test methods ...
-
-
-class TestThreadPoolWorker(SpiderFootModuleTestCase):
-    """Test ThreadPoolWorker."""
-
-    def setUp(self):
-        """Set up test case."""
-        self.threadpool = MagicMock()
-        self.mock_queue = MagicMock()
-        self.threadpool.queue = self.mock_queue
-        
-        from spiderfoot import ThreadPoolWorker
-        self.worker = ThreadPoolWorker(self.threadpool)
-        
-    def test_run(self):
-        """Test run method."""
-        # Setup mock queue to return a task and then raise StopIteration
-        task = MagicMock()
-        self.mock_queue.get.side_effect = [task, StopIteration]
-        task.fn = MagicMock()
-        
-        # Patch the sleep function to avoid actual sleeping
-        with patch('time.sleep'):
-            try:
-                self.worker.run()
-            except StopIteration:
-                # This is expected when the queue is empty
-                pass
-                
-    def test_run_with_exception(self):
-        """Test run method with an exception."""
-        task = MagicMock()
-        task.fn.side_effect = Exception("Test exception")
-        self.mock_queue.get.side_effect = [task, StopIteration]
-        
-        # Patch the sleep function to avoid actual sleeping
-        with patch('time.sleep'):
-            try:
-                self.worker.run()
-            except StopIteration:
-                # This is expected when the queue is empty
-                pass
-
-
-if __name__ == "__main__":
-    unittest.main()
+        # Example 3: using both
+        threads = 1
+        iterable2 = ["d", "e", "f"]
+        expectedOutput2 = [
+            ("d", ("arg1",), ("kwarg1", "kwarg1")),
+            ("e", ("arg1",), ("kwarg1", "kwarg1")),
+            ("f", ("arg1",), ("kwarg1", "kwarg1"))
+        ]
+        pool = SpiderFootThreadPool(threads)
+        pool.start()
+        for i in iterable2:
+            pool.submit(callback, *((i,) + args), taskName="submitTest", saveResult=True, **kwargs)
+        map_results = sorted(
+            list(pool.map(
+                callback,
+                iterable,
+                *args,
+                taskName="mapTest",
+                saveResult=True,
+                **kwargs
+            )),
+            key=lambda x: x[0]
+        )
+        submit_results = sorted(
+            list(pool.shutdown()["submitTest"]),
+            key=lambda x: x[0]
+        )
+        self.assertEqual(map_results, expectedOutput)
+        self.assertEqual(submit_results, expectedOutput2)

@@ -15,6 +15,7 @@ import importlib
 import random
 import threading
 import time
+from importlib.resources import files
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
@@ -66,13 +67,13 @@ class sfp_dnsbrute(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
         if self.opts['commons']:
-            with importlib.resources.open_text('spiderfoot.dicts', 'subdomains.txt') as f:
+            with files('spiderfoot.dicts').joinpath('subdomains.txt').open() as f:
                 for s in f.readlines():
                     s = s.strip()
                     self.sublist[s] = True
 
         if self.opts['top10000']:
-            with importlib.resources.open_text('spiderfoot.dicts', 'subdomains-10000.txt') as f:
+            with files('spiderfoot.dicts').joinpath('subdomains-10000.txt').open() as f:
                 for s in f.readlines():
                     s = s.strip()
                     self.sublist[s] = True

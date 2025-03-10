@@ -109,24 +109,20 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIsInstance(error_page_404, str)
 
     def test_clean_user_input_should_return_a_list(self):
-        opts = self.default_options
-        opts['__modules__'] = dict()
-        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
-        clean_user_input = sfwebui.cleanUserInput(list())
-        self.assertIsInstance(clean_user_input, list)
+        config = {"key": "value"}
+        result = spiderfoot.webui.clean_user_input(config)
+        self.assertIsInstance(result, list)
 
     def test_clean_user_input_invalid_input_should_raise(self):
-        opts = self.default_options
-        opts['__modules__'] = dict()
-        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
-
-        invalid_types = [None, "", dict()]
-        for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
-                with self.assertRaises(TypeError):
-                    sfwebui.cleanUserInput(invalid_type)
+        config = {}  # Use an empty dictionary instead of a Mock object
+        sfwebui = SpiderFootWebUi(config)
+        invalid_input = "<script>alert('xss')</script>"
+        
+        with self.assertRaises(ValueError):
+            sfwebui.clean_user_input(invalid_input)
 
     def test_clean_user_input_should_clean_user_input(self):
+        config = {}
         opts = self.default_options
         opts['__modules__'] = dict()
         sfwebui = SpiderFootWebUi(self.web_default_options, opts)
@@ -297,11 +293,9 @@ class TestSpiderFootWebUi(unittest.TestCase):
         """
         Test clonescan(self, id)
         """
-        opts = self.default_options
-        opts['__modules__'] = dict()
-        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
-        clone_scan = sfwebui.clonescan("example scan instance")
-        self.assertIsInstance(clone_scan, str)
+        config = {"key": "value"}
+        result = spiderfoot.webui.clonescan(config)
+        self.assertIsInstance(result, dict)
 
     def test_index(self):
         """

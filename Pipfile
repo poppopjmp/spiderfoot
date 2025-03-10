@@ -22,7 +22,7 @@ ipwhois = ">=1.1.0,<1.4.0"
 ipaddr = ">=2.2.0,<3"
 phonenumbers = ">=8.13.6,<9"
 pygexf = ">=0.2.2,<0.3"
-PyPDF2 = ">=1.28.6,<2"
+pypdf>=3.1.0
 python-whois = ">=0.7.3,<0.10"
 secure = ">=0.3.0,<1.1.0"
 pyOpenSSL = ">=21.0.0,<22"
@@ -37,4 +37,4 @@ psycopg2 = "*"
 zoomeye = "*"
 
 [requires]
-python_version = "3.10"
+python_version = "3.9"
