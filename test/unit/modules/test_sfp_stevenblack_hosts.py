@@ -1,10 +1,13 @@
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp_stevenblack_hosts.py
 from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
+from spiderfoot import SpiderFootEvent
 from modules.sfp_stevenblack_hosts import sfp_stevenblack_hosts
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
+
 class TestModuleStevenblackHosts(SpiderFootModuleTestCase):
-    """Test StevenBlack Hosts module."""
+    """Test Stevenblack Hosts module."""
 
     def setUp(self):
         """Set up before each test."""
@@ -17,11 +20,15 @@ class TestModuleStevenblackHosts(SpiderFootModuleTestCase):
         self.mock_logger = patcher1.start()
         
         # Create module wrapper class dynamically
+        module_attributes = {
+            'descr': "Description for sfp_stevenblack_hosts",
+            # Add module-specific options
+
+        }
+        
         self.module_class = self.create_module_wrapper(
             sfp_stevenblack_hosts,
-            module_attributes={
-                'descr': "Queries the stevenblack hosts blocklist.",
-            }
+            module_attributes=module_attributes
         )
 
     def test_opts(self):
@@ -35,6 +42,7 @@ class TestModuleStevenblackHosts(SpiderFootModuleTestCase):
         module = self.module_class()
         module.setup(sf, self.default_options)
         self.assertIsNotNone(module.options)
+        self.assertTrue('_debug' in module.options)
         self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):

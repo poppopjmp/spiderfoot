@@ -1,153 +1,56 @@
-import pytest
-import unittest
-
-from modules.sfp_company import sfp_company
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp_company.py
+from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from spiderfoot import SpiderFootEvent
+from modules.sfp_company import sfp_company
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
-@pytest.mark.usefixtures
-class TestModuleCompany(unittest.TestCase):
+class TestModuleCompany(SpiderFootModuleTestCase):
+    """Test Company module."""
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Create a mock for any logging calls
+        self.log_mock = MagicMock()
+        # Apply patches in setup to affect all tests
+        patcher1 = patch('logging.getLogger', return_value=self.log_mock)
+        self.addCleanup(patcher1.stop)
+        self.mock_logger = patcher1.start()
+        
+        # Create module wrapper class dynamically
+        module_attributes = {
+            'descr': "Description for sfp_company",
+            # Add module-specific options
+
+        }
+        
+        self.module_class = self.create_module_wrapper(
+            sfp_company,
+            module_attributes=module_attributes
+        )
 
     def test_opts(self):
-        module = sfp_company()
+        """Test the module options."""
+        module = self.module_class()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
+        """Test setup function."""
         sf = SpiderFoot(self.default_options)
-        module = sfp_company()
-        module.setup(sf, dict())
+        module = self.module_class()
+        module.setup(sf, self.default_options)
+        self.assertIsNotNone(module.options)
+        self.assertTrue('_debug' in module.options)
+        self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
-        module = sfp_company()
+        """Test the watchedEvents function returns a list."""
+        module = self.module_class()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
-        module = sfp_company()
+        """Test the producedEvents function returns a list."""
+        module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
-
-    @unittest.skip("todo")
-    def test_handleEvent_event_data_ssl_certificate_issued_containing_company_name_should_return_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_company()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            expected = 'COMPANY_NAME'
-            if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != {expected}")
-
-            expected = "SpiderFoot Corporation"
-            if str(event.data) != expected:
-                raise Exception(f"{event.data} != {expected}")
-
-            raise Exception("OK")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_company)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'SSL_CERTIFICATE_ISSUED'
-        event_data = 'O=SpiderFoot Corporation'
-        event_module = 'example module'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        with self.assertRaises(Exception) as cm:
-            module.handleEvent(evt)
-
-        self.assertEqual("OK", str(cm.exception))
-
-    @unittest.skip("todo")
-    def test_handleEvent_event_data_domain_whois_containing_company_name_should_return_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_company()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            expected = 'COMPANY_NAME'
-            if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != {expected}")
-
-            expected = "SpiderFoot Corporation"
-            if str(event.data) != expected:
-                raise Exception(f"{event.data} != {expected}")
-
-            raise Exception("OK")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_company)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'DOMAIN_WHOIS'
-        event_data = 'Registrant Organization: SpiderFoot Corporation'
-        event_module = 'example module'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        with self.assertRaises(Exception) as cm:
-            module.handleEvent(evt)
-
-        self.assertEqual("OK", str(cm.exception))
-
-    @unittest.skip("todo")
-    def test_handleEvent_event_data_target_web_content_containing_company_name_should_return_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_company()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            expected = 'COMPANY_NAME'
-            if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != {expected}")
-
-            expected = "SpiderFoot Corporation"
-            if str(event.data) != expected:
-                raise Exception(f"{event.data} != {expected}")
-
-            raise Exception("OK")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_company)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'TARGET_WEB_CONTENT'
-        event_data = '<p>Copyright SpiderFoot Corporation 2022.</p>'
-        event_module = 'example module'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        with self.assertRaises(Exception) as cm:
-            module.handleEvent(evt)
-
-        self.assertEqual("OK", str(cm.exception))

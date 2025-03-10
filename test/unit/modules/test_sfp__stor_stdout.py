@@ -1,35 +1,16 @@
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp__stor_stdout.py
+from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp__stor_stdout import sfp__stor_stdout
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-class TestModuleStor_stdout(SpiderFootModuleTestCase):
-    def test_opts(self):
 
-        module = self.module_class()
-        self.assertEqual(len(module.opts), len(module.optdescs))
-
-    def test_setup(self):
-
-        sf = SpiderFoot(self.default_options)
-        module = self.module_class()
-        module.setup(sf, self.default_options)
-        self.assertIsNotNone(module.options)
-        self.assertEqual(module.options['_debug'], False)
-
-    def test_watchedEvents_should_return_list(self):
-
-        module = self.module_class()
-        self.assertIsInstance(module.watchedEvents(), list)
-
-    def test_producedEvents_should_return_list(self):
-
-        module = self.module_class()
-        self.assertIsInstance(module.producedEvents(), list)
-
+class TestModuleStorStdout(SpiderFootModuleTestCase):
+    """Test Stor Stdout module."""
 
     def setUp(self):
-
+        """Set up before each test."""
         super().setUp()
         # Create a mock for any logging calls
         self.log_mock = MagicMock()
@@ -39,27 +20,37 @@ class TestModuleStor_stdout(SpiderFootModuleTestCase):
         self.mock_logger = patcher1.start()
         
         # Create module wrapper class dynamically
+        module_attributes = {
+            'descr': "Description for sfp__stor_stdout",
+            # Add module-specific options
+
+        }
+        
         self.module_class = self.create_module_wrapper(
             sfp__stor_stdout,
-            module_attributes={
-                'descr': "Module description unavailable",
-                # Add any other specific attributes needed by this module
-            }
+            module_attributes=module_attributes
         )
 
-    """Test stdout storage module."""
+    def test_opts(self):
+        """Test the module options."""
+        module = self.module_class()
+        self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
         """Test setup function."""
         sf = SpiderFoot(self.default_options)
         module = self.module_class()
         module.setup(sf, self.default_options)
+        self.assertIsNotNone(module.options)
+        self.assertTrue('_debug' in module.options)
         self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
+        """Test the watchedEvents function returns a list."""
         module = self.module_class()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
+        """Test the producedEvents function returns a list."""
         module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)

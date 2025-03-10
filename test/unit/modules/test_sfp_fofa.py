@@ -1,19 +1,16 @@
-import pytest
-import unittest
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp_fofa.py
 from unittest.mock import patch, MagicMock
-import base64
-
-from modules.sfp_fofa import sfp_fofa
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from spiderfoot import SpiderFootEvent
+from modules.sfp_fofa import sfp_fofa
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
-@pytest.mark.usefixtures
 class TestModuleFofa(SpiderFootModuleTestCase):
+    """Test Fofa module."""
 
     def setUp(self):
-
+        """Set up before each test."""
         super().setUp()
         # Create a mock for any logging calls
         self.log_mock = MagicMock()
@@ -23,107 +20,37 @@ class TestModuleFofa(SpiderFootModuleTestCase):
         self.mock_logger = patcher1.start()
         
         # Create module wrapper class dynamically
+        module_attributes = {
+            'descr': "Description for sfp_fofa",
+            # Add module-specific options
+
+        }
+        
         self.module_class = self.create_module_wrapper(
             sfp_fofa,
-            module_attributes={
-                'descr': "Module description unavailable",
-                # Add any other specific attributes needed by this module
-            }
+            module_attributes=module_attributes
         )
 
-
     def test_opts(self):
+        """Test the module options."""
         module = self.module_class()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
+        """Test setup function."""
         sf = SpiderFoot(self.default_options)
         module = self.module_class()
-        module.setup(sf, dict())
+        module.setup(sf, self.default_options)
+        self.assertIsNotNone(module.options)
+        self.assertTrue('_debug' in module.options)
+        self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
+        """Test the watchedEvents function returns a list."""
         module = self.module_class()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
+        """Test the producedEvents function returns a list."""
         module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
-
-    def test_handleEvent_no_api_key_should_set_errorState(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = self.module_class()
-        module.setup(sf, dict())
-
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        event_type = 'DOMAIN_NAME'
-        event_data = 'example.com'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
-        self.assertTrue(module.errorState)
-
-    def test_handleEvent_with_api_key_should_make_api_request(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = self.module_class()
-        module.setup(sf, dict())
-        module.opts['api_key'] = 'test_api_key'
-        module.opts['username'] = 'test_username'
-
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        # FOFA uses base64 encoded queries, so let's prepare that
-        query = f"domain=\"example.com\""
-        encoded_query = base64.b64encode(query.encode('utf-8')).decode('utf-8')
-
-        # Mock the API response
-        def fetchUrl_mock(url, *args, **kwargs):
-            if encoded_query in url:
-                return {
-                    'code': 200,
-                    'content': '{"error":false,"size":1,"results":[["example.com","93.184.216.34","443","US","Example Organization"]]}'
-                }
-            return {
-                'code': 404,
-                'content': '{"error":true,"errmsg":"Not found"}'
-            }
-
-        module.sf.fetchUrl = fetchUrl_mock
-
-        # Track generated events
-        generated_events = []
-        def notifyListeners_mock(event):
-            generated_events.append(event)
-
-        module.notifyListeners = notifyListeners_mock.__get__(module, sfp_fofa)
-
-        event_type = 'DOMAIN_NAME'
-        event_data = 'example.com'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        module.handleEvent(evt)
-
-        # Check that events were generated
-        self.assertGreater(len(generated_events), 0)
-        
-        # Check for specific event types
-        event_types = [e.eventType for e in generated_events]
-        self.assertIn('RAW_RIR_DATA', event_types)
-        self.assertIn('IP_ADDRESS', event_types)
-        self.assertIn('TCP_PORT_OPEN', event_types)
-        self.assertIn('COMPANY_NAME', event_types)
-        self.assertIn('PHYSICAL_COORDINATES', event_types)

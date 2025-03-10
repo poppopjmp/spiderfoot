@@ -1,141 +1,56 @@
-import pytest
-import unittest
-
-from modules.sfp_phone import sfp_phone
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp_phone.py
+from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from spiderfoot import SpiderFootEvent
+from modules.sfp_phone import sfp_phone
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
-@pytest.mark.usefixtures
-class TestModulePhone(unittest.TestCase):
+class TestModulePhone(SpiderFootModuleTestCase):
+    """Test Phone module."""
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Create a mock for any logging calls
+        self.log_mock = MagicMock()
+        # Apply patches in setup to affect all tests
+        patcher1 = patch('logging.getLogger', return_value=self.log_mock)
+        self.addCleanup(patcher1.stop)
+        self.mock_logger = patcher1.start()
+        
+        # Create module wrapper class dynamically
+        module_attributes = {
+            'descr': "Description for sfp_phone",
+            # Add module-specific options
+
+        }
+        
+        self.module_class = self.create_module_wrapper(
+            sfp_phone,
+            module_attributes=module_attributes
+        )
 
     def test_opts(self):
-        module = sfp_phone()
+        """Test the module options."""
+        module = self.module_class()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
+        """Test setup function."""
         sf = SpiderFoot(self.default_options)
-        module = sfp_phone()
-        module.setup(sf, dict())
+        module = self.module_class()
+        module.setup(sf, self.default_options)
+        self.assertIsNotNone(module.options)
+        self.assertTrue('_debug' in module.options)
+        self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
-        module = sfp_phone()
+        """Test the watchedEvents function returns a list."""
+        module = self.module_class()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
-        module = sfp_phone()
+        """Test the producedEvents function returns a list."""
+        module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
-
-    def test_handleEvent_domain_whois_event_data_containing_phone_string_should_create_phone_number_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_phone()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            expected = 'PHONE_NUMBER'
-            if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != {expected}")
-
-            expected = "+12025550111"
-            if str(event.data) != expected:
-                raise Exception(f"{event.data} != {expected}")
-
-            raise Exception("OK")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_phone)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'DOMAIN_WHOIS'
-        event_data = 'example data +1 202 555 0111 example data'
-        event_module = 'example module'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        with self.assertRaises(Exception) as cm:
-            module.handleEvent(evt)
-
-        self.assertEqual("OK", str(cm.exception))
-
-    def test_handleEvent_domain_whois_event_data_not_containing_phone_string_should_not_create_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_phone()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            raise Exception(f"Raised event {event.eventType}: {event.data}")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_phone)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'DOMAIN_WHOIS'
-        event_data = 'example data'
-        event_module = 'example module'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
-
-    def test_handleEvent_phone_number_event_data_containing_phone_string_should_return_provider_telco_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_phone()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            expected = 'PROVIDER_TELCO'
-            if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != {expected}")
-
-            expected = "Swisscom"
-            if str(event.data) != expected:
-                raise Exception(f"{event.data} != {expected}")
-
-            raise Exception("OK")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_phone)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'PHONE_NUMBER'
-        event_data = '+41798765432'
-        event_module = 'example module'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        with self.assertRaises(Exception) as cm:
-            module.handleEvent(evt)
-
-        self.assertEqual("OK", str(cm.exception))

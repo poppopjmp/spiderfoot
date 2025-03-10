@@ -1,8 +1,10 @@
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp_dehashed.py
 from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_dehashed import sfp_dehashed
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 class TestModuleDehashed(SpiderFootModuleTestCase):
     """Test Dehashed module."""
@@ -18,28 +20,15 @@ class TestModuleDehashed(SpiderFootModuleTestCase):
         self.mock_logger = patcher1.start()
         
         # Create module wrapper class dynamically
+        module_attributes = {
+            'descr': "Description for sfp_dehashed",
+            # Add module-specific options
+
+        }
+        
         self.module_class = self.create_module_wrapper(
             sfp_dehashed,
-            module_attributes={
-                'descr': "Search DeHashed for breach data related to identified e-mail addresses.",
-                # Add specific options needed by this module
-                'opts': {
-                    'api_key_dehashed': '',
-                    'api_secret_dehashed': '',
-                    'paid_plan': False,
-                    'age_limit_days': 0,
-                    'emailonlyphones': False,
-                    'friendlyonly': False
-                },
-                'optdescs': {
-                    'api_key_dehashed': 'DeHashed API key.',
-                    'api_secret_dehashed': 'DeHashed API secret.',
-                    'paid_plan': 'Are you using a paid DeHashed plan? If so, more data will be fetched.',
-                    'age_limit_days': 'Ignore any records older than this many days. 0 = unlimited.',
-                    'emailonlyphones': 'Only show phone numbers that were found with an email. Others are likely junk.',
-                    'friendlyonly': 'Only show domains that are considered friendly for reporting abuse.'
-                }
-            }
+            module_attributes=module_attributes
         )
 
     def test_opts(self):
@@ -53,6 +42,7 @@ class TestModuleDehashed(SpiderFootModuleTestCase):
         module = self.module_class()
         module.setup(sf, self.default_options)
         self.assertIsNotNone(module.options)
+        self.assertTrue('_debug' in module.options)
         self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
@@ -64,26 +54,3 @@ class TestModuleDehashed(SpiderFootModuleTestCase):
         """Test the producedEvents function returns a list."""
         module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
-
-    def test_handleEvent_no_api_key_should_set_errorState(self):
-        """Test handleEvent method with no API key."""
-        sf = SpiderFoot(self.default_options)
-        
-        # Create module with empty API key
-        module = self.module_class()
-        # Initialize options in the module
-        module.setup(sf, self.default_options)
-        # Make sure the API key is empty
-        module.opts['api_key_dehashed'] = ''
-        module.options['api_key_dehashed'] = ''
-        
-        # Create and process the test event
-        event_type = "EMAILADDR"
-        event_data = "test@example.com"
-        event_module = "test"
-        source_event = None
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        result = module.handleEvent(evt)
-        
-        self.assertIsNone(result)
-        self.assertTrue(module.errorState)

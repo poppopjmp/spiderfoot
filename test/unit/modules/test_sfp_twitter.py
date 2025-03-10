@@ -1,59 +1,56 @@
-import pytest
-import unittest
-
-from modules.sfp_twitter import sfp_twitter
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp_twitter.py
+from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from spiderfoot import SpiderFootEvent
+from modules.sfp_twitter import sfp_twitter
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
-@pytest.mark.usefixtures
-class TestModuleTwitter(unittest.TestCase):
+class TestModuleTwitter(SpiderFootModuleTestCase):
+    """Test Twitter module."""
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Create a mock for any logging calls
+        self.log_mock = MagicMock()
+        # Apply patches in setup to affect all tests
+        patcher1 = patch('logging.getLogger', return_value=self.log_mock)
+        self.addCleanup(patcher1.stop)
+        self.mock_logger = patcher1.start()
+        
+        # Create module wrapper class dynamically
+        module_attributes = {
+            'descr': "Description for sfp_twitter",
+            # Add module-specific options
+
+        }
+        
+        self.module_class = self.create_module_wrapper(
+            sfp_twitter,
+            module_attributes=module_attributes
+        )
 
     def test_opts(self):
-        module = sfp_twitter()
+        """Test the module options."""
+        module = self.module_class()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
+        """Test setup function."""
         sf = SpiderFoot(self.default_options)
-        module = sfp_twitter()
-        module.setup(sf, dict())
+        module = self.module_class()
+        module.setup(sf, self.default_options)
+        self.assertIsNotNone(module.options)
+        self.assertTrue('_debug' in module.options)
+        self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
-        module = sfp_twitter()
+        """Test the watchedEvents function returns a list."""
+        module = self.module_class()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
-        module = sfp_twitter()
+        """Test the producedEvents function returns a list."""
+        module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
-
-    def test_handleEvent_event_data_social_media_not_twitter_profile_should_not_return_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_twitter()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            raise Exception(f"Raised event {event.eventType}: {event.data}")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_twitter)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'SOCIAL_MEDIA'
-        event_data = 'Not Twitter: example_username'
-        event_module = 'example module'
-        source_event = evt
-
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)

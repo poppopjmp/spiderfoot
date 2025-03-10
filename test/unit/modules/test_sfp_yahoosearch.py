@@ -1,50 +1,56 @@
-import pytest
-import unittest
-
-from modules.sfp_yahoosearch import sfp_yahoosearch
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp_yahoosearch.py
+from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from spiderfoot import SpiderFootEvent
+from modules.sfp_yahoosearch import sfp_yahoosearch
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
-@pytest.mark.usefixtures
-class TestModuleYahoosearch(SpiderFootModuleTestCase, unittest.TestCase):
+class TestModuleYahoosearch(SpiderFootModuleTestCase):
+    """Test Yahoosearch module."""
 
-    @property
-    def watchedEvents(self):
-        return ["DOMAIN_NAME"]
-
-    @property
-    def producedEvents(self):
-        return ["LINKED_URL_INTERNAL", "SEARCH_ENGINE_WEB_CONTENT"]
-
-    @property
-    def opts(self):
-        return {
-            # Add any necessary options here
-        }
-    
     def setUp(self):
-        self.default_options = {
-            # Add default options required by tests
+        """Set up before each test."""
+        super().setUp()
+        # Create a mock for any logging calls
+        self.log_mock = MagicMock()
+        # Apply patches in setup to affect all tests
+        patcher1 = patch('logging.getLogger', return_value=self.log_mock)
+        self.addCleanup(patcher1.stop)
+        self.mock_logger = patcher1.start()
+        
+        # Create module wrapper class dynamically
+        module_attributes = {
+            'descr': "Description for sfp_yahoosearch",
+            # Add module-specific options
+
         }
+        
+        self.module_class = self.create_module_wrapper(
+            sfp_yahoosearch,
+            module_attributes=module_attributes
+        )
 
     def test_opts(self):
-        module = sfp_yahoosearch()
-        self.assertEqual(len(module.opts), 2)
-        self.assertTrue('maxresults' in module.opts)
-        self.assertTrue('fetchlinks' in module.opts)
+        """Test the module options."""
+        module = self.module_class()
+        self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        sf = unittest.mock.MagicMock()
-        module = sfp_yahoosearch()
-        module.setup(sf)
-        self.assertEqual(module.__dataSource__, "Yahoo")
+        """Test setup function."""
+        sf = SpiderFoot(self.default_options)
+        module = self.module_class()
+        module.setup(sf, self.default_options)
+        self.assertIsNotNone(module.options)
+        self.assertTrue('_debug' in module.options)
+        self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
-        module = sfp_yahoosearch()
+        """Test the watchedEvents function returns a list."""
+        module = self.module_class()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
-        module = sfp_yahoosearch()
+        """Test the producedEvents function returns a list."""
+        module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)

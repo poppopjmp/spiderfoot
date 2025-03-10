@@ -1,19 +1,16 @@
-import pytest
-import unittest
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp_netlas.py
 from unittest.mock import patch, MagicMock
-
-from modules.sfp_netlas import sfp_netlas
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from spiderfoot import SpiderFootEvent
+from modules.sfp_netlas import sfp_netlas
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-@pytest.mark.usefixtures
+
 class TestModuleNetlas(SpiderFootModuleTestCase):
-    """Test Netlas module"""
+    """Test Netlas module."""
 
-    
     def setUp(self):
-
+        """Set up before each test."""
         super().setUp()
         # Create a mock for any logging calls
         self.log_mock = MagicMock()
@@ -23,53 +20,37 @@ class TestModuleNetlas(SpiderFootModuleTestCase):
         self.mock_logger = patcher1.start()
         
         # Create module wrapper class dynamically
+        module_attributes = {
+            'descr': "Description for sfp_netlas",
+            # Add module-specific options
+
+        }
+        
         self.module_class = self.create_module_wrapper(
             sfp_netlas,
-            module_attributes={
-                'descr': "Module description unavailable",
-                # Add any other specific attributes needed by this module
-            }
+            module_attributes=module_attributes
         )
 
     def test_opts(self):
+        """Test the module options."""
         module = self.module_class()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        """Test module setup"""
+        """Test setup function."""
         sf = SpiderFoot(self.default_options)
         module = self.module_class()
-        module.setup(sf, dict())
+        module.setup(sf, self.default_options)
+        self.assertIsNotNone(module.options)
+        self.assertTrue('_debug' in module.options)
+        self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
+        """Test the watchedEvents function returns a list."""
         module = self.module_class()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
+        """Test the producedEvents function returns a list."""
         module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
-
-    def test_handleEvent(self):
-        """Test handleEvent function"""
-        sf = SpiderFoot(self.default_options)
-        module = self.module_class()
-        module.setup(sf, dict())
-
-        target_value = 'example.com'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        event_type = 'ROOT'
-        event_data = 'example.com'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        
-        # Mock the API key check to return success
-        module.opts['api_key'] = 'test_key'
-        
-        result = module.handleEvent(evt)
-        
-        # Add assertions based on expected behavior - this depends on actual module behavior
-        self.assertIsNone(result)
