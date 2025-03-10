@@ -4,7 +4,6 @@ import unittest
 from unittest.mock import Mock, patch
 
 from sfwebui import SpiderFootWebUi
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures

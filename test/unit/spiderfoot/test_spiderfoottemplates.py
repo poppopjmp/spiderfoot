@@ -1,7 +1,7 @@
 import unittest
 from jinja2 import Template
 import os
-
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 class TestSpiderFootTemplates(SpiderFootModuleTestCase):
     

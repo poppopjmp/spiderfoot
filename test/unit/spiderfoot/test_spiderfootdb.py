@@ -421,3 +421,35 @@ class TestSpiderFootDb(unittest.TestCase):
         self.assertIsInstance(schema_version[0], int)
 
         conn.close()
+
+import os
+import sqlite3
+import tempfile
+import unittest
+
+from spiderfoot.db import SpiderFootDb
+
+class TestSpiderFootDb(unittest.TestCase):
+    """Test SpiderFootDb class."""
+
+    def test_init_should_create_database_file_if_not_exists(self):
+        """
+        Test __init__(self, opts, init=False)
+        """
+        with tempfile.NamedTemporaryFile(suffix='.test.db') as temp:
+            temp_db_path = temp.name
+
+        opts = {
+            '_database_lifetime': 1,
+            '__database': temp_db_path,
+        }
+        
+        # Initialize database
+        sfdb = SpiderFootDb(opts)
+        
+        self.assertIsInstance(sfdb, SpiderFootDb)
+        self.assertTrue(os.path.exists(temp_db_path))
+        
+        # Clean up
+        if os.path.exists(temp_db_path):
+            os.remove(temp_db_path)

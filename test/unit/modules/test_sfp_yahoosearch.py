@@ -12,12 +12,15 @@ class TestModuleYahoosearch(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_yahoosearch()
-        self.assertEqual(len(module.opts), len(module.optdescs))
+        self.assertEqual(len(module.opts), 2)
+        self.assertTrue('maxresults' in module.opts)
+        self.assertTrue('fetchlinks' in module.opts)
 
     def test_setup(self):
-        sf = SpiderFoot(self.default_options)
+        sf = unittest.mock.MagicMock()
         module = sfp_yahoosearch()
-        module.setup(sf, dict())
+        module.setup(sf)
+        self.assertEqual(module.__dataSource__, "Yahoo")
 
     def test_watchedEvents_should_return_list(self):
         module = sfp_yahoosearch()

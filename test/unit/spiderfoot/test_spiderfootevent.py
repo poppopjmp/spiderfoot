@@ -1,6 +1,7 @@
 import unittest
 
-from spiderfoot.event import SpiderFootEvent
+from test.unit.test_base import SpiderFootModuleTestCase
+from spiderfoot import SpiderFootEvent
 
 class TestSpiderFootEvent(SpiderFootModuleTestCase):
     """Test SpiderFootEvent."""
@@ -151,6 +152,13 @@ class TestSpiderFootEvent(SpiderFootModuleTestCase):
         self.assertEqual(event_dict['data'], self.event.data)
         self.assertEqual(event_dict['module'], self.event.module)
         self.assertEqual(event_dict['source'], '')
+
+    def test_event_creation(self):
+        """
+        Test event creation
+        """
+        event = SpiderFootEvent("TEST", "test event", "testing", "testHash")
+        self.assertIsInstance(event, SpiderFootEvent)
 
 
 if __name__ == "__main__":

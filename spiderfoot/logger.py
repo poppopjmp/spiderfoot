@@ -121,6 +121,61 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         self.dbh = SpiderFootDb(self.opts)
 
 
+class SpiderFootLogger:
+    """SpiderFoot logger class"""
+    
+    def __init__(self, logname, refresh_rate=1):
+        """Initialize SpiderFoot logger
+        
+        Args:
+            logname (str): name of the log
+            refresh_rate (int): how quickly to refresh the log
+        """
+        self.logname = logname
+        self.refresh_rate = refresh_rate
+        self.logger = logging.getLogger(f"spiderfoot.{logname}")
+    
+    def debug(self, message):
+        """Log debug message
+        
+        Args:
+            message (str): message to log
+        """
+        self.logger.debug(message)
+    
+    def info(self, message):
+        """Log info message
+        
+        Args:
+            message (str): message to log
+        """
+        self.logger.info(message)
+    
+    def warning(self, message):
+        """Log warning message
+        
+        Args:
+            message (str): message to log
+        """
+        self.logger.warning(message)
+    
+    def error(self, message):
+        """Log error message
+        
+        Args:
+            message (str): message to log
+        """
+        self.logger.error(message)
+    
+    def critical(self, message):
+        """Log critical message
+        
+        Args:
+            message (str): message to log
+        """
+        self.logger.critical(message)
+
+
 def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.QueueListener':
     """Create and start a SpiderFoot log listener in its own thread.
     

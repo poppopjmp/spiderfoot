@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import SpiderFootStaticJS
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 @pytest.mark.usefixtures
 class TestSpiderFootStaticJS(SpiderFootModuleTestCase):

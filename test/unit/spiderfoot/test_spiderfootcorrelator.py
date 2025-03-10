@@ -4,6 +4,7 @@ import uuid
 from unittest.mock import MagicMock, Mock, patch
 
 from spiderfoot import SpiderFootCorrelator, SpiderFootDb, SpiderFootEvent
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 @pytest.mark.usefixtures
 class TestSpiderFootCorrelator(SpiderFootModuleTestCase):
@@ -350,6 +351,14 @@ class TestSpiderFootCorrelator(SpiderFootModuleTestCase):
         ]
         result = self.correlator.process_rule(rule)
         self.assertEqual(len(result), 1)
+
+    def test_correlate(self):
+        """
+        Test correlate()
+        """
+        correlator = SpiderFootCorrelator(None)
+        result = correlator.correlate(None, [], [])
+        self.assertIsNotNone(result)
 
 
 if __name__ == "__main__":

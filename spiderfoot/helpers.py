@@ -17,6 +17,7 @@ import networkx as nx
 from bs4 import BeautifulSoup, SoupStrainer
 from networkx.readwrite.gexf import GEXFWriter
 import phonenumbers
+import ipaddress
 
 
 if sys.version_info >= (3, 8):  # PEP 589 support (TypedDict)
@@ -1530,3 +1531,37 @@ class SpiderFootHelpers():
             return False
 
         return True
+
+    @staticmethod
+    def is_private_ip(ip_address_str):
+        """
+        Check if an IP address is private.
+        
+        Args:
+            ip_address_str (str): IP address to check
+            
+        Returns:
+            bool: True if the IP address is private, False otherwise
+        """
+        try:
+            ip_obj = ipaddress.ip_address(ip_address_str)
+            return ip_obj.is_private
+        except Exception:
+            return False
+
+    @staticmethod
+    def is_valid_local_or_loopback_ip(ip_address_str):
+        """
+        Check if an IP address is valid local or loopback.
+        
+        Args:
+            ip_address_str (str): IP address to check
+            
+        Returns:
+            bool: True if the IP address is valid local or loopback, False otherwise
+        """
+        try:
+            ip_obj = ipaddress.ip_address(ip_address_str)
+            return ip_obj.is_private or ip_obj.is_loopback
+        except Exception:
+            return False

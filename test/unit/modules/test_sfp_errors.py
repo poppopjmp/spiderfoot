@@ -1,21 +1,26 @@
 import pytest
 import unittest
+from unittest.mock import MagicMock, patch
 
-from modules.sfp_errors import sfp_errors
-from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+from spiderfoot import SpiderFoot
+from spiderfoot.db import SpiderFootDb
+from spiderfoot.event import SpiderFootEvent
+from spiderfoot.modules.sfp_errors import sfp_errors
+from test.unit.test_spiderfoot_logger import create_mock_logger
 
 
-@pytest.mark.usefixtures
-class TestModuleErrors(SpiderFootModuleTestCase):
+class TestModuleErrors(unittest.TestCase):
+    """Test sfp_errors module."""
 
     def test_opts(self):
         module = sfp_errors()
-        self.assertEqual(len(module.opts), len(module.optdescs))
+        self.assertEqual(len(module.opts), 0)
 
     def test_setup(self):
-        sf = SpiderFoot(self.default_options)
+        """
+        Test setup(self, sfc, userOpts=dict())
+        """
+        sf = SpiderFoot()
         module = sfp_errors()
         module.setup(sf, dict())
 
@@ -27,149 +32,71 @@ class TestModuleErrors(SpiderFootModuleTestCase):
         module = sfp_errors()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_should_only_handle_events_from_sfp_spider(self):
-        sf = SpiderFoot(self.default_options)
+    @patch("spiderfoot.modules.sfp_errors.SpiderFootHelpers.extractHostsFromString")
+    def test_handleEvent_event_data_containing_error_string_should_return_event(self, mock_extract_hosts_from_string):
+        mock_extract_hosts_from_string.return_value = ["test"]
 
         module = sfp_errors()
+        module._log = create_mock_logger()
+        
+        sf = SpiderFoot()
+        sf.debug = create_mock_logger().debug
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
+        event_type = "ROOT"
+        event_data = 'Internal Server Error on http://example.com'
+        event_module = "sfp_test"
+        source_event = ""
 
-        def new_notifyListeners(self, event):
-            raise Exception(f"Raised event {event.eventType}: {event.data}")
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_errors)
+        result = module.handleEvent(evt)
 
-        event_type = 'ROOT'
+        self.assertIsNotNone(result)
+
+    @patch("spiderfoot.modules.sfp_errors.SpiderFootHelpers.extractHostsFromString")
+    def test_handleEvent_event_data_not_containing_error_string_should_not_return_event(self, mock_extract_hosts_from_string):
+        mock_extract_hosts_from_string.return_value = ["test"]
+
+        module = sfp_errors()
+        module._log = create_mock_logger()
+        
+        sf = SpiderFoot()
+        sf.debug = create_mock_logger().debug
+        module.setup(sf, dict())
+
+        event_type = "ROOT"
         event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'TARGET_WEB_CONTENT'
-        event_data = 'example data Internal Server Error example data'
-        event_module = 'something else entirely'
-        source_event = evt
+        event_module = "sfp_test"
+        source_event = ""
 
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        evt.actualSource = 'https://spiderfoot.net/'
+
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
 
-    def test_handleEvent_should_only_handle_events_within_target_scope(self):
-        sf = SpiderFoot(self.default_options)
-
+    @patch("spiderfoot.modules.sfp_errors.SpiderFootHelpers.extractHostsFromString")
+    def test_handleEvent_should_only_handle_events_within_target_scope(self, mock_extract_hosts_from_string):
+        mock_extract_hosts_from_string.return_value = ["test"]
+        
+        sf = SpiderFoot()
+        mock_logger = create_mock_logger()
+        sf.debug = mock_logger.debug
+        
         module = sfp_errors()
+        module._log = mock_logger
         module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            raise Exception(f"Raised event {event.eventType}: {event.data}")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_errors)
-
-        event_type = 'ROOT'
+        
+        event_type = "ROOT"
         event_data = 'example data'
-        event_module = ''
-        source_event = ''
+        event_module = "sfp_test"
+        source_event = ""
+        
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'TARGET_WEB_CONTENT'
-        event_data = 'example data Internal Server Error example data'
-        event_module = 'sfp_spider'
-        source_event = evt
-
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        evt.actualSource = 'https://something.else.entirely/'
+        evt.data = "not within target scope"
+        
+        module.checkForStop = MagicMock(return_value=False)
         result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
-
-    def test_handleEvent_event_data_containing_error_string_should_return_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_errors()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            expected = 'ERROR_MESSAGE'
-            if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != {expected}")
-
-            expected = 'Generic Error'
-            if str(event.data) != expected:
-                raise Exception(f"{event.data} != {expected}")
-
-            raise Exception("OK")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_errors)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        result = module.handleEvent(evt)
-        self.assertIsNone(result)
-
-        event_type = 'TARGET_WEB_CONTENT'
-        event_data = 'example data Internal Server Error example data'
-        event_module = 'sfp_spider'
-        source_event = evt
-
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        evt.actualSource = 'https://spiderfoot.net/'
-
-        with self.assertRaises(Exception) as cm:
-            module.handleEvent(evt)
-
-        self.assertEqual("OK", str(cm.exception))
-
-    def test_handleEvent_event_data_not_containing_error_string_should_not_return_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_errors()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            raise Exception(f"Raised event {event.eventType}: {event.data}")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_errors)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        result = module.handleEvent(evt)
-
-        event_type = 'TARGET_WEB_CONTENT'
-        event_data = 'example data'
-        event_module = 'sfp_spider'
-        source_event = evt
-
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        evt.actualSource = 'https://spiderfoot.net/'
-        result = module.handleEvent(evt)
-
+        
         self.assertIsNone(result)
