@@ -7,7 +7,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationDnsneighbor(SpiderFootModuleTestCase):
+class TestModuleIntegrationDnsneighbor(unittest.TestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

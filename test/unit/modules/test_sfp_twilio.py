@@ -1,15 +1,13 @@
 import pytest
 import unittest
-import logging
 
 from modules.sfp_twilio import sfp_twilio
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleTwilio(SpiderFootModuleTestCase):
+class TestModuletwilio(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_twilio()
@@ -17,6 +15,7 @@ class TestModuleTwilio(SpiderFootModuleTestCase):
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
+
         module = sfp_twilio()
         module.setup(sf, dict())
 
@@ -34,8 +33,8 @@ class TestModuleTwilio(SpiderFootModuleTestCase):
         module = sfp_twilio()
         module.setup(sf, dict())
 
-        target_value = '+12345678901'
-        target_type = 'PHONE_NUMBER'
+        target_value = 'example target value'
+        target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
@@ -49,7 +48,3 @@ class TestModuleTwilio(SpiderFootModuleTestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
-
-    def setUp(self):
-        self.module = sfp_twilio()
-        self.module.log = logging.getLogger(__name__)

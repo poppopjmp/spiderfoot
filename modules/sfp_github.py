@@ -263,7 +263,7 @@ class sfp_github(SpiderFootPlugin):
                     continue
 
                 for item in repret:
-                    if not isinstance(item, dict):
+                    if type(item) != dict:
                         self.debug("Encountered an unexpected or empty response from Github.")
                         continue
 
@@ -278,11 +278,5 @@ class sfp_github(SpiderFootPlugin):
                                               self.__name__, event)
                         self.notifyListeners(evt)
 
-# Look at the options defined in the module
-# If there are multiple options but the test expects only 1, we need to fix either:
-# 1. The test to expect the correct number of options, or
-# 2. The module to have only 1 option
-
-# After examining the code, update either the test or the module accordingly
 
 # End of sfp_github class

@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_similar import sfp_similar
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleSimilar(SpiderFootModuleTestCase):
+class TestModuleSimilar(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_similar()

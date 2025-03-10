@@ -4,10 +4,10 @@ import unittest
 from modules.sfp_bitcoinwhoswho import sfp_bitcoinwhoswho
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleBitcoinwhoswho(SpiderFootModuleTestCase):
+class TestModuleBitcoinwhoswho(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_bitcoinwhoswho()

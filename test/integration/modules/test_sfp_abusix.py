@@ -7,15 +7,10 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationAbusix(SpiderFootModuleTestCase):
+class TestModuleIntegrationAbusix(unittest.TestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):
-        """
-        Test handleEvent(mock_get) with a malicious IP address.
-        Args:
-            mock_get: Mock for requests.get
-        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_abusix()

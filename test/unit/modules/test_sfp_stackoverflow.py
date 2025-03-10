@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_stackoverflow import sfp_stackoverflow
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleStackoverflow(SpiderFootModuleTestCase):
+class TestModuleStackoverflow(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_stackoverflow()

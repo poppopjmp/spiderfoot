@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_ipqualityscore import sfp_ipqualityscore
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleIpqualityscore(SpiderFootModuleTestCase):
+class TestModuleIpqualityscore(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_ipqualityscore()
@@ -33,8 +32,8 @@ class TestModuleIpqualityscore(SpiderFootModuleTestCase):
         module = sfp_ipqualityscore()
         module.setup(sf, dict())
 
-        target_value = '1.1.1.1'
-        target_type = 'IP_ADDRESS'
+        target_value = 'example target value'
+        target_type = 'PHONE_NUMBER'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

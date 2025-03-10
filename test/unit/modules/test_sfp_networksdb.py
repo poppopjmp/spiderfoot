@@ -4,10 +4,10 @@ import unittest
 from modules.sfp_networksdb import sfp_networksdb
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleNetworksdb(SpiderFootModuleTestCase):
+class TestModuleNetworksdb(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_networksdb()

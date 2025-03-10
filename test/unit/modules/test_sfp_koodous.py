@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_koodous import sfp_koodous
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleKoodous(SpiderFootModuleTestCase):
+class TestModuleKoodous(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_koodous()
@@ -57,8 +56,8 @@ class TestModuleKoodous(SpiderFootModuleTestCase):
         module = sfp_koodous()
         module.setup(sf, dict())
 
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_value = 'example target value'
+        target_type = 'EMAILADDR'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

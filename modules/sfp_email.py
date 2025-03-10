@@ -12,7 +12,6 @@
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
-# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp_email(SpiderFootPlugin):
@@ -55,7 +54,7 @@ class sfp_email(SpiderFootPlugin):
         srcModuleName = event.module
         eventData = event.data
 
-        self.self.debug(f"Received event, {eventName}, from {srcModuleName}")
+        self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         emails = SpiderFootHelpers.extractEmailsFromText(eventData)
         for email in set(emails):
@@ -65,11 +64,11 @@ class sfp_email(SpiderFootPlugin):
             # Get the domain and strip potential ending .
             mailDom = email.split('@')[1].strip('.')
             if not self.sf.validHost(mailDom, self.opts['_internettlds']):
-                self.self.debug(f"Skipping {email} as not a valid e-mail.")
+                self.debug(f"Skipping {email} as not a valid e-mail.")
                 continue
 
             if not self.getTarget().matches(mailDom, includeChildren=True, includeParents=True) and not self.getTarget().matches(email):
-                self.self.debug("External domain, so possible affiliate e-mail")
+                self.debug("External domain, so possible affiliate e-mail")
                 evttype = "AFFILIATE_EMAILADDR"
 
             if eventName.startswith("AFFILIATE_"):
@@ -78,7 +77,7 @@ class sfp_email(SpiderFootPlugin):
             if not evttype.startswith("AFFILIATE_") and email.split("@")[0] in self.opts['_genericusers'].split(","):
                 evttype = "EMAILADDR_GENERIC"
 
-            self.self.info(f"Found e-mail address: {email}")
+            self.info(f"Found e-mail address: {email}")
             mail = email.strip('.')
 
             evt = SpiderFootEvent(evttype, mail, self.__name__, event)

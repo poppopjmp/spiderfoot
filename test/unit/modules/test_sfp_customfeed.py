@@ -4,10 +4,10 @@ import unittest
 from modules.sfp_customfeed import sfp_customfeed
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleCustomfeed(SpiderFootModuleTestCase):
+class TestModuleCustomfeed(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_customfeed()

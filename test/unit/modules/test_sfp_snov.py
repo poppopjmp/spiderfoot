@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_snov import sfp_snov
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleSnov(SpiderFootModuleTestCase):
+class TestModuleSnov(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_snov()
@@ -33,8 +32,8 @@ class TestModuleSnov(SpiderFootModuleTestCase):
         module = sfp_snov()
         module.setup(sf, dict())
 
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_value = 'example target value'
+        target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

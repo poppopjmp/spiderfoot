@@ -14,7 +14,6 @@
 from netaddr import IPAddress, IPNetwork
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
-# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp_abusech(SpiderFootPlugin):
@@ -120,13 +119,13 @@ class sfp_abusech(SpiderFootPlugin):
 
         if targetType == "ip":
             if target in blacklist:
-                self.self.debug(f"IP address {target} found in Abuse.ch Feodo Tracker.")
+                self.debug(f"IP address {target} found in Abuse.ch Feodo Tracker.")
                 return True
         elif targetType == "netblock":
             netblock = IPNetwork(target)
             for ip in blacklist:
                 if IPAddress(ip) in netblock:
-                    self.self.debug(f"IP address {ip} found within netblock/subnet {target} in Abuse.ch Feodo Tracker.")
+                    self.debug(f"IP address {ip} found within netblock/subnet {target} in Abuse.ch Feodo Tracker.")
                     return True
 
         return False
@@ -345,10 +344,10 @@ class sfp_abusech(SpiderFootPlugin):
         srcModuleName = event.module
         eventData = event.data
 
-        self.self.debug(f"Received event, {eventName}, from {srcModuleName}")
+        self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventData in self.results:
-            self.self.debug(f"Skipping {eventData}, already checked.")
+            self.debug(f"Skipping {eventData}, already checked.")
             return
 
         if self.errorState:
@@ -391,7 +390,7 @@ class sfp_abusech(SpiderFootPlugin):
             return
 
         if targetType in ['ip', 'netblock']:
-            self.self.debug(f"Checking maliciousness of {eventData} ({eventName}) with Abuse.ch Feodo Tracker")
+            self.debug(f"Checking maliciousness of {eventData} ({eventName}) with Abuse.ch Feodo Tracker")
             if self.queryFeodoTrackerBlacklist(eventData, targetType):
                 url = "https://feodotracker.abuse.ch/downloads/ipblocklist.txt"
                 text = f"Abuse.ch Feodo Tracker [{eventData}]\n<SFURL>{url}</SFURL>"

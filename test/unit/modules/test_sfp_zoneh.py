@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_zoneh import sfp_zoneh
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleZoneh(SpiderFootModuleTestCase):
+class TestModuleZoneh(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_zoneh()

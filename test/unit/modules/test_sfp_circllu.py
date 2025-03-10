@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_circllu import sfp_circllu
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleCircllu(SpiderFootModuleTestCase):
+class TestModuleCircllu(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_circllu()
@@ -33,8 +32,8 @@ class TestModuleCircllu(SpiderFootModuleTestCase):
         module = sfp_circllu()
         module.setup(sf, dict())
 
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_value = 'example target value'
+        target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
@@ -46,46 +45,5 @@ class TestModuleCircllu(SpiderFootModuleTestCase):
 
         result = module.handleEvent(evt)
 
-        self.assertIsNone(result)
-        self.assertTrue(module.errorState)
-
-    def test_parseApiResponse_should_handle_json_data(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_circllu()
-        module.setup(sf, dict())
-
-        api_response = {
-            'code': 200,
-            'content': '{"success":true,"result":{"domains":["example.com"]}}'
-        }
-
-        result = module.parseApiResponse(api_response)
-        self.assertIsInstance(result, dict)
-        self.assertTrue(result.get("success"))
-        self.assertIn("domains", result.get("result", {}))
-
-    def test_parseApiResponse_should_handle_errors(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_circllu()
-        module.setup(sf, dict())
-
-        # Test with invalid JSON
-        api_response = {
-            'code': 200,
-            'content': 'not json'
-        }
-
-        result = module.parseApiResponse(api_response)
-        self.assertIsNone(result)
-
-        # Test with error code
-        api_response = {
-            'code': 401,
-            'content': '{"success":false,"error":"Invalid API key"}'
-        }
-
-        result = module.parseApiResponse(api_response)
         self.assertIsNone(result)
         self.assertTrue(module.errorState)

@@ -137,7 +137,7 @@ class sfp_portscan_tcp(SpiderFootPlugin):
         while i < len(portList):
             port = portList[i]
             self.info(f"Spawning thread to check port: {port} on {ip}")
-            t.append(threading.Thread(name=f"sfp_portscan_tcp_{port}", target=self.tryPort, args=(ip, port),daemon=True))
+            t.append(threading.Thread(name=f"sfp_portscan_tcp_{port}", target=self.tryPort, args=(ip, port)))
             t[i].start()
             i += 1
 

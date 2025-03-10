@@ -1,15 +1,13 @@
 import pytest
 import unittest
-import logging
 
 from modules.sfp_whoxy import sfp_whoxy
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleWhoxy(SpiderFootModuleTestCase):
+class TestModuleWhoxy(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_whoxy()
@@ -34,8 +32,8 @@ class TestModuleWhoxy(SpiderFootModuleTestCase):
         module = sfp_whoxy()
         module.setup(sf, dict())
 
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_value = 'example target value'
+        target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
@@ -49,7 +47,3 @@ class TestModuleWhoxy(SpiderFootModuleTestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
-
-    def setUp(self):
-        self.module = sfp_whoxy()
-        self.module.log = logging.getLogger(__name__)

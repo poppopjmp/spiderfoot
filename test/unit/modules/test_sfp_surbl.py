@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_surbl import sfp_surbl
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleSurbl(SpiderFootModuleTestCase):
+class TestModuleSurbl(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_surbl()

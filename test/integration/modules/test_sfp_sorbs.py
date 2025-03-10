@@ -7,7 +7,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationSorbs(SpiderFootModuleTestCase):
+class TestModuleIntegrationSorbs(unittest.TestCase):
 
     def test_handleEvent_event_data_safe_ip_address_not_blocked_should_not_return_event(self):
         sf = SpiderFoot(self.default_options)

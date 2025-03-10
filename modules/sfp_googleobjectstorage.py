@@ -106,7 +106,7 @@ class sfp_googleobjectstorage(SpiderFootPlugin):
             self.info("Spawning thread to check bucket: " + site)
             tname = str(random.SystemRandom().randint(0, 999999999))
             t.append(threading.Thread(name='thread_sfp_googleobjectstorage_' + tname,
-                                      target=self.checkSite, args=(site,),daemon=True))
+                                      target=self.checkSite, args=(site,)))
             t[i].start()
             i += 1
 
@@ -137,20 +137,14 @@ class sfp_googleobjectstorage(SpiderFootPlugin):
                     return res
 
                 for ret in list(data.keys()):
-                    # Format: "url:filecount"
-                    res.append(f"{ret}:{data[ret]}")
+                    if data[ret]:
+                        # bucket:filecount
+                        res.append(ret + ":" + str(data[ret]))
                 i = 0
                 siteList = list()
 
             siteList.append(site)
             i += 1
-
-        # Don't forget to process any remaining sites
-        if siteList:
-            data = self.threadSites(siteList)
-            if data:
-                for ret in list(data.keys()):
-                    res.append(f"{ret}:{data[ret]}")
 
         return res
 
@@ -168,17 +162,10 @@ class sfp_googleobjectstorage(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventName == "LINKED_URL_EXTERNAL":
-            if ".storage.googleapis.com" in eventData.lower():
-                try:
-                    # Extract the Google storage domain
-                    b = self.sf.urlFQDN(eventData)
-                    if not b:
-                        return
-                    
-                    evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET", b, self.__name__, event)
-                    self.notifyListeners(evt)
-                except Exception as e:
-                    self.debug(f"Error processing Google storage URL: {e}")
+            if ".storage.googleapis.com" in eventData:
+                b = self.sf.urlFQDN(eventData)
+                evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET", b, self.__name__, event)
+                self.notifyListeners(evt)
             return
 
         targets = [eventData.replace('.', '')]
@@ -200,26 +187,14 @@ class sfp_googleobjectstorage(SpiderFootPlugin):
         # Batch the scans
         ret = self.batchSites(urls)
         for b in ret:
-            try:
-                parts = b.split(":")
-                if len(parts) != 2:
-                    self.debug(f"Unexpected format in bucket data: {b}")
-                    continue
-                
-                url = parts[0]
-                file_count = parts[1]
-                
-                evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET", url, self.__name__, event)
+            bucket = b.split(":")
+            evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET", bucket[0] + ":" + bucket[1], self.__name__, event)
+            self.notifyListeners(evt)
+            if bucket[2] != "0":
+                bucketname = bucket[1].replace("//", "")
+                evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET_OPEN", bucketname + ": " + bucket[2] + " files found.",
+                                      self.__name__, evt)
                 self.notifyListeners(evt)
-                
-                if file_count != "0":
-                    bucket_name = url.replace("https://", "").replace("http://", "")
-                    evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET_OPEN", 
-                                        f"{bucket_name}: {file_count} files found.",
-                                        self.__name__, evt)
-                    self.notifyListeners(evt)
-            except Exception as e:
-                self.debug(f"Error processing bucket data: {e}")
 
 
 # End of sfp_googleobjectstorage class

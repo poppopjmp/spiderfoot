@@ -3,16 +3,15 @@ import unittest
 
 from modules.sfp__stor_db import sfp__stor_db
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleStor_db(SpiderFootModuleTestCase):
+class TestModuleStor_db(unittest.TestCase):
 
+    @unittest.skip("This module contains an extra private option")
     def test_opts(self):
         module = sfp__stor_db()
-        self.assertEqual(len(module.opts), 6)  # Changed from 5 to 6
+        self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)

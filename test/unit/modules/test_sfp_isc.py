@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_isc import sfp_isc
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleIsc(SpiderFootModuleTestCase):
+class TestModuleisc(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_isc()

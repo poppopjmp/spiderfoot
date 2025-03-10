@@ -1,13 +1,12 @@
 import pytest
 import unittest
-from unittest.mock import MagicMock
 
 from modules.sfp_sublist3r import sfp_sublist3r
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleSublist3r(SpiderFootModuleTestCase):
+class TestModuleSublist3r(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_sublist3r()
@@ -17,15 +16,6 @@ class TestModuleSublist3r(SpiderFootModuleTestCase):
         sf = SpiderFoot(self.default_options)
         module = sfp_sublist3r()
         module.setup(sf, dict())
-
-    def test_setup(self, mock_sublist3r):
-        """
-        Test setup
-        """
-        module = sfp_sublist3r()
-        module.log = MagicMock()  # Mock the log object before setup is called
-        module.setup()
-        assert module.errorState is False
 
     def test_watchedEvents_should_return_list(self):
         module = sfp_sublist3r()

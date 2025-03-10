@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_hosting import sfp_hosting
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleHosting(SpiderFootModuleTestCase):
+class TestModuleHosting(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_hosting()

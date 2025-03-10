@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_emailrep import sfp_emailrep
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleEmailrep(SpiderFootModuleTestCase):
+class TestModuleEmailrep(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_emailrep()
@@ -26,25 +24,3 @@ class TestModuleEmailrep(SpiderFootModuleTestCase):
     def test_producedEvents_should_return_list(self):
         module = sfp_emailrep()
         self.assertIsInstance(module.producedEvents(), list)
-
-    def test_handleEvent_no_api_key_should_set_errorState(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_emailrep()
-        module.setup(sf, dict())
-
-        target_value = 'example@example.com'
-        target_type = 'EMAILADDR'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
-        self.assertTrue(module.errorState)

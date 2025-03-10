@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_strangeheaders import sfp_strangeheaders
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleStrangeheaders(SpiderFootModuleTestCase):
+class TestModuleStrangeHeaders(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_strangeheaders()
@@ -41,11 +40,11 @@ class TestModuleStrangeheaders(SpiderFootModuleTestCase):
         def new_notifyListeners(self, event):
             expected = 'WEBSERVER_STRANGEHEADER'
             if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != expected")
+                raise Exception(f"{event.eventType} != {expected}")
 
             expected = 'unusual header: example header value'
             if str(event.data) != expected:
-                raise Exception(f"{event.data} != expected")
+                raise Exception(f"{event.data} != {expected}")
 
             raise Exception("OK")
 

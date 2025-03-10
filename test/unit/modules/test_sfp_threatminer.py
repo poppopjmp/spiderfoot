@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_threatminer import sfp_threatminer
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleThreatminer(SpiderFootModuleTestCase):
+class TestModuleThreatminer(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_threatminer()

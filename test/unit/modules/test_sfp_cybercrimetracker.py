@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_cybercrimetracker import sfp_cybercrimetracker
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleCybercrimetracker(SpiderFootModuleTestCase):
+class TestModuleCybercrimetracker(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_cybercrimetracker()

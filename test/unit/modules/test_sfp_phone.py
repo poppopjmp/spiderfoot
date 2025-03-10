@@ -4,10 +4,10 @@ import unittest
 from modules.sfp_phone import sfp_phone
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModulePhone(SpiderFootModuleTestCase):
+class TestModulePhone(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_phone()

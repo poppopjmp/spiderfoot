@@ -38,20 +38,15 @@ class sfp_zetalytics(SpiderFootPlugin):
         },
     }
 
-    def __init__(self):
-        self.__name__ = "Zetalytics"
-        self.opts = {
-            "api_key": "",
-            "verify": True
-        }
-        self.optdescs = {
-            "api_key": "Zetalytics API Key.",
-            "verify": "Verify that any hostnames found on the target domain still resolve?",
-        }
-        self.results = None
-        self.errorState = False
-        # Make sure to call the parent class constructor
-        super().__init__()
+    opts = {"api_key": "", "verify": True}
+
+    optdescs = {
+        "api_key": "Zetalytics API Key.",
+        "verify": "Verify that any hostnames found on the target domain still resolve?",
+    }
+
+    results = None
+    errorState = False
 
     def setup(self, sfc, userOpts=None):
         self.sf = sfc
@@ -200,11 +195,6 @@ class sfp_zetalytics(SpiderFootPlugin):
         eventData = event.data
 
         if self.errorState:
-            return
-
-        if self.opts['_zetalytics_api_key'] == "":
-            self.error("You enabled sfp_zetalytics but did not set an API key!")
-            self.errorState = True
             return
 
         if self.checkForStop():

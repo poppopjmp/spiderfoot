@@ -443,7 +443,7 @@ class sfp_alienvault(SpiderFootPlugin):
             if not rec:
                 continue
 
-            if rec.get("reputation"):
+            if rec.get("reputation", None):
                 self.debug(f"Found reputation info for {addr} in AlienVault OTX")
                 rec_history = rec['reputation'].get("activities", list())
                 threat_score = rec['reputation']['threat_score']
@@ -456,7 +456,7 @@ class sfp_alienvault(SpiderFootPlugin):
                 descr = f"AlienVault Threat Score: {threat_score}"
 
                 for result in rec_history:
-                    nm = result.get("name")
+                    nm = result.get("name", None)
 
                     if nm is None or nm in descr:
                         continue

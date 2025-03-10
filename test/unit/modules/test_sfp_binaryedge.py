@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_binaryedge import sfp_binaryedge
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleBinaryedge(SpiderFootModuleTestCase):
+class TestModuleBinaryedge(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_binaryedge()
@@ -33,7 +32,7 @@ class TestModuleBinaryedge(SpiderFootModuleTestCase):
         module = sfp_binaryedge()
         module.setup(sf, dict())
 
-        target_value = '1.1.1.1'
+        target_value = 'example target value'
         target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)

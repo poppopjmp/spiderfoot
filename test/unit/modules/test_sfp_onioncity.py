@@ -4,10 +4,10 @@ import unittest
 from modules.sfp_onioncity import sfp_onioncity
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleonioncity(SpiderFootModuleTestCase):
+class TestModuleonioncity(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_onioncity()

@@ -14,7 +14,6 @@ import re
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
-# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp_base64(SpiderFootPlugin):
@@ -58,7 +57,7 @@ class sfp_base64(SpiderFootPlugin):
         srcModuleName = event.module
         eventData = event.data
 
-        self.self.debug(f"Received event, {eventName}, from {srcModuleName}")
+        self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         decoded_data = urllib.parse.unquote(eventData)
 
@@ -84,12 +83,12 @@ class sfp_base64(SpiderFootPlugin):
             else:
                 string = str(match)
 
-            self.self.info(f"Found Base64 string: {match}")
+            self.info(f"Found Base64 string: {match}")
 
             try:
                 string += f" ({base64.b64decode(match).decode('utf-8')})"
             except Exception as e:
-                self.self.debug(f"Unable to base64-decode string: {e}")
+                self.debug(f"Unable to base64-decode string: {e}")
                 continue
 
             evt = SpiderFootEvent("BASE64_DATA", string, self.__name__, event)

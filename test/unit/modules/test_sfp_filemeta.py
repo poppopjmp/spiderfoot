@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_filemeta import sfp_filemeta
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleFilemeta(SpiderFootModuleTestCase):
+class TestModuleFilemeta(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_filemeta()

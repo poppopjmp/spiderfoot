@@ -123,10 +123,10 @@ class sfp_fraudguard(SpiderFootPlugin):
 
         fraudguard_url = "https://api.fraudguard.io/ip/" + qry
         api_key_account = self.opts['fraudguard_api_key_account']
-        if not isinstance(api_key_account, str):
+        if type(api_key_account) == str:
             api_key_account = api_key_account.encode('utf-8')
         api_key_password = self.opts['fraudguard_api_key_password']
-        if not isinstance(api_key_password, str):
+        if type(api_key_password) == str:
             api_key_password = api_key_password.encode('utf-8')
         token = base64.b64encode(api_key_account + ':'.encode('utf-8') + api_key_password)
         headers = {

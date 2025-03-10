@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_ahmia import sfp_ahmia
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleAhmia(SpiderFootModuleTestCase):
+class TestModuleAhmia(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_ahmia()
@@ -16,6 +14,7 @@ class TestModuleAhmia(SpiderFootModuleTestCase):
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
+
         module = sfp_ahmia()
         module.setup(sf, dict())
 

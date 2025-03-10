@@ -12,8 +12,6 @@
 # -------------------------------------------------------------------------------
 
 import re
-import time
-import requests
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
@@ -22,7 +20,7 @@ class sfp_zoneh(SpiderFootPlugin):
 
     meta = {
         'name': "Zone-H Defacement Check",
-        'summary': "Check if a hostname/domain appears on the zone-h.org defacement archives.",
+        'summary': "Check if a hostname/domain appears on the zone-h.org 'special defacements' RSS feed.",
         'flags': [],
         'useCases': ["Investigate", "Passive"],
         'categories': ["Leaks, Dumps and Breaches"],
@@ -31,8 +29,7 @@ class sfp_zoneh(SpiderFootPlugin):
             'model': "FREE_NOAUTH_UNLIMITED",
             'references': [
                 "https://www.zone-h.org/archive",
-                "https://www.zone-h.org/archive/special=1",
-                "https://www.zone-h.org/archive/published=0"
+                "https://www.zone-h.org/archive/special=1"
             ],
             'favIcon': "https://zone-h.org/images/logo.gif",
             'logo': "https://zone-h.org/images/logo.gif",
@@ -48,114 +45,66 @@ class sfp_zoneh(SpiderFootPlugin):
     # Default options
     opts = {
         'checkcohosts': True,
-        'checkaffiliates': True,
-        'feeds': ["specialdefacements", "published=0"],
-        'cachetime': 48,
-        'fetchtimeout': 30,
-        'delay': 1,  # Added delay option like in zoomeye
+        'checkaffiliates': True
     }
 
     # Option descriptions
     optdescs = {
         'checkcohosts': "Check co-hosted sites?",
-        'checkaffiliates': "Check affiliates?",
-        'feeds': "Zone-H RSS feeds to check: specialdefacements and/or published=0",
-        'cachetime': "Hours to cache the feeds for (0 = no caching)",
-        'fetchtimeout': "Timeout for fetch operations in seconds",
-        'delay': "Delay between API requests (in seconds)",  # Added description
+        'checkaffiliates': "Check affiliates?"
     }
+
+    # Be sure to completely clear any class variables in setup()
+    # or you run the risk of data persisting between scan runs.
 
     results = None
     errorState = False
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
-        self.errorState = False
         self.results = self.tempStorage()
+        self.errorState = False
+
+        # Clear / reset any other class member variables here
+        # or you risk them persisting between threads.
 
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
+    # What events is this module interested in for input
+    # * = be notified about all events.
     def watchedEvents(self):
         return ["INTERNET_NAME", "IP_ADDRESS", "IPV6_ADDRESS",
                 "AFFILIATE_INTERNET_NAME", "AFFILIATE_IPADDR", "AFFILIATE_IPV6_ADDRESS",
                 "CO_HOSTED_SITE"]
 
+    # What events this module produces
+    # This is to support the end user in selecting modules based on events
+    # produced.
     def producedEvents(self):
         return ["DEFACED_INTERNET_NAME", "DEFACED_IPADDR",
                 "DEFACED_AFFILIATE_INTERNET_NAME",
                 "DEFACED_COHOST", "DEFACED_AFFILIATE_IPADDR"]
 
     def lookupItem(self, target, content):
-        # Enhanced regex pattern to better handle different formats
-        pattern = r"<title><!\[CDATA\[(.*?)\]\]></title>\s+<link><!\[CDATA\[(.*?)\]\]></link>"
-        matches = re.findall(pattern, content, re.DOTALL)
-        
-        for title, link in matches:
-            if target.lower() in title.lower():
-                self.debug(f"Found Zone-H entry for {target}: {title}")
-                return f"{title.strip()}\n<SFURL>{link.strip()}</SFURL>"
-                
+        grps = re.findall(r"<title><\!\[CDATA\[(.[^\]]*)\]\]></title>\s+<link><\!\[CDATA\[(.[^\]]*)\]\]></link>", content)
+        for m in grps:
+            if target in m[0]:
+                self.info("Found zoneh site: " + m[0])
+                return m[0] + "\n<SFURL>" + m[1] + "</SFURL>"
+
         return False
 
-    def fetchFeed(self, feed_name):
-        if self.errorState:
-            return None
-            
-        feed_url = f"https://www.zone-h.org/rss/{feed_name}"
-        cache_key = f"sfzoneh_{feed_name}"
-        
-        content = self.sf.cacheGet(cache_key, self.opts['cachetime'])
-        if content:
-            return content
-            
-        self.debug(f"Fetching Zone-H feed: {feed_url}")
-        
-        try:
-            headers = {
-                'User-Agent': self.opts['_useragent'],
-                'Accept': 'application/rss+xml'
-            }
-            
-            response = requests.get(
-                feed_url, 
-                headers=headers,
-                timeout=self.opts['fetchtimeout']
-            )
-            time.sleep(self.opts['delay'])
-            
-            if response.status_code != 200:
-                self.error(f"Zone-H API returned HTTP status {response.status_code}: {response.text}")
-                self.errorState = True
-                return None
-                
-            content = response.text
-            
-            if not content:
-                self.debug(f"Empty content from {feed_url}")
-                return None
-                
-            self.sf.cachePut(cache_key, content)
-            return content
-            
-        except requests.exceptions.RequestException as e:
-            self.error(f"Error fetching Zone-H feed: {e}")
-            self.errorState = True
-            return None
-        except Exception as e:
-            self.error(f"Unexpected error fetching Zone-H feed: {e}")
-            self.errorState = True
-            return None
-
+    # Handle events sent to this module
     def handleEvent(self, event):
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
 
+        self.debug(f"Received event, {eventName}, from {srcModuleName}")
+
         if self.errorState:
             return
-
-        self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventData in self.results:
             self.debug(f"Skipping {eventData}, already checked.")
@@ -186,25 +135,21 @@ class sfp_zoneh(SpiderFootPlugin):
         if self.checkForStop():
             return
 
-        found = False
-        
-        # Check each configured feed
-        for feed in self.opts['feeds']:
-            if self.checkForStop():
+        url = "https://www.zone-h.org/rss/specialdefacements"
+        content = self.sf.cacheGet("sfzoneh", 48)
+        if content is None:
+            data = self.sf.fetchUrl(url, useragent=self.opts['_useragent'])
+            if data['content'] is None:
+                self.error("Unable to fetch " + url)
+                self.errorState = True
                 return
-                
-            content = self.fetchFeed(feed)
-            if not content:
-                self.info(f"No content found for feed {feed}")
-                continue
-                
-            ret = self.lookupItem(eventData, content)
-            if ret:
-                found = True
-                evt = SpiderFootEvent(evtType, ret, self.__name__, event)
-                self.notifyListeners(evt)
-        
-        if not found:
-            self.debug(f"No Zone-H defacements found for {eventData}")
+
+            self.sf.cachePut("sfzoneh", data['content'])
+            content = data['content']
+
+        ret = self.lookupItem(eventData, content)
+        if ret:
+            evt = SpiderFootEvent(evtType, ret, self.__name__, event)
+            self.notifyListeners(evt)
 
 # End of sfp_zoneh class

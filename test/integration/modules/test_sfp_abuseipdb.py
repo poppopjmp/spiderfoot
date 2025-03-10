@@ -11,11 +11,6 @@ class TestModuleIntegrationabuseipdb(unittest.TestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):
-        """
-        Test handleEvent(mock_get) with a malicious IP address.
-        Args:
-            mock_get: Mock for requests.get
-        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_abuseipdb()

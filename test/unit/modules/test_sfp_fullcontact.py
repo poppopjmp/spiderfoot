@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_fullcontact import sfp_fullcontact
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleFullcontact(SpiderFootModuleTestCase):
+class TestModuleFullcontact(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_fullcontact()
@@ -34,7 +33,7 @@ class TestModuleFullcontact(SpiderFootModuleTestCase):
         module.setup(sf, dict())
 
         target_value = 'example target value'
-        target_type = 'EMAILADDR'
+        target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

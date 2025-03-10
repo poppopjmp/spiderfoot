@@ -7,7 +7,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationOnionsearchengine(SpiderFootModuleTestCase):
+class TestModuleIntegrationOnionsearchengine(unittest.TestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

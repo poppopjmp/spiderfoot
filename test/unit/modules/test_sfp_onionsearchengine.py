@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_onionsearchengine import sfp_onionsearchengine
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleOnionsearchengine(SpiderFootModuleTestCase):
+class TestModuleOnionsearchengine(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_onionsearchengine()

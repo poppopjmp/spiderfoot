@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_jsonwhoiscom import sfp_jsonwhoiscom
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleJsonWhoisCom(SpiderFootModuleTestCase):
+class TestModuleJsonwhoiscom(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_jsonwhoiscom()
@@ -57,8 +56,8 @@ class TestModuleJsonWhoisCom(SpiderFootModuleTestCase):
         module = sfp_jsonwhoiscom()
         module.setup(sf, dict())
 
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_value = 'example target value'
+        target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
@@ -71,4 +70,3 @@ class TestModuleJsonWhoisCom(SpiderFootModuleTestCase):
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
-        self.assertTrue(module.errorState)

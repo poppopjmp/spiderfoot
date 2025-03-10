@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_cleantalk import sfp_cleantalk
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleCleantalk(SpiderFootModuleTestCase):
+class TestModuleCleantalk(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_cleantalk()

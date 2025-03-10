@@ -4,10 +4,10 @@ import unittest
 from modules.sfp_etherscan import sfp_etherscan
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleEtherscan(SpiderFootModuleTestCase):
+class TestModuleEtherscan(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_etherscan()

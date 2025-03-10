@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_dronebl import sfp_dronebl
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDronebl(SpiderFootModuleTestCase):
+class TestModuleDronebl(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_dronebl()

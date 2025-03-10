@@ -7,7 +7,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationHosting(SpiderFootModuleTestCase):
+class TestModuleIntegrationHosting(unittest.TestCase):
 
     @unittest.skip("todo")
     def test_handleEvent_event_data_ip_address_hosted_should_return_event(self):

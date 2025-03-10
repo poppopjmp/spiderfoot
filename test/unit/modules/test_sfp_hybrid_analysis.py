@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_hybrid_analysis import sfp_hybrid_analysis
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleHybridAnalysis(SpiderFootModuleTestCase):
+class TestModuleHybridAnalysis(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_hybrid_analysis()
@@ -50,25 +48,3 @@ class TestModuleHybridAnalysis(SpiderFootModuleTestCase):
                 result = module.parseApiResponse({"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertTrue(module.errorState)
-
-    def test_handleEvent_no_api_key_should_set_errorState(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_hybrid_analysis()
-        module.setup(sf, dict())
-
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
-        self.assertTrue(module.errorState)

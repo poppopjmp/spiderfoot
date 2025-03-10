@@ -4,10 +4,10 @@ import unittest
 from modules.sfp_builtwith import sfp_builtwith
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModulebuiltwith(SpiderFootModuleTestCase):
+class TestModulebuiltwith(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_builtwith()

@@ -104,7 +104,7 @@ class sfp_s3bucket(SpiderFootPlugin):
             self.info("Spawning thread to check bucket: " + site)
             tname = str(random.SystemRandom().randint(0, 999999999))
             t.append(threading.Thread(name='thread_sfp_s3buckets_' + tname,
-                                      target=self.checkSite, args=(site,),daemon=True))
+                                      target=self.checkSite, args=(site,)))
             t[i].start()
 
         # Block until all threads are finished
@@ -134,20 +134,14 @@ class sfp_s3bucket(SpiderFootPlugin):
                     return res
 
                 for ret in list(data.keys()):
-                    # Format: "url:filecount"
-                    res.append(f"{ret}:{data[ret]}")
+                    if data[ret]:
+                        # bucket:filecount
+                        res.append(f"{ret}:{data[ret]}")
                 i = 0
                 siteList = list()
 
             siteList.append(site)
             i += 1
-
-        # Don't forget to process any remaining sites
-        if siteList:
-            data = self.threadSites(siteList)
-            if data:
-                for ret in list(data.keys()):
-                    res.append(f"{ret}:{data[ret]}")
 
         return res
 
@@ -165,30 +159,16 @@ class sfp_s3bucket(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventName == "LINKED_URL_EXTERNAL":
-            if ".amazonaws.com" in eventData.lower():
-                try:
-                    # Extract the AWS domain
-                    b = self.sf.urlFQDN(eventData)
-                    if not b:
+            if ".amazonaws.com" in eventData:
+                b = self.sf.urlFQDN(eventData)
+                if b in self.opts['endpoints']:
+                    try:
+                        b += "/" + eventData.split(b + "/")[1].split("/")[0]
+                    except Exception:
+                        # Not a proper bucket path
                         return
-                        
-                    if b in self.opts['endpoints'].split(','):
-                        try:
-                            # Extract the bucket name from path
-                            path_parts = eventData.split(b + "/")
-                            if len(path_parts) > 1 and path_parts[1]:
-                                bucket_path = path_parts[1].split("/")[0]
-                                if bucket_path:
-                                    b += "/" + bucket_path
-                        except Exception as e:
-                            self.debug(f"Error extracting bucket path: {e}")
-                            # Not a proper bucket path
-                            return
-                    
-                    evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET", b, self.__name__, event)
-                    self.notifyListeners(evt)
-                except Exception as e:
-                    self.debug(f"Error processing AWS S3 URL: {e}")
+                evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET", b, self.__name__, event)
+                self.notifyListeners(evt)
             return
 
         targets = [eventData.replace('.', '')]
@@ -211,26 +191,14 @@ class sfp_s3bucket(SpiderFootPlugin):
         # Batch the scans
         ret = self.batchSites(urls)
         for b in ret:
-            try:
-                parts = b.split(":")
-                if len(parts) != 2:
-                    self.debug(f"Unexpected format in bucket data: {b}")
-                    continue
-                
-                url = parts[0]
-                file_count = parts[1]
-                
-                evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET", url, self.__name__, event)
+            bucket = b.split(":")
+            evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET", bucket[0] + ":" + bucket[1], self.__name__, event)
+            self.notifyListeners(evt)
+            if bucket[2] != "0":
+                bucketname = bucket[1].replace("//", "")
+                evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET_OPEN", bucketname + ": " + bucket[2] + " files found.",
+                                      self.__name__, evt)
                 self.notifyListeners(evt)
-                
-                if file_count != "0":
-                    bucket_name = url.replace("https://", "").replace("http://", "")
-                    evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET_OPEN", 
-                                        f"{bucket_name}: {file_count} files found.",
-                                        self.__name__, evt)
-                    self.notifyListeners(evt)
-            except Exception as e:
-                self.debug(f"Error processing bucket data: {e}")
 
 
 # End of sfp_s3bucket class

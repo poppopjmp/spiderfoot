@@ -78,7 +78,7 @@ class sfp_accounts(SpiderFootPlugin):
 
         content = self.sf.cacheGet("sfaccountsv2", 48)
         if content is None:
-            url = "https://raw.githubusercontent.com/WebBreacher/WhatsMyName/refs/heads/main/wmn-data.json"
+            url = "https://raw.githubusercontent.com/WebBreacher/WhatsMyName/main/wmn-data.json"
             data = self.sf.fetchUrl(url, useragent="SpiderFoot")
 
             if data['content'] is None:
@@ -192,7 +192,7 @@ class sfp_accounts(SpiderFootPlugin):
             thread = threading.Thread(
                 name=f'sfp_accounts_scan_{i}',
                 target=processSiteQueue,
-                args=(username, queue),daemon=True)
+                args=(username, queue))
             thread.start()
             threads.append(thread)
 

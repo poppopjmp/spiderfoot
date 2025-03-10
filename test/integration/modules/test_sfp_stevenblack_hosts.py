@@ -7,7 +7,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationStevenblackHosts(SpiderFootModuleTestCase):
+class TestModuleIntegrationStevenblackHosts(unittest.TestCase):
 
     def test_handleEvent_event_data_affiliate_internet_name_matching_ad_server_should_return_event(self):
         sf = SpiderFoot(self.default_options)

@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_spamcop import sfp_spamcop
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleSpamcop(SpiderFootModuleTestCase):
+class TestModuleSpamcop(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_spamcop()

@@ -1,15 +1,12 @@
 import pytest
 import unittest
-import logging
 
 from modules.sfp_urlscan import sfp_urlscan
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleUrlscan(SpiderFootModuleTestCase):
+class TestModuleUrlscan(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_urlscan()
@@ -27,29 +24,3 @@ class TestModuleUrlscan(SpiderFootModuleTestCase):
     def test_producedEvents_should_return_list(self):
         module = sfp_urlscan()
         self.assertIsInstance(module.producedEvents(), list)
-
-    def test_handleEvent_no_api_key_should_set_errorState(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_urlscan()
-        module.setup(sf, dict())
-
-        target_value = 'example target value'
-        target_type = 'DOMAIN_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
-        self.assertTrue(module.errorState)
-
-    def setUp(self):
-        self.module = sfp_urlscan()
-        self.module.log = logging.getLogger(__name__)

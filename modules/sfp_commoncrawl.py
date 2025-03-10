@@ -15,7 +15,6 @@ import json
 import re
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
-# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp_commoncrawl(SpiderFootPlugin):
@@ -74,12 +73,12 @@ class sfp_commoncrawl(SpiderFootPlugin):
                                    useragent="SpiderFoot")
 
             if res['code'] in ["400", "401", "402", "403", "404"]:
-                self.self.error("CommonCrawl search doesn't seem to be available.")
+                self.error("CommonCrawl search doesn't seem to be available.")
                 self.errorState = True
                 return None
 
             if not res['content']:
-                self.self.error("CommonCrawl search doesn't seem to be available.")
+                self.error("CommonCrawl search doesn't seem to be available.")
                 self.errorState = True
                 return None
 
@@ -93,12 +92,12 @@ class sfp_commoncrawl(SpiderFootPlugin):
                                useragent="SpiderFoot")
 
         if res['code'] in ["400", "401", "402", "403", "404"]:
-            self.self.error("CommonCrawl index collection doesn't seem to be available.")
+            self.error("CommonCrawl index collection doesn't seem to be available.")
             self.errorState = True
             return list()
 
         if not res['content']:
-            self.self.error("CommonCrawl index collection doesn't seem to be available.")
+            self.error("CommonCrawl index collection doesn't seem to be available.")
             self.errorState = True
             return list()
 
@@ -111,14 +110,14 @@ class sfp_commoncrawl(SpiderFootPlugin):
         topindexes = sorted(list(indexlist.keys()), reverse=True)[0:self.opts['indexes']]
 
         if len(topindexes) < self.opts['indexes']:
-            self.self.error("Not able to find latest CommonCrawl indexes.")
+            self.error("Not able to find latest CommonCrawl indexes.")
             self.errorState = True
             return list()
 
         retindex = list()
         for i in topindexes:
             retindex.append("CC-MAIN-" + str(i)[0:4] + "-" + str(i)[4:6])
-        self.self.debug("CommonCrawl indexes: " + str(retindex))
+        self.debug("CommonCrawl indexes: " + str(retindex))
         return retindex
 
     # What events is this module interested in for input
@@ -137,7 +136,7 @@ class sfp_commoncrawl(SpiderFootPlugin):
         srcModuleName = event.module
         eventData = event.data
 
-        self.self.debug(f"Received event, {eventName}, from {srcModuleName}")
+        self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.errorState:
             return
@@ -160,7 +159,7 @@ class sfp_commoncrawl(SpiderFootPlugin):
 
         data = self.search(eventData)
         if not data:
-            self.self.error("Unable to obtain content from CommonCrawl.")
+            self.error("Unable to obtain content from CommonCrawl.")
             return
 
         sent = list()

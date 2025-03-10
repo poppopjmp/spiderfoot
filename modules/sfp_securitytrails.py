@@ -124,7 +124,7 @@ class sfp_securitytrails(SpiderFootPlugin):
         try:
             info = json.loads(res['content'])
             if querytype == "domain":
-                return info.get("subdomains")
+                return info.get('subdomains', None)
 
             if info.get("record_count", 0) > 100:
                 if len(info.get('records', [])) >= 100:

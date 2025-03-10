@@ -4,10 +4,10 @@ import unittest
 from modules.sfp_googlemaps import sfp_googlemaps
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleGoogleMaps(SpiderFootModuleTestCase):
+class TestModuleGoogleMaps(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_googlemaps()

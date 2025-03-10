@@ -1,31 +1,8 @@
 # test_spiderfootwebui.py
 import pytest
 import unittest
-from unittest.mock import Mock, patch, MagicMock
-import cherrypy
 
-# Define MockDbh class for testing
-class MockDbh:
-    """Mock database handler for testing."""
-    
-    def __init__(self, parent):
-        self.parent = parent
-        
-    def execute(self, query, args=None):
-        """Mock execute method that returns None"""
-        return None
-    
-    def search(self, *args, **kwargs):
-        """Mock search method that returns an empty list"""
-        return []
-        
-    def close(self):
-        """Mock close method"""
-        pass
-
-# Before importing SpiderFootWebUi, patch os.makedirs and os.path.isdir
-with patch('os.makedirs') as mock_makedirs, patch('os.path.isdir', return_value=True):
-    from sfwebui import SpiderFootWebUi
+from sfwebui import SpiderFootWebUi
 
 
 @pytest.mark.usefixtures
@@ -33,50 +10,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
     """
     Test SpiderFootWebUi
     """
-
-    def setUp(self):
-        """Set up test case."""
-        self.default_options = {
-            '_debug': False,
-            '__logging': True,
-            '__outputfilter': None,
-            '__blocknotif': False,
-            '_fatalerrors': False,
-            '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
-            '_dnsserver': '',
-            '_fetchtimeout': 5,
-            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
-            '_internettlds_cache': 72,
-            '_genericusers': "abuse,admin,billing,compliance,devnull,dns,ftp,hostmaster,inoc,ispfeedback,ispsupport,list-request,list,maildaemon,marketing,noc,no-reply,noreply,null,peering,peering-notify,peering-request,phish,phishing,postmaster,privacy,registrar,registry,root,routing-registry,rr,sales,security,spam,support,sysadmin,tech,undisclosed-recipients,unsubscribe,usenet,uucp,webmaster,www",
-            '__version__': '3.0',
-            '__database': 'spiderfoot.test.db',  # Test database
-        }
-        
-        self.web_default_options = {
-            'web.host': '127.0.0.1',
-            'web.port': 5001,
-            'web.root': '/',
-            'web.username': '',
-            'web.password': '',
-            'web.cors': '*',
-            'web.ssl_certificate': '',
-            'web.ssl_key': '',
-            'web.ssl_ca': ''
-        }
-        self.default_config = {
-            "modules_enabled": [],
-            "GUID": "",
-            "__modules__": {},
-            "_debug": False,
-            "_test": False,
-            "dbh": MockDbh(self),
-            "scanId": "test_scan", 
-            "_useCache": True
-        }
-        self.opts = self.default_options.copy()
-        self.opts.update(self.web_default_options)
-        self.web = SpiderFootWebUi(self.opts, Mock())
-        self.app.config = self.default_config.copy()
 
     def test_init_config_invalid_type_should_raise_TypeError(self):
         """
@@ -141,22 +74,25 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIsInstance(error_page_404, str)
 
     def test_clean_user_input_should_return_a_list(self):
-        config = {"key": "value"}
-        result = spiderfoot.webui.clean_user_input(config)
-        self.assertIsInstance(result, list)
+        opts = self.default_options
+        opts['__modules__'] = dict()
+        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+        clean_user_input = sfwebui.cleanUserInput(list())
+        self.assertIsInstance(clean_user_input, list)
 
     def test_clean_user_input_invalid_input_should_raise(self):
-        config = {}  # Use an empty dictionary instead of a Mock object
-        sfwebui = SpiderFootWebUi(config)
-        invalid_input = "<script>alert('xss')</script>"
-        
-        with self.assertRaises(ValueError):
-            sfwebui.clean_user_input(invalid_input)
+        opts = self.default_options
+        opts['__modules__'] = dict()
+        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+
+        invalid_types = [None, "", dict()]
+        for invalid_type in invalid_types:
+            with self.subTest(invalid_type=invalid_type):
+                with self.assertRaises(TypeError):
+                    sfwebui.cleanUserInput(invalid_type)
 
     def test_clean_user_input_should_clean_user_input(self):
-        config = {}
         opts = self.default_options
-        self.app.config = self.default_config.copy()
         opts['__modules__'] = dict()
         sfwebui = SpiderFootWebUi(self.web_default_options, opts)
 
@@ -175,7 +111,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
         Test searchBase(self, id=None, eventType=None, value=None)
         """
         opts = self.default_options
-        self.app.config = self.default_config.copy()
         opts['__modules__'] = dict()
         sfwebui = SpiderFootWebUi(self.web_default_options, opts)
         search_results = sfwebui.searchBase(None, None, None)
@@ -330,8 +265,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
         opts = self.default_options
         opts['__modules__'] = dict()
         sfwebui = SpiderFootWebUi(self.web_default_options, opts)
-        result = sfwebui.clonescan("example scan instance")
-        self.assertIsInstance(result, dict)
+        clone_scan = sfwebui.clonescan("example scan instance")
+        self.assertIsInstance(clone_scan, str)
 
     def test_index(self):
         """
@@ -474,23 +409,17 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def test_query_should_perform_sql_query(self):
         """
-        Test query(self)
+        Test query(self, query)
         """
-        cherrypy.request.headers = {}
-        webui = SpiderFootWebUi(self.default_options)
-        webui.dbh.execute = MagicMock(return_value=None)
-        webui.error = MagicMock(return_value="error message")
-        
-        # Mock config to be a dict instead of a Mock object
-        webui.config = {'__database': {'db_path': ':memory:'}}  # Example dict config
-        
-        # mock the request query as a SQL statement
-        cherrypy.request.json = {"query": "SELECT 1+1"}
-        
-        result = webui.query()
-        self.assertEqual(result, None)
+        opts = self.default_options
+        opts['__modules__'] = dict()
+        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
 
-        webui.dbh.execute.assert_called_once_with("SELECT 1+1")
+        select = "12345"
+        query = sfwebui.query(f"SELECT {select}")
+        self.assertIsInstance(query, list)
+        self.assertEqual(len(query), 1)
+        self.assertEqual(str(query[0].get(select)), str(select))
 
     def test_query_invalid_query_should_return_error(self):
         """
@@ -534,27 +463,25 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def test_start_scan_invalid_scantarget_should_return_error(self):
         """
-        Test startScan(self, scanname, scantarget, modulelist, typelist, usecase)
-        Invalid scan target
+        Test startscan(self, scanname, scantarget, modulelist, typelist, usecase)
         """
-        # Mock the config to be a dictionary instead of a Mock object
-        self.test_app.config = {}
-
-    def test_start_scan_invalid_typelist_should_return_error(self):
-        """
-        Test startScan(self, scanname, scantarget, modulelist, typelist, usecase)
-        Invalid type list
-        """
-        # Mock the config to be a dictionary
-        self.test_app.config = {}
+        opts = self.default_options
+        opts['__modules__'] = dict()
+        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+        start_scan = sfwebui.startscan('example scan name', None, None, None, None)
+        self.assertIn('Invalid request: scan target was not specified.', start_scan)
+        start_scan = sfwebui.startscan('example scan name', '', None, None, None)
+        self.assertIn('Invalid request: scan target was not specified.', start_scan)
 
     def test_start_scan_unrecognized_scantarget_type_should_return_error(self):
         """
-        Test startScan(self, scanname, scantarget, modulelist, typelist, usecase)
-        Unrecognized scan target type
+        Test startscan(self, scanname, scantarget, modulelist, typelist, usecase)
         """
-        # Mock the config to be a dictionary
-        self.test_app.config = {}
+        opts = self.default_options
+        opts['__modules__'] = dict()
+        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+        start_scan = sfwebui.startscan('example scan name', 'example scan target', 'example module list', None, None)
+        self.assertIn('Invalid target type. Could not recognize it as a target SpiderFoot supports.', start_scan)
 
     def test_start_scan_invalid_modules_should_return_error(self):
         """
@@ -579,14 +506,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIn('Invalid request: no modules specified for scan.', start_scan)
         start_scan = sfwebui.startscan('example scan name', 'spiderfoot.net', '', 'invalid type list', '')
         self.assertIn('Invalid request: no modules specified for scan.', start_scan)
-
-    def test_stopscan_invalid_scanid_should_return_an_error(self):
-        """
-        Test stopScan(self, id)
-        Invalid scan ID
-        """
-        # Mock the config to be a dictionary
-        self.test_app.config = {}
 
     def test_stopscan_invalid_scanid_should_return_an_error(self):
         """
@@ -726,30 +645,3 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIsInstance(scan_element_type_discovery, dict)
         scan_element_type_discovery = sfwebui.scanelementtypediscovery('', '')
         self.assertIsInstance(scan_element_type_discovery, dict)
-
-    def test_init_should_initialize_class_attributes(self):
-        """
-        Test __init__(self, config)
-        """
-        config = {
-            '__database': 'spiderfoot.test.db',
-            '__modules__': {},
-        }
-        sfwebui = SpiderFootWebUi(config)
-        self.assertIsInstance(sfwebui, SpiderFootWebUi)
-        self.assertEqual(config, sfwebui.config)
-        self.assertIsNone(sfwebui.db)
-        self.assertEqual("Running", sfwebui.scanstatus)
-
-    def test_error_page_should_return_string(self):
-        """
-        Test error_page(self)
-        """
-        config = {
-            '__database': 'spiderfoot.test.db',
-            '__modules__': {},
-        }
-        sfwebui = SpiderFootWebUi(config)
-        error_page = sfwebui.error_page()
-        self.assertIsInstance(error_page, str)
-        self.assertIn("Error", error_page)

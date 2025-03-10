@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_reversewhois import sfp_reversewhois
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleReversewhois(SpiderFootModuleTestCase):
+class TestModuleReversewhois(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_reversewhois()

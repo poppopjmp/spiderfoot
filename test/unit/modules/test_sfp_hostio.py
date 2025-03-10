@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_hostio import sfp_hostio
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleHostio(SpiderFootModuleTestCase):
+class TestModuleHostio(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_hostio()
@@ -33,8 +32,8 @@ class TestModuleHostio(SpiderFootModuleTestCase):
         module = sfp_hostio()
         module.setup(sf, dict())
 
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_value = 'example target value'
+        target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

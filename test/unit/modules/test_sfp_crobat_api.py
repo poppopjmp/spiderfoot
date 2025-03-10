@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_crobat_api import sfp_crobat_api
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleCrobatApi(SpiderFootModuleTestCase):
+class TestModuleCrobatApi(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_crobat_api()

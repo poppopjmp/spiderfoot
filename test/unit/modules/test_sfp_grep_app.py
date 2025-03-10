@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_grep_app import sfp_grep_app
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleGrepApp(SpiderFootModuleTestCase):
+class TestModuleGrepApp(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_grep_app()

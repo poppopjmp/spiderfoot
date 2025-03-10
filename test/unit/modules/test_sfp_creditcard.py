@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_creditcard import sfp_creditcard
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleCreditcard(SpiderFootModuleTestCase):
+class TestModuleCreditCard(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_creditcard()

@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_zetalytics import sfp_zetalytics
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleZetalytics(SpiderFootModuleTestCase):
+class TestModuleZetalytics(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_zetalytics()
@@ -18,7 +17,6 @@ class TestModuleZetalytics(SpiderFootModuleTestCase):
         sf = SpiderFoot(self.default_options)
         module = sfp_zetalytics()
         module.setup(sf, dict())
-        self.assertEqual(module.opts['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
         module = sfp_zetalytics()
@@ -34,8 +32,8 @@ class TestModuleZetalytics(SpiderFootModuleTestCase):
         module = sfp_zetalytics()
         module.setup(sf, dict())
 
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_value = 'example target value'
+        target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

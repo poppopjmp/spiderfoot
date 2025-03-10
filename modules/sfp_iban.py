@@ -2,7 +2,7 @@
 # -------------------------------------------------------------------------------
 # Name:         sfp_iban
 # Purpose:      SpiderFoot plug-in for scanning retrieved content by other
-#               modules (such as sfp_spider and sfp_dnsraw) and identifying IBANs.
+#               modules (such as sfp_spider) and identifying IBANs.
 #
 # Author:      Krishnasis Mandal <krishnasis@hotmail.com>
 #
@@ -12,7 +12,6 @@
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
-# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp_iban(SpiderFootPlugin):
@@ -45,8 +44,8 @@ class sfp_iban(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ['TARGET_WEB_CONTENT', 'DARKNET_MENTION_CONTENT',
-                'LEAKSITE_CONTENT']
+        return ["TARGET_WEB_CONTENT", "DARKNET_MENTION_CONTENT",
+                "LEAKSITE_CONTENT"]
 
     # What events this module produces
     def producedEvents(self):
@@ -58,11 +57,11 @@ class sfp_iban(SpiderFootPlugin):
         srcModuleName = event.module
         eventData = event.data
 
-        self.self.debug(f"Received event, {eventName}, from {srcModuleName}")
+        self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         ibans = SpiderFootHelpers.extractIbansFromText(eventData)
         for ibanNumber in set(ibans):
-            self.self.info(f"Found IBAN number: {ibanNumber}")
+            self.info(f"Found IBAN number: {ibanNumber}")
             evt = SpiderFootEvent("IBAN_NUMBER", ibanNumber, self.__name__, event)
             if event.moduleDataSource:
                 evt.moduleDataSource = event.moduleDataSource

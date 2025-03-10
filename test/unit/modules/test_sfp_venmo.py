@@ -3,10 +3,10 @@ import unittest
 
 from modules.sfp_venmo import sfp_venmo
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleVenmo(SpiderFootModuleTestCase):
+class TestModuleVenmo(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_venmo()

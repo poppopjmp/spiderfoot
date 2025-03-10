@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_pastebin import sfp_pastebin
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModulePastebin(SpiderFootModuleTestCase):
+class TestModulePastebin(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_pastebin()
@@ -33,8 +32,8 @@ class TestModulePastebin(SpiderFootModuleTestCase):
         module = sfp_pastebin()
         module.setup(sf, dict())
 
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_value = 'example target value'
+        target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

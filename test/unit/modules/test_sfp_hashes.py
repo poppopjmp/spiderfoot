@@ -4,10 +4,10 @@ import unittest
 from modules.sfp_hashes import sfp_hashes
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleHashes(SpiderFootModuleTestCase):
+class TestModuleHashes(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_hashes()

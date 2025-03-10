@@ -1,15 +1,13 @@
 import pytest
 import unittest
-import logging
 
 from modules.sfp_trashpanda import sfp_trashpanda
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleTrashpanda(SpiderFootModuleTestCase):
+class TestModuleTrashpanda(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_trashpanda()
@@ -35,7 +33,7 @@ class TestModuleTrashpanda(SpiderFootModuleTestCase):
         module.setup(sf, dict())
 
         target_value = 'example target value'
-        target_type = 'DOMAIN_NAME'
+        target_type = 'EMAILADDR'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
@@ -49,9 +47,3 @@ class TestModuleTrashpanda(SpiderFootModuleTestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
-
-class TestModuleTrashpanda(unittest.TestCase):
-
-    def setUp(self):
-        self.module = sfp_trashpanda()
-        self.module.log = logging.getLogger(__name__)

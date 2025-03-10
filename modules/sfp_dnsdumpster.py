@@ -70,7 +70,7 @@ class sfp_dnsdumpster(SpiderFootPlugin):
                 k, v = cookie.split('=', 1)
                 if k == "csrftoken":
                     csrftoken = str(v)
-            csrfmiddlewaretoken = html.find("input", {"name": "csrfmiddlewaretoken"}).attrs.get("value")
+            csrfmiddlewaretoken = html.find("input", {"name": "csrfmiddlewaretoken"}).attrs.get("value", None)
         except Exception:
             pass
 

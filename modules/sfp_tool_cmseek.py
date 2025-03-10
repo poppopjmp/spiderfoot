@@ -38,7 +38,7 @@ class sfp_tool_cmseek(SpiderFootPlugin):
     # Default options
     opts = {
         'pythonpath': "python3",
-        'cmseekpath': "/tools/CMSeeK/cmseek.py"
+        'cmseekpath': ""
     }
 
     # Option descriptions
@@ -58,14 +58,6 @@ class sfp_tool_cmseek(SpiderFootPlugin):
 
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
-
-        # Check the opts dictionary and remove any that shouldn't be there
-        # The module likely has something like:
-        # self.opts = {
-        #     'cmseek_path': '',
-        #     'some_other_option': '',
-        #     'unexpected_third_option': ''  # This might need to be removed
-        # }
 
     # What events is this module interested in for input
     def watchedEvents(self):

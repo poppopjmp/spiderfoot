@@ -60,9 +60,6 @@ class sfp_opencorporates(SpiderFootPlugin):
 
     results = None
 
-    def __init__(self):
-        super().__init__()
-
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
         self.results = self.tempStorage()

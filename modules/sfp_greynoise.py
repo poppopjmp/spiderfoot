@@ -200,7 +200,7 @@ class sfp_greynoise(SpiderFootPlugin):
 
         if "data" in ret and len(ret["data"]) > 0:
             for rec in ret["data"]:
-                if rec.get("seen"):
+                if rec.get("seen", None):
                     self.debug(f"Found threat info in Greynoise: {rec['ip']}")
                     lastseen = rec.get("last_seen", "1970-01-01")
                     lastseen_dt = datetime.strptime(lastseen, "%Y-%m-%d")
@@ -251,7 +251,7 @@ class sfp_greynoise(SpiderFootPlugin):
                         self.notifyListeners(e)
 
         if "seen" in ret:
-            if ret.get("seen"):
+            if ret.get("seen", None):
                 lastseen = ret.get("last_seen", "1970-01-01")
                 lastseen_dt = datetime.strptime(lastseen, "%Y-%m-%d")
                 lastseen_ts = int(time.mktime(lastseen_dt.timetuple()))

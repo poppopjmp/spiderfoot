@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_cloudflaredns import sfp_cloudflaredns
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleCloudflaredns(SpiderFootModuleTestCase):
+class TestModuleCloudflaredns(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_cloudflaredns()

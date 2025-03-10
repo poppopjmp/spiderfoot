@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_azureblobstorage import sfp_azureblobstorage
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleAzureblobstorage(SpiderFootModuleTestCase):
+class TestModuleAzureblobstorage(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_azureblobstorage()

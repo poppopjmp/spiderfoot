@@ -4,11 +4,10 @@ import unittest
 from modules.sfp_shodan import sfp_shodan
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleShodan(SpiderFootModuleTestCase):
+class TestModuleShodan(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_shodan()
@@ -33,7 +32,7 @@ class TestModuleShodan(SpiderFootModuleTestCase):
         module = sfp_shodan()
         module.setup(sf, dict())
 
-        target_value = '1.1.1.1'
+        target_value = 'example target value'
         target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)

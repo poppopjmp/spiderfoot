@@ -150,7 +150,7 @@ class sfp_greynoise_community(SpiderFootPlugin):
             return
 
         if "noise" in ret:
-            if ret.get("noise"):
+            if ret.get("noise", None):
                 lastseen = ret.get("last_seen", "1970-01-01")
                 lastseen_dt = datetime.strptime(lastseen, "%Y-%m-%d")
                 lastseen_ts = int(time.mktime(lastseen_dt.timetuple()))

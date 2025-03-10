@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_voipbl import sfp_voipbl
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleVoipbl(SpiderFootModuleTestCase):
+class TestModuleVoipbl(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_voipbl()

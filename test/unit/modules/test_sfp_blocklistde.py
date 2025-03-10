@@ -3,12 +3,10 @@ import unittest
 
 from modules.sfp_blocklistde import sfp_blocklistde
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleBlocklistde(SpiderFootModuleTestCase):
+class TestModuleBlocklistde(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_blocklistde()

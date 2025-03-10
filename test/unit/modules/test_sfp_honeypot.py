@@ -4,10 +4,10 @@ import unittest
 from modules.sfp_honeypot import sfp_honeypot
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+
 
 @pytest.mark.usefixtures
-class TestModuleHoneypot(SpiderFootModuleTestCase):
+class TestModuleHoneypot(unittest.TestCase):
 
     def test_opts(self):
         module = sfp_honeypot()

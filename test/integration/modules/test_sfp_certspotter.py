@@ -7,7 +7,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationCertspotter(SpiderFootModuleTestCase):
+class TestModuleIntegrationCertspotter(unittest.TestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

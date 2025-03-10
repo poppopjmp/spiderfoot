@@ -13,7 +13,6 @@
 import json
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
-# Module now uses the logging from the SpiderFootPlugin base class
 
 
 class sfp_cookie(SpiderFootPlugin):
@@ -54,7 +53,7 @@ class sfp_cookie(SpiderFootPlugin):
         eventData = event.data
         eventSource = event.actualSource
 
-        self.self.debug(f"Received event, {eventName}, from {srcModuleName}")
+        self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventSource in self.results:
             return
@@ -63,13 +62,13 @@ class sfp_cookie(SpiderFootPlugin):
 
         fqdn = self.sf.urlFQDN(eventSource)
         if not self.getTarget().matches(fqdn):
-            self.self.debug(f"Not collecting cookies from external sites. Ignoring HTTP headers from {fqdn}")
+            self.debug(f"Not collecting cookies from external sites. Ignoring HTTP headers from {fqdn}")
             return
 
         try:
             data = json.loads(eventData)
         except Exception:
-            self.self.error("Received HTTP headers from another module in an unexpected format.")
+            self.error("Received HTTP headers from another module in an unexpected format.")
             return
 
         cookie = data.get('cookie')
