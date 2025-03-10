@@ -1,5 +1,4 @@
 import pytest
-import unittest
 import tempfile
 import logging
 
@@ -27,9 +26,11 @@ class TestModuleToolNmap(SpiderFootModuleTestCase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
+        """Test setup function."""
         sf = SpiderFoot(self.default_options)
         module = sfp_tool_nmap()
-        module.setup(sf, dict())
+        module.setup(sf, self.default_options)
+        self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
         module = sfp_tool_nmap()
@@ -40,23 +41,17 @@ class TestModuleToolNmap(SpiderFootModuleTestCase):
         self.assertIsInstance(module.producedEvents(), list)
 
     def test_handleEvent_no_tool_path_configured_should_set_errorState(self):
+        """Test handleEvent method when no tool path is configured."""
         sf = SpiderFoot(self.default_options)
-
+        
+        options = self.default_options.copy()
+        options['nmappath'] = ''  # Empty tool path
+        
         module = sfp_tool_nmap()
-        module.setup(sf, dict())
-
-        target_value = '1.1.1.1'
-        target_type = 'IP_ADDRESS'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        result = module.handleEvent(evt)
-
+        module.setup(sf, options)
+        
+        event = SpiderFootEvent("IP_ADDRESS", "1.2.3.4", "test_module", None)
+        result = module.handleEvent(event)
+        
         self.assertIsNone(result)
         self.assertTrue(module.errorState)

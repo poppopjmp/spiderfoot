@@ -1,5 +1,4 @@
 import pytest
-import unittest
 
 from modules.sfp_cloudfront import sfp_cloudfront
 from sflib import SpiderFoot
@@ -17,7 +16,8 @@ class TestModuleCloudfront(SpiderFootModuleTestCase):
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
         module = sfp_cloudfront()
-        module.setup(sf, dict())
+        module.setup(sf, self.default_options)
+        self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
         module = sfp_cloudfront()

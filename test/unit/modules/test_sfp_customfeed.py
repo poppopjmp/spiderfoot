@@ -47,3 +47,4 @@ class TestModuleCustomfeed(unittest.TestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+

@@ -1,1 +1,1 @@
-# This file makes the modules directory a proper Python package
+# This file makes the modules directory a Python package

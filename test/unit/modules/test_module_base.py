@@ -2,17 +2,30 @@ import unittest
 
 class SpiderFootModuleTestCase(unittest.TestCase):
     """
-    Base test case for SpiderFoot modules.
-    Provides common functionality and attributes that all module test cases need.
+    Base class for SpiderFoot module test cases.
+    Handles common test setup and provides default options.
     """
+    
+    # Default options for all modules
+    default_options = {
+        '_debug': False,
+        '__logging': True,
+        '_datadir': 'data',
+        '_useragent': 'SpiderFoot',
+        '_api_key': 'test_api_key',
+    }
+    
+    def setUp(self):
+        """Set up test case."""
+        self.sf = None
+        self.module = None
+        self.opts = self.default_options.copy()
 
     def __init__(self, *args, **kwargs):
         super(SpiderFootModuleTestCase, self).__init__(*args, **kwargs)
         
         # Common options used by module tests
-        self.default_options = {
-            '_debug': False,
-            '__logging': True,
+        self.default_options.update({
             '__outputfilter': None,
             '__blocknotif': False,
             '_fatalerrors': False,
@@ -34,7 +47,7 @@ class SpiderFootModuleTestCase(unittest.TestCase):
             '_tos_is_acceptable': False,
             '_cache_period': 24,
             '__modules__': {},
-        }
+        })
     
     def assertIsOk(self, condition):
         """Assert that the condition evaluates to True."""
