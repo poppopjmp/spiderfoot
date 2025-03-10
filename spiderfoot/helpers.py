@@ -6,12 +6,32 @@ import os.path
 import random
 import re
 import ssl
-import sys
 import typing
 import urllib.parse
 import uuid
 from pathlib import Path
-from importlib import resources, files
+import sys
+try:
+    from importlib import resources, files
+except ImportError:
+    import importlib.resources as resources
+    try:
+        # Try the importlib_resources backport if available
+        import importlib_resources
+        files = importlib_resources.files
+    except ImportError:
+        # Fallback implementation
+        from importlib.resources import path as resources_path
+        
+        class FilesAdapter:
+            def __init__(self, package):
+                self.package = package
+                
+            def joinpath(self, resource):
+                return resources_path(self.package, resource)
+        
+        def files(package):
+            return FilesAdapter(package)
 
 import networkx as nx
 from bs4 import BeautifulSoup, SoupStrainer

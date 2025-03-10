@@ -5,9 +5,12 @@
 # Purpose:     Command Line Interface for SpiderFoot.
 #
 # Author:      Steve Micallef <steve@binarypool.com>
+# Mantainer:   Agostino Panico <van1sh@van1shland.io>
 #
 # Created:     03/05/2017
+# Modified:    03/05/2025
 # Copyright:   (c) Steve Micallef 2017
+# Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
@@ -32,9 +35,12 @@ ASCII_LOGO = f"""
  \_____  \\____ \|  |/ __ |/ __ \_  __ \    __)/  _ \ /  _ \   __\
  /        \  |_> >  / /_/ \  ___/|  | \/     \(  <_> |  <_> )  |
 /_______  /   __/|__\____ |\___  >__|  \___  / \____/ \____/|__|
-        \/|__|           \/    \/          \/
-                Open Source Intelligence Automation version {__version__}."""
-COPYRIGHT_INFO = f"               by Agostino Panico | @poppopjmp\n"
+        \/|__|           \/    \/          \/   
+{' '.join("SPIDERFOOT Open Source Intelligence Automation Tool " + __version__)}
+                by Agostino Panico | @poppopjmp 2025
+                        
+"""
+COPYRIGHT_INFO = f"               by Agostino Panico | @poppopjmp  2025\n "
 
 try:
     import readline
