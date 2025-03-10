@@ -1,22 +1,35 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request
 from pydantic import BaseModel
-from typing import List
-from spiderfoot import SpiderFootTarget
-from sflib import SpiderFoot
-from spiderfoot.db import SpiderFootDb
-from spiderfoot.logger import logListenerSetup, logWorkerSetup
-from fastapi.openapi.utils import get_openapi
-from fastapi.openapi.docs import get_swagger_ui_html
+from typing import List, Dict
+from fastapi.responses import JSONResponse, StreamingResponse, Response
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import asyncio
 import uuid
-from spiderfoot import SpiderFootHelpers
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.responses import JSONResponse, StreamingResponse
 import csv
 import io
+from spiderfoot import SpiderFootHelpers
 from spiderfoot.__version__ import __version__
 
+# Import necessary modules - adding missing imports
+try:
+    # Importing these modules which were referenced but not imported
+    from sfscan import startSpiderFootScanner
+    from spiderfoot import SpiderFootTarget
+    from sflib import SpiderFoot
+    from spiderfoot.db import SpiderFootDb
+    from spiderfoot.logger import logListenerSetup, logWorkerSetup
+    from fastapi.openapi.utils import get_openapi
+    from fastapi.openapi.docs import get_swagger_ui_html
+except ImportError as e:
+    print(f"Error importing modules: {e}")
+    exit(1)
+
 app = FastAPI()
+
+# Define global config variable which was referenced but not defined
+config = {
+    'token': '',  # Set your token here if you want to use authentication
+}
 
 sfConfig_API = {
     '_debug': False,  # Debug
@@ -39,8 +52,12 @@ sfConfig_API = {
     '_socks5pwd': '',
 }
 
-log_listener = logListenerSetup(loggingQueue=None, opts=sfConfig_API)
-log = logWorkerSetup(loggingQueue=None)
+try:
+    log_listener = logListenerSetup(loggingQueue=None, opts=sfConfig_API)
+    log = logWorkerSetup(loggingQueue=None)
+except Exception as e:
+    print(f"Error setting up logging: {e}")
+    log = None
 
 class ScanRequest(BaseModel):
     target: str
@@ -555,3 +572,69 @@ def handle_logging_and_error_handling():
     log_listener = logListenerSetup(loggingQueue=None, opts=sfConfig_API)
     log = logWorkerSetup(loggingQueue=None)
     return log_listener, log
+
+def error_page(message, status_code=404) -> JSONResponse:
+    """Create a JSON error response.
+    
+    Args:
+        message: Error message
+        status_code: HTTP status code
+        
+    Returns:
+        JSONResponse: A formatted JSON error response
+    """
+    message_dict = {
+        "error": message,
+        "status_code": status_code
+    }
+    return JSONResponse(status_code=status_code, content=message_dict)
+
+@app.exception_handler(404)
+def not_found(request: Request, exc: HTTPException) -> JSONResponse:
+    return error_page("Resource not found.", 404)
+
+@app.exception_handler(500)
+def internal_error(request: Request, exc: HTTPException) -> JSONResponse:
+    return error_page("Internal server error.", 500)
+
+@app.exception_handler(400)
+def bad_request(request: Request, exc: HTTPException) -> JSONResponse:
+    return error_page("Bad request.", 400)
+
+@app.exception_handler(401)
+def unauthorized(request: Request, exc: HTTPException) -> JSONResponse:
+    return error_page("Unauthorized", 401)
+
+@app.exception_handler(403)
+def forbidden(request: Request, exc: HTTPException) -> JSONResponse:
+    return error_page("Forbidden", 403)
+
+@app.exception_handler(405)
+def method_not_allowed(request: Request, exc: HTTPException) -> JSONResponse:
+    return error_page("Method not allowed", 405)
+
+def check_auth(request: Request) -> bool:
+    """Check authentication if set"""
+    if not config.get('token'):
+        return True
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return False
+    try:
+        auth_type, auth_token = auth_header.split(' ', 1)
+        if auth_type.lower() == 'bearer' and auth_token == config['token']:
+            return True
+    except ValueError:
+        return False
+    return False
+
+@app.middleware("http")
+async def authentication_middleware(request: Request, call_next):
+    """Middleware to handle authentication for all requests."""
+    if not check_auth(request):
+        return JSONResponse(
+            status_code=401,
+            content={"message": "Unauthorized"}
+        )
+    response = await call_next(request)
+    return response

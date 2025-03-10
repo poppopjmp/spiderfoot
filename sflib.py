@@ -25,7 +25,6 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from copy import deepcopy
 from datetime import datetime
 
 import cryptography
@@ -119,7 +118,7 @@ class SpiderFoot:
         if not isinstance(options, dict):
             raise TypeError(f"options is {type(options)}; expected dict()")
 
-        self.opts = deepcopy(options)
+        self.opts = safe_deepcopy(options)
         self.log = get_module_logger(__name__)
         self.log.debug(f"Initializing SpiderFoot with options: {options}")
 
@@ -1241,6 +1240,16 @@ class SpiderFoot:
                 if host.endswith(s):
                     return False
 
+            # If it resolves to a private IP, assume no proxy
+            try:
+                if self.resolveHost(host):
+                    for ip in self.resolveHost(host):
+                        ipaddr = netaddr.IPNetwork(ip)
+                        if ipaddr.is_private() or ipaddr.is_loopback():
+                            return False
+            except BaseException:
+                pass
+
         return True
 
     def fetchUrl(
@@ -1324,6 +1333,14 @@ class SpiderFoot:
         request_log.append(f"user-agent={header['User-Agent']}")
         request_log.append(f"timeout={timeout}")
         request_log.append(f"cookies={cookies}")
+
+        # Initialize _socks1type if it doesn't exist
+        if '_socks1type' not in self.opts:
+            self.opts['_socks1type'] = ''
+            self.opts['_socks2addr'] = ''
+            self.opts['_socks3port'] = ''
+            self.opts['_socks4user'] = ''
+            self.opts['_socks5pwd'] = ''
 
         if sizeLimit or headOnly:
             if noLog:
@@ -1511,7 +1528,9 @@ class SpiderFoot:
 
         return True
 
-    def cveInfo(self, cveId: str, sources: str = "circl,nist") -> (str, str):
+    from typing import Tuple
+
+    def cveInfo(self, cveId: str, sources: str = "circl,nist") -> Tuple[str, str]:
         """Look up a CVE ID for more information in the first available source.
 
         Args:
@@ -1716,4 +1735,56 @@ class SpiderFoot:
 
         return None
 
-# end of SpiderFoot class
+
+class SpiderFootPlugin():
+    def __init__(self):
+        self.__name__ = "module_name_not_set!"
+        self.__sfdb__ = None
+        self.__scanId__ = None
+        self.__target__ = None
+        self._stopScanning = False
+        self.__scanStatus__ = None
+        self.errorState = False
+        self.lastEvent = None
+        self.__configurableOpts__ = dict()
+        self.__outputFilter__ = None
+        self._listener = list()
+        self._listenerModules = ['*']
+        self.dbh = None
+        self.scanId = None
+        self.target = None
+
+    def clearListeners(self):
+        """Reset the listener list to an empty list."""
+        self._listener = list()
+        self._listenerModules = ['*']
+
+    def registerListener(self, listener):
+        """Register a listener with this module."""
+        self._listener.append(listener)
+
+    def setDbh(self, dbh):
+        """Set the database handle."""
+        self.dbh = dbh
+
+    def setOutputFilter(self, filter):
+        """Set the output filter."""
+        self.__outputFilter__ = filter
+
+    def setScanId(self, scanId):
+        """Set the scan ID."""
+        self.scanId = scanId
+
+    def setTarget(self, target):
+        """Set the target for this scan."""
+        self.target = target
+
+    def notifyListeners(self, event):
+        """Call the handleEvent function on listeners listening for events."""
+        for listener in self._listener:
+            listener.handleEvent(event)
+        return event
+
+    def setup(self):
+        """Initialize any required resources."""
+        return True
