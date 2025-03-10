@@ -8,6 +8,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from sfwebui import SpiderFootWebUi
+from spiderfoot import SpiderFootHelpers
 
 @pytest.mark.usefixtures
 class TestSpiderFootWebUi(unittest.TestCase):
@@ -23,7 +24,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
             '_password': '',
             '_host': '127.0.0.1',
             '_port': 5001,
-            '_cors': False
+            '_cors': False,
+            '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
         }
         self.config = {'__modules__': dict()}
         self.web_ui = SpiderFootWebUi(self.default_options, self.config)
