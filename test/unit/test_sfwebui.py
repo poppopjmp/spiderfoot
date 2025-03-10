@@ -1,9 +1,12 @@
 # test_spiderfootwebui.py
 import pytest
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
+import cherrypy
 
-from sfwebui import SpiderFootWebUi
+# Before importing SpiderFootWebUi, patch os.makedirs and os.path.isdir
+with patch('os.makedirs') as mock_makedirs, patch('os.path.isdir', return_value=True):
+    from sfwebui import SpiderFootWebUi
 
 
 @pytest.mark.usefixtures

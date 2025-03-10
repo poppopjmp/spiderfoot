@@ -37,6 +37,8 @@ from spiderfoot.logger import logListenerSetup, logWorkerSetup, SpiderFootLogger
 
 # Ensure log directory exists
 import os
+
+# Create log directory if it doesn't exist
 if not os.path.isdir('log'):
     os.makedirs('log')
 
