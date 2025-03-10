@@ -133,7 +133,15 @@ class SpiderFootLogger:
         """
         self.logname = logname
         self.refresh_rate = refresh_rate
-        self.logger = logging.getLogger(f"spiderfoot.{logname}")
+        self._logger = logging.getLogger(f"spiderfoot.{logname}")
+
+    @property
+    def log(self):
+        return self._logger
+
+    @log.setter
+    def log(self, value):
+        self._logger = value
     
     def debug(self, message):
         """Log debug message
@@ -141,7 +149,7 @@ class SpiderFootLogger:
         Args:
             message (str): message to log
         """
-        self.logger.debug(message)
+        self._logger.debug(message)
     
     def info(self, message):
         """Log info message
@@ -149,7 +157,7 @@ class SpiderFootLogger:
         Args:
             message (str): message to log
         """
-        self.logger.info(message)
+        self._logger.info(message)
     
     def warning(self, message):
         """Log warning message
@@ -157,7 +165,7 @@ class SpiderFootLogger:
         Args:
             message (str): message to log
         """
-        self.logger.warning(message)
+        self._logger.warning(message)
     
     def error(self, message):
         """Log error message
@@ -165,7 +173,7 @@ class SpiderFootLogger:
         Args:
             message (str): message to log
         """
-        self.logger.error(message)
+        self._logger.error(message)
     
     def critical(self, message):
         """Log critical message
@@ -173,7 +181,7 @@ class SpiderFootLogger:
         Args:
             message (str): message to log
         """
-        self.logger.critical(message)
+        self._logger.critical(message)
 
 
 def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.QueueListener':
