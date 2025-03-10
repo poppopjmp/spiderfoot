@@ -1,5 +1,6 @@
 import pytest
 import unittest
+import logging
 
 from modules.sfp_twilio import sfp_twilio
 from sflib import SpiderFoot
@@ -48,3 +49,7 @@ class TestModuleTwilio(SpiderFootModuleTestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+    def setUp(self):
+        self.module = sfp_twilio()
+        self.module.log = logging.getLogger(__name__)

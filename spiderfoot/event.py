@@ -296,6 +296,12 @@ class SpiderFootEvent():
             self._sourceEvent = None
             self._sourceEventHash = "ROOT"
             return
+        
+        # Handle empty string or None as None
+        if sourceEvent == '' or sourceEvent is None:
+            self._sourceEvent = None
+            self._sourceEventHash = "ROOT"
+            return
 
         if not isinstance(sourceEvent, SpiderFootEvent):
             raise TypeError(f"sourceEvent is {type(sourceEvent)}; expected SpiderFootEvent()")

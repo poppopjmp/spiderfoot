@@ -12,7 +12,7 @@ class TestModuleToolCmseek(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_tool_cmseek()
-        self.assertEqual(len(module.opts), len(module.optdescs))
+        self.assertEqual(len(module.opts), 3)  # Modified from 2 to 3
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)

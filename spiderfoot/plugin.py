@@ -235,6 +235,7 @@ class SpiderFootPlugin:
         self._log = None
         # Shared thread pool for all modules
         self.sharedThreadPool = None
+        self.log = logging.getLogger(__name__)  # Ensure logger is initialized
 
     @property
     def log(self):
@@ -246,7 +247,10 @@ class SpiderFootPlugin:
     # For backward compatibility
     def debug(self, message):
         """Log a debug message."""
-        self.log.debug(message)
+        if self.log:
+            self.log.debug(message)
+        else:
+            print(f"DEBUG: {message}")  # Fallback for when log isn't initialized
         
     def info(self, message):
         """Log an info message."""

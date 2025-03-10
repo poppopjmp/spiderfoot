@@ -1,5 +1,6 @@
 import pytest
 import unittest
+import logging
 
 from modules.sfp_whois import sfp_whois
 from sflib import SpiderFoot
@@ -26,6 +27,10 @@ class TestModuleWhois(SpiderFootModuleTestCase):
     def test_producedEvents_should_return_list(self):
         module = sfp_whois()
         self.assertIsInstance(module.producedEvents(), list)
+
+    def setUp(self):
+        # Ensure logger is properly initialized
+        self.module.log = logging.getLogger(__name__)
 
     def test_handleEvent_domain_name_event_should_extract_whois_data(self):
         sf = SpiderFoot(self.default_options)

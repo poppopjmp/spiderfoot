@@ -42,13 +42,15 @@ class sfp_tool_whatweb(SpiderFootPlugin):
     # Default options
     opts = {
         'aggression': 1,
-        'whatweb_path': '/usr/bin/whatweb'
+        'whatweb_path': '/usr/bin/whatweb',
+        'whatweb_use_json': True
     }
 
     # Option descriptions
     optdescs = {
         'aggression': 'Set WhatWeb aggression level (1-4)',
-        'whatweb_path': "Path to the whatweb executable file. Must be set."
+        'whatweb_path': "Path to the whatweb executable file. Must be set.",
+        'whatweb_use_json': "Use JSON output from WhatWeb."
     }
 
     results = None
@@ -63,12 +65,28 @@ class sfp_tool_whatweb(SpiderFootPlugin):
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
+    # What events is this module interested in for input
     def watchedEvents(self):
-        return ['INTERNET_NAME']
+        return [
+            'IP_ADDRESS',
+            'IPV6_ADDRESS',
+            'NETBLOCK_OWNER',
+            'NETBLOCKV6_OWNER',
+            'INTERNET_NAME',
+            'URL',
+            'EMAILADDR',
+            'HUMAN_NAME',
+            'BGP_AS_OWNER',
+            'PHONE_NUMBER',
+            'USERNAME',
+            'BITCOIN_ADDRESS',
+            'DOMAIN_NAME',
+        ]
 
     def producedEvents(self):
         return ['RAW_RIR_DATA', 'WEBSERVER_BANNER', 'WEBSERVER_TECHNOLOGY']
 
+    # Handle events sent to this module
     def handleEvent(self, event):
         eventName = event.eventType
         srcModuleName = event.module
@@ -80,7 +98,7 @@ class sfp_tool_whatweb(SpiderFootPlugin):
             return
 
         if eventData in self.results:
-            self.debug("Skipping " + eventData + " as already scanned.")
+            self.debug(f"Skipping {eventData}, already checked.")
             return
 
         self.results[eventData] = True
@@ -91,6 +109,20 @@ class sfp_tool_whatweb(SpiderFootPlugin):
             return
 
         exe = self.opts['whatweb_path']
+        if self.opts['whatweb_use_json']:
+            args = ["-a", "3", "--colour=never", "--log-json=/dev/stdout", "--user-agent=ScoutSpider"]
+        else:
+            args = ["-a", "3", "--colour=never", "--log-brief=/dev/stdout", "--user-agent=ScoutSpider"]
+
+        # Process based on event type
+        if eventName == 'URL':
+            # For URL events, use the URL directly
+            target = eventData
+        else:
+            # For other event types, just use the data as-is
+            target = eventData
+
+        args.append(target)
 
         # If tool is not found, abort
         if not os.path.isfile(exe):
@@ -113,19 +145,9 @@ class sfp_tool_whatweb(SpiderFootPlugin):
         except Exception:
             aggression = 1
 
-        # Run WhatWeb
-        args = [
-            exe,
-            "--quiet",
-            "--aggression=" + str(aggression),
-            "--log-json=/dev/stdout",
-            "--user-agent=Mozilla/5.0",
-            "--follow-redirect=never",
-            eventData
-        ]
         try:
-            p = Popen(args, stdout=PIPE, stderr=PIPE, timeout=300)
-            stdout, stderr = p.communicate(input=None)
+            p = Popen([exe] + args, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = p.communicate(input=None, timeout=300)
         except TimeoutExpired:
             p.kill()
             stdout, stderr = p.communicate()

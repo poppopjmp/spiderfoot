@@ -1,5 +1,7 @@
 import pytest
 import unittest
+import tempfile
+import logging
 
 from modules.sfp_tool_nmap import sfp_tool_nmap
 from sflib import SpiderFoot
@@ -9,6 +11,16 @@ from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 @pytest.mark.usefixtures
 class TestModuleToolNmap(SpiderFootModuleTestCase):
+
+    def setUp(self):
+        # Create a temporary directory
+        self.test_dir = tempfile.mkdtemp()
+
+        # Initialize module
+        self.module = sfp_tool_nmap()
+        self.module.sf = SpiderFoot(self.default_options)
+        # Ensure logger is properly initialized
+        self.module.log = logging.getLogger(__name__)
 
     def test_opts(self):
         module = sfp_tool_nmap()

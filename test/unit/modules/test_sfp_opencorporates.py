@@ -28,23 +28,19 @@ class TestModuleOpencorporates(SpiderFootModuleTestCase):
         self.assertIsInstance(module.producedEvents(), list)
 
     def test_handleEvent_no_api_key_should_set_errorState(self):
+        """
+        Test handleEvent when no API key is provided
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_opencorporates()
         module.setup(sf, dict())
 
         target_value = 'example target value'
-        target_type = 'COMPANY_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
+        target_type = 'INTERNET_NAME'  # Using a valid target type instead of COMPANY_NAME
+        module_result = None
 
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        event = SpiderFootEvent(target_type, target_value, module_result, source_event)
+        module.handleEvent(event)
 
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
         self.assertTrue(module.errorState)

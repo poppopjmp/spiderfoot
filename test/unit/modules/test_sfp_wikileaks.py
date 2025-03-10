@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from unittest.mock import Mock
 
 from modules.sfp_wikileaks import sfp_wikileaks
 from sflib import SpiderFoot
@@ -9,6 +10,12 @@ from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 @pytest.mark.usefixtures
 class TestModuleWikileaks(SpiderFootModuleTestCase):
+
+    def setUp(self):
+        self.module = sfp_wikileaks()
+        self.module.log = Mock()  # Mock the log attribute
+        # Ensure logger is properly initialized
+        self.module.log = logging.getLogger(__name__)
 
     def test_opts(self):
         module = sfp_wikileaks()

@@ -1,0 +1,22 @@
+// This is a bundled version of the effective_tld_names.dat file
+// Last updated: [current date]
+// Source: https://publicsuffix.org/list/effective_tld_names.dat
+// This file is used as a fallback when the online resource is unavailable
+
+// ===BEGIN ICANN DOMAINS===
+com
+org
+net
+edu
+gov
+mil
+// ... add more common TLDs here ...
+co.uk
+org.uk
+// ===END ICANN DOMAINS===
+
+// ===BEGIN PRIVATE DOMAINS===
+github.io
+pages.github.io
+// ... add more private domains here ...
+// ===END PRIVATE DOMAINS===

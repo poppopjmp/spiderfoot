@@ -29,22 +29,19 @@ class TestModuleToolTrufflehog(SpiderFootModuleTestCase):
 
     def test_handleEvent_no_tool_path_configured_should_set_errorState(self):
         sf = SpiderFoot(self.default_options)
-
         module = sfp_tool_trufflehog()
         module.setup(sf, dict())
-
-        target_value = 'https://github.com/example/repo'
-        target_type = 'PUBLIC_CODE_REPO'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
+        
+        target_value = 'example target value'
+        target_type = 'PUBLIC_CODE_REPO'  # This should be a type the module is watching
         event_type = 'ROOT'
         event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
-        self.assertTrue(module.errorState)
+        
+        event_data = f"{target_type}: {target_value}"
+        event_type = 'ROOT'
+        
+        event = SpiderFootEvent(event_type, event_data, None, '')
+        result = module.handleEvent(event)
+        
+        assert module.errorState
+        assert not result

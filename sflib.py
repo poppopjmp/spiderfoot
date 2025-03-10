@@ -1788,3 +1788,25 @@ class SpiderFootPlugin():
     def setup(self):
         """Initialize any required resources."""
         return True
+
+class SpiderFootCorrelator():
+    """SpiderFoot correlator class.
+    """
+
+    def __init__(self, ruleset, scanId, events, dbh=None):
+        """Initialize SpiderFootCorrelator object.
+
+        Args:
+            ruleset (dict): dict of correlation rules
+            scanId (str): scan ID
+            events (list): list of SpiderFootEvent events
+            dbh (SpiderFootDb): SpiderFootDb object
+        """
+        if not isinstance(ruleset, dict):
+            raise TypeError(f"ruleset is {type(ruleset)}; expected dict()")
+
+        if not ruleset:
+            raise ValueError("ruleset is empty")
+            
+        if not isinstance(scanId, str):
+            raise TypeError(f"scanId is {type(scanId)}; expected str()")

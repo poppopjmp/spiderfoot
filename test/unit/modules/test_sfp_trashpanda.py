@@ -1,5 +1,6 @@
 import pytest
 import unittest
+import logging
 
 from modules.sfp_trashpanda import sfp_trashpanda
 from sflib import SpiderFoot
@@ -48,3 +49,9 @@ class TestModuleTrashpanda(SpiderFootModuleTestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+class TestModuleTrashpanda(unittest.TestCase):
+
+    def setUp(self):
+        self.module = sfp_trashpanda()
+        self.module.log = logging.getLogger(__name__)

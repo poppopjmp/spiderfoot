@@ -1,5 +1,6 @@
 import pytest
 import unittest
+import logging
 
 from modules.sfp_viewdns import sfp_viewdns
 from sflib import SpiderFoot
@@ -48,3 +49,7 @@ class TestModuleViewdns(SpiderFootModuleTestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+    def setUp(self):
+        self.module = sfp_viewdns()
+        self.module.log = logging.getLogger(__name__)

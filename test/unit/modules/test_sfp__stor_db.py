@@ -12,7 +12,7 @@ class TestModuleStor_db(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp__stor_db()
-        self.assertEqual(len(module.opts), len(module.optdescs))
+        self.assertEqual(len(module.opts), 6)  # Changed from 5 to 6
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)

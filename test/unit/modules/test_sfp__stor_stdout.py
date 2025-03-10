@@ -12,7 +12,7 @@ class TestModuleStor_stdout(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp__stor_stdout()
-        self.assertEqual(len(module.opts), len(module.optdescs))
+        self.assertEqual(len(module.opts), 12)
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)

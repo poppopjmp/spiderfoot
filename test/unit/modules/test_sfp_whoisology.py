@@ -1,5 +1,6 @@
 import pytest
 import unittest
+import logging
 
 from modules.sfp_whoisology import sfp_whoisology
 from sflib import SpiderFoot
@@ -48,3 +49,6 @@ class TestModuleWhoisology(SpiderFootModuleTestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+    def setUp(self):
+        self.module.log = logging.getLogger(__name__)

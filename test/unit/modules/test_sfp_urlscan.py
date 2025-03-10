@@ -1,5 +1,6 @@
 import pytest
 import unittest
+import logging
 
 from modules.sfp_urlscan import sfp_urlscan
 from sflib import SpiderFoot
@@ -48,3 +49,7 @@ class TestModuleUrlscan(SpiderFootModuleTestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+    def setUp(self):
+        self.module = sfp_urlscan()
+        self.module.log = logging.getLogger(__name__)

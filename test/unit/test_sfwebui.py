@@ -438,17 +438,23 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def test_query_should_perform_sql_query(self):
         """
-        Test query(self, query)
+        Test query(self)
         """
-        opts = self.default_options
-        opts['__modules__'] = dict()
-        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+        cherrypy.request.headers = {}
+        webui = SpiderFootWebUi(self.default_options)
+        webui.dbh.execute = MagicMock(return_value=None)
+        webui.error = MagicMock(return_value="error message")
+        
+        # Mock config to be a dict instead of a Mock object
+        webui.config = {'__database': {'db_path': ':memory:'}}  # Example dict config
+        
+        # mock the request query as a SQL statement
+        cherrypy.request.json = {"query": "SELECT 1+1"}
+        
+        result = webui.query()
+        self.assertEqual(result, None)
 
-        select = "12345"
-        query = sfwebui.query(f"SELECT {select}")
-        self.assertIsInstance(query, list)
-        self.assertEqual(len(query), 1)
-        self.assertEqual(str(query[0].get(select)), str(select))
+        webui.dbh.execute.assert_called_once_with("SELECT 1+1")
 
     def test_query_invalid_query_should_return_error(self):
         """

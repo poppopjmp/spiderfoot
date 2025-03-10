@@ -40,6 +40,8 @@ class sfp_sublist3r(SpiderFootPlugin):
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
+        if not self.log:
+            self.log = SpiderFootHelpers.SpiderFootLog(self.__name__)
         self.debug("Setting up sfp_sublist3r")
         self.results = self.tempStorage()
         self.opts.update(userOpts)

@@ -53,7 +53,19 @@ class sfp__stor_stdout(SpiderFootPlugin):
         'use_elasticsearch': "Store events in ElasticSearch instead of standard output.",
         'elasticsearch_host': "ElasticSearch host.",
         'elasticsearch_port': "ElasticSearch port.",
-        'elasticsearch_index': "ElasticSearch index name."
+        'elasticsearch_index': "ElasticSearch index name.",
+        'fileextensions': "File extensions to include in results",
+        'maxfilesize': "Maximum file size to download for processing (bytes)",
+        'maxage': "Maximum age of data to be considered valid (hours)",
+        'usecache': "Use cached data where available",
+        'type': "Event types to be processed",
+        '_dnsserver': "Override the default resolver",
+        '_fetchtimeout': "Seconds before giving up on a HTTP request",
+        'ssl_verify': "Verify SSL certificates",
+        'sslcertwarndays': "Warn about expiring certs days in advance",
+        '_useragent': "User-Agent string to use",
+        '_dnsserver_recursive': "If specified, use this resolver for recursive lookups",
+        'socksProxy': "SOCKS proxy",
     }
 
     def setup(self, sfc, userOpts=dict()):

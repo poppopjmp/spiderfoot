@@ -63,7 +63,10 @@ class sfp_tool_trufflehog(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return ['SOCIAL_MEDIA', 'PUBLIC_CODE_REPO']
+        return ["IP_ADDRESS", "IPV6_ADDRESS", "NETBLOCK_OWNER", "NETBLOCKV6_OWNER",
+                "INTERNET_NAME", "EMAILADDR", "HUMAN_NAME", "BGP_AS_OWNER",
+                "PHONE_NUMBER", "USERNAME", "BITCOIN_ADDRESS", "DOMAIN_NAME", 
+                "PUBLIC_CODE_REPO"]
 
     def producedEvents(self):
         return ['PASSWORD_COMPROMISED']

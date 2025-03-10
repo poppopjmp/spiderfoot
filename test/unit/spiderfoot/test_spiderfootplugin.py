@@ -118,9 +118,19 @@ class TestSpiderFootPlugin(SpiderFootModuleTestCase):
             self.module.setTarget("invalid_target")
 
     def test_setDbh(self):
-        dbh = MagicMock()
-        self.module.setDbh(dbh)
-        self.assertEqual(self.module.__sfdb__, dbh)
+        """
+        Test setDbh(self, dbh)
+        """
+        sf = SpiderFootPlugin()
+        
+        sf.__init__()
+        dbh = 'example non-dict value'
+        opts = {}  # Changed from a string to an empty dict
+        sf.opts = opts
+
+        sf.setDbh(dbh)
+        self.assertEqual(sf.__dbh, dbh)
+
 
     def test_setScanId(self):
         scanId = "test_scan"
@@ -156,9 +166,18 @@ class TestSpiderFootPlugin(SpiderFootModuleTestCase):
         self.assertIn(listener, self.module._listenerModules)
 
     def test_setOutputFilter(self):
-        types = ["type1", "type2"]
-        self.module.setOutputFilter(types)
-        self.assertEqual(self.module.__outputFilter__, types)
+        """
+        Test setOutputFilter(self, types)
+        """
+        sf = SpiderFootPlugin()
+        
+        sf.__init__()
+        output_filter = ["example filter"]
+        opts = {}  # Changed from a string to an empty dict
+        sf.opts = opts
+
+        sf.setOutputFilter(output_filter)
+        self.assertEqual(sf.__outputFilter, output_filter)
 
     def test_tempStorage(self):
         self.assertEqual(self.module.tempStorage(), {})

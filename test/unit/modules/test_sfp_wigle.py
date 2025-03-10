@@ -1,5 +1,6 @@
 import pytest
 import unittest
+import logging
 
 from modules.sfp_wigle import sfp_wigle
 from sflib import SpiderFoot
@@ -48,3 +49,7 @@ class TestModuleWigle(SpiderFootModuleTestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+    def setUp(self):
+        self.module = sfp_wigle()
+        self.module.log = logging.getLogger(__name__)

@@ -28,6 +28,10 @@ class TestModuleXref(SpiderFootModuleTestCase):
         module = sfp_xref()
         self.assertIsInstance(module.producedEvents(), list)
     
+    def setUp(self):
+        self.module = sfp_xref()
+        self.module.log = logging.getLogger(__name__)
+
     def test_handleEvent_should_generate_cross_references(self):
         sf = SpiderFoot(self.default_options)
 
@@ -63,11 +67,7 @@ class TestModuleXref(SpiderFootModuleTestCase):
         module.notifyListeners = new_notifyListeners.__get__(module, sfp_xref)
 
         # Create an IP_ADDRESS event
-        event_type = 'IP_ADDRESS'
-        event_data = '192.168.1.1'
-        event_module = 'sfp_dnsresolve'
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent("IP_ADDRESS", "1.2.3.4", self.__name__, None)
 
         module.handleEvent(evt)
         
