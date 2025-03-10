@@ -5,9 +5,10 @@ from sflib import SpiderFoot
 from modules.sfp_sorbs import sfp_sorbs
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-class TestSFPSorbsClass(sfp_sorbs):
+# Rename to not contain "Test" to avoid PyTest collection
+class SfpSorbsTestWrapper(sfp_sorbs):
     """
-    Test version of the sfp_sorbs module with __init__ overridden to prevent log attribute issues.
+    Test wrapper of the sfp_sorbs module with __init__ overridden to prevent log attribute issues.
     """
     def __init__(self):
         self.thread = None
@@ -35,11 +36,8 @@ class TestSFPSorbsClass(sfp_sorbs):
         self.results = dict()
         self.sf = None
         self.errorState = False
-        self.opts = dict()
-        self.optdescs = dict()
         self.cohostcount = 0
-        self.options = None
-        self.optdescs = dict()
+        self.options = {}  # Initialize with empty dict instead of None
         self.registry = list()
 
 class TestModuleSorbs(SpiderFootModuleTestCase):
@@ -57,22 +55,23 @@ class TestModuleSorbs(SpiderFootModuleTestCase):
 
     def test_opts(self):
         """Test the module options."""
-        module = TestSFPSorbsClass()
+        module = SfpSorbsTestWrapper()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
         """Test setup function."""
         sf = SpiderFoot(self.default_options)
-        module = TestSFPSorbsClass()
+        module = SfpSorbsTestWrapper()
         module.setup(sf, self.default_options)
+        self.assertIsNotNone(module.options)
         self.assertEqual(module.options['_debug'], False)
 
     def test_watchedEvents_should_return_list(self):
         """Test the watchedEvents function returns a list."""
-        module = TestSFPSorbsClass()
+        module = SfpSorbsTestWrapper()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
         """Test the producedEvents function returns a list."""
-        module = TestSFPSorbsClass()
+        module = SfpSorbsTestWrapper()
         self.assertIsInstance(module.producedEvents(), list)
