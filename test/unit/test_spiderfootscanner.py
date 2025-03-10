@@ -192,7 +192,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         module_list = ['sfp__stor_db']
 
         with self.assertRaises(ValueError):
-            SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, opts, start=False)
+            SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, self.default_options, start=False)
 
     def test_init_argument_globalOpts_proxy_type_without_host_should_raise_ValueError(self):
         """
@@ -205,7 +205,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         module_list = ['sfp__stor_db']
 
         with self.assertRaises(ValueError):
-            SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, opts, start=False)
+            SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, self.default_options, start=False)
 
     def test_init_argument_globalOpts_proxy_should_set_proxy(self):
         """
@@ -221,7 +221,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
-        SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, opts, start=False)
+        SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, self.default_options, start=False)
 
         self.assertEqual('TBD', 'TBD')
 
@@ -237,7 +237,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
-        SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, opts, start=False)
+        SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, self.default_options, start=False)
 
         self.assertEqual('TBD', 'TBD')
 
@@ -250,7 +250,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
-        sfscan = SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, opts, start=False)
+        sfscan = SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, self.default_options, start=False)
         self.assertIsInstance(sfscan, SpiderFootScanner)
 
         get_id = sfscan.scanId
@@ -266,7 +266,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
-        sfscan = SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, opts, start=False)
+        sfscan = SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, self.default_options, start=False)
         self.assertIsInstance(sfscan, SpiderFootScanner)
 
         status = sfscan.status
@@ -281,7 +281,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
-        sfscan = SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, opts, start=False)
+        sfscan = SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, self.default_options, start=False)
 
         invalid_types = [None, list(), dict(), int()]
         for invalid_type in invalid_types:
@@ -298,6 +298,6 @@ class TestSpiderFootScanner(unittest.TestCase):
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
-        sfscan = SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, opts, start=False)
+        sfscan = SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, self.default_options, start=False)
         with self.assertRaises(ValueError):
             sfscan._SpiderFootScanner__setStatus("example invalid scan status")
