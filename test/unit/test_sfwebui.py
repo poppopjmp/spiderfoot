@@ -1,15 +1,31 @@
 # test_spiderfootwebui.py
 import pytest
 import unittest
+import sys
+import os
+
+# Add parent directory to path to import the module being tested
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from sfwebui import SpiderFootWebUi
-
 
 @pytest.mark.usefixtures
 class TestSpiderFootWebUi(unittest.TestCase):
     """
     Test SpiderFootWebUi
     """
+
+    def setUp(self):
+        """Set up test environment before each test."""
+        self.default_options = {
+            'debug': False,
+            'testing': True,
+            '_password': '',
+            '_host': '127.0.0.1',
+            '_port': 5001,
+            '_cors': False
+        }
+        self.web_ui = SpiderFootWebUi(self.default_options, None)
 
     def test_init_config_invalid_type_should_raise_TypeError(self):
         """

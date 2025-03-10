@@ -14,7 +14,7 @@
 import io
 import mimetypes
 
-import PyPDF2
+import pypdf
 
 import docx
 
@@ -176,7 +176,7 @@ class sfp_filemeta(SpiderFootPlugin):
                         return
 
                     for v in val:
-                        if v and not isinstance(v, PyPDF2.generic.NullObject):
+                        if v and not isinstance(v, pypdf.generic.NullObject):
                             self.debug("VAL: " + str(val))
                             # Strip non-ASCII
                             v = ''.join([i if ord(i) < 128 else ' ' for i in v])
