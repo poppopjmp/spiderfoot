@@ -122,15 +122,15 @@ class sfp_zoneh(SpiderFootPlugin):
         )
         
         if not data:
-            self.error(f"Failed to fetch data from {feed_url}")
+            self.debug(f"Failed to fetch data from {feed_url}")
             return None
             
-        if data['code'] not in [200, 201]:
-            self.error(f"HTTP response code {data['code']} from {feed_url}")
+        if data.get('code') not in [200, 201]:
+            self.debug(f"HTTP response code {data.get('code')} from {feed_url}")
             return None
             
-        if not data['content']:
-            self.error(f"Empty content from {feed_url}")
+        if not data.get('content'):
+            self.debug(f"Empty content from {feed_url}")
             return None
             
         self.sf.cachePut(cache_key, data['content'])
