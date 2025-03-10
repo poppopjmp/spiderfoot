@@ -218,3 +218,58 @@ class SpiderFootModuleTestCase(unittest.TestCase):
             module = module_class()
             module.setup(sf, self.default_options)
             return module, sf
+
+    def create_test_module_subclass(self, module_class, init_attributes=None):
+        """
+        Dynamically create a subclass of the module to test that skips problematic initialization.
+        
+        Args:
+            module_class: The SpiderFoot module class to subclass
+            init_attributes: Dictionary of attributes to set during initialization
+            
+        Returns:
+            A class that can be instantiated for testing
+        """
+        if init_attributes is None:
+            init_attributes = {}
+            
+        # Define the test class
+        class TestModuleClass(module_class):
+            def __init__(self_inner):
+                # Basic attributes needed for all modules
+                self_inner.thread = None
+                self_inner._log = None
+                self_inner.sharedThreadPool = None
+                self_inner.__name__ = module_class.__name__
+                self_inner.sf = None
+                self_inner.errorState = False
+                self_inner.results = dict()
+                
+                # Copy original opts and optdescs when available
+                try:
+                    instance = module_class.__new__(module_class)
+                    instance.__init__ = lambda *args, **kwargs: None
+                    
+                    # Try to access attributes without triggering __init__
+                    if hasattr(module_class, 'opts'):
+                        self_inner.opts = module_class.opts.copy()
+                    else:
+                        self_inner.opts = {}
+                        
+                    if hasattr(module_class, 'optdescs'):
+                        self_inner.optdescs = module_class.optdescs.copy()
+                    else:
+                        self_inner.optdescs = {}
+                except Exception:
+                    self_inner.opts = {}
+                    self_inner.optdescs = {}
+                
+                # Set additional attributes
+                self_inner.options = None
+                self_inner.registry = []
+                
+                # Set any custom attributes
+                for attr, value in init_attributes.items():
+                    setattr(self_inner, attr, value)
+
+        return TestModuleClass
