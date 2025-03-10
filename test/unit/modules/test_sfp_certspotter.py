@@ -1,3 +1,4 @@
+from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_certspotter import sfp_certspotter
@@ -6,36 +7,46 @@ from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 class TestModuleiCertspotter(SpiderFootModuleTestCase):
     """Test Certspotter module."""
 
-    def test_opts(self):
+    @patch('modules.sfp_certspotter.logging')
+    def test_opts(self, mock_logging):
         module = sfp_certspotter()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
-    def test_setup(self):
+    @patch('modules.sfp_certspotter.logging')
+    def test_setup(self, mock_logging):
         """Test setup function."""
-        self.sf = SpiderFoot(self.opts)
+        sf = SpiderFoot(self.default_options)
         module = sfp_certspotter()
-        module.setup(self.sf, self.opts)
+        module.setup(sf, self.default_options)
         self.assertEqual(module.options['_debug'], False)
 
-    def test_watchedEvents_should_return_list(self):
+    @patch('modules.sfp_certspotter.logging')
+    def test_watchedEvents_should_return_list(self, mock_logging):
         module = sfp_certspotter()
         self.assertIsInstance(module.watchedEvents(), list)
 
-    def test_producedEvents_should_return_list(self):
+    @patch('modules.sfp_certspotter.logging')
+    def test_producedEvents_should_return_list(self, mock_logging):
         module = sfp_certspotter()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_no_api_key_should_set_errorState(self):
+    @patch('modules.sfp_certspotter.logging')
+    def test_handleEvent_no_api_key_should_set_errorState(self, mock_logging):
         """Test handleEvent method with no API key."""
-        self.sf = SpiderFoot(self.opts)
-        self.opts['api_key_certspotter'] = ''
+        sf = SpiderFoot(self.default_options)
+        
+        options = self.default_options.copy()
+        options['api_key_certspotter'] = ''
+        
         module = sfp_certspotter()
-        module.setup(self.sf, self.opts)
+        module.setup(sf, options)
+        
         event_type = "DOMAIN_NAME"
         event_data = "example.com"
         event_module = "test"
         source_event = ""
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
         result = module.handleEvent(evt)
+        
         self.assertIsNone(result)
         self.assertTrue(module.errorState)

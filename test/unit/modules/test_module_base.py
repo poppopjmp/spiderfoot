@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch, MagicMock
 
 class SpiderFootModuleTestCase(unittest.TestCase):
     """
@@ -156,3 +157,22 @@ class SpiderFootModuleTestCase(unittest.TestCase):
                         f"Expected event type {expected_type} not found in {actual_types}")
         
         return events
+
+    def setup_module_with_mocks(self, module_class):
+        """Set up a module for testing with default options and mocked logging."""
+        from sflib import SpiderFoot
+        sf = SpiderFoot(self.default_options)
+        
+        # Use a patch context to create the module
+        with patch(f'modules.{module_class.__module__}.logging', MagicMock()) as mock_logging:
+            module = module_class()
+            module.setup(sf, dict())
+            return module, sf, mock_logging
+        
+    def create_module_with_mocks(self, module_path):
+        """Create a module instance with mocked logging."""
+        with patch(f'{module_path}.logging', MagicMock()) as mock_logging:
+            # Import the module dynamically
+            module_name = module_path.split('.')[-1]
+            module_class = getattr(__import__(module_path, fromlist=[module_name]), module_name)
+            return module_class(), mock_logging
