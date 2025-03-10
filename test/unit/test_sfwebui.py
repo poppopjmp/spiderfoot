@@ -327,8 +327,10 @@ class TestSpiderFootWebUi(unittest.TestCase):
         """
         Test clonescan(self, id)
         """
-        config = {"key": "value"}
-        result = spiderfoot.webui.clonescan(config)
+        opts = self.default_options
+        opts['__modules__'] = dict()
+        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+        result = sfwebui.clonescan("example scan instance")
         self.assertIsInstance(result, dict)
 
     def test_index(self):

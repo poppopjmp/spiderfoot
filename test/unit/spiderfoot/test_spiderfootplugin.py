@@ -3,22 +3,11 @@ import unittest
 from unittest.mock import MagicMock, Mock, patch
 
 from sflib import SpiderFoot
-from spiderfoot.db import SpiderFootDb
-from spiderfoot.event import SpiderFootEvent
-from spiderfoot.plugin import SpiderFootPlugin
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+from spiderfoot import SpiderFootDb, SpiderFootPlugin
 
-class TestSpiderFootPlugin(SpiderFootModuleTestCase):
+class TestSpiderFootPlugin(unittest.TestCase):
     """Test SpiderFootPlugin."""
-    @classmethod
-    def setUpClass(cls):
-        # ...existing code...
-        cls.default_opts = {
-            "_debug": False,
-            "__modules__": {},
-            "__globallogging__": True,
-            "__database__": "spiderfoot.test.db"
-        }
+
     def setUp(self):
         """Set up test case."""
         self.options = {
@@ -28,31 +17,20 @@ class TestSpiderFootPlugin(SpiderFootModuleTestCase):
             '__blocknotif': False,
             '_fatalerrors': False,
         }
+    
+        # Initialize database with proper error handling
+        self.dbh = SpiderFootDb(":memory:")
         
-        dbh = SpiderFootDb(":memory:")
+        # If SpiderFootDb initialization needs more setup, add it here
+        # For example, you might need to create tables in the database
+        self.dbh.create_schema()
         
-        # Mock scan instance
-        self.scan_instance = "example scan instance"
-        dbh.scanInstanceCreate = MagicMock(return_value=True)
-        dbh.scanInstanceGet = MagicMock(return_value=["example scan instance", "example scan name", "example scan target", 0, 0, 0, "example scan status"])
-        
-        self.sf = MagicMock()
-        self.sf.dbh = dbh
-        
-        # Create a mock log
-        self.mock_log = MagicMock()
-        
-        # Initialize the module first
-        self.module = SpiderFootPlugin()
-        # Then set its properties
-        self.module.opts = self.default_opts.copy()
-        self.module.__name__ = "example module"
-        self.module._stopScanning = False
-        self.module.setDbh(dbh)
-        self.module.setScanId(self.scan_instance)
-        self.module.setSharedData("data")
-        self.module.setSf(self.sf)
-        self.module.log = self.mock_log
+        # Initialize the plugin with the database handle
+        self.sf = SpiderFootPlugin()
+        self.sf.__init__()  # Explicitly call the initializer
+        self.sf.setDbh(self.dbh)
+        self.sf.clearListeners()
+        self.sf.setOptions(self.options)
         
     def test_start(self):
         """Test start()"""

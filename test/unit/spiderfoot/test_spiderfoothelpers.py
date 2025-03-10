@@ -1,10 +1,9 @@
 import unittest
 from unittest.mock import patch, MagicMock, mock_open, Mock
 
-import spiderfoot.helpers
 from spiderfoot.helpers import SpiderFootHelpers
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
-from spiderfoot import spiderfoothelpers as helpers
+
 
 class TestSpiderFootHelpers(SpiderFootModuleTestCase):
     """Test SpiderFootHelpers."""
@@ -298,7 +297,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
             ["test_scan", "1.1.1.1", "IP_ADDRESS", "IP Address", "", "SpiderFoot", "example.com", "Scan 1", "Path 1", "", "", ""]
         ]
         
-        gexf = helpers.buildGraphGexf(data, "test title", "test scan")
+        gexf = SpiderFootHelpers.buildGraphGexf(data, "test title", "test scan")
         
         self.assertIsInstance(gexf, str)
         self.assertTrue("<gexf" in gexf)
@@ -313,7 +312,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
             ["test_scan", "1.1.1.1", "IP_ADDRESS", "IP Address", "", "SpiderFoot", "example.com", "Scan 1", "Path 1", "", "", ""]
         ]
         
-        json_data = helpers.buildGraphJson(data)
+        json_data = SpiderFootHelpers.buildGraphJson(data)
         
         self.assertIsInstance(json_data, str)
         # Check valid JSON
@@ -335,7 +334,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         with open(wordlist_path, "w") as f:
             f.write("password\nsecret\ncompany\ntest\nhello\nworld\n")
         
-        word_list = helpers.dictionaryWordsFromWordlists([wordlist_path])
+        word_list = SpiderFootHelpers.dictionaryWordsFromWordlists([wordlist_path])
         
         self.assertIsInstance(word_list, list)
         self.assertTrue("password" in word_list)
@@ -348,7 +347,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         html = "<a href='http://example.com'>Example</a>"
         url = "http://example.org"
         
-        links = helpers.extractLinksFromHtml(url, html)
+        links = SpiderFootHelpers.extractLinksFromHtml(url, html)
         
         self.assertIsInstance(links, list)
         self.assertTrue("http://example.com" in links)
@@ -365,7 +364,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         More text
         """
         
-        keys = helpers.extractPgpKeysFromText(text)
+        keys = SpiderFootHelpers.extractPgpKeysFromText(text)
         
         self.assertIsInstance(keys, list)
         self.assertTrue(len(keys) == 1)
@@ -377,7 +376,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         """
         text = "Check out http://example.com and https://example.org"
         
-        urls = helpers.extractUrlsFromText(text)
+        urls = SpiderFootHelpers.extractUrlsFromText(text)
         
         self.assertIsInstance(urls, list)
         self.assertTrue("http://example.com" in urls)
@@ -397,7 +396,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         with open(wordlist_path, "w") as f:
             f.write("John\nJane\nBob\nuser1\nuser2\nadmin\nroot\n")
         
-        name_list = helpers.humanNamesFromWordlists([wordlist_path])
+        name_list = SpiderFootHelpers.humanNamesFromWordlists([wordlist_path])
         
         self.assertIsInstance(name_list, list)
         self.assertTrue("John" in name_list)
@@ -418,7 +417,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
                 mock_module.module1 = mock.MagicMock()
                 mock_import.return_value = mock_module
                 
-                modules = helpers.loadModulesAsDict("modules", None)
+                modules = SpiderFootHelpers.loadModulesAsDict("modules", None)
                 
                 self.assertIsInstance(modules, dict)
                 mock_import.assert_called()
@@ -428,13 +427,13 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         Test sanitiseInput
         """
         # Test with string containing quotes
-        result = helpers.sanitiseInput("test'injection\"attempt")
+        result = SpiderFootHelpers.sanitiseInput("test'injection\"attempt")
         
         # Quotes should be removed
         self.assertEqual(result, "testinjectionattempt")
         
         # Test with boolean
-        bool_result = helpers.sanitiseInput(True)
+        bool_result = SpiderFootHelpers.sanitiseInput(True)
         self.assertEqual(bool_result, "True")
         
     def test_urlBaseDir(self):
@@ -442,7 +441,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         Test urlBaseDir
         """
         # Change the expected result to match the updated function
-        result = helpers.urlBaseDir("http://example.com/test/test2/index.html")
+        result = SpiderFootHelpers.urlBaseDir("http://example.com/test/test2/index.html")
         
         # Should return the directory containing the file
         self.assertEqual(result, "http://example.com/test/test2/")
@@ -454,7 +453,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         base = "http://example.com/test/"
         relative = "../page.html"
         
-        result = helpers.urlRelativeToAbsolute(base, relative)
+        result = SpiderFootHelpers.urlRelativeToAbsolute(base, relative)
         
         self.assertEqual(result, "http://example.com/page.html")
         
@@ -472,7 +471,7 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
         with open(wordlist_path, "w") as f:
             f.write("John\nJane\nBob\nuser1\nuser2\nadmin\nroot\n")
         
-        username_list = helpers.usernamesFromWordlists([wordlist_path])
+        username_list = SpiderFootHelpers.usernamesFromWordlists([wordlist_path])
         
         self.assertIsInstance(username_list, list)
         self.assertTrue("user1" in username_list)
