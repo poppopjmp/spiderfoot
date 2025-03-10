@@ -34,7 +34,7 @@ import OpenSSL
 import requests
 import urllib3
 from publicsuffixlist import PublicSuffixList
-from spiderfoot import SpiderFootHelpers
+from spiderfoot import SpiderFootHelpers, SpiderFootDb
 from spiderfoot.logger import logWorkerSetup
 from spiderfoot.logconfig import get_module_logger
 
@@ -130,6 +130,9 @@ class SpiderFoot:
             res = dns.resolver.Resolver()
             res.nameservers = [self.opts['_dnsserver']]
             dns.resolver.override_system_resolver(res)
+
+        # Initialize the dbh attribute to a non-None value
+        self._dbh = SpiderFootDb(self.opts)
 
     @property
     def dbh(self):
