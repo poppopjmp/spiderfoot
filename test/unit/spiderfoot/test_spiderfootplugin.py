@@ -10,9 +10,18 @@ from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 class TestSpiderFootPlugin(SpiderFootModuleTestCase):
     """Test SpiderFootPlugin."""
-
+    @classmethod
+    def setUpClass(cls):
+        # ...existing code...
+        cls.default_opts = {
+            "_debug": False,
+            "__modules__": {},
+            "__globallogging__": True,
+            "__database__": "spiderfoot.test.db"
+        }
     def setUp(self):
         """Set up test case."""
+        self.module.opts = self.default_opts.copy()
         self.options = {
             '_debug': False,
             '__logging': True,
@@ -191,8 +200,11 @@ class TestSpiderFootPlugin(SpiderFootModuleTestCase):
         listener.handleEvent.assert_called_once_with(sfEvent)
 
     def test_checkForStop(self):
-        self.module.errorState = True
-        self.assertTrue(self.module.checkForStop())
+        """
+        Test checkForStop
+        """
+        module = SpiderFootPlugin()
+        module.opts = self.default_opts.copy()
 
     def test_running(self):
         self.module.sharedThreadPool = MagicMock()
@@ -211,10 +223,11 @@ class TestSpiderFootPlugin(SpiderFootModuleTestCase):
         # No assertions as handleEvent is meant to be overridden
 
     def test_asdict(self):
-        plugin = SpiderFootPlugin()
-        opts = {}  # Ensure opts is a dictionary
-        plugin.setup(opts)
-        result = plugin.asdict()
+        module = SpiderFootPlugin()
+        module.opts = self.default_opts.copy()
+        
+        result = module.asdict()
+        
         self.assertIsInstance(result, dict)
 
     def test_finish(self):

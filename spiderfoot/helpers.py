@@ -1589,3 +1589,209 @@ class SpiderFootHelpers():
             return ip_obj.is_private or ip_obj.is_loopback
         except Exception:
             return False
+        
+    def buildGraphJson(data, root="", tooltip=None):
+        """Convert supplied raw data into JSON format for graph.
+
+        Args:
+            data (list): Data to be converted
+            root (str): Root node
+            tooltip (str): Tooltip text
+
+        Returns:
+            str: JSON data
+        """
+        nodes = []
+        edges = []
+        
+        for row in data:
+            # Handling the nodes and edges
+            source_data = row[7]
+            source_type = row[6]
+            child_data = row[1]
+            child_type = row[2]
+            
+            if source_data not in [x["data"] for x in nodes]:
+                nodes.append({"data": source_data, "type": source_type})
+            
+            if child_data not in [x["data"] for x in nodes]:
+                nodes.append({"data": child_data, "type": child_type})
+            
+            edges.append({"source": source_data, "target": child_data, "label": row[3]})
+        
+        return json.dumps({"nodes": nodes, "edges": edges})
+
+    def extractLinksFromHtml(url, data):
+        """Extract URLs from HTML content.
+
+        Args:
+            url (str): Base URL
+            data (str): HTML content
+
+        Returns:
+            list: List of URLs
+        """
+        links = []
+        
+        if not data:
+            return links
+            
+        try:
+            soup = BeautifulSoup(data, 'lxml')
+            for link in soup.find_all('a'):
+                href = link.get('href')
+                if href:
+                    absurl = urlRelativeToAbsolute(url, href)
+                    if absurl:
+                        links.append(absurl)
+        except Exception:
+            pass
+            
+        return links
+
+    def extractPgpKeysFromText(text):
+        """Extract PGP public keys from text.
+
+        Args:
+            text (str): Text to extract from
+
+        Returns:
+            list: list of PGP key blocks
+        """
+        if not text:
+            return []
+            
+        pgp_keys = []
+        pattern = r"-----BEGIN PGP PUBLIC KEY BLOCK-----(.*?)-----END PGP PUBLIC KEY BLOCK-----"
+        
+        matches = re.findall(pattern, text, re.DOTALL)
+        for match in matches:
+            pgp_keys.append(f"-----BEGIN PGP PUBLIC KEY BLOCK-----{match}-----END PGP PUBLIC KEY BLOCK-----")
+            
+        return pgp_keys
+
+    def loadModulesAsDict(directory, modclass):
+        """Load modules from directory as a dict.
+
+        Args:
+            directory (str): Directory to load modules from
+            modclass (str): Module class
+
+        Returns:
+            dict: Dictionary of module objects
+        """
+        modules = {}
+        
+        for filename in os.listdir(directory):
+            if not filename.endswith(".py"):
+                continue
+            
+            if filename == "__init__.py":
+                continue
+                
+            modname = filename.split('.')[0]
+            
+            try:
+                module = __import__(f"modules.{modname}", globals(), locals(), [modname])
+                mod = getattr(module, modname)
+                instance = mod()
+                
+                if modclass and modclass != instance.__module__:
+                    continue
+                    
+                modules[modname] = instance
+            except Exception:
+                pass
+                
+        return modules
+
+    def urlRelativeToAbsolute(base_url, relative_url):
+        """Convert a relative URL to an absolute URL.
+
+        Args:
+            base_url (str): Base URL
+            relative_url (str): Relative URL
+
+        Returns:
+            str: Absolute URL
+        """
+        if not relative_url:
+            return None
+            
+        if relative_url.startswith('//'):
+            # Protocol-relative URL
+            protocol = base_url.split(':', 1)[0]
+            return f"{protocol}:{relative_url}"
+            
+        if relative_url.startswith('http://') or relative_url.startswith('https://'):
+            # Already absolute
+            return relative_url
+            
+        try:
+            return urljoin(base_url, relative_url)
+        except Exception:
+            return None
+
+    def sanitiseInput(string):
+        """Sanitize input to prevent SQL injection.
+        
+        Args:
+            string (str): The input string to sanitize
+            
+        Returns:
+            str: The sanitized string
+        """
+        if not isinstance(string, str):
+            string = str(string)
+            
+        if string.find("'") >= 0 or string.find('"') >= 0:
+            string = string.replace("'", "").replace('"', "")
+        return string
+
+    def urlBaseDir(url):
+        """Get the base directory of a URL.
+        
+        Args:
+            url (str): URL to get the base directory from
+            
+        Returns:
+            str: Base directory URL
+        """
+        if not url:
+            return None
+            
+        try:
+            parsed_url = urlparse(url)
+            path = parsed_url.path
+            
+            # Get the directory part
+            if path.endswith('/'):
+                # URL already points to a directory
+                directory = path
+            else:
+                # Get the directory containing the file
+                directory = os.path.dirname(path) + '/'
+                
+            # Reconstruct the URL
+            base_url = f"{parsed_url.scheme}://{parsed_url.netloc}{directory}"
+            return base_url
+        except Exception:
+            return None
+
+    def extractUrlsFromText(text):
+        """Extract URLs from text.
+        
+        Args:
+            text (str): Text to extract URLs from
+            
+        Returns:
+            list: List of URLs
+        """
+        # Simple URL regex pattern
+        url_pattern = r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+'
+        
+        if not text:
+            return []
+            
+        urls = re.findall(url_pattern, text)
+        return urls

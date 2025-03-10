@@ -289,3 +289,193 @@ class TestSpiderFootHelpers(SpiderFootModuleTestCase):
             input_str = "<script>alert()</script>"
             result = SpiderFootHelpers.sanitiseInput(input_str)
             self.assertTrue(result.find("script") == -1)
+    def test_buildGraphGexf(self):
+        """
+        Test buildGraphGexf
+        """
+        # Setup test data
+        data = [
+            ["test_scan", "example.com", "INTERNET_NAME", "Domain Name", "", "SpiderFoot", "example.com", "Scan 1", "Path 1", "", "", ""],
+            ["test_scan", "1.1.1.1", "IP_ADDRESS", "IP Address", "", "SpiderFoot", "example.com", "Scan 1", "Path 1", "", "", ""]
+        ]
+        
+        gexf = helpers.buildGraphGexf(data, "test title", "test scan")
+        
+        self.assertIsInstance(gexf, str)
+        self.assertTrue("<gexf" in gexf)
+        
+    def test_buildGraphJson(self):
+        """
+        Test buildGraphJson
+        """
+        # Setup test data
+        data = [
+            ["test_scan", "example.com", "INTERNET_NAME", "Domain Name", "", "SpiderFoot", "example.com", "Scan 1", "Path 1", "", "", ""],
+            ["test_scan", "1.1.1.1", "IP_ADDRESS", "IP Address", "", "SpiderFoot", "example.com", "Scan 1", "Path 1", "", "", ""]
+        ]
+        
+        json_data = helpers.buildGraphJson(data)
+        
+        self.assertIsInstance(json_data, str)
+        # Check valid JSON
+        parsed = json.loads(json_data)
+        self.assertIn("nodes", parsed)
+        self.assertIn("edges", parsed)
+
+    def test_dictionaryWordsFromWordlists(self):
+        """
+        Test dictionaryWordsFromWordlists
+        """
+        # Update the path to the test wordlist
+        wordlist_path = os.path.join("test", "wordlists", "english.dict")
+        
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(wordlist_path), exist_ok=True)
+        
+        # Create test wordlist file if it doesn't exist
+        with open(wordlist_path, "w") as f:
+            f.write("password\nsecret\ncompany\ntest\nhello\nworld\n")
+        
+        word_list = helpers.dictionaryWordsFromWordlists([wordlist_path])
+        
+        self.assertIsInstance(word_list, list)
+        self.assertTrue("password" in word_list)
+        self.assertTrue("secret" in word_list)
+        
+    def test_extractLinksFromHtml(self):
+        """
+        Test extractLinksFromHtml
+        """
+        html = "<a href='http://example.com'>Example</a>"
+        url = "http://example.org"
+        
+        links = helpers.extractLinksFromHtml(url, html)
+        
+        self.assertIsInstance(links, list)
+        self.assertTrue("http://example.com" in links)
+        
+    def test_extractPgpKeysFromText(self):
+        """
+        Test extractPgpKeysFromText
+        """
+        text = """
+        Some text
+        -----BEGIN PGP PUBLIC KEY BLOCK-----
+        Test PGP Key
+        -----END PGP PUBLIC KEY BLOCK-----
+        More text
+        """
+        
+        keys = helpers.extractPgpKeysFromText(text)
+        
+        self.assertIsInstance(keys, list)
+        self.assertTrue(len(keys) == 1)
+        self.assertTrue("-----BEGIN PGP PUBLIC KEY BLOCK-----" in keys[0])
+        
+    def test_extractUrlsFromText(self):
+        """
+        Test extractUrlsFromText
+        """
+        text = "Check out http://example.com and https://example.org"
+        
+        urls = helpers.extractUrlsFromText(text)
+        
+        self.assertIsInstance(urls, list)
+        self.assertTrue("http://example.com" in urls)
+        self.assertTrue("https://example.org" in urls)
+        
+    def test_humanNamesFromWordlists(self):
+        """
+        Test humanNamesFromWordlists
+        """
+        # Update the path to the test wordlist
+        wordlist_path = os.path.join("test", "wordlists", "names.dict")
+        
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(wordlist_path), exist_ok=True)
+        
+        # Create test wordlist file if it doesn't exist
+        with open(wordlist_path, "w") as f:
+            f.write("John\nJane\nBob\nuser1\nuser2\nadmin\nroot\n")
+        
+        name_list = helpers.humanNamesFromWordlists([wordlist_path])
+        
+        self.assertIsInstance(name_list, list)
+        self.assertTrue("John" in name_list)
+        self.assertTrue("Jane" in name_list)
+        self.assertTrue("user1" in name_list)
+        
+    def test_loadModulesAsDict(self):
+        """
+        Test loadModulesAsDict
+        """
+        # Create a mock directory structure for this test only
+        with mock.patch("os.listdir") as mock_listdir:
+            mock_listdir.return_value = ["module1.py", "module2.py", "__init__.py"]
+            
+            # Mock the import process
+            with mock.patch("builtins.__import__") as mock_import:
+                mock_module = mock.MagicMock()
+                mock_module.module1 = mock.MagicMock()
+                mock_import.return_value = mock_module
+                
+                modules = helpers.loadModulesAsDict("modules", None)
+                
+                self.assertIsInstance(modules, dict)
+                mock_import.assert_called()
+
+    def test_sanitiseInput(self):
+        """
+        Test sanitiseInput
+        """
+        # Test with string containing quotes
+        result = helpers.sanitiseInput("test'injection\"attempt")
+        
+        # Quotes should be removed
+        self.assertEqual(result, "testinjectionattempt")
+        
+        # Test with boolean
+        bool_result = helpers.sanitiseInput(True)
+        self.assertEqual(bool_result, "True")
+        
+    def test_urlBaseDir(self):
+        """
+        Test urlBaseDir
+        """
+        # Change the expected result to match the updated function
+        result = helpers.urlBaseDir("http://example.com/test/test2/index.html")
+        
+        # Should return the directory containing the file
+        self.assertEqual(result, "http://example.com/test/test2/")
+        
+    def test_urlRelativeToAbsolute(self):
+        """
+        Test urlRelativeToAbsolute
+        """
+        base = "http://example.com/test/"
+        relative = "../page.html"
+        
+        result = helpers.urlRelativeToAbsolute(base, relative)
+        
+        self.assertEqual(result, "http://example.com/page.html")
+        
+    def test_usernamesFromWordlists(self):
+        """
+        Test usernamesFromWordlists
+        """
+        # Update the path to the test wordlist
+        wordlist_path = os.path.join("test", "wordlists", "names.dict")
+        
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(wordlist_path), exist_ok=True)
+        
+        # Create test wordlist file if it doesn't exist
+        with open(wordlist_path, "w") as f:
+            f.write("John\nJane\nBob\nuser1\nuser2\nadmin\nroot\n")
+        
+        username_list = helpers.usernamesFromWordlists([wordlist_path])
+        
+        self.assertIsInstance(username_list, list)
+        self.assertTrue("user1" in username_list)
+        self.assertTrue("admin" in username_list)
+        self.assertTrue("root" in username_list)

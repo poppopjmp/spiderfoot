@@ -301,3 +301,110 @@ class TestSpiderFootScanner(unittest.TestCase):
         sfscan = SpiderFootScanner("example scan name", scan_id, "spiderfoot.net", "IP_ADDRESS", module_list, opts, start=False)
         with self.assertRaises(ValueError):
             sfscan._SpiderFootScanner__setStatus("example invalid scan status")
+
+    def test_init_argument_scanId_of_invalid_type_should_raise_TypeError(self):
+        """
+        Test __init__(self, scanId, scanName, scanTarget, targetType, moduleList, globalOpts, start=True)
+        """
+        with self.assertRaises(TypeError):
+            SpiderFootScanner(None, 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], dict(example=True))
+
+    def test_init_argument_scanId_as_empty_string_should_raise_ValueError(self):
+        with self.assertRaises(ValueError):
+            SpiderFootScanner('', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], dict(example=True))
+
+    def test_init_argument_scanName_of_invalid_type_should_raise_TypeError(self):
+        with self.assertRaises(TypeError):
+            SpiderFootScanner('scanId', None, 'scanTarget', 'IP_ADDRESS', ['module1'], dict(example=True))
+
+    def test_init_argument_scanName_as_empty_string_should_raise_ValueError(self):
+        with self.assertRaises(ValueError):
+            SpiderFootScanner('scanId', '', 'scanTarget', 'IP_ADDRESS', ['module1'], dict(example=True))
+
+    def test_init_argument_targetValue_of_invalid_type_should_raise_TypeError(self):
+        with self.assertRaises(TypeError):
+            SpiderFootScanner('scanId', 'scanName', None, 'IP_ADDRESS', ['module1'], dict(example=True))
+
+    def test_init_argument_targetValue_as_empty_string_should_raise_ValueError(self):
+        with self.assertRaises(ValueError):
+            SpiderFootScanner('scanId', 'scanName', '', 'IP_ADDRESS', ['module1'], dict(example=True))
+
+    def test_init_argument_targetType_of_invalid_type_should_raise_TypeError(self):
+        with self.assertRaises(TypeError):
+            SpiderFootScanner('scanId', 'scanName', 'scanTarget', None, ['module1'], dict(example=True))
+
+    def test_init_argument_targetType_invalid_value_should_raise_ValueError(self):
+        with self.assertRaises(ValueError):
+            SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'invalid target type', ['module1'], dict(example=True))
+
+    def test_init_argument_moduleList_of_invalid_type_should_raise_TypeError(self):
+        with self.assertRaises(TypeError):
+            SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', None, dict(example=True))
+
+    def test_init_argument_moduleList_as_empty_list_should_raise_ValueError(self):
+        with self.assertRaises(ValueError):
+            SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', [], dict(example=True))
+
+    def test_init_argument_globalOpts_of_invalid_type_should_raise_TypeError(self):
+        with self.assertRaises(TypeError):
+            SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], None)
+
+    def test_init_argument_globalOpts_as_empty_dict_should_raise_ValueError(self):
+        with self.assertRaises(ValueError):
+            SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], {})
+
+    def test_init_argument_globalOpts_proxy_invalid_proxy_type_should_raise_ValueError(self):
+        with self.assertRaises(ValueError):
+            opts = {'_socks1type': 'invalid proxy type', '_socks1addr': 'proxy host'}
+            SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], opts)
+
+    def test_init_argument_globalOpts_proxy_type_without_host_should_raise_ValueError(self):
+        with self.assertRaises(ValueError):
+            opts = {'_socks1type': 'HTTP'}  # Missing _socks1addr
+            SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], opts)
+
+    def test_init_argument_globalOpts_proxy_should_set_proxy(self):
+        opts = {'_socks1type': 'HTTP', '_socks1addr': 'proxy host', '_socks1port': '8080'}
+        scanner = SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], opts, False)
+        self.assertIsNotNone(scanner)
+        self.assertEqual(scanner._globalOpts['_socks1type'], 'HTTP')
+        self.assertEqual(scanner._globalOpts['_socks1addr'], 'proxy host')
+
+    def test_init_argument_globalOpts_proxy_without_port_should_set_proxy(self):
+        opts = {'_socks1type': 'HTTP', '_socks1addr': 'proxy host'}  # No port specified
+        scanner = SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], opts, False)
+        self.assertIsNotNone(scanner)
+        self.assertEqual(scanner._globalOpts['_socks1type'], 'HTTP')
+        self.assertEqual(scanner._globalOpts['_socks1addr'], 'proxy host')
+
+    def test_init_argument_start_false_should_create_a_scan_without_starting_the_scan(self):
+        opts = {'example': True}
+        scanner = SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], opts, False)
+        self.assertEqual('INITIALIZING', scanner.status)
+
+    def test_init_argument_start_true_with_no_valid_modules_should_set_scanstatus_to_failed(self):
+        opts = {'example': True}
+        scanner = SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], opts, True)
+        self.assertEqual('FAILED', scanner.status)
+
+    def test_attribute_scanId_should_return_scan_id_as_a_string(self):
+        opts = {'example': True}
+        scanner = SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], opts, False)
+        self.assertEqual('scanId', scanner.scanId)
+
+    def test_attribute_status_should_return_status_as_a_string(self):
+        opts = {'example': True}
+        scanner = SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], opts, False)
+        self.assertEqual('INITIALIZING', scanner.status)
+
+    def test__setStatus_argument_status_of_invalid_type_should_raise_TypeError(self):
+        opts = {'example': True}
+        scanner = SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], opts, False)
+        with self.assertRaises(TypeError):
+            scanner._setStatus(None)
+
+    def test__setStatus_argument_status_with_blank_value_should_raise_ValueError(self):
+        opts = {'example': True}
+        scanner = SpiderFootScanner('scanId', 'scanName', 'scanTarget', 'IP_ADDRESS', ['module1'], opts, False)
+        with self.assertRaises(ValueError):
+            scanner._setStatus('  ')

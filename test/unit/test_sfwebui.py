@@ -44,10 +44,20 @@ class TestSpiderFootWebUi(unittest.TestCase):
             'web.ssl_key': '',
             'web.ssl_ca': ''
         }
-        
+        self.default_config = {
+            "modules_enabled": [],
+            "GUID": "",
+            "__modules__": {},
+            "_debug": False,
+            "_test": False,
+            "dbh": MockDbh(self),
+            "scanId": "test_scan", 
+            "_useCache": True
+        }
         self.opts = self.default_options.copy()
         self.opts.update(self.web_default_options)
         self.web = SpiderFootWebUi(self.opts, Mock())
+        self.app.config = self.default_config.copy()
 
     def test_init_config_invalid_type_should_raise_TypeError(self):
         """
@@ -127,6 +137,7 @@ class TestSpiderFootWebUi(unittest.TestCase):
     def test_clean_user_input_should_clean_user_input(self):
         config = {}
         opts = self.default_options
+        self.app.config = self.default_config.copy()
         opts['__modules__'] = dict()
         sfwebui = SpiderFootWebUi(self.web_default_options, opts)
 
@@ -145,6 +156,7 @@ class TestSpiderFootWebUi(unittest.TestCase):
         Test searchBase(self, id=None, eventType=None, value=None)
         """
         opts = self.default_options
+        self.app.config = self.default_config.copy()
         opts['__modules__'] = dict()
         sfwebui = SpiderFootWebUi(self.web_default_options, opts)
         search_results = sfwebui.searchBase(None, None, None)
