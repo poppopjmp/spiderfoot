@@ -12,7 +12,6 @@
 import csv
 import html
 import json
-import logging
 import multiprocessing as mp
 import random
 import string
@@ -34,7 +33,12 @@ from sfscan import startSpiderFootScanner
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import __version__
-from spiderfoot.logger import logListenerSetup, logWorkerSetup
+from spiderfoot.logger import logListenerSetup, logWorkerSetup, SpiderFootLogger
+
+# Ensure log directory exists
+import os
+if not os.path.exists('log'):
+    os.makedirs('log')
 
 mp.set_start_method("spawn", force=True)
 
@@ -48,13 +52,13 @@ class SpiderFootWebUi:
     token = None
     docroot = ''
 
-    def __init__(self: 'SpiderFootWebUi', web_config: dict, config: dict, loggingQueue: 'logging.handlers.QueueListener' = None) -> None:
+    def __init__(self: 'SpiderFootWebUi', web_config: dict, config: dict, loggingQueue: 'mp.Queue' = None) -> None:
         """Initialize web server.
 
         Args:
             web_config (dict): config settings for web interface (interface, port, root path)
             config (dict): SpiderFoot config
-            loggingQueue: TBD
+            loggingQueue: Queue for logging messages
 
         Raises:
             TypeError: arg type is invalid
@@ -74,22 +78,54 @@ class SpiderFootWebUi:
 
         # 'config' supplied will be the defaults, let's supplement them
         # now with any configuration which may have previously been saved.
-        from spiderfoot.sflib import safe_deepcopy
+        from sflib import safe_deepcopy
         self.defaultConfig = safe_deepcopy(config)
         dbh = SpiderFootDb(self.defaultConfig, init=True)
         sf = SpiderFoot(self.defaultConfig)
         self.config = sf.configUnserialize(dbh.configGet(), self.defaultConfig)
 
-        # Set up logging
-        if loggingQueue is None:
-            self.loggingQueue = mp.Queue()
-            logListenerSetup(self.loggingQueue, self.config)
-        else:
-            self.loggingQueue = loggingQueue
-        logWorkerSetup(self.loggingQueue)
-        self.log = logging.getLogger(f"spiderfoot.{__name__}")
-        self.log.info("Web interface initialized")
+        # Set up logging with more explicit configuration
+        try:
+            if loggingQueue is None:
+                self.loggingQueue = mp.Queue()
+                # Make sure we have the necessary logging configuration
+                if 'logLevel' not in self.config:
+                    self.config['logLevel'] = 'INFO'
+                if 'logPath' not in self.config:
+                    self.config['logPath'] = './log'
+                logListenerSetup(self.loggingQueue, self.config)
+            else:
+                self.loggingQueue = loggingQueue
+            
+            # Ensure the worker setup is configured properly
+            logWorkerSetup(self.loggingQueue)
+            
+            # Get the logger for this module using SpiderFoot's logger
+            self.log = SpiderFootLogger(f"spiderfoot.{__name__}")
+            
+            # Test logging at startup to verify configuration
+            self.log.debug("Logger initialized for web interface")
+            self.log.info("Web interface initialized")
+        except Exception as e:
+            # If SpiderFootLogger fails, create a basic console logger as fallback
+            import logging
+            logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s [%(levelname)s] %(message)s'
+            )
+            self.log = logging.getLogger(f"spiderfoot.{__name__}")
+            self.log.error(f"Failed to set up SpiderFoot logging: {str(e)}", exc_info=True)
+            self.log.info("Using fallback console logger")
+            self.log.info("Web interface initialized with fallback logging")
 
+        # Additional startup verification
+        try:
+            # Verify database connectivity at startup
+            test_conn = SpiderFootDb(self.config)
+            del test_conn
+            self.log.info("Database connection verified")
+        except Exception as e:
+            self.log.error(f"Database connection failed: {str(e)}", exc_info=True)
 
     def error_page(self: 'SpiderFootWebUi') -> None:
         """Error page."""

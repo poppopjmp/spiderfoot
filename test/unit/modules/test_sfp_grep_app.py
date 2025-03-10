@@ -5,7 +5,6 @@ from modules.sfp_grep_app import sfp_grep_app
 from sflib import SpiderFoot
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-
 @pytest.mark.usefixtures
 class TestModuleGrepApp(SpiderFootModuleTestCase):
 

@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_greynoise import sfp_greynoise
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -33,7 +33,7 @@ class TestModuleGreynoise(SpiderFootModuleTestCase):
         module = sfp_greynoise()
         module.setup(sf, dict())
 
-        target_value = 'example target value'
+        target_value = '1.1.1.1'
         target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)

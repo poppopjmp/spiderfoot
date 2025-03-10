@@ -3,9 +3,8 @@ import unittest
 
 from modules.sfp_bingsearch import sfp_bingsearch
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 @pytest.mark.usefixtures
 class TestModuleBingsearch(SpiderFootModuleTestCase):

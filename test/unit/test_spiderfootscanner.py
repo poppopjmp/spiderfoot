@@ -6,15 +6,16 @@ import uuid
 from sfscan import SpiderFootScanner
 
 
-@pytest.mark.usefixtures
-class TestSpiderFootScanner(SpiderFootModuleTestCase):
+@pytest.mark.usefixtures("default_options")
+class TestSpiderFootScanner(unittest.TestCase):
     """
-    Test SpiderFootScanStatus
+    Test SpiderFootScanner functionality.
     """
 
     def test_init_argument_start_false_should_create_a_scan_without_starting_the_scan(self):
         """
         Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts, start=True)
+        Should create a scan instance without starting it when start=False.
         """
         opts = self.default_options
         opts['__modules__'] = dict()
@@ -26,6 +27,10 @@ class TestSpiderFootScanner(SpiderFootModuleTestCase):
         self.assertEqual(sfscan.status, "INITIALIZING")
 
     def test_init_argument_start_true_with_no_valid_modules_should_set_scanstatus_to_failed(self):
+        """
+        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts, start=True)
+        Should set scan status to ERROR-FAILED when no valid modules are provided and start=True.
+        """
         opts = self.default_options
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())
@@ -237,6 +242,9 @@ class TestSpiderFootScanner(SpiderFootModuleTestCase):
         self.assertEqual('TBD', 'TBD')
 
     def test_attribute_scanId_should_return_scan_id_as_a_string(self):
+        """
+        Test scanId attribute should return scan id as a string.
+        """
         opts = self.default_options
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())
@@ -250,6 +258,9 @@ class TestSpiderFootScanner(SpiderFootModuleTestCase):
         self.assertEqual(scan_id, get_id)
 
     def test_attribute_status_should_return_status_as_a_string(self):
+        """
+        Test status attribute should return status as a string.
+        """
         opts = self.default_options
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())

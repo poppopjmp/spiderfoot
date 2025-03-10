@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_cookie import sfp_cookie
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -38,36 +38,26 @@ class TestModuleCookie(SpiderFootModuleTestCase):
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
-        def new_notifyListeners(self, event):
-            expected = 'TARGET_WEB_COOKIE'
-            if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != {expected}")
-
-            expected = 'example cookie'
-            if str(event.data) != expected:
-                raise Exception(f"{event.data} != {expected}")
-
-            raise Exception("OK")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_cookie)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        # Track generated events
+        generated_events = []
+        def notifyListeners_mock(event):
+            generated_events.append(event)
+            
+        module.notifyListeners = notifyListeners_mock.__get__(module, sfp_cookie)
 
         event_type = 'WEBSERVER_HTTPHEADERS'
         event_data = '{"cookie": "example cookie"}'
         event_module = 'sfp_spider'
-        source_event = evt
+        source_event = ''
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
         evt.actualSource = "https://spiderfoot.net/example"
 
-        with self.assertRaises(Exception) as cm:
-            module.handleEvent(evt)
+        module.handleEvent(evt)
 
-        self.assertEqual("OK", str(cm.exception))
+        # Check that the expected event was generated
+        self.assertEqual(len(generated_events), 1)
+        self.assertEqual(generated_events[0].eventType, 'TARGET_WEB_COOKIE')
+        self.assertEqual(generated_events[0].data, 'example cookie')
 
     def test_handleEvent_event_data_not_containing_cookie_should_not_return_event(self):
         sf = SpiderFoot(self.default_options)
@@ -80,24 +70,21 @@ class TestModuleCookie(SpiderFootModuleTestCase):
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
-        def new_notifyListeners(self, event):
-            raise Exception(f"Raised event {event.eventType}: {event.data}")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_cookie)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        # Track generated events
+        generated_events = []
+        def notifyListeners_mock(event):
+            generated_events.append(event)
+            
+        module.notifyListeners = notifyListeners_mock.__get__(module, sfp_cookie)
 
         event_type = 'WEBSERVER_HTTPHEADERS'
-        event_data = '{"not cookie": "example cookie"}'
+        event_data = '{"not_cookie": "example value"}'
         event_module = 'sfp_spider'
-        source_event = evt
+        source_event = ''
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
         evt.actualSource = "https://spiderfoot.net/example"
 
-        result = module.handleEvent(evt)
+        module.handleEvent(evt)
 
-        self.assertIsNone(result)
+        # Check that no event was generated
+        self.assertEqual(len(generated_events), 0)

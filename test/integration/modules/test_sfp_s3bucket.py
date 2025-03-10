@@ -3,7 +3,6 @@ import unittest
 
 from modules.sfp_s3bucket import sfp_s3bucket
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

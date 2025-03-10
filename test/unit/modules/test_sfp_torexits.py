@@ -5,7 +5,6 @@ from modules.sfp_torexits import sfp_torexits
 from sflib import SpiderFoot
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-
 @pytest.mark.usefixtures
 class TestModuleTorexits(SpiderFootModuleTestCase):
 

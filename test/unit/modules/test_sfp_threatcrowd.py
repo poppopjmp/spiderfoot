@@ -5,7 +5,6 @@ from modules.sfp_threatcrowd import sfp_threatcrowd
 from sflib import SpiderFoot
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-
 @pytest.mark.usefixtures
 class TestModuleThreatcrowd(SpiderFootModuleTestCase):
 

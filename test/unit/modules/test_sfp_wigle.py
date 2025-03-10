@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_wigle import sfp_wigle
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -33,8 +33,8 @@ class TestModuleWigle(SpiderFootModuleTestCase):
         module = sfp_wigle()
         module.setup(sf, dict())
 
-        target_value = 'example target value'
-        target_type = 'IP_ADDRESS'
+        target_value = 'example.com'
+        target_type = 'DOMAIN_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
@@ -47,3 +47,4 @@ class TestModuleWigle(SpiderFootModuleTestCase):
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
+        self.assertTrue(module.errorState)

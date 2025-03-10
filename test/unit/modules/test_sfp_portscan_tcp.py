@@ -5,7 +5,6 @@ from modules.sfp_portscan_tcp import sfp_portscan_tcp
 from sflib import SpiderFoot
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-
 @pytest.mark.usefixtures
 class TestModulePortscanTcp(SpiderFootModuleTestCase):
 

@@ -3,12 +3,12 @@ import unittest
 
 from modules.sfp_viewdns import sfp_viewdns
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModulViewdns(SpiderFootModuleTestCase):
+class TestModuleViewdns(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_viewdns()
@@ -29,11 +29,12 @@ class TestModulViewdns(SpiderFootModuleTestCase):
 
     def test_handleEvent_no_api_key_should_set_errorState(self):
         sf = SpiderFoot(self.default_options)
+
         module = sfp_viewdns()
         module.setup(sf, dict())
 
         target_value = 'example target value'
-        target_type = 'IP_ADDRESS'
+        target_type = 'DOMAIN_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

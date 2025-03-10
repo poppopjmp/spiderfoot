@@ -3,11 +3,11 @@
 # Name:     sfp_fofa
 # Purpose:   Search Fofa for domain, IP address, and other information.
 #
-# Author:    [Your Name]
+# Author:    Agostino Panico <van1sh@van1shland.io>
 #
-# Created:   [Date]
-# Copyright:  (c) [Your Name]
-# Licence:   MIT
+# Created:    01/02/2025
+# Copyright: (c) poppopjmp
+# Licence:    MIT
 # -------------------------------------------------------------------------------
 
 import json
@@ -113,15 +113,24 @@ class sfp_fofa(SpiderFootPlugin):
             self.error("No response from Fofa API.")
             return None
 
-        if res['code'] != 200:
-            self.error(f"Fofa API error: {res['errmsg']}")
+        if res['code'] != "200":
+            self.error(f"Fofa API HTTP error: {res['code']}")
             self.errorState = True
+            return None
+            
+        if res['content'] is None:
+            self.error("Empty response from Fofa API")
             return None
 
         try:
-            return json.loads(res['content'])
+            content = json.loads(res['content'])
+            if 'error' in content:
+                self.error(f"Fofa API error: {content['error']}")
+                self.errorState = True
+                return None
+            return content
         except Exception as e:
-            self.debug(f"Error processing JSON response: {e}")
+            self.error(f"Error processing JSON response: {e}")
             return None
 
     def handleEvent(self, event):
@@ -156,15 +165,25 @@ class sfp_fofa(SpiderFootPlugin):
         self.notifyListeners(e)
 
         for result in data['results']:
-            if 'host' in result:
-                e = SpiderFootEvent("INTERNET_NAME", result['host'], self.__name__, event)
+            if 'host' in result and result['host']:
+                host = result['host'].strip()
+                if host:
+                    e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, event)
+                    self.notifyListeners(e)
+            if 'domain' in result and result['domain']:
+                domain = result['domain'].strip()
+                if domain:
+                    e = SpiderFootEvent("DOMAIN_NAME", domain, self.__name__, event)
+                    self.notifyListeners(e)
+            if 'ip' in result and result['ip']:
+                ip = result['ip'].strip()
+                if ip and not self.sf.validIP(ip):
+                    continue
+                e = SpiderFootEvent("IP_ADDRESS", ip, self.__name__, event)
                 self.notifyListeners(e)
-            if 'domain' in result:
-                e = SpiderFootEvent("DOMAIN_NAME", result['domain'], self.__name__, event)
-                self.notifyListeners(e)
-            if 'ip' in result:
-                e = SpiderFootEvent("IP_ADDRESS", result['ip'], self.__name__, event)
-                self.notifyListeners(e)
-            if 'ipv6' in result:
-                e = SpiderFootEvent("IPV6_ADDRESS", result['ipv6'], self.__name__, event)
+            if 'ipv6' in result and result['ipv6']:
+                ipv6 = result['ipv6'].strip()
+                if ipv6 and not self.sf.validIP6(ipv6):
+                    continue
+                e = SpiderFootEvent("IPV6_ADDRESS", ipv6, self.__name__, event)
                 self.notifyListeners(e)

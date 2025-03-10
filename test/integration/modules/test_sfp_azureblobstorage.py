@@ -3,12 +3,11 @@ import unittest
 
 from modules.sfp_azureblobstorage import sfp_azureblobstorage
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationazureblobstorage(SpiderFootModuleTestCase):
+class TestModuleIntegrationazureblobstorage(unittest.TestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

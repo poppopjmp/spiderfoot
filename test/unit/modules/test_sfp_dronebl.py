@@ -3,6 +3,7 @@ import unittest
 
 from modules.sfp_dronebl import sfp_dronebl
 from sflib import SpiderFoot
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 

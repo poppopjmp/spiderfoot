@@ -3,12 +3,12 @@ import unittest
 
 from modules.sfp_certspotter import sfp_certspotter
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleiCertspotter(SpiderFootModuleTestCase):
+class TestModuleCertspotter(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_certspotter()
@@ -34,7 +34,7 @@ class TestModuleiCertspotter(SpiderFootModuleTestCase):
         module.setup(sf, dict())
 
         target_value = 'example target value'
-        target_type = 'INTERNET_NAME'
+        target_type = 'DOMAIN_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

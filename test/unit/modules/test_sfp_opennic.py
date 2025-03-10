@@ -5,7 +5,6 @@ from modules.sfp_opennic import sfp_opennic
 from sflib import SpiderFoot
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-
 @pytest.mark.usefixtures
 class TestModuleOpenNic(SpiderFootModuleTestCase):
 

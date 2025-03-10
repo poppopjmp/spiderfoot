@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_pageinfo import sfp_pageinfo
 from sflib import SpiderFoot
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModulePageInfo(SpiderFootModuleTestCase):
+class TestModulePageinfo(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_pageinfo()

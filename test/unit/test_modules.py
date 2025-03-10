@@ -4,16 +4,21 @@ import pytest
 import unittest
 
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
+from test.unit.test_spiderfoot import SpiderFootModuleTestCase
 
 
-@pytest.mark.usefixtures
 class TestSpiderFootModuleLoading(SpiderFootModuleTestCase):
     """
     Test SpiderFoot module loading
     """
+
+    def setUp(self):
+        """
+        Set up test case
+        """
+        super().setUp()
 
     @staticmethod
     def load_modules(sf):

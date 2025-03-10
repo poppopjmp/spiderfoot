@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_tool_wafw00f import sfp_tool_wafw00f
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -33,7 +33,7 @@ class TestModuleToolWafw00f(SpiderFootModuleTestCase):
         module = sfp_tool_wafw00f()
         module.setup(sf, dict())
 
-        target_value = 'example target value'
+        target_value = 'example.com'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)

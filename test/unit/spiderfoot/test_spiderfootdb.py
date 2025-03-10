@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock, Mock, patch
 
 from spiderfoot.db import SpiderFootDb
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 class TestSpiderFootDb(SpiderFootModuleTestCase):
@@ -381,3 +382,42 @@ class TestSpiderFootDb(SpiderFootModuleTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+import pytest
+import sqlite3
+import unittest
+import uuid
+
+from spiderfoot import SpiderFootDb
+
+
+@pytest.mark.usefixtures
+class TestSpiderFootDb(unittest.TestCase):
+    """Test SpiderFoot DB"""
+
+    def test_init_should_create_database_file_if_not_exists(self):
+        """
+        Test __init__(self, opts)
+        """
+        database_file = f"spiderfoot_{uuid.uuid4()}.test.db"
+        opts = {
+            '__database': database_file
+        }
+
+        sftempdb = SpiderFootDb(opts)
+        self.assertIsInstance(sftempdb, SpiderFootDb)
+
+        self.assertEqual(f"sqlite:///{database_file}", sftempdb.dbh)
+
+        conn = sqlite3.connect(database_file, timeout=10)
+        cursor = conn.cursor()
+
+        # Get schema version
+        cursor.execute("PRAGMA schema_version")
+        schema_version = cursor.fetchone()
+
+        # schema_version should be an integer
+        self.assertIsNotNone(schema_version)
+        self.assertIsInstance(schema_version[0], int)
+
+        conn.close()

@@ -1,12 +1,145 @@
 import unittest
 
-class SpiderFootModuleTestCase(SpiderFootModuleTestCase):
-    """Base test case for SpiderFoot modules"""
+class SpiderFootModuleTestCase(unittest.TestCase):
+    """
+    Base test case for SpiderFoot modules.
+    Provides common functionality and attributes that all module test cases need.
+    """
 
-    default_options = {
-        '_debug': False,
-        '__logging': True,
-        '__outputfilter': None,
-        '__blocknotif': False,
-        '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
-    }
+    def __init__(self, *args, **kwargs):
+        super(SpiderFootModuleTestCase, self).__init__(*args, **kwargs)
+        
+        # Common options used by module tests
+        self.default_options = {
+            '_debug': False,
+            '__logging': True,
+            '__outputfilter': None,
+            '__blocknotif': False,
+            '_fatalerrors': False,
+            '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
+            '_dnsserver': '',
+            '_fetchtimeout': 5,
+            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+            '_internettlds_cache': 72,
+            '_genericusers': "abuse,admin,billing,compliance,devnull,dns,ftp,hostmaster,inoc,ispfeedback,ispsupport,list-request,list,maildaemon,marketing,noc,no-reply,noreply,null,peering,peering-notify,peering-request,phish,phishing,postmaster,privacy,registrar,registry,root,routing-registry,rr,sales,security,spam,support,sysadmin,tech,undisclosed-recipients,unsubscribe,usenet,uucp,webmaster,www",
+            '__version__': '3.0',
+            '__database': 'spiderfoot.test.db',
+            '_socks1type': '',
+            '_socks2addr': '',
+            '_socks3port': '',
+            '_socks4user': '',
+            '_socks5pwd': '',
+            '_torctlport': 9051,
+            '_password_list': './spiderfoot/dicts/passwords.txt',
+            '_tos_is_acceptable': False,
+            '_cache_period': 24,
+            '__modules__': {},
+        }
+    
+    def assertIsOk(self, condition):
+        """Assert that the condition evaluates to True."""
+        self.assertTrue(condition, "Expected condition to be True, but got False")
+    
+    def assertEventData(self, event, expected_type, expected_data):
+        """Assert that an event has the expected type and data."""
+        self.assertEqual(event.eventType, expected_type, f"Expected event type '{expected_type}', but got '{event.eventType}'")
+        self.assertEqual(event.data, expected_data, f"Expected event data '{expected_data}', but got '{event.data}'")
+    
+    def assertErrorState(self, module, expected_state=True):
+        """Assert that the module's error state matches the expected state."""
+        self.assertEqual(module.errorState, expected_state, 
+                        f"Expected module.errorState to be {expected_state}, but got {module.errorState}")
+    
+    def setup_module(self, module_class):
+        """Set up a module for testing with default options."""
+        from sflib import SpiderFoot
+        sf = SpiderFoot(self.default_options)
+        module = module_class()
+        module.setup(sf, dict())
+        return module, sf
+        
+    def generate_event(self, event_type, event_data, module_name='', source_event=None):
+        """Generate a SpiderFoot event for testing."""
+        from spiderfoot import SpiderFootEvent
+        return SpiderFootEvent(event_type, event_data, module_name, source_event)
+        
+    def set_module_target(self, module, target_value, target_type='INTERNET_NAME'):
+        """Set the target for a module."""
+        from spiderfoot import SpiderFootTarget
+        target = SpiderFootTarget(target_value, target_type)
+        module.setTarget(target)
+        return target
+    
+    def execute_module_test(self, module_class, event_type, event_data, module_name='test_module', 
+                          target_value='example.com', target_type='INTERNET_NAME'):
+        """
+        Helper method to execute a standard test for a module with the given event.
+        Returns the module instance and event after handling.
+        """
+        from sflib import SpiderFoot
+        sf = SpiderFoot(self.default_options)
+        
+        module = module_class()
+        module.setup(sf, dict())
+        
+        target = self.set_module_target(module, target_value, target_type)
+        
+        root_event = self.generate_event('ROOT', 'root event data')
+        evt = self.generate_event(event_type, event_data, module_name, root_event)
+        
+        return module, module.handleEvent(evt)
+    
+    def mock_module_response(self, module, new_response):
+        """Modify a module to return a predetermined response."""
+        def mock_fetch_url(url, *args, **kwargs):
+            return new_response
+        
+        module.sf.fetchUrl = mock_fetch_url
+        return module
+    
+    def capture_module_events(self, module):
+        """
+        Override a module's notifyListeners method to capture events.
+        Returns a list to store events and the new notifyListeners function.
+        """
+        events = []
+        
+        def new_notify_listeners(event):
+            events.append(event)
+            
+        original_notify = module.notifyListeners
+        module.notifyListeners = new_notify_listeners.__get__(module, module.__class__)
+        
+        return events, original_notify
+    
+    def restore_module_notify_listeners(self, module, original_notify):
+        """Restore the original notifyListeners method to a module."""
+        module.notifyListeners = original_notify
+        
+    def assert_module_produces_events_from(self, module_class, event_data, expected_types):
+        """
+        Assert that a module produces events of the expected types when given an event.
+        Returns the generated events for further inspection.
+        """
+        module, sf = self.setup_module(module_class)
+        
+        self.set_module_target(module, 'example.com')
+        
+        events, _ = self.capture_module_events(module)
+        
+        root_event = self.generate_event('ROOT', 'root event data')
+        evt = self.generate_event('LINKED_URL_INTERNAL', event_data, 'test_module', root_event)
+        
+        module.handleEvent(evt)
+        
+        # Check that we got the right number of events
+        self.assertEqual(len(events), len(expected_types), 
+                        f"Expected {len(expected_types)} events, got {len(events)}")
+        
+        # Check event types
+        actual_types = [e.eventType for e in events]
+        for expected_type in expected_types:
+            self.assertIn(expected_type, actual_types, 
+                        f"Expected event type {expected_type} not found in {actual_types}")
+        
+        return events

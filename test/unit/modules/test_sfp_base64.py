@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_base64 import sfp_base64
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -27,7 +27,7 @@ class TestModuleBase64(SpiderFootModuleTestCase):
         module = sfp_base64()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_event_data_url_containing_base64_string_should_return_event(self):
+    def test_handleEvent_event_data_containing_base64_should_return_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_base64()
@@ -38,53 +38,68 @@ class TestModuleBase64(SpiderFootModuleTestCase):
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
+        # Create a list to store the generated events
+        generated_events = []
+        
+        # Override notifyListeners to capture the generated events
         def new_notifyListeners(self, event):
-            expected = 'BASE64_DATA'
-            if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != {expected}")
-
-            expected = "U3BpZGVyRm9vdA== (SpiderFoot)"
-            if str(event.data) != expected:
-                raise Exception(f"{event.data} != {expected}")
-
-            raise Exception("OK")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_base64)
-
-        event_type = 'ROOT'
-        event_data = 'https://spiderfoot.net/path?param=example%20data%20U3BpZGVyRm9vdA%3d%3d%20example%20data'
-        event_module = ''
-        source_event = ''
-
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        with self.assertRaises(Exception) as cm:
-            module.handleEvent(evt)
-
-        self.assertEqual("OK", str(cm.exception))
-
-    def test_handleEvent_event_data_not_containing_base64_string_should_not_return_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_base64()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            raise Exception(f"Raised event {event.eventType}: {event.data}")
-
+            generated_events.append(event)
+        
         module.notifyListeners = new_notifyListeners.__get__(module, sfp_base64)
 
         event_type = 'ROOT'
         event_data = 'example data'
         event_module = ''
         source_event = ''
-
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        result = module.handleEvent(evt)
 
-        self.assertIsNone(result)
+        # Base64 for "test message"
+        event_type = 'TARGET_WEB_CONTENT'
+        event_data = 'This string contains some base64: dGVzdCBtZXNzYWdl and should be decoded'
+        event_module = 'example module'
+        source_event = evt
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+
+        module.handleEvent(evt)
+        
+        # Check if the expected event was generated
+        self.assertEqual(len(generated_events), 1)
+        self.assertEqual(generated_events[0].eventType, 'BASE64_DATA')
+        self.assertEqual(generated_events[0].data, "test message")
+
+    def test_handleEvent_event_data_not_containing_base64_should_not_return_event(self):
+        sf = SpiderFoot(self.default_options)
+
+        module = sfp_base64()
+        module.setup(sf, dict())
+
+        target_value = 'spiderfoot.net'
+        target_type = 'INTERNET_NAME'
+        target = SpiderFootTarget(target_value, target_type)
+        module.setTarget(target)
+
+        # Create a list to store the generated events
+        generated_events = []
+        
+        # Override notifyListeners to capture the generated events
+        def new_notifyListeners(self, event):
+            generated_events.append(event)
+        
+        module.notifyListeners = new_notifyListeners.__get__(module, sfp_base64)
+
+        event_type = 'ROOT'
+        event_data = 'example data'
+        event_module = ''
+        source_event = ''
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+
+        event_type = 'TARGET_WEB_CONTENT'
+        event_data = 'This string contains no valid base64 data'
+        event_module = 'example module'
+        source_event = evt
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+
+        module.handleEvent(evt)
+        
+        # Check that no events were generated
+        self.assertEqual(len(generated_events), 0)

@@ -3,6 +3,7 @@ import unittest
 
 from modules.sfp_talosintel import sfp_talosintel
 from sflib import SpiderFoot
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 

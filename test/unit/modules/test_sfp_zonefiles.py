@@ -5,7 +5,6 @@ from modules.sfp_zonefiles import sfp_zonefiles
 from sflib import SpiderFoot
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-
 @pytest.mark.usefixtures
 class TestModuleZoneFiles(SpiderFootModuleTestCase):
 

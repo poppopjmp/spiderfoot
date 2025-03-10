@@ -3,6 +3,7 @@ import unittest
 
 from modules.sfp_tldsearch import sfp_tldsearch
 from sflib import SpiderFoot
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
@@ -15,7 +16,6 @@ class TestModuleTldsearch(SpiderFootModuleTestCase):
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
-
         module = sfp_tldsearch()
         module.setup(sf, dict())
 

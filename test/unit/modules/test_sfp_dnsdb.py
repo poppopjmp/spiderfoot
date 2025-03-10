@@ -3,12 +3,12 @@ import unittest
 
 from modules.sfp_dnsdb import sfp_dnsdb
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleDnsDb(SpiderFootModuleTestCase):
+class TestModuleDnsdb(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_dnsdb()
@@ -33,15 +33,15 @@ class TestModuleDnsDb(SpiderFootModuleTestCase):
         module = sfp_dnsdb()
         module.setup(sf, dict())
 
-        target_value = "example target value"
-        target_type = "IP_ADDRESS"
+        target_value = 'example.com'
+        target_type = 'DOMAIN_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
-        event_type = "ROOT"
-        event_data = "example data"
-        event_module = ""
-        source_event = ""
+        event_type = 'ROOT'
+        event_data = 'example data'
+        event_module = ''
+        source_event = ''
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
 
         result = module.handleEvent(evt)

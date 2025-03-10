@@ -3,9 +3,8 @@ import unittest
 
 from modules.sfp_ipregistry import sfp_ipregistry
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 @pytest.mark.usefixtures
 class TestModuleIntegrationIpregistry(SpiderFootModuleTestCase):

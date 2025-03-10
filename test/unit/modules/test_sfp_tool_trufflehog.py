@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_tool_trufflehog import sfp_tool_trufflehog
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -33,13 +33,13 @@ class TestModuleToolTrufflehog(SpiderFootModuleTestCase):
         module = sfp_tool_trufflehog()
         module.setup(sf, dict())
 
-        target_value = 'example target value'
-        target_type = 'IP_ADDRESS'
+        target_value = 'https://github.com/example/repo'
+        target_type = 'PUBLIC_CODE_REPO'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
         event_type = 'ROOT'
-        event_data = 'example value'
+        event_data = 'example data'
         event_module = ''
         source_event = ''
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)

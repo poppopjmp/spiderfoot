@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_subdomain_takeover import sfp_subdomain_takeover
 from sflib import SpiderFoot
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleSubdomain_takeover(SpiderFootModuleTestCase):
+class TestModuleSubdomainTakeover(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_subdomain_takeover()

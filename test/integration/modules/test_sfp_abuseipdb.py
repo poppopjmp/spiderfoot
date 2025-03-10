@@ -3,12 +3,11 @@ import unittest
 
 from modules.sfp_abuseipdb import sfp_abuseipdb
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationabuseipdb(SpiderFootModuleTestCase):
+class TestModuleIntegrationabuseipdb(unittest.TestCase):
 
     @unittest.skip("todo")
     def test_handleEvent(self):

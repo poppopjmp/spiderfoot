@@ -3,7 +3,6 @@ import unittest
 
 from modules.sfp_sslcert import sfp_sslcert
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

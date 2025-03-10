@@ -145,10 +145,17 @@ class sfp_azureblobstorage(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventName == "LINKED_URL_EXTERNAL":
-            if ".blob.core.windows.net" in eventData:
-                b = self.sf.urlFQDN(eventData)
-                evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET", b, self.__name__, event)
-                self.notifyListeners(evt)
+            if ".blob.core.windows.net" in eventData.lower():
+                try:
+                    # Extract the blob storage domain
+                    b = self.sf.urlFQDN(eventData)
+                    if not b:
+                        return
+                    
+                    evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET", b, self.__name__, event)
+                    self.notifyListeners(evt)
+                except Exception as e:
+                    self.debug(f"Error processing Azure blob URL: {e}")
             return
 
         targets = [eventData.replace('.', '')]

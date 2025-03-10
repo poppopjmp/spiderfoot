@@ -3,7 +3,6 @@ import unittest
 
 from modules.sfp_keybase import sfp_keybase
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

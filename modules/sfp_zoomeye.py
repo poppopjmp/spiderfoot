@@ -11,13 +11,10 @@
 # -------------------------------------------------------------------------------
 
 import time
+import json
+import requests
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
-
-try:
-    from zoomeyeai.sdk import ZoomEye
-except ImportError:
-    ZoomEye = None
 
 
 class sfp_zoomeye(SpiderFootPlugin):
@@ -60,8 +57,7 @@ class sfp_zoomeye(SpiderFootPlugin):
 
     results = None
     errorState = False
-    zoomeye_api = None
-
+    
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
         self.errorState = False
@@ -70,10 +66,8 @@ class sfp_zoomeye(SpiderFootPlugin):
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
-        if ZoomEye and self.opts['api_key']:
-            self.zoomeye_api = ZoomEye(api_key=self.opts['api_key'])
-        elif not ZoomEye:
-            self.error("ZoomEye-python library not found. Install it using 'pip install zoomeye'.")
+        if not self.opts['api_key']:
+            self.error("ZoomEye API key is required.")
             self.errorState = True
 
     def watchedEvents(self):
@@ -83,34 +77,62 @@ class sfp_zoomeye(SpiderFootPlugin):
         return ["INTERNET_NAME", "DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS", "RAW_RIR_DATA"]
 
     def query(self, qry, querytype, page=1):
-        if self.errorState or not self.zoomeye_api:
+        if self.errorState:
             return None
 
+        api_endpoint = "https://api.zoomeye.org/host/search" if querytype == "host" else "https://api.zoomeye.org/web/search"
+        headers = {
+            "API-KEY": self.opts['api_key'],
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
+        
+        params = {
+            "query": qry,
+            "page": page,
+            "pageSize": 20
+        }
+        
         try:
-            if querytype == "host":
-                res = self.zoomeye_api.search(qry, page=page, pagesize=20, sub_type='all', fields='', facets='')
-            elif querytype == "web":
-                res = self.zoomeye_api.search(qry, page=page, pagesize=20, sub_type='all', fields='', facets='')
-            else:
-                self.error(f"Invalid query type: {querytype}")
-                return None
-
+            self.debug(f"Querying ZoomEye API: {api_endpoint} for {qry} (page {page})")
+            response = requests.get(api_endpoint, headers=headers, params=params)
             time.sleep(self.opts['delay'])
-
-            if not res or not res.get('matches'):
+            
+            if response.status_code != 200:
+                self.error(f"ZoomEye API returned HTTP status {response.status_code}: {response.text}")
+                self.errorState = True
+                return None
+                
+            data = response.json()
+            
+            if not data or not data.get('matches'):
                 self.info(f"No ZoomEye info found for {qry}")
                 return None
 
-            if res.get('total') > res.get('size', 10) * page:
+            results = [data]
+            
+            # Check if we should fetch more pages
+            if data.get('total', 0) > data.get('pageSize', 20) * page:
                 page += 1
-                if page > self.opts['max_pages']:
-                    self.error("Maximum number of pages reached.")
-                    return [res]
-                return [res] + self.query(qry, querytype, page)
-            return [res]
+                if page <= self.opts['max_pages']:
+                    next_page_results = self.query(qry, querytype, page)
+                    if next_page_results:
+                        results.extend(next_page_results)
+                else:
+                    self.debug("Maximum number of pages reached.")
+            
+            return results
 
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             self.error(f"Error querying ZoomEye API: {e}")
+            self.errorState = True
+            return None
+        except json.JSONDecodeError as e:
+            self.error(f"Error decoding JSON response from ZoomEye: {e}")
+            self.errorState = True
+            return None
+        except Exception as e:
+            self.error(f"Unexpected error querying ZoomEye API: {e}")
             self.errorState = True
             return None
 

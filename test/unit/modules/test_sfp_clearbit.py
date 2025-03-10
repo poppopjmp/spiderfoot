@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_clearbit import sfp_clearbit
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -58,7 +58,7 @@ class TestModuleClearbit(SpiderFootModuleTestCase):
         module.setup(sf, dict())
 
         target_value = 'example target value'
-        target_type = 'IP_ADDRESS'
+        target_type = 'EMAILADDR'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

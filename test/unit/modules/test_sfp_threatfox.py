@@ -3,11 +3,12 @@ import unittest
 
 from modules.sfp_threatfox import sfp_threatfox
 from sflib import SpiderFoot
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleThreatFox(SpiderFootModuleTestCase):
+class TestModuleThreatfox(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_threatfox()

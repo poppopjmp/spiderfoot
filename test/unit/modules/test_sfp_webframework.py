@@ -3,12 +3,12 @@ import unittest
 
 from modules.sfp_webframework import sfp_webframework
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuleWebFramework(SpiderFootModuleTestCase):
+class TestModuleWebframework(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_webframework()
@@ -27,7 +27,7 @@ class TestModuleWebFramework(SpiderFootModuleTestCase):
         module = sfp_webframework()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_event_data_web_content_containing_webframework_string_should_create_url_web_framework_event(self):
+    def test_handleEvent_event_data_containing_framework_should_return_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webframework()
@@ -39,11 +39,11 @@ class TestModuleWebFramework(SpiderFootModuleTestCase):
         module.setTarget(target)
 
         def new_notifyListeners(self, event):
-            expected = 'URL_WEB_FRAMEWORK'
+            expected = 'WEBSERVER_TECHNOLOGY'
             if str(event.eventType) != expected:
                 raise Exception(f"{event.eventType} != {expected}")
 
-            expected = "Wordpress"
+            expected = 'Laravel'
             if str(event.data) != expected:
                 raise Exception(f"{event.data} != {expected}")
 
@@ -51,25 +51,18 @@ class TestModuleWebFramework(SpiderFootModuleTestCase):
 
         module.notifyListeners = new_notifyListeners.__get__(module, sfp_webframework)
 
-        event_type = 'ROOT'
-        event_data = 'example data'
+        event_type = 'HTTP_HEADER'
+        event_data = 'X-Powered-By: Laravel'
         event_module = ''
         source_event = ''
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'TARGET_WEB_CONTENT'
-        event_data = 'example data /wp-includes/ example data'
-        event_module = 'sfp_spider'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        evt.actualSource = "https://spiderfoot.net/"
 
         with self.assertRaises(Exception) as cm:
             module.handleEvent(evt)
 
         self.assertEqual("OK", str(cm.exception))
 
-    def test_handleEvent_event_data_web_content_not_containing_webframework_string_should_not_create_event(self):
+    def test_handleEvent_event_data_not_containing_framework_should_not_return_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webframework()
@@ -85,51 +78,11 @@ class TestModuleWebFramework(SpiderFootModuleTestCase):
 
         module.notifyListeners = new_notifyListeners.__get__(module, sfp_webframework)
 
-        event_type = 'ROOT'
-        event_data = 'example data'
+        event_type = 'HTTP_HEADER'
+        event_data = 'Content-Type: text/html'
         event_module = ''
         source_event = ''
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'TARGET_WEB_CONTENT'
-        event_data = 'example data'
-        event_module = 'example module'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        evt.actualSource = "https://spiderfoot.net/"
-
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
-
-    def test_handleEvent_event_data_web_content_from_external_url_containing_webframework_string_should_not_create_event(self):
-        sf = SpiderFoot(self.default_options)
-
-        module = sfp_webframework()
-        module.setup(sf, dict())
-
-        target_value = 'spiderfoot.net'
-        target_type = 'INTERNET_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            raise Exception(f"Raised event {event.eventType}: {event.data}")
-
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_webframework)
-
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-
-        event_type = 'TARGET_WEB_CONTENT'
-        event_data = 'example data /wp-includes/ example data'
-        event_module = 'sfp_spider'
-        source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
-        evt.actualSource = "https://externalhost.local/"
 
         result = module.handleEvent(evt)
 

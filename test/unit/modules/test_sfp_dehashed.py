@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_dehashed import sfp_dehashed
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -16,7 +16,6 @@ class TestModuleDehashed(SpiderFootModuleTestCase):
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
-
         module = sfp_dehashed()
         module.setup(sf, dict())
 

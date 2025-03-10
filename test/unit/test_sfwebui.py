@@ -4,10 +4,11 @@ import unittest
 from unittest.mock import Mock, patch
 
 from sfwebui import SpiderFootWebUi
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestSpiderFootWebUi(SpiderFootModuleTestCase):
+class TestSpiderFootWebUi(unittest.TestCase):
     """
     Test SpiderFootWebUi
     """
@@ -690,3 +691,30 @@ class TestSpiderFootWebUi(SpiderFootModuleTestCase):
         self.assertIsInstance(scan_element_type_discovery, dict)
         scan_element_type_discovery = sfwebui.scanelementtypediscovery('', '')
         self.assertIsInstance(scan_element_type_discovery, dict)
+
+    def test_init_should_initialize_class_attributes(self):
+        """
+        Test __init__(self, config)
+        """
+        config = {
+            '__database': 'spiderfoot.test.db',
+            '__modules__': {},
+        }
+        sfwebui = SpiderFootWebUi(config)
+        self.assertIsInstance(sfwebui, SpiderFootWebUi)
+        self.assertEqual(config, sfwebui.config)
+        self.assertIsNone(sfwebui.db)
+        self.assertEqual("Running", sfwebui.scanstatus)
+
+    def test_error_page_should_return_string(self):
+        """
+        Test error_page(self)
+        """
+        config = {
+            '__database': 'spiderfoot.test.db',
+            '__modules__': {},
+        }
+        sfwebui = SpiderFootWebUi(config)
+        error_page = sfwebui.error_page()
+        self.assertIsInstance(error_page, str)
+        self.assertIn("Error", error_page)

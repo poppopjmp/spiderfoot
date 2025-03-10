@@ -5,7 +5,6 @@ from modules.sfp_stevenblack_hosts import sfp_stevenblack_hosts
 from sflib import SpiderFoot
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-
 @pytest.mark.usefixtures
 class TestModuleStevenblackHosts(SpiderFootModuleTestCase):
 

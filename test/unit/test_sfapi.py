@@ -4,7 +4,7 @@ from sfapi import app, authenticate
 
 client = TestClient(app)
 
-class TestSfapi(SpiderFootModuleTestCase):
+class TestSfapi(unittest.TestCase):
 
     def setUp(self):
         self.client = TestClient(app)

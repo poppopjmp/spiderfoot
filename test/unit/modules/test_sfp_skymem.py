@@ -5,7 +5,6 @@ from modules.sfp_skymem import sfp_skymem
 from sflib import SpiderFoot
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
-
 @pytest.mark.usefixtures
 class TestModuleSkymem(SpiderFootModuleTestCase):
 

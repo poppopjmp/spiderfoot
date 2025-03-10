@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_seon import sfp_seon
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -33,8 +33,8 @@ class TestModuleSeon(SpiderFootModuleTestCase):
         module = sfp_seon()
         module.setup(sf, dict())
 
-        target_value = 'example target value'
-        target_type = 'IP_ADDRESS'
+        target_value = 'example@example.com'
+        target_type = 'EMAILADDR'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

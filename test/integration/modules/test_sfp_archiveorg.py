@@ -3,9 +3,8 @@ import unittest
 
 from modules.sfp_archiveorg import sfp_archiveorg
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 @pytest.mark.usefixtures
 class TestModuleIntegrationarchiveorg(SpiderFootModuleTestCase):

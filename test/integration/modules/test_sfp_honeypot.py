@@ -3,7 +3,6 @@ import unittest
 
 from modules.sfp_honeypot import sfp_honeypot
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

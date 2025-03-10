@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_haveibeenpwned import sfp_haveibeenpwned
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -33,14 +33,14 @@ class TestModuleHaveibeenpwned(SpiderFootModuleTestCase):
         module = sfp_haveibeenpwned()
         module.setup(sf, dict())
 
-        target_value = 'example target value'
+        target_value = 'test@example.com'
         target_type = 'EMAILADDR'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
+        event_type = 'EMAILADDR'
+        event_data = 'test@example.com'
+        event_module = 'test_module'
         source_event = ''
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
 
@@ -48,3 +48,52 @@ class TestModuleHaveibeenpwned(SpiderFootModuleTestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+    def test_handleEvent_with_api_key_should_make_api_request(self):
+        sf = SpiderFoot(self.default_options)
+
+        module = sfp_haveibeenpwned()
+        module.setup(sf, dict())
+        module.opts['api_key'] = 'test_api_key'
+
+        target_value = 'test@example.com'
+        target_type = 'EMAILADDR'
+        target = SpiderFootTarget(target_value, target_type)
+        module.setTarget(target)
+
+        # Mock the API response
+        def fetchUrl_mock(url, *args, **kwargs):
+            return {
+                'code': 200,
+                'content': '[{"Name":"Adobe","Title":"Adobe","BreachDate":"2013-10-04","AddedDate":"2013-12-04T00:00Z","ModifiedDate":"2022-05-15T23:52Z","PwnCount":152445165,"Description":"desc","LogoPath":"https://haveibeenpwned.com/Content/Images/PwnedLogos/Adobe.png","DataClasses":["Email addresses","Password hints","Passwords","Usernames"],"IsVerified":true,"IsFabricated":false,"IsSensitive":false,"IsRetired":false,"IsSpamList":false,"IsMalware":false}]'
+            }
+
+        module.sf.fetchUrl = fetchUrl_mock
+
+        # Track generated events
+        generated_events = []
+        def notifyListeners_mock(event):
+            generated_events.append(event)
+
+        module.notifyListeners = notifyListeners_mock.__get__(module, sfp_haveibeenpwned)
+
+        event_type = 'EMAILADDR'
+        event_data = 'test@example.com'
+        event_module = 'test_module'
+        source_event = ''
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+
+        module.handleEvent(evt)
+
+        # Check that events were generated
+        self.assertGreater(len(generated_events), 0)
+        
+        # Check for specific event types
+        event_types = [e.eventType for e in generated_events]
+        self.assertIn('EMAILADDR_COMPROMISED', event_types)
+        self.assertIn('RAW_RIR_DATA', event_types)
+
+        # Check specific details
+        for event in generated_events:
+            if event.eventType == 'EMAILADDR_COMPROMISED':
+                self.assertIn('Adobe', event.data)

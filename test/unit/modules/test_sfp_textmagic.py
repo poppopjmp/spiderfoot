@@ -3,8 +3,8 @@ import unittest
 
 from modules.sfp_textmagic import sfp_textmagic
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
@@ -33,7 +33,7 @@ class TestModuleTextmagic(SpiderFootModuleTestCase):
         module = sfp_textmagic()
         module.setup(sf, dict())
 
-        target_value = 'example target value'
+        target_value = '+12345678901'
         target_type = 'PHONE_NUMBER'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)

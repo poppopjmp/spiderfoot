@@ -3,12 +3,12 @@ import unittest
 
 from modules.sfp_twilio import sfp_twilio
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
 @pytest.mark.usefixtures
-class TestModuletwilio(SpiderFootModuleTestCase):
+class TestModuleTwilio(SpiderFootModuleTestCase):
 
     def test_opts(self):
         module = sfp_twilio()
@@ -16,7 +16,6 @@ class TestModuletwilio(SpiderFootModuleTestCase):
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
-
         module = sfp_twilio()
         module.setup(sf, dict())
 
@@ -34,8 +33,8 @@ class TestModuletwilio(SpiderFootModuleTestCase):
         module = sfp_twilio()
         module.setup(sf, dict())
 
-        target_value = 'example target value'
-        target_type = 'IP_ADDRESS'
+        target_value = '+12345678901'
+        target_type = 'PHONE_NUMBER'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

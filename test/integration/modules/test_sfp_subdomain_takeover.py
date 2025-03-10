@@ -3,7 +3,6 @@ import unittest
 
 from modules.sfp_subdomain_takeover import sfp_subdomain_takeover
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

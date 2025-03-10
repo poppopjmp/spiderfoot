@@ -90,8 +90,21 @@ class sfp_rocketreach(SpiderFootPlugin):
         url = "https://api.rocketreach.co/v2/person/search"
 
         try:
+            self.debug(f"Querying RocketReach API for {query_type}: {query_value}")
             res = requests.get(url, headers=headers, params=params, timeout=self.opts['_fetchtimeout'])
-            res.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+            
+            if res.status_code == 401:
+                self.error("Invalid RocketReach API key")
+                self.errorState = True
+                return None
+                
+            if res.status_code == 429:
+                self.error("RocketReach API rate limit exceeded")
+                time.sleep(10)  # Additional delay for rate limiting
+                return None
+                
+            res.raise_for_status()  # Raise HTTPError for other bad responses
+            
             time.sleep(self.opts['delay'])
             return res.json()
         except requests.exceptions.RequestException as e:
@@ -127,31 +140,65 @@ class sfp_rocketreach(SpiderFootPlugin):
 
         query_type = "email" if eventName == "EMAILADDR" else "domain" if eventName == "DOMAIN_NAME" else None
 
-        if query_type:
-            ret = self.query(eventData, query_type)
-            if ret and 'results' in ret:
-                for match in ret['results']:
-                    email = match.get('email')
-                    if email:
-                        e = SpiderFootEvent("EMAILADDR", email, self.__name__, event)
-                        self.notifyListeners(e)
+        if not query_type:
+            self.debug(f"Unsupported event type: {eventName}")
+            return
 
-                    name = match.get('name')
-                    if name:
-                        e = SpiderFootEvent("PERSON_NAME", name, self.__name__, event)
-                        self.notifyListeners(e)
+        ret = self.query(eventData, query_type)
+        if not ret:
+            self.info(f"No RocketReach info found for {eventData}")
+            return
+            
+        if 'results' not in ret:
+            self.debug(f"Unexpected API response format for {eventData}")
+            return
 
-                    phone = match.get('phone')
-                    if phone:
-                        e = SpiderFootEvent("PHONE_NUMBER", phone, self.__name__, event)
-                        self.notifyListeners(e)
-
-                    social = match.get('linkedin')
-                    if social:
-                        e = SpiderFootEvent("SOCIAL_MEDIA", social, self.__name__, event)
-                        self.notifyListeners(e)
-
-                    e = SpiderFootEvent("RAW_RIR_DATA", str(match), self.__name__, event)
+        for match in ret['results']:
+            # Extract email addresses
+            email = match.get('email')
+            if email:
+                e = SpiderFootEvent("EMAILADDR", email, self.__name__, event)
+                self.notifyListeners(e)
+                
+            # Extract all email addresses from the list if available
+            emails = match.get('emails', [])
+            for email_obj in emails:
+                if isinstance(email_obj, dict) and 'email' in email_obj:
+                    e = SpiderFootEvent("EMAILADDR", email_obj['email'], self.__name__, event)
                     self.notifyListeners(e)
-            elif ret is None:
-                self.info(f"No RocketReach info found for {eventData}")
+
+            # Extract name
+            name = match.get('name')
+            if name:
+                e = SpiderFootEvent("PERSON_NAME", name, self.__name__, event)
+                self.notifyListeners(e)
+
+            # Extract phone numbers
+            phone = match.get('phone')
+            if phone:
+                e = SpiderFootEvent("PHONE_NUMBER", phone, self.__name__, event)
+                self.notifyListeners(e)
+                
+            # Extract all phone numbers from the list if available
+            phones = match.get('phones', [])
+            for phone_obj in phones:
+                if isinstance(phone_obj, dict) and 'number' in phone_obj:
+                    e = SpiderFootEvent("PHONE_NUMBER", phone_obj['number'], self.__name__, event)
+                    self.notifyListeners(e)
+
+            # Extract social media profiles
+            social_networks = {
+                'linkedin': match.get('linkedin_url'),
+                'twitter': match.get('twitter_url'),
+                'facebook': match.get('facebook_url'),
+                'github': match.get('github_url')
+            }
+            
+            for network, url in social_networks.items():
+                if url:
+                    e = SpiderFootEvent("SOCIAL_MEDIA", f"{network}: {url}", self.__name__, event)
+                    self.notifyListeners(e)
+
+            # Send raw data
+            e = SpiderFootEvent("RAW_RIR_DATA", json.dumps(match), self.__name__, event)
+            self.notifyListeners(e)

@@ -3,6 +3,7 @@ import unittest
 
 from modules.sfp_adguard_dns import sfp_adguard_dns
 from sflib import SpiderFoot
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 

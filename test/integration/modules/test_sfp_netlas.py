@@ -1,7 +1,6 @@
 import unittest
 from modules.sfp_netlas import sfp_netlas
 from sflib import SpiderFoot
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
