@@ -185,7 +185,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         """
         Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
         """
-        opts = self.default_options
+
         opts['_socks1type'] = 'invalid proxy type'
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())
@@ -198,7 +198,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         """
         Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
         """
-        opts = self.default_options
+
         opts['_socks1type'] = 'HTTP'
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())
@@ -211,7 +211,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         """
         Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
         """
-        opts = self.default_options
+
         opts['_socks1type'] = 'HTTP'
         opts['_socks2addr'] = '127.0.0.1'
         opts['_socks3port'] = '8080'
@@ -229,7 +229,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         """
         Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
         """
-        opts = self.default_options
+
         opts['_socks1type'] = 'HTTP'
         opts['_socks2addr'] = '127.0.0.1'
         opts['_socks3port'] = ''
@@ -245,7 +245,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         """
         Test scanId attribute should return scan id as a string.
         """
-        opts = self.default_options
+
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
@@ -261,7 +261,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         """
         Test status attribute should return status as a string.
         """
-        opts = self.default_options
+
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
@@ -276,7 +276,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         """
         Test __setStatus(self, status, started=None, ended=None)
         """
-        opts = self.default_options
+
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
@@ -293,7 +293,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         """
         Test __setStatus(self, status, started=None, ended=None)
         """
-        opts = self.default_options
+
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
