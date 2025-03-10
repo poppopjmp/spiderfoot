@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_certspotter import sfp_certspotter
@@ -7,31 +7,46 @@ from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 class TestModuleiCertspotter(SpiderFootModuleTestCase):
     """Test Certspotter module."""
 
-    @patch('modules.sfp_certspotter.logging')
-    def test_opts(self, mock_logging):
+    @patch('logging.Logger.debug')
+    @patch('logging.Logger.info')
+    @patch('logging.Logger.warning')
+    @patch('logging.Logger.error')
+    def test_opts(self, *args):
         module = sfp_certspotter()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
-    @patch('modules.sfp_certspotter.logging')
-    def test_setup(self, mock_logging):
+    @patch('logging.Logger.debug')
+    @patch('logging.Logger.info')
+    @patch('logging.Logger.warning')
+    @patch('logging.Logger.error')
+    def test_setup(self, *args):
         """Test setup function."""
         sf = SpiderFoot(self.default_options)
         module = sfp_certspotter()
         module.setup(sf, self.default_options)
         self.assertEqual(module.options['_debug'], False)
 
-    @patch('modules.sfp_certspotter.logging')
-    def test_watchedEvents_should_return_list(self, mock_logging):
+    @patch('logging.Logger.debug')
+    @patch('logging.Logger.info')
+    @patch('logging.Logger.warning')
+    @patch('logging.Logger.error')
+    def test_watchedEvents_should_return_list(self, *args):
         module = sfp_certspotter()
         self.assertIsInstance(module.watchedEvents(), list)
 
-    @patch('modules.sfp_certspotter.logging')
-    def test_producedEvents_should_return_list(self, mock_logging):
+    @patch('logging.Logger.debug')
+    @patch('logging.Logger.info')
+    @patch('logging.Logger.warning')
+    @patch('logging.Logger.error')
+    def test_producedEvents_should_return_list(self, *args):
         module = sfp_certspotter()
         self.assertIsInstance(module.producedEvents(), list)
 
-    @patch('modules.sfp_certspotter.logging')
-    def test_handleEvent_no_api_key_should_set_errorState(self, mock_logging):
+    @patch('logging.Logger.debug')
+    @patch('logging.Logger.info')
+    @patch('logging.Logger.warning')
+    @patch('logging.Logger.error')
+    def test_handleEvent_no_api_key_should_set_errorState(self, *args):
         """Test handleEvent method with no API key."""
         sf = SpiderFoot(self.default_options)
         

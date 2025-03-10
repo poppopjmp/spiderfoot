@@ -176,3 +176,29 @@ class SpiderFootModuleTestCase(unittest.TestCase):
             module_name = module_path.split('.')[-1]
             module_class = getattr(__import__(module_path, fromlist=[module_name]), module_name)
             return module_class(), mock_logging
+
+    def patch_logging_methods(self, test_func):
+        """Decorator to patch all logging methods for a test function."""
+        patches = [
+            patch('logging.Logger.debug'),
+            patch('logging.Logger.info'),
+            patch('logging.Logger.warning'),
+            patch('logging.Logger.error')
+        ]
+        for p in patches:
+            test_func = p(test_func)
+        return test_func
+    
+    def setup_module_with_patched_logging(self, module_class):
+        """Set up a module for testing with patched logging."""
+        from sflib import SpiderFoot
+        
+        with patch('logging.Logger.debug'), \
+             patch('logging.Logger.info'), \
+             patch('logging.Logger.warning'), \
+             patch('logging.Logger.error'):
+            
+            sf = SpiderFoot(self.default_options)
+            module = module_class()
+            module.setup(sf, self.default_options)
+            return module, sf
