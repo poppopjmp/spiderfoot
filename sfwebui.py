@@ -28,7 +28,7 @@ import openpyxl
 
 from sflib import SpiderFoot
 
-from sfscan import startSpiderFootScanner
+from spiderfoot.scan_controller import start_spiderfoot_scanner, SpiderFootScanController
 
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
@@ -1051,7 +1051,7 @@ class SpiderFootWebUi:
         self.log.info(f"Generated new scan ID: {scanId}")
         try:
             p = mp.Process(
-                target=startSpiderFootScanner,
+                target=start_spiderfoot_scanner,
                 args=(
                     self.loggingQueue,
                     scanname,
@@ -1123,7 +1123,7 @@ class SpiderFootWebUi:
             scanId = SpiderFootHelpers.genScanInstanceId()
             try:
                 p = mp.Process(
-                    target=startSpiderFootScanner,
+                    target=start_spiderfoot_scanner,
                     args=(
                         self.loggingQueue,
                         scanname,
@@ -1880,7 +1880,7 @@ class SpiderFootWebUi:
         self.log.info(f"Generated new scan ID: {scanId}")
         try:
             p = mp.Process(
-                target=startSpiderFootScanner,
+                target=start_spiderfoot_scanner,
                 args=(
                     self.loggingQueue,
                     scanname,

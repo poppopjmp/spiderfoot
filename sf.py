@@ -21,9 +21,28 @@ import signal
 import sys
 import time
 from copy import deepcopy
+from datetime import datetime, timedelta
+from typing import Optional, Union
+import queue
 
 import cherrypy
 import cherrypy_cors
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import HTMLResponse
+import uvicorn
+from pydantic import BaseModel
+try:
+    from jose import JWTError, jwt
+except ImportError as e:
+    print(
+        "Error: The 'jose' module is not installed. Please install it using 'pip install python-jose'."
+    )
+    raise e
+from passlib.context import CryptContext
 
 from sfapi import (
     app,
@@ -34,35 +53,14 @@ from sfapi import (
     handle_logging_and_error_handling,
 )
 from sflib import SpiderFoot
-from sfscan import startSpiderFootScanner
 from sfwebui import SpiderFootWebUi
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootCorrelator
 from spiderfoot.logger import logListenerSetup, logWorkerSetup, SafeQueueListener
+from spiderfoot.scan_controller import start_spiderfoot_scanner
 
-from fastapi import FastAPI, Depends
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.middleware.cors import CORSMiddleware
-
-try:
-    from jose import JWTError, jwt
-except ImportError as e:
-    print(
-        "Error: The 'jose' module is not installed. Please install it using 'pip install python-jose'."
-    )
-    raise e
-from passlib.context import CryptContext
-from datetime import datetime, timedelta
-from typing import Optional, Union
-from fastapi import HTTPException, status
-from fastapi.openapi.utils import get_openapi
-from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse
-import uvicorn
-from pydantic import BaseModel
 from spiderfoot.__version__ import __version__
-import queue
 
 scanId = None
 dbh = None
@@ -884,7 +882,7 @@ def execute_scan(loggingQueue, target, targetType, modlist, cfg, log):
     scanId = SpiderFootHelpers.genScanInstanceId()
     try:
         p = mp.Process(
-            target=startSpiderFootScanner,
+            target=start_spiderfoot_scanner,
             args=(loggingQueue, scanName, scanId,
                   target, targetType, modlist, cfg),
         )

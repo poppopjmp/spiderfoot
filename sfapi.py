@@ -1,32 +1,24 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request
-from pydantic import BaseModel
-from typing import List
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.openapi.utils import get_openapi
+from fastapi.openapi.docs import get_swagger_ui_html
+from pydantic import BaseModel
+from typing import List
 import asyncio
 import uuid
 import csv
 import io
+
 from spiderfoot import SpiderFootHelpers
 from spiderfoot.__version__ import __version__
-
-# Import necessary modules - adding missing imports
-try:
-    # Importing these modules which were referenced but not imported
-    from sfscan import startSpiderFootScanner
-    from spiderfoot import SpiderFootTarget
-    from sflib import SpiderFoot
-    from spiderfoot.db import SpiderFootDb
-    from spiderfoot.logger import logListenerSetup, logWorkerSetup
-    from fastapi.openapi.utils import get_openapi
-    from fastapi.openapi.docs import get_swagger_ui_html
-except ImportError as e:
-    print(f"Error importing modules: {e}")
-    exit(1)
+from spiderfoot.scan_controller import start_spiderfoot_scanner, SpiderFootScanController
+from spiderfoot.target import SpiderFootTarget
+from spiderfoot.db import SpiderFootDb
+from spiderfoot.logger import logListenerSetup, logWorkerSetup
 
 app = FastAPI()
 
-# Define global config variable which was referenced but not defined
 config = {
     "token": "",  # Set your token here if you want to use authentication
 }
@@ -176,7 +168,7 @@ def run_spiderfoot_scan(target: str, modules: List[str], use_postgresql: bool = 
     target_obj = SpiderFootTarget(target)
     sf.setTarget(target_obj)
     sf.setModules(modules)
-    scan_id = startSpiderFootScanner(sf)
+    scan_id = start_spiderfoot_scanner(sf)
     return scan_id
 
 
@@ -618,7 +610,7 @@ async def export_scan_results_json(
     except Exception as e:
         log.error(
             f"Unexpected error in export_scan_results_json: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail:str(e)) from e
 
 
 @app.exception_handler(HTTPException)
