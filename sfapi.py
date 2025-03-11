@@ -500,7 +500,7 @@ async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentia
         return JSONResponse(content={"results": formatted_results})
     except Exception as e:
         log.error(f"Unexpected error in export_scan_results_json: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail:str(e)) from e
 
 @app.exception_handler(HTTPException)
 async def custom_http_exception_handler(request, exc):
