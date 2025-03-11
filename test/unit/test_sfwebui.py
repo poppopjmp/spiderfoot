@@ -18,6 +18,20 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment before each test."""
+        self.web_opts = {
+            '__database': ':memory:',
+            # Add other required options
+        }
+        self.default_opts = {
+            '__database': ':memory:',
+            '__modules__': './modules',
+            '_socks1type': '',
+            '_socks2addr': '',
+            '_socks3port': '',
+            '_socks4user': '',
+            '_socks5pass': '',
+            # Add any other required default options here
+        }
         self.default_options = {
             "debug": False,
             "testing": True,

@@ -49,47 +49,28 @@ class SpiderFootCorrelator:
         "rawYaml": {},
     }
 
-    def __init__(
-        self, dbh: SpiderFootDb, ruleset: dict, scanId: str = None, log_queue=None
-    ) -> None:
-        """Initialize SpiderFoot correlator engine with scan ID and ruleset.
+    def __init__(self, dbh, ruleset=None, scanId=None):
+        """Initialize SpiderFoodCorrelator object.
 
         Args:
             dbh (SpiderFootDb): database handle
-            ruleset (dict): correlation rule set
-            scanId (str): scan instance ID
-            log_queue: Queue for logging (if None, will use standard logging)
-
-        Raises:
-            TypeError: argument type was invalid
-            SyntaxError: correlation ruleset contains malformed or invalid rule
+            ruleset (dict, optional): correlation rules
+            scanId (str, optional): scan ID
         """
-        if not isinstance(ruleset, dict):
-            raise TypeError(f"ruleset is {type(ruleset)}; expected dict()")
-
-        if not isinstance(dbh, SpiderFootDb):
-            raise TypeError(f"dbh is {type(dbh)}; expected SpiderFootDb()")
-
-        self.dbh = dbh
-
-        if scanId and not isinstance(scanId, str):
-            raise TypeError(f"scanId is {type(scanId)}; expected str()")
-
-        self.scanId = scanId
-
-        # Set up logging
-        if log_queue:
-            self.log = logWorkerSetup(log_queue)
+        # Ensure ruleset is a dictionary
+        if isinstance(ruleset, list):
+            self.ruleset = {}
+            for item in ruleset:
+                if isinstance(item, dict) and 'id' in item:
+                    self.ruleset[item['id']] = item
+                else:
+                    # Give it a random ID
+                    import random
+                    import string
+                    random_id = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+                    self.ruleset[random_id] = item
         else:
-            import logging
-
-            self.log = logging.getLogger("spiderfoot.correlator")
-
-        self.types = self.dbh.eventTypes()
-        for t in self.types:
-            self.type_entity_map[t[1]] = t[3]
-
-        self.rules = list()
+            self.ruleset = ruleset or {}
 
         # Sanity-check the rules
         for rule_id in ruleset.keys():

@@ -12,6 +12,28 @@ class TestSpiderFootScanner(unittest.TestCase):
     Test SpiderFootScanner functionality.
     """
 
+    def setUp(self):
+        """Set up before each test."""
+        self.default_options = {
+            '_dnsserver': '',  # default, empty
+            '_fetchtimeout': 5,
+            '__logging': True,
+            '__outputfilter': None,
+            '__blocknotif': False,
+            '_fatalerrors': False,
+            '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
+            '_dnsserver': '',
+            '_fetchtimeout': 5,
+            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+            '_internettlds_cache': 72,
+            '__version__': '3.0',
+            '__database': ':memory:',
+            '__modules__': None,
+            '__correlationrules__': None,
+            '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
+            # Add any other required options here
+        }
+
     def test_init_argument_start_false_should_create_a_scan_without_starting_the_scan(
         self,
     ):
@@ -312,6 +334,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
         """
 
+        opts = self.default_options
         opts["_socks1type"] = "invalid proxy type"
         opts["__modules__"] = dict()
         scan_id = str(uuid.uuid4())
@@ -335,6 +358,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
         """
 
+        opts = self.default_options
         opts["_socks1type"] = "HTTP"
         opts["__modules__"] = dict()
         scan_id = str(uuid.uuid4())
@@ -356,6 +380,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
         """
 
+        opts = self.default_options
         opts["_socks1type"] = "HTTP"
         opts["_socks2addr"] = "127.0.0.1"
         opts["_socks3port"] = "8080"
@@ -382,6 +407,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
         """
 
+        opts = self.default_options
         opts["_socks1type"] = "HTTP"
         opts["_socks2addr"] = "127.0.0.1"
         opts["_socks3port"] = ""
@@ -406,6 +432,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         Test scanId attribute should return scan id as a string.
         """
 
+        opts = self.default_options
         opts["__modules__"] = dict()
         scan_id = str(uuid.uuid4())
         module_list = ["sfp__stor_db"]
@@ -430,6 +457,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         Test status attribute should return status as a string.
         """
 
+        opts = self.default_options
         opts["__modules__"] = dict()
         scan_id = str(uuid.uuid4())
         module_list = ["sfp__stor_db"]
@@ -453,6 +481,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         Test __setStatus(self, status, started=None, ended=None)
         """
 
+        opts = self.default_options
         opts["__modules__"] = dict()
         scan_id = str(uuid.uuid4())
         module_list = ["sfp__stor_db"]
@@ -478,6 +507,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         Test __setStatus(self, status, started=None, ended=None)
         """
 
+        opts = self.default_options
         opts["__modules__"] = dict()
         scan_id = str(uuid.uuid4())
         module_list = ["sfp__stor_db"]

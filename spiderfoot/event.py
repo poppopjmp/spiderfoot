@@ -35,16 +35,26 @@ class SpiderFootEvent:
     _actualSource = None
     __id = None
 
-    def __init__(
-        self, eventType: str, data: str, module: str, sourceEvent: "SpiderFootEvent"
-    ) -> None:
-        """Initialize SpiderFoot event object.
+    def __init__(self, eventType, data, module, sourceEvent, confidence=100, visibility=100, risk=0, moduleDataSource=None):
+        """Initialize SpiderFootEvent object.
 
         Args:
             eventType (str): Event type, e.g. URL_FORM, RAW_DATA, etc.
             data (str): Event data, e.g. a URL, port number, webpage content, etc.
             module (str): Module from which the event originated
-            sourceEvent (SpiderFootEvent): SpiderFootEvent event that triggered this event
+            sourceEvent (SpiderFootEvent): Source event that led to this event
+            confidence (int): How sure are we of this data's validity, 0-100
+            visibility (int): How 'visible' was this data, 0-100
+            risk (int): How much risk does this data represent, 0-100
+            moduleDataSource (str): Module data source
+
+        Raises:
+            TypeError: confidence type was invalid
+            TypeError: visibility type was invalid
+            TypeError: risk type was invalid
+            ValueError: confidence value was invalid
+            ValueError: visibility value was invalid
+            ValueError: risk value was invalid
         """
         self._generated = time.time()
         self.data = data

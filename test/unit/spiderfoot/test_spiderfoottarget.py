@@ -128,5 +128,29 @@ class TestSpiderFootTarget(SpiderFootModuleTestCase):
         )
 
 
+class TestSpiderFootTarget(unittest.TestCase):
+    """Test SpiderFootTarget."""
+
+    def test_getNames(self):
+        """Test getNames()."""
+        target = SpiderFootTarget("example.com", "INTERNET_NAME")
+        target_names = target.getNames()
+        self.assertIsInstance(target_names, list)
+        self.assertIn("example.com", target_names)
+
+    def test_getAddresses(self):
+        """Test getAddresses()."""
+        target = SpiderFootTarget("192.168.1.1", "IP_ADDRESS")
+        target_addresses = target.getAddresses()
+        self.assertIsInstance(target_addresses, list)
+        self.assertIn("192.168.1.1", target_addresses)
+
+    def test_matches(self):
+        """Test matches()."""
+        # Test a matching target value
+        target = SpiderFootTarget("example.com", "INTERNET_NAME")
+        self.assertTrue(target.matches("example.com"))
+
+
 if __name__ == "__main__":
     unittest.main()

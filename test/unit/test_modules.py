@@ -1,5 +1,6 @@
 # test_modules.py
 import os
+import unittest
 
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootDb
@@ -7,15 +8,13 @@ from spiderfoot import SpiderFootHelpers
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
-class TestSpiderFootModuleLoading(SpiderFootModuleTestCase):
-    """
-    Test SpiderFoot module loading
-    """
+class TestSpiderFootModuleLoading(unittest.TestCase):
+    """Test module loading."""
 
     def setUp(self):
-        """
-        Set up test case
-        """
+        """Set up test case."""
+        # Create mock SpiderFootTarget object
+        self.sft = unittest.mock.MagicMock()
         super().setUp()
 
     @staticmethod

@@ -1,6 +1,7 @@
 # test_spiderfoot.py
 import pytest
 import unittest
+import unittest.mock as mock  # Ensure mock is imported correctly
 
 from sflib import SpiderFoot
 
