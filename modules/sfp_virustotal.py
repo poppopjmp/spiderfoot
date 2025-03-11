@@ -24,53 +24,51 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_virustotal(SpiderFootPlugin):
 
     meta = {
-        'name': "VirusTotal",
-        'summary': "Obtain information from VirusTotal about identified IP addresses.",
-        'flags': ["apikey"],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://www.virustotal.com/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
-                "https://developers.virustotal.com/reference"
-            ],
-            'apiKeyInstructions': [
+        "name": "VirusTotal",
+        "summary": "Obtain information from VirusTotal about identified IP addresses.",
+        "flags": ["apikey"],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://www.virustotal.com/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": ["https://developers.virustotal.com/reference"],
+            "apiKeyInstructions": [
                 "Visit https://www.virustotal.com/",
                 "Register a free account",
                 "Click on your profile",
                 "Click on API Key",
-                "The API key is listed under 'API Key'"
+                "The API key is listed under 'API Key'",
             ],
-            'favIcon': "https://www.virustotal.com/gui/images/favicon.png",
-            'logo': "https://www.virustotal.com/gui/images/logo.svg",
-            'description': "Analyze suspicious files and URLs to detect types of malware, "
+            "favIcon": "https://www.virustotal.com/gui/images/favicon.png",
+            "logo": "https://www.virustotal.com/gui/images/logo.svg",
+            "description": "Analyze suspicious files and URLs to detect types of malware, "
             "automatically share them with the security community.",
-        }
+        },
     }
 
     opts = {
-        'api_key': '',
-        'verify': True,
-        'publicapi': True,
-        'checkcohosts': True,
-        'checkaffiliates': True,
-        'netblocklookup': True,
-        'maxnetblock': 24,
-        'subnetlookup': True,
-        'maxsubnet': 24
+        "api_key": "",
+        "verify": True,
+        "publicapi": True,
+        "checkcohosts": True,
+        "checkaffiliates": True,
+        "netblocklookup": True,
+        "maxnetblock": 24,
+        "subnetlookup": True,
+        "maxsubnet": 24,
     }
 
     optdescs = {
-        'api_key': 'VirusTotal API Key.',
-        'publicapi': 'Are you using a public key? If so SpiderFoot will pause for 15 seconds after each query to avoid VirusTotal dropping requests.',
-        'checkcohosts': 'Check co-hosted sites?',
-        'checkaffiliates': 'Check affiliates?',
-        'netblocklookup': 'Look up all IPs on netblocks deemed to be owned by your target for possible hosts on the same target subdomain/domain?',
-        'maxnetblock': 'If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)',
-        'subnetlookup': 'Look up all IPs on subnets which your target is a part of?',
-        'maxsubnet': 'If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)',
-        'verify': 'Verify that any hostnames found on the target domain still resolve?'
+        "api_key": "VirusTotal API Key.",
+        "publicapi": "Are you using a public key? If so SpiderFoot will pause for 15 seconds after each query to avoid VirusTotal dropping requests.",
+        "checkcohosts": "Check co-hosted sites?",
+        "checkaffiliates": "Check affiliates?",
+        "netblocklookup": "Look up all IPs on netblocks deemed to be owned by your target for possible hosts on the same target subdomain/domain?",
+        "maxnetblock": "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
+        "subnetlookup": "Look up all IPs on subnets which your target is a part of?",
+        "maxsubnet": "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
+        "verify": "Verify that any hostnames found on the target domain still resolve?",
     }
 
     results = None
@@ -90,7 +88,7 @@ class sfp_virustotal(SpiderFootPlugin):
             "INTERNET_NAME",
             "CO_HOSTED_SITE",
             "NETBLOCK_OWNER",
-            "NETBLOCK_MEMBER"
+            "NETBLOCK_MEMBER",
         ]
 
     def producedEvents(self):
@@ -105,31 +103,33 @@ class sfp_virustotal(SpiderFootPlugin):
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
             "INTERNET_NAME_UNRESOLVED",
-            "DOMAIN_NAME"
+            "DOMAIN_NAME",
         ]
 
     def queryIp(self, qry):
-        params = urllib.parse.urlencode({
-            'ip': qry,
-            'apikey': self.opts['api_key'],
-        })
+        params = urllib.parse.urlencode(
+            {
+                "ip": qry,
+                "apikey": self.opts["api_key"],
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://www.virustotal.com/vtapi/v2/ip-address/report?{params}",
-            timeout=self.opts['_fetchtimeout'],
-            useragent="SpiderFoot"
+            timeout=self.opts["_fetchtimeout"],
+            useragent="SpiderFoot",
         )
 
         # Public API is limited to 4 queries per minute
-        if self.opts['publicapi']:
+        if self.opts["publicapi"]:
             time.sleep(15)
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info(f"No VirusTotal info found for {qry}")
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.error(f"Error processing JSON response from VirusTotal: {e}")
             self.errorState = True
@@ -137,32 +137,34 @@ class sfp_virustotal(SpiderFootPlugin):
         return None
 
     def queryDomain(self, qry):
-        params = urllib.parse.urlencode({
-            'domain': qry,
-            'apikey': self.opts['api_key'],
-        })
+        params = urllib.parse.urlencode(
+            {
+                "domain": qry,
+                "apikey": self.opts["api_key"],
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://www.virustotal.com/vtapi/v2/domain/report?{params}",
-            timeout=self.opts['_fetchtimeout'],
-            useragent="SpiderFoot"
+            timeout=self.opts["_fetchtimeout"],
+            useragent="SpiderFoot",
         )
 
-        if res['code'] == "204":
+        if res["code"] == "204":
             self.error("Your request to VirusTotal was throttled.")
             self.errorState = True
             return None
 
         # Public API is limited to 4 queries per minute
-        if self.opts['publicapi']:
+        if self.opts["publicapi"]:
             time.sleep(15)
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info(f"No VirusTotal info found for {qry}")
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.error(f"Error processing JSON response from VirusTotal: {e}")
             self.errorState = True
@@ -192,30 +194,34 @@ class sfp_virustotal(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventName.startswith("AFFILIATE") and not self.opts['checkaffiliates']:
+        if eventName.startswith("AFFILIATE") and not self.opts["checkaffiliates"]:
             return
 
-        if eventName == 'CO_HOSTED_SITE' and not self.opts['checkcohosts']:
+        if eventName == "CO_HOSTED_SITE" and not self.opts["checkcohosts"]:
             return
 
-        if eventName == 'NETBLOCK_OWNER':
-            if not self.opts['netblocklookup']:
+        if eventName == "NETBLOCK_OWNER":
+            if not self.opts["netblocklookup"]:
                 return
 
             net_size = IPNetwork(eventData).prefixlen
-            max_netblock = self.opts['maxnetblock']
+            max_netblock = self.opts["maxnetblock"]
             if net_size < max_netblock:
-                self.debug(f"Network size {net_size} bigger than permitted: {max_netblock}")
+                self.debug(
+                    f"Network size {net_size} bigger than permitted: {max_netblock}"
+                )
                 return
 
-        if eventName == 'NETBLOCK_MEMBER':
-            if not self.opts['subnetlookup']:
+        if eventName == "NETBLOCK_MEMBER":
+            if not self.opts["subnetlookup"]:
                 return
 
             net_size = IPNetwork(eventData).prefixlen
-            max_subnet = self.opts['maxsubnet']
+            max_subnet = self.opts["maxsubnet"]
             if net_size < max_subnet:
-                self.debug(f"Network size {net_size} bigger than permitted: {max_subnet}")
+                self.debug(
+                    f"Network size {net_size} bigger than permitted: {max_subnet}"
+                )
                 return
 
         qrylist = list()
@@ -238,7 +244,7 @@ class sfp_virustotal(SpiderFootPlugin):
             if info is None:
                 continue
 
-            if len(info.get('detected_urls', [])) > 0:
+            if len(info.get("detected_urls", [])) > 0:
                 self.info(f"Found VirusTotal URL data for {addr}")
 
                 if eventName in ["IP_ADDRESS"] or eventName.startswith("NETBLOCK_"):
@@ -264,9 +270,7 @@ class sfp_virustotal(SpiderFootPlugin):
                 infourl = f"<SFURL>https://www.virustotal.com/en/{infotype}/{addr}/information/</SFURL>"
 
                 e = SpiderFootEvent(
-                    evt, f"VirusTotal [{addr}]\n{infourl}",
-                    self.__name__,
-                    event
+                    evt, f"VirusTotal [{addr}]\n{infourl}", self.__name__, event
                 )
                 self.notifyListeners(e)
 
@@ -274,14 +278,14 @@ class sfp_virustotal(SpiderFootPlugin):
 
             # Treat siblings as affiliates if they are of the original target, otherwise
             # they are additional hosts within the target.
-            if 'domain_siblings' in info:
+            if "domain_siblings" in info:
                 if eventName in ["IP_ADDRESS", "INTERNET_NAME"]:
-                    for domain in info['domain_siblings']:
+                    for domain in info["domain_siblings"]:
                         domains.append(domain)
 
-            if 'subdomains' in info:
+            if "subdomains" in info:
                 if eventName == "INTERNET_NAME":
-                    for domain in info['subdomains']:
+                    for domain in info["subdomains"]:
                         domains.append(domain)
 
             for domain in set(domains):
@@ -289,23 +293,32 @@ class sfp_virustotal(SpiderFootPlugin):
                     continue
 
                 if self.getTarget().matches(domain):
-                    evt_type = 'INTERNET_NAME'
+                    evt_type = "INTERNET_NAME"
                 else:
-                    evt_type = 'AFFILIATE_INTERNET_NAME'
+                    evt_type = "AFFILIATE_INTERNET_NAME"
 
-                if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+                if (
+                    self.opts["verify"] and
+                    not self.sf.resolveHost(domain) and
+                    not self.sf.resolveHost6(domain)
+                ):
                     self.debug(f"Host {domain} could not be resolved")
-                    evt_type += '_UNRESOLVED'
+                    evt_type += "_UNRESOLVED"
 
                 evt = SpiderFootEvent(evt_type, domain, self.__name__, event)
                 self.notifyListeners(evt)
 
-                if self.sf.isDomain(domain, self.opts['_internettlds']):
-                    if evt_type.startswith('AFFILIATE'):
-                        evt = SpiderFootEvent('AFFILIATE_DOMAIN_NAME', domain, self.__name__, event)
+                if self.sf.isDomain(domain, self.opts["_internettlds"]):
+                    if evt_type.startswith("AFFILIATE"):
+                        evt = SpiderFootEvent(
+                            "AFFILIATE_DOMAIN_NAME", domain, self.__name__, event
+                        )
                         self.notifyListeners(evt)
                     else:
-                        evt = SpiderFootEvent('DOMAIN_NAME', domain, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "DOMAIN_NAME", domain, self.__name__, event
+                        )
                         self.notifyListeners(evt)
+
 
 # End of sfp_virustotal class

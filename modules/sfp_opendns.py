@@ -19,34 +19,32 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_opendns(SpiderFootPlugin):
 
     meta = {
-        'name': "OpenDNS",
-        'summary': "Check if a host would be blocked by OpenDNS.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://www.opendns.com/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "OpenDNS",
+        "summary": "Check if a host would be blocked by OpenDNS.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://www.opendns.com/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://www.opendns.com/setupguide/?url=familyshield",
                 "https://support.opendns.com/hc/en-us/categories/204012807-OpenDNS-Knowledge-Base",
-                "https://support.opendns.com/hc/en-us/categories/204012907-OpenDNS-Device-Configuration"
+                "https://support.opendns.com/hc/en-us/categories/204012907-OpenDNS-Device-Configuration",
             ],
-            'favIcon': "https://www.google.com/s2/favicons?domain=https://www.opendns.com/",
-            'logo': "https://d15ni2z53ptwz9.cloudfront.net/opendns-www/img/logo-opendns.png",
-            'description': "Cisco Umbrella provides protection against threats on the internet such as "
+            "favIcon": "https://www.google.com/s2/favicons?domain=https://www.opendns.com/",
+            "logo": "https://d15ni2z53ptwz9.cloudfront.net/opendns-www/img/logo-opendns.png",
+            "description": "Cisco Umbrella provides protection against threats on the internet such as "
             "malware, phishing, and ransomware.\n"
             "OpenDNS is a suite of consumer products aimed at making your internet faster, safer, and more reliable. "
             "FamilyShield is the single easiest way to protect your kids online, block adult websites, "
             "and protect your family from phishing and malware.",
-        }
+        },
     }
 
-    opts = {
-    }
+    opts = {}
 
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -67,11 +65,7 @@ class sfp_opendns(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            "INTERNET_NAME",
-            "AFFILIATE_INTERNET_NAME",
-            "CO_HOSTED_SITE"
-        ]
+        return ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME", "CO_HOSTED_SITE"]
 
     def producedEvents(self):
         return [
@@ -133,11 +127,24 @@ class sfp_opendns(SpiderFootPlugin):
             if k not in self.checks:
                 continue
 
-            evt = SpiderFootEvent(blacklist_type, f"{self.checks[k]} [{eventData}]", self.__name__, event)
+            evt = SpiderFootEvent(
+                blacklist_type, f"{self.checks[k]} [{eventData}]", self.__name__, event
+            )
             self.notifyListeners(evt)
 
-            if k in ['146.112.61.105', '146.112.61.107', '146.112.61.108', '146.112.61.110']:
-                evt = SpiderFootEvent(malicious_type, f"{self.checks[k]} [{eventData}]", self.__name__, event)
+            if k in [
+                "146.112.61.105",
+                "146.112.61.107",
+                "146.112.61.108",
+                "146.112.61.110",
+            ]:
+                evt = SpiderFootEvent(
+                    malicious_type,
+                    f"{self.checks[k]} [{eventData}]",
+                    self.__name__,
+                    event,
+                )
                 self.notifyListeners(evt)
+
 
 # End of sfp_opendns class

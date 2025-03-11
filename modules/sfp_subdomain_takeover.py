@@ -20,20 +20,18 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_subdomain_takeover(SpiderFootPlugin):
 
     meta = {
-        'name': "Subdomain Takeover Checker",
-        'summary': "Check if affiliated subdomains are vulnerable to takeover.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate"],
-        'categories': ["Crawling and Scanning"]
+        "name": "Subdomain Takeover Checker",
+        "summary": "Check if affiliated subdomains are vulnerable to takeover.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate"],
+        "categories": ["Crawling and Scanning"],
     }
 
     # Default options
-    opts = {
-    }
+    opts = {}
 
     # Option descriptions
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
     errorState = False
@@ -53,18 +51,19 @@ class sfp_subdomain_takeover(SpiderFootPlugin):
             url = "https://raw.githubusercontent.com/haccer/subjack/master/fingerprints.json"
             res = self.sf.fetchUrl(url, useragent="SpiderFoot")
 
-            if res['content'] is None:
+            if res["content"] is None:
                 self.error(f"Unable to fetch {url}")
                 self.errorState = True
                 return
 
-            self.sf.cachePut("subjack-fingerprints", res['content'])
-            content = res['content']
+            self.sf.cachePut("subjack-fingerprints", res["content"])
+            content = res["content"]
 
         try:
             self.fingerprints = json.loads(content)
         except Exception as e:
-            self.error(f"Unable to parse subdomain takeover fingerprints list: {e}")
+            self.error(
+                f"Unable to parse subdomain takeover fingerprints list: {e}")
             self.errorState = True
             return
 
@@ -110,17 +109,24 @@ class sfp_subdomain_takeover(SpiderFootPlugin):
                         res = self.sf.fetchUrl(
                             f"{proto}://{eventData}/",
                             timeout=15,
-                            useragent=self.opts['_useragent'],
-                            verify=False
+                            useragent=self.opts["_useragent"],
+                            verify=False,
                         )
                         if not res:
                             continue
-                        if not res['content']:
+                        if not res["content"]:
                             continue
                         for fingerprint in fingerprints:
-                            if fingerprint in res['content']:
-                                self.info(f"{eventData} appears to be vulnerable to takeover on {service}")
-                                evt = SpiderFootEvent("AFFILIATE_INTERNET_NAME_HIJACKABLE", eventData, self.__name__, event)
+                            if fingerprint in res["content"]:
+                                self.info(
+                                    f"{eventData} appears to be vulnerable to takeover on {service}"
+                                )
+                                evt = SpiderFootEvent(
+                                    "AFFILIATE_INTERNET_NAME_HIJACKABLE",
+                                    eventData,
+                                    self.__name__,
+                                    event,
+                                )
                                 self.notifyListeners(evt)
                                 break
 
@@ -136,8 +142,16 @@ class sfp_subdomain_takeover(SpiderFootPlugin):
                 for cname in cnames:
                     if cname.lower() not in eventData.lower():
                         continue
-                    self.info(f"{eventData} appears to be vulnerable to takeover on {service}")
-                    evt = SpiderFootEvent("AFFILIATE_INTERNET_NAME_HIJACKABLE", eventData, self.__name__, event)
+                    self.info(
+                        f"{eventData} appears to be vulnerable to takeover on {service}"
+                    )
+                    evt = SpiderFootEvent(
+                        "AFFILIATE_INTERNET_NAME_HIJACKABLE",
+                        eventData,
+                        self.__name__,
+                        event,
+                    )
                     self.notifyListeners(evt)
+
 
 # End of sfp_subdomain_takeover class

@@ -20,27 +20,27 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_zoomeye(SpiderFootPlugin):
 
     meta = {
-        'name': "ZoomEye",
-        'summary': "Look up domain, IP address, and other information from ZoomEye.",
-        'flags': ["apikey"],
-        'useCases': ["Passive", "Footprint", "Investigate"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://www.zoomeye.org/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
+        "name": "ZoomEye",
+        "summary": "Look up domain, IP address, and other information from ZoomEye.",
+        "flags": ["apikey"],
+        "useCases": ["Passive", "Footprint", "Investigate"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://www.zoomeye.org/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": [
                 "https://www.zoomeye.org/api/doc",
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "Visit https://www.zoomeye.org/",
                 "Register a free account",
                 "Navigate to https://www.zoomeye.org/profile",
                 "Your API key will be listed under 'API Key'",
             ],
-            'favIcon': "https://www.zoomeye.org/favicon.ico",
-            'logo': "https://www.zoomeye.org/logo.png",
-            'description': "ZoomEye is a search engine for cyberspace that lets researchers find specific network components, such as routers, servers, and IoT devices."
-        }
+            "favIcon": "https://www.zoomeye.org/favicon.ico",
+            "logo": "https://www.zoomeye.org/logo.png",
+            "description": "ZoomEye is a search engine for cyberspace that lets researchers find specific network components, such as routers, servers, and IoT devices.",
+        },
     }
 
     opts = {
@@ -57,7 +57,7 @@ class sfp_zoomeye(SpiderFootPlugin):
 
     results = None
     errorState = False
-    
+
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
         self.errorState = False
@@ -66,7 +66,7 @@ class sfp_zoomeye(SpiderFootPlugin):
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
-        if not self.opts['api_key']:
+        if not self.opts["api_key"]:
             self.error("ZoomEye API key is required.")
             self.errorState = True
 
@@ -74,53 +74,63 @@ class sfp_zoomeye(SpiderFootPlugin):
         return ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"]
 
     def producedEvents(self):
-        return ["INTERNET_NAME", "DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS", "RAW_RIR_DATA"]
+        return [
+            "INTERNET_NAME",
+            "DOMAIN_NAME",
+            "IP_ADDRESS",
+            "IPV6_ADDRESS",
+            "RAW_RIR_DATA",
+        ]
 
     def query(self, qry, querytype, page=1):
         if self.errorState:
             return None
 
-        api_endpoint = "https://api.zoomeye.org/host/search" if querytype == "host" else "https://api.zoomeye.org/web/search"
+        api_endpoint = (
+            "https://api.zoomeye.org/host/search"
+            if querytype == "host"
+            else "https://api.zoomeye.org/web/search"
+        )
         headers = {
-            "API-KEY": self.opts['api_key'],
+            "API-KEY": self.opts["api_key"],
             "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Accept": "application/json",
         }
-        
-        params = {
-            "query": qry,
-            "page": page,
-            "pageSize": 20
-        }
-        
+
+        params = {"query": qry, "page": page, "pageSize": 20}
+
         try:
-            self.debug(f"Querying ZoomEye API: {api_endpoint} for {qry} (page {page})")
-            response = requests.get(api_endpoint, headers=headers, params=params)
-            time.sleep(self.opts['delay'])
-            
+            self.debug(
+                f"Querying ZoomEye API: {api_endpoint} for {qry} (page {page})")
+            response = requests.get(
+                api_endpoint, headers=headers, params=params)
+            time.sleep(self.opts["delay"])
+
             if response.status_code != 200:
-                self.error(f"ZoomEye API returned HTTP status {response.status_code}: {response.text}")
+                self.error(
+                    f"ZoomEye API returned HTTP status {response.status_code}: {response.text}"
+                )
                 self.errorState = True
                 return None
-                
+
             data = response.json()
-            
-            if not data or not data.get('matches'):
+
+            if not data or not data.get("matches"):
                 self.info(f"No ZoomEye info found for {qry}")
                 return None
 
             results = [data]
-            
+
             # Check if we should fetch more pages
-            if data.get('total', 0) > data.get('pageSize', 20) * page:
+            if data.get("total", 0) > data.get("pageSize", 20) * page:
                 page += 1
-                if page <= self.opts['max_pages']:
+                if page <= self.opts["max_pages"]:
                     next_page_results = self.query(qry, querytype, page)
                     if next_page_results:
                         results.extend(next_page_results)
                 else:
                     self.debug("Maximum number of pages reached.")
-            
+
             return results
 
         except requests.exceptions.RequestException as e:
@@ -166,15 +176,16 @@ class sfp_zoomeye(SpiderFootPlugin):
                 return
 
             for rec in ret:
-                matches = rec.get('matches')
+                matches = rec.get("matches")
                 if not matches:
                     continue
 
                 self.debug("Found web results in ZoomEye")
                 for match in matches:
-                    host = match.get('site')
+                    host = match.get("site")
                     if host:
-                        e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, event)
+                        e = SpiderFootEvent(
+                            "INTERNET_NAME", host, self.__name__, event)
                         self.notifyListeners(e)
 
         elif eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
@@ -184,21 +195,25 @@ class sfp_zoomeye(SpiderFootPlugin):
                 return
 
             for rec in ret:
-                matches = rec.get('matches')
+                matches = rec.get("matches")
                 if not matches:
                     continue
 
                 self.debug("Found host results in ZoomEye")
                 for match in matches:
-                    ip = match.get('ip')
+                    ip = match.get("ip")
                     if ip:
-                        e = SpiderFootEvent("IP_ADDRESS", ip, self.__name__, event)
+                        e = SpiderFootEvent(
+                            "IP_ADDRESS", ip, self.__name__, event)
                         self.notifyListeners(e)
 
-                    domain = match.get('domain')
+                    domain = match.get("domain")
                     if domain:
-                        e = SpiderFootEvent("DOMAIN_NAME", domain, self.__name__, event)
+                        e = SpiderFootEvent(
+                            "DOMAIN_NAME", domain, self.__name__, event)
                         self.notifyListeners(e)
 
-                    e = SpiderFootEvent("RAW_RIR_DATA", str(match), self.__name__, event)
+                    e = SpiderFootEvent(
+                        "RAW_RIR_DATA", str(match), self.__name__, event
+                    )
                     self.notifyListeners(e)

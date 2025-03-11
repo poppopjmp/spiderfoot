@@ -18,28 +18,24 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_psbdmp(SpiderFootPlugin):
 
     meta = {
-        'name': "Psbdmp",
-        'summary': "Check psbdmp.cc (PasteBin Dump) for potentially hacked e-mails and domains.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Leaks, Dumps and Breaches"],
-        'dataSource': {
-            'website': "https://psbdmp.cc/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
-                "https://psbdmp.cc/api"
-            ],
-            'favIcon': "",
-            'logo': "https://psbdmp.cc/logo.png",
-            'description': "Pastebin dump security monitor."
-        }
+        "name": "Psbdmp",
+        "summary": "Check psbdmp.cc (PasteBin Dump) for potentially hacked e-mails and domains.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Leaks, Dumps and Breaches"],
+        "dataSource": {
+            "website": "https://psbdmp.cc/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://psbdmp.cc/api"],
+            "favIcon": "",
+            "logo": "https://psbdmp.cc/logo.png",
+            "description": "Pastebin dump security monitor.",
+        },
     }
 
-    opts = {
-    }
+    opts = {}
 
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -66,25 +62,25 @@ class sfp_psbdmp(SpiderFootPlugin):
 
         res = self.sf.fetchUrl(url, timeout=15, useragent="SpiderFoot")
 
-        if res['code'] == "403" or res['content'] is None:
+        if res["code"] == "403" or res["content"] is None:
             self.info("Unable to fetch data from psbdmp.cc right now.")
             return None
 
         try:
-            ret = json.loads(res['content'])
+            ret = json.loads(res["content"])
         except Exception as e:
             self.error(f"Error processing JSON response from psbdmp.cc: {e}")
             return None
 
         ids = list()
-        if 'count' not in ret:
+        if "count" not in ret:
             return None
 
-        if ret['count'] <= 0:
+        if ret["count"] <= 0:
             return None
 
-        for d in ret['data']:
-            ids.append("https://pastebin.com/" + d['id'])
+        for d in ret["data"]:
+            ids.append("https://pastebin.com/" + d["id"])
 
         return ids
 
@@ -110,23 +106,27 @@ class sfp_psbdmp(SpiderFootPlugin):
             self.notifyListeners(e)
 
             res = self.sf.fetchUrl(
-                n,
-                timeout=self.opts['_fetchtimeout'],
-                useragent=self.opts['_useragent']
+                n, timeout=self.opts["_fetchtimeout"], useragent=self.opts["_useragent"]
             )
 
-            if res['content'] is None:
+            if res["content"] is None:
                 self.debug(f"Ignoring {n} as no data returned")
                 continue
 
-            if re.search(
-                r"[^a-zA-Z\-\_0-9]" + re.escape(eventData) + r"[^a-zA-Z\-\_0-9]",
-                res['content'],
-                re.IGNORECASE
-            ) is None:
+            if (
+                re.search(
+                    r"[^a-zA-Z\-\_0-9]" +
+                    re.escape(eventData) + r"[^a-zA-Z\-\_0-9]",
+                    res["content"],
+                    re.IGNORECASE,
+                )
+                is None
+            ):
                 continue
 
-            evt = SpiderFootEvent("LEAKSITE_CONTENT", res['content'], self.__name__, e)
+            evt = SpiderFootEvent("LEAKSITE_CONTENT",
+                                  res["content"], self.__name__, e)
             self.notifyListeners(evt)
+
 
 # End of sfp_psbdmp class

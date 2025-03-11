@@ -19,39 +19,33 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 class sfp_pastebin(SpiderFootPlugin):
 
     meta = {
-        'name': "PasteBin",
-        'summary': "PasteBin search (via Google Search API) to identify related content.",
-        'flags': ["apikey"],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Leaks, Dumps and Breaches"],
-        'dataSource': {
-            'website': "https://pastebin.com/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
-                "https://pastebin.com/doc_api",
-                "https://pastebin.com/faq"
-            ],
-            'apiKeyInstructions': [
+        "name": "PasteBin",
+        "summary": "PasteBin search (via Google Search API) to identify related content.",
+        "flags": ["apikey"],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Leaks, Dumps and Breaches"],
+        "dataSource": {
+            "website": "https://pastebin.com/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": ["https://pastebin.com/doc_api", "https://pastebin.com/faq"],
+            "apiKeyInstructions": [
                 "Visit https://developers.google.com/custom-search/v1/introduction",
                 "Register a free Google account",
                 "Click on 'Get A Key'",
                 "Connect a Project",
-                "The API Key will be listed under 'YOUR API KEY'"
+                "The API Key will be listed under 'YOUR API KEY'",
             ],
-            'favIcon': "https://pastebin.com/favicon.ico",
-            'logo': "https://pastebin.com/favicon.ico",
-            'description': "Pastebin is a website where you can store any text online for easy sharing. "
+            "favIcon": "https://pastebin.com/favicon.ico",
+            "logo": "https://pastebin.com/favicon.ico",
+            "description": "Pastebin is a website where you can store any text online for easy sharing. "
             "The website is mainly used by programmers to store pieces of source code or "
             "configuration information, but anyone is more than welcome to paste any type of text. "
             "The idea behind the site is to make it more convenient for people to share large amounts of text online.",
-        }
+        },
     }
 
     # Default options
-    opts = {
-        "api_key": "",
-        "cse_id": "013611106330597893267:tfgl3wxdtbp"
-    }
+    opts = {"api_key": "", "cse_id": "013611106330597893267:tfgl3wxdtbp"}
 
     # Option descriptions
     optdescs = {
@@ -59,9 +53,7 @@ class sfp_pastebin(SpiderFootPlugin):
         "cse_id": "Google Custom Search Engine ID.",
     }
 
-    domains = {
-        'pastebin': "pastebin.com"
-    }
+    domains = {"pastebin": "pastebin.com"}
 
     results = None
     errorState = False
@@ -90,8 +82,10 @@ class sfp_pastebin(SpiderFootPlugin):
         if self.errorState:
             return
 
-        if self.opts['api_key'] == "":
-            self.error(f"You enabled {self.__class__.__name__} but did not set a Google API key!")
+        if self.opts["api_key"] == "":
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set a Google API key!"
+            )
             self.errorState = True
             return
 
@@ -124,7 +118,9 @@ class sfp_pastebin(SpiderFootPlugin):
                 self.results[link] = True
 
             relevant_links = [
-                link for link in new_links if SpiderFootHelpers.urlBaseUrl(link).endswith(target)
+                link
+                for link in new_links
+                if SpiderFootHelpers.urlBaseUrl(link).endswith(target)
             ]
 
             for link in relevant_links:
@@ -133,24 +129,36 @@ class sfp_pastebin(SpiderFootPlugin):
                 if self.checkForStop():
                     return
 
-                res = self.sf.fetchUrl(link, timeout=self.opts['_fetchtimeout'],
-                                       useragent=self.opts['_useragent'])
+                res = self.sf.fetchUrl(
+                    link,
+                    timeout=self.opts["_fetchtimeout"],
+                    useragent=self.opts["_useragent"],
+                )
 
-                if res['content'] is None:
+                if res["content"] is None:
                     self.debug(f"Ignoring {link} as no data returned")
                     continue
 
-                if re.search(
-                    r"[^a-zA-Z\-\_0-9]" + re.escape(eventData) + r"[^a-zA-Z\-\_0-9]",
-                    res['content'],
-                    re.IGNORECASE
-                ) is None:
+                if (
+                    re.search(
+                        r"[^a-zA-Z\-\_0-9]" +
+                        re.escape(eventData) +
+                        r"[^a-zA-Z\-\_0-9]",
+                        res["content"],
+                        re.IGNORECASE,
+                    )
+                    is None
+                ):
                     continue
 
-                evt1 = SpiderFootEvent("LEAKSITE_URL", link, self.__name__, event)
+                evt1 = SpiderFootEvent(
+                    "LEAKSITE_URL", link, self.__name__, event)
                 self.notifyListeners(evt1)
 
-                evt2 = SpiderFootEvent("LEAKSITE_CONTENT", res['content'], self.__name__, evt1)
+                evt2 = SpiderFootEvent(
+                    "LEAKSITE_CONTENT", res["content"], self.__name__, evt1
+                )
                 self.notifyListeners(evt2)
+
 
 # End of sfp_pastebin class

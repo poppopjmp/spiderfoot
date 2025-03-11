@@ -19,38 +19,32 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_ipinfo(SpiderFootPlugin):
 
     meta = {
-        'name': "IPInfo.io",
-        'summary': "Identifies the physical location of IP addresses identified using ipinfo.io.",
-        'flags': ["apikey"],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Real World"],
-        'dataSource': {
-            'website': "https://ipinfo.io",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
-                "https://ipinfo.io/developers"
-            ],
-            'apiKeyInstructions': [
+        "name": "IPInfo.io",
+        "summary": "Identifies the physical location of IP addresses identified using ipinfo.io.",
+        "flags": ["apikey"],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Real World"],
+        "dataSource": {
+            "website": "https://ipinfo.io",
+            "model": "FREE_AUTH_LIMITED",
+            "references": ["https://ipinfo.io/developers"],
+            "apiKeyInstructions": [
                 "Visit https://ipinfo.io/",
                 "Sign up for a free account",
                 "Navigate to https://ipinfo.io/account",
-                "The API key is listed above 'is your access token'"
+                "The API key is listed above 'is your access token'",
             ],
-            'favIcon': "https://ipinfo.io/static/favicon-96x96.png?v3",
-            'logo': "https://ipinfo.io/static/deviceicons/android-icon-96x96.png",
-            'description': "The Trusted Source for IP Address Data.\n"
+            "favIcon": "https://ipinfo.io/static/favicon-96x96.png?v3",
+            "logo": "https://ipinfo.io/static/deviceicons/android-icon-96x96.png",
+            "description": "The Trusted Source for IP Address Data.\n"
             "With IPinfo, you can pinpoint your users’ locations, customize their experiences, "
             "prevent fraud, ensure compliance, and so much more.",
-        }
+        },
     }
 
     # Default options
-    opts = {
-        "api_key": ""
-    }
-    optdescs = {
-        "api_key": "Ipinfo.io access token."
-    }
+    opts = {"api_key": ""}
+    optdescs = {"api_key": "Ipinfo.io access token."}
 
     results = None
     errorState = False
@@ -65,7 +59,7 @@ class sfp_ipinfo(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ['IP_ADDRESS', 'IPV6_ADDRESS']
+        return ["IP_ADDRESS", "IPV6_ADDRESS"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
@@ -75,25 +69,25 @@ class sfp_ipinfo(SpiderFootPlugin):
 
     # https://ipinfo.io/developers
     def queryIP(self, ip):
-        headers = {
-            'Authorization': "Bearer " + self.opts['api_key']
-        }
-        res = self.sf.fetchUrl("https://ipinfo.io/" + ip + "/json",
-                               timeout=self.opts['_fetchtimeout'],
-                               useragent=self.opts['_useragent'],
-                               headers=headers)
+        headers = {"Authorization": "Bearer " + self.opts["api_key"]}
+        res = self.sf.fetchUrl(
+            "https://ipinfo.io/" + ip + "/json",
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
+            headers=headers,
+        )
 
-        if res['code'] == "429":
+        if res["code"] == "429":
             self.error("You are being rate-limited by ipinfo.io.")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info("No GeoIP info found for " + ip)
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
 
@@ -110,7 +104,7 @@ class sfp_ipinfo(SpiderFootPlugin):
 
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
-        if self.opts['api_key'] == "":
+        if self.opts["api_key"] == "":
             self.error("You enabled sfp_ipinfo but did not set an API key!")
             self.errorState = True
             return
@@ -126,13 +120,20 @@ class sfp_ipinfo(SpiderFootPlugin):
         if data is None:
             return
 
-        if 'country' not in data:
+        if "country" not in data:
             return
 
-        location = ', '.join([_f for _f in [data.get('city'), data.get('region'), data.get('country')] if _f])
+        location = ", ".join(
+            [
+                _f
+                for _f in [data.get("city"), data.get("region"), data.get("country")]
+                if _f
+            ]
+        )
         self.info("Found GeoIP for " + eventData + ": " + location)
 
         evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
         self.notifyListeners(evt)
+
 
 # End of sfp_ipinfo class

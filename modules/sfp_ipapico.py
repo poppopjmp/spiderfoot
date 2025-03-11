@@ -20,31 +20,27 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_ipapico(SpiderFootPlugin):
 
     meta = {
-        'name': "ipapi.co",
-        'summary': "Queries ipapi.co to identify geolocation of IP Addresses using ipapi.co API",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Real World"],
-        'dataSource': {
-            'website': "https://ipapi.co/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
-                "https://ipapi.co/api/"
-            ],
-            'favIcon': "https://ipapi.co/static/images/favicon.b64f1de785e1.ico",
-            'logo': "https://ipapi.co/static/images/favicon.34f0ec468301.png",
-            'description': "Powerful & Simple REST API for IP Address Geolocation."
+        "name": "ipapi.co",
+        "summary": "Queries ipapi.co to identify geolocation of IP Addresses using ipapi.co API",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Real World"],
+        "dataSource": {
+            "website": "https://ipapi.co/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": ["https://ipapi.co/api/"],
+            "favIcon": "https://ipapi.co/static/images/favicon.b64f1de785e1.ico",
+            "logo": "https://ipapi.co/static/images/favicon.34f0ec468301.png",
+            "description": "Powerful & Simple REST API for IP Address Geolocation."
             "ipapi.co provides a REST API to find the location of an IP address.",
-        }
+        },
     }
 
     # Default options
-    opts = {
-    }
+    opts = {}
 
     # Option descriptions
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -57,34 +53,30 @@ class sfp_ipapico(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return [
-            "IP_ADDRESS",
-            "IPV6_ADDRESS"
-        ]
+        return ["IP_ADDRESS", "IPV6_ADDRESS"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
-        return [
-            "GEOINFO",
-            "RAW_RIR_DATA"
-        ]
+        return ["GEOINFO", "RAW_RIR_DATA"]
 
     def query(self, qry):
         queryString = f"https://ipapi.co/{qry}/json/"
 
-        res = self.sf.fetchUrl(queryString,
-                               timeout=self.opts['_fetchtimeout'],
-                               useragent=self.opts['_useragent'])
+        res = self.sf.fetchUrl(
+            queryString,
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
+        )
         time.sleep(1.5)
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info(f"No ipapi.co data found for {qry}")
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
 
@@ -111,12 +103,24 @@ class sfp_ipapico(SpiderFootPlugin):
             self.info("No results returned from ipapi.co")
             return
 
-        if data.get('country'):
-            location = ', '.join(filter(None, [data.get('city'), data.get('region'), data.get('region_code'), data.get('country_name'), data.get('country')]))
-            evt = SpiderFootEvent('GEOINFO', location, self.__name__, event)
+        if data.get("country"):
+            location = ", ".join(
+                filter(
+                    None,
+                    [
+                        data.get("city"),
+                        data.get("region"),
+                        data.get("region_code"),
+                        data.get("country_name"),
+                        data.get("country"),
+                    ],
+                )
+            )
+            evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
             self.notifyListeners(evt)
 
-            evt = SpiderFootEvent('RAW_RIR_DATA', str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(data), self.__name__, event)
             self.notifyListeners(evt)
 
 

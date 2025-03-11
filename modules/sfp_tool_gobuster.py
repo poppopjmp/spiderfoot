@@ -20,43 +20,43 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 class sfp_tool_gobuster(SpiderFootPlugin):
     meta = {
-        'name': "Gobuster",
-        'summary': "Identify web paths on target websites using the Gobuster tool.",
-        'flags': ["tool", "slow", "invasive"],
-        'useCases': ["Footprint", "Investigation"],
-        'categories': ["Crawling and Scanning"],
-        'toolDetails': {
-            'name': "Gobuster",
-            'description': "Gobuster is a tool used to brute-force URIs (directories and files) "
-                           "in web sites, DNS subdomains, Virtual Host names, Open Amazon S3 "
-                           "buckets, and TFTP servers.",
-            'website': "https://github.com/OJ/gobuster",
-            'repository': "https://github.com/OJ/gobuster"
-        }
+        "name": "Gobuster",
+        "summary": "Identify web paths on target websites using the Gobuster tool.",
+        "flags": ["tool", "slow", "invasive"],
+        "useCases": ["Footprint", "Investigation"],
+        "categories": ["Crawling and Scanning"],
+        "toolDetails": {
+            "name": "Gobuster",
+            "description": "Gobuster is a tool used to brute-force URIs (directories and files) "
+            "in web sites, DNS subdomains, Virtual Host names, Open Amazon S3 "
+            "buckets, and TFTP servers.",
+            "website": "https://github.com/OJ/gobuster",
+            "repository": "https://github.com/OJ/gobuster",
+        },
     }
 
     # Default options
     opts = {
-        'gobuster_path': '',
-        'wordlist': '',
-        'threads': 10,
-        'timeout': 30,
-        'status_codes': '200,204,301,302,307,401,403',
-        'follow_redirects': True,
-        'extensions': 'php,asp,aspx,jsp,html,htm,js',
-        'use_proxy': False
+        "gobuster_path": "",
+        "wordlist": "",
+        "threads": 10,
+        "timeout": 30,
+        "status_codes": "200,204,301,302,307,401,403",
+        "follow_redirects": True,
+        "extensions": "php,asp,aspx,jsp,html,htm,js",
+        "use_proxy": False,
     }
 
     # Option descriptions
     optdescs = {
-        'gobuster_path': "Path to the gobuster binary. If just 'gobuster' then assume it's in the system path.",
-        'wordlist': "Path to the wordlist used for brute-forcing.",
-        'threads': "Number of concurrent threads (gobuster -t).",
-        'timeout': "Timeout in seconds for gobuster requests (gobuster -to).",
-        'status_codes': "Comma-separated list of status codes to consider valid (gobuster -s).",
-        'follow_redirects': "Follow redirects (gobuster -r)",
-        'extensions': "Comma-separated list of file extensions to look for (gobuster -x).",
-        'use_proxy': "Use the configured SpiderFoot proxy for scanning."
+        "gobuster_path": "Path to the gobuster binary. If just 'gobuster' then assume it's in the system path.",
+        "wordlist": "Path to the wordlist used for brute-forcing.",
+        "threads": "Number of concurrent threads (gobuster -t).",
+        "timeout": "Timeout in seconds for gobuster requests (gobuster -to).",
+        "status_codes": "Comma-separated list of status codes to consider valid (gobuster -s).",
+        "follow_redirects": "Follow redirects (gobuster -r)",
+        "extensions": "Comma-separated list of file extensions to look for (gobuster -x).",
+        "use_proxy": "Use the configured SpiderFoot proxy for scanning.",
     }
 
     # Target
@@ -89,7 +89,7 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             if not self.sf.outputProgress(f"Running Gobuster against {cmd[-1]}"):
                 return None
 
-            cmd = ' '.join(cmd) + f" -o {output_file.name}"
+            cmd = " ".join(cmd) + f" -o {output_file.name}"
             ret_val = self.sf.execute(cmd, useShell=True)
 
             if ret_val:
@@ -123,20 +123,27 @@ class sfp_tool_gobuster(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        gobuster_path = self.opts['gobuster_path']
-        wordlist = self.opts['wordlist']
-        
+        gobuster_path = self.opts["gobuster_path"]
+        wordlist = self.opts["wordlist"]
+
         if not gobuster_path:
-            self.error("You enabled sfp_tool_gobuster but did not set a path to the tool!")
+            self.error(
+                "You enabled sfp_tool_gobuster but did not set a path to the tool!"
+            )
             self.errorState = True
             return
 
         if not wordlist:
-            self.error("You enabled sfp_tool_gobuster but did not set a wordlist!")
+            self.error(
+                "You enabled sfp_tool_gobuster but did not set a wordlist!")
             self.errorState = True
             return
 
-        if not os.path.isfile(gobuster_path) and '/' not in gobuster_path and '\\' not in gobuster_path:
+        if (
+            not os.path.isfile(gobuster_path) and
+            "/" not in gobuster_path and
+            "\\" not in gobuster_path
+        ):
             cmd = ["which", gobuster_path]
             path = self.sf.execute(cmd, useShell=True)
             if not path:
@@ -155,21 +162,26 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             gobuster_path,
             "dir",
             "-q",
-            "-u", eventData,
-            "-w", wordlist,
-            "-t", str(self.opts['threads']),
-            "-s", self.opts['status_codes'],
-            "-to", str(self.opts['timeout']) + "s",
-            "-j"  # JSON output format
+            "-u",
+            eventData,
+            "-w",
+            wordlist,
+            "-t",
+            str(self.opts["threads"]),
+            "-s",
+            self.opts["status_codes"],
+            "-to",
+            str(self.opts["timeout"]) + "s",
+            "-j",  # JSON output format
         ]
 
-        if self.opts['follow_redirects']:
+        if self.opts["follow_redirects"]:
             cmd.append("-r")
 
-        if self.opts['extensions']:
-            cmd.extend(["-x", self.opts['extensions']])
+        if self.opts["extensions"]:
+            cmd.extend(["-x", self.opts["extensions"]])
 
-        if self.opts['use_proxy'] and self.sf.opts.get('_socks1type'):
+        if self.opts["use_proxy"] and self.sf.opts.get("_socks1type"):
             proxy = f"{self.sf.opts.get('_socks1type')}://{self.sf.opts.get('_socks2addr')}:{self.sf.opts.get('_socks3port')}"
             cmd.extend(["--proxy", proxy])
 
@@ -178,32 +190,35 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             return
 
         try:
-            with open(output_file, 'r') as file:
+            with open(output_file, "r") as file:
                 output = file.read()
-            
+
             try:
                 results = json.loads(output)
             except json.JSONDecodeError:
-                self.error(f"Could not parse gobuster output as JSON: {output}")
+                self.error(
+                    f"Could not parse gobuster output as JSON: {output}")
                 return
-            
+
             # Process the results
-            for result in results.get('results', []):
-                path = result.get('path')
-                status = result.get('status')
+            for result in results.get("results", []):
+                path = result.get("path")
+                status = result.get("status")
 
                 if not path:
                     continue
 
                 # Construct the full URL
-                base_url = eventData.rstrip('/')
+                base_url = eventData.rstrip("/")
                 full_url = f"{base_url}{path}"
-                
+
                 # Determine if it's a directory or a file
-                event_type = "URL_DIRECTORY" if path.endswith('/') else "URL_FILE"
+                event_type = "URL_DIRECTORY" if path.endswith(
+                    "/") else "URL_FILE"
 
                 # Create and notify the event
-                evt = SpiderFootEvent(event_type, full_url, self.__name__, event)
+                evt = SpiderFootEvent(
+                    event_type, full_url, self.__name__, event)
                 self.notifyListeners(evt)
 
         except Exception as e:

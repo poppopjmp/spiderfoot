@@ -20,21 +20,19 @@ class sfp_ipqualityscore(SpiderFootPlugin):
     meta = {
         "name": "IPQualityScore",
         "summary": "Determine if target is malicious using IPQualityScore API",
-        'flags': ["apikey"],
+        "flags": ["apikey"],
         "useCases": ["Investigate", "Passive"],
         "categories": ["Reputation Systems"],
         "dataSource": {
             "website": "https://www.ipqualityscore.com/",
             "model": "FREE_AUTH_LIMITED",
-            "references": [
-                "https://www.ipqualityscore.com/documentation/overview"
-            ],
+            "references": ["https://www.ipqualityscore.com/documentation/overview"],
             "apiKeyInstructions": [
                 "Visit https://www.ipqualityscore.com/",
                 "Click on 'Plans'",
                 "Register a free account",
                 "Visit https://www.ipqualityscore.com/user/settings",
-                "Your API key will be listed under 'API Key'"
+                "Your API key will be listed under 'API Key'",
             ],
             "favIcon": "https://www.ipqualityscore.com/templates/img/icons/fav/favicon-32x32.png",
             "logo": "https://www.ipqualityscore.com/templates/img/logo.png",
@@ -44,16 +42,12 @@ class sfp_ipqualityscore(SpiderFootPlugin):
         },
     }
 
-    opts = {
-        "api_key": "",
-        "abuse_score_threshold": 85,
-        "strictness": 0
-    }
+    opts = {"api_key": "", "abuse_score_threshold": 85, "strictness": 0}
 
     optdescs = {
         "api_key": "IPQualityScore API Key",
         "abuse_score_threshold": "Minimum abuse score for target to be considered malicious (0 - 100)",
-        "strictness": "Depth of the reputation checks to be performed on the target (0 - 2)"
+        "strictness": "Depth of the reputation checks to be performed on the target (0 - 2)",
     }
 
     errorState = False
@@ -83,7 +77,7 @@ class sfp_ipqualityscore(SpiderFootPlugin):
             "MALICIOUS_IPADDR",
             "MALICIOUS_INTERNET_NAME",
             "PHONE_NUMBER_TYPE",
-            "RAW_RIR_DATA"
+            "RAW_RIR_DATA",
         ]
 
     def handle_error_response(self, qry, res):
@@ -99,7 +93,8 @@ class sfp_ipqualityscore(SpiderFootPlugin):
             error_str = f", message {error_message}"
         else:
             error_str = ""
-        self.error(f"Failed to get results for {qry}, code {res['code']}{error_str}")
+        self.error(
+            f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
     def query(self, qry, eventName):
         queryString = ""
@@ -107,7 +102,7 @@ class sfp_ipqualityscore(SpiderFootPlugin):
             queryString = f"https://ipqualityscore.com/api/json/phone/{self.opts['api_key']}/{qry}?strictness={self.opts['strictness']}"
         elif eventName == "EMAILADDR":
             queryString = f"https://ipqualityscore.com/api/json/email/{self.opts['api_key']}/{qry}?strictness={self.opts['strictness']}"
-        elif eventName in ['IP_ADDRESS', 'DOMAIN_NAME']:
+        elif eventName in ["IP_ADDRESS", "DOMAIN_NAME"]:
             queryString = f"https://ipqualityscore.com/api/json/ip/{self.opts['api_key']}/{qry}?strictness={self.opts['strictness']}"
 
         res = self.sf.fetchUrl(
@@ -116,30 +111,31 @@ class sfp_ipqualityscore(SpiderFootPlugin):
             useragent="SpiderFoot",
         )
 
-        if not res['content']:
+        if not res["content"]:
             self.info(f"No IPQualityScore info found for {qry}")
             return None
 
         try:
-            r = json.loads(res['content'])
+            r = json.loads(res["content"])
             if res["code"] != "200" or not r.get("success"):
                 self.handle_error_response(qry, res)
                 return None
             return r
         except Exception as e:
-            self.error(f"Error processing JSON response from IPQualityScore: {e}")
+            self.error(
+                f"Error processing JSON response from IPQualityScore: {e}")
 
         return None
 
     def getGeoInfo(self, data):
         geoInfo = ""
 
-        city = data.get('city')
-        country = data.get('country')
+        city = data.get("city")
+        country = data.get("country")
         if not country:
-            country = data.get('country_code')
-        zipcode = data.get('zip_code')
-        region = data.get('region')
+            country = data.get("country_code")
+        zipcode = data.get("zip_code")
+        region = data.get("region")
 
         if city:
             geoInfo += city + ", "
@@ -178,14 +174,15 @@ class sfp_ipqualityscore(SpiderFootPlugin):
         if not data:
             return
 
-        fraudScore = data.get('fraud_score')
-        recentAbuse = data.get('recent_abuse')
-        botStatus = data.get('bot_status')
+        fraudScore = data.get("fraud_score")
+        recentAbuse = data.get("recent_abuse")
+        botStatus = data.get("bot_status")
         malicious = False
         maliciousDesc = ""
 
-        if fraudScore >= self.opts['abuse_score_threshold'] or recentAbuse or botStatus:
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+        if fraudScore >= self.opts["abuse_score_threshold"] or recentAbuse or botStatus:
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(data), self.__name__, event)
             self.notifyListeners(evt)
             malicious = True
             maliciousDesc = f"IPQualityScore [{eventData}]\n"
@@ -193,12 +190,16 @@ class sfp_ipqualityscore(SpiderFootPlugin):
         if eventName == "PHONE_NUMBER":
             if malicious:
                 maliciousDesc += f" - FRAUD SCORE: {fraudScore}\n - ACTIVE: {data.get('active')}\n - RISKY: {data.get('risky')}\n - RECENT ABUSE: {recentAbuse}"
-                evt = SpiderFootEvent("MALICIOUS_PHONE_NUMBER", maliciousDesc, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "MALICIOUS_PHONE_NUMBER", maliciousDesc, self.__name__, event
+                )
                 self.notifyListeners(evt)
 
-            phoneNumberType = data.get('line_type')
+            phoneNumberType = data.get("line_type")
             if phoneNumberType:
-                evt = SpiderFootEvent("PHONE_NUMBER_TYPE", phoneNumberType, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "PHONE_NUMBER_TYPE", phoneNumberType, self.__name__, event
+                )
                 self.notifyListeners(evt)
 
             geoInfo = self.getGeoInfo(data)
@@ -209,30 +210,44 @@ class sfp_ipqualityscore(SpiderFootPlugin):
         elif eventName == "EMAILADDR":
             if malicious:
                 maliciousDesc += f" - FRAUD SCORE: {fraudScore}\n - HONEYPOT: {data.get('honeypot')}\n - SPAM TRAP SCORE: {data.get('spam_trap_score')}\n - RECENT ABUSE: {recentAbuse}"
-                evt = SpiderFootEvent("MALICIOUS_EMAILADDR", maliciousDesc, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "MALICIOUS_EMAILADDR", maliciousDesc, self.__name__, event
+                )
                 self.notifyListeners(evt)
 
-            if data.get('disposable'):
-                evt = SpiderFootEvent("EMAILADDR_DISPOSABLE", eventData, self.__name__, event)
+            if data.get("disposable"):
+                evt = SpiderFootEvent(
+                    "EMAILADDR_DISPOSABLE", eventData, self.__name__, event
+                )
                 self.notifyListeners(evt)
 
-            if data.get('leaked'):
-                evt = SpiderFootEvent("EMAILADDR_COMPROMISED", f"{eventData} [Unknown]", self.__name__, event)
+            if data.get("leaked"):
+                evt = SpiderFootEvent(
+                    "EMAILADDR_COMPROMISED",
+                    f"{eventData} [Unknown]",
+                    self.__name__,
+                    event,
+                )
                 self.notifyListeners(evt)
 
-        elif eventName in ['IP_ADDRESS', 'DOMAIN_NAME']:
+        elif eventName in ["IP_ADDRESS", "DOMAIN_NAME"]:
             if malicious:
                 maliciousDesc += f" - FRAUD SCORE: {fraudScore}\n - BOT STATUS: {botStatus}\n - RECENT ABUSE: {recentAbuse}\n - ABUSE VELOCITY: {data.get('abuse_velocity')}\n - VPN: {data.get('vpn')}\n - ACTIVE VPN: {data.get('active_vpn')}\n - TOR: {data.get('tor')}\n - ACTIVE TOR: {data.get('active_tor')}"
 
                 if eventName == "IP_ADDRESS":
-                    evt = SpiderFootEvent("MALICIOUS_IPADDR", maliciousDesc, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "MALICIOUS_IPADDR", maliciousDesc, self.__name__, event
+                    )
                 elif eventName == "DOMAIN_NAME":
-                    evt = SpiderFootEvent("MALICIOUS_INTERNET_NAME", maliciousDesc, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "MALICIOUS_INTERNET_NAME", maliciousDesc, self.__name__, event
+                    )
                 self.notifyListeners(evt)
 
             geoInfo = self.getGeoInfo(data)
             if geoInfo:
                 evt = SpiderFootEvent("GEOINFO", geoInfo, self.__name__, event)
                 self.notifyListeners(evt)
+
 
 # End of sfp_ipqualityscore class

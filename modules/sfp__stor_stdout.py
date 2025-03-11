@@ -18,8 +18,8 @@ from spiderfoot import SpiderFootPlugin
 class sfp__stor_stdout(SpiderFootPlugin):
 
     meta = {
-        'name': "Command-line output",
-        'summary': "Dumps output to standard out. Used for when a SpiderFoot scan is run via the command-line."
+        "name": "Command-line output",
+        "summary": "Dumps output to standard out. Used for when a SpiderFoot scan is run via the command-line.",
     }
 
     _priority = 0
@@ -34,12 +34,11 @@ class sfp__stor_stdout(SpiderFootPlugin):
         "_showsource": False,
         "_csvdelim": ",",
         "_maxlength": 0,
-        "_eventtypes": dict()
+        "_eventtypes": dict(),
     }
 
     # Option descriptions
-    optdescs = {
-    }
+    optdescs = {}
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
@@ -54,7 +53,7 @@ class sfp__stor_stdout(SpiderFootPlugin):
         return ["*"]
 
     def output(self, event):
-        d = self.opts['_csvdelim']
+        d = self.opts["_csvdelim"]
         if type(event.data) in [list, dict]:
             data = str(event.data)
         else:
@@ -71,7 +70,7 @@ class sfp__stor_stdout(SpiderFootPlugin):
         if type(srcdata) != str:
             srcdata = str(event.sourceEvent.data)
 
-        if self.opts['_stripnewline']:
+        if self.opts["_stripnewline"]:
             data = data.replace("\n", " ").replace("\r", "")
             srcdata = srcdata.replace("\n", " ").replace("\r", "")
 
@@ -80,38 +79,51 @@ class sfp__stor_stdout(SpiderFootPlugin):
         if "<SFURL>" in srcdata:
             srcdata = srcdata.replace("<SFURL>", "").replace("</SFURL>", "")
 
-        if self.opts['_maxlength'] > 0:
-            data = data[0:self.opts['_maxlength']]
-            srcdata = srcdata[0:self.opts['_maxlength']]
+        if self.opts["_maxlength"] > 0:
+            data = data[0: self.opts["_maxlength"]]
+            srcdata = srcdata[0: self.opts["_maxlength"]]
 
-        if self.opts['_format'] == "tab":
-            event_type = self.opts['_eventtypes'][event.eventType]
-            if self.opts['_showsource']:
-                print(f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{srcdata}\t{data}")
+        if self.opts["_format"] == "tab":
+            event_type = self.opts["_eventtypes"][event.eventType]
+            if self.opts["_showsource"]:
+                print(
+                    f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{srcdata}\t{data}"
+                )
             else:
                 print(f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{data}")
 
-        if self.opts['_format'] == "csv":
-            print((event.module + d + self.opts['_eventtypes'][event.eventType] + d + srcdata + d + data))
+        if self.opts["_format"] == "csv":
+            print(
+                (
+                    event.module +
+                    d +
+                    self.opts["_eventtypes"][event.eventType] +
+                    d +
+                    srcdata +
+                    d +
+                    data
+                )
+            )
 
-        if self.opts['_format'] == "json":
+        if self.opts["_format"] == "json":
             d = event.asDict()
-            d['type'] = self.opts['_eventtypes'][event.eventType]
+            d["type"] = self.opts["_eventtypes"][event.eventType]
             if self.firstEvent:
                 self.firstEvent = False
             else:
                 print(",")
-            print(json.dumps(d), end='')
+            print(json.dumps(d), end="")
 
     # Handle events sent to this module
     def handleEvent(self, sfEvent):
         if sfEvent.eventType == "ROOT":
             return
 
-        if self.opts['_showonlyrequested']:
-            if sfEvent.eventType in self.opts['_requested']:
+        if self.opts["_showonlyrequested"]:
+            if sfEvent.eventType in self.opts["_requested"]:
                 self.output(sfEvent)
         else:
             self.output(sfEvent)
+
 
 # End of sfp__stor_stdout class

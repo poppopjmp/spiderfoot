@@ -18,28 +18,28 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_fullhunt(SpiderFootPlugin):
 
     meta = {
-        'name': "FullHunt",
-        'summary': "Identify domain attack surface using FullHunt API.",
-        'flags': ['apikey'],
-        'useCases': ["Passive", "Footprint", "Investigate"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://fullhunt.io/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
+        "name": "FullHunt",
+        "summary": "Identify domain attack surface using FullHunt API.",
+        "flags": ["apikey"],
+        "useCases": ["Passive", "Footprint", "Investigate"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://fullhunt.io/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": [
                 "https://api-docs.fullhunt.io/",
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "Visit https://fullhunt.io/",
                 "Register a free account",
                 "Navigate to https://fullhunt.io/user/settings/",
-                "Your API key is listed under 'API Access'"
+                "Your API key is listed under 'API Access'",
             ],
-            'favIcon': "https://fullhunt.io/static/theme/images/logo/favicon.ico",
-            'logo': "https://fullhunt.io/static/theme/images/logo/Icon.png",
-            'description': "Discover, monitor, and secure your attack surface. "
-            "FullHunt delivers the best platform in the market for attack surface security."
-        }
+            "favIcon": "https://fullhunt.io/static/theme/images/logo/favicon.ico",
+            "logo": "https://fullhunt.io/static/theme/images/logo/Icon.png",
+            "description": "Discover, monitor, and secure your attack surface. "
+            "FullHunt delivers the best platform in the market for attack surface security.",
+        },
     }
 
     opts = {
@@ -75,7 +75,7 @@ class sfp_fullhunt(SpiderFootPlugin):
             "TCP_PORT_OPEN",
             "PROVIDER_DNS",
             "PROVIDER_MAIL",
-            "RAW_RIR_DATA"
+            "RAW_RIR_DATA",
         ]
 
     def queryDomainDetails(self, qry):
@@ -87,15 +87,13 @@ class sfp_fullhunt(SpiderFootPlugin):
         Returns:
             dict: search results
         """
-        headers = {
-            'X-API-KEY': self.opts['api_key']
-        }
+        headers = {"X-API-KEY": self.opts["api_key"]}
 
         res = self.sf.fetchUrl(
             f"https://fullhunt.io/api/v1/domain/{qry}/details",
             timeout=30,
             headers=headers,
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
         return self.parseApiResponse(res)
@@ -105,36 +103,38 @@ class sfp_fullhunt(SpiderFootPlugin):
             self.error("No response from FullHunt.")
             return None
 
-        if res['code'] == "400":
+        if res["code"] == "400":
             self.error("Bad Request -- Your request is invalid.")
             return None
 
-        if res['code'] == "401":
+        if res["code"] == "401":
             self.errorState = True
             self.error("Unauthorized -- Your API key is wrong.")
             return None
 
-        if res['code'] == "403":
+        if res["code"] == "403":
             self.errorState = True
             self.error("Forbidden -- The requested resource is forbidden.")
             return None
 
-        if res['code'] == "404":
-            self.error("Not Found -- The requested resource could not be found.")
+        if res["code"] == "404":
+            self.error(
+                "Not Found -- The requested resource could not be found.")
             return None
 
-        if res['code'] == "429":
+        if res["code"] == "429":
             self.errorState = True
-            self.error("Too Many Requests -- You are sending too many requests.")
+            self.error(
+                "Too Many Requests -- You are sending too many requests.")
             return None
 
         try:
-            results = json.loads(res['content'])
+            results = json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
             return None
 
-        return results.get('hosts')
+        return results.get("hosts")
 
     def handleEvent(self, event):
         eventName = event.eventType
@@ -172,34 +172,36 @@ class sfp_fullhunt(SpiderFootPlugin):
         mail_servers = list()
 
         for record in res:
-            host = record.get('host')
+            host = record.get("host")
 
             if not host:
                 continue
 
             hosts.append(host)
 
-            dns = record.get('dns')
+            dns = record.get("dns")
             if dns:
-                mx = dns.get('mx')
+                mx = dns.get("mx")
                 if mx:
                     for mail_server in mx:
                         mail_servers.append(mail_server.rstrip("."))
 
-                ns = dns.get('ns')
+                ns = dns.get("ns")
                 if ns:
                     for name_server in ns:
                         name_servers.append(name_server.rstrip("."))
 
-                cname = dns.get('cname')
+                cname = dns.get("cname")
                 if cname:
                     for c in cname:
                         hosts.append(c.rstrip("."))
 
-            network_ports = record.get('network_ports')
+            network_ports = record.get("network_ports")
             if network_ports:
                 for port in network_ports:
-                    e = SpiderFootEvent("TCP_PORT_OPEN", f"{host}:{port}", self.__name__, event)
+                    e = SpiderFootEvent(
+                        "TCP_PORT_OPEN", f"{host}:{port}", self.__name__, event
+                    )
                     self.notifyListeners(e)
 
         for host in set(mail_servers):
@@ -240,5 +242,6 @@ class sfp_fullhunt(SpiderFootPlugin):
 
             evt = SpiderFootEvent(evt_type, host, self.__name__, event)
             self.notifyListeners(evt)
+
 
 # End of sfp_fullhunt class

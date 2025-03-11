@@ -19,34 +19,32 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_comodo(SpiderFootPlugin):
 
     meta = {
-        'name': "Comodo Secure DNS",
-        'summary': "Check if a host would be blocked by Comodo Secure DNS.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://www.comodo.com/secure-dns/",
-            'model': "FREE_NOAUTH_LIMITED",
-            'references': [
+        "name": "Comodo Secure DNS",
+        "summary": "Check if a host would be blocked by Comodo Secure DNS.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://www.comodo.com/secure-dns/",
+            "model": "FREE_NOAUTH_LIMITED",
+            "references": [
                 "https://cdome.comodo.com/pdf/Datasheet-Dome-Shield.pdf",
                 "http://securedns.dnsbycomodo.com/",
                 "https://www.comodo.com/secure-dns/secure-dns-assets/dowloads/ccs-dome-shield-whitepaper-threat-intelligence.pdf",
                 "https://www.comodo.com/secure-dns/secure-dns-assets/dowloads/domeshield-all-use-cases.pdf",
             ],
-            'favIcon': "https://www.comodo.com/favicon.ico",
-            'logo': "https://www.comodo.com/new-assets/images/logo.png",
-            'description': "Comodo Secure DNS is a domain name resolution service "
+            "favIcon": "https://www.comodo.com/favicon.ico",
+            "logo": "https://www.comodo.com/new-assets/images/logo.png",
+            "description": "Comodo Secure DNS is a domain name resolution service "
             "that resolves your DNS requests through our worldwide network of redundant DNS servers, "
             "bringing you the most reliable fully redundant DNS service anywhere, for a safer, "
-            "smarter and faster Internet experience."
-        }
+            "smarter and faster Internet experience.",
+        },
     }
 
-    opts = {
-    }
+    opts = {}
 
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -58,11 +56,7 @@ class sfp_comodo(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            "INTERNET_NAME",
-            "AFFILIATE_INTERNET_NAME",
-            "CO_HOSTED_SITE"
-        ]
+        return ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME", "CO_HOSTED_SITE"]
 
     def producedEvents(self):
         return [
@@ -124,10 +118,15 @@ class sfp_comodo(SpiderFootPlugin):
         if found:
             return
 
-        evt = SpiderFootEvent(blacklist_type, f"Comodo Secure DNS [{eventData}]", self.__name__, event)
+        evt = SpiderFootEvent(
+            blacklist_type, f"Comodo Secure DNS [{eventData}]", self.__name__, event
+        )
         self.notifyListeners(evt)
 
-        evt = SpiderFootEvent(malicious_type, f"Comodo Secure DNS [{eventData}]", self.__name__, event)
+        evt = SpiderFootEvent(
+            malicious_type, f"Comodo Secure DNS [{eventData}]", self.__name__, event
+        )
         self.notifyListeners(evt)
+
 
 # End of sfp_comodo class

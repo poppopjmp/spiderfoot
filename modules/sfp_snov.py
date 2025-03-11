@@ -22,40 +22,35 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 class sfp_snov(SpiderFootPlugin):
 
     meta = {
-        'name': "Snov",
-        'summary': "Gather available email IDs from identified domains",
-        'flags': ["apikey"],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://snov.io/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
-                "https://snov.io/api"
-            ],
-            'apiKeyInstructions': [
+        "name": "Snov",
+        "summary": "Gather available email IDs from identified domains",
+        "flags": ["apikey"],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://snov.io/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": ["https://snov.io/api"],
+            "apiKeyInstructions": [
                 "Visit https://snov.io",
                 "Register a free account",
                 "Navigate to https://app.snov.io/api-setting",
-                "The API key combination is listed under 'API User ID' and 'API Secret'"
+                "The API key combination is listed under 'API User ID' and 'API Secret'",
             ],
-            'favIcon': "https://snov.io/img/favicon/favicon-96x96.png",
-            'logo': "https://cdn.snov.io/img/common/icon-logo.svg?cf6b11aa56fa13f6c94c969282424cfc",
-            'description': "Snov.io API allows to get a list of all emails from a particular domain, "
+            "favIcon": "https://snov.io/img/favicon/favicon-96x96.png",
+            "logo": "https://cdn.snov.io/img/common/icon-logo.svg?cf6b11aa56fa13f6c94c969282424cfc",
+            "description": "Snov.io API allows to get a list of all emails from a particular domain, "
             "find email addresses by name and domain, verify emails, add prospects to a list, "
             "change a recipient's status and more.",
-        }
+        },
     }
 
-    opts = {
-        'api_key_client_id': '',
-        'api_key_client_secret': ''
-    }
+    opts = {"api_key_client_id": "", "api_key_client_secret": ""}
 
     # Option descriptions. Delete any options not applicable to this module.
     optdescs = {
-        'api_key_client_id': "Snov.io API Client ID",
-        'api_key_client_secret': "Snov.io API Client Secret"
+        "api_key_client_id": "Snov.io API Client ID",
+        "api_key_client_secret": "Snov.io API Client Secret",
     }
 
     results = None
@@ -83,66 +78,76 @@ class sfp_snov(SpiderFootPlugin):
     # Get Authentication token from Snov.IO API
     def queryAccessToken(self):
         params = {
-            'grant_type': "client_credentials",
-            'client_id': self.opts['api_key_client_id'],
-            'client_secret': self.opts['api_key_client_secret']
+            "grant_type": "client_credentials",
+            "client_id": self.opts["api_key_client_id"],
+            "client_secret": self.opts["api_key_client_secret"],
         }
 
         headers = {
-            'Accept': "application/json",
+            "Accept": "application/json",
         }
 
         res = self.sf.fetchUrl(
-            'https://api.snov.io/v1/oauth/access_token?' + urllib.parse.urlencode(params),
+            "https://api.snov.io/v1/oauth/access_token?" +
+            urllib.parse.urlencode(params),
             headers=headers,
             timeout=30,
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] != '200':
-            self.error("No access token received from snov.io for the provided Client ID and/or Client Secret")
+        if res["code"] != "200":
+            self.error(
+                "No access token received from snov.io for the provided Client ID and/or Client Secret"
+            )
             self.errorState = True
             return None
         try:
             # Extract access token from response
-            content = res.get('content')
-            accessToken = json.loads(content).get('access_token')
+            content = res.get("content")
+            accessToken = json.loads(content).get("access_token")
 
             if accessToken is None:
-                self.error("No access token received from snov.io for the provided Client ID and/or Client Secret")
+                self.error(
+                    "No access token received from snov.io for the provided Client ID and/or Client Secret"
+                )
                 return None
 
             return str(accessToken)
         except Exception:
-            self.error("No access token received from snov.io for the provided Client ID and/or Client Secret")
+            self.error(
+                "No access token received from snov.io for the provided Client ID and/or Client Secret"
+            )
             self.errorState = True
             return None
 
     # Fetch email addresses related to target domain
     def queryDomainName(self, qry, accessToken, currentLastId):
         params = {
-            'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
-            'access_token': accessToken,
-            'type': "all",
-            'limit': str(self.limit),
-            'lastId': str(currentLastId)
+            "domain": qry.encode("raw_unicode_escape").decode(
+                "ascii", errors="replace"
+            ),
+            "access_token": accessToken,
+            "type": "all",
+            "limit": str(self.limit),
+            "lastId": str(currentLastId),
         }
 
         headers = {
-            'Accept': "application/json",
+            "Accept": "application/json",
         }
 
         res = self.sf.fetchUrl(
-            'https://api.snov.io/v2/domain-emails-with-info?' + urllib.parse.urlencode(params),
+            "https://api.snov.io/v2/domain-emails-with-info?" +
+            urllib.parse.urlencode(params),
             headers=headers,
             timeout=30,
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
-        if res['code'] != '200':
+        if res["code"] != "200":
             self.debug("Could not fetch email addresses")
             return None
 
-        return res.get('content')
+        return res.get("content")
 
     # Handle events sent to this module
     def handleEvent(self, event):
@@ -157,8 +162,13 @@ class sfp_snov(SpiderFootPlugin):
 
         # Always check if the API key is set and complain if it isn't, then set
         # self.errorState to avoid this being a continual complaint during the scan.
-        if self.opts['api_key_client_id'] == "" or self.opts['api_key_client_secret'] == "":
-            self.error("You enabled sfp_snov but did not set a Client ID and/or Client Secret")
+        if (
+            self.opts["api_key_client_id"] == "" or
+            self.opts["api_key_client_secret"] == ""
+        ):
+            self.error(
+                "You enabled sfp_snov but did not set a Client ID and/or Client Secret"
+            )
             self.errorState = True
             return
 
@@ -170,8 +180,10 @@ class sfp_snov(SpiderFootPlugin):
 
         # Get access token from Snov IO API
         accessToken = self.queryAccessToken()
-        if accessToken is None or accessToken == '':
-            self.error("No access token received from snov.io for the provided Client ID and/or Client Secret")
+        if accessToken is None or accessToken == "":
+            self.error(
+                "No access token received from snov.io for the provided Client ID and/or Client Secret"
+            )
             self.errorState = True
             return
 
@@ -193,16 +205,17 @@ class sfp_snov(SpiderFootPlugin):
                 self.debug("No email address found for target domain")
                 break
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(data), self.__name__, event)
             self.notifyListeners(evt)
 
-            records = data.get('emails')
-            lastId = data.get('lastId')
+            records = data.get("emails")
+            lastId = data.get("lastId")
 
             if records:
                 for record in records:
                     if record:
-                        email = str(record.get('email'))
+                        email = str(record.get("email"))
                         if email:
                             if email in self.results:
                                 continue
@@ -210,17 +223,21 @@ class sfp_snov(SpiderFootPlugin):
                                 continue
                             self.results[email] = True
 
-                            if email.split("@")[0] in self.opts['_genericusers'].split(","):
+                            if email.split("@")[0] in self.opts["_genericusers"].split(
+                                ","
+                            ):
                                 evttype = "EMAILADDR_GENERIC"
                             else:
                                 evttype = "EMAILADDR"
 
-                            evt = SpiderFootEvent(evttype, email, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                evttype, email, self.__name__, event)
                             self.notifyListeners(evt)
 
             # Determine whether another page of data exists
             if len(records) < self.limit:
                 nextPageHasData = False
             currentLastId = lastId
+
 
 # End of sfp_snov class

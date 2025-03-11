@@ -18,27 +18,25 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_punkspider(SpiderFootPlugin):
 
     meta = {
-        'name': "PunkSpider",
-        'summary': "Check the QOMPLX punkspider.io service to see if the target is listed as vulnerable.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Leaks, Dumps and Breaches"],
-        'dataSource': {
-            'website': "https://punkspider.io/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'logo': "https://punkspider.io/img/logo.svg",
-            'description': "The idea behind Punkspider is very simple - we're doing a bunch "
+        "name": "PunkSpider",
+        "summary": "Check the QOMPLX punkspider.io service to see if the target is listed as vulnerable.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Leaks, Dumps and Breaches"],
+        "dataSource": {
+            "website": "https://punkspider.io/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "logo": "https://punkspider.io/img/logo.svg",
+            "description": "The idea behind Punkspider is very simple - we're doing a bunch "
             "of complicated stuff to find insecurities in massive amounts of websites, with "
-            "the goal of scanning the entire Internet."
-        }
+            "the goal of scanning the entire Internet.",
+        },
     }
     # Default options
-    opts = {
-    }
+    opts = {}
 
     # Option descriptions
-    optdescs = {
-    }
+    optdescs = {}
 
     # Be sure to completely clear any class variables in setup()
     # or you run the risk of data persisting between scan runs.
@@ -65,9 +63,12 @@ class sfp_punkspider(SpiderFootPlugin):
         return ["VULNERABILITY_GENERAL"]
 
     def query(self, domain: str):
-        domain_hash = hashlib.md5(domain.encode('utf-8', errors='replace').lower()).hexdigest()  # noqa: DUO130
+        domain_hash = hashlib.md5(
+            domain.encode("utf-8", errors="replace").lower()
+        ).hexdigest()  # noqa: DUO130
         url = f"https://api.punkspider.org/api/partial-hash/{domain_hash}"
-        res = self.sf.fetchUrl(url, timeout=30, useragent=self.opts['_useragent'])
+        res = self.sf.fetchUrl(
+            url, timeout=30, useragent=self.opts["_useragent"])
 
         return self.parseApiResponse(res)
 
@@ -76,26 +77,26 @@ class sfp_punkspider(SpiderFootPlugin):
             self.error("No response from PunkSpider.")
             return None
 
-        if res['code'] == '404':
+        if res["code"] == "404":
             self.debug("No results from PunkSpider.")
             return None
 
-        if res['code'] == '500' or res['code'] == '502' or res['code'] == '503':
+        if res["code"] == "500" or res["code"] == "502" or res["code"] == "503":
             self.error("PunkSpider service is unavailable.")
             self.errorState = True
             return None
 
         # Catch all non-200 status codes, and presume something went wrong
-        if res['code'] != '200':
+        if res["code"] != "200":
             self.error(f"Unexpected reply from PunkSpider: {res['code']}")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response from PunkSpider: {e}")
 
@@ -118,13 +119,19 @@ class sfp_punkspider(SpiderFootPlugin):
             return
 
         for rec in res:
-            if 'vulns' not in res[rec]:
+            if "vulns" not in res[rec]:
                 continue
 
-            for vuln in res[rec]['vulns']:
-                if res[rec]['vulns'][vuln] == 0:
+            for vuln in res[rec]["vulns"]:
+                if res[rec]["vulns"][vuln] == 0:
                     continue
-                e = SpiderFootEvent("VULNERABILITY_GENERAL", f"{vuln}: {res[rec]['vulns'][vuln]}", self.__name__, event)
+                e = SpiderFootEvent(
+                    "VULNERABILITY_GENERAL",
+                    f"{vuln}: {res[rec]['vulns'][vuln]}",
+                    self.__name__,
+                    event,
+                )
                 self.notifyListeners(e)
+
 
 # End of sfp_punkspider class

@@ -17,37 +17,32 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 class sfp_whoisfreaks(SpiderFootPlugin):
     meta = {
-        'name': "WhoisFreaks",
-        'summary': "Reverse Whois Lookup by owner email or name or company name",
-        'flags': ["slow", "apiKey"],
-        'useCases': ["Investigate", "Passive", "Footprint"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://whoisfreaks.com/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
-                "https://whoisfreaks.com/products/whois-api.html"
-            ],
-            'apiKeyInstructions': [
+        "name": "WhoisFreaks",
+        "summary": "Reverse Whois Lookup by owner email or name or company name",
+        "flags": ["slow", "apiKey"],
+        "useCases": ["Investigate", "Passive", "Footprint"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://whoisfreaks.com/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": ["https://whoisfreaks.com/products/whois-api.html"],
+            "apiKeyInstructions": [
                 "Visit https://whoisfreaks.com/signup.html",
                 "Register an account.",
                 "The API key will be available on billing dashboard after signup",
                 "500 Free credits upon signup",
                 "select a plan to request beyond this limit",
                 "Visit https://whoisfreaks.com/pricing/api-plans.html",
-
             ],
-            'favIcon': "https://whoisfreaks.com/images/icons/favicon.ico",
-            'logo': "https://whoisfreaks.com/images/logo.webp",
-            'description': "Search domain names by owner email or name or company name"
-                           " through our Reverse WHOIS lookup API"
-        }
+            "favIcon": "https://whoisfreaks.com/images/icons/favicon.ico",
+            "logo": "https://whoisfreaks.com/images/logo.webp",
+            "description": "Search domain names by owner email or name or company name"
+            " through our Reverse WHOIS lookup API",
+        },
     }
 
     # Default options
-    opts = {
-        "api_key": ""
-    }
+    opts = {"api_key": ""}
 
     # Option descriptions
     optdescs = {
@@ -78,56 +73,60 @@ class sfp_whoisfreaks(SpiderFootPlugin):
 
     # What events this module produces
     def producedEvents(self):
-        return [
-            'AFFILIATE_INTERNET_NAME',
-            'AFFILIATE_DOMAIN_NAME'
-        ]
+        return ["AFFILIATE_INTERNET_NAME", "AFFILIATE_DOMAIN_NAME"]
 
     # Search WhoisFreaks
     def query(self, qry, querytype, page=1, accum=None):
-        url = "https://api.whoisfreaks.com/v1.0/whois?whois=reverse&mode=mini&apiKey=" + self.opts['api_key']
+        url = (
+            "https://api.whoisfreaks.com/v1.0/whois?whois=reverse&mode=mini&apiKey=" +
+            self.opts["api_key"]
+        )
         url += "&" + querytype + "=" + qry + "&page=" + str(page)
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
-                               useragent="SpiderFoot")
+        res = self.sf.fetchUrl(
+            url, timeout=self.opts["_fetchtimeout"], useragent="SpiderFoot"
+        )
 
-        if res['code'] in ["401", "429", "413", "412"]:
-            self.error("WhoisFreaks API key seems to have been rejected or you have exceeded usage limits.")
+        if res["code"] in ["401", "429", "413", "412"]:
+            self.error(
+                "WhoisFreaks API key seems to have been rejected or you have exceeded usage limits."
+            )
             self.errorState = True
             return None
 
-        if res['code'] in ["404", "400"]:
+        if res["code"] in ["404", "400"]:
             self.error("Incorrect paramter or record not found.")
             self.errorState = True
             return None
 
-        if res['code'] in ["500", "503", "504"]:
+        if res["code"] in ["500", "503", "504"]:
             self.error("request timed out or server error")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info("No WhoisFreaks info found for " + qry)
             return None
 
         try:
-            info = json.loads(res['content'])
+            info = json.loads(res["content"])
 
             if info.get("total_pages", 1) > 1:
                 if info.get("current_page") < info.get("total_pages"):
                     if accum:
-                        accum.extend(info.get('whois_domains_historical'))
+                        accum.extend(info.get("whois_domains_historical"))
                     else:
-                        accum = info.get('whois_domains_historical')
+                        accum = info.get("whois_domains_historical")
                     return self.query(qry, querytype, page + 1, accum)
 
                 # We are at the last page
-                accum.extend(info.get('whois_domains_historical', []))
+                accum.extend(info.get("whois_domains_historical", []))
                 return accum
 
-            return info.get('whois_domains_historical', [])
+            return info.get("whois_domains_historical", [])
         except Exception as e:
-            self.error("Error processing JSON response from WhoisFreaks: " + str(e))
+            self.error(
+                "Error processing JSON response from WhoisFreaks: " + str(e))
             return None
 
     # Handle events sent to this module
@@ -141,7 +140,7 @@ class sfp_whoisfreaks(SpiderFootPlugin):
 
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
-        if self.opts['api_key'] == "":
+        if self.opts["api_key"] == "":
             self.error("You enabled whoisfreaks but did not set an API key!")
             self.errorState = True
             return
@@ -163,11 +162,15 @@ class sfp_whoisfreaks(SpiderFootPlugin):
         records = self.query(eventData, query_type)
         if records is not None:
             for record in records:
-                domain_name = record.get('domain_name')
+                domain_name = record.get("domain_name")
                 if domain_name:
-                    evt = SpiderFootEvent("AFFILIATE_INTERNET_NAME", domain_name, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "AFFILIATE_INTERNET_NAME", domain_name, self.__name__, event
+                    )
                     self.notifyListeners(evt)
 
-                    if self.sf.isDomain(domain_name, self.opts['_internettlds']):
-                        evt = SpiderFootEvent('AFFILIATE_DOMAIN_NAME', domain_name, self.__name__, event)
+                    if self.sf.isDomain(domain_name, self.opts["_internettlds"]):
+                        evt = SpiderFootEvent(
+                            "AFFILIATE_DOMAIN_NAME", domain_name, self.__name__, event
+                        )
                         self.notifyListeners(evt)

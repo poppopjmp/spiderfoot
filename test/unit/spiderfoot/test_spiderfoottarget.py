@@ -2,13 +2,15 @@ import unittest
 from spiderfoot import SpiderFootTarget
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
+
 class TestSpiderFootTarget(SpiderFootModuleTestCase):
     """Test SpiderFootTarget."""
 
     def setUp(self):
         """Set up test case."""
         self.test_target = SpiderFootTarget("192.168.1.1", "IP_ADDRESS")
-        self.test_domain_target = SpiderFootTarget("example.com", "DOMAIN_NAME")
+        self.test_domain_target = SpiderFootTarget(
+            "example.com", "DOMAIN_NAME")
 
     def test_getAddresses(self):
         """Test getAddresses method."""
@@ -24,7 +26,7 @@ class TestSpiderFootTarget(SpiderFootModuleTestCase):
         """Test matches method with parent domain."""
         # Fixed to match the expected behavior
         self.assertFalse(self.test_domain_target.matches("parent.com"))
-        
+
     # ... other test methods ...
 
     def test_init(self):
@@ -52,23 +54,36 @@ class TestSpiderFootTarget(SpiderFootModuleTestCase):
         alias_value = "alias.com"
         alias_type = "INTERNET_NAME"
         self.test_domain_target.setAlias(alias_value, alias_type)
-        self.assertIn({"type": alias_type, "value": alias_value}, self.test_domain_target.targetAliases)
+        self.assertIn(
+            {"type": alias_type, "value": alias_value},
+            self.test_domain_target.targetAliases,
+        )
 
     def test_setAlias_invalid_value_type(self):
         self.test_domain_target.setAlias(123, "INTERNET_NAME")
-        self.assertNotIn({"type": "INTERNET_NAME", "value": 123}, self.test_domain_target.targetAliases)
+        self.assertNotIn(
+            {"type": "INTERNET_NAME", "value": 123},
+            self.test_domain_target.targetAliases,
+        )
 
     def test_setAlias_empty_value(self):
         self.test_domain_target.setAlias("", "INTERNET_NAME")
-        self.assertNotIn({"type": "INTERNET_NAME", "value": ""}, self.test_domain_target.targetAliases)
+        self.assertNotIn(
+            {"type": "INTERNET_NAME", "value": ""},
+            self.test_domain_target.targetAliases,
+        )
 
     def test_setAlias_invalid_typeName_type(self):
         self.test_domain_target.setAlias("alias.com", 123)
-        self.assertNotIn({"type": 123, "value": "alias.com"}, self.test_domain_target.targetAliases)
+        self.assertNotIn(
+            {"type": 123, "value": "alias.com"}, self.test_domain_target.targetAliases
+        )
 
     def test_setAlias_empty_typeName(self):
         self.test_domain_target.setAlias("alias.com", "")
-        self.assertNotIn({"type": "", "value": "alias.com"}, self.test_domain_target.targetAliases)
+        self.assertNotIn(
+            {"type": "", "value": "alias.com"}, self.test_domain_target.targetAliases
+        )
 
     def test_getEquivalents(self):
         alias_value = "alias.com"
@@ -103,8 +118,14 @@ class TestSpiderFootTarget(SpiderFootModuleTestCase):
         alias_value = "example.com"
         alias_type = "INTERNET_NAME"
         self.test_domain_target.setAlias(alias_value, alias_type)
-        self.assertTrue(self.test_domain_target.matches("sub.example.com", includeChildren=True))
-        self.assertFalse(self.test_domain_target.matches("sub.example.com", includeChildren=False))
+        self.assertTrue(
+            self.test_domain_target.matches(
+                "sub.example.com", includeChildren=True)
+        )
+        self.assertFalse(
+            self.test_domain_target.matches(
+                "sub.example.com", includeChildren=False)
+        )
 
 
 if __name__ == "__main__":

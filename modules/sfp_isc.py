@@ -18,24 +18,24 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_isc(SpiderFootPlugin):
 
     meta = {
-        'name': "Internet Storm Center",
-        'summary': "Check if an IP address is malicious according to SANS ISC.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://isc.sans.edu",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "Internet Storm Center",
+        "summary": "Check if an IP address is malicious according to SANS ISC.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://isc.sans.edu",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://isc.sans.edu/api/",
                 "https://isc.sans.edu/howto.html",
                 "https://isc.sans.edu/honeypot.html",
                 "https://isc.sans.edu/glossary.html",
-                "https://isc.sans.edu/fightback.html"
+                "https://isc.sans.edu/fightback.html",
             ],
-            'favIcon': "https://isc.sans.edu/iscfavicon.ico",
-            'logo': "https://isc.sans.edu/images/logos/isc/large.png",
-            'description': "The ISC provides a free analysis and warning service to thousands of Internet users "
+            "favIcon": "https://isc.sans.edu/iscfavicon.ico",
+            "logo": "https://isc.sans.edu/images/logos/isc/large.png",
+            "description": "The ISC provides a free analysis and warning service to thousands of Internet users "
             "and organizations, and is actively working with Internet Service Providers to "
             "fight back against the most malicious attackers.\n"
             "Thousands of sensors that work with most firewalls, intrusion detection systems, "
@@ -45,16 +45,12 @@ class sfp_isc(SpiderFootPlugin):
             "the data looking for abnormal trends and behavior. "
             "The resulting analysis is posted to the ISC's main web page where it can be automatically retrieved "
             "by simple scripts or can be viewed in near real time by any Internet user.",
-        }
+        },
     }
 
-    opts = {
-        'checkaffiliates': True
-    }
+    opts = {"checkaffiliates": True}
 
-    optdescs = {
-        'checkaffiliates': "Apply checks to affiliates?"
-    }
+    optdescs = {"checkaffiliates": "Apply checks to affiliates?"}
 
     results = None
     errorState = False
@@ -89,21 +85,22 @@ class sfp_isc(SpiderFootPlugin):
 
         res = self.sf.fetchUrl(
             f"https://isc.sans.edu/api/ip/{ip}",
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from ISC.")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from ISC.")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error("Received no content from ISC")
             self.errorState = True
             return None
 
-        return res['content']
+        return res["content"]
 
     def handleEvent(self, event):
         eventName = event.eventType
@@ -120,14 +117,14 @@ class sfp_isc(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
-            malicious_type = 'MALICIOUS_IPADDR'
-            blacklist_type = 'BLACKLISTED_IPADDR'
-        elif eventName in ['AFFILIATE_IPADDR', 'AFFILIATE_IPV6_ADDRESS']:
-            if not self.opts.get('checkaffiliates', False):
+        if eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
+            malicious_type = "MALICIOUS_IPADDR"
+            blacklist_type = "BLACKLISTED_IPADDR"
+        elif eventName in ["AFFILIATE_IPADDR", "AFFILIATE_IPV6_ADDRESS"]:
+            if not self.opts.get("checkaffiliates", False):
                 return
-            malicious_type = 'MALICIOUS_AFFILIATE_IPADDR'
-            blacklist_type = 'BLACKLISTED_AFFILIATE_IPADDR'
+            malicious_type = "MALICIOUS_AFFILIATE_IPADDR"
+            blacklist_type = "BLACKLISTED_AFFILIATE_IPADDR"
         else:
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
@@ -150,5 +147,6 @@ class sfp_isc(SpiderFootPlugin):
 
         evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
         self.notifyListeners(evt)
+
 
 # End of sfp_isc class

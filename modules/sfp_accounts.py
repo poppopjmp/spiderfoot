@@ -24,10 +24,10 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 class sfp_accounts(SpiderFootPlugin):
 
     meta = {
-        'name': "Account Finder",
-        'summary': "Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc.",
-        'useCases': ["Footprint", "Passive"],
-        'categories': ["Social Media"]
+        "name": "Account Finder",
+        "summary": "Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc.",
+        "useCases": ["Footprint", "Passive"],
+        "categories": ["Social Media"],
     }
 
     # Default options
@@ -38,7 +38,7 @@ class sfp_accounts(SpiderFootPlugin):
         "userfromemail": True,
         "permutate": False,
         "usernamesize": 4,
-        "_maxthreads": 20
+        "_maxthreads": 20,
     }
 
     # Option descriptions
@@ -49,7 +49,7 @@ class sfp_accounts(SpiderFootPlugin):
         "userfromemail": "Extract usernames from e-mail addresses at all? If disabled this can reduce false positives for common usernames but for highly unique usernames it would result in missed accounts.",
         "permutate": "Look for the existence of account name permutations. Useful to identify fraudulent social media accounts or account squatting.",
         "usernamesize": "The minimum length of a username to query across social media sites. Helps avoid false positives for very common short usernames.",
-        "_maxthreads": "Maximum threads"
+        "_maxthreads": "Maximum threads",
     }
 
     results = None
@@ -81,16 +81,20 @@ class sfp_accounts(SpiderFootPlugin):
             url = "https://raw.githubusercontent.com/WebBreacher/WhatsMyName/main/wmn-data.json"
             data = self.sf.fetchUrl(url, useragent="SpiderFoot")
 
-            if data['content'] is None:
+            if data["content"] is None:
                 self.error(f"Unable to fetch {url}")
                 self.errorState = True
                 return
 
-            content = data['content']
+            content = data["content"]
             self.sf.cachePut("sfaccountsv2", content)
 
         try:
-            self.sites = [site for site in json.loads(content)['sites'] if not site.get('valid', True) is False]
+            self.sites = [
+                site
+                for site in json.loads(content)["sites"]
+                if site.get("valid", True) is not False
+            ]
         except Exception as e:
             self.error(f"Unable to parse social media accounts list: {e}")
             self.errorState = True
@@ -100,52 +104,54 @@ class sfp_accounts(SpiderFootPlugin):
         return ["EMAILADDR", "DOMAIN_NAME", "HUMAN_NAME", "USERNAME"]
 
     def producedEvents(self):
-        return ["USERNAME", "ACCOUNT_EXTERNAL_OWNED",
-                "SIMILAR_ACCOUNT_EXTERNAL"]
+        return ["USERNAME", "ACCOUNT_EXTERNAL_OWNED", "SIMILAR_ACCOUNT_EXTERNAL"]
 
     def checkSite(self, name, site):
-        if 'uri_check' not in site:
+        if "uri_check" not in site:
             return
 
-        url = site['uri_check'].format(account=name)
-        if 'uri_pretty' in site:
-            ret_url = site['uri_pretty'].format(account=name)
+        url = site["uri_check"].format(account=name)
+        if "uri_pretty" in site:
+            ret_url = site["uri_pretty"].format(account=name)
         else:
             ret_url = url
         retname = f"{site['name']} (Category: {site['cat']})\n<SFURL>{ret_url}</SFURL>"
 
         post = None
-        if site.get('post_body'):
-            post = site['post_body']
+        if site.get("post_body"):
+            post = site["post_body"]
 
         res = self.sf.fetchUrl(
             url,
             postData=post,
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
             noLog=True,
-            verify=False
+            verify=False,
         )
 
-        if not res['content']:
+        if not res["content"]:
             with self.lock:
                 self.siteResults[retname] = False
             return
 
-        if site.get('e_code') != site.get('m_code'):
-            if res['code'] != str(site.get('e_code')):
+        if site.get("e_code") != site.get("m_code"):
+            if res["code"] != str(site.get("e_code")):
                 with self.lock:
                     self.siteResults[retname] = False
                 return
 
-        if site.get('e_string') not in res['content'] or (site.get('m_string') and site.get('m_string') in res['content']):
+        if site.get("e_string") not in res["content"] or (
+            site.get("m_string") and site.get("m_string") in res["content"]
+        ):
             with self.lock:
                 self.siteResults[retname] = False
             return
 
-        if self.opts['musthavename']:
-            if name.lower() not in res['content'].lower():
-                self.debug(f"Skipping {site['name']} as username not mentioned.")
+        if self.opts["musthavename"]:
+            if name.lower() not in res["content"].lower():
+                self.debug(
+                    f"Skipping {site['name']} as username not mentioned.")
                 with self.lock:
                     self.siteResults[retname] = False
                 return
@@ -154,7 +160,7 @@ class sfp_accounts(SpiderFootPlugin):
         # TODO: fix this once WhatsMyName has support for usernames with '.'
         if "." in name:
             firstname = name.split(".")[0]
-            if firstname + "<" in res['content'] or firstname + '"' in res['content']:
+            if firstname + "<" in res["content"] or firstname + '"' in res["content"]:
                 with self.lock:
                     self.siteResults[retname] = False
                 return
@@ -170,7 +176,9 @@ class sfp_accounts(SpiderFootPlugin):
                     try:
                         self.checkSite(username, site)
                     except Exception as e:
-                        self.debug(f'Thread {threading.current_thread().name} exception: {e}')
+                        self.debug(
+                            f"Thread {threading.current_thread().name} exception: {e}"
+                        )
             except QueueEmpty:
                 return
 
@@ -188,11 +196,12 @@ class sfp_accounts(SpiderFootPlugin):
 
         # start the scan threads
         threads = []
-        for i in range(min(len(sites), self.opts['_maxthreads'])):
+        for i in range(min(len(sites), self.opts["_maxthreads"])):
             thread = threading.Thread(
-                name=f'sfp_accounts_scan_{i}',
+                name=f"sfp_accounts_scan_{i}",
                 target=processSiteQueue,
-                args=(username, queue))
+                args=(username, queue),
+            )
             thread.start()
             threads.append(thread)
 
@@ -202,54 +211,56 @@ class sfp_accounts(SpiderFootPlugin):
 
         duration = time.monotonic() - startTime
         scanRate = len(sites) / duration
-        self.debug(f'Scan statistics: name={username}, count={len(self.siteResults)}, duration={duration:.2f}, rate={scanRate:.0f}')
+        self.debug(
+            f"Scan statistics: name={username}, count={len(self.siteResults)}, duration={duration:.2f}, rate={scanRate:.0f}"
+        )
 
         return [site for site, found in self.siteResults.items() if found]
 
     def generatePermutations(self, username):
         permutations = list()
-        prefixsuffix = ['_', '-']
+        prefixsuffix = ["_", "-"]
         replacements = {
-            'a': ['4', 's'],
-            'b': ['v', 'n'],
-            'c': ['x', 'v'],
-            'd': ['s', 'f'],
-            'e': ['w', 'r'],
-            'f': ['d', 'g'],
-            'g': ['f', 'h'],
-            'h': ['g', 'j', 'n'],
-            'i': ['o', 'u', '1'],
-            'j': ['k', 'h', 'i'],
-            'k': ['l', 'j'],
-            'l': ['i', '1', 'k'],
-            'm': ['n'],
-            'n': ['m'],
-            'o': ['p', 'i', '0'],
-            'p': ['o', 'q'],
-            'r': ['t', 'e'],
-            's': ['a', 'd', '5'],
-            't': ['7', 'y', 'z', 'r'],
-            'u': ['v', 'i', 'y', 'z'],
-            'v': ['u', 'c', 'b'],
-            'w': ['v', 'vv', 'q', 'e'],
-            'x': ['z', 'y', 'c'],
-            'y': ['z', 'x'],
-            'z': ['y', 'x'],
-            '0': ['o'],
-            '1': ['l'],
-            '2': ['5'],
-            '3': ['e'],
-            '4': ['a'],
-            '5': ['s'],
-            '6': ['b'],
-            '7': ['t'],
-            '8': ['b'],
-            '9': []
+            "a": ["4", "s"],
+            "b": ["v", "n"],
+            "c": ["x", "v"],
+            "d": ["s", "f"],
+            "e": ["w", "r"],
+            "f": ["d", "g"],
+            "g": ["f", "h"],
+            "h": ["g", "j", "n"],
+            "i": ["o", "u", "1"],
+            "j": ["k", "h", "i"],
+            "k": ["l", "j"],
+            "l": ["i", "1", "k"],
+            "m": ["n"],
+            "n": ["m"],
+            "o": ["p", "i", "0"],
+            "p": ["o", "q"],
+            "r": ["t", "e"],
+            "s": ["a", "d", "5"],
+            "t": ["7", "y", "z", "r"],
+            "u": ["v", "i", "y", "z"],
+            "v": ["u", "c", "b"],
+            "w": ["v", "vv", "q", "e"],
+            "x": ["z", "y", "c"],
+            "y": ["z", "x"],
+            "z": ["y", "x"],
+            "0": ["o"],
+            "1": ["l"],
+            "2": ["5"],
+            "3": ["e"],
+            "4": ["a"],
+            "5": ["s"],
+            "6": ["b"],
+            "7": ["t"],
+            "8": ["b"],
+            "9": [],
         }
         pairs = {
-            'oo': ['00'],
-            'll': ['l1l', 'l1l', '111', '11'],
-            '11': ['ll', 'lll', 'l1l', '1l1']
+            "oo": ["00"],
+            "ll": ["l1l", "l1l", "111", "11"],
+            "11": ["ll", "lll", "l1l", "1l1"],
         }
 
         # Generate a set with replacements, then
@@ -262,7 +273,7 @@ class sfp_accounts(SpiderFootPlugin):
                 continue
             npos = pos + 1
             for xc in replacements[c]:
-                newuser = username[0:pos] + xc + username[npos:len(username)]
+                newuser = username[0:pos] + xc + username[npos: len(username)]
                 permutations.append(newuser)
 
             pos += 1
@@ -281,7 +292,9 @@ class sfp_accounts(SpiderFootPlugin):
         # Search for double character usernames
         pos = 0
         for c in username:
-            permutations.append(username[0:pos] + c + c + username[(pos + 1):len(username)])
+            permutations.append(
+                username[0:pos] + c + c + username[(pos + 1): len(username)]
+            )
             pos += 1
 
         return list(set(permutations))
@@ -313,16 +326,21 @@ class sfp_accounts(SpiderFootPlugin):
             # Check if a state cache exists first, to not have to do this all the time
             content = self.sf.cacheGet("sfaccounts_state_v3", 72)
             if content:
-                if content != "None":  # "None" is written to the cached file when no sites are distrusted
+                if (
+                    content != "None"
+                ):  # "None" is written to the cached file when no sites are distrusted
                     delsites = list()
                     for line in content.split("\n"):
-                        if line == '':
+                        if line == "":
                             continue
                         delsites.append(line)
-                    self.sites = [d for d in self.sites if d['name'] not in delsites]
+                    self.sites = [
+                        d for d in self.sites if d["name"] not in delsites]
             else:
-                randpool = 'abcdefghijklmnopqrstuvwxyz1234567890'
-                randuser = ''.join([random.SystemRandom().choice(randpool) for x in range(10)])
+                randpool = "abcdefghijklmnopqrstuvwxyz1234567890"
+                randuser = "".join(
+                    [random.SystemRandom().choice(randpool) for x in range(10)]
+                )
                 res = self.checkSites(randuser)
                 if res:
                     delsites = list()
@@ -330,7 +348,8 @@ class sfp_accounts(SpiderFootPlugin):
                         sitename = site.split(" (Category:")[0]
                         self.debug(f"Distrusting {sitename}")
                         delsites.append(sitename)
-                    self.sites = [d for d in self.sites if d['name'] not in delsites]
+                    self.sites = [
+                        d for d in self.sites if d["name"] not in delsites]
                 else:
                     # The caching code needs *some* content
                     delsites = "None"
@@ -339,18 +358,21 @@ class sfp_accounts(SpiderFootPlugin):
             self.distrustedChecked = True
 
         if eventName == "HUMAN_NAME":
-            names = [eventData.lower().replace(" ", ""), eventData.lower().replace(" ", ".")]
+            names = [
+                eventData.lower().replace(" ", ""),
+                eventData.lower().replace(" ", "."),
+            ]
             for name in names:
                 users.append(name)
 
         if eventName == "DOMAIN_NAME":
-            kw = self.sf.domainKeyword(eventData, self.opts['_internettlds'])
+            kw = self.sf.domainKeyword(eventData, self.opts["_internettlds"])
             if not kw:
                 return
 
             users.append(kw)
 
-        if eventName == "EMAILADDR" and self.opts['userfromemail']:
+        if eventName == "EMAILADDR" and self.opts["userfromemail"]:
             name = eventData.split("@")[0].lower()
             users.append(name)
 
@@ -358,20 +380,22 @@ class sfp_accounts(SpiderFootPlugin):
             users.append(eventData)
 
         for user in set(users):
-            if user in self.opts['_genericusers'].split(","):
+            if user in self.opts["_genericusers"].split(","):
                 self.debug(f"{user} is a generic account name, skipping.")
                 continue
 
-            if self.opts['ignorenamedict'] and user in self.commonNames:
-                self.debug(f"{user} is found in our name dictionary, skipping.")
+            if self.opts["ignorenamedict"] and user in self.commonNames:
+                self.debug(
+                    f"{user} is found in our name dictionary, skipping.")
                 continue
 
-            if self.opts['ignoreworddict'] and user in self.words:
-                self.debug(f"{user} is found in our word dictionary, skipping.")
+            if self.opts["ignoreworddict"] and user in self.words:
+                self.debug(
+                    f"{user} is found in our word dictionary, skipping.")
                 continue
 
             if user not in self.reportedUsers and eventData != user:
-                if len(user) < self.opts['usernamesize']:
+                if len(user) < self.opts["usernamesize"]:
                     self.debug(f"{user} is too short, skipping.")
                     continue
 
@@ -387,23 +411,19 @@ class sfp_accounts(SpiderFootPlugin):
             res = self.checkSites(user)
             for site in res:
                 evt = SpiderFootEvent(
-                    "ACCOUNT_EXTERNAL_OWNED",
-                    site,
-                    self.__name__,
-                    event
+                    "ACCOUNT_EXTERNAL_OWNED", site, self.__name__, event
                 )
                 self.notifyListeners(evt)
 
-            if self.opts['permutate']:
+            if self.opts["permutate"]:
                 permutations = self.generatePermutations(user)
                 for puser in permutations:
                     res = self.checkSites(puser)
                     for site in res:
                         evt = SpiderFootEvent(
-                            "SIMILAR_ACCOUNT_EXTERNAL",
-                            site,
-                            self.__name__,
-                            event
+                            "SIMILAR_ACCOUNT_EXTERNAL", site, self.__name__, event
                         )
                         self.notifyListeners(evt)
+
+
 # End of sfp_accounts class

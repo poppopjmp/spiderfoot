@@ -18,30 +18,28 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_dns_for_family(SpiderFootPlugin):
 
     meta = {
-        'name': "DNS for Family",
-        'summary': "Check if a host would be blocked by DNS for Family.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://dnsforfamily.com/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "DNS for Family",
+        "summary": "Check if a host would be blocked by DNS for Family.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://dnsforfamily.com/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://dnsforfamily.com/",
             ],
-            'favIcon': "https://dnsforfamily.com/Icons/favicon-32x32.png",
-            'logo': "https://dnsforfamily.com/Templates/assets/images/logo.svg",
-            'description': "DNS for Family aims to block websites which are considered as porn. "
+            "favIcon": "https://dnsforfamily.com/Icons/favicon-32x32.png",
+            "logo": "https://dnsforfamily.com/Templates/assets/images/logo.svg",
+            "description": "DNS for Family aims to block websites which are considered as porn. "
             "So that you and your children can safely surf internet to their heart's desire, "
-            "without worrying to be followed to harmful websites."
-        }
+            "without worrying to be followed to harmful websites.",
+        },
     }
 
-    opts = {
-    }
+    opts = {}
 
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -53,11 +51,7 @@ class sfp_dns_for_family(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            "INTERNET_NAME",
-            "AFFILIATE_INTERNET_NAME",
-            "CO_HOSTED_SITE"
-        ]
+        return ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME", "CO_HOSTED_SITE"]
 
     def producedEvents(self):
         return [
@@ -108,11 +102,14 @@ class sfp_dns_for_family(SpiderFootPlugin):
 
         for result in res:
             k = str(result)
-            if k != '159.69.10.249':
+            if k != "159.69.10.249":
                 continue
 
             self.debug(f"{eventData} blocked by DNS for Family")
-            evt = SpiderFootEvent(blacklist_type, f"DNS for Family [{eventData}]", self.__name__, event)
+            evt = SpiderFootEvent(
+                blacklist_type, f"DNS for Family [{eventData}]", self.__name__, event
+            )
             self.notifyListeners(evt)
+
 
 # End of sfp_dns_for_family class

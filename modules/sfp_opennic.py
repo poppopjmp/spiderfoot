@@ -19,29 +19,29 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_opennic(SpiderFootPlugin):
 
     meta = {
-        'name': "OpenNIC DNS",
-        'summary': "Resolves host names in the OpenNIC alternative DNS system.",
-        'flags': [],
-        'useCases': ["Investigate", "Footprint", "Passive"],
-        'categories': ["DNS"],
-        'dataSource': {
-            'website': "https://www.opennic.org/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "OpenNIC DNS",
+        "summary": "Resolves host names in the OpenNIC alternative DNS system.",
+        "flags": [],
+        "useCases": ["Investigate", "Footprint", "Passive"],
+        "categories": ["DNS"],
+        "dataSource": {
+            "website": "https://www.opennic.org/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://wiki.opennic.org/",
                 "https://servers.opennic.org",
             ],
-            'description': "An organization of hobbyists who run an alternative DNS network, "
-            "also provides access to domains not administered by ICANN."
-        }
+            "description": "An organization of hobbyists who run an alternative DNS network, "
+            "also provides access to domains not administered by ICANN.",
+        },
     }
 
     opts = {
-        'checkaffiliates': True,
+        "checkaffiliates": True,
     }
 
     optdescs = {
-        'checkaffiliates': "Apply checks to affiliates?",
+        "checkaffiliates": "Apply checks to affiliates?",
     }
 
     results = None
@@ -77,7 +77,7 @@ class sfp_opennic(SpiderFootPlugin):
             "35.211.96.150",
             "51.89.88.77",
             "94.247.43.254",
-            "138.197.140.189"
+            "138.197.140.189",
         ]
 
         try:
@@ -94,36 +94,35 @@ class sfp_opennic(SpiderFootPlugin):
             list: OpenNIC TLDs (and peer TLDs).
         """
         return [
-            'bbs',
-            'chan',
-            'cyb',
-            'dyn',
-            'epic',
-            'free',
-            'geek',
-            'glue',
-            'gopher',
-            'indy',
-            'libre',
-            'neo',
-            'null',
-            'o',
-            'oss',
-            'oz',
-            'parody',
-            'pirate',
-
+            "bbs",
+            "chan",
+            "cyb",
+            "dyn",
+            "epic",
+            "free",
+            "geek",
+            "glue",
+            "gopher",
+            "indy",
+            "libre",
+            "neo",
+            "null",
+            "o",
+            "oss",
+            "oz",
+            "parody",
+            "pirate",
             # Peers
-            'bazar',
-            'bit',
-            'coin',
-            'emc',
-            'fur',
-            'ku',
-            'lib',
-            'te',
-            'ti',
-            'uu',
+            "bazar",
+            "bit",
+            "coin",
+            "emc",
+            "fur",
+            "ku",
+            "lib",
+            "te",
+            "ti",
+            "uu",
         ]
 
     def handleEvent(self, event):
@@ -137,13 +136,13 @@ class sfp_opennic(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventData.split('.')[-1] not in self.tlds():
+        if eventData.split(".")[-1] not in self.tlds():
             return
 
         affiliate = False
 
         if "AFFILIATE" in eventName:
-            if not self.opts.get('checkaffiliates', False):
+            if not self.opts.get("checkaffiliates", False):
                 return
             affiliate = True
 
@@ -156,20 +155,31 @@ class sfp_opennic(SpiderFootPlugin):
 
         for addr in set(addrs):
             if self.sf.validIP(addr):
-                if affiliate and not self.getTarget().matches(addr, includeParents=True):
-                    evt = SpiderFootEvent("AFFILIATE_IPADDR", addr, self.__name__, event)
+                if affiliate and not self.getTarget().matches(
+                    addr, includeParents=True
+                ):
+                    evt = SpiderFootEvent(
+                        "AFFILIATE_IPADDR", addr, self.__name__, event
+                    )
                 else:
-                    evt = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "IP_ADDRESS", addr, self.__name__, event)
 
                 self.notifyListeners(evt)
             elif self.sf.validIP6(addr):
-                if affiliate and not self.getTarget().matches(addr, includeParents=True):
-                    evt = SpiderFootEvent("AFFILIATE_IPV6_ADDRESS", addr, self.__name__, event)
+                if affiliate and not self.getTarget().matches(
+                    addr, includeParents=True
+                ):
+                    evt = SpiderFootEvent(
+                        "AFFILIATE_IPV6_ADDRESS", addr, self.__name__, event
+                    )
                 else:
-                    evt = SpiderFootEvent("IPV6_ADDRESS", addr, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "IPV6_ADDRESS", addr, self.__name__, event)
 
                 self.notifyListeners(evt)
             else:
                 continue
+
 
 # End of sfp_opennic class

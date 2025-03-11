@@ -10,28 +10,26 @@
 # Licence:     GPL
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootPlugin
+
 
 class sfp_yahoosearch(SpiderFootPlugin):
 
     meta = {
-        'name': "Yahoo Search",
-        'summary': "Search Yahoo for information related to the target.",
-        'flags': ["slow"],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Search Engines"]
+        "name": "Yahoo Search",
+        "summary": "Search Yahoo for information related to the target.",
+        "flags": ["slow"],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Search Engines"],
     }
 
     # Default options
-    opts = {
-        'fetchlinks': True,
-        'maxresults': 100
-    }
+    opts = {"fetchlinks": True, "maxresults": 100}
 
     # Option descriptions
     optdescs = {
-        'fetchlinks': "Fetch the URLs mentioned in Yahoo search results.",
-        'maxresults': "Maximum number of results to obtain."
+        "fetchlinks": "Fetch the URLs mentioned in Yahoo search results.",
+        "maxresults": "Maximum number of results to obtain.",
     }
 
     def setup(self, sfc, userOpts=dict()):
@@ -57,8 +55,8 @@ class sfp_yahoosearch(SpiderFootPlugin):
             return None
 
         self.results[eventData] = True
-        
+
         self.debug(f"Searching Yahoo for: {eventData}")
-        
+
         # Mock implementation - in a real plugin this would perform an actual search
         return None

@@ -19,31 +19,29 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_cloudflaredns(SpiderFootPlugin):
 
     meta = {
-        'name': "CloudFlare DNS",
-        'summary': "Check if a host would be blocked by CloudFlare DNS.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://www.cloudflare.com/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "CloudFlare DNS",
+        "summary": "Check if a host would be blocked by CloudFlare DNS.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://www.cloudflare.com/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://developers.cloudflare.com/1.1.1.1/1.1.1.1-for-families/"
             ],
-            'favIcon': "https://www.cloudflare.com/img/favicon/favicon-32x32.png",
-            'logo': "https://www.cloudflare.com/img/logo-web-badges/cf-logo-on-white-bg.svg",
-            'description': "1.1.1.1 for Families is the easiest way to add a layer of protection to "
+            "favIcon": "https://www.cloudflare.com/img/favicon/favicon-32x32.png",
+            "logo": "https://www.cloudflare.com/img/logo-web-badges/cf-logo-on-white-bg.svg",
+            "description": "1.1.1.1 for Families is the easiest way to add a layer of protection to "
             "your home network and protect it from malware and adult content. "
             "1.1.1.1 for Families leverages Cloudflare’s global network to ensure "
             "that it is fast and secure around the world.",
-        }
+        },
     }
 
-    opts = {
-    }
+    opts = {}
 
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -55,11 +53,7 @@ class sfp_cloudflaredns(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            "INTERNET_NAME",
-            "AFFILIATE_INTERNET_NAME",
-            "CO_HOSTED_SITE"
-        ]
+        return ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME", "CO_HOSTED_SITE"]
 
     def producedEvents(self):
         return [
@@ -120,19 +114,23 @@ class sfp_cloudflaredns(SpiderFootPlugin):
         if not family or not malware:
             return
 
-        if '0.0.0.0' not in family and '0.0.0.0' not in malware:
+        if "0.0.0.0" not in family and "0.0.0.0" not in malware:
             return
 
         # Host is blocked only by family filters
-        if '0.0.0.0' not in malware:
+        if "0.0.0.0" not in malware:
             self.debug(f"{eventData} blocked by CloudFlare Family DNS")
-            evt = SpiderFootEvent(e, f"CloudFlare - Family [{eventData}]", self.__name__, event)
+            evt = SpiderFootEvent(
+                e, f"CloudFlare - Family [{eventData}]", self.__name__, event
+            )
             self.notifyListeners(evt)
             return
 
         # Host is blocked only by malware filters
         self.debug(f"{eventData} blocked by CloudFlare Malware DNS")
-        evt = SpiderFootEvent(e, f"CloudFlare - Malware [{eventData}]", self.__name__, event)
+        evt = SpiderFootEvent(
+            e, f"CloudFlare - Malware [{eventData}]", self.__name__, event
+        )
         self.notifyListeners(evt)
 
         if eventName == "INTERNET_NAME":
@@ -144,7 +142,10 @@ class sfp_cloudflaredns(SpiderFootPlugin):
         else:
             self.debug(f"Unexpected event type {eventName}, skipping")
 
-        evt = SpiderFootEvent(e, f"CloudFlare - Malware [{eventData}]", self.__name__, event)
+        evt = SpiderFootEvent(
+            e, f"CloudFlare - Malware [{eventData}]", self.__name__, event
+        )
         self.notifyListeners(evt)
+
 
 # End of sfp_cloudflaredns class

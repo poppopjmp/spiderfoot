@@ -19,40 +19,37 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_twilio(SpiderFootPlugin):
 
     meta = {
-        'name': "Twilio",
-        'summary': "Obtain information from Twilio about phone numbers. Ensure you have the Caller Name add-on installed in Twilio.",
-        'flags': ["apikey"],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://www.twilio.com/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
+        "name": "Twilio",
+        "summary": "Obtain information from Twilio about phone numbers. Ensure you have the Caller Name add-on installed in Twilio.",
+        "flags": ["apikey"],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://www.twilio.com/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": [
                 "https://www.twilio.com/docs/all",
-                "https://www.twilio.com/blog/what-does-twilio-do"
+                "https://www.twilio.com/blog/what-does-twilio-do",
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "Visit https://www.twilio.com",
                 "Register a free account",
                 "Navigate to https://www.twilio.com/console",
-                "The API key combination is listed under 'Account SID' and 'Auth Token'"
+                "The API key combination is listed under 'Account SID' and 'Auth Token'",
             ],
-            'favIcon': "https://www.datasource.com/favicon.ico",
-            'logo': "https://www.datasource.com/logo.gif",
-            'description': "Twilio is a cloud communications platform as a service company based in San Francisco, California. "
+            "favIcon": "https://www.datasource.com/favicon.ico",
+            "logo": "https://www.datasource.com/logo.gif",
+            "description": "Twilio is a cloud communications platform as a service company based in San Francisco, California. "
             "Twilio allows software developers to programmatically make and receive phone calls, "
             "send and receive text messages, and perform other communication functions using its web service APIs.",
-        }
+        },
     }
 
-    opts = {
-        'api_key_account_sid': '',
-        'api_key_auth_token': ''
-    }
+    opts = {"api_key_account_sid": "", "api_key_auth_token": ""}
 
     optdescs = {
-        'api_key_account_sid': 'Twilio Account SID',
-        'api_key_auth_token': 'Twilio Auth Token'
+        "api_key_account_sid": "Twilio Account SID",
+        "api_key_auth_token": "Twilio Auth Token",
     }
 
     results = None
@@ -75,41 +72,45 @@ class sfp_twilio(SpiderFootPlugin):
     # to do so and avoid putting it in handleEvent()
     def queryPhoneNumber(self, phoneNumber):
 
-        token = (base64.b64encode(self.opts['api_key_account_sid'].encode('utf8') + ":".encode('utf-8') + self.opts['api_key_auth_token'].encode('utf-8'))).decode('utf-8')
+        token = (
+            base64.b64encode(
+                self.opts["api_key_account_sid"].encode("utf8") +
+                ":".encode("utf-8") +
+                self.opts["api_key_auth_token"].encode("utf-8")
+            )
+        ).decode("utf-8")
 
-        headers = {
-            'Accept': "application/json",
-            'Authorization': "Basic " + token
-        }
+        headers = {"Accept": "application/json",
+                   "Authorization": "Basic " + token}
 
         res = self.sf.fetchUrl(
             f"https://lookups.twilio.com/v1/PhoneNumbers/{phoneNumber}?Type=caller-name",
             headers=headers,
             timeout=15,
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] == '400':
+        if res["code"] == "400":
             self.error("Bad request.")
             return None
 
-        if res['code'] == '404':
+        if res["code"] == "404":
             self.debug("Phone number not found.")
             return None
 
-        if res['code'] == '429':
+        if res["code"] == "429":
             self.error("API usage limit reached.")
             return None
 
-        if res['code'] == '503':
+        if res["code"] == "503":
             self.error("Service unavailable.")
             return None
 
-        if res['code'] != '200':
+        if res["code"] != "200":
             self.error("Could not fetch data.")
             return None
 
-        return res.get('content')
+        return res.get("content")
 
     # Handle events sent to this module
     def handleEvent(self, event):
@@ -124,8 +125,12 @@ class sfp_twilio(SpiderFootPlugin):
 
         # Always check if the API key is set and complain if it isn't, then set
         # self.errorState to avoid this being a continual complaint during the scan.
-        if self.opts['api_key_account_sid'] == "" or self.opts['api_key_auth_token'] == "":
-            self.error("You enabled sfp_twilio but did not set account sid/auth token")
+        if (
+            self.opts["api_key_account_sid"] == "" or
+            self.opts["api_key_auth_token"] == ""
+        ):
+            self.error(
+                "You enabled sfp_twilio but did not set account sid/auth token")
             self.errorState = True
             return
 
@@ -145,12 +150,14 @@ class sfp_twilio(SpiderFootPlugin):
         evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
         self.notifyListeners(evt)
 
-        callerName = data.get('caller_name')
+        callerName = data.get("caller_name")
         if callerName:
-            callerName = callerName.get('caller_name')
+            callerName = callerName.get("caller_name")
 
         if callerName:
-            evt = SpiderFootEvent("COMPANY_NAME", callerName, self.__name__, event)
+            evt = SpiderFootEvent(
+                "COMPANY_NAME", callerName, self.__name__, event)
             self.notifyListeners(evt)
+
 
 # End of sfp_twilio class

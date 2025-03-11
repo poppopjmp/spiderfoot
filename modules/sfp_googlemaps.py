@@ -20,18 +20,18 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_googlemaps(SpiderFootPlugin):
 
     meta = {
-        'name': "Google Maps",
-        'summary': "Identifies potential physical addresses and latitude/longitude coordinates.",
-        'flags': ["apikey"],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Real World"],
-        'dataSource': {
-            'website': "https://cloud.google.com/maps-platform/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
+        "name": "Google Maps",
+        "summary": "Identifies potential physical addresses and latitude/longitude coordinates.",
+        "flags": ["apikey"],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Real World"],
+        "dataSource": {
+            "website": "https://cloud.google.com/maps-platform/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": [
                 "https://developers.google.com/maps/documentation/?_ga=2.135220017.1220421370.1587340370-900596925.1587340370"
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "Visit https://cloud.google.com/maps-platform/",
                 "Register a free Google account",
                 "Click on 'Get Started'",
@@ -39,23 +39,19 @@ class sfp_googlemaps(SpiderFootPlugin):
                 "Select the type of API",
                 "Navigate to https://console.cloud.google.com/apis/credentials",
                 "Click on 'Credentials'",
-                "The API Key will be listed under 'API Keys'"
+                "The API Key will be listed under 'API Keys'",
             ],
-            'favIcon': "https://www.gstatic.com/devrel-devsite/prod/v2210deb8920cd4a55bd580441aa58e7853afc04b39a9d9ac4198e1cd7fbe04ef/cloud/images/favicons/onecloud/favicon.ico",
-            'logo': "https://www.gstatic.com/devrel-devsite/prod/v2210deb8920cd4a55bd580441aa58e7853afc04b39a9d9ac4198e1cd7fbe04ef/cloud/images/cloud-logo.svg",
-            'description': "Explore where real-world insights and immersive location experiences can take your business.\n"
+            "favIcon": "https://www.gstatic.com/devrel-devsite/prod/v2210deb8920cd4a55bd580441aa58e7853afc04b39a9d9ac4198e1cd7fbe04ef/cloud/images/favicons/onecloud/favicon.ico",
+            "logo": "https://www.gstatic.com/devrel-devsite/prod/v2210deb8920cd4a55bd580441aa58e7853afc04b39a9d9ac4198e1cd7fbe04ef/cloud/images/cloud-logo.svg",
+            "description": "Explore where real-world insights and immersive location experiences can take your business.\n"
             "Build with reliable, comprehensive data for over 200 countries and territories.\n"
             "has been done here. If line breaks are needed for breaking up\n"
             "Scale confidently, backed by our infrastructure.",
-        }
+        },
     }
 
-    opts = {
-        "api_key": ""
-    }
-    optdescs = {
-        "api_key": "Google Geocoding API Key."
-    }
+    opts = {"api_key": ""}
+    optdescs = {"api_key": "Google Geocoding API Key."}
     results = None
     errorState = False
 
@@ -68,24 +64,28 @@ class sfp_googlemaps(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return ['DOMAIN_NAME', 'PHYSICAL_ADDRESS']
+        return ["DOMAIN_NAME", "PHYSICAL_ADDRESS"]
 
     def producedEvents(self):
         return ["PHYSICAL_ADDRESS", "PHYSICAL_COORDINATES", "RAW_RIR_DATA"]
 
     def query(self, address):
-        params = urllib.parse.urlencode({
-            'key': self.opts['api_key'],
-            'address': address.encode('raw_unicode_escape').decode("ascii", errors='replace')
-        })
+        params = urllib.parse.urlencode(
+            {
+                "key": self.opts["api_key"],
+                "address": address.encode("raw_unicode_escape").decode(
+                    "ascii", errors="replace"
+                ),
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://maps.googleapis.com/maps/api/geocode/json?{params}",
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent']
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
         )
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info(f"No location info found for {address}")
             return None
 
@@ -121,15 +121,11 @@ class sfp_googlemaps(SpiderFootPlugin):
             return
 
         evt = SpiderFootEvent(
-            "RAW_RIR_DATA",
-            res['content'],
-            self.__name__,
-            event
-        )
+            "RAW_RIR_DATA", res["content"], self.__name__, event)
         self.notifyListeners(evt)
 
         try:
-            data = json.loads(res['content'])['results'][0]
+            data = json.loads(res["content"])["results"][0]
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
             return
@@ -137,29 +133,24 @@ class sfp_googlemaps(SpiderFootPlugin):
         if srcModuleName == "sfp_googlemaps":
             return
 
-        geometry = data.get('geometry')
+        geometry = data.get("geometry")
         if geometry:
-            location = data.get('location')
+            location = data.get("location")
             if location:
-                lat = location.get('lat')
-                lng = location.get('lng')
+                lat = location.get("lat")
+                lng = location.get("lng")
                 if lat and lng:
                     evt = SpiderFootEvent(
-                        "PHYSICAL_COORDINATES",
-                        f"{lat},{lng}",
-                        self.__name__,
-                        event
+                        "PHYSICAL_COORDINATES", f"{lat},{lng}", self.__name__, event
                     )
                     self.notifyListeners(evt)
 
-        formatted_address = data.get('formatted_address')
+        formatted_address = data.get("formatted_address")
         if formatted_address:
             evt = SpiderFootEvent(
-                "PHYSICAL_ADDRESS",
-                data['formatted_address'],
-                self.__name__,
-                event
+                "PHYSICAL_ADDRESS", data["formatted_address"], self.__name__, event
             )
             self.notifyListeners(evt)
+
 
 # End of sfp_googlemaps class

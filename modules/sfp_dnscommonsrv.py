@@ -19,11 +19,11 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_dnscommonsrv(SpiderFootPlugin):
 
     meta = {
-        'name': "DNS Common SRV",
-        'summary': "Attempts to identify hostnames through brute-forcing common DNS SRV records.",
-        'flags': ["slow"],
-        'useCases': ["Footprint", "Investigate"],
-        'categories': ["DNS"]
+        "name": "DNS Common SRV",
+        "summary": "Attempts to identify hostnames through brute-forcing common DNS SRV records.",
+        "flags": ["slow"],
+        "useCases": ["Footprint", "Investigate"],
+        "categories": ["DNS"],
     }
 
     opts = {}
@@ -35,42 +35,38 @@ class sfp_dnscommonsrv(SpiderFootPlugin):
     commonsrv = [
         # LDAP/Kerberos, used for Active Directory
         # https://technet.microsoft.com/en-us/library/cc961719.aspx
-        '_ldap._tcp',
-        '_gc._msdcs',
-        '_ldap._tcp.pdc._msdcs',
-        '_ldap._tcp.gc._msdcs',
-        '_kerberos._tcp.dc._msdcs',
-        '_kerberos._tcp',
-        '_kerberos._udp',
-        '_kerberos-master._tcp',
-        '_kerberos-master._udp',
-        '_kpasswd._tcp',
-        '_kpasswd._udp',
-        '_ntp._udp',
-
+        "_ldap._tcp",
+        "_gc._msdcs",
+        "_ldap._tcp.pdc._msdcs",
+        "_ldap._tcp.gc._msdcs",
+        "_kerberos._tcp.dc._msdcs",
+        "_kerberos._tcp",
+        "_kerberos._udp",
+        "_kerberos-master._tcp",
+        "_kerberos-master._udp",
+        "_kpasswd._tcp",
+        "_kpasswd._udp",
+        "_ntp._udp",
         # SIP
-        '_sip._tcp',
-        '_sip._udp',
-        '_sip._tls',
-        '_sips._tcp',
-
+        "_sip._tcp",
+        "_sip._udp",
+        "_sip._tls",
+        "_sips._tcp",
         # STUN
         # https://tools.ietf.org/html/rfc5389
-        '_stun._tcp',
-        '_stun._udp',
-        '_stuns._tcp',
-
+        "_stun._tcp",
+        "_stun._udp",
+        "_stuns._tcp",
         # TURN
         # https://tools.ietf.org/html/rfc5928
-        '_turn._tcp',
-        '_turn._udp',
-        '_turns._tcp',
-
+        "_turn._tcp",
+        "_turn._udp",
+        "_turns._tcp",
         # XMPP
         # http://xmpp.org/rfcs/rfc6120.html
-        '_jabber._tcp',
-        '_xmpp-client._tcp',
-        '_xmpp-server._tcp'
+        "_jabber._tcp",
+        "_xmpp-client._tcp",
+        "_xmpp-server._tcp",
     ]
 
     def setup(self, sfc, userOpts=dict()):
@@ -82,7 +78,7 @@ class sfp_dnscommonsrv(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return ['INTERNET_NAME', 'DOMAIN_NAME']
+        return ["INTERNET_NAME", "DOMAIN_NAME"]
 
     def producedEvents(self):
         return ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME"]
@@ -107,8 +103,8 @@ class sfp_dnscommonsrv(SpiderFootPlugin):
         self.events[eventDataHash] = True
 
         res = dns.resolver.Resolver()
-        if self.opts.get('_dnsserver', "") != "":
-            res.nameservers = [self.opts['_dnsserver']]
+        if self.opts.get("_dnsserver", "") != "":
+            res.nameservers = [self.opts["_dnsserver"]]
 
         self.debug("Iterating through possible SRV records.")
 
@@ -124,19 +120,14 @@ class sfp_dnscommonsrv(SpiderFootPlugin):
                 continue
 
             try:
-                answers = res.query(name, 'SRV', timeout=10)
+                answers = res.query(name, "SRV", timeout=10)
             except Exception:
                 answers = []
 
             if not answers:
                 continue
 
-            evt = SpiderFootEvent(
-                "DNS_SRV",
-                name,
-                self.__name__,
-                parentEvent
-            )
+            evt = SpiderFootEvent("DNS_SRV", name, self.__name__, parentEvent)
             self.notifyListeners(evt)
 
             for a in answers:
@@ -149,11 +140,8 @@ class sfp_dnscommonsrv(SpiderFootPlugin):
                     evt_type = "AFFILIATE_INTERNET_NAME"
 
                 evt = SpiderFootEvent(
-                    evt_type,
-                    tgt_clean,
-                    self.__name__,
-                    parentEvent
-                )
+                    evt_type, tgt_clean, self.__name__, parentEvent)
                 self.notifyListeners(evt)
+
 
 # End of sfp_dnscommonsrv class

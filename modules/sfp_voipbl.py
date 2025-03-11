@@ -19,37 +19,37 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_voipbl(SpiderFootPlugin):
 
     meta = {
-        'name': "VoIP Blacklist (VoIPBL)",
-        'summary': "Check if an IP address or netblock is malicious according to VoIP Blacklist (VoIPBL).",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://voipbl.org/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "VoIP Blacklist (VoIPBL)",
+        "summary": "Check if an IP address or netblock is malicious according to VoIP Blacklist (VoIPBL).",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://voipbl.org/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://voipbl.org/#install",
-                "https://voipbl.org/#advanced"
+                "https://voipbl.org/#advanced",
             ],
-            'favIcon': "",
-            'logo': "https://voipbl.org/images/scopserv.png",
-            'description': "VoIPBL is a distributed VoIP blacklist that is aimed to protect against\n"
-            "VoIP Fraud and minimizing abuse for network that have publicly accessible PBXs."
-        }
+            "favIcon": "",
+            "logo": "https://voipbl.org/images/scopserv.png",
+            "description": "VoIPBL is a distributed VoIP blacklist that is aimed to protect against\n"
+            "VoIP Fraud and minimizing abuse for network that have publicly accessible PBXs.",
+        },
     }
 
     opts = {
-        'checkaffiliates': True,
-        'cacheperiod': 18,
-        'checknetblocks': True,
-        'checksubnets': True
+        "checkaffiliates": True,
+        "cacheperiod": 18,
+        "checknetblocks": True,
+        "checksubnets": True,
     }
 
     optdescs = {
-        'checkaffiliates': "Apply checks to affiliates?",
-        'cacheperiod': "Hours to cache list data before re-fetching.",
-        'checknetblocks': "Report if any malicious IPs are found within owned netblocks?",
-        'checksubnets': "Check if any malicious IPs are found within the same subnet of the target?"
+        "checkaffiliates": "Apply checks to affiliates?",
+        "cacheperiod": "Hours to cache list data before re-fetching.",
+        "checknetblocks": "Report if any malicious IPs are found within owned netblocks?",
+        "checksubnets": "Check if any malicious IPs are found within the same subnet of the target?",
     }
 
     results = None
@@ -91,42 +91,47 @@ class sfp_voipbl(SpiderFootPlugin):
 
         if targetType == "ip":
             if target in blacklist:
-                self.debug(f"IP address {target} found in VoIP Blacklist (VoIPBL).")
+                self.debug(
+                    f"IP address {target} found in VoIP Blacklist (VoIPBL).")
                 return True
         elif targetType == "netblock":
             netblock = IPNetwork(target)
             for ip in blacklist:
                 if IPAddress(ip) in netblock:
-                    self.debug(f"IP address {ip} found within netblock/subnet {target} in VoIP Blacklist (VoIPBL).")
+                    self.debug(
+                        f"IP address {ip} found within netblock/subnet {target} in VoIP Blacklist (VoIPBL)."
+                    )
                     return True
 
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('voipbl', 24)
+        blacklist = self.sf.cacheGet("voipbl", 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
         res = self.sf.fetchUrl(
             "https://voipbl.org/update",
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from VoIP Blacklist (VoIPBL).")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from VoIP Blacklist (VoIPBL)."
+            )
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error("Received no content from VoIP Blacklist (VoIPBL)")
             self.errorState = True
             return None
 
-        self.sf.cachePut("voipbl", res['content'])
+        self.sf.cachePut("voipbl", res["content"])
 
-        return self.parseBlacklist(res['content'])
+        return self.parseBlacklist(res["content"])
 
     def parseBlacklist(self, blacklist):
         """Parse plaintext blacklist
@@ -142,11 +147,11 @@ class sfp_voipbl(SpiderFootPlugin):
         if not blacklist:
             return ips
 
-        for cidr in blacklist.split('\n'):
+        for cidr in blacklist.split("\n"):
             cidr = cidr.strip()
             if not cidr:
                 continue
-            if cidr.startswith('#'):
+            if cidr.startswith("#"):
                 continue
 
             try:
@@ -172,33 +177,35 @@ class sfp_voipbl(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventName == 'IP_ADDRESS':
-            targetType = 'ip'
+        if eventName == "IP_ADDRESS":
+            targetType = "ip"
             malicious_type = "MALICIOUS_IPADDR"
             blacklist_type = "BLACKLISTED_IPADDR"
-        elif eventName == 'AFFILIATE_IPADDR':
-            if not self.opts.get('checkaffiliates', False):
+        elif eventName == "AFFILIATE_IPADDR":
+            if not self.opts.get("checkaffiliates", False):
                 return
-            targetType = 'ip'
+            targetType = "ip"
             malicious_type = "MALICIOUS_AFFILIATE_IPADDR"
             blacklist_type = "BLACKLISTED_AFFILIATE_IPADDR"
-        elif eventName == 'NETBLOCK_OWNER':
-            if not self.opts.get('checknetblocks', False):
+        elif eventName == "NETBLOCK_OWNER":
+            if not self.opts.get("checknetblocks", False):
                 return
-            targetType = 'netblock'
+            targetType = "netblock"
             malicious_type = "MALICIOUS_NETBLOCK"
             blacklist_type = "BLACKLISTED_NETBLOCK"
-        elif eventName == 'NETBLOCK_MEMBER':
-            if not self.opts.get('checksubnets', False):
+        elif eventName == "NETBLOCK_MEMBER":
+            if not self.opts.get("checksubnets", False):
                 return
-            targetType = 'netblock'
+            targetType = "netblock"
             malicious_type = "MALICIOUS_SUBNET"
             blacklist_type = "BLACKLISTED_SUBNET"
         else:
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with VoIP Blacklist (VoIPBL)")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with VoIP Blacklist (VoIPBL)"
+        )
 
         if not self.queryBlacklist(eventData, targetType):
             return
@@ -211,5 +218,6 @@ class sfp_voipbl(SpiderFootPlugin):
 
         evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
         self.notifyListeners(evt)
+
 
 # End of sfp_voipbl class

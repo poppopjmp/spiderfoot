@@ -19,19 +19,17 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_company(SpiderFootPlugin):
 
     meta = {
-        'name': "Company Name Extractor",
-        'summary': "Identify company names in any obtained data.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        "name": "Company Name Extractor",
+        "summary": "Identify company names in any obtained data.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Content Analysis"],
     }
 
-    opts = {
-        'filterjscss': True
-    }
+    opts = {"filterjscss": True}
 
     optdescs = {
-        'filterjscss': "Filter out company names that originated from CSS/JS content. Enabling this avoids detection of popular Javascript and web framework author company names."
+        "filterjscss": "Filter out company names that originated from CSS/JS content. Enabling this avoids detection of popular Javascript and web framework author company names."
     }
 
     def setup(self, sfc, userOpts=dict()):
@@ -42,9 +40,14 @@ class sfp_company(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ["TARGET_WEB_CONTENT", "SSL_CERTIFICATE_ISSUED",
-                "DOMAIN_WHOIS", "NETBLOCK_WHOIS",
-                "AFFILIATE_DOMAIN_WHOIS", "AFFILIATE_WEB_CONTENT"]
+        return [
+            "TARGET_WEB_CONTENT",
+            "SSL_CERTIFICATE_ISSUED",
+            "DOMAIN_WHOIS",
+            "NETBLOCK_WHOIS",
+            "AFFILIATE_DOMAIN_WHOIS",
+            "AFFILIATE_WEB_CONTENT",
+        ]
 
     # What events this module produces
     def producedEvents(self):
@@ -61,23 +64,62 @@ class sfp_company(SpiderFootPlugin):
         # a capital letter, allowing for hyphens brackets and numbers within.
         pattern_prefix = r"(?=[,;:\'\">\(= ]|^)\s?([A-Z0-9\(\)][A-Za-z0-9\-&,\.][^ \"\';:><]*)?\s?([A-Z0-9\(\)][A-Za-z0-9\-&,\.]?[^ \"\';:><]*|[Aa]nd)?\s?([A-Z0-9\(\)][A-Za-z0-9\-&,\.]?[^ \"\';:><]*)?\s+"
         pattern_match_re = [
-            'LLC', r'L\.L\.C\.?', 'AG', r'A\.G\.?', 'GmbH', r'Pty\.?\s+Ltd\.?',
-            r'Ltd\.?', r'Pte\.?', r'Inc\.?', r'INC\.?', 'Incorporated', 'Foundation',
-            r'Corp\.?', 'Corporation', 'SA', r'S\.A\.?', 'SIA', 'BV', r'B\.V\.?',
-            'NV', r'N\.V\.?', 'PLC', 'Limited', r'Pvt\.?\s+Ltd\.?', 'SARL']
+            "LLC",
+            r"L\.L\.C\.?",
+            "AG",
+            r"A\.G\.?",
+            "GmbH",
+            r"Pty\.?\s+Ltd\.?",
+            r"Ltd\.?",
+            r"Pte\.?",
+            r"Inc\.?",
+            r"INC\.?",
+            "Incorporated",
+            "Foundation",
+            r"Corp\.?",
+            "Corporation",
+            "SA",
+            r"S\.A\.?",
+            "SIA",
+            "BV",
+            r"B\.V\.?",
+            "NV",
+            r"N\.V\.?",
+            "PLC",
+            "Limited",
+            r"Pvt\.?\s+Ltd\.?",
+            "SARL",
+        ]
         pattern_match = [
-            'LLC', 'L.L.C', 'AG', 'A.G', 'GmbH', 'Pty',
-            'Ltd', 'Pte', 'Inc', 'INC', 'Foundation',
-            'Corp', 'SA', 'S.A', 'SIA', 'BV', 'B.V',
-            'NV', 'N.V', 'PLC', 'Limited', 'Pvt.', 'SARL']
+            "LLC",
+            "L.L.C",
+            "AG",
+            "A.G",
+            "GmbH",
+            "Pty",
+            "Ltd",
+            "Pte",
+            "Inc",
+            "INC",
+            "Foundation",
+            "Corp",
+            "SA",
+            "S.A",
+            "SIA",
+            "BV",
+            "B.V",
+            "NV",
+            "N.V",
+            "PLC",
+            "Limited",
+            "Pvt.",
+            "SARL",
+        ]
 
         pattern_suffix = r"(?=[ \.,:<\)\'\"]|[$\n\r])"
 
         # Filter out anything from the company name which matches the below
-        filterpatterns = [
-            "Copyright",
-            r"\d{4}"  # To catch years
-        ]
+        filterpatterns = ["Copyright", r"\d{4}"]  # To catch years
 
         # Don't re-parse company names
         if eventName in ["COMPANY_NAME", "AFFILIATE_COMPANY_NAME"]:
@@ -85,18 +127,22 @@ class sfp_company(SpiderFootPlugin):
 
         if eventName == "TARGET_WEB_CONTENT":
             url = event.actualSource
-            if self.opts['filterjscss'] and (".js" in url or ".css" in url):
+            if self.opts["filterjscss"] and (".js" in url or ".css" in url):
                 self.debug("Ignoring web content from CSS/JS.")
                 return
 
-        self.debug(f"Received event, {eventName}, from {srcModuleName} ({len(eventData)} bytes)")
+        self.debug(
+            f"Received event, {eventName}, from {srcModuleName} ({len(eventData)} bytes)"
+        )
 
         # Strip out everything before the O=
         try:
             if eventName == "SSL_CERTIFICATE_ISSUED":
                 eventData = eventData.split("O=")[1]
         except Exception:
-            self.debug("Couldn't strip out 'O=' from certificate issuer, proceeding anyway...")
+            self.debug(
+                "Couldn't strip out 'O=' from certificate issuer, proceeding anyway..."
+            )
 
         # Find chunks of text containing what might be a company name first.
         # This is to avoid running very expensive regexps on large chunks of
@@ -119,7 +165,11 @@ class sfp_company(SpiderFootPlugin):
         myres = list()
         for chunk in chunks:
             for pat in pattern_match_re:
-                matches = re.findall(pattern_prefix + "(" + pat + ")" + pattern_suffix, chunk, re.MULTILINE | re.DOTALL)
+                matches = re.findall(
+                    pattern_prefix + "(" + pat + ")" + pattern_suffix,
+                    chunk,
+                    re.MULTILINE | re.DOTALL,
+                )
                 for match in matches:
                     matched = 0
                     for m in match:
@@ -152,11 +202,13 @@ class sfp_company(SpiderFootPlugin):
                     else:
                         etype = "COMPANY_NAME"
 
-                    evt = SpiderFootEvent(etype, fullcompany, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        etype, fullcompany, self.__name__, event)
                     if event.moduleDataSource:
                         evt.moduleDataSource = event.moduleDataSource
                     else:
                         evt.moduleDataSource = "Unknown"
                     self.notifyListeners(evt)
+
 
 # End of sfp_company class

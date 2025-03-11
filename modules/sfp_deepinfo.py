@@ -14,32 +14,31 @@ import json
 import time
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
+
 class sfp_deepinfo(SpiderFootPlugin):
     meta = {
-        'name': "Deepinfo",
-        'summary': "Obtain Passive DNS and other information from Deepinfo",
-        'flags': ["apikey"],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://deepinfo.com/",
-            'model': "COMMERCIAL_ONLY",
-            'references': [
-                "https://docs.deepinfo.com/docs/getting-started"
-            ],
-            'apiKeyInstructions': [
+        "name": "Deepinfo",
+        "summary": "Obtain Passive DNS and other information from Deepinfo",
+        "flags": ["apikey"],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://deepinfo.com/",
+            "model": "COMMERCIAL_ONLY",
+            "references": ["https://docs.deepinfo.com/docs/getting-started"],
+            "apiKeyInstructions": [
                 "Visit https://deepinfo.info/request-demo",
                 "Request a demo account",
                 "Navigate to https://platform.deepinfo.com/app/settings/organization/api-keys",
-                "The API key is listed under 'API Keys'"
+                "The API key is listed under 'API Keys'",
             ],
-            'favIcon': "https://ik.imagekit.io/deepinfo/test/favicon/favicon-96x96.png",
-            'logo': "https://ik.imagekit.io/deepinfo/test/favicon/favicon-96x96.png",
-            'description': "Deepinfo provides relevant data and insights that empower "
+            "favIcon": "https://ik.imagekit.io/deepinfo/test/favicon/favicon-96x96.png",
+            "logo": "https://ik.imagekit.io/deepinfo/test/favicon/favicon-96x96.png",
+            "description": "Deepinfo provides relevant data and insights that empower "
             "cybersecurity professionals by providing access to an extensive database and reliable indicators."
             "Deepinfo has the data you need to understand what's going on on the Internet, we are dealing with "
             "terabytes of data, hundreds of data sources, billions of lines of raw data.",
-        }
+        },
     }
 
     # Default options
@@ -80,25 +79,28 @@ class sfp_deepinfo(SpiderFootPlugin):
     def query(self, qry, page=1, accum=None):
         url = f"https://api.deepinfo.com/v1/discovery/subdomain-finder?domain={qry}&page={page}"
         request = None
-        headers = {"apikey": self.opts['api_key']}
-        res = self.sf.fetchUrl(url,
-                               useragent="SpiderFoot", headers=headers,
-                               postData=request)
+        headers = {"apikey": self.opts["api_key"]}
+        res = self.sf.fetchUrl(
+            url, useragent="SpiderFoot", headers=headers, postData=request
+        )
 
-        if res['code'] not in ["200"]:
-            self.error("Deepinfo API key seems to have been rejected or you have exceeded usage limits for the month.")
+        if res["code"] not in ["200"]:
+            self.error(
+                "Deepinfo API key seems to have been rejected or you have exceeded usage limits for the month."
+            )
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info("No Deepinfo info found for " + qry)
             return None
 
         try:
-            info = json.loads(res['content'])
+            info = json.loads(res["content"])
             self.info(f"result_count {info.get('result_count')}, page {page}")
             if info.get("result_count", 0) > 100:
-                domains = [item.get("punycode", "") for item in info.get("results", [])]
+                domains = [item.get("punycode", "")
+                           for item in info.get("results", [])]
                 if len(domains) >= 100:
                     return domains
                 # Avoid throttling
@@ -109,31 +111,34 @@ class sfp_deepinfo(SpiderFootPlugin):
                     accum = domains
                 return self.query(qry, page + 1, accum)
             else:
-                return info.get('results', [])
+                return info.get("results", [])
         except Exception as e:
-            self.error("Error processing JSON response from Deepinfo: " + str(e))
+            self.error(
+                "Error processing JSON response from Deepinfo: " + str(e))
             return None
 
     # Search Deepinfo for Passive DNS
     def query_passive_dns(self, qry):
         url = f"https://api.deepinfo.com/v1/discovery/passive-dns?domain={qry}"
-        headers = {"apikey": self.opts['api_key']}
-        res = self.sf.fetchUrl(url,
-                               useragent="SpiderFoot", headers=headers)
+        headers = {"apikey": self.opts["api_key"]}
+        res = self.sf.fetchUrl(url, useragent="SpiderFoot", headers=headers)
 
-        if res['code'] not in ["200"]:
-            self.error("Deepinfo API key seems to have been rejected or you have exceeded usage limits for the month.")
+        if res["code"] not in ["200"]:
+            self.error(
+                "Deepinfo API key seems to have been rejected or you have exceeded usage limits for the month."
+            )
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info("No Deepinfo info found for " + qry)
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
-            self.error("Error processing JSON response from Deepinfo: " + str(e))
+            self.error(
+                "Error processing JSON response from Deepinfo: " + str(e))
             return None
 
     # Handle events sent to this module
@@ -147,8 +152,9 @@ class sfp_deepinfo(SpiderFootPlugin):
 
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
-        if self.opts['api_key'] == "":
-            self.error("You enabled sfp_deepinfo but did not set an API uid/secret!")
+        if self.opts["api_key"] == "":
+            self.error(
+                "You enabled sfp_deepinfo but did not set an API uid/secret!")
             self.errorState = True
             return
 

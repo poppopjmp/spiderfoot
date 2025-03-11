@@ -18,42 +18,42 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_blocklistde(SpiderFootPlugin):
 
     meta = {
-        'name': "blocklist.de",
-        'summary': "Check if a netblock or IP is malicious according to blocklist.de.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "http://www.blocklist.de/en/index.html",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "blocklist.de",
+        "summary": "Check if a netblock or IP is malicious according to blocklist.de.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "http://www.blocklist.de/en/index.html",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "http://www.blocklist.de/en/api.html",
                 "http://www.blocklist.de/en/rbldns.html",
                 "http://www.blocklist.de/en/httpreports.html",
                 "http://www.blocklist.de/en/export.html",
-                "http://www.blocklist.de/en/delist.html?ip="
+                "http://www.blocklist.de/en/delist.html?ip=",
             ],
-            'favIcon': "http://www.blocklist.de/templates/css/logo_web-size.jpg",
-            'logo': "http://www.blocklist.de/templates/css/logo_web-size.jpg",
-            'description': "www.blocklist.de is a free and voluntary service provided by a Fraud/Abuse-specialist, "
+            "favIcon": "http://www.blocklist.de/templates/css/logo_web-size.jpg",
+            "logo": "http://www.blocklist.de/templates/css/logo_web-size.jpg",
+            "description": "www.blocklist.de is a free and voluntary service provided by a Fraud/Abuse-specialist, "
             "whose servers are often attacked via SSH-, Mail-Login-, FTP-, Webserver- and other services.\n"
             "The mission is to report any and all attacks to the respective abuse departments of the infected PCs/servers, "
-            "to ensure that the responsible provider can inform their customer about the infection and disable the attacker."
-        }
+            "to ensure that the responsible provider can inform their customer about the infection and disable the attacker.",
+        },
     }
 
     opts = {
-        'checkaffiliates': True,
-        'cacheperiod': 18,
-        'checknetblocks': True,
-        'checksubnets': True
+        "checkaffiliates": True,
+        "cacheperiod": 18,
+        "checknetblocks": True,
+        "checksubnets": True,
     }
 
     optdescs = {
-        'checkaffiliates': "Apply checks to affiliates?",
-        'cacheperiod': "Hours to cache list data before re-fetching.",
-        'checknetblocks': "Report if any malicious IPs are found within owned netblocks?",
-        'checksubnets': "Check if any malicious IPs are found within the same subnet of the target?"
+        "checkaffiliates": "Apply checks to affiliates?",
+        "cacheperiod": "Hours to cache list data before re-fetching.",
+        "checknetblocks": "Report if any malicious IPs are found within owned netblocks?",
+        "checksubnets": "Check if any malicious IPs are found within the same subnet of the target?",
     }
 
     results = None
@@ -99,42 +99,47 @@ class sfp_blocklistde(SpiderFootPlugin):
 
         if targetType == "ip":
             if target in blacklist:
-                self.debug(f"IP address {target} found in blocklist.de blacklist.")
+                self.debug(
+                    f"IP address {target} found in blocklist.de blacklist.")
                 return True
         elif targetType == "netblock":
             netblock = IPNetwork(target)
             for ip in blacklist:
                 if IPAddress(ip) in netblock:
-                    self.debug(f"IP address {ip} found within netblock/subnet {target} in blocklist.de blacklist.")
+                    self.debug(
+                        f"IP address {ip} found within netblock/subnet {target} in blocklist.de blacklist."
+                    )
                     return True
 
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('blocklistde', 24)
+        blacklist = self.sf.cacheGet("blocklistde", 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
         res = self.sf.fetchUrl(
             "https://lists.blocklist.de/lists/all.txt",
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from blocklist.de.")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from blocklist.de."
+            )
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error("Received no content from blocklist.de")
             self.errorState = True
             return None
 
-        self.sf.cachePut("blocklistde", res['content'])
+        self.sf.cachePut("blocklistde", res["content"])
 
-        return self.parseBlacklist(res['content'])
+        return self.parseBlacklist(res["content"])
 
     def parseBlacklist(self, blacklist):
         """Parse plaintext blacklist
@@ -150,9 +155,9 @@ class sfp_blocklistde(SpiderFootPlugin):
         if not blacklist:
             return ips
 
-        for ip in blacklist.split('\n'):
+        for ip in blacklist.split("\n"):
             ip = ip.strip()
-            if ip.startswith('#'):
+            if ip.startswith("#"):
                 continue
             if not self.sf.validIP(ip) and not self.sf.validIP6(ip):
                 continue
@@ -175,33 +180,35 @@ class sfp_blocklistde(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
-            targetType = 'ip'
-            malicious_type = 'MALICIOUS_IPADDR'
-            blacklist_type = 'BLACKLISTED_IPADDR'
-        elif eventName in ['AFFILIATE_IPADDR', 'AFFILIATE_IPV6_ADDRESS']:
-            if not self.opts.get('checkaffiliates', False):
+        if eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
+            targetType = "ip"
+            malicious_type = "MALICIOUS_IPADDR"
+            blacklist_type = "BLACKLISTED_IPADDR"
+        elif eventName in ["AFFILIATE_IPADDR", "AFFILIATE_IPV6_ADDRESS"]:
+            if not self.opts.get("checkaffiliates", False):
                 return
-            targetType = 'ip'
-            malicious_type = 'MALICIOUS_AFFILIATE_IPADDR'
-            blacklist_type = 'BLACKLISTED_AFFILIATE_IPADDR'
-        elif eventName in ['NETBLOCK_OWNER', 'NETBLOCKV6_OWNER']:
-            if not self.opts.get('checknetblocks', False):
+            targetType = "ip"
+            malicious_type = "MALICIOUS_AFFILIATE_IPADDR"
+            blacklist_type = "BLACKLISTED_AFFILIATE_IPADDR"
+        elif eventName in ["NETBLOCK_OWNER", "NETBLOCKV6_OWNER"]:
+            if not self.opts.get("checknetblocks", False):
                 return
-            targetType = 'netblock'
-            malicious_type = 'MALICIOUS_NETBLOCK'
-            blacklist_type = 'BLACKLISTED_NETBLOCK'
-        elif eventName in ['NETBLOCK_MEMBER', 'NETBLOCKV6_MEMBER']:
-            if not self.opts.get('checksubnets', False):
+            targetType = "netblock"
+            malicious_type = "MALICIOUS_NETBLOCK"
+            blacklist_type = "BLACKLISTED_NETBLOCK"
+        elif eventName in ["NETBLOCK_MEMBER", "NETBLOCKV6_MEMBER"]:
+            if not self.opts.get("checksubnets", False):
                 return
-            targetType = 'netblock'
-            malicious_type = 'MALICIOUS_SUBNET'
-            blacklist_type = 'BLACKLISTED_SUBNET'
+            targetType = "netblock"
+            malicious_type = "MALICIOUS_SUBNET"
+            blacklist_type = "BLACKLISTED_SUBNET"
         else:
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with blocklist.de")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with blocklist.de"
+        )
 
         if self.queryBlacklist(eventData, targetType):
             # https://www.blocklist.de/en/search.html?ip=<ip>
@@ -213,5 +220,6 @@ class sfp_blocklistde(SpiderFootPlugin):
 
             evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
             self.notifyListeners(evt)
+
 
 # End of sfp_blocklistde class

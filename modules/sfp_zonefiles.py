@@ -19,37 +19,33 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 class sfp_zonefiles(SpiderFootPlugin):
 
     meta = {
-        'name': "ZoneFile.io",
-        'summary': "Search ZoneFiles.io Domain query API for domain information.",
-        'flags': ["apikey"],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Passive DNS"],
+        "name": "ZoneFile.io",
+        "summary": "Search ZoneFiles.io Domain query API for domain information.",
+        "flags": ["apikey"],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Passive DNS"],
         "dataSource": {
             "website": "https://zonefiles.io",
-            'model': "FREE_AUTH_LIMITED",
+            "model": "FREE_AUTH_LIMITED",
             "references": ["https://zonefiles.io/query-api/"],
             "apiKeyInstructions": [
                 "Visit https://zonefiles.io",
                 "Register an account",
                 "Visit https://zonefiles.io/profile/",
-                "The API key is listed next to 'Your API token'"
+                "The API key is listed next to 'Your API token'",
             ],
             "favIcon": "https://zonefiles.io/favicon.ico",
             "logo": "https://zonefiles.io/static/images/logo.png",
-            "description": "You can fetch data for any domain name with our pay-as-you-go API."
-        }
+            "description": "You can fetch data for any domain name with our pay-as-you-go API.",
+        },
     }
 
-    opts = {
-        "api_key": "",
-        "verify": True,
-        "delay": 1
-    }
+    opts = {"api_key": "", "verify": True, "delay": 1}
 
     optdescs = {
         "api_key": "ZoneFiles.io API key.",
         "verify": "Verify specified domains still resolve to the identified IP address.",
-        "delay": "Delay between requests, in seconds."
+        "delay": "Delay between requests, in seconds.",
     }
 
     results = None
@@ -86,17 +82,15 @@ class sfp_zonefiles(SpiderFootPlugin):
             str: API response as JSON
         """
 
-        headers = {
-            "Accept": "application/json"
-        }
+        headers = {"Accept": "application/json"}
         res = self.sf.fetchUrl(
             f"https://zonefiles.io/q/{self.opts['api_key']}/{qry}",
             headers=headers,
             timeout=30,
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
-        time.sleep(self.opts['delay'])
+        time.sleep(self.opts["delay"])
 
         return self.parseApiResponse(res)
 
@@ -106,32 +100,32 @@ class sfp_zonefiles(SpiderFootPlugin):
             return None
 
         # Future proofing - ZoneFiles.io does not implement rate limiting
-        if res['code'] == '429':
+        if res["code"] == "429":
             self.error("You are being rate-limited by ZoneFiles.")
             self.errorState = True
             return None
 
-        if res['code'] == '500' or res['code'] == '502' or res['code'] == '503':
+        if res["code"] == "500" or res["code"] == "502" or res["code"] == "503":
             self.error("ZoneFiles.io service is unavailable")
             self.errorState = True
             return None
 
         # Catch all other non-200 status codes, and presume something went wrong
-        if res['code'] != '200':
+        if res["code"] != "200":
             self.error("Failed to retrieve content from ZoneFiles.")
             self.errorState = True
             return None
 
-        if not res['content']:
+        if not res["content"]:
             return None
 
         try:
-            json_data = json.loads(res['content'])
+            json_data = json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
             return None
 
-        data = json_data.get('data')
+        data = json_data.get("data")
 
         if not data:
             return None
@@ -164,29 +158,32 @@ class sfp_zonefiles(SpiderFootPlugin):
             self.debug(f"No information found for domain {eventData}")
             return
 
-        evt = SpiderFootEvent('RAW_RIR_DATA', str(data), self.__name__, event)
+        evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
         self.notifyListeners(evt)
 
-        ip = data.get('ip')
+        ip = data.get("ip")
         if ip:
-            if self.opts['verify']:
+            if self.opts["verify"]:
                 if self.sf.validateIP(eventData, str(ip)):
-                    evt = SpiderFootEvent('IP_ADDRESS', str(ip), self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "IP_ADDRESS", str(ip), self.__name__, event)
                     self.notifyListeners(evt)
             else:
-                evt = SpiderFootEvent('IP_ADDRESS', str(ip), self.__name__, event)
+                evt = SpiderFootEvent(
+                    "IP_ADDRESS", str(ip), self.__name__, event)
                 self.notifyListeners(evt)
 
-        dns = data.get('dns')
+        dns = data.get("dns")
         if dns:
-            for nameserver in set(dns.split(',')):
-                evt = SpiderFootEvent('PROVIDER_DNS', nameserver, self.__name__, event)
+            for nameserver in set(dns.split(",")):
+                evt = SpiderFootEvent(
+                    "PROVIDER_DNS", nameserver, self.__name__, event)
                 self.notifyListeners(evt)
 
-        emails = data.get('emails')
+        emails = data.get("emails")
         if emails:
-            for email in set(emails.split(',')):
-                mail_domain = email.lower().split('@')[1]
+            for email in set(emails.split(",")):
+                mail_domain = email.lower().split("@")[1]
                 if not self.getTarget().matches(mail_domain):
                     self.debug(f"Ignored affiliate email address: {email}")
                     continue
@@ -194,22 +191,25 @@ class sfp_zonefiles(SpiderFootPlugin):
                 self.info(f"Found e-mail address: {email}")
 
                 evt_type = "EMAILADDR"
-                if email.split("@")[0] in self.opts['_genericusers'].split(","):
+                if email.split("@")[0] in self.opts["_genericusers"].split(","):
                     evt_type = "EMAILADDR_GENERIC"
                 evt = SpiderFootEvent(evt_type, email, self.__name__, event)
                 self.notifyListeners(evt)
 
-        phones = data.get('phones')
+        phones = data.get("phones")
         if phones:
-            for phone in set(phones.split(',')):
+            for phone in set(phones.split(",")):
                 if SpiderFootHelpers.validPhoneNumber(phone):
-                    evt = SpiderFootEvent('PHONE_NUMBER', phone, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "PHONE_NUMBER", phone, self.__name__, event)
                     self.notifyListeners(evt)
 
-        technologies = data.get('technologies')
+        technologies = data.get("technologies")
         if technologies and isinstance(technologies, dict):
             for tech in technologies.keys():
-                evt = SpiderFootEvent('SOFTWARE_USED', tech, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "SOFTWARE_USED", tech, self.__name__, event)
                 self.notifyListeners(evt)
+
 
 # End of sfp_zonefiles class

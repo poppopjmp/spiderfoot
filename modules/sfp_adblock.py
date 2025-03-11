@@ -19,42 +19,42 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_adblock(SpiderFootPlugin):
 
     meta = {
-        'name': "AdBlock Check",
-        'summary': "Check if linked pages would be blocked by AdBlock Plus.",
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://adblockplus.org/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
+        "name": "AdBlock Check",
+        "summary": "Check if linked pages would be blocked by AdBlock Plus.",
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://adblockplus.org/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": [
                 "https://help.eyeo.com/en/adblockplus/",
                 "https://adblockplus.org/en/download",
                 "https://adblockplus.org/en/filters#options",
-                "https://chrome.google.com/webstore/detail/adblock-plus-free-ad-bloc/cfhdojbkjhnklbpkdaibdccddilifddb"
+                "https://chrome.google.com/webstore/detail/adblock-plus-free-ad-bloc/cfhdojbkjhnklbpkdaibdccddilifddb",
             ],
-            'favIcon': "https://www.google.com/s2/favicons?domain=https://adblockplus.org/en/",
-            'logo': "https://adblockplus.org/img/navbar-logo.svg",
-            'description': "Adblock Plus is a free extension that allows you to customize your web experience."
+            "favIcon": "https://www.google.com/s2/favicons?domain=https://adblockplus.org/en/",
+            "logo": "https://adblockplus.org/img/navbar-logo.svg",
+            "description": "Adblock Plus is a free extension that allows you to customize your web experience."
             "You can block annoying ads, disable tracking and lots more."
             "It’s available for all major desktop browsers and for your mobile devices.\n"
             "Block ads that interrupt your browsing experience."
             "Say goodbye to video ads, pop-ups, flashing banners and more."
             "Blocking these annoyances means pages load faster.\n"
             "With Adblock Plus avoiding tracking and malware is easy."
-            "Blocking intrusive ads reduces the risk of \"malvertising\" infections."
-            "Blocking tracking stops companies following your online activity."
-        }
+            'Blocking intrusive ads reduces the risk of "malvertising" infections.'
+            "Blocking tracking stops companies following your online activity.",
+        },
     }
 
     # Default options
     opts = {
         "blocklist": "https://easylist-downloads.adblockplus.org/easylist.txt",
-        'cacheperiod': 24,
+        "cacheperiod": 24,
     }
 
     optdescs = {
         "blocklist": "AdBlockPlus block list.",
-        'cacheperiod': "Hours to cache list data before re-fetching.",
+        "cacheperiod": "Hours to cache list data before re-fetching.",
     }
 
     results = None
@@ -89,19 +89,22 @@ class sfp_adblock(SpiderFootPlugin):
 
         res = self.sf.fetchUrl(blocklist_url, timeout=30)
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} for {blocklist_url}")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} for {blocklist_url}"
+            )
             self.errorState = True
             return None
 
-        if res['content'] is None:
-            self.error(f"Unable to download AdBlock Plus blocklist: {blocklist_url}")
+        if res["content"] is None:
+            self.error(
+                f"Unable to download AdBlock Plus blocklist: {blocklist_url}")
             self.errorState = True
             return None
 
-        self.sf.cachePut(f"adblock_{blocklist_url}", res['content'])
+        self.sf.cachePut(f"adblock_{blocklist_url}", res["content"])
 
-        return self.setBlocklistRules(res['content'])
+        return self.setBlocklistRules(res["content"])
 
     def setBlocklistRules(self, blocklist):
         """Parse AdBlock Plus blocklist and set blocklist rules
@@ -112,7 +115,7 @@ class sfp_adblock(SpiderFootPlugin):
         if not blocklist:
             return
 
-        lines = blocklist.split('\n')
+        lines = blocklist.split("\n")
         self.debug(f"Retrieved {len(lines)} AdBlock blocklist rules")
         try:
             self.rules = adblockparser.AdblockRules(lines)
@@ -129,7 +132,8 @@ class sfp_adblock(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventData in self.results:
-            self.debug("Already checked this URL for AdBlock matching, skipping.")
+            self.debug(
+                "Already checked this URL for AdBlock matching, skipping.")
             return
 
         self.results[eventData] = True
@@ -145,7 +149,7 @@ class sfp_adblock(SpiderFootPlugin):
             return
 
         if not self.rules:
-            self.retrieveBlocklist(self.opts['blocklist'])
+            self.retrieveBlocklist(self.opts["blocklist"])
 
         if not self.rules:
             self.error("No AdBlock Plus rules loaded")
@@ -153,23 +157,34 @@ class sfp_adblock(SpiderFootPlugin):
             return
 
         try:
-            if eventName == 'PROVIDER_JAVASCRIPT':
-                if self.rules and self.rules.should_block(eventData, {'third-party': True, 'script': True}):
-                    evt = SpiderFootEvent("URL_ADBLOCKED_EXTERNAL", eventData, self.__name__, event)
+            if eventName == "PROVIDER_JAVASCRIPT":
+                if self.rules and self.rules.should_block(
+                    eventData, {"third-party": True, "script": True}
+                ):
+                    evt = SpiderFootEvent(
+                        "URL_ADBLOCKED_EXTERNAL", eventData, self.__name__, event
+                    )
                     self.notifyListeners(evt)
 
-            if eventName == 'LINKED_URL_EXTERNAL':
-                if self.rules and self.rules.should_block(eventData, {'third-party': True}):
-                    evt = SpiderFootEvent("URL_ADBLOCKED_EXTERNAL", eventData, self.__name__, event)
+            if eventName == "LINKED_URL_EXTERNAL":
+                if self.rules and self.rules.should_block(
+                    eventData, {"third-party": True}
+                ):
+                    evt = SpiderFootEvent(
+                        "URL_ADBLOCKED_EXTERNAL", eventData, self.__name__, event
+                    )
                     self.notifyListeners(evt)
 
-            if eventName == 'LINKED_URL_INTERNAL':
+            if eventName == "LINKED_URL_INTERNAL":
                 if self.rules and self.rules.should_block(eventData):
-                    evt = SpiderFootEvent("URL_ADBLOCKED_INTERNAL", eventData, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "URL_ADBLOCKED_INTERNAL", eventData, self.__name__, event
+                    )
                     self.notifyListeners(evt)
 
         except ValueError as e:
             self.error(f"Parsing error handling AdBlock list: {e}")
             self.errorState = True
+
 
 # End of sfp_adblock class

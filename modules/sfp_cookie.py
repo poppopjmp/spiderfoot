@@ -18,11 +18,11 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_cookie(SpiderFootPlugin):
 
     meta = {
-        'name': "Cookie Extractor",
-        'summary': "Extract Cookies from HTTP headers.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        "name": "Cookie Extractor",
+        "summary": "Extract Cookies from HTTP headers.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Content Analysis"],
     }
 
     opts = {}
@@ -62,18 +62,24 @@ class sfp_cookie(SpiderFootPlugin):
 
         fqdn = self.sf.urlFQDN(eventSource)
         if not self.getTarget().matches(fqdn):
-            self.debug(f"Not collecting cookies from external sites. Ignoring HTTP headers from {fqdn}")
+            self.debug(
+                f"Not collecting cookies from external sites. Ignoring HTTP headers from {fqdn}"
+            )
             return
 
         try:
             data = json.loads(eventData)
         except Exception:
-            self.error("Received HTTP headers from another module in an unexpected format.")
+            self.error(
+                "Received HTTP headers from another module in an unexpected format."
+            )
             return
 
-        cookie = data.get('cookie')
+        cookie = data.get("cookie")
         if cookie:
-            evt = SpiderFootEvent("TARGET_WEB_COOKIE", cookie, self.__name__, event)
+            evt = SpiderFootEvent("TARGET_WEB_COOKIE",
+                                  cookie, self.__name__, event)
             self.notifyListeners(evt)
+
 
 # End of sfp_cookie class

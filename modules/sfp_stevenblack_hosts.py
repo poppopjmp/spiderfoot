@@ -17,29 +17,25 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_stevenblack_hosts(SpiderFootPlugin):
 
     meta = {
-        'name': "Steven Black Hosts",
-        'summary': "Check if a domain is malicious (malware or adware) according to Steven Black Hosts list.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://github.com/StevenBlack/hosts",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'description': "Consolidating and extending hosts files (for malware and adware)"
-            "from several well-curated sources."
-        }
+        "name": "Steven Black Hosts",
+        "summary": "Check if a domain is malicious (malware or adware) according to Steven Black Hosts list.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://github.com/StevenBlack/hosts",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "description": "Consolidating and extending hosts files (for malware and adware)"
+            "from several well-curated sources.",
+        },
     }
 
-    opts = {
-        'checkaffiliates': True,
-        'checkcohosts': True,
-        'cacheperiod': 24
-    }
+    opts = {"checkaffiliates": True, "checkcohosts": True, "cacheperiod": 24}
 
     optdescs = {
-        'checkaffiliates': "Apply checks to affiliates?",
-        'checkcohosts': "Apply checks to sites found to be co-hosted on the target's IP?",
-        'cacheperiod': "Hours to cache list data before re-fetching."
+        "checkaffiliates": "Apply checks to affiliates?",
+        "checkcohosts": "Apply checks to sites found to be co-hosted on the target's IP?",
+        "cacheperiod": "Hours to cache list data before re-fetching.",
     }
 
     results = None
@@ -54,11 +50,7 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            "INTERNET_NAME",
-            "AFFILIATE_INTERNET_NAME",
-            "CO_HOSTED_SITE"
-        ]
+        return ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME", "CO_HOSTED_SITE"]
 
     def producedEvents(self):
         return [
@@ -67,7 +59,7 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
             "BLACKLISTED_COHOST",
             "MALICIOUS_INTERNET_NAME",
             "MALICIOUS_AFFILIATE_INTERNET_NAME",
-            "MALICIOUS_COHOST"
+            "MALICIOUS_COHOST",
         ]
 
     def queryBlocklist(self, target):
@@ -77,13 +69,14 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
             return False
 
         if target.lower() in blocklist:
-            self.debug(f"Host name {target} found in Steven Black Hosts block list.")
+            self.debug(
+                f"Host name {target} found in Steven Black Hosts block list.")
             return True
 
         return False
 
     def retrieveBlocklist(self):
-        blocklist = self.sf.cacheGet('stevenblack_hosts', 24)
+        blocklist = self.sf.cacheGet("stevenblack_hosts", 24)
 
         if blocklist is not None:
             return self.parseBlocklist(blocklist)
@@ -91,23 +84,24 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
         url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
         res = self.sf.fetchUrl(
             url,
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from {url}")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from {url}")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error(f"Received no content from {url}")
             self.errorState = True
             return None
 
-        self.sf.cachePut("stevenblack_hosts", res['content'])
+        self.sf.cachePut("stevenblack_hosts", res["content"])
 
-        return self.parseBlocklist(res['content'])
+        return self.parseBlocklist(res["content"])
 
     def parseBlocklist(self, blocklist):
         """Parse plaintext block list
@@ -123,10 +117,10 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
         if not blocklist:
             return hosts
 
-        for line in blocklist.split('\n'):
+        for line in blocklist.split("\n"):
             if not line:
                 continue
-            if line.startswith('#'):
+            if line.startswith("#"):
                 continue
             host = line.strip().split(" ")[1]
             # Note: Validation with sf.validHost() is too slow to use here
@@ -157,12 +151,12 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
             malicious_type = "MALICIOUS_INTERNET_NAME"
             blacklist_type = "BLACKLISTED_INTERNET_NAME"
         elif eventName == "AFFILIATE_INTERNET_NAME":
-            if not self.opts.get('checkaffiliates', False):
+            if not self.opts.get("checkaffiliates", False):
                 return
             malicious_type = "MALICIOUS_AFFILIATE_INTERNET_NAME"
             blacklist_type = "BLACKLISTED_AFFILIATE_INTERNET_NAME"
         elif eventName == "CO_HOSTED_SITE":
-            if not self.opts.get('checkcohosts', False):
+            if not self.opts.get("checkcohosts", False):
                 return
             malicious_type = "MALICIOUS_COHOST"
             blacklist_type = "BLACKLISTED_COHOST"
@@ -170,7 +164,9 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with Steven Black Hosts blocklist")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with Steven Black Hosts blocklist"
+        )
 
         if not self.queryBlocklist(eventData):
             return
@@ -183,5 +179,6 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
 
         evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
         self.notifyListeners(evt)
+
 
 # End of sfp_stevenblack_hosts class

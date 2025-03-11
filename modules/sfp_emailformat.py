@@ -21,30 +21,28 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 class sfp_emailformat(SpiderFootPlugin):
 
     meta = {
-        'name': "EmailFormat",
-        'summary': "Look up e-mail addresses on email-format.com.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://www.email-format.com/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "EmailFormat",
+        "summary": "Look up e-mail addresses on email-format.com.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://www.email-format.com/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://www.email-format.com/i/api_access/",
                 "https://www.email-format.com/i/api_v2/",
-                "https://www.email-format.com/i/api_v1/"
+                "https://www.email-format.com/i/api_v1/",
             ],
-            'favIcon': "https://www.google.com/s2/favicons?domain=https://www.email-format.com/",
-            'logo': "https://www.google.com/s2/favicons?domain=https://www.email-format.com/",
-            'description': "Save time and energy - find the email address formats in use at thousands of companies.",
-        }
+            "favIcon": "https://www.google.com/s2/favicons?domain=https://www.email-format.com/",
+            "logo": "https://www.google.com/s2/favicons?domain=https://www.email-format.com/",
+            "description": "Save time and energy - find the email address formats in use at thousands of companies.",
+        },
     }
 
-    opts = {
-    }
+    opts = {}
 
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -56,7 +54,7 @@ class sfp_emailformat(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return ['INTERNET_NAME', "DOMAIN_NAME"]
+        return ["INTERNET_NAME", "DOMAIN_NAME"]
 
     def producedEvents(self):
         return ["EMAILADDR", "EMAILADDR_GENERIC"]
@@ -74,16 +72,20 @@ class sfp_emailformat(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         # Get e-mail addresses on this domain
-        res = self.sf.fetchUrl(f"https://www.email-format.com/d/{eventData}/", timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
+        res = self.sf.fetchUrl(
+            f"https://www.email-format.com/d/{eventData}/",
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
+        )
 
-        if res['content'] is None:
+        if res["content"] is None:
             return
 
         html = BeautifulSoup(res["content"], features="lxml")
         if not html:
             return
 
-        tbody = html.find('tbody')
+        tbody = html.find("tbody")
         if tbody:
             data = str(tbody.contents)
         else:
@@ -93,7 +95,7 @@ class sfp_emailformat(SpiderFootPlugin):
         emails = SpiderFootHelpers.extractEmailsFromText(data)
         for email in emails:
             # Skip unrelated emails
-            mailDom = email.lower().split('@')[1]
+            mailDom = email.lower().split("@")[1]
             if not self.getTarget().matches(mailDom):
                 self.debug(f"Skipped address: {email}")
                 continue
@@ -104,12 +106,13 @@ class sfp_emailformat(SpiderFootPlugin):
                 continue
 
             self.info(f"Found e-mail address: {email}")
-            if email.split("@")[0] in self.opts['_genericusers'].split(","):
+            if email.split("@")[0] in self.opts["_genericusers"].split(","):
                 evttype = "EMAILADDR_GENERIC"
             else:
                 evttype = "EMAILADDR"
 
             evt = SpiderFootEvent(evttype, email, self.__name__, event)
             self.notifyListeners(evt)
+
 
 # End of sfp_emailformat class

@@ -24,29 +24,27 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_wikipediaedits(SpiderFootPlugin):
 
     meta = {
-        'name': "Wikipedia Edits",
-        'summary': "Identify edits to Wikipedia articles made from a given IP address or username.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Secondary Networks"],
-        'dataSource': {
-            'website': "https://www.wikipedia.org/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "Wikipedia Edits",
+        "summary": "Identify edits to Wikipedia articles made from a given IP address or username.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Secondary Networks"],
+        "dataSource": {
+            "website": "https://www.wikipedia.org/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://www.mediawiki.org/wiki/API:Tutorial",
                 "https://www.mediawiki.org/wiki/How_to_contribute",
-                "https://www.mediawiki.org/wiki/API:Main_page"
+                "https://www.mediawiki.org/wiki/API:Main_page",
             ],
-            'favIcon': "https://www.wikipedia.org/static/favicon/wikipedia.ico",
-            'logo': "https://www.wikipedia.org/static/apple-touch/wikipedia.png",
-            'description': "Wikipedia is a multilingual online encyclopedia created and maintained as an "
+            "favIcon": "https://www.wikipedia.org/static/favicon/wikipedia.ico",
+            "logo": "https://www.wikipedia.org/static/apple-touch/wikipedia.png",
+            "description": "Wikipedia is a multilingual online encyclopedia created and maintained as an "
             "open collaboration project by a community of volunteer editors, using a wiki-based editing system.",
-        }
+        },
     }
 
-    opts = {
-        "days_limit": "365"
-    }
+    opts = {"days_limit": "365"}
 
     optdescs = {
         "days_limit": "Maximum age of data to be considered valid (0 = unlimited)."
@@ -71,25 +69,28 @@ class sfp_wikipediaedits(SpiderFootPlugin):
     def query(self, qry):
         params = {
             "action": "feedcontributions",
-            "user": qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
+            "user": qry.encode("raw_unicode_escape").decode("ascii", errors="replace"),
         }
 
-        if self.opts['days_limit'] != "0":
-            dt = datetime.datetime.now() - datetime.timedelta(days=int(self.opts['days_limit']))
+        if self.opts["days_limit"] != "0":
+            dt = datetime.datetime.now() - datetime.timedelta(
+                days=int(self.opts["days_limit"])
+            )
             params["year"] = dt.strftime("%Y")
             params["month"] = dt.strftime("%m")
 
         res = self.sf.fetchUrl(
             f"https://en.wikipedia.org/w/api.php?{urllib.parse.urlencode(params)}",
-            timeout=self.opts['_fetchtimeout'],
-            useragent="SpiderFoot"
+            timeout=self.opts["_fetchtimeout"],
+            useragent="SpiderFoot",
         )
 
-        if res['code'] in ["404", "403", "500"]:
-            self.debug(f"Unexpected response code {res['code']} from Wikipedia")
+        if res["code"] in ["404", "403", "500"]:
+            self.debug(
+                f"Unexpected response code {res['code']} from Wikipedia")
             return None
 
-        if not res['content']:
+        if not res["content"]:
             return None
 
         links = list()
@@ -97,7 +98,7 @@ class sfp_wikipediaedits(SpiderFootPlugin):
         try:
             parser = HTMLParser()
 
-            for line in res['content'].split("\n"):
+            for line in res["content"].split("\n"):
                 matches = re.findall("<link>(.*?)</link>", line, re.IGNORECASE)
                 for m in matches:
                     if "Special:Contributions" in m:
@@ -129,7 +130,9 @@ class sfp_wikipediaedits(SpiderFootPlugin):
             return
 
         for link in data:
-            evt = SpiderFootEvent("WIKIPEDIA_PAGE_EDIT", link, self.__name__, event)
+            evt = SpiderFootEvent("WIKIPEDIA_PAGE_EDIT",
+                                  link, self.__name__, event)
             self.notifyListeners(evt)
+
 
 # End of sfp_wikipediaedits class

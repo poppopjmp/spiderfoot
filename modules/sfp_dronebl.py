@@ -20,41 +20,41 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_dronebl(SpiderFootPlugin):
 
     meta = {
-        'name': "DroneBL",
-        'summary': "Query the DroneBL database for open relays, open proxies, vulnerable servers, etc.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://dronebl.org/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "DroneBL",
+        "summary": "Query the DroneBL database for open relays, open proxies, vulnerable servers, etc.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://dronebl.org/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://dronebl.org/docs/howtouse",
                 "https://dronebl.org/rpckey_signup",
-                "https://dronebl.org/docs/rpc2"
+                "https://dronebl.org/docs/rpc2",
             ],
-            'favIcon': "https://dronebl.org/images/favicon.ico",
-            'logo': "https://dronebl.org/images/dronebl-logo.svg",
-            'description': "DroneBL is a realtime monitor of abusable IPs, which has "
+            "favIcon": "https://dronebl.org/images/favicon.ico",
+            "logo": "https://dronebl.org/images/dronebl-logo.svg",
+            "description": "DroneBL is a realtime monitor of abusable IPs, which has "
             "the goal of stopping abuse of infected machines.\n"
             "A real-time tracker of abusable IPs.",
-        }
+        },
     }
 
     # Default options
     opts = {
-        'netblocklookup': True,
-        'maxnetblock': 24,
-        'subnetlookup': True,
-        'maxsubnet': 24
+        "netblocklookup": True,
+        "maxnetblock": 24,
+        "subnetlookup": True,
+        "maxsubnet": 24,
     }
 
     # Option descriptions
     optdescs = {
-        'netblocklookup': "Look up all IPs on netblocks deemed to be owned by your target for possible blacklisted hosts on the same target subdomain/domain?",
-        'maxnetblock': "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
-        'subnetlookup': "Look up all IPs on subnets which your target is a part of for blacklisting?",
-        'maxsubnet': "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)"
+        "netblocklookup": "Look up all IPs on netblocks deemed to be owned by your target for possible blacklisted hosts on the same target subdomain/domain?",
+        "maxnetblock": "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
+        "subnetlookup": "Look up all IPs on subnets which your target is a part of for blacklisting?",
+        "maxsubnet": "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
     }
 
     results = None
@@ -76,7 +76,7 @@ class sfp_dronebl(SpiderFootPlugin):
         "127.0.0.17": "dronebl.org - Automatically determined botnet IPs (experimental)",
         "127.0.0.18": "dronebl.org - Possibly compromised DNS/MX",
         "127.0.0.19": "dronebl.org - Abused VPN Service",
-        "127.0.0.255": "dronebl.org - Unknown"
+        "127.0.0.255": "dronebl.org - Unknown",
     }
 
     def setup(self, sfc, userOpts=dict()):
@@ -87,12 +87,7 @@ class sfp_dronebl(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            'IP_ADDRESS',
-            'AFFILIATE_IPADDR',
-            'NETBLOCK_OWNER',
-            'NETBLOCK_MEMBER'
-        ]
+        return ["IP_ADDRESS", "AFFILIATE_IPADDR", "NETBLOCK_OWNER", "NETBLOCK_MEMBER"]
 
     def producedEvents(self):
         return [
@@ -105,7 +100,7 @@ class sfp_dronebl(SpiderFootPlugin):
             "MALICIOUS_NETBLOCK",
             "MALICIOUS_SUBNET",
             "VPN_HOST",
-            "PROXY_HOST"
+            "PROXY_HOST",
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
@@ -113,7 +108,7 @@ class sfp_dronebl(SpiderFootPlugin):
         if not self.sf.validIP(ipaddr):
             self.debug(f"Invalid IPv4 address {ipaddr}")
             return None
-        return '.'.join(reversed(ipaddr.split('.')))
+        return ".".join(reversed(ipaddr.split(".")))
 
     def queryAddr(self, qaddr):
         """Query DroneBL DNS for an IPv4 address.
@@ -129,7 +124,7 @@ class sfp_dronebl(SpiderFootPlugin):
             return None
 
         try:
-            lookup = self.reverseAddr(qaddr) + '.dnsbl.dronebl.org'
+            lookup = self.reverseAddr(qaddr) + ".dnsbl.dronebl.org"
             self.debug(f"Checking DroneBL blacklist: {lookup}")
             return self.sf.resolveHost(lookup)
         except Exception as e:
@@ -149,22 +144,26 @@ class sfp_dronebl(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventName == 'NETBLOCK_OWNER':
-            if not self.opts['netblocklookup']:
+        if eventName == "NETBLOCK_OWNER":
+            if not self.opts["netblocklookup"]:
                 return
 
-            max_netblock = self.opts['maxnetblock']
+            max_netblock = self.opts["maxnetblock"]
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}"
+                )
                 return
 
-        if eventName == 'NETBLOCK_MEMBER':
-            if not self.opts['subnetlookup']:
+        if eventName == "NETBLOCK_MEMBER":
+            if not self.opts["subnetlookup"]:
                 return
 
-            max_subnet = self.opts['maxsubnet']
+            max_subnet = self.opts["maxsubnet"]
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}"
+                )
                 return
 
         if eventName == "AFFILIATE_IPADDR":
@@ -206,12 +205,16 @@ class sfp_dronebl(SpiderFootPlugin):
             for result in res:
                 k = str(result)
                 if k not in self.checks:
-                    if not result.endswith('.dnsbl.dronebl.org'):
+                    if not result.endswith(".dnsbl.dronebl.org"):
                         # This is an error. The "checks" dict may need to be updated.
-                        self.error(f"DroneBL resolved address {addr} to unknown IP address {result} not found in DroneBL list.")
+                        self.error(
+                            f"DroneBL resolved address {addr} to unknown IP address {result} not found in DroneBL list."
+                        )
                     continue
 
-                evt = SpiderFootEvent(blacklist_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, f"{self.checks[k]} [{addr}]", self.__name__, event
+                )
                 self.notifyListeners(evt)
 
                 if k in [
@@ -226,15 +229,29 @@ class sfp_dronebl(SpiderFootPlugin):
                     "127.0.0.18",
                     "127.0.0.19",
                 ]:
-                    evt = SpiderFootEvent(malicious_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        malicious_type,
+                        f"{self.checks[k]} [{addr}]",
+                        self.__name__,
+                        event,
+                    )
                     self.notifyListeners(evt)
 
-                if k in ["127.0.0.8", "127.0.0.9", "127.0.0.10", "127.0.0.11", "127.0.0.14"]:
-                    evt = SpiderFootEvent("PROXY_HOST", addr, self.__name__, event)
+                if k in [
+                    "127.0.0.8",
+                    "127.0.0.9",
+                    "127.0.0.10",
+                    "127.0.0.11",
+                    "127.0.0.14",
+                ]:
+                    evt = SpiderFootEvent(
+                        "PROXY_HOST", addr, self.__name__, event)
                     self.notifyListeners(evt)
 
                 if k == "127.0.0.19":
-                    evt = SpiderFootEvent("VPN_HOST", addr, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "VPN_HOST", addr, self.__name__, event)
                     self.notifyListeners(evt)
+
 
 # End of sfp_dronebl class

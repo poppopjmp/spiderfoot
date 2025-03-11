@@ -19,34 +19,32 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_quad9(SpiderFootPlugin):
 
     meta = {
-        'name': "Quad9",
-        'summary': "Check if a host would be blocked by Quad9 DNS.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://quad9.net/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "Quad9",
+        "summary": "Check if a host would be blocked by Quad9 DNS.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://quad9.net/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://www.quad9.net/faq/",
                 "https://support.quad9.net/hc/en-us/categories/360002571772-Configuration",
             ],
-            'favIcon': "https://quad9.net/wp-content/uploads/2018/01/favicon-32.png",
-            'logo': "https://quad9.net/wp-content/uploads/2017/11/quad9-logo-white@2x.png",
-            'description': "Quad9 brings together cyber threat intelligence about malicious domains "
+            "favIcon": "https://quad9.net/wp-content/uploads/2018/01/favicon-32.png",
+            "logo": "https://quad9.net/wp-content/uploads/2017/11/quad9-logo-white@2x.png",
+            "description": "Quad9 brings together cyber threat intelligence about malicious domains "
             "from a variety of public and private sources and blocks access "
             "to those malicious domains when your system attempts to contact them.\n"
             "When you use Quad9, attackers and malware cannot leverage the known malicious domains to control your systems, "
             "and their ability to steal your data or cause harm will be hindered. "
             "Quad9 is an effective and easy way to add an additional layer of security to your infrastructure for free.",
-        }
+        },
     }
 
-    opts = {
-    }
+    opts = {}
 
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -58,11 +56,7 @@ class sfp_quad9(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            "INTERNET_NAME",
-            "AFFILIATE_INTERNET_NAME",
-            "CO_HOSTED_SITE"
-        ]
+        return ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME", "CO_HOSTED_SITE"]
 
     def producedEvents(self):
         return [
@@ -129,7 +123,7 @@ class sfp_quad9(SpiderFootPlugin):
             blacklist_type,
             f"Quad9 [{eventData}]\n<SFURL>https://quad9.net/result/?url={eventData}</SFURL>",
             self.__name__,
-            event
+            event,
         )
         self.notifyListeners(evt)
 
@@ -137,8 +131,9 @@ class sfp_quad9(SpiderFootPlugin):
             malicious_type,
             f"Quad9 [{eventData}]\n<SFURL>https://quad9.net/result/?url={eventData}</SFURL>",
             self.__name__,
-            event
+            event,
         )
         self.notifyListeners(evt)
+
 
 # End of sfp_quad9 class

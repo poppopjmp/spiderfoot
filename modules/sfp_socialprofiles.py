@@ -21,21 +21,21 @@ sites = {
     # Search string to use, domain name the profile will sit on within
     # those search results.
     "Facebook": [
-        "\"{name}\"+site:facebook.com",
+        '"{name}"+site:facebook.com',
         [
             r'[ \'"](https?://[a-z\.]*facebook.[a-z\.]+/[^/"\'<> ]+/?)[\'"]',
             r'(https?%3a%2f%2f[a-z\.]*facebook.[a-z\.]+%2f[^\/"\'<> ]+/?)',
         ],
     ],
     "Google+": [
-        "\"{name}\"+site:plus.google.com",
+        '"{name}"+site:plus.google.com',
         [
             r'[ \'"](https?://plus.google.[a-z\.]+/\d+[^"\'<>\/ ]+)[\'"]',
             r'(https?%3a%2f%2fplus.google.[a-z\.]+%2f\d+[^\/"\'<> ]+)',
         ],
     ],
     "LinkedIn": [
-        "\"{name}\"+site:linkedin.com",
+        '"{name}"+site:linkedin.com',
         [
             r'["\' ](https?://[a-z\.]*linkedin.[a-z\.]+/[^\?"\'<> ]+)[\'"]',
             r'(https?%3a%2f%2f[a-z\.]*linkedin.[a-z\.]+%2f[^\?"\'<> ]+)',
@@ -47,20 +47,20 @@ sites = {
 class sfp_socialprofiles(SpiderFootPlugin):
 
     meta = {
-        'name': "Social Media Profile Finder",
-        'summary': "Tries to discover the social media profiles for human names identified.",
-        'flags': ["slow", "apikey"],
-        'useCases': ["Footprint", "Passive"],
-        'categories': ["Social Media"],
-        'dataSource': {
-            'website': "https://developers.google.com/custom-search",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
+        "name": "Social Media Profile Finder",
+        "summary": "Tries to discover the social media profiles for human names identified.",
+        "flags": ["slow", "apikey"],
+        "useCases": ["Footprint", "Passive"],
+        "categories": ["Social Media"],
+        "dataSource": {
+            "website": "https://developers.google.com/custom-search",
+            "model": "FREE_AUTH_LIMITED",
+            "references": [
                 "https://developers.google.com/custom-search/v1",
                 "https://developers.google.com/custom-search/docs/overview",
-                "https://cse.google.com/cse"
+                "https://cse.google.com/cse",
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "If using Google:",
                 "Visit https://developers.google.com/custom-search/v1/introduction",
                 "Register a free Google account",
@@ -71,15 +71,15 @@ class sfp_socialprofiles(SpiderFootPlugin):
                 "Visit https://azure.microsoft.com/en-in/services/cognitive-services/bing-web-search-api/",
                 "Register a free account",
                 "Select on Bing Custom Search",
-                "The API keys are listed under 'Key1' and 'Key2' (both should work)"
+                "The API keys are listed under 'Key1' and 'Key2' (both should work)",
             ],
-            'favIcon': "https://www.gstatic.com/devrel-devsite/prod/v2210deb8920cd4a55bd580441aa58e7853afc04b39a9d9ac4198e1cd7fbe04ef/developers/images/favicon.png",
-            'logo': "https://www.gstatic.com/devrel-devsite/prod/v2210deb8920cd4a55bd580441aa58e7853afc04b39a9d9ac4198e1cd7fbe04ef/developers/images/favicon.png",
-            'description': "Google Custom Search enables you to create a search engine for your website, your blog, or a collection of websites. "
+            "favIcon": "https://www.gstatic.com/devrel-devsite/prod/v2210deb8920cd4a55bd580441aa58e7853afc04b39a9d9ac4198e1cd7fbe04ef/developers/images/favicon.png",
+            "logo": "https://www.gstatic.com/devrel-devsite/prod/v2210deb8920cd4a55bd580441aa58e7853afc04b39a9d9ac4198e1cd7fbe04ef/developers/images/favicon.png",
+            "description": "Google Custom Search enables you to create a search engine for your website, your blog, or a collection of websites. "
             "You can configure your engine to search both web pages and images. "
             "You can fine-tune the ranking, add your own promotions and customize the look and feel of the search results. "
             "You can monetize the search by connecting your engine to your Google AdSense account.",
-        }
+        },
     }
 
     # Default options
@@ -137,8 +137,10 @@ class sfp_socialprofiles(SpiderFootPlugin):
 
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
-        if self.opts['google_api_key'] == "" and self.opts['bing_api_key'] == "":
-            self.error("You enabled sfp_socialprofiles but did not set a Google or Bing API key!")
+        if self.opts["google_api_key"] == "" and self.opts["bing_api_key"] == "":
+            self.error(
+                "You enabled sfp_socialprofiles but did not set a Google or Bing API key!"
+            )
             self.errorState = True
             return
 
@@ -199,8 +201,7 @@ class sfp_socialprofiles(SpiderFootPlugin):
 
             # Submit the results for analysis
             evt = SpiderFootEvent(
-                "RAW_RIR_DATA", str(res), self.__name__, event
-            )
+                "RAW_RIR_DATA", str(res), self.__name__, event)
             self.notifyListeners(evt)
 
             instances = list()
@@ -231,13 +232,14 @@ class sfp_socialprofiles(SpiderFootPlugin):
                     if self.opts["tighten"] and self.keywords:
                         match = urllib.parse.unquote(match)
                         self.debug(
-                            "Tightening results to look for " + str(self.keywords)
+                            "Tightening results to look for " +
+                            str(self.keywords)
                         )
                         pres = self.sf.fetchUrl(
                             match,
                             timeout=self.opts["_fetchtimeout"],
                             useragent=self.opts["_useragent"],
-                            verify=False
+                            verify=False,
                         )
 
                         if pres["content"] is None:
@@ -255,10 +257,14 @@ class sfp_socialprofiles(SpiderFootPlugin):
                         if not found:
                             continue
 
-                    self.info("Social Media Profile found at " + site + ": " + match)
+                    self.info("Social Media Profile found at " +
+                              site + ": " + match)
                     match = urllib.parse.unquote(match)
                     evt = SpiderFootEvent(
-                        "SOCIAL_MEDIA", site + ": <SFURL>" + match + "</SFURL>", self.__name__, event
+                        "SOCIAL_MEDIA",
+                        site + ": <SFURL>" + match + "</SFURL>",
+                        self.__name__,
+                        event,
                     )
                     self.notifyListeners(evt)
 

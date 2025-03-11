@@ -20,43 +20,41 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_threatcrowd(SpiderFootPlugin):
 
     meta = {
-        'name': "ThreatCrowd",
-        'summary': "Obtain information from ThreatCrowd about identified IP addresses, domains and e-mail addresses.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://www.threatcrowd.org",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
-                "https://threatcrowd.blogspot.com/2015/03/tutorial.html"
-            ],
-            'favIcon': "https://www.threatcrowd.org/img/favicon-32x32.png",
-            'logo': "https://www.threatcrowd.org/img/home.png",
-            'description': "The ThreatCrowd API allows you to quickly identify related infrastructure and malware.\n"
+        "name": "ThreatCrowd",
+        "summary": "Obtain information from ThreatCrowd about identified IP addresses, domains and e-mail addresses.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://www.threatcrowd.org",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://threatcrowd.blogspot.com/2015/03/tutorial.html"],
+            "favIcon": "https://www.threatcrowd.org/img/favicon-32x32.png",
+            "logo": "https://www.threatcrowd.org/img/home.png",
+            "description": "The ThreatCrowd API allows you to quickly identify related infrastructure and malware.\n"
             "With the ThreatCrowd API you can search for Domains, IP Addreses, E-mail adddresses, "
             "Filehashes, Antivirus detections.",
-        }
+        },
     }
 
     # Default options
     opts = {
         "checkcohosts": True,
         "checkaffiliates": True,
-        'netblocklookup': True,
-        'maxnetblock': 24,
-        'subnetlookup': True,
-        'maxsubnet': 24
+        "netblocklookup": True,
+        "maxnetblock": 24,
+        "subnetlookup": True,
+        "maxsubnet": 24,
     }
 
     # Option descriptions
     optdescs = {
         "checkcohosts": "Check co-hosted sites?",
         "checkaffiliates": "Check affiliates?",
-        'netblocklookup': "Look up all IPs on netblocks deemed to be owned by your target for possible hosts on the same target subdomain/domain?",
-        'maxnetblock': "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
-        'subnetlookup': "Look up all IPs on subnets which your target is a part of?",
-        'maxsubnet': "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)"
+        "netblocklookup": "Look up all IPs on netblocks deemed to be owned by your target for possible hosts on the same target subdomain/domain?",
+        "maxnetblock": "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
+        "subnetlookup": "Look up all IPs on subnets which your target is a part of?",
+        "maxsubnet": "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
     }
 
     # Be sure to completely clear any class variables in setup()
@@ -78,16 +76,29 @@ class sfp_threatcrowd(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ["IP_ADDRESS", "AFFILIATE_IPADDR", "INTERNET_NAME",
-                "CO_HOSTED_SITE", "NETBLOCK_OWNER", "EMAILADDR",
-                "NETBLOCK_MEMBER", "AFFILIATE_INTERNET_NAME"]
+        return [
+            "IP_ADDRESS",
+            "AFFILIATE_IPADDR",
+            "INTERNET_NAME",
+            "CO_HOSTED_SITE",
+            "NETBLOCK_OWNER",
+            "EMAILADDR",
+            "NETBLOCK_MEMBER",
+            "AFFILIATE_INTERNET_NAME",
+        ]
 
     # What events this module produces
     def producedEvents(self):
-        return ["MALICIOUS_IPADDR", "MALICIOUS_INTERNET_NAME",
-                "MALICIOUS_COHOST", "MALICIOUS_AFFILIATE_INTERNET_NAME",
-                "MALICIOUS_AFFILIATE_IPADDR", "MALICIOUS_NETBLOCK",
-                "MALICIOUS_SUBNET", "MALICIOUS_EMAILADDR"]
+        return [
+            "MALICIOUS_IPADDR",
+            "MALICIOUS_INTERNET_NAME",
+            "MALICIOUS_COHOST",
+            "MALICIOUS_AFFILIATE_INTERNET_NAME",
+            "MALICIOUS_AFFILIATE_IPADDR",
+            "MALICIOUS_NETBLOCK",
+            "MALICIOUS_SUBNET",
+            "MALICIOUS_EMAILADDR",
+        ]
 
     def query(self, qry):
         url = None
@@ -99,16 +110,20 @@ class sfp_threatcrowd(SpiderFootPlugin):
             url = "https://www.threatcrowd.org/searchApi/v2/email/report/?email=" + qry
 
         if not url:
-            url = "https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=" + qry
+            url = (
+                "https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=" + qry
+            )
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
+        res = self.sf.fetchUrl(
+            url, timeout=self.opts["_fetchtimeout"], useragent="SpiderFoot"
+        )
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info(f"No ThreatCrowd info found for {qry}")
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.error(f"Error processing JSON response from ThreatCrowd: {e}")
             self.errorState = True
@@ -132,26 +147,30 @@ class sfp_threatcrowd(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventName.startswith("AFFILIATE") and not self.opts['checkaffiliates']:
+        if eventName.startswith("AFFILIATE") and not self.opts["checkaffiliates"]:
             return
 
-        if eventName == 'CO_HOSTED_SITE' and not self.opts['checkcohosts']:
+        if eventName == "CO_HOSTED_SITE" and not self.opts["checkcohosts"]:
             return
 
-        if eventName == 'NETBLOCK_OWNER':
-            if not self.opts['netblocklookup']:
+        if eventName == "NETBLOCK_OWNER":
+            if not self.opts["netblocklookup"]:
                 return
-            max_netblock = self.opts['maxnetblock']
+            max_netblock = self.opts["maxnetblock"]
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}"
+                )
                 return
 
-        if eventName == 'NETBLOCK_MEMBER':
-            if not self.opts['subnetlookup']:
+        if eventName == "NETBLOCK_MEMBER":
+            if not self.opts["subnetlookup"]:
                 return
-            max_subnet = self.opts['maxsubnet']
+            max_subnet = self.opts["maxsubnet"]
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}"
+                )
                 return
 
         qrylist = list()
@@ -169,7 +188,7 @@ class sfp_threatcrowd(SpiderFootPlugin):
             info = self.query(addr)
             if info is None:
                 continue
-            if info.get('votes', 0) < 0:
+            if info.get("votes", 0) < 0:
                 self.info("Found ThreatCrowd URL data for " + addr)
                 if eventName in ["IP_ADDRESS"] or eventName.startswith("NETBLOCK_"):
                     evt = "MALICIOUS_IPADDR"
@@ -189,10 +208,14 @@ class sfp_threatcrowd(SpiderFootPlugin):
                 if eventName == "EMAILADDR":
                     evt = "MALICIOUS_EMAILADDR"
 
-                infourl = "<SFURL>" + info.get('permalink') + "</SFURL>"
+                infourl = "<SFURL>" + info.get("permalink") + "</SFURL>"
 
                 # Notify other modules of what you've found
-                e = SpiderFootEvent(evt, "ThreatCrowd [" + addr + "]\n" + infourl, self.__name__, event)
+                e = SpiderFootEvent(
+                    evt, "ThreatCrowd [" + addr + "]\n" +
+                    infourl, self.__name__, event
+                )
                 self.notifyListeners(e)
+
 
 # End of sfp_threatcrowd class

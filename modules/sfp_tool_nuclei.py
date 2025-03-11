@@ -26,35 +26,31 @@ class sfp_tool_nuclei(SpiderFootPlugin):
     meta = {
         "name": "Tool - Nuclei",
         "summary": "Fast and customisable vulnerability scanner.",
-        "flags": [
-            "tool",
-            "slow",
-            "invasive"
-        ],
+        "flags": ["tool", "slow", "invasive"],
         "useCases": ["Footprint", "Investigate"],
         "categories": ["Crawling and Scanning"],
         "toolDetails": {
             "name": "Nuclei",
             "description": "Fast and customisable vulnerability scanner based on simple YAML based DSL.",
             "website": "https://nuclei.projectdiscovery.io/",
-            "repository": "https://github.com/projectdiscovery/nuclei"
-        }
+            "repository": "https://github.com/projectdiscovery/nuclei",
+        },
     }
 
     # Default options
     opts = {
         "nuclei_path": "/tools/bin/nuclei",
         "template_path": "/tools/nuclei-templates/",
-        'netblockscan': True,
-        'netblockscanmax': 24
+        "netblockscan": True,
+        "netblockscanmax": 24,
     }
 
     # Option descriptions
     optdescs = {
-        'nuclei_path': "The path to your nuclei binary. Must be set.",
-        'template_path': "The path to your nuclei templates. Must be set.",
-        'netblockscan': "Check all IPs within identified owned netblocks?",
-        'netblockscanmax': "Maximum netblock/subnet size to scan IPs within (CIDR value, 24 = /24, 16 = /16, etc.)"
+        "nuclei_path": "The path to your nuclei binary. Must be set.",
+        "template_path": "The path to your nuclei templates. Must be set.",
+        "netblockscan": "Check all IPs within identified owned netblocks?",
+        "netblockscanmax": "Maximum netblock/subnet size to scan IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
     }
 
     # Target
@@ -79,7 +75,7 @@ class sfp_tool_nuclei(SpiderFootPlugin):
             "VULNERABILITY_CVE_LOW",
             "IP_ADDRESS",
             "VULNERABILITY_GENERAL",
-            "WEBSERVER_TECHNOLOGY"
+            "WEBSERVER_TECHNOLOGY",
         ]
 
     # Handle events sent to this module
@@ -96,13 +92,15 @@ class sfp_tool_nuclei(SpiderFootPlugin):
         if srcModuleName == "sfp_tool_nuclei":
             return
 
-        if not self.opts['nuclei_path'] or not self.opts['template_path']:
-            self.error("You enabled sfp_tool_nuclei but did not set a path to the tool and/or templates!")
+        if not self.opts["nuclei_path"] or not self.opts["template_path"]:
+            self.error(
+                "You enabled sfp_tool_nuclei but did not set a path to the tool and/or templates!"
+            )
             self.errorState = True
             return
 
-        exe = self.opts['nuclei_path']
-        if self.opts['nuclei_path'].endswith('/'):
+        exe = self.opts["nuclei_path"]
+        if self.opts["nuclei_path"].endswith("/"):
             exe = f"{exe}nuclei"
 
         if not os.path.isfile(exe):
@@ -110,7 +108,7 @@ class sfp_tool_nuclei(SpiderFootPlugin):
             self.errorState = True
             return
 
-        if not SpiderFootHelpers.sanitiseInput(eventData, extra=['/']):
+        if not SpiderFootHelpers.sanitiseInput(eventData, extra=["/"]):
             self.debug("Invalid input, skipping.")
             return
 
@@ -124,7 +122,9 @@ class sfp_tool_nuclei(SpiderFootPlugin):
             for addr in self.results:
                 try:
                     if IPNetwork(eventData) in IPNetwork(addr):
-                        self.debug(f"Skipping {eventData} as already within a scanned range.")
+                        self.debug(
+                            f"Skipping {eventData} as already within a scanned range."
+                        )
                         return
                 except Exception:
                     # self.results will also contain hostnames
@@ -135,10 +135,10 @@ class sfp_tool_nuclei(SpiderFootPlugin):
         timeout = 240
         try:
             target = eventData
-            if eventName == "NETBLOCK_OWNER" and self.opts['netblockscan']:
+            if eventName == "NETBLOCK_OWNER" and self.opts["netblockscan"]:
                 target = ""
                 net = IPNetwork(eventData)
-                if net.prefixlen < self.opts['netblockscanmax']:
+                if net.prefixlen < self.opts["netblockscanmax"]:
                     self.debug(f"Skipping scanning of {eventData}, too big.")
                     return
 
@@ -148,7 +148,9 @@ class sfp_tool_nuclei(SpiderFootPlugin):
                     target += str(addr) + "\n"
                     timeout += 240
         except Exception as e:
-            self.error(f"Strange netblock identified, unable to parse: {eventData} ({e})")
+            self.error(
+                f"Strange netblock identified, unable to parse: {eventData} ({e})"
+            )
             return
 
         try:
@@ -170,7 +172,9 @@ class sfp_tool_nuclei(SpiderFootPlugin):
             ]
             p = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             try:
-                stdout, stderr = p.communicate(input=target.encode(sys.stdin.encoding), timeout=timeout)
+                stdout, stderr = p.communicate(
+                    input=target.encode(sys.stdin.encoding), timeout=timeout
+                )
                 if p.returncode == 0:
                     content = stdout.decode(sys.stdout.encoding)
                 else:
@@ -196,13 +200,14 @@ class sfp_tool_nuclei(SpiderFootPlugin):
 
                 data = json.loads(line)
                 srcevent = event
-                host = data['matched-at'].split(":")[0]
+                host = data["matched-at"].split(":")[0]
                 if host != eventData:
                     if self.sf.validIP(host):
                         srctype = "IP_ADDRESS"
                     else:
                         srctype = "INTERNET_NAME"
-                    srcevent = SpiderFootEvent(srctype, host, self.__name__, event)
+                    srcevent = SpiderFootEvent(
+                        srctype, host, self.__name__, event)
                     self.notifyListeners(srcevent)
 
                 matches = re.findall(r"CVE-\d{4}-\d{4,7}", line)
@@ -210,19 +215,20 @@ class sfp_tool_nuclei(SpiderFootPlugin):
                     for cve in matches:
                         etype, cvetext = self.sf.cveInfo(cve)
                         e = SpiderFootEvent(
-                            etype, cvetext, self.__name__, srcevent
-                        )
+                            etype, cvetext, self.__name__, srcevent)
                         self.notifyListeners(e)
                 else:
                     if "matcher-name" in data:
                         etype = "VULNERABILITY_GENERAL"
-                        if data['info']['severity'] == "info":
+                        if data["info"]["severity"] == "info":
                             etype = "WEBSERVER_TECHNOLOGY"
 
-                        datatext = f"Template: {data['info']['name']}({data['template-id']})\n"
+                        datatext = (
+                            f"Template: {data['info']['name']}({data['template-id']})\n"
+                        )
                         datatext += f"Matcher: {data['matcher-name']}\n"
                         datatext += f"Matched at: {data['matched-at']}\n"
-                        if data['info'].get('reference'):
+                        if data["info"].get("reference"):
                             datatext += f"Reference: <SFURL>{data['info']['reference'][0]}</SFURL>"
 
                         evt = SpiderFootEvent(

@@ -22,29 +22,26 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootHelpers
 class sfp_tool_cmseek(SpiderFootPlugin):
 
     meta = {
-        'name': "Tool - CMSeeK",
-        'summary': "Identify what Content Management System (CMS) might be used.",
-        'flags': ["tool"],
-        'useCases': ["Footprint", "Investigate"],
-        'categories': ["Content Analysis"],
-        'toolDetails': {
-            'name': "CMSeeK",
-            'description': "CMSeek is a tool that is used to extract Content Management System(CMS) details of a website.",
-            'website': 'https://github.com/Tuhinshubhra/CMSeeK',
-            'repository': 'https://github.com/Tuhinshubhra/CMSeeK'
+        "name": "Tool - CMSeeK",
+        "summary": "Identify what Content Management System (CMS) might be used.",
+        "flags": ["tool"],
+        "useCases": ["Footprint", "Investigate"],
+        "categories": ["Content Analysis"],
+        "toolDetails": {
+            "name": "CMSeeK",
+            "description": "CMSeek is a tool that is used to extract Content Management System(CMS) details of a website.",
+            "website": "https://github.com/Tuhinshubhra/CMSeeK",
+            "repository": "https://github.com/Tuhinshubhra/CMSeeK",
         },
     }
 
     # Default options
-    opts = {
-        'pythonpath': "python3",
-        'cmseekpath': ""
-    }
+    opts = {"pythonpath": "python3", "cmseekpath": ""}
 
     # Option descriptions
     optdescs = {
-        'pythonpath': "Path to Python 3 interpreter to use for CMSeeK. If just 'python3' then it must be in your PATH.",
-        'cmseekpath': "Path to the where the cmseek.py file lives. Must be set."
+        "pythonpath": "Path to Python 3 interpreter to use for CMSeeK. If just 'python3' then it must be in your PATH.",
+        "cmseekpath": "Path to the where the cmseek.py file lives. Must be set.",
     }
 
     results = None
@@ -61,7 +58,7 @@ class sfp_tool_cmseek(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ['INTERNET_NAME']
+        return ["INTERNET_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
@@ -86,21 +83,24 @@ class sfp_tool_cmseek(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if not self.opts['cmseekpath']:
-            self.error("You enabled sfp_tool_cmseek but did not set a path to the tool!")
+        if not self.opts["cmseekpath"]:
+            self.error(
+                "You enabled sfp_tool_cmseek but did not set a path to the tool!"
+            )
             self.errorState = True
             return
 
         # Normalize path
-        if self.opts['cmseekpath'].endswith('cmseek.py'):
-            exe = self.opts['cmseekpath']
-            resultpath = self.opts['cmseekpath'].split("cmseek.py")[0] + "/Result"
-        elif self.opts['cmseekpath'].endswith('/'):
-            exe = self.opts['cmseekpath'] + "cmseek.py"
-            resultpath = self.opts['cmseekpath'] + "Result"
+        if self.opts["cmseekpath"].endswith("cmseek.py"):
+            exe = self.opts["cmseekpath"]
+            resultpath = self.opts["cmseekpath"].split("cmseek.py")[
+                0] + "/Result"
+        elif self.opts["cmseekpath"].endswith("/"):
+            exe = self.opts["cmseekpath"] + "cmseek.py"
+            resultpath = self.opts["cmseekpath"] + "Result"
         else:
-            exe = self.opts['cmseekpath'] + "/cmseek.py"
-            resultpath = self.opts['cmseekpath'] + "/Result"
+            exe = self.opts["cmseekpath"] + "/cmseek.py"
+            resultpath = self.opts["cmseekpath"] + "/Result"
 
         # If tool is not found, abort
         if not os.path.isfile(exe):
@@ -114,12 +114,12 @@ class sfp_tool_cmseek(SpiderFootPlugin):
             return
 
         args = [
-            self.opts['pythonpath'],
+            self.opts["pythonpath"],
             exe,
-            '--follow-redirect',
-            '--batch',
-            '-u',
-            eventData
+            "--follow-redirect",
+            "--batch",
+            "-u",
+            eventData,
         ]
         try:
             p = Popen(args, stdout=PIPE, stderr=PIPE)
@@ -129,7 +129,9 @@ class sfp_tool_cmseek(SpiderFootPlugin):
             return
 
         if p.returncode != 0:
-            self.error(f"Unable to read CMSeeK output\nstderr: {stderr}\nstdout: {stdout}")
+            self.error(
+                f"Unable to read CMSeeK output\nstderr: {stderr}\nstdout: {stdout}"
+            )
             return
 
         if b"CMS Detection failed" in stdout:
@@ -142,25 +144,28 @@ class sfp_tool_cmseek(SpiderFootPlugin):
             return
 
         try:
-            f = io.open(log_path, encoding='utf-8')
+            f = io.open(log_path, encoding="utf-8")
             j = json.loads(f.read())
         except Exception as e:
-            self.error(f"Could not parse CMSeeK output file {log_path} as JSON: {e}")
+            self.error(
+                f"Could not parse CMSeeK output file {log_path} as JSON: {e}")
             return
 
-        cms_name = j.get('cms_name')
+        cms_name = j.get("cms_name")
 
         if not cms_name:
             return
 
-        cms_version = j.get('cms_version')
+        cms_version = j.get("cms_version")
 
-        software = ' '.join(filter(None, [cms_name, cms_version]))
+        software = " ".join(filter(None, [cms_name, cms_version]))
 
         if not software:
             return
 
-        evt = SpiderFootEvent("WEBSERVER_TECHNOLOGY", software, self.__name__, event)
+        evt = SpiderFootEvent("WEBSERVER_TECHNOLOGY",
+                              software, self.__name__, event)
         self.notifyListeners(evt)
+
 
 # End of sfp_tool_cmseek class

@@ -30,7 +30,7 @@ class sfp_reversewhois(SpiderFootPlugin):
             "favIcon": "https://www.reversewhois.io/dist/img/favicon-32x32.png",
             "description": "ReverseWhois is a free search engine to find domain names owned by an individual or company.\n"
             "Search based on names or email addresses.",
-        }
+        },
     }
 
     # Default options
@@ -76,7 +76,7 @@ class sfp_reversewhois(SpiderFootPlugin):
             return ([], [])
 
         html = BeautifulSoup(res["content"], features="lxml")
-        date_regex = re.compile(r'\d{4}-\d{2}-\d{2}')
+        date_regex = re.compile(r"\d{4}-\d{2}-\d{2}")
         registrars = set()
         domains = set()
         for table_row in html.findAll("tr"):
@@ -121,14 +121,20 @@ class sfp_reversewhois(SpiderFootPlugin):
         for domain in set(domains):
             # if this domain isn't the main target
             if not self.getTarget().matches(domain, includeChildren=False):
-                e = SpiderFootEvent("AFFILIATE_INTERNET_NAME", domain, self.__name__, event)
+                e = SpiderFootEvent(
+                    "AFFILIATE_INTERNET_NAME", domain, self.__name__, event
+                )
                 self.notifyListeners(e)
                 if self.sf.isDomain(domain, self.opts["_internettlds"]):
-                    evt = SpiderFootEvent("AFFILIATE_DOMAIN_NAME", domain, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "AFFILIATE_DOMAIN_NAME", domain, self.__name__, event
+                    )
                     self.notifyListeners(evt)
 
         for registrar in set(registrars):
-            e = SpiderFootEvent("DOMAIN_REGISTRAR", registrar, self.__name__, event)
+            e = SpiderFootEvent("DOMAIN_REGISTRAR",
+                                registrar, self.__name__, event)
             self.notifyListeners(e)
+
 
 # End of sfp_reversewhois class

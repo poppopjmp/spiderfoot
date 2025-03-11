@@ -27,7 +27,7 @@ class sfp_sublist3r(SpiderFootPlugin):
             "website": "https://api.sublist3r.com",
             "model": "FREE_NOAUTH_UNLIMITED",
             "description": "This is the API queried by the Sublist3r tool.",
-        }
+        },
     }
 
     # Default options
@@ -61,7 +61,7 @@ class sfp_sublist3r(SpiderFootPlugin):
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
                 "Accept-Language": "en-US,en;q=0.8",
                 "Accept-Encoding": "gzip",
-            }
+            },
         )
         try:
             ret = [s.strip().lower() for s in json.loads(res["content"])]
@@ -71,7 +71,8 @@ class sfp_sublist3r(SpiderFootPlugin):
             self.error("Error querying Sublist3r API")
 
         if res["code"] not in ["200"]:
-            self.error(f"Bad response code \"{res['code']}\" from Sublist3r API")
+            self.error(
+                f"Bad response code \"{res['code']}\" from Sublist3r API")
 
         return list(set(ret))
 
@@ -79,7 +80,8 @@ class sfp_sublist3r(SpiderFootPlugin):
         if self.sf.resolveHost(host) or self.sf.resolveHost6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)
         else:
-            e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", host, self.__name__, source)
+            e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED",
+                                host, self.__name__, source)
         self.notifyListeners(e)
 
     def handleEvent(self, event):
@@ -90,16 +92,20 @@ class sfp_sublist3r(SpiderFootPlugin):
         # skip if we've already processed this event (or its parent domain/subdomain)
         target = self.getTarget()
         eventDataHash = self.sf.hashstring(query)
-        if eventDataHash in self.results or \
-                (target.matches(query, includeParents=True) and not
-                 target.matches(query, includeChildren=False)):
-            self.debug(f"Skipping already-processed event, {event.eventType}, from {event.module}")
+        if eventDataHash in self.results or (
+            target.matches(query, includeParents=True) and
+            not target.matches(query, includeChildren=False)
+        ):
+            self.debug(
+                f"Skipping already-processed event, {event.eventType}, from {event.module}"
+            )
             return
         self.results[eventDataHash] = True
 
         for hostname in self.query(query):
-            if target.matches(hostname, includeParents=True) and not \
-                    target.matches(hostname, includeChildren=False):
+            if target.matches(hostname, includeParents=True) and not target.matches(
+                hostname, includeChildren=False
+            ):
                 self.sendEvent(event, hostname)
             else:
                 self.debug(f"Invalid subdomain: {hostname}")

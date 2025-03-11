@@ -17,11 +17,11 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 class sfp_hashes(SpiderFootPlugin):
 
     meta = {
-        'name': "Hash Extractor",
-        'summary': "Identify MD5 and SHA hashes in web content, files and more.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        "name": "Hash Extractor",
+        "summary": "Identify MD5 and SHA hashes in web content, files and more.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Content Analysis"],
     }
 
     # Default options
@@ -30,8 +30,7 @@ class sfp_hashes(SpiderFootPlugin):
     }
 
     # Option descriptions
-    optdescs = {
-    }
+    optdescs = {}
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
@@ -41,9 +40,13 @@ class sfp_hashes(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ["TARGET_WEB_CONTENT", "BASE64_DATA",
-                "LEAKSITE_CONTENT", "RAW_DNS_RECORDS",
-                "RAW_FILE_META_DATA"]
+        return [
+            "TARGET_WEB_CONTENT",
+            "BASE64_DATA",
+            "LEAKSITE_CONTENT",
+            "RAW_DNS_RECORDS",
+            "RAW_FILE_META_DATA",
+        ]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
@@ -63,11 +66,14 @@ class sfp_hashes(SpiderFootPlugin):
         for hashtup in hashes:
             hashalgo, hashval = hashtup
 
-            evt = SpiderFootEvent("HASH", f"[{hashalgo}] {hashval}", self.__name__, event)
+            evt = SpiderFootEvent(
+                "HASH", f"[{hashalgo}] {hashval}", self.__name__, event
+            )
             if event.moduleDataSource:
                 evt.moduleDataSource = event.moduleDataSource
             else:
                 evt.moduleDataSource = "Unknown"
             self.notifyListeners(evt)
+
 
 # End of sfp_hashes class

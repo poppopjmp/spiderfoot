@@ -16,38 +16,38 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_coinblocker(SpiderFootPlugin):
 
     meta = {
-        'name': "CoinBlocker Lists",
-        'summary': "Check if a domain appears on CoinBlocker lists.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://zerodot1.gitlab.io/CoinBlockerListsWeb/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "CoinBlocker Lists",
+        "summary": "Check if a domain appears on CoinBlocker lists.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://zerodot1.gitlab.io/CoinBlockerListsWeb/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://zerodot1.gitlab.io/CoinBlockerListsWeb/downloads.html",
                 "https://zerodot1.gitlab.io/CoinBlockerListsWeb/references.html",
-                "https://zerodot1.gitlab.io/CoinBlockerListsWeb/aboutthisproject.html"
+                "https://zerodot1.gitlab.io/CoinBlockerListsWeb/aboutthisproject.html",
             ],
-            'favIcon': "https://zerodot1.gitlab.io/CoinBlockerListsWeb/assets/img/favicon.png",
-            'logo': "https://zerodot1.gitlab.io/CoinBlockerListsWeb/assets/img/favicon.png",
-            'description': "The CoinBlockerLists are a project to prevent illegal mining in "
+            "favIcon": "https://zerodot1.gitlab.io/CoinBlockerListsWeb/assets/img/favicon.png",
+            "logo": "https://zerodot1.gitlab.io/CoinBlockerListsWeb/assets/img/favicon.png",
+            "description": "The CoinBlockerLists are a project to prevent illegal mining in "
             "browsers or other applications using IPlists and URLLists.\n"
             "It's not just to block everything without any reason, but to protect "
             "Internet users from illegal mining.",
-        }
+        },
     }
 
     opts = {
-        'checkaffiliates': True,
-        'checkcohosts': True,
-        'cacheperiod': 18,
+        "checkaffiliates": True,
+        "checkcohosts": True,
+        "cacheperiod": 18,
     }
 
     optdescs = {
-        'checkaffiliates': "Apply checks to affiliates?",
-        'checkcohosts': "Apply checks to sites found to be co-hosted on the target's IP?",
-        'cacheperiod': "Hours to cache list data before re-fetching.",
+        "checkaffiliates": "Apply checks to affiliates?",
+        "checkcohosts": "Apply checks to sites found to be co-hosted on the target's IP?",
+        "cacheperiod": "Hours to cache list data before re-fetching.",
     }
 
     results = None
@@ -91,7 +91,8 @@ class sfp_coinblocker(SpiderFootPlugin):
         return False
 
     def retrieveBlocklist(self):
-        blocklist = self.sf.cacheGet('coinblocker', self.opts.get('cacheperiod', 24))
+        blocklist = self.sf.cacheGet(
+            "coinblocker", self.opts.get("cacheperiod", 24))
 
         if blocklist is not None:
             return self.parseBlocklist(blocklist)
@@ -99,23 +100,24 @@ class sfp_coinblocker(SpiderFootPlugin):
         url = "https://zerodot1.gitlab.io/CoinBlockerLists/list.txt"
         res = self.sf.fetchUrl(
             url,
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from {url}")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from {url}")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error(f"Received no content from {url}")
             self.errorState = True
             return None
 
-        self.sf.cachePut("coinblocker", res['content'])
+        self.sf.cachePut("coinblocker", res["content"])
 
-        return self.parseBlocklist(res['content'])
+        return self.parseBlocklist(res["content"])
 
     def parseBlocklist(self, blocklist):
         """Parse plaintext CoinBlocker list
@@ -131,10 +133,10 @@ class sfp_coinblocker(SpiderFootPlugin):
         if not blocklist:
             return hosts
 
-        for line in blocklist.split('\n'):
+        for line in blocklist.split("\n"):
             if not line:
                 continue
-            if line.startswith('#'):
+            if line.startswith("#"):
                 continue
             host = line.strip()
             # Note: Validation with sf.validHost() is too slow to use here
@@ -166,12 +168,12 @@ class sfp_coinblocker(SpiderFootPlugin):
             malicious_type = "MALICIOUS_INTERNET_NAME"
             blacklist_type = "BLACKLISTED_INTERNET_NAME"
         elif eventName == "AFFILIATE_INTERNET_NAME":
-            if not self.opts.get('checkaffiliates', False):
+            if not self.opts.get("checkaffiliates", False):
                 return
             malicious_type = "MALICIOUS_AFFILIATE_INTERNET_NAME"
             blacklist_type = "BLACKLISTED_AFFILIATE_INTERNET_NAME"
         elif eventName == "CO_HOSTED_SITE":
-            if not self.opts.get('checkcohosts', False):
+            if not self.opts.get("checkcohosts", False):
                 return
             malicious_type = "MALICIOUS_COHOST"
             blacklist_type = "BACKLISTED_COHOST"
@@ -179,7 +181,9 @@ class sfp_coinblocker(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with CoinBlocker list")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with CoinBlocker list"
+        )
 
         if not self.queryBlocklist(eventData):
             return
@@ -192,5 +196,6 @@ class sfp_coinblocker(SpiderFootPlugin):
 
         evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
         self.notifyListeners(evt)
+
 
 # End of sfp_coinblocker class

@@ -21,20 +21,18 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_whois(SpiderFootPlugin):
 
     meta = {
-        'name': "Whois",
-        'summary': "Perform a WHOIS look-up on domain names and owned netblocks.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Public Registries"]
+        "name": "Whois",
+        "summary": "Perform a WHOIS look-up on domain names and owned netblocks.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Public Registries"],
     }
 
     # Default options
-    opts = {
-    }
+    opts = {}
 
     # Option descriptions
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -47,16 +45,28 @@ class sfp_whois(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ["DOMAIN_NAME", "DOMAIN_NAME_PARENT", "NETBLOCK_OWNER", "NETBLOCKV6_OWNER",
-                "CO_HOSTED_SITE_DOMAIN", "AFFILIATE_DOMAIN_NAME", "SIMILARDOMAIN"]
+        return [
+            "DOMAIN_NAME",
+            "DOMAIN_NAME_PARENT",
+            "NETBLOCK_OWNER",
+            "NETBLOCKV6_OWNER",
+            "CO_HOSTED_SITE_DOMAIN",
+            "AFFILIATE_DOMAIN_NAME",
+            "SIMILARDOMAIN",
+        ]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
-        return ["DOMAIN_WHOIS", "NETBLOCK_WHOIS", "DOMAIN_REGISTRAR",
-                "CO_HOSTED_SITE_DOMAIN_WHOIS", "AFFILIATE_DOMAIN_WHOIS",
-                "SIMILARDOMAIN_WHOIS"]
+        return [
+            "DOMAIN_WHOIS",
+            "NETBLOCK_WHOIS",
+            "DOMAIN_REGISTRAR",
+            "CO_HOSTED_SITE_DOMAIN_WHOIS",
+            "AFFILIATE_DOMAIN_WHOIS",
+            "SIMILARDOMAIN_WHOIS",
+        ]
 
     # Handle events sent to this module
     def handleEvent(self, event):
@@ -109,7 +119,8 @@ class sfp_whois(SpiderFootPlugin):
                 whoisdata = whois.whois(eventData)
                 data = str(whoisdata.text)
             except Exception as e:
-                self.error(f"Unable to perform WHOIS query on {eventData}: {e}")
+                self.error(
+                    f"Unable to perform WHOIS query on {eventData}: {e}")
 
         if not data:
             self.error(f"No WHOIS record for {eventData}")
@@ -117,7 +128,9 @@ class sfp_whois(SpiderFootPlugin):
 
         # This is likely to be an error about being throttled rather than real data
         if len(str(data)) < 250:
-            self.error(f"WHOIS data ({len(data)} bytes) is smaller than 250 bytes. Throttling from WHOIS server is probably happening. Ignoring response.")
+            self.error(
+                f"WHOIS data ({len(data)} bytes) is smaller than 250 bytes. Throttling from WHOIS server is probably happening. Ignoring response."
+            )
             return
 
         rawevt = SpiderFootEvent(typ, data, self.__name__, event)
@@ -125,9 +138,12 @@ class sfp_whois(SpiderFootPlugin):
 
         if eventName.startswith("DOMAIN_NAME"):
             if whoisdata:
-                registrar = whoisdata.get('registrar')
+                registrar = whoisdata.get("registrar")
                 if registrar:
-                    evt = SpiderFootEvent("DOMAIN_REGISTRAR", registrar, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "DOMAIN_REGISTRAR", registrar, self.__name__, event
+                    )
                     self.notifyListeners(evt)
+
 
 # End of sfp_whois class

@@ -22,11 +22,11 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_dnsbrute(SpiderFootPlugin):
 
     meta = {
-        'name': "DNS Brute-forcer",
-        'summary': "Attempts to identify hostnames through brute-forcing common names and iterations.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate"],
-        'categories': ["DNS"]
+        "name": "DNS Brute-forcer",
+        "summary": "Attempts to identify hostnames through brute-forcing common names and iterations.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate"],
+        "categories": ["DNS"],
     }
 
     # Default options
@@ -37,18 +37,18 @@ class sfp_dnsbrute(SpiderFootPlugin):
         "top10000": False,
         "numbersuffix": True,
         "numbersuffixlimit": True,
-        "_maxthreads": 100
+        "_maxthreads": 100,
     }
 
     # Option descriptions
     optdescs = {
-        'skipcommonwildcard': "If wildcard DNS is detected, don't bother brute-forcing.",
-        'domainonly': "Only attempt to brute-force names on domain names, not hostnames (some hostnames are also sub-domains).",
-        'commons': "Try a list of about 750 common hostnames/sub-domains.",
-        'top10000': "Try a further 10,000 common hostnames/sub-domains. Will make the scan much slower.",
-        'numbersuffix': "For any host found, try appending 1, 01, 001, -1, -01, -001, 2, 02, etc. (up to 10)",
-        'numbersuffixlimit': "Limit using the number suffixes for hosts that have already been resolved? If disabled this will significantly extend the duration of scans.",
-        "_maxthreads": "Maximum threads"
+        "skipcommonwildcard": "If wildcard DNS is detected, don't bother brute-forcing.",
+        "domainonly": "Only attempt to brute-force names on domain names, not hostnames (some hostnames are also sub-domains).",
+        "commons": "Try a list of about 750 common hostnames/sub-domains.",
+        "top10000": "Try a further 10,000 common hostnames/sub-domains. Will make the scan much slower.",
+        "numbersuffix": "For any host found, try appending 1, 01, 001, -1, -01, -001, 2, 02, etc. (up to 10)",
+        "numbersuffixlimit": "Limit using the number suffixes for hosts that have already been resolved? If disabled this will significantly extend the duration of scans.",
+        "_maxthreads": "Maximum threads",
     }
 
     events = None
@@ -65,23 +65,27 @@ class sfp_dnsbrute(SpiderFootPlugin):
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
-        if self.opts['commons']:
-            with importlib.resources.open_text('spiderfoot.dicts', 'subdomains.txt') as f:
+        if self.opts["commons"]:
+            with importlib.resources.open_text(
+                "spiderfoot.dicts", "subdomains.txt"
+            ) as f:
                 for s in f.readlines():
                     s = s.strip()
                     self.sublist[s] = True
 
-        if self.opts['top10000']:
-            with importlib.resources.open_text('spiderfoot.dicts', 'subdomains-10000.txt') as f:
+        if self.opts["top10000"]:
+            with importlib.resources.open_text(
+                "spiderfoot.dicts", "subdomains-10000.txt"
+            ) as f:
                 for s in f.readlines():
                     s = s.strip()
                     self.sublist[s] = True
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        ret = ['DOMAIN_NAME']
-        if not self.opts['domainonly'] or self.opts['numbersuffix']:
-            ret.append('INTERNET_NAME')
+        ret = ["DOMAIN_NAME"]
+        if not self.opts["domainonly"] or self.opts["numbersuffix"]:
+            ret.append("INTERNET_NAME")
         return ret
 
     # What events this module produces
@@ -108,8 +112,11 @@ class sfp_dnsbrute(SpiderFootPlugin):
         # Spawn threads for scanning
         self.info("Spawning threads to check hosts: " + str(hostList))
         for name in hostList:
-            tn = 'thread_sfp_dnsbrute_' + str(random.SystemRandom().randint(1, 999999999))
-            t.append(threading.Thread(name=tn, target=self.tryHost, args=(name,)))
+            tn = "thread_sfp_dnsbrute_" + str(
+                random.SystemRandom().randint(1, 999999999)
+            )
+            t.append(threading.Thread(
+                name=tn, target=self.tryHost, args=(name,)))
             t[i].start()
             i += 1
 
@@ -152,8 +159,10 @@ class sfp_dnsbrute(SpiderFootPlugin):
             return
         self.events[eventDataHash] = True
 
-        if eventName == "INTERNET_NAME" and not self.getTarget().matches(eventData, includeChildren=False):
-            if not self.opts['numbersuffix']:
+        if eventName == "INTERNET_NAME" and not self.getTarget().matches(
+            eventData, includeChildren=False
+        ):
+            if not self.opts["numbersuffix"]:
                 return
 
             if self.checkForStop():
@@ -163,8 +172,10 @@ class sfp_dnsbrute(SpiderFootPlugin):
 
             # Try resolving common names
             wildcard = self.sf.checkDnsWildcard(dom)
-            if self.opts['skipcommonwildcard'] and wildcard:
-                self.debug("Wildcard DNS detected on " + dom + " so skipping host iteration.")
+            if self.opts["skipcommonwildcard"] and wildcard:
+                self.debug(
+                    "Wildcard DNS detected on " + dom + " so skipping host iteration."
+                )
                 return
 
             dom = "." + dom
@@ -189,7 +200,7 @@ class sfp_dnsbrute(SpiderFootPlugin):
         # Try resolving common names
         self.debug("Iterating through possible sub-domains.")
         wildcard = self.sf.checkDnsWildcard(eventData)
-        if self.opts['skipcommonwildcard'] and wildcard:
+        if self.opts["skipcommonwildcard"] and wildcard:
             self.debug("Wildcard DNS detected.")
             return
 
@@ -200,7 +211,7 @@ class sfp_dnsbrute(SpiderFootPlugin):
 
             name = f"{sub}.{eventData}"
 
-            if len(targetList) <= self.opts['_maxthreads']:
+            if len(targetList) <= self.opts["_maxthreads"]:
                 targetList.append(name)
             else:
                 self.tryHostWrapper(targetList, event)
@@ -210,7 +221,7 @@ class sfp_dnsbrute(SpiderFootPlugin):
         if len(targetList) > 0:
             self.tryHostWrapper(targetList, event)
 
-        if self.opts['numbersuffix'] and not self.opts['numbersuffixlimit']:
+        if self.opts["numbersuffix"] and not self.opts["numbersuffixlimit"]:
             nextsubs = dict()
             dom = "." + eventData
             for s in self.sublist:
@@ -225,7 +236,7 @@ class sfp_dnsbrute(SpiderFootPlugin):
                     nextsubs[s + "-0" + str(i) + dom] = True
                     nextsubs[s + "-00" + str(i) + dom] = True
 
-                if len(list(nextsubs.keys())) >= self.opts['_maxthreads']:
+                if len(list(nextsubs.keys())) >= self.opts["_maxthreads"]:
                     self.tryHostWrapper(list(nextsubs.keys()), event)
                     nextsubs = dict()
 

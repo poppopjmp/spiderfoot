@@ -21,7 +21,7 @@ class sfp_bitcoinabuse(SpiderFootPlugin):
     meta = {
         "name": "BitcoinAbuse",
         "summary": "Check Bitcoin addresses against the bitcoinabuse.com database of suspect/malicious addresses.",
-        'flags': ["apikey"],
+        "flags": ["apikey"],
         "useCases": ["Passive", "Investigate"],
         "categories": ["Reputation Systems"],
         "dataSource": {
@@ -75,10 +75,7 @@ class sfp_bitcoinabuse(SpiderFootPlugin):
         ]
 
     def queryAddress(self, address: str):
-        params = {
-            "address": address,
-            "api_token": self.opts["api_key"]
-        }
+        params = {"address": address, "api_token": self.opts["api_key"]}
 
         res = self.sf.fetchUrl(
             f"https://www.bitcoinabuse.com/api/reports/check?{urllib.parse.urlencode(params)}",
@@ -97,38 +94,39 @@ class sfp_bitcoinabuse(SpiderFootPlugin):
             self.error("No response from BitcoinAbuse.")
             return None
 
-        if res['code'] == '404':
+        if res["code"] == "404":
             self.debug("No results for query")
             return None
 
-        if res['code'] == "401":
+        if res["code"] == "401":
             self.error("Invalid BitcoinAbuse API key.")
             self.errorState = True
             return None
 
-        if res['code'] == '429':
+        if res["code"] == "429":
             self.error("You are being rate-limited by BitcoinAbuse")
             self.errorState = True
             return None
 
-        if res['code'] in ['500', '502', '503']:
+        if res["code"] in ["500", "502", "503"]:
             self.error("BitcoinAbuse service unavailable")
             self.errorState = True
             return None
 
         # Catch all other non-200 status codes, and presume something went wrong
-        if res['code'] != '200':
+        if res["code"] != "200":
             self.error("Failed to retrieve content from BitcoinAbuse")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
-            self.debug(f"Error processing JSON response from BitcoinAbuse: {e}")
+            self.debug(
+                f"Error processing JSON response from BitcoinAbuse: {e}")
 
         return None
 
@@ -141,7 +139,9 @@ class sfp_bitcoinabuse(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {event.module}")
 
         if self.opts["api_key"] == "":
-            self.error(f"You enabled {self.__class__.__name__} but did not set an API key!")
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set an API key!"
+            )
             self.errorState = True
             return
 
@@ -170,7 +170,7 @@ class sfp_bitcoinabuse(SpiderFootPlugin):
             if not isinstance(count, int):
                 return
 
-            address = rec.get('address')
+            address = rec.get("address")
 
             if not address:
                 return
@@ -180,7 +180,7 @@ class sfp_bitcoinabuse(SpiderFootPlugin):
                 "MALICIOUS_BITCOIN_ADDRESS",
                 f"BitcoinAbuse [{address}]\n<SFURL>{url}</SFURL>",
                 self.__name__,
-                event
+                event,
             )
             self.notifyListeners(evt)
 

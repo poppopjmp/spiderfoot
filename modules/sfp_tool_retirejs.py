@@ -32,8 +32,8 @@ class sfp_tool_retirejs(SpiderFootPlugin):
             "name": "Retire.js",
             "description": "Scanner detecting the use of JavaScript libraries with known vulnerabilities",
             "website": "http://retirejs.github.io/retire.js/",
-            "repository": "https://github.com/RetireJS/retire.js"
-        }
+            "repository": "https://github.com/RetireJS/retire.js",
+        },
     }
 
     # Default options
@@ -42,9 +42,7 @@ class sfp_tool_retirejs(SpiderFootPlugin):
     }
 
     # Option descriptions
-    optdescs = {
-        "retirejs_path": "Path to your retire binary. Must be set."
-    }
+    optdescs = {"retirejs_path": "Path to your retire binary. Must be set."}
 
     # Target
     results = None
@@ -66,7 +64,7 @@ class sfp_tool_retirejs(SpiderFootPlugin):
             "VULNERABILITY_CVE_HIGH",
             "VULNERABILITY_CVE_MEDIUM",
             "VULNERABILITY_CVE_LOW",
-            "VULNERABILITY_GENERAL"
+            "VULNERABILITY_GENERAL",
         ]
 
     # Handle events sent to this module
@@ -80,13 +78,15 @@ class sfp_tool_retirejs(SpiderFootPlugin):
         if self.errorState:
             return
 
-        if not self.opts['retirejs_path']:
-            self.error("You enabled sfp_tool_retirejs but did not set a path to the tool!")
+        if not self.opts["retirejs_path"]:
+            self.error(
+                "You enabled sfp_tool_retirejs but did not set a path to the tool!"
+            )
             self.errorState = True
             return
 
-        exe = self.opts['retirejs_path']
-        if self.opts['retirejs_path'].endswith('/'):
+        exe = self.opts["retirejs_path"]
+        if self.opts["retirejs_path"].endswith("/"):
             exe = f"{exe}retire"
 
         if not os.path.isfile(exe):
@@ -109,7 +109,7 @@ class sfp_tool_retirejs(SpiderFootPlugin):
             eventData,
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],
-            disableContentEncoding=True
+            disableContentEncoding=True,
         )
 
         if res["content"] is None:
@@ -173,5 +173,6 @@ class sfp_tool_retirejs(SpiderFootPlugin):
             self.error(f"Couldn't parse the JSON output of Retire.js: {e}")
             shutil.rmtree(tmpdirname)
             return
+
 
 # End of sfp_tool_retirejs class

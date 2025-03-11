@@ -21,33 +21,30 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 class sfp_google_tag_manager(SpiderFootPlugin):
 
     meta = {
-        'name': "Google Tag Manager",
-        'summary': "Search Google Tag Manager (GTM) for hosts sharing the same GTM code.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Passive DNS"],
-        'dataSource': {
-            'website': "https://tagmanager.google.com",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "Google Tag Manager",
+        "summary": "Search Google Tag Manager (GTM) for hosts sharing the same GTM code.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Passive DNS"],
+        "dataSource": {
+            "website": "https://tagmanager.google.com",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://marketingplatform.google.com/about/tag-manager/",
                 "https://developers.google.com/tag-manager/quickstart",
-                "https://developers.google.com/tag-manager/devguide"
+                "https://developers.google.com/tag-manager/devguide",
             ],
-            'favIcon': "https://google.com/favicon.ico",
-            'logo': "https://google.com/favicon.ico",
-            'description': "Manage all your website tags without editing code. Google Tag Manager "
-            "delivers simple, reliable, easily integrated tag management solutions for free."
-        }
+            "favIcon": "https://google.com/favicon.ico",
+            "logo": "https://google.com/favicon.ico",
+            "description": "Manage all your website tags without editing code. Google Tag Manager "
+            "delivers simple, reliable, easily integrated tag management solutions for free.",
+        },
     }
 
-    opts = {
-        "verify": True
-    }
+    opts = {"verify": True}
 
     optdescs = {
-        "verify": "Verify identified hostnames resolve to an IP address."
-    }
+        "verify": "Verify identified hostnames resolve to an IP address."}
 
     results = None
     errorState = False
@@ -60,14 +57,14 @@ class sfp_google_tag_manager(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return ['WEB_ANALYTICS_ID']
+        return ["WEB_ANALYTICS_ID"]
 
     def producedEvents(self):
         return [
-            'DOMAIN_NAME',
-            'INTERNET_NAME',
-            'AFFILIATE_DOMAIN_NAME',
-            'AFFILIATE_INTERNET_NAME',
+            "DOMAIN_NAME",
+            "INTERNET_NAME",
+            "AFFILIATE_DOMAIN_NAME",
+            "AFFILIATE_INTERNET_NAME",
         ]
 
     # from: https://stackoverflow.com/a/43211062
@@ -85,21 +82,23 @@ class sfp_google_tag_manager(SpiderFootPlugin):
         if not tag_id:
             return None
 
-        params = urllib.parse.urlencode({
-            'id': tag_id,
-        })
+        params = urllib.parse.urlencode(
+            {
+                "id": tag_id,
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://googletagmanager.com/gtm.js?{params}",
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent']
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] != "200":
+        if res["code"] != "200":
             self.debug(f"Invalid GTM tag id: {tag_id}")
             return None
 
-        data = res['content']
+        data = res["content"]
 
         if not data:
             self.debug(f"Invalid GTM tag id: {tag_id}")
@@ -108,13 +107,13 @@ class sfp_google_tag_manager(SpiderFootPlugin):
         hosts = list()
 
         for host in re.findall(r'"map","key","(.+?)"', data):
-            if '.' not in host:
+            if "." not in host:
                 continue
             if self.is_valid_hostname(host):
                 hosts.append(host)
 
         for host in re.findall(r',"arg1":"(.+?)"', data):
-            if '.' not in host:
+            if "." not in host:
                 continue
             if self.is_valid_hostname(host):
                 hosts.append(host)
@@ -123,7 +122,7 @@ class sfp_google_tag_manager(SpiderFootPlugin):
             host = self.sf.urlFQDN(url)
             if not host:
                 continue
-            if '.' not in host:
+            if "." not in host:
                 continue
             hosts.append(host)
 
@@ -147,7 +146,7 @@ class sfp_google_tag_manager(SpiderFootPlugin):
             self.error(f"Unable to parse WEB_ANALYTICS_ID: {event.data} ({e})")
             return
 
-        if network != 'Google Tag Manager':
+        if network != "Google Tag Manager":
             return
 
         hosts = self.queryGoogleTagId(tag_id)
@@ -160,25 +159,33 @@ class sfp_google_tag_manager(SpiderFootPlugin):
 
         for host in hosts:
             # we ignore unresolved hosts due to large number of false positives
-            if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
-                self.debug(f"Potential host name '{host}' could not be resolved")
+            if (
+                self.opts["verify"] and
+                not self.sf.resolveHost(host) and
+                not self.sf.resolveHost6(host)
+            ):
+                self.debug(
+                    f"Potential host name '{host}' could not be resolved")
                 continue
 
-            if self.getTarget().matches(host, includeChildren=True, includeParents=True):
-                evt_type = 'INTERNET_NAME'
+            if self.getTarget().matches(
+                host, includeChildren=True, includeParents=True
+            ):
+                evt_type = "INTERNET_NAME"
             else:
-                evt_type = 'AFFILIATE_INTERNET_NAME'
+                evt_type = "AFFILIATE_INTERNET_NAME"
 
             evt = SpiderFootEvent(evt_type, host, self.__name__, event)
             self.notifyListeners(evt)
 
-            if self.sf.isDomain(host, self.opts['_internettlds']):
-                if evt_type.startswith('AFFILIATE'):
-                    evt_type = 'AFFILIATE_DOMAIN_NAME'
+            if self.sf.isDomain(host, self.opts["_internettlds"]):
+                if evt_type.startswith("AFFILIATE"):
+                    evt_type = "AFFILIATE_DOMAIN_NAME"
                 else:
-                    evt_type = 'DOMAIN_NAME'
+                    evt_type = "DOMAIN_NAME"
 
                 evt = SpiderFootEvent(evt_type, host, self.__name__, event)
                 self.notifyListeners(evt)
+
 
 # End of sfp_google_tag_manager class

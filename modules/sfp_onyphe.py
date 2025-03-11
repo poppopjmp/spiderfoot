@@ -23,7 +23,7 @@ class sfp_onyphe(SpiderFootPlugin):
     meta = {
         "name": "Onyphe",
         "summary": "Check Onyphe data (threat list, geo-location, pastries, vulnerabilities)  about a given IP.",
-        'flags': ["apikey"],
+        "flags": ["apikey"],
         "useCases": ["Footprint", "Passive", "Investigate"],
         "categories": ["Reputation Systems"],
         "dataSource": {
@@ -146,9 +146,9 @@ class sfp_onyphe(SpiderFootPlugin):
         try:
             current_page = int(info["page"])
             if (
-                self.opts["paid_plan"]
-                and info.get("page")
-                and int(info.get("max_page")) > current_page
+                self.opts["paid_plan"] and
+                info.get("page") and
+                int(info.get("max_page")) > current_page
             ):
                 page = current_page + 1
 
@@ -178,15 +178,14 @@ class sfp_onyphe(SpiderFootPlugin):
             return
         self.info(f"Found location for {eventData}: {location}")
 
-        evt = SpiderFootEvent("PHYSICAL_COORDINATES", location, self.__name__, event)
+        evt = SpiderFootEvent("PHYSICAL_COORDINATES",
+                              location, self.__name__, event)
         self.notifyListeners(evt)
 
     def emitDomainData(self, response, eventData, event):
         domains = set()
-        if response.get("domain") is not None and isinstance(
-            response['domain'], list
-        ):
-            for dom in response['domain']:
+        if response.get("domain") is not None and isinstance(response["domain"], list):
+            for dom in response["domain"]:
                 domains.add(dom)
 
         if response.get("subdomains") is not None and isinstance(
@@ -197,28 +196,37 @@ class sfp_onyphe(SpiderFootPlugin):
 
         for domain in domains:
             if self.getTarget().matches(domain):
-                if self.opts['verify']:
+                if self.opts["verify"]:
                     if self.sf.resolveHost(domain) or self.sf.resolveHost6(domain):
-                        evt = SpiderFootEvent('INTERNET_NAME', domain, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "INTERNET_NAME", domain, self.__name__, event
+                        )
                     else:
-                        evt = SpiderFootEvent('INTERNET_NAME_UNRESOLVED', domain, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "INTERNET_NAME_UNRESOLVED", domain, self.__name__, event
+                        )
                     self.notifyListeners(evt)
 
-                if self.sf.isDomain(domain, self.opts['_internettlds']):
-                    evt = SpiderFootEvent('DOMAIN_NAME', domain, self.__name__, event)
+                if self.sf.isDomain(domain, self.opts["_internettlds"]):
+                    evt = SpiderFootEvent(
+                        "DOMAIN_NAME", domain, self.__name__, event)
                     self.notifyListeners(evt)
                 continue
 
-            if self.cohostcount < self.opts['maxcohost']:
+            if self.cohostcount < self.opts["maxcohost"]:
                 if self.opts["verify"] and not self.sf.validateIP(domain, eventData):
                     self.debug("Host no longer resolves to our IP.")
                     continue
 
-                if not self.opts["cohostsamedomain"] and self.getTarget().matches(domain, includeParents=True):
-                    self.debug(f"Skipping {domain} because it is on the same domain.")
+                if not self.opts["cohostsamedomain"] and self.getTarget().matches(
+                    domain, includeParents=True
+                ):
+                    self.debug(
+                        f"Skipping {domain} because it is on the same domain.")
                     continue
 
-                evt = SpiderFootEvent("CO_HOSTED_SITE", domain, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "CO_HOSTED_SITE", domain, self.__name__, event)
                 self.notifyListeners(evt)
                 self.cohostcount += 1
 
@@ -299,7 +307,8 @@ class sfp_onyphe(SpiderFootPlugin):
 
                     sentData.add(location)
 
-                    evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "GEOINFO", location, self.__name__, event)
                     self.notifyListeners(evt)
 
                     coordinates = result.get("location")
@@ -416,5 +425,6 @@ class sfp_onyphe(SpiderFootPlugin):
                             event,
                         )
                         self.notifyListeners(evt)
+
 
 # End of sfp_onyphe class

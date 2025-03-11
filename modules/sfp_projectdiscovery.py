@@ -19,7 +19,7 @@ class sfp_projectdiscovery(SpiderFootPlugin):
     meta = {
         "name": "ProjectDiscovery Chaos",
         "summary": "Search for hosts/subdomains using chaos.projectdiscovery.io",
-        'flags': ["apikey"],
+        "flags": ["apikey"],
         "useCases": ["Passive", "Footprint", "Investigate"],
         "categories": ["Passive DNS"],
         "dataSource": {
@@ -71,7 +71,8 @@ class sfp_projectdiscovery(SpiderFootPlugin):
         return ["RAW_RIR_DATA", "INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
     def query(self, qry):
-        headers = {"Accept": "application/json", "Authorization": self.opts["api_key"]}
+        headers = {"Accept": "application/json",
+                   "Authorization": self.opts["api_key"]}
         res = self.sf.fetchUrl(
             f"https://dns.projectdiscovery.io/dns/{qry}/subdomains",
             timeout=self.opts["_fetchtimeout"],
@@ -80,7 +81,8 @@ class sfp_projectdiscovery(SpiderFootPlugin):
         )
 
         if res["content"] is None:
-            self.info("No DNS info found in chaos projectdiscovery API for " + qry)
+            self.info(
+                "No DNS info found in chaos projectdiscovery API for " + qry)
             return None
 
         try:
@@ -105,8 +107,7 @@ class sfp_projectdiscovery(SpiderFootPlugin):
 
         if self.opts["api_key"] == "":
             self.error(
-                "You enabled sfp_projectdiscovery but did not set an API key!"
-            )
+                "You enabled sfp_projectdiscovery but did not set an API key!")
             self.errorState = True
             return
 
@@ -127,7 +128,8 @@ class sfp_projectdiscovery(SpiderFootPlugin):
         if not isinstance(subdomains, list):
             return
 
-        evt = SpiderFootEvent("RAW_RIR_DATA", str(result), self.__name__, event)
+        evt = SpiderFootEvent("RAW_RIR_DATA", str(
+            result), self.__name__, event)
         self.notifyListeners(evt)
 
         resultsSet = set()
@@ -138,7 +140,11 @@ class sfp_projectdiscovery(SpiderFootPlugin):
             if subdomain in resultsSet:
                 continue
             completeSubdomain = f"{subdomain}.{eventData}"
-            if self.opts["verify"] and not self.sf.resolveHost(completeSubdomain) and not self.sf.resolveHost6(completeSubdomain):
+            if (
+                self.opts["verify"] and
+                not self.sf.resolveHost(completeSubdomain) and
+                not self.sf.resolveHost6(completeSubdomain)
+            ):
                 self.debug(f"Host {completeSubdomain} could not be resolved")
                 evt = SpiderFootEvent(
                     "INTERNET_NAME_UNRESOLVED", completeSubdomain, self.__name__, event
@@ -151,5 +157,6 @@ class sfp_projectdiscovery(SpiderFootPlugin):
                 self.notifyListeners(evt)
 
             resultsSet.add(subdomain)
+
 
 # End of sfp_projectdiscovery class

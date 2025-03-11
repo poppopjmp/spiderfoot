@@ -23,37 +23,37 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_koodous(SpiderFootPlugin):
 
     meta = {
-        'name': "Koodous",
-        'summary': "Search Koodous for mobile apps.",
-        'flags': ["apikey"],
-        'useCases': ["Investigate", "Footprint", "Passive"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'model': "FREE_AUTH_LIMITED",
+        "name": "Koodous",
+        "summary": "Search Koodous for mobile apps.",
+        "flags": ["apikey"],
+        "useCases": ["Investigate", "Footprint", "Passive"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "model": "FREE_AUTH_LIMITED",
             "apiKeyInstructions": [
                 "Visit https://koodous.com/apks",
                 "Register a free account",
                 "Visit https://koodous.com/settings/developers and use the authentication token provided",
             ],
-            'references': [
+            "references": [
                 "https://docs.koodous.com/api/apks.html",
-                "https://docs.koodous.com/apks.html#apks-search-system"
+                "https://docs.koodous.com/apks.html#apks-search-system",
             ],
-            'website': "https://koodous.com/apks/",
-            'favIcon': "https://koodous.com/favicon.ico",
-            'logo': "https://koodous.com/assets/img/koodous-logo.png",
-            "description": "The Collaborative Platform for Android Malware Analysts."
-        }
+            "website": "https://koodous.com/apks/",
+            "favIcon": "https://koodous.com/favicon.ico",
+            "logo": "https://koodous.com/assets/img/koodous-logo.png",
+            "description": "The Collaborative Platform for Android Malware Analysts.",
+        },
     }
 
     opts = {
         "api_key": "",
-        'max_pages': 10,
+        "max_pages": 10,
     }
 
     optdescs = {
         "api_key": "Koodous API key.",
-        'max_pages': "Maximum number of pages of results to fetch.",
+        "max_pages": "Maximum number of pages of results to fetch.",
     }
 
     results = None
@@ -68,29 +68,25 @@ class sfp_koodous(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            'DOMAIN_NAME'
-        ]
+        return ["DOMAIN_NAME"]
 
     def producedEvents(self):
-        return [
-            'APPSTORE_ENTRY',
-            'RAW_RIR_DATA'
-        ]
+        return ["APPSTORE_ENTRY", "RAW_RIR_DATA"]
 
-    def queryPackageName(self, qry, cursor=''):
-        package_name = qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
+    def queryPackageName(self, qry, cursor=""):
+        package_name = qry.encode("raw_unicode_escape").decode(
+            "ascii", errors="replace"
+        )
 
-        params = urllib.parse.urlencode({
-            'cursor': cursor,
-            'search': f"package:{package_name}.*"
-        })
+        params = urllib.parse.urlencode(
+            {"cursor": cursor, "search": f"package:{package_name}.*"}
+        )
 
         res = self.sf.fetchUrl(
             f"https://developer.koodous.com/apks/?{params}",
             headers={"Authorization": f"Token {self.opts['api_key']}"},
-            useragent=self.opts['_useragent'],
-            timeout=self.opts['_fetchtimeout']
+            useragent=self.opts["_useragent"],
+            timeout=self.opts["_fetchtimeout"],
         )
 
         # 100 requests per minute
@@ -103,36 +99,36 @@ class sfp_koodous(SpiderFootPlugin):
             self.error("No response from Koodous.")
             return None
 
-        if res['code'] == '404':
+        if res["code"] == "404":
             self.debug("No results from Koodous.")
             return None
 
-        if res['code'] == "401":
+        if res["code"] == "401":
             self.error("Invalid Koodous API key.")
             self.errorState = True
             return None
 
-        if res['code'] == '429':
+        if res["code"] == "429":
             self.error("You are being rate-limited by Koodous.")
             self.errorState = True
             return None
 
-        if res['code'] == '500' or res['code'] == '502' or res['code'] == '503':
+        if res["code"] == "500" or res["code"] == "502" or res["code"] == "503":
             self.error("Koodous service is unavailable")
             self.errorState = True
             return None
 
         # Catch all non-200 status codes, and presume something went wrong
-        if res['code'] != '200':
+        if res["code"] != "200":
             self.error(f"Unexpected reply from Koodous: {res['code']}")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response from Koodous: {e}")
 
@@ -160,11 +156,12 @@ class sfp_koodous(SpiderFootPlugin):
         self.results[eventData] = True
 
         # Reverse domain name to create potential package name
-        domain_reversed = '.'.join(list(reversed(eventData.lower().split('.'))))
+        domain_reversed = ".".join(
+            list(reversed(eventData.lower().split("."))))
 
-        max_pages = int(self.opts['max_pages'])
+        max_pages = int(self.opts["max_pages"])
         page = 1
-        cursor = ''
+        cursor = ""
         while page <= max_pages:
             found = False
 
@@ -179,15 +176,15 @@ class sfp_koodous(SpiderFootPlugin):
                 self.errorState = True
                 return
 
-            results = data.get('results')
+            results = data.get("results")
 
             for result in results:
-                package_name = result.get('package_name')
+                package_name = result.get("package_name")
 
                 if not package_name:
                     continue
 
-                app = result.get('app')
+                app = result.get("app")
 
                 # results can have a null app name, but it is probably a duplicate
                 if not app:
@@ -196,7 +193,7 @@ class sfp_koodous(SpiderFootPlugin):
                 # TODO: compare company name with target
                 # company = result.get('company')
 
-                version = result.get('version')
+                version = result.get("version")
 
                 if version:
                     app_full_name = f"{app} {version} ({package_name})"
@@ -204,36 +201,44 @@ class sfp_koodous(SpiderFootPlugin):
                     app_full_name = f"{app} ({package_name})"
 
                 if (
-                    domain_reversed != package_name.lower()
-                    and not package_name.lower().startswith(f"{domain_reversed}.")
-                    and not package_name.lower().endswith(f".{domain_reversed}")
-                    and f".{domain_reversed}." not in package_name.lower()
+                    domain_reversed != package_name.lower() and
+                    not package_name.lower().startswith(f"{domain_reversed}.") and
+                    not package_name.lower().endswith(f".{domain_reversed}") and
+                    f".{domain_reversed}." not in package_name.lower()
                 ):
-                    self.debug(f"App {app_full_name} does not match {domain_reversed}, skipping")
+                    self.debug(
+                        f"App {app_full_name} does not match {domain_reversed}, skipping"
+                    )
                     continue
 
-                sha256 = result.get('sha256')
+                sha256 = result.get("sha256")
 
                 if not sha256:
                     continue
 
-                app_data = f"{app_full_name}\n<SFURL>https://koodous.com/apks/{sha256}</SFURL>"
+                app_data = (
+                    f"{app_full_name}\n<SFURL>https://koodous.com/apks/{sha256}</SFURL>"
+                )
 
-                evt = SpiderFootEvent('APPSTORE_ENTRY', app_data, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "APPSTORE_ENTRY", app_data, self.__name__, event)
                 self.notifyListeners(evt)
                 found = True
 
             if found:
-                evt = SpiderFootEvent('RAW_RIR_DATA', json.dumps(data), self.__name__, event)
+                evt = SpiderFootEvent(
+                    "RAW_RIR_DATA", json.dumps(data), self.__name__, event
+                )
                 self.notifyListeners(evt)
 
-            if not data.get('next'):
+            if not data.get("next"):
                 break
 
-            next_cursor = re.findall('cursor=(.+?)&', data.get('next'))
+            next_cursor = re.findall("cursor=(.+?)&", data.get("next"))
             if not next_cursor:
                 break
 
             cursor = urllib.parse.unquote(next_cursor[0])
+
 
 # End of sfp_koodous class

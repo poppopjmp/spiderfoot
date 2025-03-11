@@ -21,33 +21,33 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_torexits(SpiderFootPlugin):
 
     meta = {
-        'name': "TOR Exit Nodes",
-        'summary': "Check if an IP adddress or netblock appears on the Tor Metrics exit node list.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Secondary Networks"],
-        'dataSource': {
-            'website': "https://metrics.torproject.org/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "TOR Exit Nodes",
+        "summary": "Check if an IP adddress or netblock appears on the Tor Metrics exit node list.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Secondary Networks"],
+        "dataSource": {
+            "website": "https://metrics.torproject.org/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://metrics.torproject.org/rs.html#search/flag:exit",
             ],
-            'favIcon': "https://metrics.torproject.org/images/favicon.ico",
-            'logo': "https://metrics.torproject.org/images/tor-metrics-white@2x.png",
-            'description': "The relay search tool displays data about single relays and bridges in the Tor network."
+            "favIcon": "https://metrics.torproject.org/images/favicon.ico",
+            "logo": "https://metrics.torproject.org/images/tor-metrics-white@2x.png",
+            "description": "The relay search tool displays data about single relays and bridges in the Tor network.",
         },
     }
 
     opts = {
-        'checkaffiliates': True,
-        'cacheperiod': 1,
-        'checknetblocks': True,
+        "checkaffiliates": True,
+        "cacheperiod": 1,
+        "checknetblocks": True,
     }
 
     optdescs = {
-        'checkaffiliates': "Apply checks to affiliates?",
-        'cacheperiod': "Hours to cache list data before re-fetching.",
-        'checknetblocks': "Report if any malicious IPs are found within owned netblocks?",
+        "checkaffiliates": "Apply checks to affiliates?",
+        "cacheperiod": "Hours to cache list data before re-fetching.",
+        "checknetblocks": "Report if any malicious IPs are found within owned netblocks?",
     }
 
     results = None
@@ -93,30 +93,34 @@ class sfp_torexits(SpiderFootPlugin):
         return False
 
     def retrieveExitNodes(self):
-        exit_addresses = self.sf.cacheGet('torexitnodes', self.opts.get('cacheperiod', 1))
+        exit_addresses = self.sf.cacheGet(
+            "torexitnodes", self.opts.get("cacheperiod", 1)
+        )
 
         if exit_addresses is not None:
             return self.parseExitNodes(exit_addresses)
 
         res = self.sf.fetchUrl(
             "https://onionoo.torproject.org/details?search=flag:exit",
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from onionoo.torproject.org.")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from onionoo.torproject.org."
+            )
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error("Received no content from onionoo.torproject.org.")
             self.errorState = True
             return None
 
-        self.sf.cachePut("torexitnodes", res['content'])
+        self.sf.cachePut("torexitnodes", res["content"])
 
-        return self.parseExitNodes(res['content'])
+        return self.parseExitNodes(res["content"])
 
     def parseExitNodes(self, data):
         """Extract exit node IP addresses from TOR relay search results
@@ -138,29 +142,29 @@ class sfp_torexits(SpiderFootPlugin):
             self.error(f"Error processing JSON response: {e}")
             return None
 
-        relays = results.get('relays')
+        relays = results.get("relays")
 
         if not relays:
             return ips
 
         for relay in relays:
-            or_addresses = relay.get('or_addresses')
+            or_addresses = relay.get("or_addresses")
 
             if or_addresses:
                 for ip in or_addresses:
                     # IPv6 addresses are wrapped in [] (For example: "[127.0.0.1]:443")
                     if ip.startswith("["):
-                        ip = ip.split('[')[1].split(']')[0]
+                        ip = ip.split("[")[1].split("]")[0]
                         if self.sf.validIP6(ip):
                             ips.append(ip)
                     else:
-                        ip = ip.split(':')[0]
+                        ip = ip.split(":")[0]
                         if self.sf.validIP(ip):
                             ips.append(ip)
 
             # Exit addresses are only listed in the exit addreses array
             # if the address differs from the OR address.
-            exit_addresses = relay.get('exit_addresses')
+            exit_addresses = relay.get("exit_addresses")
 
             if exit_addresses:
                 for ip in exit_addresses:
@@ -184,12 +188,12 @@ class sfp_torexits(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventName in ['AFFILIATE_IPADDR', 'AFFILIATE_IPV6_ADDRESS']:
-            if not self.opts.get('checkaffiliates', False):
+        if eventName in ["AFFILIATE_IPADDR", "AFFILIATE_IPV6_ADDRESS"]:
+            if not self.opts.get("checkaffiliates", False):
                 return
 
-        if eventName in ['NETBLOCK_OWNER', 'NETBLOCKV6_OWNER']:
-            if not self.opts.get('checknetblocks', False):
+        if eventName in ["NETBLOCK_OWNER", "NETBLOCKV6_OWNER"]:
+            if not self.opts.get("checknetblocks", False):
                 return
 
         addrs = list()
@@ -212,11 +216,13 @@ class sfp_torexits(SpiderFootPlugin):
                 continue
 
             # For netblocks, we need to create the associated IP address event first.
-            if eventName == 'NETBLOCK_OWNER':
-                pevent = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+            if eventName == "NETBLOCK_OWNER":
+                pevent = SpiderFootEvent(
+                    "IP_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
-            if eventName == 'NETBLOCKV6_OWNER':
-                pevent = SpiderFootEvent("IPV6_ADDRESS", addr, self.__name__, event)
+            if eventName == "NETBLOCKV6_OWNER":
+                pevent = SpiderFootEvent(
+                    "IPV6_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             else:
                 pevent = event
@@ -224,5 +230,6 @@ class sfp_torexits(SpiderFootPlugin):
             self.debug(f"IP address {addr} found in TOR exit node list.")
             evt = SpiderFootEvent("TOR_EXIT_NODE", addr, self.__name__, pevent)
             self.notifyListeners(evt)
+
 
 # End of sfp_torexits class

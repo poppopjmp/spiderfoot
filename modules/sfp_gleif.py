@@ -20,30 +20,28 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 class sfp_gleif(SpiderFootPlugin):
 
     meta = {
-        'name': "GLEIF",
-        'summary': "Look up company information from Global Legal Entity Identifier Foundation (GLEIF).",
-        'flags': [],
-        'useCases': ["Passive", "Footprint", "Investigate"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://search.gleif.org/",
-            'model': "FREE_NOAUTH_LIMITED",
-            'references': [
+        "name": "GLEIF",
+        "summary": "Look up company information from Global Legal Entity Identifier Foundation (GLEIF).",
+        "flags": [],
+        "useCases": ["Passive", "Footprint", "Investigate"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://search.gleif.org/",
+            "model": "FREE_NOAUTH_LIMITED",
+            "references": [
                 "https://www.gleif.org/en/lei-data/gleif-api",
                 "https://api.gleif.org/docs",
             ],
-            'favIcon': "https://www.gleif.org/favicon.ico",
-            'logo': "https://search.gleif.org/static/img/gleif-logo.svg",
-            'description': "The Global Legal Entity Identifier Foundation (GLEIF) Global LEI Index contains "
-            "historical and current LEI records including related reference data in one authoritative, central repository."
-        }
+            "favIcon": "https://www.gleif.org/favicon.ico",
+            "logo": "https://search.gleif.org/static/img/gleif-logo.svg",
+            "description": "The Global Legal Entity Identifier Foundation (GLEIF) Global LEI Index contains "
+            "historical and current LEI records including related reference data in one authoritative, central repository.",
+        },
     }
 
-    opts = {
-    }
+    opts = {}
 
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -70,33 +68,33 @@ class sfp_gleif(SpiderFootPlugin):
             dict: search results
         """
 
-        params = urllib.parse.urlencode({
-            'q': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
-            'field': "entity.legalName"
-        })
+        params = urllib.parse.urlencode(
+            {
+                "q": qry.encode("raw_unicode_escape").decode("ascii", errors="replace"),
+                "field": "entity.legalName",
+            }
+        )
 
-        headers = {
-            'Accept': 'application/vnd.api+json'
-        }
+        headers = {"Accept": "application/vnd.api+json"}
 
         res = self.sf.fetchUrl(
             f"https://api.gleif.org/api/v1/fuzzycompletions?{params}",
             timeout=30,
             headers=headers,
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] == "429":
+        if res["code"] == "429":
             self.error("You are being rate-limited by GLEIF.")
             return None
 
         try:
-            results = json.loads(res['content'])
+            results = json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
             return None
 
-        data = results.get('data')
+        data = results.get("data")
         if not data:
             return None
         if not len(data):
@@ -114,33 +112,33 @@ class sfp_gleif(SpiderFootPlugin):
             dict: search results
         """
 
-        params = urllib.parse.urlencode({
-            'q': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
-            'field': "fulltext"
-        })
+        params = urllib.parse.urlencode(
+            {
+                "q": qry.encode("raw_unicode_escape").decode("ascii", errors="replace"),
+                "field": "fulltext",
+            }
+        )
 
-        headers = {
-            'Accept': 'application/vnd.api+json'
-        }
+        headers = {"Accept": "application/vnd.api+json"}
 
         res = self.sf.fetchUrl(
             f"https://api.gleif.org/api/v1/autocompletions?{params}",
             timeout=30,
             headers=headers,
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] == "429":
+        if res["code"] == "429":
             self.error("You are being rate-limited by GLEIF.")
             return None
 
         try:
-            results = json.loads(res['content'])
+            results = json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
             return None
 
-        data = results.get('data')
+        data = results.get("data")
         if not data:
             return None
         if not len(data):
@@ -149,32 +147,30 @@ class sfp_gleif(SpiderFootPlugin):
         return data
 
     def retrieveRecord(self, lei):
-        headers = {
-            'Accept': 'application/vnd.api+json'
-        }
+        headers = {"Accept": "application/vnd.api+json"}
 
         res = self.sf.fetchUrl(
             f"https://api.gleif.org/api/v1/lei-records/{lei}",
-            timeout=self.opts['_fetchtimeout'],
+            timeout=self.opts["_fetchtimeout"],
             headers=headers,
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] == "404":
+        if res["code"] == "404":
             self.error(f"No record for LEI: {lei}")
             return None
 
-        if res['code'] == "429":
+        if res["code"] == "429":
             self.error("You are being rate-limited by GLEIF.")
             return None
 
         try:
-            results = json.loads(res['content'])
+            results = json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
             return None
 
-        data = results.get('data')
+        data = results.get("data")
 
         if not len(data):
             return None
@@ -210,19 +206,19 @@ class sfp_gleif(SpiderFootPlugin):
             self.notifyListeners(e)
 
             for record in res:
-                relationships = record.get('relationships')
+                relationships = record.get("relationships")
                 if not relationships:
                     continue
 
-                lei_records = relationships.get('lei-records')
+                lei_records = relationships.get("lei-records")
                 if not lei_records:
                     continue
 
-                data = lei_records.get('data')
+                data = lei_records.get("data")
                 if not data:
                     continue
 
-                lei = data.get('id')
+                lei = data.get("id")
                 if not SpiderFootHelpers.validLEI(lei):
                     continue
 
@@ -249,55 +245,59 @@ class sfp_gleif(SpiderFootPlugin):
                 self.debug(f"Found no results for {eventData}")
                 continue
 
-            attributes = res.get('attributes')
+            attributes = res.get("attributes")
             if not attributes:
                 continue
 
-            entity = attributes.get('entity')
+            entity = attributes.get("entity")
             if not entity:
                 continue
 
-            legal_name = entity.get('legalName')
+            legal_name = entity.get("legalName")
             if legal_name:
-                entity_name = legal_name.get('value')
+                entity_name = legal_name.get("value")
                 if entity_name:
-                    e = SpiderFootEvent("COMPANY_NAME", entity_name, self.__name__, event)
+                    e = SpiderFootEvent(
+                        "COMPANY_NAME", entity_name, self.__name__, event
+                    )
                     self.notifyListeners(e)
 
             addresses = list()
 
-            address = entity.get('legalAddress')
-            if address.get('addressLines'):
-                address_lines = ', '.join(filter(None, address.get('addressLines')))
-                location = ', '.join(
+            address = entity.get("legalAddress")
+            if address.get("addressLines"):
+                address_lines = ", ".join(
+                    filter(None, address.get("addressLines")))
+                location = ", ".join(
                     filter(
                         None,
                         [
                             address_lines,
-                            address.get('city'),
-                            address.get('region'),
-                            address.get('country'),
-                            address.get('postalCode')
-                        ]
+                            address.get("city"),
+                            address.get("region"),
+                            address.get("country"),
+                            address.get("postalCode"),
+                        ],
                     )
                 )
 
                 if location:
                     addresses.append(location)
 
-            address = entity.get('headquartersAddress')
-            if address.get('addressLines'):
-                address_lines = ', '.join(filter(None, address.get('addressLines')))
-                location = ', '.join(
+            address = entity.get("headquartersAddress")
+            if address.get("addressLines"):
+                address_lines = ", ".join(
+                    filter(None, address.get("addressLines")))
+                location = ", ".join(
                     filter(
                         None,
                         [
                             address_lines,
-                            address.get('city'),
-                            address.get('region'),
-                            address.get('country'),
-                            address.get('postalCode')
-                        ]
+                            address.get("city"),
+                            address.get("region"),
+                            address.get("country"),
+                            address.get("postalCode"),
+                        ],
                     )
                 )
 
@@ -305,7 +305,9 @@ class sfp_gleif(SpiderFootPlugin):
                     addresses.append(location)
 
             for address in set(addresses):
-                e = SpiderFootEvent("PHYSICAL_ADDRESS", address, self.__name__, event)
+                e = SpiderFootEvent("PHYSICAL_ADDRESS",
+                                    address, self.__name__, event)
                 self.notifyListeners(e)
+
 
 # End of sfp_gleif class

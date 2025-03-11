@@ -20,44 +20,44 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_sorbs(SpiderFootPlugin):
 
     meta = {
-        'name': "SORBS",
-        'summary': "Query the SORBS database for open relays, open proxies, vulnerable servers, etc.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "http://www.sorbs.net/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "SORBS",
+        "summary": "Query the SORBS database for open relays, open proxies, vulnerable servers, etc.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "http://www.sorbs.net/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "http://www.sorbs.net/information/proxy.shtml",
                 "http://www.sorbs.net/information/spamfo/",
-                "http://www.sorbs.net/general/using.shtml"
+                "http://www.sorbs.net/general/using.shtml",
             ],
-            'favIcon': "https://www.google.com/s2/favicons?domain=http://www.sorbs.net/",
-            'logo': "http://www.sorbs.net/img/pix.gif",
-            'description': "The Spam and Open Relay Blocking System (SORBS) was conceived as an anti-spam project "
-            "where a daemon would check \"on-the-fly\", all servers from which it received email "
+            "favIcon": "https://www.google.com/s2/favicons?domain=http://www.sorbs.net/",
+            "logo": "http://www.sorbs.net/img/pix.gif",
+            "description": "The Spam and Open Relay Blocking System (SORBS) was conceived as an anti-spam project "
+            'where a daemon would check "on-the-fly", all servers from which it received email '
             "to determine if that email was sent via various types of proxy and open-relay servers.\n"
             "The SORBS (Spam and Open Relay Blocking System) provides free access to its "
             "DNS-based Block List (DNSBL) to effectively block email from more than 12 million host servers "
             "known to disseminate spam, phishing attacks and other forms of malicious email.",
-        }
+        },
     }
 
     # Default options
     opts = {
-        'netblocklookup': True,
-        'maxnetblock': 24,
-        'subnetlookup': True,
-        'maxsubnet': 24
+        "netblocklookup": True,
+        "maxnetblock": 24,
+        "subnetlookup": True,
+        "maxsubnet": 24,
     }
 
     # Option descriptions
     optdescs = {
-        'netblocklookup': "Look up all IPs on netblocks deemed to be owned by your target for possible blacklisted hosts on the same target subdomain/domain?",
-        'maxnetblock': "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
-        'subnetlookup': "Look up all IPs on subnets which your target is a part of for blacklisting?",
-        'maxsubnet': "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)"
+        "netblocklookup": "Look up all IPs on netblocks deemed to be owned by your target for possible blacklisted hosts on the same target subdomain/domain?",
+        "maxnetblock": "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
+        "subnetlookup": "Look up all IPs on subnets which your target is a part of for blacklisting?",
+        "maxsubnet": "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
     }
 
     results = None
@@ -103,12 +103,7 @@ class sfp_sorbs(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            'IP_ADDRESS',
-            'AFFILIATE_IPADDR',
-            'NETBLOCK_OWNER',
-            'NETBLOCK_MEMBER'
-        ]
+        return ["IP_ADDRESS", "AFFILIATE_IPADDR", "NETBLOCK_OWNER", "NETBLOCK_MEMBER"]
 
     def producedEvents(self):
         return [
@@ -120,7 +115,7 @@ class sfp_sorbs(SpiderFootPlugin):
             "MALICIOUS_AFFILIATE_IPADDR",
             "MALICIOUS_NETBLOCK",
             "MALICIOUS_SUBNET",
-            "PROXY_HOST"
+            "PROXY_HOST",
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
@@ -128,7 +123,7 @@ class sfp_sorbs(SpiderFootPlugin):
         if not self.sf.validIP(ipaddr):
             self.debug(f"Invalid IPv4 address {ipaddr}")
             return None
-        return '.'.join(reversed(ipaddr.split('.')))
+        return ".".join(reversed(ipaddr.split(".")))
 
     def queryAddr(self, qaddr):
         """Query SORBS DNS for an IPv4 address.
@@ -144,7 +139,7 @@ class sfp_sorbs(SpiderFootPlugin):
             return None
 
         try:
-            lookup = self.reverseAddr(qaddr) + '.dnsbl.sorbs.net'
+            lookup = self.reverseAddr(qaddr) + ".dnsbl.sorbs.net"
             self.debug(f"Checking SORBS blacklist: {lookup}")
             return self.sf.resolveHost(lookup)
         except Exception as e:
@@ -169,24 +164,28 @@ class sfp_sorbs(SpiderFootPlugin):
         elif eventName == "IP_ADDRESS":
             malicious_type = "MALICIOUS_IPADDR"
             blacklist_type = "BLACKLISTED_IPADDR"
-        elif eventName == 'NETBLOCK_MEMBER':
-            if not self.opts['subnetlookup']:
+        elif eventName == "NETBLOCK_MEMBER":
+            if not self.opts["subnetlookup"]:
                 return
 
-            max_subnet = self.opts['maxsubnet']
+            max_subnet = self.opts["maxsubnet"]
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}"
+                )
                 return
 
             malicious_type = "MALICIOUS_SUBNET"
             blacklist_type = "BLACKLISTED_SUBNET"
-        elif eventName == 'NETBLOCK_OWNER':
-            if not self.opts['netblocklookup']:
+        elif eventName == "NETBLOCK_OWNER":
+            if not self.opts["netblocklookup"]:
                 return
 
-            max_netblock = self.opts['maxnetblock']
+            max_netblock = self.opts["maxnetblock"]
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}"
+                )
                 return
 
             malicious_type = "MALICIOUS_NETBLOCK"
@@ -218,12 +217,16 @@ class sfp_sorbs(SpiderFootPlugin):
             for result in res:
                 k = str(result)
                 if k not in self.checks:
-                    if not result.endswith('.dnsbl.sorbs.net'):
+                    if not result.endswith(".dnsbl.sorbs.net"):
                         # This is an error. The "checks" dict may need to be updated.
-                        self.error(f"SORBS resolved address {addr} to unknown IP address {result} not found in SORBS list.")
+                        self.error(
+                            f"SORBS resolved address {addr} to unknown IP address {result} not found in SORBS list."
+                        )
                     continue
 
-                evt = SpiderFootEvent(blacklist_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, f"{self.checks[k]} [{addr}]", self.__name__, event
+                )
                 self.notifyListeners(evt)
 
                 if k in [
@@ -231,7 +234,8 @@ class sfp_sorbs(SpiderFootPlugin):
                     "127.0.0.3",
                     "127.0.0.4",
                 ]:
-                    evt = SpiderFootEvent("PROXY_HOST", eventData, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "PROXY_HOST", eventData, self.__name__, event)
                     self.notifyListeners(evt)
 
                 if k not in [
@@ -241,7 +245,13 @@ class sfp_sorbs(SpiderFootPlugin):
                     "127.0.0.12",
                     "127.0.0.14",
                 ]:
-                    evt = SpiderFootEvent(malicious_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        malicious_type,
+                        f"{self.checks[k]} [{addr}]",
+                        self.__name__,
+                        event,
+                    )
                     self.notifyListeners(evt)
+
 
 # End of sfp_sorbs class

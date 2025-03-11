@@ -16,22 +16,19 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_intfiles(SpiderFootPlugin):
 
     meta = {
-        'name': "Interesting File Finder",
-        'summary': "Identifies potential files of interest, e.g. office documents, zip files.",
-        'flags': [],
-        'useCases': ["Footprint", "Passive"],
-        'categories': ["Crawling and Scanning"]
+        "name": "Interesting File Finder",
+        "summary": "Identifies potential files of interest, e.g. office documents, zip files.",
+        "flags": [],
+        "useCases": ["Footprint", "Passive"],
+        "categories": ["Crawling and Scanning"],
     }
 
     # Default options
-    opts = {
-        'fileexts': ["doc", "docx", "ppt", "pptx", "pdf", 'xls', 'xlsx', 'zip']
-    }
+    opts = {"fileexts": ["doc", "docx", "ppt",
+                         "pptx", "pdf", "xls", "xlsx", "zip"]}
 
     # Option descriptions
-    optdescs = {
-        'fileexts': "File extensions of files you consider interesting."
-    }
+    optdescs = {"fileexts": "File extensions of files you consider interesting."}
 
     results = None
 
@@ -66,10 +63,12 @@ class sfp_intfiles(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        for fileExt in self.opts['fileexts']:
+        for fileExt in self.opts["fileexts"]:
             if "." + fileExt.lower() in eventData.lower():
-                evt = SpiderFootEvent("INTERESTING_FILE", eventData,
-                                      self.__name__, event)
+                evt = SpiderFootEvent(
+                    "INTERESTING_FILE", eventData, self.__name__, event
+                )
                 self.notifyListeners(evt)
+
 
 # End of sfp_intfiles class

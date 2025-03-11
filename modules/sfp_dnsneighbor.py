@@ -19,23 +19,20 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_dnsneighbor(SpiderFootPlugin):
 
     meta = {
-        'name': "DNS Look-aside",
-        'summary': "Attempt to reverse-resolve the IP addresses next to your target to see if they are related.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate"],
-        'categories': ["DNS"]
+        "name": "DNS Look-aside",
+        "summary": "Attempt to reverse-resolve the IP addresses next to your target to see if they are related.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate"],
+        "categories": ["DNS"],
     }
 
     # Default options
-    opts = {
-        'lookasidebits': 4,
-        'validatereverse': True
-    }
+    opts = {"lookasidebits": 4, "validatereverse": True}
 
     # Option descriptions
     optdescs = {
-        'validatereverse': "Validate that reverse-resolved hostnames still resolve back to that IP before considering them as aliases of your target.",
-        'lookasidebits': "If look-aside is enabled, the netmask size (in CIDR notation) to check. Default is 4 bits (16 hosts)."
+        "validatereverse": "Validate that reverse-resolved hostnames still resolve back to that IP before considering them as aliases of your target.",
+        "lookasidebits": "If look-aside is enabled, the netmask size (in CIDR notation) to check. Default is 4 bits (16 hosts).",
     }
 
     events = None
@@ -54,7 +51,7 @@ class sfp_dnsneighbor(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ['IP_ADDRESS']
+        return ["IP_ADDRESS"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
@@ -80,13 +77,19 @@ class sfp_dnsneighbor(SpiderFootPlugin):
 
         try:
             address = ipaddress.ip_address(eventData)
-            netmask = address.max_prefixlen - min(address.max_prefixlen, max(1, int(self.opts.get("lookasidebits"))))
-            network = ipaddress.ip_network(f"{eventData}/{netmask}", strict=False)
+            netmask = address.max_prefixlen - min(
+                address.max_prefixlen, max(
+                    1, int(self.opts.get("lookasidebits")))
+            )
+            network = ipaddress.ip_network(
+                f"{eventData}/{netmask}", strict=False)
         except ValueError:
             self.error(f"Invalid IP address received: {eventData}")
             return
 
-        self.debug(f"Lookaside max: {network.network_address}, min: {network.broadcast_address}")
+        self.debug(
+            f"Lookaside max: {network.network_address}, min: {network.broadcast_address}"
+        )
 
         for ip in network:
             sip = str(ip)
@@ -194,5 +197,6 @@ class sfp_dnsneighbor(SpiderFootPlugin):
         self.notifyListeners(evt)
 
         return evt
+
 
 # End of sfp_dnsneighbor class

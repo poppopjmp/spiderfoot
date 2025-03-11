@@ -20,39 +20,39 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_uceprotect(SpiderFootPlugin):
 
     meta = {
-        'name': "UCEPROTECT",
-        'summary': "Check if a netblock or IP address is in the UCEPROTECT database.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "http://www.uceprotect.net/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "UCEPROTECT",
+        "summary": "Check if a netblock or IP address is in the UCEPROTECT database.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "http://www.uceprotect.net/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "http://www.uceprotect.net/en/index.php?m=3&s=3",
                 "http://www.uceprotect.net/en/index.php?m=6&s=0",
                 "http://www.uceprotect.net/en/index.php?m=6&s=11",
                 "http://www.uceprotect.net/en/index.php?m=13&s=0",
-                "http://www.uceprotect.net/en/rblcheck.php"
+                "http://www.uceprotect.net/en/rblcheck.php",
             ],
-            'favIcon': "https://www.uceprotect.net/favicon.ico",
-            'logo': "https://www.uceprotect.net/en/logo.gif",
-            'description': "UCEPROTECT is a DNS blacklisting service whose mission is to stop mail abuse globally.",
-        }
+            "favIcon": "https://www.uceprotect.net/favicon.ico",
+            "logo": "https://www.uceprotect.net/en/logo.gif",
+            "description": "UCEPROTECT is a DNS blacklisting service whose mission is to stop mail abuse globally.",
+        },
     }
 
     opts = {
-        'netblocklookup': True,
-        'maxnetblock': 24,
-        'subnetlookup': True,
-        'maxsubnet': 24
+        "netblocklookup": True,
+        "maxnetblock": 24,
+        "subnetlookup": True,
+        "maxsubnet": 24,
     }
 
     optdescs = {
-        'netblocklookup': "Look up all IPs on netblocks deemed to be owned by your target for possible blacklisted hosts on the same target subdomain/domain?",
-        'maxnetblock': "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
-        'subnetlookup': "Look up all IPs on subnets which your target is a part of for blacklisting?",
-        'maxsubnet': "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)"
+        "netblocklookup": "Look up all IPs on netblocks deemed to be owned by your target for possible blacklisted hosts on the same target subdomain/domain?",
+        "maxnetblock": "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
+        "subnetlookup": "Look up all IPs on subnets which your target is a part of for blacklisting?",
+        "maxsubnet": "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
     }
 
     results = None
@@ -65,12 +65,7 @@ class sfp_uceprotect(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            'IP_ADDRESS',
-            'AFFILIATE_IPADDR',
-            'NETBLOCK_OWNER',
-            'NETBLOCK_MEMBER'
-        ]
+        return ["IP_ADDRESS", "AFFILIATE_IPADDR", "NETBLOCK_OWNER", "NETBLOCK_MEMBER"]
 
     def producedEvents(self):
         return [
@@ -86,7 +81,7 @@ class sfp_uceprotect(SpiderFootPlugin):
 
     # Swap 1.2.3.4 to 4.3.2.1
     def reverseAddr(self, ipaddr):
-        return '.'.join(reversed(ipaddr.split('.')))
+        return ".".join(reversed(ipaddr.split(".")))
 
     def queryDnsblLevel1(self, qaddr):
         """Query UCEPROTECT DNS Level 1 for an IPv4 address.
@@ -102,7 +97,7 @@ class sfp_uceprotect(SpiderFootPlugin):
             return None
 
         try:
-            lookup = self.reverseAddr(qaddr) + '.dnsbl-1.uceprotect.net'
+            lookup = self.reverseAddr(qaddr) + ".dnsbl-1.uceprotect.net"
             self.debug(f"Checking UCEPROTECT blacklist: {lookup}")
             return self.sf.resolveHost(lookup)
         except Exception as e:
@@ -124,7 +119,7 @@ class sfp_uceprotect(SpiderFootPlugin):
             return None
 
         try:
-            lookup = self.reverseAddr(qaddr) + '.dnsbl-2.uceprotect.net'
+            lookup = self.reverseAddr(qaddr) + ".dnsbl-2.uceprotect.net"
             self.debug(f"Checking UCEPROTECT blacklist: {lookup}")
             return self.sf.resolveHost(lookup)
         except Exception as e:
@@ -149,24 +144,28 @@ class sfp_uceprotect(SpiderFootPlugin):
         elif eventName == "IP_ADDRESS":
             malicious_type = "MALICIOUS_IPADDR"
             blacklist_type = "BLACKLISTED_IPADDR"
-        elif eventName == 'NETBLOCK_MEMBER':
-            if not self.opts['subnetlookup']:
+        elif eventName == "NETBLOCK_MEMBER":
+            if not self.opts["subnetlookup"]:
                 return
 
-            max_subnet = self.opts['maxsubnet']
+            max_subnet = self.opts["maxsubnet"]
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}"
+                )
                 return
 
             malicious_type = "MALICIOUS_SUBNET"
             blacklist_type = "BLACKLISTED_SUBNET"
-        elif eventName == 'NETBLOCK_OWNER':
-            if not self.opts['netblocklookup']:
+        elif eventName == "NETBLOCK_OWNER":
+            if not self.opts["netblocklookup"]:
                 return
 
-            max_netblock = self.opts['maxnetblock']
+            max_netblock = self.opts["maxnetblock"]
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}"
+                )
                 return
 
             malicious_type = "MALICIOUS_NETBLOCK"
@@ -200,19 +199,24 @@ class sfp_uceprotect(SpiderFootPlugin):
 
             if level1:
                 description = f"UCEPROTECT - Level 1 (high likelihood) [{addr}]\n<SFURL>{url}</SFURL>"
-                evt = SpiderFootEvent(blacklist_type, description, self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, description, self.__name__, event)
                 self.notifyListeners(evt)
 
-                evt = SpiderFootEvent(malicious_type, description, self.__name__, event)
+                evt = SpiderFootEvent(
+                    malicious_type, description, self.__name__, event)
                 self.notifyListeners(evt)
 
             if level2:
                 description = f"UCEPROTECT - Level 2 (some false positives) [{addr}]\n<SFURL>{url}</SFURL>"
 
-                evt = SpiderFootEvent(blacklist_type, description, self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, description, self.__name__, event)
                 self.notifyListeners(evt)
 
-                evt = SpiderFootEvent(malicious_type, description, self.__name__, event)
+                evt = SpiderFootEvent(
+                    malicious_type, description, self.__name__, event)
                 self.notifyListeners(evt)
+
 
 # End of sfp_uceprotect class

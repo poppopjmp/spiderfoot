@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request
 from pydantic import BaseModel
-from typing import List, Dict
-from fastapi.responses import JSONResponse, StreamingResponse, Response
+from typing import List
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import asyncio
 import uuid
@@ -28,28 +28,32 @@ app = FastAPI()
 
 # Define global config variable which was referenced but not defined
 config = {
-    'token': '',  # Set your token here if you want to use authentication
+    "token": "",  # Set your token here if you want to use authentication
 }
 
 sfConfig_API = {
-    '_debug': False,  # Debug
-    '_maxthreads': 3,  # Number of modules to run concurrently
-    '__logging': True,  # Logging in general
-    '__outputfilter': None,  # Event types to filter from modules' output
-    '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',  # User-Agent to use for HTTP requests
-    '_dnsserver': '',  # Override the default resolver
-    '_fetchtimeout': 5,  # number of seconds before giving up on a fetch
-    '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
-    '_internettlds_cache': 72,
-    '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
-    '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
-    '__modules__': None,  # List of modules. Will be set after start-up.
-    '__correlationrules__': None,  # List of correlation rules. Will be set after start-up.
-    '_socks1type': '',
-    '_socks2addr': '',
-    '_socks3port': '',
-    '_socks4user': '',
-    '_socks5pwd': '',
+    "_debug": False,  # Debug
+    "_maxthreads": 3,  # Number of modules to run concurrently
+    "__logging": True,  # Logging in general
+    "__outputfilter": None,  # Event types to filter from modules' output
+    # User-Agent to use for HTTP requests
+    "_useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0",
+    "_dnsserver": "",  # Override the default resolver
+    "_fetchtimeout": 5,  # number of seconds before giving up on a fetch
+    "_internettlds": "https://publicsuffix.org/list/effective_tld_names.dat",
+    "_internettlds_cache": 72,
+    "_genericusers": ",".join(
+        SpiderFootHelpers.usernamesFromWordlists(["generic-usernames"])
+    ),
+    "__database": f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
+    "__modules__": None,  # List of modules. Will be set after start-up.
+    # List of correlation rules. Will be set after start-up.
+    "__correlationrules__": None,
+    "_socks1type": "",
+    "_socks2addr": "",
+    "_socks3port": "",
+    "_socks4user": "",
+    "_socks5pwd": "",
 }
 
 try:
@@ -59,21 +63,29 @@ except Exception as e:
     print(f"Error setting up logging: {e}")
     log = None
 
+
 class ScanRequest(BaseModel):
     target: str
     modules: List[str]
+
 
 class APIKeyRequest(BaseModel):
     module: str
     key: str
 
+
 security = HTTPBasic()
+
 
 def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
     correct_username = "admin"
     correct_password = "password"
-    if credentials.username != correct_username or credentials.password != correct_password:
+    if (
+        credentials.username != correct_username or
+        credentials.password != correct_password
+    ):
         raise HTTPException(status_code=401, detail="Unauthorized")
+
 
 @app.get("/")
 async def read_root():
@@ -84,6 +96,7 @@ async def read_root():
         dict: A welcome message.
     """
     return {"message": "Welcome to SpiderFoot API"}
+
 
 @app.options("/{path:path}")
 async def options_handler(path: str):
@@ -100,8 +113,9 @@ async def options_handler(path: str):
         "Allow": "GET, POST, OPTIONS",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
+        "Access-Control-Allow-Headers": "Content-Type",
     }
+
 
 def initialize_spiderfoot(use_postgresql: bool = False):
     """
@@ -114,26 +128,33 @@ def initialize_spiderfoot(use_postgresql: bool = False):
         SpiderFoot: The initialized SpiderFoot instance.
     """
     sfConfig_API = {
-        '_debug': False,
-        '_maxthreads': 3,
-        '__logging': True,
-        '__outputfilter': None,
-        '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
-        '_dnsserver': '',
-        '_fetchtimeout': 5,
-        '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
-        '_internettlds_cache': 72,
-        '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
-        '__database': 'postgresql://user:password@localhost/spiderfoot' if use_postgresql else f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
-        '__modules__': None,
-        '__correlationrules__': None,
-        '_socks1type': '',
-        '_socks2addr': '',
-        '_socks3port': '',
-        '_socks4user': '',
-        '_socks5pwd': '',
+        "_debug": False,
+        "_maxthreads": 3,
+        "__logging": True,
+        "__outputfilter": None,
+        "_useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0",
+        "_dnsserver": "",
+        "_fetchtimeout": 5,
+        "_internettlds": "https://publicsuffix.org/list/effective_tld_names.dat",
+        "_internettlds_cache": 72,
+        "_genericusers": ",".join(
+            SpiderFootHelpers.usernamesFromWordlists(["generic-usernames"])
+        ),
+        "__database": (
+            "postgresql://user:password@localhost/spiderfoot"
+            if use_postgresql
+            else f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
+        ),
+        "__modules__": None,
+        "__correlationrules__": None,
+        "_socks1type": "",
+        "_socks2addr": "",
+        "_socks3port": "",
+        "_socks4user": "",
+        "_socks5pwd": "",
     }
     return SpiderFoot(sfConfig_API)
+
 
 def handle_database_interactions(use_postgresql: bool = False):
     """
@@ -148,6 +169,7 @@ def handle_database_interactions(use_postgresql: bool = False):
     sf = initialize_spiderfoot(use_postgresql)
     return SpiderFootDb(sf.config)
 
+
 def run_spiderfoot_scan(target: str, modules: List[str], use_postgresql: bool = False):
     """Runs the SpiderFoot scan synchronously."""
     sf = initialize_spiderfoot(use_postgresql)
@@ -157,16 +179,29 @@ def run_spiderfoot_scan(target: str, modules: List[str], use_postgresql: bool = 
     scan_id = startSpiderFootScanner(sf)
     return scan_id
 
-async def run_spiderfoot_scan_async(target: str, modules: List[str], use_postgresql: bool = False):
+
+async def run_spiderfoot_scan_async(
+    target: str, modules: List[str], use_postgresql: bool = False
+):
     """Runs the SpiderFoot scan in a separate thread/process."""
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, run_spiderfoot_scan, target, modules, use_postgresql)
+    return await loop.run_in_executor(
+        None, run_spiderfoot_scan, target, modules, use_postgresql
+    )
+
 
 @app.post("/start_scan")
-async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def start_scan(
+    scan_request: ScanRequest,
+    background_tasks: BackgroundTasks,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """Start a new scan with the specified target and modules."""
     try:
-        scan_id = await run_spiderfoot_scan_async(scan_request.target, scan_request.modules, use_postgresql)
+        scan_id = await run_spiderfoot_scan_async(
+            scan_request.target, scan_request.modules, use_postgresql
+        )
         return {"scan_id": scan_id}
 
     except TypeError as e:
@@ -176,16 +211,23 @@ async def start_scan(scan_request: ScanRequest, background_tasks: BackgroundTask
         log.error(f"Unexpected error during start_scan: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.post("/stop_scan/{scan_id}")
-async def stop_scan(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def stop_scan(
+    scan_id: str,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """Stop a running scan with the specified scan ID."""
     try:
-        uuid.UUID(scan_id) #validate UUID
+        uuid.UUID(scan_id)  # validate UUID
         dbh = handle_database_interactions(use_postgresql)
         dbh.scanInstanceSet(scan_id, status="ABORTED")
         return {"message": "Scan stopped successfully"}
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid scan_id format. Must be UUID.")
+        raise HTTPException(
+            status_code=400, detail="Invalid scan_id format. Must be UUID."
+        )
     except TypeError as e:
         log.error(f"TypeError during stop_scan: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -193,8 +235,12 @@ async def stop_scan(scan_id: str, credentials: HTTPBasicCredentials = Depends(au
         log.error(f"Unexpected error during stop_scan: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/modules")
-async def list_modules(credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def list_modules(
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     List all available modules.
 
@@ -209,8 +255,13 @@ async def list_modules(credentials: HTTPBasicCredentials = Depends(authenticate)
         log.error(f"Unexpected error in list_modules: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/scan_results/{scan_id}")
-async def get_scan_results(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def get_scan_results(
+    scan_id: str,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """Get the scan results for the specified scan ID."""
     try:
         uuid.UUID(scan_id)  # Validate UUID
@@ -235,8 +286,12 @@ async def get_scan_results(scan_id: str, credentials: HTTPBasicCredentials = Dep
         log.error(f"Unexpected error in get_scan_results: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/active_scans")
-async def list_active_scans(credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def list_active_scans(
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     List all active scans.
 
@@ -251,8 +306,13 @@ async def list_active_scans(credentials: HTTPBasicCredentials = Depends(authenti
         log.error(f"Unexpected error in list_active_scans: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/scan_status/{scan_id}")
-async def get_scan_status(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def get_scan_status(
+    scan_id: str,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     Get the status of a scan with the specified scan ID.
 
@@ -273,8 +333,12 @@ async def get_scan_status(scan_id: str, credentials: HTTPBasicCredentials = Depe
         log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/scan_history")
-async def list_scan_history(credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def list_scan_history(
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     List the history of all scans.
 
@@ -289,8 +353,14 @@ async def list_scan_history(credentials: HTTPBasicCredentials = Depends(authenti
         log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/export_scan_results/{scan_id}")
-async def export_scan_results(scan_id: str, export_format: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def export_scan_results(
+    scan_id: str,
+    export_format: str,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     Export the scan results for the specified scan ID in the specified format.
 
@@ -312,8 +382,13 @@ async def export_scan_results(scan_id: str, export_format: str, credentials: HTT
         log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.post("/import_api_key")
-async def import_api_key(api_key_request: APIKeyRequest, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def import_api_key(
+    api_key_request: APIKeyRequest,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     Import an API key for a specific module.
 
@@ -334,8 +409,12 @@ async def import_api_key(api_key_request: APIKeyRequest, credentials: HTTPBasicC
         log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/export_api_keys")
-async def export_api_keys(credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def export_api_keys(
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     Export all API keys.
 
@@ -350,8 +429,13 @@ async def export_api_keys(credentials: HTTPBasicCredentials = Depends(authentica
         log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/scan_correlations/{scan_id}")
-async def get_scan_correlations(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def get_scan_correlations(
+    scan_id: str,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     Get the scan correlations for the specified scan ID.
 
@@ -372,8 +456,13 @@ async def get_scan_correlations(scan_id: str, credentials: HTTPBasicCredentials 
         log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/scan_logs/{scan_id}")
-async def get_scan_logs(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def get_scan_logs(
+    scan_id: str,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     Get the scan logs for the specified scan ID.
 
@@ -394,8 +483,13 @@ async def get_scan_logs(scan_id: str, credentials: HTTPBasicCredentials = Depend
         log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/scan_summary/{scan_id}")
-async def get_scan_summary(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def get_scan_summary(
+    scan_id: str,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     Get the scan summary for the specified scan ID.
 
@@ -416,6 +510,7 @@ async def get_scan_summary(scan_id: str, credentials: HTTPBasicCredentials = Dep
         log.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/docs")
 async def get_docs():
     """
@@ -425,6 +520,7 @@ async def get_docs():
         dict: A message indicating the documentation page.
     """
     return {"message": "Swagger-like documentation page"}
+
 
 @app.get("/openapi.json")
 async def get_openapi_schema():
@@ -436,13 +532,19 @@ async def get_openapi_schema():
         routes=app.routes,
     )
 
+
 @app.get("/docs")
 async def get_swagger_ui():
     """Get the Swagger UI for the API."""
     return get_swagger_ui_html(openapi_url="/openapi.json", title="SpiderFoot REST API")
 
+
 @app.get("/export_scan_results/{scan_id}/csv")
-async def export_scan_results_csv(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def export_scan_results_csv(
+    scan_id: str,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     Export the scan results for the specified scan ID in CSV format.
 
@@ -458,19 +560,34 @@ async def export_scan_results_csv(scan_id: str, credentials: HTTPBasicCredential
 
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(["module", "data", "type", "source", "falsescore", "generated", "updated"])
+        writer.writerow(
+            ["module", "data", "type", "source",
+                "falsescore", "generated", "updated"]
+        )
 
         for result in results:
             writer.writerow(result)
 
         output.seek(0)
-        return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=scan_results_{scan_id}.csv"})
+        return StreamingResponse(
+            output,
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=scan_results_{scan_id}.csv"
+            },
+        )
     except Exception as e:
-        log.error(f"Unexpected error in export_scan_results_csv: {e}", exc_info=True)
+        log.error(
+            f"Unexpected error in export_scan_results_csv: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @app.get("/export_scan_results/{scan_id}/json")
-async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentials = Depends(authenticate), use_postgresql: bool = False):
+async def export_scan_results_json(
+    scan_id: str,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+    use_postgresql: bool = False,
+):
     """
     Export the scan results for the specified scan ID in JSON format.
 
@@ -499,8 +616,10 @@ async def export_scan_results_json(scan_id: str, credentials: HTTPBasicCredentia
 
         return JSONResponse(content={"results": formatted_results})
     except Exception as e:
-        log.error(f"Unexpected error in export_scan_results_json: {e}", exc_info=True)
+        log.error(
+            f"Unexpected error in export_scan_results_json: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
+
 
 @app.exception_handler(HTTPException)
 async def custom_http_exception_handler(request, exc):
@@ -519,6 +638,7 @@ async def custom_http_exception_handler(request, exc):
         content={"message": exc.detail},
     )
 
+
 @app.exception_handler(Exception)
 async def custom_exception_handler(request, exc):
     """
@@ -536,6 +656,7 @@ async def custom_exception_handler(request, exc):
         content={"message": "An unexpected error occurred."},
     )
 
+
 def handle_scan_status(scan_id: str):
     """
     Handle the scan status and results retrieval.
@@ -551,6 +672,7 @@ def handle_scan_status(scan_id: str):
     results = dbh.scanResultEvent(scan_id)
     return {"status": status, "results": results}
 
+
 def handle_correlation_rules(scan_id: str):
     """
     Handle the correlation rules and their execution.
@@ -565,6 +687,7 @@ def handle_correlation_rules(scan_id: str):
     correlations = dbh.scanCorrelate(scan_id)
     return {"correlations": correlations}
 
+
 def handle_logging_and_error_handling():
     """
     Handle the logging and error handling mechanisms required by SpiderFoot.
@@ -573,68 +696,71 @@ def handle_logging_and_error_handling():
     log = logWorkerSetup(loggingQueue=None)
     return log_listener, log
 
+
 def error_page(message, status_code=404) -> JSONResponse:
     """Create a JSON error response.
-    
+
     Args:
         message: Error message
         status_code: HTTP status code
-        
+
     Returns:
         JSONResponse: A formatted JSON error response
     """
-    message_dict = {
-        "error": message,
-        "status_code": status_code
-    }
+    message_dict = {"error": message, "status_code": status_code}
     return JSONResponse(status_code=status_code, content=message_dict)
+
 
 @app.exception_handler(404)
 def not_found(request: Request, exc: HTTPException) -> JSONResponse:
     return error_page("Resource not found.", 404)
 
+
 @app.exception_handler(500)
 def internal_error(request: Request, exc: HTTPException) -> JSONResponse:
     return error_page("Internal server error.", 500)
+
 
 @app.exception_handler(400)
 def bad_request(request: Request, exc: HTTPException) -> JSONResponse:
     return error_page("Bad request.", 400)
 
+
 @app.exception_handler(401)
 def unauthorized(request: Request, exc: HTTPException) -> JSONResponse:
     return error_page("Unauthorized", 401)
+
 
 @app.exception_handler(403)
 def forbidden(request: Request, exc: HTTPException) -> JSONResponse:
     return error_page("Forbidden", 403)
 
+
 @app.exception_handler(405)
 def method_not_allowed(request: Request, exc: HTTPException) -> JSONResponse:
     return error_page("Method not allowed", 405)
 
+
 def check_auth(request: Request) -> bool:
     """Check authentication if set"""
-    if not config.get('token'):
+    if not config.get("token"):
         return True
-    auth_header = request.headers.get('Authorization')
+    auth_header = request.headers.get("Authorization")
     if not auth_header:
         return False
     try:
-        auth_type, auth_token = auth_header.split(' ', 1)
-        if auth_type.lower() == 'bearer' and auth_token == config['token']:
+        auth_type, auth_token = auth_header.split(" ", 1)
+        if auth_type.lower() == "bearer" and auth_token == config["token"]:
             return True
     except ValueError:
         return False
     return False
 
+
 @app.middleware("http")
 async def authentication_middleware(request: Request, call_next):
     """Middleware to handle authentication for all requests."""
     if not check_auth(request):
-        return JSONResponse(
-            status_code=401,
-            content={"message": "Unauthorized"}
-        )
+        return JSONResponse(status_code=401, content={"message": "Unauthorized"})
     response = await call_next(request)
     return response

@@ -22,47 +22,42 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 class sfp_h1(SpiderFootPlugin):
     meta = {
-        'name': "HackerOne",
-        'summary': "Query the HackerOne API to find security vulnerabilities disclosed for a target domain.",
-        'flags': ["apikey"],
-        'useCases': ["Footprint", "Investigate"],
-        'categories': ["Leaks, Dumps and Breaches"],
-        'dataSource': {
-            'website': "https://www.hackerone.com/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
+        "name": "HackerOne",
+        "summary": "Query the HackerOne API to find security vulnerabilities disclosed for a target domain.",
+        "flags": ["apikey"],
+        "useCases": ["Footprint", "Investigate"],
+        "categories": ["Leaks, Dumps and Breaches"],
+        "dataSource": {
+            "website": "https://www.hackerone.com/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": [
                 "https://api.hackerone.com/",
                 "https://docs.hackerone.com/",
-                "https://hackerone.com/programs/search"
+                "https://hackerone.com/programs/search",
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "Visit https://hackerone.com/",
                 "Register a free account",
                 "Navigate to Settings > API Tokens",
                 "Create a new API token",
-                "The API key will be provided"
+                "The API key will be provided",
             ],
-            'favIcon': "https://www.hackerone.com/sites/default/files/favicon_0.ico",
-            'logo': "https://www.hackerone.com/sites/default/files/h1-logo.png",
-            'description': "HackerOne is a vulnerability coordination and bug bounty platform that connects businesses "
-                           "with penetration testers and cybersecurity researchers.",
-        }
+            "favIcon": "https://www.hackerone.com/sites/default/files/favicon_0.ico",
+            "logo": "https://www.hackerone.com/sites/default/files/h1-logo.png",
+            "description": "HackerOne is a vulnerability coordination and bug bounty platform that connects businesses "
+            "with penetration testers and cybersecurity researchers.",
+        },
     }
 
     # Default options
-    opts = {
-        'api_key': '',
-        'username': '',
-        'delay': 1,
-        'limit': 100
-    }
+    opts = {"api_key": "", "username": "", "delay": 1, "limit": 100}
 
     # Option descriptions
     optdescs = {
-        'api_key': "HackerOne API key.",
-        'username': "HackerOne API username.",
-        'delay': "Delay between API requests in seconds.",
-        'limit': "Maximum number of results to retrieve per API call."
+        "api_key": "HackerOne API key.",
+        "username": "HackerOne API username.",
+        "delay": "Delay between API requests in seconds.",
+        "limit": "Maximum number of results to retrieve per API call.",
     }
 
     results = None
@@ -82,63 +77,58 @@ class sfp_h1(SpiderFootPlugin):
 
     # What events this module produces
     def producedEvents(self):
-        return [
-            "VULNERABILITY_DISCLOSURE",
-            "RAW_RIR_DATA"
-        ]
+        return ["VULNERABILITY_DISCLOSURE", "RAW_RIR_DATA"]
 
     def queryApi(self, query):
         """Query the HackerOne API."""
-        if not self.opts['api_key'] or not self.opts['username']:
-            self.error("You enabled sfp_h1 but did not set an API key/username!")
+        if not self.opts["api_key"] or not self.opts["username"]:
+            self.error(
+                "You enabled sfp_h1 but did not set an API key/username!")
             self.errorState = True
             return None
 
         headers = {
-            'Authorization': f"Basic {self.opts['api_key']}",
-            'User-Agent': 'SpiderFoot',
-            'Accept': 'application/json'
+            "Authorization": f"Basic {self.opts['api_key']}",
+            "User-Agent": "SpiderFoot",
+            "Accept": "application/json",
         }
 
         # Build the API URL with query parameters
         params = {
-            'query': query,
-            'sort': 'latest_disclosable_activity_at',
-            'page[size]': str(self.opts['limit'])
+            "query": query,
+            "sort": "latest_disclosable_activity_at",
+            "page[size]": str(self.opts["limit"]),
         }
-        
+
         url = f"https://api.hackerone.com/v1/reports?{urllib.parse.urlencode(params)}"
-        
+
         res = self.sf.fetchUrl(
-            url,
-            timeout=30,
-            useragent="SpiderFoot",
-            headers=headers
-        )
+            url, timeout=30, useragent="SpiderFoot", headers=headers)
 
-        time.sleep(self.opts['delay'])
+        time.sleep(self.opts["delay"])
 
-        if res['code'] == "401":
+        if res["code"] == "401":
             self.error("Invalid HackerOne API key/username.")
             self.errorState = True
             return None
 
-        if res['code'] == "429":
+        if res["code"] == "429":
             self.error("You are being rate-limited by HackerOne.")
             self.errorState = True
             return None
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from HackerOne.")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from HackerOne.")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.debug("No results found on HackerOne")
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.error(f"Error processing JSON response from HackerOne: {e}")
             return None
@@ -165,47 +155,51 @@ class sfp_h1(SpiderFootPlugin):
         self.debug(f"Querying HackerOne for {eventData}")
 
         data = self.queryApi(eventData)
-        
+
         if not data:
             self.debug(f"No results found for {eventData} from HackerOne")
             return
-            
+
         # Process the results
-        reports = data.get('data', [])
-        
+        reports = data.get("data", [])
+
         if not reports:
             self.debug(f"No vulnerability reports found for {eventData}")
             return
-            
-        evt = SpiderFootEvent("RAW_RIR_DATA", json.dumps(data), self.__name__, event)
+
+        evt = SpiderFootEvent(
+            "RAW_RIR_DATA", json.dumps(data), self.__name__, event)
         self.notifyListeners(evt)
-            
+
         for report in reports:
             try:
-                report_id = report.get('id')
-                report_type = report.get('type')
-                
-                if report_type != 'report':
+                report_id = report.get("id")
+                report_type = report.get("type")
+
+                if report_type != "report":
                     continue
-                    
-                attrs = report.get('attributes', {})
-                
-                title = attrs.get('title', '')
-                state = attrs.get('state', '')
-                severity = attrs.get('severity', '')
-                disclosed_at = attrs.get('disclosed_at', '')
-                
+
+                attrs = report.get("attributes", {})
+
+                title = attrs.get("title", "")
+                state = attrs.get("state", "")
+                severity = attrs.get("severity", "")
+                disclosed_at = attrs.get("disclosed_at", "")
+
                 if not title:
                     continue
-                    
+
                 disclosure = f"HackerOne Report #{report_id}: {title} (Severity: {severity}, Status: {state}, Disclosed: {disclosed_at})\n"
                 disclosure += f"URL: https://hackerone.com/reports/{report_id}\n"
-                
-                evt = SpiderFootEvent("VULNERABILITY_DISCLOSURE", disclosure, self.__name__, event)
+
+                evt = SpiderFootEvent(
+                    "VULNERABILITY_DISCLOSURE", disclosure, self.__name__, event
+                )
                 self.notifyListeners(evt)
-                
+
             except Exception as e:
                 self.error(f"Error processing HackerOne report: {e}")
                 continue
+
 
 # End of sfp_h1 class

@@ -16,33 +16,27 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_phishtank(SpiderFootPlugin):
 
     meta = {
-        'name': "PhishTank",
-        'summary': "Check if a host/domain is malicious according to PhishTank.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://phishtank.com/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
-                "https://phishtank.com/developer_info.php"
-            ],
-            'favIcon': "https://www.google.com/s2/favicons?domain=https://phishtank.com/",
-            'logo': "https://phishtank.com/images/logo_with_tagline.gif",
-            'description': "Submit suspected phishes. Track the status of your submissions. Verify other users' submissions.",
-        }
+        "name": "PhishTank",
+        "summary": "Check if a host/domain is malicious according to PhishTank.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://phishtank.com/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://phishtank.com/developer_info.php"],
+            "favIcon": "https://www.google.com/s2/favicons?domain=https://phishtank.com/",
+            "logo": "https://phishtank.com/images/logo_with_tagline.gif",
+            "description": "Submit suspected phishes. Track the status of your submissions. Verify other users' submissions.",
+        },
     }
 
-    opts = {
-        'checkaffiliates': True,
-        'checkcohosts': True,
-        'cacheperiod': 18
-    }
+    opts = {"checkaffiliates": True, "checkcohosts": True, "cacheperiod": 18}
 
     optdescs = {
-        'checkaffiliates': "Apply checks to affiliates?",
-        'checkcohosts': "Apply checks to sites found to be co-hosted on the target's IP?",
-        'cacheperiod': "Hours to cache list data before re-fetching."
+        "checkaffiliates": "Apply checks to affiliates?",
+        "checkcohosts": "Apply checks to sites found to be co-hosted on the target's IP?",
+        "cacheperiod": "Hours to cache list data before re-fetching.",
     }
 
     results = None
@@ -83,36 +77,39 @@ class sfp_phishtank(SpiderFootPlugin):
             if not item:
                 continue
             if target.lower() in item[1]:
-                self.debug(f"Host name {target} found in phishtank.com blacklist.")
+                self.debug(
+                    f"Host name {target} found in phishtank.com blacklist.")
                 return item[0]
 
         return None
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('phishtank', 24)
+        blacklist = self.sf.cacheGet("phishtank", 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
         res = self.sf.fetchUrl(
             "https://data.phishtank.com/data/online-valid.csv",
-            timeout=self.opts['_fetchtimeout'],
+            timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",
         )
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from phishtank.com.")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from phishtank.com."
+            )
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error("Received no content from phishtank.com")
             self.errorState = True
             return None
 
-        self.sf.cachePut("phishtank", res['content'])
+        self.sf.cachePut("phishtank", res["content"])
 
-        return self.parseBlacklist(res['content'])
+        return self.parseBlacklist(res["content"])
 
     def parseBlacklist(self, blacklist):
         """Parse plaintext blacklist
@@ -128,10 +125,10 @@ class sfp_phishtank(SpiderFootPlugin):
         if not blacklist:
             return hosts
 
-        for line in blacklist.split('\n'):
+        for line in blacklist.split("\n"):
             if not line:
                 continue
-            if line.startswith('#'):
+            if line.startswith("#"):
                 continue
             phish_id = line.strip().split(",")[0]
             url = str(line.strip().split(",")[1]).lower()
@@ -166,12 +163,12 @@ class sfp_phishtank(SpiderFootPlugin):
             malicious_type = "MALICIOUS_INTERNET_NAME"
             blacklist_type = "BLACKLISTED_INTERNET_NAME"
         elif eventName == "AFFILIATE_INTERNET_NAME":
-            if not self.opts.get('checkaffiliates', False):
+            if not self.opts.get("checkaffiliates", False):
                 return
             malicious_type = "MALICIOUS_AFFILIATE_INTERNET_NAME"
             blacklist_type = "BLACKLISTED_AFFILIATE_INTERNET_NAME"
         elif eventName == "CO_HOSTED_SITE":
-            if not self.opts.get('checkcohosts', False):
+            if not self.opts.get("checkcohosts", False):
                 return
             malicious_type = "MALICIOUS_COHOST"
             blacklist_type = "BLACKLISTED_COHOST"
@@ -179,7 +176,9 @@ class sfp_phishtank(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with phishtank.com")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with phishtank.com"
+        )
 
         phish_id = self.queryBlacklist(eventData)
 
@@ -194,5 +193,6 @@ class sfp_phishtank(SpiderFootPlugin):
 
         evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
         self.notifyListeners(evt)
+
 
 # End of sfp_phishtank class

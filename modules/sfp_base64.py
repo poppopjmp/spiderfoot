@@ -19,21 +19,19 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_base64(SpiderFootPlugin):
 
     meta = {
-        'name': "Base64 Decoder",
-        'summary': "Identify Base64-encoded strings in URLs, often revealing interesting hidden information.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        "name": "Base64 Decoder",
+        "summary": "Identify Base64-encoded strings in URLs, often revealing interesting hidden information.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Content Analysis"],
     }
 
     # Default options
-    opts = {
-        'minlength': 10
-    }
+    opts = {"minlength": 10}
 
     # Option descriptions
     optdescs = {
-        'minlength': "The minimum length a string that looks like a base64-encoded string needs to be."
+        "minlength": "The minimum length a string that looks like a base64-encoded string needs to be."
     }
 
     def setup(self, sfc, userOpts=dict()):
@@ -69,7 +67,7 @@ class sfp_base64(SpiderFootPlugin):
             if self.checkForStop():
                 return
 
-            minlen = int(self.opts['minlength'])
+            minlen = int(self.opts["minlength"])
             if len(match) < minlen:
                 continue
 
@@ -93,5 +91,6 @@ class sfp_base64(SpiderFootPlugin):
 
             evt = SpiderFootEvent("BASE64_DATA", string, self.__name__, event)
             self.notifyListeners(evt)
+
 
 # End of sfp_base64 class

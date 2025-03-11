@@ -19,7 +19,7 @@ class sfp_c99(SpiderFootPlugin):
     meta = {
         "name": "C99",
         "summary": "Queries the C99 API which offers various data (geo location, proxy detection, phone lookup, etc).",
-        'flags': ["apikey"],
+        "flags": ["apikey"],
         "useCases": ["Footprint", "Passive", "Investigate"],
         "categories": ["Search Engines"],
         "dataSource": {
@@ -92,7 +92,7 @@ class sfp_c99(SpiderFootPlugin):
             "ACCOUNT_EXTERNAL_OWNED",
             "WEBSERVER_TECHNOLOGY",
             "PROVIDER_HOSTING",
-            "CO_HOSTED_SITE"
+            "CO_HOSTED_SITE",
         ]
 
     def query(self, path, queryParam, queryData):
@@ -123,7 +123,7 @@ class sfp_c99(SpiderFootPlugin):
             self.error(f"Error processing response from C99: {e}")
             return None
 
-        if not info.get('success', False):
+        if not info.get("success", False):
             return None
 
         return info
@@ -265,7 +265,8 @@ class sfp_c99(SpiderFootPlugin):
 
         if record:
             country = record.get("country_name")
-            region = record["region"].get("name") if record.get("region") else None
+            region = record["region"].get(
+                "name") if record.get("region") else None
             city = record.get("city")
             postalCode = record.get("postal_code")
             latitude = record.get("latitude")
@@ -351,25 +352,32 @@ class sfp_c99(SpiderFootPlugin):
             self.emitRawRirData(data, event)
 
     def emitHostname(self, data, event):
-        if not self.sf.validHost(data, self.opts['_internettlds']):
+        if not self.sf.validHost(data, self.opts["_internettlds"]):
             return
 
-        if self.opts["verify"] and not self.sf.resolveHost(data) and not self.sf.resolveHost6(data):
+        if (
+            self.opts["verify"] and
+            not self.sf.resolveHost(data) and
+            not self.sf.resolveHost6(data)
+        ):
             self.debug(f"Host {data} could not be resolved.")
             if self.getTarget().matches(data):
-                evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", data, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "INTERNET_NAME_UNRESOLVED", data, self.__name__, event
+                )
                 self.notifyListeners(evt)
             return
 
         if self.getTarget().matches(data):
-            evt = SpiderFootEvent('INTERNET_NAME', data, self.__name__, event)
+            evt = SpiderFootEvent("INTERNET_NAME", data, self.__name__, event)
             self.notifyListeners(evt)
-            if self.sf.isDomain(data, self.opts['_internettlds']):
-                evt = SpiderFootEvent('DOMAIN_NAME', data, self.__name__, event)
+            if self.sf.isDomain(data, self.opts["_internettlds"]):
+                evt = SpiderFootEvent(
+                    "DOMAIN_NAME", data, self.__name__, event)
                 self.notifyListeners(evt)
             return
 
-        if self.cohostcount < self.opts['maxcohost']:
+        if self.cohostcount < self.opts["maxcohost"]:
             if self.opts["verify"] and not self.sf.validateIP(data, event.data):
                 self.debug("Host no longer resolves to our IP.")
                 return
@@ -377,12 +385,12 @@ class sfp_c99(SpiderFootPlugin):
             if not self.opts["cohostsamedomain"]:
                 if self.getTarget().matches(data, includeParents=True):
                     self.debug(
-                        f"Skipping {data} because it is on the same domain."
-                    )
+                        f"Skipping {data} because it is on the same domain.")
                     return
 
             if self.cohostcount < self.opts["maxcohost"]:
-                evt = SpiderFootEvent("CO_HOSTED_SITE", data, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "CO_HOSTED_SITE", data, self.__name__, event)
                 self.notifyListeners(evt)
                 self.cohostcount += 1
 
@@ -419,13 +427,15 @@ class sfp_c99(SpiderFootPlugin):
         if eventName == "DOMAIN_NAME":
             subDomainData = self.query("subdomainfinder", "domain", eventData)
             subDomainData = (
-                subDomainData.get("subdomains") if subDomainData is not None else None
+                subDomainData.get(
+                    "subdomains") if subDomainData is not None else None
             )
 
             if isinstance(subDomainData, list):
                 self.emitSubDomainData(subDomainData, event)
 
-            domainHistoryData = self.query("domainhistory", "domain", eventData)
+            domainHistoryData = self.query(
+                "domainhistory", "domain", eventData)
             domainHistoryData = (
                 domainHistoryData.get("result") if domainHistoryData else None
             )
@@ -460,7 +470,8 @@ class sfp_c99(SpiderFootPlugin):
                 self.emitGeoIPData(geoIPData, event)
 
         if eventName == "USERNAME":
-            skypeResolverData = self.query("skyperesolver", "username", eventData)
+            skypeResolverData = self.query(
+                "skyperesolver", "username", eventData)
 
             if skypeResolverData:
                 self.emitSkypeResolverData(skypeResolverData, event)

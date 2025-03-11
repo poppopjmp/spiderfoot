@@ -19,33 +19,31 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_yandexdns(SpiderFootPlugin):
 
     meta = {
-        'name': "Yandex DNS",
-        'summary': "Check if a host would be blocked by Yandex DNS.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://yandex.com/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "Yandex DNS",
+        "summary": "Check if a host would be blocked by Yandex DNS.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://yandex.com/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://tech.yandex.com/",
                 "https://dns.yandex.com/advanced/",
             ],
-            'favIcon': "https://yastatic.net/iconostasis/_/tToKamh-mh5XlViKpgiJRQgjz1Q.png",
-            'logo': "https://yastatic.net/iconostasis/_/tToKamh-mh5XlViKpgiJRQgjz1Q.png",
-            'description': "Yandex.DNS is a free, recursive DNS service. "
+            "favIcon": "https://yastatic.net/iconostasis/_/tToKamh-mh5XlViKpgiJRQgjz1Q.png",
+            "logo": "https://yastatic.net/iconostasis/_/tToKamh-mh5XlViKpgiJRQgjz1Q.png",
+            "description": "Yandex.DNS is a free, recursive DNS service. "
             "Yandex.DNS' servers are located in Russia, CIS countries, and Western Europe."
             'In "Basic" mode, there is no traffic filtering. '
             'In "Safe" mode, protection from infected and fraudulent sites is provided. '
-            '"Family" mode enables protection from dangerous sites and blocks sites with adult content.'
-        }
+            '"Family" mode enables protection from dangerous sites and blocks sites with adult content.',
+        },
     }
 
-    opts = {
-    }
+    opts = {}
 
-    optdescs = {
-    }
+    optdescs = {}
 
     results = None
 
@@ -62,11 +60,7 @@ class sfp_yandexdns(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            "INTERNET_NAME",
-            "AFFILIATE_INTERNET_NAME",
-            "CO_HOSTED_SITE"
-        ]
+        return ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME", "CO_HOSTED_SITE"]
 
     def producedEvents(self):
         return [
@@ -129,11 +123,19 @@ class sfp_yandexdns(SpiderFootPlugin):
             if k not in self.checks:
                 continue
 
-            evt = SpiderFootEvent(blacklist_type, f"{self.checks[k]} [{eventData}]", self.__name__, event)
+            evt = SpiderFootEvent(
+                blacklist_type, f"{self.checks[k]} [{eventData}]", self.__name__, event
+            )
             self.notifyListeners(evt)
 
-            if k == '213.180.193.250':
-                evt = SpiderFootEvent(malicious_type, f"{self.checks[k]} [{eventData}]", self.__name__, event)
+            if k == "213.180.193.250":
+                evt = SpiderFootEvent(
+                    malicious_type,
+                    f"{self.checks[k]} [{eventData}]",
+                    self.__name__,
+                    event,
+                )
                 self.notifyListeners(evt)
+
 
 # End of sfp_yandexdns class

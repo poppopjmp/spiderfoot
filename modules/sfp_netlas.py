@@ -23,27 +23,27 @@ class sfp_netlas(SpiderFootPlugin):
     """
 
     meta = {
-        'name': "Netlas",
-        'summary': "Look up domain and IP address information from Netlas API.",
-        'flags': ["apikey"],
-        'useCases': ["Passive", "Footprint", "Investigate"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://netlas.io/",
-            'model': "FREE_NOAUTH_LIMITED",
-            'references': [
+        "name": "Netlas",
+        "summary": "Look up domain and IP address information from Netlas API.",
+        "flags": ["apikey"],
+        "useCases": ["Passive", "Footprint", "Investigate"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://netlas.io/",
+            "model": "FREE_NOAUTH_LIMITED",
+            "references": [
                 "https://netlas.io/",
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "Visit https://netlas.io/signup",
                 "Register a free account",
                 "Visit https://netlas.io/api/",
                 "Your API Key will be listed under 'API Key'.",
             ],
-            'favIcon': "https://netlas.io/favicon.ico",
-            'logo': "https://netlas.io/logo.png",
-            'description': "Netlas provides powerful APIs to help you enrich any user experience or automate any workflow."
-        }
+            "favIcon": "https://netlas.io/favicon.ico",
+            "logo": "https://netlas.io/logo.png",
+            "description": "Netlas provides powerful APIs to help you enrich any user experience or automate any workflow.",
+        },
     }
 
     # Default options
@@ -103,19 +103,23 @@ class sfp_netlas(SpiderFootPlugin):
         Returns:
             dict: Response data
         """
-        api_key = self.opts['api_key']
+        api_key = self.opts["api_key"]
         if not api_key:
             return None
 
-        params = urllib.parse.urlencode({
-            'api_key': api_key,
-            'query': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
-            'type': qryType
-        })
+        params = urllib.parse.urlencode(
+            {
+                "api_key": api_key,
+                "query": qry.encode("raw_unicode_escape").decode(
+                    "ascii", errors="replace"
+                ),
+                "type": qryType,
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://api.netlas.io/v1/search?{params}",
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
         time.sleep(1)
@@ -140,38 +144,38 @@ class sfp_netlas(SpiderFootPlugin):
             self.error("No response from Netlas API.")
             return None
 
-        if res['code'] == '429':
+        if res["code"] == "429":
             self.error("You are being rate-limited by Netlas API.")
             return None
 
-        if res['code'] == '401':
+        if res["code"] == "401":
             self.error("Unauthorized. Invalid Netlas API key.")
             self.errorState = True
             return None
 
-        if res['code'] == '422':
+        if res["code"] == "422":
             self.error("Usage quota reached. Insufficient API credit.")
             self.errorState = True
             return None
 
-        if res['code'] == '500' or res['code'] == '502' or res['code'] == '503':
+        if res["code"] == "500" or res["code"] == "502" or res["code"] == "503":
             self.error("Netlas API service is unavailable")
             self.errorState = True
             return None
 
-        if res['code'] == '204':
+        if res["code"] == "204":
             self.debug("No response data for target")
             return None
 
-        if res['code'] != '200':
+        if res["code"] != "200":
             self.error(f"Unexpected reply from Netlas API: {res['code']}")
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
 
@@ -212,32 +216,40 @@ class sfp_netlas(SpiderFootPlugin):
             if not data:
                 return
 
-            e = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            e = SpiderFootEvent("RAW_RIR_DATA", str(data),
+                                self.__name__, event)
             self.notifyListeners(e)
 
-            geoinfo = data.get('geoinfo')
-            if (geoinfo):
+            geoinfo = data.get("geoinfo")
+            if geoinfo:
                 e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
                 self.notifyListeners(e)
 
-        elif eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
+        elif eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
             data = self.queryNetlas(eventData, "ip")
 
             if not data:
                 return
 
-            e = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            e = SpiderFootEvent("RAW_RIR_DATA", str(data),
+                                self.__name__, event)
             self.notifyListeners(e)
 
-            geoinfo = data.get('geoinfo')
+            geoinfo = data.get("geoinfo")
             if geoinfo:
                 e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
                 self.notifyListeners(e)
 
-            latitude = data.get('latitude')
-            longitude = data.get('longitude')
+            latitude = data.get("latitude")
+            longitude = data.get("longitude")
             if latitude and longitude:
-                e = SpiderFootEvent("PHYSICAL_COORDINATES", f"{latitude}, {longitude}", self.__name__, event)
+                e = SpiderFootEvent(
+                    "PHYSICAL_COORDINATES",
+                    f"{latitude}, {longitude}",
+                    self.__name__,
+                    event,
+                )
                 self.notifyListeners(e)
+
 
 # End of sfp_netlas class

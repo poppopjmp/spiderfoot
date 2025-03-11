@@ -19,20 +19,18 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_hosting(SpiderFootPlugin):
 
     meta = {
-        'name': "Hosting Provider Identifier",
-        'summary': "Find out if any IP addresses identified fall within known 3rd party hosting ranges, e.g. Amazon, Azure, etc.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        "name": "Hosting Provider Identifier",
+        "summary": "Find out if any IP addresses identified fall within known 3rd party hosting ranges, e.g. Amazon, Azure, etc.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Content Analysis"],
     }
 
     # Default options
-    opts = {
-    }
+    opts = {}
 
     # Option descriptions
-    optdescs = {
-    }
+    optdescs = {}
 
     # Target
     results = None
@@ -47,7 +45,7 @@ class sfp_hosting(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ['IP_ADDRESS']
+        return ["IP_ADDRESS"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
@@ -59,17 +57,17 @@ class sfp_hosting(SpiderFootPlugin):
         data = dict()
         url = "https://raw.githubusercontent.com/client9/ipcat/master/datacenters.csv"
 
-        data['content'] = self.sf.cacheGet("sfipcat", 48)
-        if data['content'] is None:
-            data = self.sf.fetchUrl(url, useragent=self.opts['_useragent'])
+        data["content"] = self.sf.cacheGet("sfipcat", 48)
+        if data["content"] is None:
+            data = self.sf.fetchUrl(url, useragent=self.opts["_useragent"])
 
-            if data['content'] is None:
+            if data["content"] is None:
                 self.error("Unable to fetch " + url)
                 return None
 
-            self.sf.cachePut("sfipcat", data['content'])
+            self.sf.cachePut("sfipcat", data["content"])
 
-        for line in data['content'].split('\n'):
+        for line in data["content"].split("\n"):
             if "," not in line:
                 continue
             try:
@@ -78,7 +76,9 @@ class sfp_hosting(SpiderFootPlugin):
                 continue
 
             try:
-                if IPAddress(qaddr) > IPAddress(start) and IPAddress(qaddr) < IPAddress(end):
+                if IPAddress(qaddr) > IPAddress(start) and IPAddress(qaddr) < IPAddress(
+                    end
+                ):
                     return [title, url]
             except Exception as e:
                 self.debug("Encountered an issue processing an IP: " + str(e))
@@ -101,8 +101,11 @@ class sfp_hosting(SpiderFootPlugin):
 
         ret = self.queryAddr(eventData)
         if ret:
-            evt = SpiderFootEvent("PROVIDER_HOSTING", ret[0] + ": " + ret[1],
-                                  self.__name__, event)
+            evt = SpiderFootEvent(
+                "PROVIDER_HOSTING", ret[0] + ": " +
+                ret[1], self.__name__, event
+            )
             self.notifyListeners(evt)
+
 
 # End of sfp_hosting class

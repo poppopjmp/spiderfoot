@@ -20,28 +20,28 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_abstractapi(SpiderFootPlugin):
 
     meta = {
-        'name': "AbstractAPI",
-        'summary': "Look up domain, phone and IP address information from AbstractAPI.",
-        'flags': ["apikey"],
-        'useCases': ["Passive", "Footprint", "Investigate"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://app.abstractapi.com/",
-            'model': "FREE_NOAUTH_LIMITED",
-            'references': [
+        "name": "AbstractAPI",
+        "summary": "Look up domain, phone and IP address information from AbstractAPI.",
+        "flags": ["apikey"],
+        "useCases": ["Passive", "Footprint", "Investigate"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://app.abstractapi.com/",
+            "model": "FREE_NOAUTH_LIMITED",
+            "references": [
                 "https://app.abstractapi.com/",
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "Visit https://app.abstractapi.com/users/signup",
                 "Register a free account",
                 "Visit https://app.abstractapi.com/api/",
                 "Visit each API page and click on 'Try it out'",
                 "Your API Key will be listed under 'This is your private API key, specific to this API.'",
             ],
-            'favIcon': "https://app.abstractapi.com/favicon.ico",
-            'logo': "https://app.abstractapi.com/logo192.png",
-            'description': "Abstract provides powerful APIs to help you enrich any user experience or automate any workflow."
-        }
+            "favIcon": "https://app.abstractapi.com/favicon.ico",
+            "logo": "https://app.abstractapi.com/logo192.png",
+            "description": "Abstract provides powerful APIs to help you enrich any user experience or automate any workflow.",
+        },
     }
 
     opts = {
@@ -71,7 +71,14 @@ class sfp_abstractapi(SpiderFootPlugin):
         return ["DOMAIN_NAME", "PHONE_NUMBER", "IP_ADDRESS", "IPV6_ADDRESS"]
 
     def producedEvents(self):
-        return ["COMPANY_NAME", "SOCIAL_MEDIA", "GEOINFO", "PHYSICAL_COORDINATES", "PROVIDER_TELCO", "RAW_RIR_DATA"]
+        return [
+            "COMPANY_NAME",
+            "SOCIAL_MEDIA",
+            "GEOINFO",
+            "PHYSICAL_COORDINATES",
+            "PROVIDER_TELCO",
+            "RAW_RIR_DATA",
+        ]
 
     def parseApiResponse(self, res: dict):
         if not res:
@@ -79,38 +86,38 @@ class sfp_abstractapi(SpiderFootPlugin):
             return None
 
         # Rate limited to one request per second
-        if res['code'] == '429':
+        if res["code"] == "429":
             self.error("You are being rate-limited by AbstractAPI.")
             return None
 
-        if res['code'] == '401':
+        if res["code"] == "401":
             self.error("Unauthorized. Invalid AbstractAPI API key.")
             self.errorState = True
             return None
 
-        if res['code'] == '422':
+        if res["code"] == "422":
             self.error("Usage quota reached. Insufficient API credit.")
             self.errorState = True
             return None
 
-        if res['code'] == '500' or res['code'] == '502' or res['code'] == '503':
+        if res["code"] == "500" or res["code"] == "502" or res["code"] == "503":
             self.error("Abstract API service is unavailable")
             self.errorState = True
             return None
 
-        if res['code'] == '204':
+        if res["code"] == "204":
             self.debug("No response data for target")
             return None
 
-        if res['code'] != '200':
+        if res["code"] != "200":
             self.error(f"Unexpected reply from AbstractAPI: {res['code']}")
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
 
@@ -126,24 +133,29 @@ class sfp_abstractapi(SpiderFootPlugin):
             dict: company information
         """
 
-        api_key = self.opts['companyenrichment_api_key']
+        api_key = self.opts["companyenrichment_api_key"]
         if not api_key:
             return None
 
-        params = urllib.parse.urlencode({
-            'api_key': api_key,
-            'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
-        })
+        params = urllib.parse.urlencode(
+            {
+                "api_key": api_key,
+                "domain": qry.encode("raw_unicode_escape").decode(
+                    "ascii", errors="replace"
+                ),
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://companyenrichment.abstractapi.com/v1/?{params}",
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
         time.sleep(1)
 
         if not res:
-            self.debug("No response from AbstractAPI Company Enrichment API endpoint")
+            self.debug(
+                "No response from AbstractAPI Company Enrichment API endpoint")
             return None
 
         return self.parseApiResponse(res)
@@ -158,24 +170,29 @@ class sfp_abstractapi(SpiderFootPlugin):
             dict: phone number information
         """
 
-        api_key = self.opts['phonevalidation_api_key']
+        api_key = self.opts["phonevalidation_api_key"]
         if not api_key:
             return None
 
-        params = urllib.parse.urlencode({
-            'api_key': api_key,
-            'phone': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
-        })
+        params = urllib.parse.urlencode(
+            {
+                "api_key": api_key,
+                "phone": qry.encode("raw_unicode_escape").decode(
+                    "ascii", errors="replace"
+                ),
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://phonevalidation.abstractapi.com/v1/?{params}",
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
         time.sleep(1)
 
         if not res:
-            self.debug("No response from AbstractAPI Phone Validation API endpoint")
+            self.debug(
+                "No response from AbstractAPI Phone Validation API endpoint")
             return None
 
         return self.parseApiResponse(res)
@@ -190,24 +207,29 @@ class sfp_abstractapi(SpiderFootPlugin):
             dict: location information
         """
 
-        api_key = self.opts['ipgeolocation_api_key']
+        api_key = self.opts["ipgeolocation_api_key"]
         if not api_key:
             return None
 
-        params = urllib.parse.urlencode({
-            'api_key': api_key,
-            'ip_address': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
-        })
+        params = urllib.parse.urlencode(
+            {
+                "api_key": api_key,
+                "ip_address": qry.encode("raw_unicode_escape").decode(
+                    "ascii", errors="replace"
+                ),
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://ipgeolocation.abstractapi.com/v1/?{params}",
-            useragent=self.opts['_useragent']
+            useragent=self.opts["_useragent"],
         )
 
         time.sleep(1)
 
         if not res:
-            self.debug("No response from AbstractAPI Phone Validation API endpoint")
+            self.debug(
+                "No response from AbstractAPI Phone Validation API endpoint")
             return None
 
         return self.parseApiResponse(res)
@@ -225,7 +247,11 @@ class sfp_abstractapi(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if self.opts["companyenrichment_api_key"] == "" and self.opts["phonevalidation_api_key"] == "" and self.opts["ipgeolocation_api_key"] == "":
+        if (
+            self.opts["companyenrichment_api_key"] == "" and
+            self.opts["phonevalidation_api_key"] == "" and
+            self.opts["ipgeolocation_api_key"] == ""
+        ):
             self.error(
                 f"You enabled {self.__class__.__name__} but did not set any API keys!"
             )
@@ -247,31 +273,35 @@ class sfp_abstractapi(SpiderFootPlugin):
             if not data:
                 return
 
-            name = data.get('name')
+            name = data.get("name")
             if not name:
                 return
 
-            if name == 'To Be Confirmed':
+            if name == "To Be Confirmed":
                 return
 
-            e = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            e = SpiderFootEvent("RAW_RIR_DATA", str(data),
+                                self.__name__, event)
             self.notifyListeners(e)
 
             e = SpiderFootEvent("COMPANY_NAME", name, self.__name__, event)
             self.notifyListeners(e)
 
-            linkedin_url = data.get('linkedin_url')
+            linkedin_url = data.get("linkedin_url")
             if linkedin_url:
-                if linkedin_url.startswith('linkedin.com'):
+                if linkedin_url.startswith("linkedin.com"):
                     linkedin_url = f"https://{linkedin_url}"
-                e = SpiderFootEvent("SOCIAL_MEDIA", f"LinkedIn (Company): <SFURL>{linkedin_url}</SFURL>", self.__name__, event)
+                e = SpiderFootEvent(
+                    "SOCIAL_MEDIA",
+                    f"LinkedIn (Company): <SFURL>{linkedin_url}</SFURL>",
+                    self.__name__,
+                    event,
+                )
                 self.notifyListeners(e)
 
-            locality = data.get('locality')
-            country = data.get('country')
-            geoinfo = ', '.join(
-                filter(None, [locality, country])
-            )
+            locality = data.get("locality")
+            country = data.get("country")
+            geoinfo = ", ".join(filter(None, [locality, country]))
 
             if geoinfo:
                 e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
@@ -289,33 +319,33 @@ class sfp_abstractapi(SpiderFootPlugin):
             if not data:
                 return
 
-            valid = data.get('valid')
+            valid = data.get("valid")
             if not valid:
                 return
 
-            e = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            e = SpiderFootEvent("RAW_RIR_DATA", str(data),
+                                self.__name__, event)
             self.notifyListeners(e)
 
-            carrier = data.get('carrier')
+            carrier = data.get("carrier")
             if carrier:
-                e = SpiderFootEvent("PROVIDER_TELCO", carrier, self.__name__, event)
+                e = SpiderFootEvent(
+                    "PROVIDER_TELCO", carrier, self.__name__, event)
                 self.notifyListeners(e)
 
-            location = data.get('location')
-            country = data.get('country')
+            location = data.get("location")
+            country = data.get("country")
             country_name = None
             if country:
-                country_name = country.get('name')
+                country_name = country.get("name")
 
-            geoinfo = ', '.join(
-                filter(None, [location, country_name])
-            )
+            geoinfo = ", ".join(filter(None, [location, country_name]))
 
             if geoinfo:
                 e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
                 self.notifyListeners(e)
 
-        elif eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
+        elif eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
             if self.opts["ipgeolocation_api_key"] == "":
                 self.info(
                     f"No API key set for IP Geolocation API endpoint. Ignoring {eventData}"
@@ -327,18 +357,21 @@ class sfp_abstractapi(SpiderFootPlugin):
             if not data:
                 return
 
-            e = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            e = SpiderFootEvent("RAW_RIR_DATA", str(data),
+                                self.__name__, event)
             self.notifyListeners(e)
 
-            geoinfo = ', '.join(
+            geoinfo = ", ".join(
                 [
-                    _f for _f in [
-                        data.get('city'),
-                        data.get('region'),
-                        data.get('postal_code'),
-                        data.get('country'),
-                        data.get('continent'),
-                    ] if _f
+                    _f
+                    for _f in [
+                        data.get("city"),
+                        data.get("region"),
+                        data.get("postal_code"),
+                        data.get("country"),
+                        data.get("continent"),
+                    ]
+                    if _f
                 ]
             )
 
@@ -346,10 +379,16 @@ class sfp_abstractapi(SpiderFootPlugin):
                 e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
                 self.notifyListeners(e)
 
-            latitude = data.get('latitude')
-            longitude = data.get('longitude')
+            latitude = data.get("latitude")
+            longitude = data.get("longitude")
             if latitude and longitude:
-                e = SpiderFootEvent("PHYSICAL_COORDINATES", f"{latitude}, {longitude}", self.__name__, event)
+                e = SpiderFootEvent(
+                    "PHYSICAL_COORDINATES",
+                    f"{latitude}, {longitude}",
+                    self.__name__,
+                    event,
+                )
                 self.notifyListeners(e)
+
 
 # End of sfp_abstractapi class

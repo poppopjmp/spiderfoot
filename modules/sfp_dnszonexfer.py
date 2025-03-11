@@ -21,20 +21,16 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_dnszonexfer(SpiderFootPlugin):
 
     meta = {
-        'name': "DNS Zone Transfer",
-        'summary': "Attempts to perform a full DNS zone transfer.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate"],
-        'categories': ["DNS"]
+        "name": "DNS Zone Transfer",
+        "summary": "Attempts to perform a full DNS zone transfer.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate"],
+        "categories": ["DNS"],
     }
 
-    opts = {
-        "timeout": 30
-    }
+    opts = {"timeout": 30}
 
-    optdescs = {
-        "timeout": "Timeout in seconds"
-    }
+    optdescs = {"timeout": "Timeout in seconds"}
 
     events = None
 
@@ -47,7 +43,7 @@ class sfp_dnszonexfer(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return ['PROVIDER_DNS']
+        return ["PROVIDER_DNS"]
 
     def producedEvents(self):
         return ["RAW_DNS_RECORDS", "INTERNET_NAME"]
@@ -72,8 +68,8 @@ class sfp_dnszonexfer(SpiderFootPlugin):
         self.events[eventDataHash] = True
 
         res = dns.resolver.Resolver()
-        if self.opts.get('_dnsserver', "") != "":
-            res.nameservers = [self.opts['_dnsserver']]
+        if self.opts.get("_dnsserver", "") != "":
+            res.nameservers = [self.opts["_dnsserver"]]
 
         # Get the name server's IP. This is to avoid DNS leaks
         # when attempting to resolve the name server during
@@ -84,7 +80,9 @@ class sfp_dnszonexfer(SpiderFootPlugin):
                 return
 
             if not nsips:
-                self.error("Couldn't resolve the name server, so not attempting zone transfer.")
+                self.error(
+                    "Couldn't resolve the name server, so not attempting zone transfer."
+                )
                 return
 
             for n in nsips:
@@ -98,17 +96,25 @@ class sfp_dnszonexfer(SpiderFootPlugin):
             self.debug("Trying for name: " + name)
             try:
                 ret = list()
-                z = dns.zone.from_xfr(dns.query.xfr(nsip, name, timeout=int(self.opts["timeout"])))
+                z = dns.zone.from_xfr(
+                    dns.query.xfr(nsip, name, timeout=int(
+                        self.opts["timeout"]))
+                )
                 names = list(z.nodes.keys())
                 for n in names:
                     ret.append(z[n].to_text(n))
 
-                evt = SpiderFootEvent("RAW_DNS_RECORDS", "\n".join(ret), self.__name__, parentEvent)
+                evt = SpiderFootEvent(
+                    "RAW_DNS_RECORDS", "\n".join(
+                        ret), self.__name__, parentEvent
+                )
                 self.notifyListeners(evt)
 
                 # Try and pull out individual records
                 for row in ret:
-                    pat = re.compile(r"^(\S+)\.?\s+\d+\s+IN\s+[AC].*", re.IGNORECASE | re.DOTALL)
+                    pat = re.compile(
+                        r"^(\S+)\.?\s+\d+\s+IN\s+[AC].*", re.IGNORECASE | re.DOTALL
+                    )
                     grps = re.findall(pat, row)
                     if len(grps) > 0:
                         for strdata in grps:
@@ -118,10 +124,15 @@ class sfp_dnszonexfer(SpiderFootPlugin):
                             else:
                                 strdata = strdata + "." + name
 
-                            evt = SpiderFootEvent("INTERNET_NAME", strdata, self.__name__, parentEvent)
+                            evt = SpiderFootEvent(
+                                "INTERNET_NAME", strdata, self.__name__, parentEvent
+                            )
                             self.notifyListeners(evt)
 
             except Exception as e:
-                self.info(f"Unable to perform DNS zone transfer for {eventData} ({name}): {e}")
+                self.info(
+                    f"Unable to perform DNS zone transfer for {eventData} ({name}): {e}"
+                )
+
 
 # End of sfp_dnszonexfer class

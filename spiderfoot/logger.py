@@ -9,30 +9,32 @@ This module provides logging capabilities for SpiderFoot, including:
 
 import atexit
 import logging
-import os
 import socket
-import sqlite3
 import sys
 import time
 from contextlib import suppress
-from logging.handlers import QueueHandler, QueueListener, TimedRotatingFileHandler, SysLogHandler
+from logging.handlers import (
+    QueueHandler,
+    QueueListener,
+    TimedRotatingFileHandler,
+)
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
 
 
 class SafeQueueListener(QueueListener):
     """Thread-safe implementation of QueueListener for handling logs from multiple threads.
-    
+
     This class extends QueueListener to provide thread-safety when processing
     log records from multiple threads through a queue.
     """
-    
+
     def dequeue(self, block):
         """Get a record from the queue.
-        
+
         Args:
             block (bool): Whether to block if queue is empty
-            
+
         Returns:
             LogRecord: A log record from the queue or None
         """
@@ -55,7 +57,7 @@ class SafeQueueListener(QueueListener):
 
     def enqueue(self, record):
         """Put a record into the queue.
-        
+
         Args:
             record (LogRecord): The log record to queue
         """
@@ -79,14 +81,14 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         self.opts = opts
         self.dbh = None
         self.batch = []
-        if self.opts.get('_debug', False):
+        if self.opts.get("_debug", False):
             self.batch_size = 100
         else:
             self.batch_size = 5
         self.shutdown_hook = False
         super().__init__()
 
-    def emit(self, record: 'logging.LogRecord') -> None:
+    def emit(self, record: "logging.LogRecord") -> None:
         """Emit a log record.
 
         Args:
@@ -98,8 +100,10 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         scanId = getattr(record, "scanId", None)
         component = getattr(record, "module", None)
         if scanId:
-            level = ("STATUS" if record.levelname == "INFO" else record.levelname)
-            self.batch.append((scanId, level, record.getMessage(), component, time.time()))
+            level = "STATUS" if record.levelname == "INFO" else record.levelname
+            self.batch.append(
+                (scanId, level, record.getMessage(), component, time.time())
+            )
             if len(self.batch) >= self.batch_size:
                 self.logBatch()
 
@@ -123,10 +127,10 @@ class SpiderFootSqliteLogHandler(logging.Handler):
 
 class SpiderFootLogger:
     """SpiderFoot logger class"""
-    
+
     def __init__(self, logname, refresh_rate=1):
         """Initialize SpiderFoot logger
-        
+
         Args:
             logname (str): name of the log
             refresh_rate (int): how quickly to refresh the log
@@ -142,51 +146,53 @@ class SpiderFootLogger:
     @log.setter
     def log(self, value):
         self._logger = value
-    
+
     def debug(self, message):
         """Log debug message
-        
+
         Args:
             message (str): message to log
         """
         self._logger.debug(message)
-    
+
     def info(self, message):
         """Log info message
-        
+
         Args:
             message (str): message to log
         """
         self._logger.info(message)
-    
+
     def warning(self, message):
         """Log warning message
-        
+
         Args:
             message (str): message to log
         """
         self._logger.warning(message)
-    
+
     def error(self, message):
         """Log error message
-        
+
         Args:
             message (str): message to log
         """
         self._logger.error(message)
-    
+
     def critical(self, message):
         """Log critical message
-        
+
         Args:
             message (str): message to log
         """
         self._logger.critical(message)
 
 
-def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.QueueListener':
+def logListenerSetup(
+    loggingQueue, opts: dict = None
+) -> "logging.handlers.QueueListener":
     """Create and start a SpiderFoot log listener in its own thread.
-    
+
     This function sets up a centralized logging system that safely handles logs
     from multiple threads by using a queue-based approach. All log handlers are
     managed by a single listener thread to avoid file access conflicts.
@@ -203,7 +209,7 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
         opts = dict()
     doLogging = opts.get("__logging", True)
     debug = opts.get("_debug", False)
-    logLevel = (logging.DEBUG if debug else logging.INFO)
+    logLevel = logging.DEBUG if debug else logging.INFO
 
     # Log to terminal
     console_handler = logging.StreamHandler(sys.stderr)
@@ -211,26 +217,21 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
     # Log debug messages to file
     log_dir = SpiderFootHelpers.logPath()
     debug_handler = TimedRotatingFileHandler(
-        f"{log_dir}/spiderfoot.debug.log",
-        when="d",
-        interval=1,
-        backupCount=30
+        f"{log_dir}/spiderfoot.debug.log", when="d", interval=1, backupCount=30
     )
 
     # Log error messages to file
     error_handler = TimedRotatingFileHandler(
-        f"{log_dir}/spiderfoot.error.log",
-        when="d",
-        interval=1,
-        backupCount=30
+        f"{log_dir}/spiderfoot.error.log", when="d", interval=1, backupCount=30
     )
 
     # Get hostname for syslog format
     hostname = socket.gethostname()
-    
+
     # Log to syslog format file
     syslog_handler = logging.FileHandler(f"{log_dir}/spiderfoot.syslog.log")
-    syslog_format = logging.Formatter(f"%(asctime)s {hostname} %(name)s: %(message)s")
+    syslog_format = logging.Formatter(
+        f"%(asctime)s {hostname} %(name)s: %(message)s")
     syslog_handler.setFormatter(syslog_format)
 
     # Filter by log level
@@ -240,14 +241,19 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
     syslog_handler.addFilter(lambda x: x.levelno >= logLevel)
 
     # Set log format
-    log_format = logging.Formatter("%(asctime)s [%(levelname)s] %(module)s : %(message)s")
-    debug_format = logging.Formatter("%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s : %(message)s")
+    log_format = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(module)s : %(message)s"
+    )
+    debug_format = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s : %(message)s"
+    )
     console_handler.setFormatter(log_format)
     debug_handler.setFormatter(debug_format)
     error_handler.setFormatter(debug_format)
 
     if doLogging:
-        handlers = [console_handler, debug_handler, error_handler, syslog_handler]
+        handlers = [console_handler, debug_handler,
+                    error_handler, syslog_handler]
     else:
         handlers = []
 
@@ -256,16 +262,16 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
         sqlite_handler.setLevel(logLevel)
         sqlite_handler.setFormatter(log_format)
         handlers.append(sqlite_handler)
-    
+
     spiderFootLogListener = SafeQueueListener(loggingQueue, *handlers)
     spiderFootLogListener.start()
     atexit.register(stop_listener, spiderFootLogListener)
     return spiderFootLogListener
 
 
-def logWorkerSetup(loggingQueue) -> 'logging.Logger':
+def logWorkerSetup(loggingQueue) -> "logging.Logger":
     """Create a thread-safe root SpiderFoot logger.
-    
+
     Creates a thread-safe logger that sends all log records to a queue,
     which is then processed by a single listener thread. This approach ensures
     thread-safety by centralizing all I/O operations to a single thread.
@@ -285,7 +291,7 @@ def logWorkerSetup(loggingQueue) -> 'logging.Logger':
     return log
 
 
-def stop_listener(listener: 'logging.handlers.QueueListener') -> None:
+def stop_listener(listener: "logging.handlers.QueueListener") -> None:
     """Stop the log listener.
 
     Args:

@@ -19,7 +19,7 @@ class sfp_hostio(SpiderFootPlugin):
     meta = {
         "name": "Host.io",
         "summary": "Obtain information about domain names from host.io.",
-        'flags': ["apikey"],
+        "flags": ["apikey"],
         "useCases": ["Passive"],
         "categories": ["Passive DNS"],
         "dataSource": {
@@ -32,7 +32,8 @@ class sfp_hostio(SpiderFootPlugin):
                 "Visit https://host.io/dashboard and use the authentication token provided",
             ],
             "favIcon": "https://host.io/static/images/hostio/favicon.png?v2",
-            "logo": "https://host.io/static/images/hostio/favicon.png?v2",  # Seems like they embed it as SVG
+            # Seems like they embed it as SVG
+            "logo": "https://host.io/static/images/hostio/favicon.png?v2",
             "description": "We collect data on every known domain name, from every TLD, and update it every month. "
             "Our data includes DNS records and website data for each of the domains."
             "We process terabytes of data and summarize it to produce our final results. "
@@ -91,7 +92,8 @@ class sfp_hostio(SpiderFootPlugin):
             error_str = f", message {error_message}"
         else:
             error_str = ""
-        self.info(f"Failed to get results for {qry}, code {res['code']}{error_str}")
+        self.info(
+            f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
     def query(self, qry):
         res = self.sf.fetchUrl(
@@ -150,7 +152,8 @@ class sfp_hostio(SpiderFootPlugin):
                 # Not supporting co-hosted sites yet
                 if not self.sf.validIP(address):
                     continue
-                evt = SpiderFootEvent("IP_ADDRESS", address, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "IP_ADDRESS", address, self.__name__, event)
                 self.notifyListeners(evt)
                 found = True
 
@@ -162,7 +165,12 @@ class sfp_hostio(SpiderFootPlugin):
                     self.notifyListeners(loc_evt)
                     found = True
 
-                geo_info = ', '.join(filter(None, (ip_data.get(k) for k in ("city", "region", "country"))))
+                geo_info = ", ".join(
+                    filter(
+                        None, (ip_data.get(k)
+                               for k in ("city", "region", "country"))
+                    )
+                )
                 if geo_info:
                     geo_info_evt = SpiderFootEvent(
                         "GEOINFO", geo_info, self.__name__, evt
@@ -178,8 +186,8 @@ class sfp_hostio(SpiderFootPlugin):
                     if isinstance(email_data, dict):
                         value = email_data["value"]
                         if value and isinstance(value, str):
-                            for email in value.split(','):
-                                email = email.strip('.')
+                            for email in value.split(","):
+                                email = email.strip(".")
                                 evt = SpiderFootEvent(
                                     "EMAILADDR", email, self.__name__, event
                                 )

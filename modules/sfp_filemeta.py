@@ -28,23 +28,23 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_filemeta(SpiderFootPlugin):
 
     meta = {
-        'name': "File Metadata Extractor",
-        'summary': "Extracts meta data from documents and images.",
-        'flags': [],
-        'useCases': ["Footprint"],
-        'categories': ["Content Analysis"]
+        "name": "File Metadata Extractor",
+        "summary": "Extracts meta data from documents and images.",
+        "flags": [],
+        "useCases": ["Footprint"],
+        "categories": ["Content Analysis"],
     }
 
     # Default options
     opts = {
-        'fileexts': ["docx", "pptx", 'pdf', 'jpg', 'jpeg', 'tiff', 'tif'],
-        'timeout': 300
+        "fileexts": ["docx", "pptx", "pdf", "jpg", "jpeg", "tiff", "tif"],
+        "timeout": 300,
     }
 
     # Option descriptions
     optdescs = {
-        'fileexts': "File extensions of files you want to analyze the meta data of (only PDF, DOCX, XLSX and PPTX are supported.)",
-        'timeout': "Download timeout for files, in seconds."
+        "fileexts": "File extensions of files you want to analyze the meta data of (only PDF, DOCX, XLSX and PPTX are supported.)",
+        "timeout": "Download timeout for files, in seconds.",
     }
 
     results = None
@@ -80,23 +80,30 @@ class sfp_filemeta(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        for fileExt in self.opts['fileexts']:
+        for fileExt in self.opts["fileexts"]:
             if self.checkForStop():
                 return
 
             if "." + fileExt.lower() in eventData.lower():
                 # Fetch the file, allow much more time given that these files are
                 # typically large.
-                ret = self.sf.fetchUrl(eventData, timeout=self.opts['timeout'],
-                                       useragent=self.opts['_useragent'], disableContentEncoding=True,
-                                       sizeLimit=10000000,
-                                       verify=False)
-                if ret['content'] is None:
-                    self.error(f"Unable to fetch file for meta analysis: {eventData}")
+                ret = self.sf.fetchUrl(
+                    eventData,
+                    timeout=self.opts["timeout"],
+                    useragent=self.opts["_useragent"],
+                    disableContentEncoding=True,
+                    sizeLimit=10000000,
+                    verify=False,
+                )
+                if ret["content"] is None:
+                    self.error(
+                        f"Unable to fetch file for meta analysis: {eventData}")
                     return
 
-                if len(ret['content']) < 512:
-                    self.error(f"Strange content encountered, size of {len(ret['content'])}")
+                if len(ret["content"]) < 512:
+                    self.error(
+                        f"Strange content encountered, size of {len(ret['content'])}"
+                    )
                     return
 
                 meta = None
@@ -104,19 +111,20 @@ class sfp_filemeta(SpiderFootPlugin):
                 # Based on the file extension, handle it
                 if fileExt.lower() == "pdf":
                     try:
-                        raw = io.BytesIO(ret['content'])
+                        raw = io.BytesIO(ret["content"])
                         # data = metapdf.MetaPdfReader().read_metadata(raw)
                         pdf = PyPDF2.PdfFileReader(raw, strict=False)
                         data = pdf.getDocumentInfo()
                         meta = str(data)
                         self.debug("Obtained meta data from " + eventData)
                     except Exception as e:
-                        self.error(f"Unable to parse meta data from: {eventData} ({e})")
+                        self.error(
+                            f"Unable to parse meta data from: {eventData} ({e})")
                         return
 
                 if fileExt.lower() in ["docx"]:
                     try:
-                        c = io.BytesIO(ret['content'])
+                        c = io.BytesIO(ret["content"])
                         doc = docx.Document(c)
                         mtype = mimetypes.guess_type(eventData)[0]
                         self.debug("Office type: " + str(mtype))
@@ -125,12 +133,13 @@ class sfp_filemeta(SpiderFootPlugin):
                         data = [_f for _f in [a, c] if _f]
                         meta = ", ".join(data)
                     except Exception as e:
-                        self.error(f"Unable to process file: {eventData} ({e})")
+                        self.error(
+                            f"Unable to process file: {eventData} ({e})")
                         return
 
                 if fileExt.lower() in ["pptx"]:
                     try:
-                        c = io.BytesIO(ret['content'])
+                        c = io.BytesIO(ret["content"])
                         doc = pptx.Presentation(c)
                         mtype = mimetypes.guess_type(eventData)[0]
                         self.debug("Office type: " + str(mtype))
@@ -139,46 +148,53 @@ class sfp_filemeta(SpiderFootPlugin):
                         data = [_f for _f in [a, c] if _f]
                         meta = ", ".join(data)
                     except Exception as e:
-                        self.error(f"Unable to process file: {eventData} ({e})")
+                        self.error(
+                            f"Unable to process file: {eventData} ({e})")
                         return
 
                 if fileExt.lower() in ["jpg", "jpeg", "tiff"]:
                     try:
-                        raw = io.BytesIO(ret['content'])
+                        raw = io.BytesIO(ret["content"])
                         data = exifread.process_file(raw)
                         if data is None or len(data) == 0:
                             continue
                         meta = str(data)
                     except Exception as e:
-                        self.error(f"Unable to parse meta data from: {eventData} ({e})")
+                        self.error(
+                            f"Unable to parse meta data from: {eventData} ({e})")
                         return
 
                 if meta is not None and data is not None:
-                    rawevt = SpiderFootEvent("RAW_FILE_META_DATA", meta,
-                                             self.__name__, event)
+                    rawevt = SpiderFootEvent(
+                        "RAW_FILE_META_DATA", meta, self.__name__, event
+                    )
                     self.notifyListeners(rawevt)
 
                     val = list()
                     try:
                         if "/Producer" in data:
-                            val.append(str(data['/Producer']))
+                            val.append(str(data["/Producer"]))
 
                         if "/Creator" in data:
-                            val.append(str(data['/Creator']))
+                            val.append(str(data["/Creator"]))
 
                         if "Application" in data:
-                            val.append(str(data['Application']))
+                            val.append(str(data["Application"]))
 
                         if "Image Software" in data:
-                            val.append(str(data['Image Software']))
+                            val.append(str(data["Image Software"]))
                     except Exception as e:
-                        self.error("Failed to parse PDF, " + eventData + ": " + str(e))
+                        self.error("Failed to parse PDF, " +
+                                   eventData + ": " + str(e))
                         return
 
                     for v in val:
                         if v and not isinstance(v, pypdf.generic.NullObject):
                             self.debug("VAL: " + str(val))
                             # Strip non-ASCII
-                            v = ''.join([i if ord(i) < 128 else ' ' for i in v])
-                            evt = SpiderFootEvent("SOFTWARE_USED", v, self.__name__, rawevt)
+                            v = "".join(
+                                [i if ord(i) < 128 else " " for i in v])
+                            evt = SpiderFootEvent(
+                                "SOFTWARE_USED", v, self.__name__, rawevt
+                            )
                             self.notifyListeners(evt)

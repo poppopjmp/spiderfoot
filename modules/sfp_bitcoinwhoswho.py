@@ -18,41 +18,37 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 class sfp_bitcoinwhoswho(SpiderFootPlugin):
     meta = {
-        'name': "Bitcoin Who's Who",
-        'summary': "Check for Bitcoin addresses against the Bitcoin Who's Who database of suspect/malicious addresses.",
-        'flags': ["apikey"],
-        'useCases': ["Passive", "Investigate"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://bitcoinwhoswho.com/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
-                "https://bitcoinwhoswho.com/api"
-            ],
-            'apiKeyInstructions': [
+        "name": "Bitcoin Who's Who",
+        "summary": "Check for Bitcoin addresses against the Bitcoin Who's Who database of suspect/malicious addresses.",
+        "flags": ["apikey"],
+        "useCases": ["Passive", "Investigate"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://bitcoinwhoswho.com/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": ["https://bitcoinwhoswho.com/api"],
+            "apiKeyInstructions": [
                 "Visit https://bitcoinwhoswho.com/signup",
                 "Register a free account",
                 "Verify your email and sign into your account",
                 "Visit https://bitcoinwhoswho.com/api/register and request an API Key",
-                "Wait for a few days, you'll receive it to your email"
+                "Wait for a few days, you'll receive it to your email",
             ],
-            'favIcon': "https://bitcoinwhoswho.com/public/images/ico/favicon.ico",
-            'logo': "https://bitcoinwhoswho.com/public/images/logo2.png",
-            'description': (
+            "favIcon": "https://bitcoinwhoswho.com/public/images/ico/favicon.ico",
+            "logo": "https://bitcoinwhoswho.com/public/images/logo2.png",
+            "description": (
                 "Bitcoin Who's Who is dedicated to profiling the extraordinary members of the bitcoin "
                 "ecosystem.Our goal is to help you verify a bitcoin address owner and avoid a bitcoin "
                 "scam or fraud."
             ),
-        }
+        },
     }
 
     opts = {
-        'api_key': '',
+        "api_key": "",
     }
 
-    optdescs = {
-        "api_key": "Bitcoin Who's Who API Key."
-    }
+    optdescs = {"api_key": "Bitcoin Who's Who API Key."}
 
     results = None
 
@@ -86,7 +82,8 @@ class sfp_bitcoinwhoswho(SpiderFootPlugin):
         try:
             return json.loads(res["content"])
         except Exception as e:
-            self.error(f"Error processing JSON response from {self.meta['name']}: {e}")
+            self.error(
+                f"Error processing JSON response from {self.meta['name']}: {e}")
 
         return None
 
@@ -102,7 +99,11 @@ class sfp_bitcoinwhoswho(SpiderFootPlugin):
 
         scams = data.get("scams", [])
         if scams:
-            self.emit("MALICIOUS_BITCOIN_ADDRESS", f"Bitcoin Who's Who [{pevent.data}][https://bitcoinwhoswho.com/address/{pevent.data}]", pevent)
+            self.emit(
+                "MALICIOUS_BITCOIN_ADDRESS",
+                f"Bitcoin Who's Who [{pevent.data}][https://bitcoinwhoswho.com/address/{pevent.data}]",
+                pevent,
+            )
             return True
 
         return False
@@ -114,7 +115,9 @@ class sfp_bitcoinwhoswho(SpiderFootPlugin):
         self.debug(f"Received event, {event.eventType}, from {event.module}")
 
         if self.opts["api_key"] == "":
-            self.error(f"You enabled {self.__class__.__name__} but did not set an API key!")
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set an API key!"
+            )
             self.errorState = True
             return
 
@@ -129,5 +132,6 @@ class sfp_bitcoinwhoswho(SpiderFootPlugin):
 
             if r:
                 self.emit("RAW_RIR_DATA", json.dumps(data), event)
+
 
 # End of sfp_bitcoinwhoswho class

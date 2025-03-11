@@ -22,46 +22,38 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_wigle(SpiderFootPlugin):
 
     meta = {
-        'name': "WiGLE",
-        'summary': "Query WiGLE to identify nearby WiFi access points.",
-        'flags': ["apikey"],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Secondary Networks"],
-        'dataSource': {
-            'website': "https://wigle.net/",
-            'model': "FREE_AUTH_UNLIMITED",
-            'references': [
-                "https://api.wigle.net/",
-                "https://api.wigle.net/swagger"
-            ],
-            'apiKeyInstructions': [
+        "name": "WiGLE",
+        "summary": "Query WiGLE to identify nearby WiFi access points.",
+        "flags": ["apikey"],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Secondary Networks"],
+        "dataSource": {
+            "website": "https://wigle.net/",
+            "model": "FREE_AUTH_UNLIMITED",
+            "references": ["https://api.wigle.net/", "https://api.wigle.net/swagger"],
+            "apiKeyInstructions": [
                 "Visit https://wigle.net/",
                 "Register a free account",
                 "Navigate to https://wigle.net/account",
                 "Click on 'Show my token'",
-                "The encoded API key is adjacent to 'Encoded for use'"
+                "The encoded API key is adjacent to 'Encoded for use'",
             ],
-            'favIcon': "https://wigle.net/favicon.ico?v=A0Ra9gElOR",
-            'logo': "https://wigle.net/images/planet-bubble.png",
-            'description': "We consolidate location and information of wireless networks world-wide to a central database, "
+            "favIcon": "https://wigle.net/favicon.ico?v=A0Ra9gElOR",
+            "logo": "https://wigle.net/images/planet-bubble.png",
+            "description": "We consolidate location and information of wireless networks world-wide to a central database, "
             "and have user-friendly desktop and web applications that can map, "
             "query and update the database via the web.",
-        }
+        },
     }
 
     # Default options
-    opts = {
-        "api_key_encoded": "",
-        "days_limit": "365",
-        "variance": "0.01"
-    }
+    opts = {"api_key_encoded": "", "days_limit": "365", "variance": "0.01"}
 
     # Option descriptions
     optdescs = {
         "api_key_encoded": "Wigle.net base64-encoded API name/token pair.",
         "days_limit": "Maximum age of data to be considered valid.",
-        "variance": "How tightly to bound queries against the latitude/longitude box extracted from idenified addresses. This value must be between 0.001 and 0.2."
-
+        "variance": "How tightly to bound queries against the latitude/longitude box extracted from idenified addresses. This value must be between 0.001 and 0.2.",
     }
 
     # Be sure to completely clear any class variables in setup()
@@ -91,50 +83,53 @@ class sfp_wigle(SpiderFootPlugin):
 
     def getnetworks(self, coords):
         params = {
-            'onlymine': 'false',
-            'latrange1': str(coords[0]),
-            'latrange2': str(coords[0]),
-            'longrange1': str(coords[1]),
-            'longrange2': str(coords[1]),
-            'freenet': 'false',
-            'paynet': 'false',
-            'variance': self.opts['variance']
+            "onlymine": "false",
+            "latrange1": str(coords[0]),
+            "latrange2": str(coords[0]),
+            "longrange1": str(coords[1]),
+            "longrange2": str(coords[1]),
+            "freenet": "false",
+            "paynet": "false",
+            "variance": self.opts["variance"],
         }
 
-        if self.opts['days_limit'] != "0":
-            dt = datetime.datetime.now() - datetime.timedelta(days=int(self.opts['days_limit']))
+        if self.opts["days_limit"] != "0":
+            dt = datetime.datetime.now() - datetime.timedelta(
+                days=int(self.opts["days_limit"])
+            )
             date_calc = dt.strftime("%Y%m%d")
-            params['lastupdt'] = date_calc
+            params["lastupdt"] = date_calc
 
         hdrs = {
             "Accept": "application/json",
-            "Authorization": "Basic " + self.opts['api_key_encoded']
+            "Authorization": "Basic " + self.opts["api_key_encoded"],
         }
 
         res = self.sf.fetchUrl(
-            "https://api.wigle.net/api/v2/network/search?" + urllib.parse.urlencode(params),
+            "https://api.wigle.net/api/v2/network/search?" +
+            urllib.parse.urlencode(params),
             timeout=30,
             useragent="SpiderFoot",
-            headers=hdrs
+            headers=hdrs,
         )
 
-        if res['code'] == "404" or not res['content']:
+        if res["code"] == "404" or not res["content"]:
             return None
 
-        if "too many queries" in res['content']:
+        if "too many queries" in res["content"]:
             self.error("Wigle.net query limit reached for the day.")
             return None
 
         ret = list()
         try:
-            info = json.loads(res['content'])
+            info = json.loads(res["content"])
 
-            if len(info.get('results', [])) == 0:
+            if len(info.get("results", [])) == 0:
                 return None
 
-            for r in info['results']:
-                if None not in [r['ssid'], r['netid']]:
-                    ret.append(r['ssid'] + " (Net ID: " + r['netid'] + ")")
+            for r in info["results"]:
+                if None not in [r["ssid"], r["netid"]]:
+                    ret.append(r["ssid"] + " (Net ID: " + r["netid"] + ")")
 
             return ret
         except Exception as e:
@@ -146,7 +141,7 @@ class sfp_wigle(SpiderFootPlugin):
             return False
 
         try:
-            if base64.b64encode(base64.b64decode(api_key)).decode('utf-8') != api_key:
+            if base64.b64encode(base64.b64decode(api_key)).decode("utf-8") != api_key:
                 return False
         except Exception:
             return False
@@ -162,7 +157,7 @@ class sfp_wigle(SpiderFootPlugin):
         if self.errorState:
             return
 
-        if not self.validApiKey(self.opts['api_key_encoded']):
+        if not self.validApiKey(self.opts["api_key_encoded"]):
             self.error(f"Invalid API key for {self.__class__.__name__} module")
             self.errorState = True
             return
@@ -183,5 +178,6 @@ class sfp_wigle(SpiderFootPlugin):
         for n in nets:
             e = SpiderFootEvent("WIFI_ACCESS_POINT", n, self.__name__, event)
             self.notifyListeners(e)
+
 
 # End of sfp_wigle class

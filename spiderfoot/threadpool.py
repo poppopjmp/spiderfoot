@@ -32,7 +32,9 @@ class SpiderFootThreadPool:
                 yield result
     """
 
-    def __init__(self, threads: int = 100, qsize: int = 10, name: str = '', logging_queue=None) -> None:
+    def __init__(
+        self, threads: int = 100, qsize: int = 10, name: str = "", logging_queue=None
+    ) -> None:
         """Initialize the SpiderFootThreadPool class.
 
         Args:
@@ -42,7 +44,11 @@ class SpiderFootThreadPool:
             logging_queue: Queue for thread-safe logging
         """
         self.logging_queue = logging_queue
-        self.log = logWorkerSetup(logging_queue) if logging_queue else logging.getLogger(f"spiderfoot.{__name__}")
+        self.log = (
+            logWorkerSetup(logging_queue)
+            if logging_queue
+            else logging.getLogger(f"spiderfoot.{__name__}")
+        )
         self.threads = int(threads)
         self.qsize = int(qsize)
         self.pool = [None] * self.threads
@@ -54,9 +60,15 @@ class SpiderFootThreadPool:
         self._lock = threading.Lock()
 
     def start(self) -> None:
-        self.log.debug(f'Starting thread pool "{self.name}" with {self.threads:,} threads')
+        self.log.debug(
+            f'Starting thread pool "{self.name}" with {self.threads:,} threads'
+        )
         for i in range(self.threads):
-            t = ThreadPoolWorker(pool=self, name=f"{self.name}_worker_{i + 1}", logging_queue=self.logging_queue)
+            t = ThreadPoolWorker(
+                pool=self,
+                name=f"{self.name}_worker_{i + 1}",
+                logging_queue=self.logging_queue,
+            )
             t.start()
             self.pool[i] = t
 
@@ -82,7 +94,8 @@ class SpiderFootThreadPool:
             results (dict): (unordered) results in the format: {"taskName": [returnvalue1, returnvalue2, ...]}
         """
         results = dict()
-        self.log.debug(f'Shutting down thread pool "{self.name}" with wait={wait}')
+        self.log.debug(
+            f'Shutting down thread pool "{self.name}" with wait={wait}')
         if wait:
             while not self.finished and not self.stop:
                 with self._lock:
@@ -93,7 +106,7 @@ class SpiderFootThreadPool:
                         results[taskName] += moduleResults
                     except KeyError:
                         results[taskName] = moduleResults
-                sleep(.1)
+                sleep(0.1)
         self.stop = True
         # make sure input queues are empty
         with self._lock:
@@ -126,13 +139,15 @@ class SpiderFootThreadPool:
             *args: Passed through to callback
             **kwargs: Passed through to callback, except for taskName and maxThreads
         """
-        taskName = kwargs.get('taskName', 'default')
-        maxThreads = kwargs.pop('maxThreads', 100)
+        taskName = kwargs.get("taskName", "default")
+        maxThreads = kwargs.pop("maxThreads", 100)
         # block if this module's thread limit has been reached
         while self.countQueuedTasks(taskName) >= maxThreads:
-            sleep(.01)
+            sleep(0.01)
             continue
-        self.log.debug(f"Submitting function \"{callback.__name__}\" from module \"{taskName}\" to thread pool \"{self.name}\"")
+        self.log.debug(
+            f'Submitting function "{callback.__name__}" from module "{taskName}" to thread pool "{self.name}"'
+        )
         self.inputQueue(taskName).put((callback, args, kwargs))
 
     def countQueuedTasks(self, taskName: str) -> int:
@@ -182,10 +197,12 @@ class SpiderFootThreadPool:
             return values from completed callback function
         """
         taskName = kwargs.get("taskName", "default")
-        self.inputThread = threading.Thread(target=self.feedQueue, args=(callback, iterable, args, kwargs))
+        self.inputThread = threading.Thread(
+            target=self.feedQueue, args=(callback, iterable, args, kwargs)
+        )
         self.inputThread.start()
         self.start()
-        sleep(.1)
+        sleep(0.1)
         yield from self.results(taskName, wait=True)
 
     def results(self, taskName: str = "default", wait: bool = False) -> None:
@@ -199,7 +216,7 @@ class SpiderFootThreadPool:
                 break
             if not result:
                 # sleep briefly to save CPU
-                sleep(.1)
+                sleep(0.1)
 
     def feedQueue(self, callback, iterable, args, kwargs) -> None:
         for i in iterable:
@@ -232,7 +249,11 @@ class ThreadPoolWorker(threading.Thread):
 
     def __init__(self, pool, name: str = None, logging_queue=None) -> None:
         self.logging_queue = logging_queue
-        self.log = logWorkerSetup(logging_queue) if logging_queue else logging.getLogger(f"spiderfoot.{__name__}")
+        self.log = (
+            logWorkerSetup(logging_queue)
+            if logging_queue
+            else logging.getLogger(f"spiderfoot.{__name__}")
+        )
         self.pool = pool
         self.taskName = ""  # which module submitted the callback
         self.busy = False
@@ -259,7 +280,10 @@ class ThreadPoolWorker(threading.Thread):
                         ran = True
                     except Exception:  # noqa: B902
                         import traceback
-                        self.log.error(f'Error in thread worker {self.name}: {traceback.format_exc()}')
+
+                        self.log.error(
+                            f"Error in thread worker {self.name}: {traceback.format_exc()}"
+                        )
                         break
                     if saveResult:
                         self.pool.outputQueue(self.taskName).put(result)
@@ -270,4 +294,4 @@ class ThreadPoolWorker(threading.Thread):
                     self.taskName = ""
             # sleep briefly to save CPU
             if not ran:
-                sleep(.05)
+                sleep(0.05)

@@ -23,48 +23,48 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_mnemonic(SpiderFootPlugin):
 
     meta = {
-        'name': "Mnemonic PassiveDNS",
-        'summary': "Obtain Passive DNS information from PassiveDNS.mnemonic.no.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Passive DNS"],
-        'dataSource': {
-            'website': "https://www.mnemonic.no",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "Mnemonic PassiveDNS",
+        "summary": "Obtain Passive DNS information from PassiveDNS.mnemonic.no.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Passive DNS"],
+        "dataSource": {
+            "website": "https://www.mnemonic.no",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://www.mnemonic.no/resources/whitepapers/",
                 "https://www.mnemonic.no/research-and-development/",
-                "https://docs.mnemonic.no/display/public/API/PassiveDNS+Integration+Guide"
+                "https://docs.mnemonic.no/display/public/API/PassiveDNS+Integration+Guide",
             ],
-            'favIcon': "https://www.mnemonic.no/favicon-96x96.png",
-            'logo': "https://www.mnemonic.no/UI/logo.svg",
-            'description': "mnemonic helps businesses manage their security risks, "
+            "favIcon": "https://www.mnemonic.no/favicon-96x96.png",
+            "logo": "https://www.mnemonic.no/UI/logo.svg",
+            "description": "mnemonic helps businesses manage their security risks, "
             "protect their data and defend against cyber threats.\n"
             "Our expert team of security consultants, product specialists, "
             "threat researchers, incident responders and ethical hackers, combined "
             "with our Argus security platform ensures we stay ahead of "
             "advanced cyberattacks and protect our customers from evolving threats.",
-        }
+        },
     }
 
     opts = {
-        'per_page': 500,
-        'max_pages': 2,
-        'timeout': 30,
-        'maxage': 180,    # 6 months
-        'verify': True,
-        'cohostsamedomain': False,
-        'maxcohost': 100
+        "per_page": 500,
+        "max_pages": 2,
+        "timeout": 30,
+        "maxage": 180,  # 6 months
+        "verify": True,
+        "cohostsamedomain": False,
+        "maxcohost": 100,
     }
 
     optdescs = {
-        'per_page': "Maximum number of results per page.",
-        'max_pages': "Maximum number of pages of results to fetch.",
-        'timeout': "Query timeout, in seconds.",
-        'maxage': "The maximum age of the data returned, in days, in order to be considered valid.",
-        'verify': "Verify identified domains still resolve to the associated specified IP address.",
-        'cohostsamedomain': "Treat co-hosted sites on the same target domain as co-hosting?",
-        'maxcohost': "Stop reporting co-hosted sites after this many are found, as it would likely indicate web hosting.",
+        "per_page": "Maximum number of results per page.",
+        "max_pages": "Maximum number of pages of results to fetch.",
+        "timeout": "Query timeout, in seconds.",
+        "maxage": "The maximum age of the data returned, in days, in order to be considered valid.",
+        "verify": "Verify identified domains still resolve to the associated specified IP address.",
+        "cohostsamedomain": "Treat co-hosted sites on the same target domain as co-hosting?",
+        "maxcohost": "Stop reporting co-hosted sites after this many are found, as it would likely indicate web hosting.",
     }
 
     cohostcount = 0
@@ -81,21 +81,16 @@ class sfp_mnemonic(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            'IP_ADDRESS',
-            'IPV6_ADDRESS',
-            'INTERNET_NAME',
-            'DOMAIN_NAME'
-        ]
+        return ["IP_ADDRESS", "IPV6_ADDRESS", "INTERNET_NAME", "DOMAIN_NAME"]
 
     def producedEvents(self):
         return [
-            'IP_ADDRESS',
-            'IPV6_ADDRESS',
-            'INTERNAL_IP_ADDRESS',
-            'CO_HOSTED_SITE',
-            'INTERNET_NAME',
-            'DOMAIN_NAME'
+            "IP_ADDRESS",
+            "IPV6_ADDRESS",
+            "INTERNAL_IP_ADDRESS",
+            "CO_HOSTED_SITE",
+            "INTERNET_NAME",
+            "DOMAIN_NAME",
         ]
 
     def query(self, qry, limit=500, offset=0):
@@ -110,38 +105,36 @@ class sfp_mnemonic(SpiderFootPlugin):
             dict: results as JSON
         """
 
-        params = urllib.parse.urlencode({
-            'limit': limit,
-            'offset': offset
-        })
+        params = urllib.parse.urlencode({"limit": limit, "offset": offset})
 
         res = self.sf.fetchUrl(
             f"https://api.mnemonic.no/pdns/v3/{qry}?{params}",
-            timeout=self.opts['timeout'],
-            useragent=self.opts['_useragent']
+            timeout=self.opts["timeout"],
+            useragent=self.opts["_useragent"],
         )
 
         # Unauthenticated users are limited to 100 requests per minute, and 1000 requests per day.
         time.sleep(0.75)
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info("No results found for " + qry)
             return None
 
         try:
-            data = json.loads(res['content'])
+            data = json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response from Mnemonic: {e}")
             return None
 
-        response_code = data.get('responseCode')
+        response_code = data.get("responseCode")
 
         if not response_code:
             self.debug("Error retrieving search results.")
             return None
 
         if response_code == 402:
-            self.debug("Error retrieving search results: Resource limit exceeded")
+            self.debug(
+                "Error retrieving search results: Resource limit exceeded")
             self.errorState = True
             return None
 
@@ -149,12 +142,12 @@ class sfp_mnemonic(SpiderFootPlugin):
             self.debug(f"Error retrieving search results: {response_code}")
             return None
 
-        if 'data' not in data:
+        if "data" not in data:
             self.info(f"No results found for {qry}")
             return None
 
-        size = data.get('size')
-        count = data.get('count')
+        size = data.get("size")
+        count = data.get("count")
 
         if not count or not size:
             self.info(f"No results found for {qry}")
@@ -162,7 +155,7 @@ class sfp_mnemonic(SpiderFootPlugin):
 
         self.info(f"Retrieved {size} of {count} results")
 
-        return data['data']
+        return data["data"]
 
     def handleEvent(self, event):
         eventName = event.eventType
@@ -181,9 +174,9 @@ class sfp_mnemonic(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         position = 0
-        max_pages = int(self.opts['max_pages'])
-        per_page = int(self.opts['per_page'])
-        agelimit = int(time.time() * 1000) - (86400000 * self.opts['maxage'])
+        max_pages = int(self.opts["max_pages"])
+        per_page = int(self.opts["per_page"])
+        agelimit = int(time.time() * 1000) - (86400000 * self.opts["maxage"])
         self.cohostcount = 0
         cohosts = list()
 
@@ -203,53 +196,65 @@ class sfp_mnemonic(SpiderFootPlugin):
             position += per_page
 
             for r in data:
-                if "*" in r['query'] or "%" in r['query']:
+                if "*" in r["query"] or "%" in r["query"]:
                     continue
 
-                if r['lastSeenTimestamp'] < agelimit:
-                    self.debug(f"Record {r['answer']} found for {r['query']} is too old, skipping.")
+                if r["lastSeenTimestamp"] < agelimit:
+                    self.debug(
+                        f"Record {r['answer']} found for {r['query']} is too old, skipping."
+                    )
                     continue
 
-                if eventName in ['IP_ADDRESS']:
-                    if r['rrtype'] == 'a':
-                        if self.sf.validIP(r['query']):
-                            cohosts.append(r['query'])
+                if eventName in ["IP_ADDRESS"]:
+                    if r["rrtype"] == "a":
+                        if self.sf.validIP(r["query"]):
+                            cohosts.append(r["query"])
                     continue
 
-                if eventName in ['INTERNET_NAME', 'DOMAIN_NAME']:
+                if eventName in ["INTERNET_NAME", "DOMAIN_NAME"]:
                     # Ignore PTR records
-                    if r['rrtype'] == 'ptr':
+                    if r["rrtype"] == "ptr":
                         continue
 
-                    if r['rrtype'] == 'cname':
-                        if not self.getTarget().matches(r['query'], includeParents=True):
+                    if r["rrtype"] == "cname":
+                        if not self.getTarget().matches(
+                            r["query"], includeParents=True
+                        ):
                             continue
 
-                        cohosts.append(r['query'])
+                        cohosts.append(r["query"])
 
-                    if self.opts['verify']:
+                    if self.opts["verify"]:
                         continue
 
-                    answer = r.get('answer')
+                    answer = r.get("answer")
 
-                    if r['rrtype'] == 'a':
+                    if r["rrtype"] == "a":
                         if not self.sf.validIP(answer):
                             continue
 
                         if self.sf.isValidLocalOrLoopbackIp(answer):
-                            evt = SpiderFootEvent("INTERNAL_IP_ADDRESS", answer, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "INTERNAL_IP_ADDRESS", answer, self.__name__, event
+                            )
                         else:
-                            evt = SpiderFootEvent("IP_ADDRESS", answer, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "IP_ADDRESS", answer, self.__name__, event
+                            )
                         self.notifyListeners(evt)
 
-                    if r['rrtype'] == 'aaaa':
-                        if not self.sf.validIP6(r['answer']):
+                    if r["rrtype"] == "aaaa":
+                        if not self.sf.validIP6(r["answer"]):
                             continue
 
                         if self.sf.isValidLocalOrLoopbackIp(answer):
-                            evt = SpiderFootEvent("INTERNAL_IP_ADDRESS", answer, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "INTERNAL_IP_ADDRESS", answer, self.__name__, event
+                            )
                         else:
-                            evt = SpiderFootEvent("IPV6_ADDRESS", answer, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "IPV6_ADDRESS", answer, self.__name__, event
+                            )
                         self.notifyListeners(evt)
 
         for co in set(cohosts):
@@ -260,29 +265,39 @@ class sfp_mnemonic(SpiderFootPlugin):
                 continue
 
             if eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
-                if self.opts['verify'] and not self.sf.validateIP(co, eventData):
+                if self.opts["verify"] and not self.sf.validateIP(co, eventData):
                     self.debug(f"Host {co} no longer resolves to {eventData}")
                     continue
 
-            if self.opts['cohostsamedomain']:
-                if self.cohostcount < self.opts['maxcohost']:
-                    evt = SpiderFootEvent("CO_HOSTED_SITE", co, self.__name__, event)
+            if self.opts["cohostsamedomain"]:
+                if self.cohostcount < self.opts["maxcohost"]:
+                    evt = SpiderFootEvent(
+                        "CO_HOSTED_SITE", co, self.__name__, event)
                     self.notifyListeners(evt)
                     self.cohostcount += 1
                 continue
 
             if self.getTarget().matches(co, includeParents=True):
-                if self.opts['verify'] and not self.sf.resolveHost(co) and not self.sf.resolveHost6(co):
+                if (
+                    self.opts["verify"] and
+                    not self.sf.resolveHost(co) and
+                    not self.sf.resolveHost6(co)
+                ):
                     self.debug(f"Host {co} could not be resolved")
-                    evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", co, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "INTERNET_NAME_UNRESOLVED", co, self.__name__, event
+                    )
                     self.notifyListeners(evt)
                     continue
 
-                evt = SpiderFootEvent("INTERNET_NAME", co, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "INTERNET_NAME", co, self.__name__, event)
                 self.notifyListeners(evt)
 
-                if self.sf.isDomain(co, self.opts['_internettlds']):
-                    evt = SpiderFootEvent("DOMAIN_NAME", co, self.__name__, event)
+                if self.sf.isDomain(co, self.opts["_internettlds"]):
+                    evt = SpiderFootEvent(
+                        "DOMAIN_NAME", co, self.__name__, event)
                     self.notifyListeners(evt)
+
 
 # End of sfp_mnemonic class

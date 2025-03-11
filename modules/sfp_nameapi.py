@@ -19,39 +19,35 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_nameapi(SpiderFootPlugin):
 
     meta = {
-        'name': "NameAPI",
-        'summary': "Check whether an email is disposable",
-        'flags': ["apikey"],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://www.nameapi.org/",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
+        "name": "NameAPI",
+        "summary": "Check whether an email is disposable",
+        "flags": ["apikey"],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://www.nameapi.org/",
+            "model": "FREE_AUTH_LIMITED",
+            "references": [
                 "https://www.nameapi.org/en/developer/manuals/rest-web-services/53/web-services/disposable-email-address-detector/"
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "Visit https://nameapi.org",
                 "Click on 'Get API Key'",
                 "Register a free account",
-                "The API key will be sent to your email"
+                "The API key will be sent to your email",
             ],
-            'favIcon': "https://www.nameapi.org/fileadmin/favicon.ico",
-            'logo': "https://www.nameapi.org/fileadmin/templates/nameprofiler/images/name-api-logo.png",
-            'description': "The NameAPI DEA-Detector checks email addresses "
+            "favIcon": "https://www.nameapi.org/fileadmin/favicon.ico",
+            "logo": "https://www.nameapi.org/fileadmin/templates/nameprofiler/images/name-api-logo.png",
+            "description": "The NameAPI DEA-Detector checks email addresses "
             "against a list of known trash domains such as mailinator.com.\n"
             "It classifies those as disposable which operate as a time-limited, "
             "web based way of receiving emails, for example, sign up confirmations.",
-        }
+        },
     }
 
-    opts = {
-        'api_key': ''
-    }
+    opts = {"api_key": ""}
 
-    optdescs = {
-        'api_key': "API Key for NameAPI"
-    }
+    optdescs = {"api_key": "API Key for NameAPI"}
 
     results = None
     errorState = False
@@ -64,29 +60,24 @@ class sfp_nameapi(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
-        return [
-            "EMAILADDR"
-        ]
+        return ["EMAILADDR"]
 
     def producedEvents(self):
-        return [
-            "EMAILADDR_DISPOSABLE",
-            "RAW_RIR_DATA"
-        ]
+        return ["EMAILADDR_DISPOSABLE", "RAW_RIR_DATA"]
 
     def queryEmailAddr(self, qry):
         res = self.sf.fetchUrl(
             f"http://api.nameapi.org/rest/v5.3/email/disposableemailaddressdetector?apiKey={self.opts['api_key']}&emailAddress={qry}",
-            timeout=self.opts['_fetchtimeout'],
-            useragent="SpiderFoot"
+            timeout=self.opts["_fetchtimeout"],
+            useragent="SpiderFoot",
         )
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info(f"No NameAPI info found for {qry}")
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.error(f"Error processing JSON response from NameAPI: {e}")
 
@@ -117,13 +108,17 @@ class sfp_nameapi(SpiderFootPlugin):
         if data is None:
             return
 
-        isDisposable = data.get('disposable')
+        isDisposable = data.get("disposable")
 
         if isDisposable == "YES":
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(data), self.__name__, event)
             self.notifyListeners(evt)
 
-            evt = SpiderFootEvent("EMAILADDR_DISPOSABLE", eventData, self.__name__, event)
+            evt = SpiderFootEvent(
+                "EMAILADDR_DISPOSABLE", eventData, self.__name__, event
+            )
             self.notifyListeners(evt)
+
 
 # End of sfp_nameapi class

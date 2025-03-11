@@ -22,51 +22,51 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_abuseipdb(SpiderFootPlugin):
 
     meta = {
-        'name': "AbuseIPDB",
-        'summary': "Check if an IP address is malicious according to AbuseIPDB.com blacklist.",
-        'flags': ["apikey"],
-        'useCases': ["Passive", "Investigate"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://www.abuseipdb.com",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
+        "name": "AbuseIPDB",
+        "summary": "Check if an IP address is malicious according to AbuseIPDB.com blacklist.",
+        "flags": ["apikey"],
+        "useCases": ["Passive", "Investigate"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://www.abuseipdb.com",
+            "model": "FREE_AUTH_LIMITED",
+            "references": [
                 "https://docs.abuseipdb.com/#introduction",
                 "https://www.abuseipdb.com/fail2ban.html",
                 "https://www.abuseipdb.com/csf",
                 "https://www.abuseipdb.com/suricata",
                 "https://www.abuseipdb.com/splunk",
-                "https://www.abuseipdb.com/categories"
+                "https://www.abuseipdb.com/categories",
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "Visit https://www.abuseipdb.com/pricing",
                 "Select the plan required",
                 "Register a new account with an email",
                 "Navigate to https://www.abuseipdb.com/account/api",
-                "The API Key is listed under 'Keys'"
+                "The API Key is listed under 'Keys'",
             ],
-            'favIcon': "https://www.abuseipdb.com/favicon.ico",
-            'logo': "https://www.abuseipdb.com/img/abuseipdb.png.pagespeed.ce.CI8T6WsXU7.png",
-            'description': "AbuseIPDB is a project dedicated to helping combat the spread of hackers,"
+            "favIcon": "https://www.abuseipdb.com/favicon.ico",
+            "logo": "https://www.abuseipdb.com/img/abuseipdb.png.pagespeed.ce.CI8T6WsXU7.png",
+            "description": "AbuseIPDB is a project dedicated to helping combat the spread of hackers,"
             "spammers, and abusive activity on the internet.\n"
             "Our mission is to help make Web safer by providing a central blacklist for"
             "webmasters, system administrators, and other interested parties to"
-            "report and find IP addresses that have been associated with malicious activity online."
-        }
+            "report and find IP addresses that have been associated with malicious activity online.",
+        },
     }
 
     opts = {
-        'api_key': '',
-        'confidenceminimum': 90,
-        'checkaffiliates': True,
-        'limit': 10000
+        "api_key": "",
+        "confidenceminimum": 90,
+        "checkaffiliates": True,
+        "limit": 10000,
     }
 
     optdescs = {
-        'api_key': "AbuseIPDB.com API key.",
-        'confidenceminimum': "The minimium AbuseIPDB confidence level to require.",
-        'checkaffiliates': "Apply checks to affiliates?",
-        'limit': 'Maximum number of results to retrieve.',
+        "api_key": "AbuseIPDB.com API key.",
+        "confidenceminimum": "The minimium AbuseIPDB confidence level to require.",
+        "checkaffiliates": "Apply checks to affiliates?",
+        "limit": "Maximum number of results to retrieve.",
     }
 
     results = None
@@ -95,54 +95,54 @@ class sfp_abuseipdb(SpiderFootPlugin):
         ]
 
     def queryBlacklist(self):
-        blacklist = self.sf.cacheGet('abuseipdb', 24)
+        blacklist = self.sf.cacheGet("abuseipdb", 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
-        headers = {
-            'Key': self.opts['api_key'],
-            'Accept': "text/plain"
-        }
+        headers = {"Key": self.opts["api_key"], "Accept": "text/plain"}
 
-        params = urllib.parse.urlencode({
-            'confidenceMinimum': self.opts['confidenceminimum'],
-            'limit': self.opts['limit'],
-            'plaintext': '1'
-        })
+        params = urllib.parse.urlencode(
+            {
+                "confidenceMinimum": self.opts["confidenceminimum"],
+                "limit": self.opts["limit"],
+                "plaintext": "1",
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://api.abuseipdb.com/api/v2/blacklist?{params}",
-            timeout=60,  # retrieving 10,000 results (default) or more can sometimes take a while
-            useragent=self.opts['_useragent'],
-            headers=headers
+            # retrieving 10,000 results (default) or more can sometimes take a while
+            timeout=60,
+            useragent=self.opts["_useragent"],
+            headers=headers,
         )
 
         time.sleep(1)
 
-        if res['code'] == '429':
+        if res["code"] == "429":
             self.error("You are being rate-limited by AbuseIPDB")
             self.errorState = True
             return None
 
-        if res['code'] != "200":
+        if res["code"] != "200":
             self.error(f"Error retrieving search results, code {res['code']}")
             self.errorState = True
             return None
 
-        if res['code'] != "200":
+        if res["code"] != "200":
             self.error("Error retrieving search results from AbuseIPDB")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error("Received no content from AbuseIPDB")
             self.errorState = True
             return None
 
-        self.sf.cachePut("abuseipdb", res['content'])
+        self.sf.cachePut("abuseipdb", res["content"])
 
-        return self.parseBlacklist(res['content'])
+        return self.parseBlacklist(res["content"])
 
     def parseBlacklist(self, blacklist):
         """Parse plaintext blacklist
@@ -158,9 +158,9 @@ class sfp_abuseipdb(SpiderFootPlugin):
         if not blacklist:
             return ips
 
-        for ip in blacklist.split('\n'):
+        for ip in blacklist.split("\n"):
             ip = ip.strip()
-            if ip.startswith('#'):
+            if ip.startswith("#"):
                 continue
             if not self.sf.validIP(ip) and not self.sf.validIP6(ip):
                 continue
@@ -181,41 +181,43 @@ class sfp_abuseipdb(SpiderFootPlugin):
         """
 
         headers = {
-            'Key': self.opts['api_key'],
-            'Accept': 'application/json',
+            "Key": self.opts["api_key"],
+            "Accept": "application/json",
         }
 
-        params = urllib.parse.urlencode({
-            'ipAddress': ip,
-            'maxAgeInDays': 30,
-        })
+        params = urllib.parse.urlencode(
+            {
+                "ipAddress": ip,
+                "maxAgeInDays": 30,
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://api.abuseipdb.com/api/v2/check?{params}",
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
-            headers=headers
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
+            headers=headers,
         )
 
         time.sleep(1)
 
-        if res['code'] == '429':
+        if res["code"] == "429":
             self.error("You are being rate-limited by AbuseIPDB")
             self.errorState = True
             return None
 
-        if res['code'] != "200":
+        if res["code"] != "200":
             self.error("Error retrieving search results from AbuseIPDB")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error("Received no content from AbuseIPDB")
             self.errorState = True
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
             return None
@@ -235,41 +237,43 @@ class sfp_abuseipdb(SpiderFootPlugin):
         """
 
         headers = {
-            'Key': self.opts['api_key'],
-            'Accept': 'application/json',
+            "Key": self.opts["api_key"],
+            "Accept": "application/json",
         }
 
-        params = urllib.parse.urlencode({
-            'ipAddress': ip,
-            'maxAgeInDays': 30,
-        })
+        params = urllib.parse.urlencode(
+            {
+                "ipAddress": ip,
+                "maxAgeInDays": 30,
+            }
+        )
 
         res = self.sf.fetchUrl(
             f"https://api.abuseipdb.com/api/v2/check-block?{params}",
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
-            headers=headers
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
+            headers=headers,
         )
 
         time.sleep(1)
 
-        if res['code'] == '429':
+        if res["code"] == "429":
             self.error("You are being rate-limited by AbuseIPDB")
             self.errorState = True
             return None
 
-        if res['code'] != "200":
+        if res["code"] != "200":
             self.error("Error retrieving search results from AbuseIPDB")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error("Received no content from AbuseIPDB")
             self.errorState = True
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
 
@@ -295,20 +299,21 @@ class sfp_abuseipdb(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventName.startswith("AFFILIATE") and not self.opts['checkaffiliates']:
+        if eventName.startswith("AFFILIATE") and not self.opts["checkaffiliates"]:
             return
 
-        if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
+        if eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
             blacklist_type = "BLACKLISTED_IPADDR"
-            malicious_type = 'MALICIOUS_IPADDR'
-        elif eventName in ['AFFILIATE_IPADDR', 'AFFILIATE_IPV6_ADDRESS']:
+            malicious_type = "MALICIOUS_IPADDR"
+        elif eventName in ["AFFILIATE_IPADDR", "AFFILIATE_IPV6_ADDRESS"]:
             blacklist_type = "BLACKLISTED_AFFILIATE_IPADDR"
-            malicious_type = 'MALICIOUS_AFFILIATE_IPADDR'
+            malicious_type = "MALICIOUS_AFFILIATE_IPADDR"
         else:
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of IP address {eventData} with AbuseIPDB")
+        self.debug(
+            f"Checking maliciousness of IP address {eventData} with AbuseIPDB")
 
         blacklist = self.queryBlacklist()
 
@@ -318,7 +323,8 @@ class sfp_abuseipdb(SpiderFootPlugin):
         if eventData not in blacklist:
             return
 
-        self.info(f"Malicious IP address {eventData} found in AbuseIPDB blacklist")
+        self.info(
+            f"Malicious IP address {eventData} found in AbuseIPDB blacklist")
 
         url = f"https://www.abuseipdb.com/check/{eventData}"
 
@@ -326,7 +332,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
             malicious_type,
             f"AbuseIPDB [{eventData}]\n<SFURL>{url}</SFURL>",
             self.__name__,
-            event
+            event,
         )
         self.notifyListeners(evt)
 
@@ -334,8 +340,9 @@ class sfp_abuseipdb(SpiderFootPlugin):
             blacklist_type,
             f"AbuseIPDB [{eventData}]\n<SFURL>{url}</SFURL>",
             self.__name__,
-            event
+            event,
         )
         self.notifyListeners(evt)
+
 
 # End of sfp_abuseipdb class

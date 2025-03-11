@@ -3,13 +3,16 @@ import unittest
 from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 from spiderfoot import SpiderFootEvent
 
+
 class TestSpiderFootEvent(SpiderFootModuleTestCase):
     """Test SpiderFootEvent."""
 
     def setUp(self):
         """Set up test case."""
         self.root_event = SpiderFootEvent("ROOT", "Root Event", "", "", 0)
-        self.event = SpiderFootEvent("IP_ADDRESS", "192.168.0.1", "example module", "example data", 100)
+        self.event = SpiderFootEvent(
+            "IP_ADDRESS", "192.168.0.1", "example module", "example data", 100
+        )
         # Set self.eventType to match what's used in test_eventType
         self.eventType = "IP_ADDRESS"
         self.module = "example module"
@@ -138,7 +141,9 @@ class TestSpiderFootEvent(SpiderFootModuleTestCase):
             self.event.data = ""
 
     def test_sourceEvent_setter(self):
-        new_sourceEvent = SpiderFootEvent("ROOT", "root_data", "root_module", None, 100)  # Added confidence parameter
+        new_sourceEvent = SpiderFootEvent(
+            "ROOT", "root_data", "root_module", None, 100
+        )  # Added confidence parameter
         self.event.sourceEvent = new_sourceEvent
         self.assertEqual(self.event.sourceEvent, new_sourceEvent)
 
@@ -159,17 +164,19 @@ class TestSpiderFootEvent(SpiderFootModuleTestCase):
     def test_asDict(self):
         event_dict = self.event.asDict()
         self.assertIsInstance(event_dict, dict)
-        self.assertEqual(event_dict['generated'], int(self.event.generated))
-        self.assertEqual(event_dict['type'], self.event.eventType)
-        self.assertEqual(event_dict['data'], self.event.data)
-        self.assertEqual(event_dict['module'], self.event.module)
-        self.assertEqual(event_dict['source'], '')
+        self.assertEqual(event_dict["generated"], int(self.event.generated))
+        self.assertEqual(event_dict["type"], self.event.eventType)
+        self.assertEqual(event_dict["data"], self.event.data)
+        self.assertEqual(event_dict["module"], self.event.module)
+        self.assertEqual(event_dict["source"], "")
 
     def test_event_creation(self):
         """
         Test event creation
         """
-        event = SpiderFootEvent("TEST", "test event", "testing", "testHash", 100)  # Added confidence parameter
+        event = SpiderFootEvent(
+            "TEST", "test event", "testing", "testHash", 100
+        )  # Added confidence parameter
         self.assertIsInstance(event, SpiderFootEvent)
 
 

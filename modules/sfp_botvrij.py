@@ -16,32 +16,28 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_botvrij(SpiderFootPlugin):
 
     meta = {
-        'name': "botvrij.eu",
-        'summary': "Check if a domain is malicious according to botvrij.eu.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://botvrij.eu/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'description': "Botvrij.eu provides different sets "
-                " of open source IOCs that you can use in your "
-                " security devices to detect possible malicious activity.\n"
-                "The information contains network info (IPs), file hashes,"
-                " file paths, domain names, URLs.",
-        }
+        "name": "botvrij.eu",
+        "summary": "Check if a domain is malicious according to botvrij.eu.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://botvrij.eu/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "description": "Botvrij.eu provides different sets "
+            " of open source IOCs that you can use in your "
+            " security devices to detect possible malicious activity.\n"
+            "The information contains network info (IPs), file hashes,"
+            " file paths, domain names, URLs.",
+        },
     }
 
-    opts = {
-        'checkaffiliates': True,
-        'checkcohosts': True,
-        'cacheperiod': 18
-    }
+    opts = {"checkaffiliates": True, "checkcohosts": True, "cacheperiod": 18}
 
     optdescs = {
-        'checkaffiliates': "Apply checks to affiliates?",
-        'checkcohosts': "Apply checks to sites found to be co-hosted on the target's IP?",
-        'cacheperiod': "Hours to cache list data before re-fetching."
+        "checkaffiliates": "Apply checks to affiliates?",
+        "checkcohosts": "Apply checks to sites found to be co-hosted on the target's IP?",
+        "cacheperiod": "Hours to cache list data before re-fetching.",
     }
 
     results = None
@@ -85,30 +81,31 @@ class sfp_botvrij(SpiderFootPlugin):
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('botvrij', 24)
+        blacklist = self.sf.cacheGet("botvrij", 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
         res = self.sf.fetchUrl(
             "https://www.botvrij.eu/data/blocklist/blocklist_full.csv",
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from botvrij.eu.")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from botvrij.eu.")
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error("Received no content from botvrij.eu")
             self.errorState = True
             return None
 
-        self.sf.cachePut("botvrij", res['content'])
+        self.sf.cachePut("botvrij", res["content"])
 
-        return self.parseBlacklist(res['content'])
+        return self.parseBlacklist(res["content"])
 
     def parseBlacklist(self, blacklist):
         """Parse plaintext blacklist
@@ -124,10 +121,10 @@ class sfp_botvrij(SpiderFootPlugin):
         if not blacklist:
             return hosts
 
-        for line in blacklist.split('\n'):
+        for line in blacklist.split("\n"):
             if not line:
                 continue
-            if line.startswith('#'):
+            if line.startswith("#"):
                 continue
             host = line.strip().split(",")[0].lower()
             # Note: Validation with sf.validHost() is too slow to use here
@@ -156,12 +153,12 @@ class sfp_botvrij(SpiderFootPlugin):
             malicious_type = "MALICIOUS_INTERNET_NAME"
             blacklist_type = "BLACKLISTED_INTERNET_NAME"
         elif eventName == "AFFILIATE_INTERNET_NAME":
-            if not self.opts.get('checkaffiliates', False):
+            if not self.opts.get("checkaffiliates", False):
                 return
             malicious_type = "MALICIOUS_AFFILIATE_INTERNET_NAME"
             blacklist_type = "BLACKLISTED_AFFILIATE_INTERNET_NAME"
         elif eventName == "CO_HOSTED_SITE":
-            if not self.opts.get('checkcohosts', False):
+            if not self.opts.get("checkcohosts", False):
                 return
             malicious_type = "MALICIOUS_COHOST"
             blacklist_type = "BLACKLISTED_COHOST"
@@ -169,7 +166,9 @@ class sfp_botvrij(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with botvrij.eu")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with botvrij.eu"
+        )
 
         if not self.queryBlacklist(eventData):
             return
@@ -182,5 +181,6 @@ class sfp_botvrij(SpiderFootPlugin):
 
         evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
         self.notifyListeners(evt)
+
 
 # End of sfp_botvrij class

@@ -20,28 +20,28 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_ripe(SpiderFootPlugin):
 
     meta = {
-        'name': "RIPE",
-        'summary': "Queries the RIPE registry (includes ARIN data) to identify netblocks and other info.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Public Registries"],
-        'dataSource': {
-            'website': "https://www.ripe.net/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "RIPE",
+        "summary": "Queries the RIPE registry (includes ARIN data) to identify netblocks and other info.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Public Registries"],
+        "dataSource": {
+            "website": "https://www.ripe.net/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://www.ripe.net/publications/ipv6-info-centre/training-and-materials",
                 "https://www.ripe.net/publications/ipv6-info-centre/ipv6-documents",
                 "https://www.ripe.net/manage-ips-and-asns/db/support/documentation/ripe-database-documentation",
-                "https://www.ripe.net/manage-ips-and-asns/db/support/documentation/ripe-database-documentation/updating-objects-in-the-ripe-database/6-1-restful-api"
+                "https://www.ripe.net/manage-ips-and-asns/db/support/documentation/ripe-database-documentation/updating-objects-in-the-ripe-database/6-1-restful-api",
             ],
-            'favIcon': "https://www.ripe.net/favicon.ico",
-            'logo': "https://www.ripe.net/++resource++ripe.plonetheme.images/RIPE_NCC_logo.png",
-            'description': "We're an independent, not-for-profit membership organisation that supports the "
-                           "infrastructure of the Internet through technical coordination in our service region. "
-                           "Our most prominent activity is to act as the Regional Internet Registry (RIR) providing "
-                           "global Internet resources and related services (IPv4, IPv6 and AS Number resources) "
-                           "to members in our service region.",
-        }
+            "favIcon": "https://www.ripe.net/favicon.ico",
+            "logo": "https://www.ripe.net/++resource++ripe.plonetheme.images/RIPE_NCC_logo.png",
+            "description": "We're an independent, not-for-profit membership organisation that supports the "
+            "infrastructure of the Internet through technical coordination in our service region. "
+            "Our most prominent activity is to act as the Regional Internet Registry (RIR) providing "
+            "global Internet resources and related services (IPv4, IPv6 and AS Number resources) "
+            "to members in our service region.",
+        },
     }
 
     # Default options
@@ -69,26 +69,26 @@ class sfp_ripe(SpiderFootPlugin):
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
-            'IP_ADDRESS',
-            'IPV6_ADDRESS',
-            'NETBLOCK_MEMBER',
-            'NETBLOCK_OWNER',
-            'NETBLOCKV6_MEMBER',
-            'NETBLOCKV6_OWNER',
-            'BGP_AS_OWNER',
-            'BGP_AS_MEMBER',
+            "IP_ADDRESS",
+            "IPV6_ADDRESS",
+            "NETBLOCK_MEMBER",
+            "NETBLOCK_OWNER",
+            "NETBLOCKV6_MEMBER",
+            "NETBLOCKV6_OWNER",
+            "BGP_AS_OWNER",
+            "BGP_AS_MEMBER",
         ]
 
     # What events this module produces
     def producedEvents(self):
         return [
-            'NETBLOCK_MEMBER',
-            'NETBLOCK_OWNER',
-            'NETBLOCKV6_MEMBER',
-            'NETBLOCKV6_OWNER',
-            'BGP_AS_MEMBER',
-            'BGP_AS_OWNER',
-            'RAW_RIR_DATA',
+            "NETBLOCK_MEMBER",
+            "NETBLOCK_OWNER",
+            "NETBLOCKV6_MEMBER",
+            "NETBLOCKV6_OWNER",
+            "BGP_AS_MEMBER",
+            "BGP_AS_OWNER",
+            "RAW_RIR_DATA",
         ]
 
     # Fetch content and notify of the raw data
@@ -96,11 +96,12 @@ class sfp_ripe(SpiderFootPlugin):
         if url in self.memCache:
             return self.memCache[url]
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
-                               useragent=self.opts['_useragent'])
-        if res['content'] is not None:
+        res = self.sf.fetchUrl(
+            url, timeout=self.opts["_fetchtimeout"], useragent=self.opts["_useragent"]
+        )
+        if res["content"] is not None:
             self.memCache[url] = res
-            self.lastContent = res['content']
+            self.lastContent = res["content"]
 
         return res
 
@@ -108,13 +109,16 @@ class sfp_ripe(SpiderFootPlugin):
     def ipNetblock(self, ipaddr):
         prefix = None
 
-        res = self.fetchRir(f"https://stat.ripe.net/data/network-info/data.json?resource={ipaddr}")
-        if res['content'] is None:
-            self.debug(f"No netblock info found/available for {ipaddr} at RIPE.")
+        res = self.fetchRir(
+            f"https://stat.ripe.net/data/network-info/data.json?resource={ipaddr}"
+        )
+        if res["content"] is None:
+            self.debug(
+                f"No netblock info found/available for {ipaddr} at RIPE.")
             return None
 
         try:
-            j = json.loads(res['content'])
+            j = json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
             return None
@@ -128,13 +132,15 @@ class sfp_ripe(SpiderFootPlugin):
 
     # Query WHOIS data
     def queryWhois(self, qry):
-        res = self.fetchRir(f"https://stat.ripe.net/data/whois/data.json?resource={qry}")
-        if res['content'] is None:
+        res = self.fetchRir(
+            f"https://stat.ripe.net/data/whois/data.json?resource={qry}"
+        )
+        if res["content"] is None:
             self.debug(f"No results for {qry} at RIPE.")
             return None
 
         try:
-            data = json.loads(res['content'])
+            data = json.loads(res["content"])
             return data.get("data")
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
@@ -183,13 +189,14 @@ class sfp_ripe(SpiderFootPlugin):
 
         ownerinfo = dict()
         # Which keys to look for ownership information in (prefix)
-        ownerkeys = ["as", "value", "auth", "desc", "org", "mnt", "admin", "tech"]
+        ownerkeys = ["as", "value", "auth",
+                     "desc", "org", "mnt", "admin", "tech"]
 
         for rec in data:
             for d in rec:
                 for k in ownerkeys:
-                    key = d['key']
-                    value = d['value']
+                    key = d["key"]
+                    value = d["value"]
                     if not key.lower().startswith(k):
                         continue
 
@@ -206,13 +213,16 @@ class sfp_ripe(SpiderFootPlugin):
 
     # Netblocks owned by an AS
     def asNetblocks(self, asn):
-        res = self.fetchRir(f"https://stat.ripe.net/data/announced-prefixes/data.json?resource=AS{asn}")
-        if res['content'] is None:
-            self.debug(f"No netblocks info found/available for AS{asn} at RIPE.")
+        res = self.fetchRir(
+            f"https://stat.ripe.net/data/announced-prefixes/data.json?resource=AS{asn}"
+        )
+        if res["content"] is None:
+            self.debug(
+                f"No netblocks info found/available for AS{asn} at RIPE.")
             return None
 
         try:
-            j = json.loads(res['content'])
+            j = json.loads(res["content"])
             data = j["data"]["prefixes"]
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
@@ -228,13 +238,16 @@ class sfp_ripe(SpiderFootPlugin):
 
     # Neighbours to an AS
     def asNeighbours(self, asn):
-        res = self.fetchRir(f"https://stat.ripe.net/data/asn-neighbours/data.json?resource=AS{asn}")
-        if res['content'] is None:
-            self.debug(f"No neighbour info found/available for AS{asn} at RIPE.")
+        res = self.fetchRir(
+            f"https://stat.ripe.net/data/asn-neighbours/data.json?resource=AS{asn}"
+        )
+        if res["content"] is None:
+            self.debug(
+                f"No neighbour info found/available for AS{asn} at RIPE.")
             return None
 
         try:
-            j = json.loads(res['content'])
+            j = json.loads(res["content"])
             data = j["data"]["neighbours"]
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
@@ -242,7 +255,7 @@ class sfp_ripe(SpiderFootPlugin):
 
         neighbours = list()
         for rec in data:
-            neighbours.append(str(rec['asn']))
+            neighbours.append(str(rec["asn"]))
 
         return neighbours
 
@@ -256,15 +269,14 @@ class sfp_ripe(SpiderFootPlugin):
 
         if self.keywords is None:
             self.keywords = self.sf.domainKeywords(
-                self.getTarget().getNames(),
-                self.opts['_internettlds']
+                self.getTarget().getNames(), self.opts["_internettlds"]
             )
 
         # Slightly more complex..
         rx = [
-            r'^{0}[-_/\'\"\\\.,\?\!\s\d].*',
-            r'.*[-_/\'\"\\\.,\?\!\s]{0}$',
-            r'.*[-_/\'\"\\\.,\?\!\s]{0}[-_/\'\"\\\.,\?\!\s\d].*'
+            r"^{0}[-_/\'\"\\\.,\?\!\s\d].*",
+            r".*[-_/\'\"\\\.,\?\!\s]{0}$",
+            r".*[-_/\'\"\\\.,\?\!\s]{0}[-_/\'\"\\\.,\?\!\s\d].*",
         ]
 
         # Mess with the keyword as a last resort..
@@ -272,9 +284,9 @@ class sfp_ripe(SpiderFootPlugin):
         for kw in self.keywords:
             # Create versions of the keyword, esp. if hyphens are involved.
             keywordList.add(kw)
-            keywordList.add(kw.replace('-', ' '))
-            keywordList.add(kw.replace('-', '_'))
-            keywordList.add(kw.replace('-', ''))
+            keywordList.add(kw.replace("-", " "))
+            keywordList.add(kw.replace("-", "_"))
+            keywordList.add(kw.replace("-", ""))
 
         for kw in keywordList:
             for r in rx:
@@ -351,13 +363,19 @@ class sfp_ripe(SpiderFootPlugin):
                 # Technically this netblock was identified via the AS, not
                 # the original IP event, so link it to asevt, not event.
                 if ":" in netblock:
-                    evt = SpiderFootEvent("NETBLOCKV6_OWNER", netblock, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "NETBLOCKV6_OWNER", netblock, self.__name__, event
+                    )
                     self.notifyListeners(evt)
                 else:
-                    evt = SpiderFootEvent("NETBLOCK_OWNER", netblock, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "NETBLOCK_OWNER", netblock, self.__name__, event
+                    )
                     self.notifyListeners(evt)
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", self.lastContent, self.__name__, event)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", self.lastContent, self.__name__, event
+            )
             self.notifyListeners(evt)
 
             return
@@ -371,12 +389,16 @@ class sfp_ripe(SpiderFootPlugin):
                 return
 
             if eventName in ["NETBLOCK_OWNER", "NETBLOCKV6_OWNER"] and self.ownsAs(asn):
-                asevt = SpiderFootEvent("BGP_AS_OWNER", asn, self.__name__, event)
+                asevt = SpiderFootEvent(
+                    "BGP_AS_OWNER", asn, self.__name__, event)
                 self.notifyListeners(asevt)
-                evt = SpiderFootEvent("RAW_RIR_DATA", self.lastContent, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "RAW_RIR_DATA", self.lastContent, self.__name__, event
+                )
                 self.notifyListeners(evt)
             else:
-                asevt = SpiderFootEvent("BGP_AS_MEMBER", asn, self.__name__, event)
+                asevt = SpiderFootEvent(
+                    "BGP_AS_MEMBER", asn, self.__name__, event)
                 self.notifyListeners(asevt)
 
             return
@@ -386,7 +408,8 @@ class sfp_ripe(SpiderFootPlugin):
             # Get the Netblock the IP is a part of
             prefix = self.ipNetblock(eventData)
             if prefix is None:
-                self.debug(f"Could not identify network prefix for {eventData}")
+                self.debug(
+                    f"Could not identify network prefix for {eventData}")
                 return
 
             # Get the BGP AS the netblock is a part of
@@ -405,9 +428,14 @@ class sfp_ripe(SpiderFootPlugin):
                 relationship = "MEMBER"
 
             if ":" in prefix:
-                evt = SpiderFootEvent("NETBLOCKV6_" + relationship, prefix, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "NETBLOCKV6_" + relationship, prefix, self.__name__, event
+                )
             else:
-                evt = SpiderFootEvent("NETBLOCK_" + relationship, prefix, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "NETBLOCK_" + relationship, prefix, self.__name__, event
+                )
             self.notifyListeners(evt)
+
 
 # End of sfp_ripe class

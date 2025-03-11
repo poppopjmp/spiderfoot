@@ -22,47 +22,47 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_threatminer(SpiderFootPlugin):
 
     meta = {
-        'name': "ThreatMiner",
-        'summary': "Obtain information from ThreatMiner's database for passive DNS and threat intelligence.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://www.threatminer.org/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "ThreatMiner",
+        "summary": "Obtain information from ThreatMiner's database for passive DNS and threat intelligence.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://www.threatminer.org/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://www.threatminer.org/api.php",
-                "https://www.threatminer.org/features.php"
+                "https://www.threatminer.org/features.php",
             ],
-            'favIcon': "https://www.threatminer.org/images/favicon.gif",
-            'logo': "https://www.threatminer.org/images/logo.png",
-            'description': "ThreatMiner is a threat intelligence portal designed to enable analysts to research under a single interface. "
+            "favIcon": "https://www.threatminer.org/images/favicon.gif",
+            "logo": "https://www.threatminer.org/images/logo.png",
+            "description": "ThreatMiner is a threat intelligence portal designed to enable analysts to research under a single interface. "
             "It is used in the SANS FOR578 Cyber Threat Intelligence course.\n"
             "Threat intelligence and intrusion analysts who regularly perform research "
             "into malware and network infrastructure often find the need to rely on "
             "mutliple websites that individually holds a small piece of the larger puzzle.",
-        }
+        },
     }
     # Default options
     opts = {
-        'verify': True,
-        'netblocklookup': False,
-        'maxnetblock': 24,
-        'subnetlookup': False,
-        'maxsubnet': 24,
-        'maxcohost': 100,
-        "age_limit_days": 90
+        "verify": True,
+        "netblocklookup": False,
+        "maxnetblock": 24,
+        "subnetlookup": False,
+        "maxsubnet": 24,
+        "maxcohost": 100,
+        "age_limit_days": 90,
     }
 
     # Option descriptions
     optdescs = {
-        'verify': 'Verify that any hostnames found on the target domain still resolve?',
-        'netblocklookup': "Look up all IPs on netblocks deemed to be owned by your target for possible blacklisted hosts on the same target subdomain/domain?",
-        'maxnetblock': "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
-        'subnetlookup': "Look up all IPs on subnets which your target is a part of?",
-        'maxsubnet': "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
-        'maxcohost': "Stop reporting co-hosted sites after this many are found, as it would likely indicate web hosting.",
-        "age_limit_days": "Ignore records older than this many days. 0 = Unlimited."
+        "verify": "Verify that any hostnames found on the target domain still resolve?",
+        "netblocklookup": "Look up all IPs on netblocks deemed to be owned by your target for possible blacklisted hosts on the same target subdomain/domain?",
+        "maxnetblock": "If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
+        "subnetlookup": "Look up all IPs on subnets which your target is a part of?",
+        "maxsubnet": "If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
+        "maxcohost": "Stop reporting co-hosted sites after this many are found, as it would likely indicate web hosting.",
+        "age_limit_days": "Ignore records older than this many days. 0 = Unlimited.",
     }
 
     # Be sure to completely clear any class variables in setup()
@@ -88,8 +88,7 @@ class sfp_threatminer(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ["IP_ADDRESS", "DOMAIN_NAME", "NETBLOCK_OWNER",
-                "NETBLOCK_MEMBER"]
+        return ["IP_ADDRESS", "DOMAIN_NAME", "NETBLOCK_OWNER", "NETBLOCK_MEMBER"]
 
     # What events this module produces
     def producedEvents(self):
@@ -110,16 +109,16 @@ class sfp_threatminer(SpiderFootPlugin):
         url = threatminerurl + queryurl.format(qry)
         res = self.sf.fetchUrl(url, timeout=10, useragent="SpiderFoot")
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.info("No ThreatMiner info found for " + qry)
             return None
 
-        if len(res['content']) == 0:
+        if len(res["content"]) == 0:
             self.info("No ThreatMiner info found for " + qry)
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except Exception as e:
             self.error(f"Error processing JSON response from ThreatMiner: {e}")
 
@@ -139,22 +138,28 @@ class sfp_threatminer(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventName == 'NETBLOCK_OWNER':
-            if not self.opts['netblocklookup']:
+        if eventName == "NETBLOCK_OWNER":
+            if not self.opts["netblocklookup"]:
                 return
-            if IPNetwork(eventData).prefixlen < self.opts['maxnetblock']:
-                self.debug("Network size bigger than permitted: "
-                           + str(IPNetwork(eventData).prefixlen) + " > "
-                           + str(self.opts['maxnetblock']))
+            if IPNetwork(eventData).prefixlen < self.opts["maxnetblock"]:
+                self.debug(
+                    "Network size bigger than permitted: " +
+                    str(IPNetwork(eventData).prefixlen) +
+                    " > " +
+                    str(self.opts["maxnetblock"])
+                )
                 return
 
-        if eventName == 'NETBLOCK_MEMBER':
-            if not self.opts['subnetlookup']:
+        if eventName == "NETBLOCK_MEMBER":
+            if not self.opts["subnetlookup"]:
                 return
-            if IPNetwork(eventData).prefixlen < self.opts['maxsubnet']:
-                self.debug("Network size bigger than permitted: "
-                           + str(IPNetwork(eventData).prefixlen) + " > "
-                           + str(self.opts['maxsubnet']))
+            if IPNetwork(eventData).prefixlen < self.opts["maxsubnet"]:
+                self.debug(
+                    "Network size bigger than permitted: " +
+                    str(IPNetwork(eventData).prefixlen) +
+                    " > " +
+                    str(self.opts["maxsubnet"])
+                )
                 return
 
         qrylist = list()
@@ -176,35 +181,47 @@ class sfp_threatminer(SpiderFootPlugin):
 
             if "results" not in ret:
                 continue
-            if len(ret['results']) == 0:
+            if len(ret["results"]) == 0:
                 continue
 
             self.debug("Found passive DNS results in ThreatMiner")
             res = ret["results"]
             for rec in res:
                 # Skip stuff with no date
-                if rec.get('last_seen') == '':
+                if rec.get("last_seen") == "":
                     continue
-                last_seen = datetime.strptime(rec.get('last_seen', "1970-01-01 00:00:00"), '%Y-%m-%d %H:%M:%S')
+                last_seen = datetime.strptime(
+                    rec.get("last_seen",
+                            "1970-01-01 00:00:00"), "%Y-%m-%d %H:%M:%S"
+                )
                 last_ts = int(time.mktime(last_seen.timetuple()))
-                age_limit_ts = int(time.time()) - (86400 * self.opts['age_limit_days'])
-                if self.opts['age_limit_days'] > 0 and last_ts < age_limit_ts:
+                age_limit_ts = int(time.time()) - \
+                    (86400 * self.opts["age_limit_days"])
+                if self.opts["age_limit_days"] > 0 and last_ts < age_limit_ts:
                     self.debug("Record found but too old, skipping.")
                     continue
 
-                host = rec['domain']
+                host = rec["domain"]
                 if host == eventData:
                     continue
                 if self.getTarget().matches(host, includeParents=True):
-                    if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
-                        evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
+                    if (
+                        self.opts["verify"] and
+                        not self.sf.resolveHost(host) and
+                        not self.sf.resolveHost6(host)
+                    ):
+                        evt = SpiderFootEvent(
+                            "INTERNET_NAME_UNRESOLVED", host, self.__name__, event
+                        )
                     else:
-                        evt = SpiderFootEvent("INTERNET_NAME", host, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "INTERNET_NAME", host, self.__name__, event
+                        )
                     self.notifyListeners(evt)
                     self.reportedhosts[host] = True
                     continue
 
-                if self.cohostcount < self.opts['maxcohost']:
+                if self.cohostcount < self.opts["maxcohost"]:
                     e = SpiderFootEvent(evtType, host, self.__name__, event)
                     self.notifyListeners(e)
                     self.cohostcount += 1
@@ -228,11 +245,19 @@ class sfp_threatminer(SpiderFootPlugin):
 
                 self.reportedhosts[host] = True
 
-                if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
-                    evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
+                if (
+                    self.opts["verify"] and
+                    not self.sf.resolveHost(host) and
+                    not self.sf.resolveHost6(host)
+                ):
+                    evt = SpiderFootEvent(
+                        "INTERNET_NAME_UNRESOLVED", host, self.__name__, event
+                    )
                 else:
-                    evt = SpiderFootEvent("INTERNET_NAME", host, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "INTERNET_NAME", host, self.__name__, event)
                 evt = SpiderFootEvent(evtType, host, self.__name__, event)
                 self.notifyListeners(evt)
+
 
 # End of sfp_threatminer class

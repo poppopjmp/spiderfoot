@@ -16,30 +16,26 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_fortinet(SpiderFootPlugin):
 
     meta = {
-        'name': "FortiGuard Antispam",
-        'summary': "Check if an IP address is malicious according to FortiGuard Antispam.",
-        'flags': [],
-        'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"],
-        'dataSource': {
-            'website': "https://www.fortiguard.com/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "FortiGuard Antispam",
+        "summary": "Check if an IP address is malicious according to FortiGuard Antispam.",
+        "flags": [],
+        "useCases": ["Investigate", "Passive"],
+        "categories": ["Reputation Systems"],
+        "dataSource": {
+            "website": "https://www.fortiguard.com/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://www.fortiguard.com/learnmore#as",
             ],
-            'favIcon': "https://www.fortiguard.com/static/images/favicon.ico",
-            'logo': "https://www.fortiguard.com/static/images/Fortinet-logo%20white.png?v=880",
-            'description': "FortiGuard Antispam provides a comprehensive and multi-layered approach to detect and filter spam processed by organizations."
-        }
+            "favIcon": "https://www.fortiguard.com/static/images/favicon.ico",
+            "logo": "https://www.fortiguard.com/static/images/Fortinet-logo%20white.png?v=880",
+            "description": "FortiGuard Antispam provides a comprehensive and multi-layered approach to detect and filter spam processed by organizations.",
+        },
     }
 
-    opts = {
-        'checkaffiliates': True
-    }
+    opts = {"checkaffiliates": True}
 
-    optdescs = {
-        'checkaffiliates': "Apply checks to affiliates?"
-    }
+    optdescs = {"checkaffiliates": "Apply checks to affiliates?"}
 
     results = None
     errorState = False
@@ -74,21 +70,23 @@ class sfp_fortinet(SpiderFootPlugin):
 
         res = self.sf.fetchUrl(
             f"https://www.fortiguard.com/search?q={ip}&engine=8",
-            timeout=self.opts['_fetchtimeout'],
-            useragent=self.opts['_useragent'],
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
         )
 
-        if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from FortiGuard Antispam.")
+        if res["code"] != "200":
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from FortiGuard Antispam."
+            )
             self.errorState = True
             return None
 
-        if res['content'] is None:
+        if res["content"] is None:
             self.error("Received no content from FortiGuard Antispam")
             self.errorState = True
             return None
 
-        return res['content']
+        return res["content"]
 
     def handleEvent(self, event):
         eventName = event.eventType
@@ -105,14 +103,14 @@ class sfp_fortinet(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
-            malicious_type = 'MALICIOUS_IPADDR'
-            blacklist_type = 'BLACKLISTED_IPADDR'
-        elif eventName in ['AFFILIATE_IPADDR', 'AFFILIATE_IPV6_ADDRESS']:
-            if not self.opts.get('checkaffiliates', False):
+        if eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
+            malicious_type = "MALICIOUS_IPADDR"
+            blacklist_type = "BLACKLISTED_IPADDR"
+        elif eventName in ["AFFILIATE_IPADDR", "AFFILIATE_IPV6_ADDRESS"]:
+            if not self.opts.get("checkaffiliates", False):
                 return
-            malicious_type = 'MALICIOUS_AFFILIATE_IPADDR'
-            blacklist_type = 'BLACKLISTED_AFFILIATE_IPADDR'
+            malicious_type = "MALICIOUS_AFFILIATE_IPADDR"
+            blacklist_type = "BLACKLISTED_AFFILIATE_IPADDR"
         else:
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
@@ -133,5 +131,6 @@ class sfp_fortinet(SpiderFootPlugin):
 
         evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
         self.notifyListeners(evt)
+
 
 # End of sfp_fortinet class

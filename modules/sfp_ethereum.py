@@ -19,11 +19,11 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_ethereum(SpiderFootPlugin):
 
     meta = {
-        'name': "Ethereum Address Extractor",
-        'summary': "Identify ethereum addresses in scraped webpages.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        "name": "Ethereum Address Extractor",
+        "summary": "Identify ethereum addresses in scraped webpages.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Content Analysis"],
     }
 
     # Default options
@@ -69,5 +69,6 @@ class sfp_ethereum(SpiderFootPlugin):
             self.debug("Ethereum address match: " + m)
             evt = SpiderFootEvent("ETHEREUM_ADDRESS", m, self.__name__, event)
             self.notifyListeners(evt)
+
 
 # End of sfp_ethereum class
