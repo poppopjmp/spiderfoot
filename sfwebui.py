@@ -92,6 +92,10 @@ class SpiderFootWebUi:
         sf = SpiderFoot(self.defaultConfig)
         self.config = sf.configUnserialize(dbh.configGet(), self.defaultConfig)
 
+        # Ensure the __database key is set correctly
+        if "__database" not in self.config or not self.config["__database"]:
+            self.config["__database"] = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
+
         # Set up logging with more explicit configuration
         try:
             if loggingQueue is None:
