@@ -411,41 +411,22 @@ class SpiderFootHelpers:
             IOError: Error reading wordlist file
         """
         if not wordlists:
-            wordlists = ["english.dict"]
-            
+            wordlists = ["english"]
+        
         words = set()
         
-        try:
-            # Add path fallback logic to find dictionaries
-            import os
-            dict_paths = [
-                "./dicts",
-                "./dictionaries",
-                "../dicts",
-                "../dictionaries",
-                # Add more potential paths
-            ]
-            
-            for wordlist in wordlists:
-                word_file = None
+        for wordlist in wordlists:
+            try:
+                with (
+                    files("spiderfoot.dicts.ispell")
+                    .joinpath(f"{wordlist}.dict")
+                    .open(errors="ignore") as dict_file
+                ):
+                    for w in dict_file.readlines():
+                        words.add(w.strip().lower().split("/")[0])
+            except Exception as e:
+                raise IOError(f"Could not read wordlist file '{wordlist}.dict'") from e
                 
-                # Try multiple potential paths
-                for path in dict_paths:
-                    potential_path = os.path.join(path, wordlist)
-                    if os.path.isfile(potential_path):
-                        word_file = potential_path
-                        break
-                
-                if not word_file:
-                    # Create a dummy file for testing if needed
-                    words.add("dummy_word")
-                    continue
-                    
-                # ...existing code to read words...
-        except Exception:
-            # Return at least something for tests to work with
-            words = {"test", "words", "for", "testing"}
-            
         return words
 
     @staticmethod
@@ -882,7 +863,7 @@ class SpiderFootHelpers:
 
     @staticmethod
     def extractLinksFromHtml(
-        url: str, data: str, domains: typing.Optional[typing.List[str]]
+        url: str, data: str, domains: typing.Optional[typing.List[str]] = None
     ) -> typing.Dict[str, ExtractedLink]:
         """Find all URLs within the supplied content.
 
@@ -1000,9 +981,10 @@ class SpiderFootHelpers:
                 absLink = SpiderFootHelpers.urlBaseUrl(url) + link
 
             # Maybe the domain was just mentioned and not a link, so we make it one
-            for domain in domains:
-                if absLink is None and domain.lower() in link.lower():
-                    absLink = proto + "://" + link
+            if domains:
+                for domain in domains:
+                    if absLink is None and domain.lower() in link.lower():
+                        absLink = proto + "://" + link
 
             # Otherwise, it's a flat link within the current directory
             if absLink is None:
@@ -1029,56 +1011,20 @@ class SpiderFootHelpers:
         if not isinstance(data, str):
             return ret
 
-        # Optimized regex patterns using word boundaries - more efficient
-        # and just as effective as the more complex patterns
+        # Regex patterns for various hash types
         hashes = {
-            "MD5": re.compile(r"\b([a-fA-F0-9]{32})\b"),
-            "SHA1": re.compile(r"\b([a-fA-F0-9]{40})\b"),
-            "SHA256": re.compile(r"\b([a-fA-F0-9]{64})\b"),
-            "SHA512": re.compile(r"\b([a-fA-F0-9]{128})\b"),
+            "MD5": re.compile(r"\b([a-fA-F0-9]{32})\b", re.IGNORECASE),
+            "SHA1": re.compile(r"\b([a-fA-F0-9]{40})\b", re.IGNORECASE),
+            "SHA256": re.compile(r"\b([a-fA-F0-9]{64})\b", re.IGNORECASE),
+            "SHA512": re.compile(r"\b([a-fA-F0-9]{128})\b", re.IGNORECASE),
         }
 
-        # Extract each hash type and add to the results
-        for hash_type, pattern in hashes.items():
-            matches = pattern.findall(data)
+        for hash_type, hash_regex in hashes.items():
+            matches = hash_regex.findall(data)
             for match in matches:
                 ret.append((hash_type, match))
 
         return ret
-
-    @staticmethod
-    def extractUrlsFromRobotsTxt(robotsTxtData: str) -> typing.List[str]:
-        """Parse the contents of robots.txt to extract disallowed paths.
-
-        Args:
-            robotsTxtData (str): robots.txt file contents
-
-        Returns:
-            list[str]: list of patterns which should not be followed
-
-        Todo:
-            Check and parse User-Agent directives.
-            Handle whitespace properly - " " is not a valid disallowed path.
-        """
-        returnArr: typing.List[str] = list()
-
-        if not isinstance(robotsTxtData, str):
-            return returnArr
-
-        # Improved regex to better handle robots.txt format
-        # Matches after 'Disallow:' and captures until whitespace or a comment
-        disallow_pattern = re.compile(
-            r"^\s*Disallow:\s*([^ #\r\n]+)", re.IGNORECASE)
-
-        for line in robotsTxtData.splitlines():
-            match = disallow_pattern.search(line)
-            if match and match.group(1):
-                # Only add non-empty paths
-                path = match.group(1).strip()
-                if path:
-                    returnArr.append(path)
-
-        return returnArr
 
     @staticmethod
     def extractPgpKeysFromText(data: str) -> typing.List[str]:
@@ -1095,8 +1041,7 @@ class SpiderFootHelpers:
 
         keys: typing.Set[str] = set()
 
-        # Improved regex to match PGP key blocks
-        # This pattern looks for BEGIN and END block markers that are commonly found in PGP keys
+        # Match both public and private key blocks
         pattern = re.compile(
             r"-----BEGIN PGP (?:PUBLIC|PRIVATE) KEY BLOCK-----.*?-----END PGP (?:PUBLIC|PRIVATE) KEY BLOCK-----",
             re.DOTALL | re.MULTILINE,
@@ -1352,9 +1297,9 @@ class SpiderFootHelpers:
         if not isinstance(content, str):
             return []
 
-        # https://tools.ietf.org/html/rfc3986#section-3.3
+        # Improved regex pattern that captures more of the URL structure including paths
         return re.findall(
-            r"(https?://[a-zA-Z0-9-\.:]+/[\-\._~!\$&'\(\)\*\+\,\;=:@/a-zA-Z0-9]*)",
+            r"(https?://[a-zA-Z0-9-\.:]+(?:/[\-\._~!\$&'\(\)\*\+\,\;=:@/a-zA-Z0-9]*)?)",
             html.unescape(content),
         )
 
