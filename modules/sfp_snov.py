@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_snov(SpiderFootPlugin):
-
     meta = {
         "name": "Snov",
         "summary": "Gather available email IDs from identified domains",

@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_botscout(SpiderFootPlugin):
-
     meta = {
         "name": "BotScout",
         "summary": "Searches BotScout.com's database of spam-bot IP addresses and e-mail addresses.",

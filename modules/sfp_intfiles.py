@@ -14,7 +14,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_intfiles(SpiderFootPlugin):
-
     meta = {
         "name": "Interesting File Finder",
         "summary": "Identifies potential files of interest, e.g. office documents, zip files.",

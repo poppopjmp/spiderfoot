@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_maltiverse(SpiderFootPlugin):
-
     meta = {
         "name": "Maltiverse",
         "summary": "Obtain information about any malicious activities involving IP addresses",
@@ -88,7 +87,6 @@ class sfp_maltiverse(SpiderFootPlugin):
     # Check whether the IP Address is malicious using Maltiverse API
     # https://app.swaggerhub.com/apis-docs/maltiverse/api/1.0.0-oas3#/IPv4/getIP
     def queryIPAddress(self, qry):
-
         headers = {
             "Accept": "application/json",
         }
@@ -176,7 +174,6 @@ class sfp_maltiverse(SpiderFootPlugin):
             qrylist.append(eventData)
 
         for addr in qrylist:
-
             if self.checkForStop():
                 return
 

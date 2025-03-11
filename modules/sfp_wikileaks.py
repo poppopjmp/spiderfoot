@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_wikileaks(SpiderFootPlugin):
-
     meta = {
         "name": "Wikileaks",
         "summary": "Search Wikileaks for mentions of domain names and e-mail addresses.",

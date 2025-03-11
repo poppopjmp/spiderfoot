@@ -15,7 +15,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_slideshare(SpiderFootPlugin):
-
     meta = {
         "name": "SlideShare",
         "summary": "Gather name and location from SlideShare profiles.",

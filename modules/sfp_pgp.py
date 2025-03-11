@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_pgp(SpiderFootPlugin):
-
     meta = {
         "name": "PGP Key Servers",
         "summary": "Look up domains and e-mail addresses in PGP public key servers.",

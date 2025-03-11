@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_company(SpiderFootPlugin):
-
     meta = {
         "name": "Company Name Extractor",
         "summary": "Identify company names in any obtained data.",

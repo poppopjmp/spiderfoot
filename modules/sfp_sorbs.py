@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_sorbs(SpiderFootPlugin):
-
     meta = {
         "name": "SORBS",
         "summary": "Query the SORBS database for open relays, open proxies, vulnerable servers, etc.",

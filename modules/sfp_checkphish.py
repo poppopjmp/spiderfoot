@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_checkphish(SpiderFootPlugin):
-
     meta = {
         "name": "CheckPhish",
         "summary": "Check URLs against the CheckPhish API for phishing detection.",

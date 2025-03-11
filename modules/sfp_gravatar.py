@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_gravatar(SpiderFootPlugin):
-
     meta = {
         "name": "Gravatar",
         "summary": "Retrieve user information from Gravatar API.",

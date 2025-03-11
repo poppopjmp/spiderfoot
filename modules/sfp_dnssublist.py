@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dnssublist(SpiderFootPlugin):
-
     meta = {
         "name": "DNS Subdomain Enumerator",
         "summary": "Enumerate subdomains using various DNS techniques.",

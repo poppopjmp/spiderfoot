@@ -61,7 +61,7 @@ class TestSpiderFootThreadPool(unittest.TestCase):
                 *((i,) + args),
                 taskName="submitTest",
                 saveResult=True,
-                **kwargs
+                **kwargs,
             )
         map_results = sorted(
             list(
@@ -71,7 +71,7 @@ class TestSpiderFootThreadPool(unittest.TestCase):
                     *args,
                     taskName="mapTest",
                     saveResult=True,
-                    **kwargs
+                    **kwargs,
                 )
             ),
             key=lambda x: x[0],

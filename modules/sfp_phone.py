@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_phone(SpiderFootPlugin):
-
     meta = {
         "name": "Phone Number Extractor",
         "summary": "Identify phone numbers in scraped webpages.",

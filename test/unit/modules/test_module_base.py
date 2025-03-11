@@ -240,10 +240,12 @@ class SpiderFootModuleTestCase(unittest.TestCase):
         """Set up a module for testing with patched logging."""
         from sflib import SpiderFoot
 
-        with patch("logging.Logger.debug"), patch("logging.Logger.info"), patch(
-            "logging.Logger.warning"
-        ), patch("logging.Logger.error"):
-
+        with (
+            patch("logging.Logger.debug"),
+            patch("logging.Logger.info"),
+            patch("logging.Logger.warning"),
+            patch("logging.Logger.error"),
+        ):
             sf = SpiderFoot(self.default_options)
             module = module_class()
             module.setup(sf, self.default_options)

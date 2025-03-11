@@ -7,7 +7,6 @@ from spiderfoot import SpiderFootHelpers
 
 @pytest.mark.usefixtures
 class TestSpiderFootHelpers(unittest.TestCase):
-
     def test_data_path_should_return_a_string(self):
         data_path = SpiderFootHelpers.dataPath()
         self.assertIsInstance(data_path, str)

@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_darksearch(SpiderFootPlugin):
-
     meta = {
         "name": "Darksearch.io",
         "summary": "Search Darksearch.io for mentions of domain names and emails on the dark web.",

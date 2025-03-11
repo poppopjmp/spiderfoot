@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_accounts(SpiderFootPlugin):
-
     meta = {
         "name": "Account Finder",
         "summary": "Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc.",

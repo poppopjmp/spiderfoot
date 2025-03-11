@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_archiveorg(SpiderFootPlugin):
-
     meta = {
         "name": "Archive.org",
         "summary": "Identifies historic versions of interesting files/pages from the Wayback Machine.",

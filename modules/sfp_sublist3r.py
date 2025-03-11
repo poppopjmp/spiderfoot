@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_sublist3r(SpiderFootPlugin):
-
     meta = {
         "name": "Sublist3r PassiveDNS",
         "summary": "Passive subdomain enumeration using Sublist3r's API",
@@ -71,8 +70,7 @@ class sfp_sublist3r(SpiderFootPlugin):
             self.error("Error querying Sublist3r API")
 
         if res["code"] not in ["200"]:
-            self.error(
-                f"Bad response code \"{res['code']}\" from Sublist3r API")
+            self.error(f'Bad response code "{res["code"]}" from Sublist3r API')
 
         return list(set(ret))
 

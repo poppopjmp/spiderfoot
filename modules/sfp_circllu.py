@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_circllu(SpiderFootPlugin):
-
     meta = {
         "name": "CIRCL.LU",
         "summary": "Obtain information from CIRCL.LU's Passive DNS and Passive SSL databases.",

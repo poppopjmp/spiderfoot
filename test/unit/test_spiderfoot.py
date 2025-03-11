@@ -7,7 +7,6 @@ from sflib import SpiderFoot
 
 @pytest.mark.usefixtures
 class TestSpiderFoot(unittest.TestCase):
-
     default_modules = [
         "sfp_binstring",
         "sfp_company",

@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
 
 
 class sfp_tool_snallygaster(SpiderFootPlugin):
-
     meta = {
         "name": "Tool - snallygaster",
         "summary": "Finds file leaks and other security problems on HTTP servers.",

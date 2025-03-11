@@ -15,7 +15,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_hashes(SpiderFootPlugin):
-
     meta = {
         "name": "Hash Extractor",
         "summary": "Identify MD5 and SHA hashes in web content, files and more.",

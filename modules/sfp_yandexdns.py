@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_yandexdns(SpiderFootPlugin):
-
     meta = {
         "name": "Yandex DNS",
         "summary": "Check if a host would be blocked by Yandex DNS.",

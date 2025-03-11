@@ -14,7 +14,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_coinblocker(SpiderFootPlugin):
-
     meta = {
         "name": "CoinBlocker Lists",
         "summary": "Check if a domain appears on CoinBlocker lists.",

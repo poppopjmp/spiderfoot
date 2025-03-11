@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_alienvaultiprep(SpiderFootPlugin):
-
     meta = {
         "name": "AlienVault IP Reputation",
         "summary": "Check if an IP or netblock is malicious according to the AlienVault IP Reputation database.",

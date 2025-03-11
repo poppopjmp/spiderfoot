@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_cisco_umbrella(SpiderFootPlugin):
-
     meta = {
         "name": "Cisco Umbrella Investigate",
         "summary": "Query Cisco Umbrella Investigate API for domain information.",

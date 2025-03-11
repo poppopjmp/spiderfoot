@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_zoomeye(SpiderFootPlugin):
-
     meta = {
         "name": "ZoomEye",
         "summary": "Look up domain, IP address, and other information from ZoomEye.",

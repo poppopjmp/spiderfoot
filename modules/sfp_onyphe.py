@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_onyphe(SpiderFootPlugin):
-
     meta = {
         "name": "Onyphe",
         "summary": "Check Onyphe data (threat list, geo-location, pastries, vulnerabilities)  about a given IP.",

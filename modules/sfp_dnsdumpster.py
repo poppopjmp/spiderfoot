@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dnsdumpster(SpiderFootPlugin):
-
     meta = {
         "name": "DNSDumpster",
         "summary": "Passive subdomain enumeration using HackerTarget's DNSDumpster",
@@ -58,11 +57,10 @@ class sfp_dnsdumpster(SpiderFootPlugin):
             url, useragent=self.opts.get("_useragent", "Spiderfoot")
         )
         if res1["code"] not in ["200"]:
-            self.error(
-                f"Bad response code \"{res1['code']}\" from DNSDumpster")
+            self.error(f'Bad response code "{res1["code"]}" from DNSDumpster')
         else:
             self.debug(
-                f"Valid response code \"{res1['code']}\" from DNSDumpster")
+                f'Valid response code "{res1["code"]}" from DNSDumpster')
         html = BeautifulSoup(str(res1["content"]), features="lxml")
         csrftoken = None
         csrfmiddlewaretoken = None
@@ -103,8 +101,7 @@ class sfp_dnsdumpster(SpiderFootPlugin):
             useragent=self.opts.get("_useragent", "Spiderfoot"),
         )
         if res2["code"] not in ["200"]:
-            self.error(
-                f"Bad response code \"{res2['code']}\" from DNSDumpster")
+            self.error(f'Bad response code "{res2["code"]}" from DNSDumpster')
             return ret
 
         html = BeautifulSoup(str(res2["content"]), features="lxml")

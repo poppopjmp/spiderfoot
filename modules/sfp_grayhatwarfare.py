@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_grayhatwarfare(SpiderFootPlugin):
-
     meta = {
         "name": "Grayhat Warfare",
         "summary": "Find bucket names matching the keyword extracted from a domain from Grayhat API.",

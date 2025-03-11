@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_reversewhois(SpiderFootPlugin):
-
     meta = {
         "name": "ReverseWhois",
         "summary": "Reverse Whois lookups using reversewhois.io.",

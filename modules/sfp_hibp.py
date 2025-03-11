@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_hibp(SpiderFootPlugin):
-
     meta = {
         "name": "Have I Been Pwned",
         "summary": "Check Have I Been Pwned for email address breaches.",

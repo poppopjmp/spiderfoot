@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_emergingthreats(SpiderFootPlugin):
-
     meta = {
         "name": "Emerging Threats",
         "summary": "Check if a netblock or IP address is malicious according to EmergingThreats.net.",

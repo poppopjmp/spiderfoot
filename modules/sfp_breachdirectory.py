@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_breachdirectory(SpiderFootPlugin):
-
     meta = {
         "name": "BreachDirectory",
         "summary": "Check BreachDirectory for leaked credentials.",

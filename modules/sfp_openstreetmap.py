@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_openstreetmap(SpiderFootPlugin):
-
     meta = {
         "name": "OpenStreetMap",
         "summary": "Retrieves latitude/longitude coordinates for physical addresses from OpenStreetMap API.",

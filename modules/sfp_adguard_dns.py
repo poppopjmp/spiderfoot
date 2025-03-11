@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_adguard_dns(SpiderFootPlugin):
-
     meta = {
         "name": "AdGuard DNS",
         "summary": "Check if a host would be blocked by AdGuard DNS.",

@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_hybrid_analysis(SpiderFootPlugin):
-
     meta = {
         "name": "Hybrid Analysis",
         "summary": "Search Hybrid Analysis for domains and URLs related to the target.",

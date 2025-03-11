@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_cinsscore(SpiderFootPlugin):
-
     meta = {
         "name": "CINS Army List",
         "summary": "Check if a netblock or IP address is malicious according to Collective Intelligence Network Security (CINS) Army list.",

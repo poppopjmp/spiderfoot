@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_binaryedge(SpiderFootPlugin):
-
     meta = {
         "name": "BinaryEdge",
         "summary": "Obtain information from BinaryEdge.io Internet scanning systems, including breaches, vulnerabilities, torrents and passive DNS.",

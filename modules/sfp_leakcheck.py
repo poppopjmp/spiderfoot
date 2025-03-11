@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_leakcheck(SpiderFootPlugin):
-
     meta = {
         "name": "LeakCheck.io",
         "summary": "Gather breach data from LeakCheck API.",

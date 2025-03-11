@@ -21,7 +21,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_portscan_tcp(SpiderFootPlugin):
-
     meta = {
         "name": "Port Scanner - TCP",
         "summary": "Scans for commonly open TCP ports on Internet-facing systems.",

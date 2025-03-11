@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_ethereum(SpiderFootPlugin):
-
     meta = {
         "name": "Ethereum Address Extractor",
         "summary": "Identify ethereum addresses in scraped webpages.",

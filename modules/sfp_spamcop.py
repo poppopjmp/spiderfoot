@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_spamcop(SpiderFootPlugin):
-
     meta = {
         "name": "SpamCop",
         "summary": "Check if a netblock or IP address is in the SpamCop database.",

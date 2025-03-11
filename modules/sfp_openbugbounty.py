@@ -15,7 +15,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_openbugbounty(SpiderFootPlugin):
-
     meta = {
         "name": "Open Bug Bounty",
         "summary": "Check external vulnerability scanning/reporting service openbugbounty.org to see if the target is listed.",

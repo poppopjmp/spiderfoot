@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_seon(SpiderFootPlugin):
-
     meta = {
         "name": "Seon",
         "summary": "Queries seon.io to gather intelligence about IP Addresses, email addresses, and phone numbers",

@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_intelx(SpiderFootPlugin):
-
     meta = {
         "name": "IntelligenceX",
         "summary": "Obtain information from IntelligenceX about identified IP addresses, domains, e-mail addresses and phone numbers.",

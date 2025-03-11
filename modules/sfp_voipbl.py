@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_voipbl(SpiderFootPlugin):
-
     meta = {
         "name": "VoIP Blacklist (VoIPBL)",
         "summary": "Check if an IP address or netblock is malicious according to VoIP Blacklist (VoIPBL).",

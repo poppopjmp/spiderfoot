@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_twilio(SpiderFootPlugin):
-
     meta = {
         "name": "Twilio",
         "summary": "Obtain information from Twilio about phone numbers. Ensure you have the Caller Name add-on installed in Twilio.",
@@ -71,7 +70,6 @@ class sfp_twilio(SpiderFootPlugin):
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
     def queryPhoneNumber(self, phoneNumber):
-
         token = (
             base64.b64encode(
                 self.opts["api_key_account_sid"].encode("utf8") +

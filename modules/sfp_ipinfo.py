@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_ipinfo(SpiderFootPlugin):
-
     meta = {
         "name": "IPInfo.io",
         "summary": "Identifies the physical location of IP addresses identified using ipinfo.io.",

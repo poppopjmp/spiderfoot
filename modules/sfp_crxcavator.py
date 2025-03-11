@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_crxcavator(SpiderFootPlugin):
-
     meta = {
         "name": "CRXcavator",
         "summary": "Search CRXcavator for Chrome extensions.",

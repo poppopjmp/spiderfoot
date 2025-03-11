@@ -15,7 +15,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_creditcard(SpiderFootPlugin):
-
     meta = {
         "name": "Credit Card Number Extractor",
         "summary": "Identify Credit Card Numbers in any data",

@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_xforce(SpiderFootPlugin):
-
     meta = {
         "name": "XForce Exchange",
         "summary": "Obtain IP reputation and passive DNS information from IBM X-Force Exchange.",

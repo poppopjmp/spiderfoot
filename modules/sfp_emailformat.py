@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_emailformat(SpiderFootPlugin):
-
     meta = {
         "name": "EmailFormat",
         "summary": "Look up e-mail addresses on email-format.com.",

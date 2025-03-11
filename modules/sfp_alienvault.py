@@ -23,7 +23,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_alienvault(SpiderFootPlugin):
-
     meta = {
         "name": "AlienVault OTX",
         "summary": "Obtain information from AlienVault Open Threat Exchange (OTX)",

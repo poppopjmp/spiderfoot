@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_ripe(SpiderFootPlugin):
-
     meta = {
         "name": "RIPE",
         "summary": "Queries the RIPE registry (includes ARIN data) to identify netblocks and other info.",

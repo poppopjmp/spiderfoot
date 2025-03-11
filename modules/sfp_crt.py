@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_crt(SpiderFootPlugin):
-
     meta = {
         "name": "Certificate Transparency",
         "summary": "Gather hostnames from historical certificates in crt.sh.",

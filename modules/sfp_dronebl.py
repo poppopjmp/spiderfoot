@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dronebl(SpiderFootPlugin):
-
     meta = {
         "name": "DroneBL",
         "summary": "Query the DroneBL database for open relays, open proxies, vulnerable servers, etc.",

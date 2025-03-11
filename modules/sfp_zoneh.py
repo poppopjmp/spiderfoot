@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_zoneh(SpiderFootPlugin):
-
     meta = {
         "name": "Zone-H Defacement Check",
         "summary": "Check if a hostname/domain appears on the zone-h.org 'special defacements' RSS feed.",

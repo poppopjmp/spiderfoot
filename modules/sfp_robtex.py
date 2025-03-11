@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_robtex(SpiderFootPlugin):
-
     meta = {
         "name": "Robtex",
         "summary": "Search Robtex.com for hosts sharing the same IP.",

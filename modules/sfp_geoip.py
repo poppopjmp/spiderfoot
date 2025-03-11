@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_geoip(SpiderFootPlugin):
-
     meta = {
         "name": "GeoIP",
         "summary": "Identifies the physical location of IP addresses.",

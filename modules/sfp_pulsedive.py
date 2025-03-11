@@ -23,7 +23,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_pulsedive(SpiderFootPlugin):
-
     meta = {
         "name": "Pulsedive",
         "summary": "Obtain information from Pulsedive's API.",

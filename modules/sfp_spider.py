@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_spider(SpiderFootPlugin):
-
     meta = {
         "name": "Web Spider",
         "summary": "Spidering of web-pages to extract content for searching.",

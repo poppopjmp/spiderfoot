@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_multiproxy(SpiderFootPlugin):
-
     meta = {
         "name": "multiproxy.org Open Proxies",
         "summary": "Check if an IP address is an open proxy according to multiproxy.org open proxy list.",

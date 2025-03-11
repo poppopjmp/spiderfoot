@@ -14,7 +14,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_googlesearch(SpiderFootPlugin):
-
     meta = {
         "name": "Google",
         "summary": "Obtain information from the Google Custom Search API to identify sub-domains and links.",

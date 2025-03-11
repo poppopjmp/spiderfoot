@@ -21,7 +21,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_mnemonic(SpiderFootPlugin):
-
     meta = {
         "name": "Mnemonic PassiveDNS",
         "summary": "Obtain Passive DNS information from PassiveDNS.mnemonic.no.",

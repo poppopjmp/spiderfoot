@@ -21,7 +21,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_greynoise(SpiderFootPlugin):
-
     meta = {
         "name": "GreyNoise",
         "summary": "Obtain IP enrichment data from GreyNoise",

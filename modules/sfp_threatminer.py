@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_threatminer(SpiderFootPlugin):
-
     meta = {
         "name": "ThreatMiner",
         "summary": "Obtain information from ThreatMiner's database for passive DNS and threat intelligence.",

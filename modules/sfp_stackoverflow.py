@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_stackoverflow(SpiderFootPlugin):
-
     meta = {
         "name": "StackOverflow",
         "summary": "Search StackOverflow for any mentions of a target domain. Returns potentially related information.",

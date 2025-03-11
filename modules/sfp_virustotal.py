@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_virustotal(SpiderFootPlugin):
-
     meta = {
         "name": "VirusTotal",
         "summary": "Obtain information from VirusTotal about identified IP addresses.",

@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_emailrep(SpiderFootPlugin):
-
     meta = {
         "name": "EmailRep",
         "summary": "Search EmailRep.io for email address reputation.",

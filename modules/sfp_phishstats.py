@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_phishstats(SpiderFootPlugin):
-
     meta = {
         "name": "PhishStats",
         "summary": "Check if a netblock or IP address is malicious according to PhishStats.",

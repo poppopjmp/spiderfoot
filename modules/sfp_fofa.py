@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_fofa(SpiderFootPlugin):
-
     meta = {
         "name": "Fofa",
         "summary": "Look up domain, IP address, and other information from Fofa.",

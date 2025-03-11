@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_spur(SpiderFootPlugin):
-
     meta = {
         "name": "spur.us",
         "summary": "Obtain information about any malicious activities involving IP addresses found",
@@ -94,7 +93,6 @@ class sfp_spur(SpiderFootPlugin):
     # Check whether the IP Address is malicious using spur.us API
     # https://spur.us/app/docs
     def queryIPAddress(self, ipAddr):
-
         headers = {"Accept": "application/json", "token": self.opts["api_key"]}
 
         res = self.sf.fetchUrl(
@@ -182,7 +180,6 @@ class sfp_spur(SpiderFootPlugin):
             qrylist.append(eventData)
 
         for addr in qrylist:
-
             if self.checkForStop():
                 return
 

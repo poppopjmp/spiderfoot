@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_shodan(SpiderFootPlugin):
-
     meta = {
         "name": "SHODAN",
         "summary": "Obtain information from SHODAN about identified IP addresses.",

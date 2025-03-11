@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_spamhaus(SpiderFootPlugin):
-
     meta = {
         "name": "Spamhaus Zen",
         "summary": "Check if a netblock or IP address is in the Spamhaus Zen database.",

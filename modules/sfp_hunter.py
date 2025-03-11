@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_hunter(SpiderFootPlugin):
-
     meta = {
         "name": "Hunter.io",
         "summary": "Check for e-mail addresses and names on hunter.io.",

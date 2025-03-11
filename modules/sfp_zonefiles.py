@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_zonefiles(SpiderFootPlugin):
-
     meta = {
         "name": "ZoneFile.io",
         "summary": "Search ZoneFiles.io Domain query API for domain information.",

@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_riskiq(SpiderFootPlugin):
-
     meta = {
         "name": "RiskIQ",
         "summary": "Obtain information from RiskIQ's (formerly PassiveTotal) Passive DNS and Passive SSL databases.",

@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_ipapicom(SpiderFootPlugin):
-
     meta = {
         "name": "ipapi.com",
         "summary": "Queries ipapi.com to identify geolocation of IP Addresses using ipapi.com API",

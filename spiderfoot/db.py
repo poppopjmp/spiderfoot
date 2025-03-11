@@ -273,9 +273,9 @@ class SpiderFootDb:
         ["PHYSICAL_COORDINATES", "Physical Coordinates", 0, "ENTITY"],
         ["PGP_KEY", "PGP Public Key", 0, "DATA"],
         ["PROXY_HOST", "Proxy Host", 0, "DESCRIPTOR"],
-        ["PROVIDER_DNS", "Name Server (DNS " "NS" " Records)", 0, "ENTITY"],
+        ["PROVIDER_DNS", "Name Server (DNS NS Records)", 0, "ENTITY"],
         ["PROVIDER_JAVASCRIPT", "Externally Hosted Javascript", 0, "ENTITY"],
-        ["PROVIDER_MAIL", "Email Gateway (DNS " "MX" " Records)", 0, "ENTITY"],
+        ["PROVIDER_MAIL", "Email Gateway (DNS MX Records)", 0, "ENTITY"],
         ["PROVIDER_HOSTING", "Hosting Provider", 0, "ENTITY"],
         ["PROVIDER_TELCO", "Telecommunications Provider", 0, "ENTITY"],
         ["PUBLIC_CODE_REPO", "Public Code Repository", 0, "ENTITY"],
@@ -1623,7 +1623,7 @@ class SpiderFootDb:
 
         if not isinstance(sfEvent.eventType, str):
             raise TypeError(
-                f"sfEvent.eventType is {type(sfEvent.eventType,)}; expected str()"
+                f"sfEvent.eventType is {type(sfEvent.eventType)}; expected str()"
             ) from None
 
         if not sfEvent.eventType:

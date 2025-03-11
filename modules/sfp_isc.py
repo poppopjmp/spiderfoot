@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_isc(SpiderFootPlugin):
-
     meta = {
         "name": "Internet Storm Center",
         "summary": "Check if an IP address is malicious according to SANS ISC.",

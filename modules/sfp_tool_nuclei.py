@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
 
 
 class sfp_tool_nuclei(SpiderFootPlugin):
-
     meta = {
         "name": "Tool - Nuclei",
         "summary": "Fast and customisable vulnerability scanner.",

@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_ipqualityscore(SpiderFootPlugin):
-
     meta = {
         "name": "IPQualityScore",
         "summary": "Determine if target is malicious using IPQualityScore API",

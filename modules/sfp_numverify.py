@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_numverify(SpiderFootPlugin):
-
     meta = {
         "name": "numverify",
         "summary": "Lookup phone number location and carrier information from numverify.com.",

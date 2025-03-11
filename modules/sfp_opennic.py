@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_opennic(SpiderFootPlugin):
-
     meta = {
         "name": "OpenNIC DNS",
         "summary": "Resolves host names in the OpenNIC alternative DNS system.",

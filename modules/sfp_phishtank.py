@@ -14,7 +14,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_phishtank(SpiderFootPlugin):
-
     meta = {
         "name": "PhishTank",
         "summary": "Check if a host/domain is malicious according to PhishTank.",

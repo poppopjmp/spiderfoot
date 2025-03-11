@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_abstractapi(SpiderFootPlugin):
-
     meta = {
         "name": "AbstractAPI",
         "summary": "Look up domain, phone and IP address information from AbstractAPI.",

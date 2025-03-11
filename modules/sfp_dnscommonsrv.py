@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dnscommonsrv(SpiderFootPlugin):
-
     meta = {
         "name": "DNS Common SRV",
         "summary": "Attempts to identify hostnames through brute-forcing common DNS SRV records.",

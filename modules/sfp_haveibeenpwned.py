@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_haveibeenpwned(SpiderFootPlugin):
-
     meta = {
         "name": "HaveIBeenPwned",
         "summary": "Check HaveIBeenPwned.com for hacked e-mail addresses identified in breaches.",

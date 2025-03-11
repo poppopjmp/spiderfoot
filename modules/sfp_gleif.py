@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_gleif(SpiderFootPlugin):
-
     meta = {
         "name": "GLEIF",
         "summary": "Look up company information from Global Legal Entity Identifier Foundation (GLEIF).",

@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
 
 
 class sfp_tool_wappalyzer(SpiderFootPlugin):
-
     meta = {
         "name": "Out of Support ---------------------Tool - Wappalyzer",
         "summary": "Wappalyzer indentifies technologies on websites.",

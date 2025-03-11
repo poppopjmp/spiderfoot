@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_torexits(SpiderFootPlugin):
-
     meta = {
         "name": "TOR Exit Nodes",
         "summary": "Check if an IP adddress or netblock appears on the Tor Metrics exit node list.",

@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
 
 
 class sfp_tool_testsslsh(SpiderFootPlugin):
-
     meta = {
         "name": "Tool - testssl.sh",
         "summary": "Identify various TLS/SSL weaknesses, including Heartbleed, CRIME and ROBOT.",

@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_clearbit(SpiderFootPlugin):
-
     meta = {
         "name": "Clearbit",
         "summary": "Check for names, addresses, domains and more based on lookups of e-mail addresses on clearbit.com.",

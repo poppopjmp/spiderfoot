@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_talosintel(SpiderFootPlugin):
-
     meta = {
         "name": "Talos Intelligence",
         "summary": "Check if a netblock or IP address is malicious according to TalosIntelligence.",

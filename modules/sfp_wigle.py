@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_wigle(SpiderFootPlugin):
-
     meta = {
         "name": "WiGLE",
         "summary": "Query WiGLE to identify nearby WiFi access points.",

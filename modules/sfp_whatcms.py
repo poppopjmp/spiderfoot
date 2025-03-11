@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_whatcms(SpiderFootPlugin):
-
     meta = {
         "name": "WhatCMS",
         "summary": "Check web technology using WhatCMS.org API.",

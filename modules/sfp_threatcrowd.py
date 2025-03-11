@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_threatcrowd(SpiderFootPlugin):
-
     meta = {
         "name": "ThreatCrowd",
         "summary": "Obtain information from ThreatCrowd about identified IP addresses, domains and e-mail addresses.",

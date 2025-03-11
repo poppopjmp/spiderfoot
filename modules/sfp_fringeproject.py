@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_fringeproject(SpiderFootPlugin):
-
     meta = {
         "name": "Fringe Project",
         "summary": "Obtain information from Fringe Project about various online assets.",

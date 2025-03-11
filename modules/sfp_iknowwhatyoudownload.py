@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_iknowwhatyoudownload(SpiderFootPlugin):
-
     meta = {
         "name": "Iknowwhatyoudownload.com",
         "summary": "Check iknowwhatyoudownload.com for IP addresses that have been using torrents.",

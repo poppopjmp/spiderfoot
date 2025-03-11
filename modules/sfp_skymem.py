@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_skymem(SpiderFootPlugin):
-
     meta = {
         "name": "Skymem",
         "summary": "Look up e-mail addresses on Skymem.",

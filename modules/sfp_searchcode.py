@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_searchcode(SpiderFootPlugin):
-
     meta = {
         "name": "searchcode",
         "summary": "Search searchcode for code repositories mentioning the target domain.",

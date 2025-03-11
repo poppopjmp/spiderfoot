@@ -32,11 +32,11 @@ import requests
 ASCII_LOGO = f"""
   _________      .__    .___          ___________            __
  /   _____/_____ |__| __| _/__________\_   _____/___   _____/  |_
- \_____  \\____ \|  |/ __ |/ __ \_  __ \    __)/  _ \ /  _ \   __\
+ \_____  \\____ \|  |/ __ |/ __ \_  __ \    __)/  _ \ /  _ \   __|
  /        \  |_> >  / /_/ \  ___/|  | \/     \(  <_> |  <_> )  |
 /_______  /   __/|__\____ |\___  >__|  \___  / \____/ \____/|__|
         \/|__|           \/    \/          \/   
-{' '.join("SPIDERFOOT Open Source Intelligence Automation Tool " + __version__)}
+{" ".join("SPIDERFOOT Open Source Intelligence Automation Tool " + __version__)}
                 by Agostino Panico | @poppopjmp 2025
                         
 """
@@ -311,7 +311,7 @@ class SpiderFootCli(cmd.Cmd):
         # Then the separator
         for i, c in enumerate(cols):
             # out += "-" * ((maxsize[c]+spaces))
-            out.append("-" * ((maxsize[c] + spaces)))
+            out.append("-" * (maxsize[c] + spaces))
             if i < len(cols) - 1:
                 # out += "+"
                 out.append("+")

@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootHelpers
 
 
 class sfp_tool_whatweb(SpiderFootPlugin):
-
     meta = {
         "name": "Tool - WhatWeb",
         "summary": "Identify what software is in use on the specified website.",

@@ -246,7 +246,6 @@ class SpiderFootThreadPool:
 
 
 class ThreadPoolWorker(threading.Thread):
-
     def __init__(self, pool, name: str = None, logging_queue=None) -> None:
         self.logging_queue = logging_queue
         self.log = (

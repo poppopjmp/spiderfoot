@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_securitytrails(SpiderFootPlugin):
-
     meta = {
         "name": "SecurityTrails",
         "summary": "Obtain Passive DNS and other information from SecurityTrails",

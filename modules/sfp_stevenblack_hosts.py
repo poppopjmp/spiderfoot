@@ -15,7 +15,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_stevenblack_hosts(SpiderFootPlugin):
-
     meta = {
         "name": "Steven Black Hosts",
         "summary": "Check if a domain is malicious (malware or adware) according to Steven Black Hosts list.",

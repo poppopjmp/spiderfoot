@@ -14,7 +14,6 @@ from spiderfoot import SpiderFootPlugin
 
 
 class sfp_yahoosearch(SpiderFootPlugin):
-
     meta = {
         "name": "Yahoo Search",
         "summary": "Search Yahoo for information related to the target.",

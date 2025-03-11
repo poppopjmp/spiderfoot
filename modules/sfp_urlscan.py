@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_urlscan(SpiderFootPlugin):
-
     meta = {
         "name": "URLScan.io",
         "summary": "Search URLScan.io cache for domain information.",

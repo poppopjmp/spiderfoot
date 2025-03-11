@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_onioncity(SpiderFootPlugin):
-
     meta = {
         "name": "Onion.link",
         "summary": "Search Tor 'Onion City' search engine for mentions of the target domain using Google Custom Search.",

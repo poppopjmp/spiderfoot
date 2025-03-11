@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_grep_app(SpiderFootPlugin):
-
     meta = {
         "name": "grep.app",
         "summary": "Search grep.app API for links and emails related to the specified domain.",

@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_onionsearchengine(SpiderFootPlugin):
-
     meta = {
         "name": "Onionsearchengine.com",
         "summary": "Search Tor onionsearchengine.com for mentions of the target domain.",

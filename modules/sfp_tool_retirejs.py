@@ -21,7 +21,6 @@ from spiderfoot import SpiderFootPlugin, SpiderFootEvent
 
 
 class sfp_tool_retirejs(SpiderFootPlugin):
-
     meta = {
         "name": "Tool - Retire.js",
         "summary": "Scanner detecting the use of JavaScript libraries with known vulnerabilities",

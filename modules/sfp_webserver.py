@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_webserver(SpiderFootPlugin):
-
     meta = {
         "name": "Web Server Identifier",
         "summary": "Obtain web server banners to identify versions of web servers being used.",

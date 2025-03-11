@@ -15,7 +15,6 @@ from spiderfoot import SpiderFootPlugin
 
 
 class sfp__stor_db(SpiderFootPlugin):
-
     meta = {
         "name": "Storage",
         "summary": "Stores scan results into the back-end SpiderFoot database. You will need this.",

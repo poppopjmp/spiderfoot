@@ -247,9 +247,7 @@ class TestSpiderFootDb(SpiderFootModuleTestCase):
 
     def test_scanLogEvents(self):
         with patch("spiderfoot.db.sqlite3") as mock_sqlite3:
-            mock_sqlite3.connect.return_value.cursor.return_value.executemany.return_value = (
-                None
-            )
+            mock_sqlite3.connect.return_value.cursor.return_value.executemany.return_value = None
             batch = [
                 ("instanceId", "classification", "message", "component", 1234567890)
             ]
@@ -261,9 +259,7 @@ class TestSpiderFootDb(SpiderFootModuleTestCase):
 
     def test_scanLogEvent(self):
         with patch("spiderfoot.db.sqlite3") as mock_sqlite3:
-            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = (
-                None
-            )
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
             self.dbh.scanLogEvent("instanceId", "classification", "message")
             self.assertTrue(
                 mock_sqlite3.connect.return_value.cursor.return_value.execute.called
@@ -271,9 +267,7 @@ class TestSpiderFootDb(SpiderFootModuleTestCase):
 
     def test_scanInstanceCreate(self):
         with patch("spiderfoot.db.sqlite3") as mock_sqlite3:
-            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = (
-                None
-            )
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
             self.dbh.scanInstanceCreate("instanceId", "scanName", "scanTarget")
             self.assertTrue(
                 mock_sqlite3.connect.return_value.cursor.return_value.execute.called
@@ -281,9 +275,7 @@ class TestSpiderFootDb(SpiderFootModuleTestCase):
 
     def test_scanInstanceSet(self):
         with patch("spiderfoot.db.sqlite3") as mock_sqlite3:
-            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = (
-                None
-            )
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
             self.dbh.scanInstanceSet(
                 "instanceId", started="started", ended="ended", status="status"
             )
@@ -428,9 +420,7 @@ class TestSpiderFootDb(SpiderFootModuleTestCase):
 
     def test_scanInstanceDelete(self):
         with patch("spiderfoot.db.sqlite3") as mock_sqlite3:
-            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = (
-                None
-            )
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
             result = self.dbh.scanInstanceDelete("instanceId")
             self.assertTrue(result)
             self.assertTrue(
@@ -439,9 +429,7 @@ class TestSpiderFootDb(SpiderFootModuleTestCase):
 
     def test_scanResultsUpdateFP(self):
         with patch("spiderfoot.db.sqlite3") as mock_sqlite3:
-            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = (
-                None
-            )
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
             result = self.dbh.scanResultsUpdateFP(
                 "instanceId", ["resultHash"], 1)
             self.assertTrue(result)
@@ -451,9 +439,7 @@ class TestSpiderFootDb(SpiderFootModuleTestCase):
 
     def test_scanConfigSet(self):
         with patch("spiderfoot.db.sqlite3") as mock_sqlite3:
-            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = (
-                None
-            )
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
             self.dbh.scanConfigSet("scan_id", {"opt": "val"})
             self.assertTrue(
                 mock_sqlite3.connect.return_value.cursor.return_value.execute.called
@@ -469,9 +455,7 @@ class TestSpiderFootDb(SpiderFootModuleTestCase):
 
     def test_scanEventStore(self):
         with patch("spiderfoot.db.sqlite3") as mock_sqlite3:
-            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = (
-                None
-            )
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
             sfEvent = MagicMock()
             sfEvent.generated = 1234567890.0
             sfEvent.eventType = "type"
@@ -668,9 +652,7 @@ class TestSpiderFootDb(SpiderFootModuleTestCase):
 
     def test_correlationResultCreate(self):
         with patch("spiderfoot.db.sqlite3") as mock_sqlite3:
-            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = (
-                None
-            )
+            mock_sqlite3.connect.return_value.cursor.return_value.execute.return_value = None
             result = self.dbh.correlationResultCreate(
                 "instanceId",
                 "ruleId",

@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_whoxy(SpiderFootPlugin):
-
     meta = {
         "name": "Whoxy",
         "summary": "Reverse Whois lookups using Whoxy.com.",

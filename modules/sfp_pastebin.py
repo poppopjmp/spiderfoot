@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_pastebin(SpiderFootPlugin):
-
     meta = {
         "name": "PasteBin",
         "summary": "PasteBin search (via Google Search API) to identify related content.",

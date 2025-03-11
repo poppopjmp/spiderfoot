@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_venmo(SpiderFootPlugin):
-
     meta = {
         "name": "Venmo",
         "summary": "Gather user information from Venmo API.",

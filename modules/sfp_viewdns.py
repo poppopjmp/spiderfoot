@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_viewdns(SpiderFootPlugin):
-
     meta = {
         "name": "ViewDNS.info",
         "summary": "Identify co-hosted websites and perform reverse Whois lookups using ViewDNS.info.",

@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_uceprotect(SpiderFootPlugin):
-
     meta = {
         "name": "UCEPROTECT",
         "summary": "Check if a netblock or IP address is in the UCEPROTECT database.",

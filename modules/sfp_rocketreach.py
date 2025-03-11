@@ -18,7 +18,6 @@ import requests
 
 
 class sfp_rocketreach(SpiderFootPlugin):
-
     meta = {
         "name": "RocketReach (Official API)",
         "summary": "Look up contact information from RocketReach using the official API.",
@@ -148,7 +147,9 @@ class sfp_rocketreach(SpiderFootPlugin):
         query_type = (
             "email"
             if eventName == "EMAILADDR"
-            else "domain" if eventName == "DOMAIN_NAME" else None
+            else "domain"
+            if eventName == "DOMAIN_NAME"
+            else None
         )
 
         if not query_type:

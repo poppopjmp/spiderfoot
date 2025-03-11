@@ -14,6 +14,7 @@
 import argparse
 import logging
 import multiprocessing as mp
+from multiprocessing.connection import Listener
 import os
 import os.path
 import signal
@@ -313,7 +314,6 @@ def setup_logging(config: dict) -> queue.Queue:
 
 
 def main() -> None:
-
     try:
         # web server config
         sfWebUiConfig = {
@@ -469,7 +469,7 @@ def main() -> None:
 
         # Initialize the logging system
         logging_queue = (
-            multiprocessing.Queue(-1)
+            mp.Queue(-1)
             if sfConfig.get("__multiprocessing", False)
             else queue.Queue(-1)
         )
@@ -606,7 +606,7 @@ def main() -> None:
         start_scan(sfConfig, sfModules, args, loggingQueue)
 
         # Stop the listener when done
-        listener.stop()
+        Listener.stop()
 
     except Exception as e:
         log.critical(f"Unhandled exception in main: {e}", exc_info=True)
@@ -958,11 +958,6 @@ def start_web_server(
             },
         }
 
-        if enable_oauth:
-            # Use OAuth2 for authentication
-            log.info("Enabling OAuth2 authentication.")
-            app.include_router(router, prefix="/api")
-
         using_ssl = False
         key_path = SpiderFootHelpers.dataPath() + "/spiderfoot.key"
         crt_path = SpiderFootHelpers.dataPath() + "/spiderfoot.crt"
@@ -1111,10 +1106,6 @@ def start_rest_api_server(enable_oauth=False) -> None:  # P3926
     handle_logging_and_error_handling()
 
     log = logging.getLogger(f"spiderfoot.{__name__}")
-
-    if enable_oauth:
-        log.info("Enabling OAuth2 authentication for REST API.")
-        app.include_router(router, prefix="/api")
 
     uvicorn.run(app, host="0.0.0.0", port=8000)  # P3926
     check_rest_api_implementation()

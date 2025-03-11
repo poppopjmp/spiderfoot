@@ -15,7 +15,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_twitter(SpiderFootPlugin):
-
     meta = {
         "name": "Twitter",
         "summary": "Gather name and location from Twitter profiles.",

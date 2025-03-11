@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootHelpers
 
 
 class sfp_tool_dnstwist(SpiderFootPlugin):
-
     meta = {
         "name": "Tool - DNSTwist",
         "summary": "Identify bit-squatting, typo and other similar domains to the target using a local DNSTwist installation.",

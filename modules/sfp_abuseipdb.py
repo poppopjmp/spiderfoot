@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_abuseipdb(SpiderFootPlugin):
-
     meta = {
         "name": "AbuseIPDB",
         "summary": "Check if an IP address is malicious according to AbuseIPDB.com blacklist.",

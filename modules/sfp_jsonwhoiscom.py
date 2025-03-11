@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_jsonwhoiscom(SpiderFootPlugin):
-
     meta = {
         "name": "JsonWHOIS.com",
         "summary": "Search JsonWHOIS.com for WHOIS records associated with a domain.",

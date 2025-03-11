@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_apple_itunes(SpiderFootPlugin):
-
     meta = {
         "name": "Apple iTunes",
         "summary": "Search Apple iTunes for mobile apps.",

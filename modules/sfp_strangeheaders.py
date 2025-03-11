@@ -80,7 +80,6 @@ headers = [
 
 
 class sfp_strangeheaders(SpiderFootPlugin):
-
     meta = {
         "name": "Strange Header Identifier",
         "summary": "Obtain non-standard HTTP headers returned by web servers.",

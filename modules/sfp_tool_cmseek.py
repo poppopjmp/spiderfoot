@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootHelpers
 
 
 class sfp_tool_cmseek(SpiderFootPlugin):
-
     meta = {
         "name": "Tool - CMSeeK",
         "summary": "Identify what Content Management System (CMS) might be used.",

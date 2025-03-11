@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_psbdmp(SpiderFootPlugin):
-
     meta = {
         "name": "Psbdmp",
         "summary": "Check psbdmp.cc (PasteBin Dump) for potentially hacked e-mails and domains.",

@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dnsresolve(SpiderFootPlugin):
-
     meta = {
         "name": "DNS Resolver",
         "summary": "Resolves hosts and IP addresses identified, also extracted from raw content.",

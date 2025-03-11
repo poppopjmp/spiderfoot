@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_cloudfront(SpiderFootPlugin):
-
     meta = {
         "name": "Amazon CloudFront Detector",
         "summary": "Identify domains using Amazon CloudFront CDN.",

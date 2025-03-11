@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_honeypot(SpiderFootPlugin):
-
     meta = {
         "name": "Project Honey Pot",
         "summary": "Query the Project Honey Pot database for IP addresses.",

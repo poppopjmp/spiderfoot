@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_tool_nmap(SpiderFootPlugin):
-
     meta = {
         "name": "Tool - Nmap",
         "summary": "Identify what Operating System might be used.",

@@ -29,3 +29,5 @@ THANKYOU
 README.md
 generate-certificate
 .pylintrc
+.ruff_cache
+.pytest_cache

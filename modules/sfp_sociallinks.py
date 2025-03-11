@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_sociallinks(SpiderFootPlugin):
-
     meta = {
         "name": "Social Links",
         "summary": "Queries SocialLinks.io to gather intelligence from social media platforms and dark web.",

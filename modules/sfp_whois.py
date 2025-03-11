@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_whois(SpiderFootPlugin):
-
     meta = {
         "name": "Whois",
         "summary": "Perform a WHOIS look-up on domain names and owned netblocks.",

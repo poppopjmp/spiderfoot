@@ -21,7 +21,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_networksdb(SpiderFootPlugin):
-
     meta = {
         "name": "NetworksDB",
         "summary": "Search NetworksDB.io API for IP address and domain information.",

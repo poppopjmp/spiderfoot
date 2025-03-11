@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_opencorporates(SpiderFootPlugin):
-
     meta = {
         "name": "OpenCorporates",
         "summary": "Look up company information from OpenCorporates.",
@@ -151,7 +150,6 @@ class sfp_opencorporates(SpiderFootPlugin):
 
     # Extract company address, previous names, and officer names
     def extractCompanyDetails(self, company, sevt):
-
         # Extract registered address
         location = company.get("registered_address_in_full")
 

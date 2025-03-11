@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_duckduckgo(SpiderFootPlugin):
-
     meta = {
         "name": "DuckDuckGo",
         "summary": "Query DuckDuckGo's API for descriptive information about your target.",

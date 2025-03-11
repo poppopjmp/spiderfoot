@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_trashpanda(SpiderFootPlugin):
-
     meta = {
         "name": "Trashpanda",
         "summary": "Queries Trashpanda to gather intelligence about mentions of target in pastesites",

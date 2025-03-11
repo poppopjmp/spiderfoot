@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dns_for_family(SpiderFootPlugin):
-
     meta = {
         "name": "DNS for Family",
         "summary": "Check if a host would be blocked by DNS for Family.",

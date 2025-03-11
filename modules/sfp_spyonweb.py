@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_spyonweb(SpiderFootPlugin):
-
     meta = {
         "name": "SpyOnWeb",
         "summary": "Search SpyOnWeb for hosts sharing the same IP address, Google Analytics code, or Google Adsense code.",

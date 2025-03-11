@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_googleobjectstorage(SpiderFootPlugin):
-
     meta = {
         "name": "Google Object Storage Finder",
         "summary": "Search for potential Google Object Storage buckets associated with the target and attempt to list their contents.",

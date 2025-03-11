@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_fsecure_riddler(SpiderFootPlugin):
-
     meta = {
         "name": "F-Secure Riddler.io",
         "summary": "Obtain network information from F-Secure Riddler.io API.",

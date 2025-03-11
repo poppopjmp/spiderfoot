@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_threatjammer(SpiderFootPlugin):
-
     meta = {
         "name": "Threat Jammer",
         "summary": "Check if an IP address is malicious according to ThreatJammer.com",

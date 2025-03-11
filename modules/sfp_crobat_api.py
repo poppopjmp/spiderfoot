@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_crobat_api(SpiderFootPlugin):
-
     meta = {
         "name": "Crobat API",
         "summary": "Search Crobat API for subdomains.",

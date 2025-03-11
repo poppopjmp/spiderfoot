@@ -23,7 +23,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dnsgrep(SpiderFootPlugin):
-
     meta = {
         "name": "DNSGrep",
         "summary": "Obtain Passive DNS information from Rapid7 Sonar Project using DNSGrep API.",

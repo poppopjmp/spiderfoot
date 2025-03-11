@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_digitaloceanspace(SpiderFootPlugin):
-
     meta = {
         "name": "Digital Ocean Space Finder",
         "summary": "Search for potential Digital Ocean Spaces associated with the target and attempt to list their contents.",

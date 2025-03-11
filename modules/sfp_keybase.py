@@ -22,7 +22,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_keybase(SpiderFootPlugin):
-
     meta = {
         "name": "Keybase",
         "summary": "Obtain additional information about domain names and identified usernames.",

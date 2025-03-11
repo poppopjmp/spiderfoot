@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_ahmia(SpiderFootPlugin):
-
     meta = {
         "name": "Ahmia",
         "flags": ["tor"],

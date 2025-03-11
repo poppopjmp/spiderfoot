@@ -219,7 +219,6 @@ class sfp_dnsdb(SpiderFootPlugin):
                             "IP_ADDRESS", data, self.__name__, event)
 
                     if record.get("rrtype") == "AAAA":
-
                         if not self.getTarget().matches(
                             data, includeChildren=True, includeParents=True
                         ):

@@ -219,8 +219,9 @@ class TestSpiderFootPlugin(unittest.TestCase):
         # No assertions as finish is meant to be overridden
 
     def test_threadWorker(self):
-        with patch("spiderfoot.plugin.SpiderFootDb") as mock_SpiderFootDb, patch.object(
-            self.module, "poolExecute"
+        with (
+            patch("spiderfoot.plugin.SpiderFootDb") as mock_SpiderFootDb,
+            patch.object(self.module, "poolExecute"),
         ):
             self.module.incomingEventQueue = MagicMock()
             self.module.outgoingEventQueue = MagicMock()
@@ -309,8 +310,9 @@ class TestSpiderFootPlugin(unittest.TestCase):
         self.assertFalse(self.module.checkForStop()).return_value = None
 
     def test_threadWorker_with_incomingEventQueue(self):
-        with patch("spiderfoot.plugin.SpiderFootDb") as mock_SpiderFootDb, patch.object(
-            self.module, "poolExecute"
+        with (
+            patch("spiderfoot.plugin.SpiderFootDb") as mock_SpiderFootDb,
+            patch.object(self.module, "poolExecute"),
         ):
             self.module.outgoingEventQueue = MagicMock()
             self.module.incomingEventQueue.get_nowait.side_effect = [
@@ -323,9 +325,11 @@ class TestSpiderFootPlugin(unittest.TestCase):
             self.assertEqual(self.module.poolExecute.call_count, 2)
 
     def test_threadWorker_with_exception(self):
-        with patch("spiderfoot.plugin.SpiderFootDb") as mock_SpiderFootDb, patch.object(
-            self.module, "poolExecute"
-        ), patch.object(self.module, "sf"):
+        with (
+            patch("spiderfoot.plugin.SpiderFootDb") as mock_SpiderFootDb,
+            patch.object(self.module, "poolExecute"),
+            patch.object(self.module, "sf"),
+        ):
             self.module.outgoingEventQueue = MagicMock()
             self.module.incomingEventQueue.get_nowait.side_effect = Exception(
                 "Test exception"
@@ -337,8 +341,9 @@ class TestSpiderFootPlugin(unittest.TestCase):
             self.module.incomingEventQueue.get_nowait.assert_called()
 
     def test_threadWorker_with_keyboard_interrupt(self):
-        with patch("spiderfoot.plugin.SpiderFootDb") as mock_SpiderFootDb, patch.object(
-            self.module, "sf"
+        with (
+            patch("spiderfoot.plugin.SpiderFootDb") as mock_SpiderFootDb,
+            patch.object(self.module, "sf"),
         ):
             self.module.outgoingEventQueue = MagicMock()
             self.module.incomingEventQueue.get_nowait.side_effect = KeyboardInterrupt

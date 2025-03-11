@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_surbl(SpiderFootPlugin):
-
     meta = {
         "name": "SURBL",
         "summary": "Check if a netblock, IP address or domain is in the SURBL blacklist.",

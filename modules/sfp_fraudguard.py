@@ -21,7 +21,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_fraudguard(SpiderFootPlugin):
-
     meta = {
         "name": "Fraudguard",
         "summary": "Obtain threat information from Fraudguard.io",

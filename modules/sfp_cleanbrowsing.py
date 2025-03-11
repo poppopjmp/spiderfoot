@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_cleanbrowsing(SpiderFootPlugin):
-
     meta = {
         "name": "CleanBrowsing.org",
         "summary": "Check if a host would be blocked by CleanBrowsing.org DNS content filters.",

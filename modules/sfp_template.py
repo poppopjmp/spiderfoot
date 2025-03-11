@@ -204,7 +204,6 @@ class sfp_template(SpiderFootPlugin):
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
     def query(self, qry):
-
         # This is an example of querying SHODAN. Note that the fetch timeout
         # is inherited from global options (options prefixed with _ will come
         # from global config), and the user agent is SpiderFoot so that the

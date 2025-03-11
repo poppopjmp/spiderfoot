@@ -22,6 +22,11 @@ def fix_pep8_recursively(directory):
                 # Ruff (for specific fixes)
                 try:
                     subprocess.run(
+                        ["ruff", "format", filepath],
+                        check=True,
+                        capture_output=True,
+                    )
+                    subprocess.run(
                         ["ruff", "check", "--fix", filepath],
                         check=True,
                         capture_output=True,

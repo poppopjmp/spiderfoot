@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_ipstack(SpiderFootPlugin):
-
     meta = {
         "name": "ipstack",
         "summary": "Identifies the physical location of IP addresses identified using ipstack.com.",

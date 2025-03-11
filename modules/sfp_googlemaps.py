@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_googlemaps(SpiderFootPlugin):
-
     meta = {
         "name": "Google Maps",
         "summary": "Identifies potential physical addresses and latitude/longitude coordinates.",

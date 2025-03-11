@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_etherscan(SpiderFootPlugin):
-
     meta = {
         "name": "Etherscan",
         "summary": "Queries etherscan.io to find the balance of identified ethereum wallet addresses.",

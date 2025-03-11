@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_junkfiles(SpiderFootPlugin):
-
     meta = {
         "name": "Junk File Finder",
         "summary": "Looks for old/temporary and other similar files.",

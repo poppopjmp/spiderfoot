@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_leakix(SpiderFootPlugin):
-
     meta = {
         "name": "LeakIX",
         "summary": "Search LeakIX for host data leaks, open ports, software and geoip.",

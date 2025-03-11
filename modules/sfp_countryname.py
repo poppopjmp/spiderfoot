@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_countryname(SpiderFootPlugin):
-
     meta = {
         "name": "Country Name Extractor",
         "summary": "Identify country names in any obtained data.",

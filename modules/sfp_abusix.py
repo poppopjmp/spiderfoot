@@ -19,7 +19,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_abusix(SpiderFootPlugin):
-
     meta = {
         "name": "Abusix Mail Intelligence",
         "summary": "Check if a netblock or IP address is in the Abusix Mail Intelligence blacklist.",

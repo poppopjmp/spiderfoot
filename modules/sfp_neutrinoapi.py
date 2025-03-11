@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_neutrinoapi(SpiderFootPlugin):
-
     meta = {
         "name": "NeutrinoAPI",
         "summary": "Search NeutrinoAPI for phone location information, IP address information, and host reputation.",

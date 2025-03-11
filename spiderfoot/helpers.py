@@ -15,7 +15,6 @@ import sys
 try:
     from importlib import resources, files
 except ImportError:
-
     try:
         # Try the importlib_resources backport if available
         import importlib_resources
@@ -420,9 +419,11 @@ class SpiderFootHelpers:
 
         for d in wordlists:
             try:
-                with files("spiderfoot.dicts.ispell").joinpath(f"{d}.dict").open(
-                    errors="ignore"
-                ) as dict_file:
+                with (
+                    files("spiderfoot.dicts.ispell")
+                    .joinpath(f"{d}.dict")
+                    .open(errors="ignore") as dict_file
+                ):
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split("/")[0])
             except Exception as e:
@@ -453,9 +454,11 @@ class SpiderFootHelpers:
 
         for d in wordlists:
             try:
-                with files("spiderfoot.dicts.ispell").joinpath(f"{d}.dict").open(
-                    errors="ignore"
-                ) as dict_file:
+                with (
+                    files("spiderfoot.dicts.ispell")
+                    .joinpath(f"{d}.dict")
+                    .open(errors="ignore") as dict_file
+                ):
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split("/")[0])
             except Exception as e:

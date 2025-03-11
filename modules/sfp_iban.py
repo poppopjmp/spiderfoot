@@ -15,7 +15,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_iban(SpiderFootPlugin):
-
     meta = {
         "name": "IBAN Number Extractor",
         "summary": "Identify International Bank Account Numbers (IBANs) in any data.",

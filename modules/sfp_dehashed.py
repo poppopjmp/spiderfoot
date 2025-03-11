@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dehashed(SpiderFootPlugin):
-
     meta = {
         "name": "Dehashed",
         "summary": "Gather breach data from Dehashed API.",
@@ -29,7 +28,7 @@ class sfp_dehashed(SpiderFootPlugin):
             "model": "COMMERCIAL_ONLY",
             "references": ["https://www.dehashed.com/docs"],
             "apiKeyInstructions": [
-                "Visit https://www.dehashed.com/register" "Register a free account",
+                "Visit https://www.dehashed.com/registerRegister a free account",
                 "Visit https://www.dehashed.com/profile",
                 "Your API key is listed under 'API Key'",
             ],
@@ -89,9 +88,9 @@ class sfp_dehashed(SpiderFootPlugin):
     # Query Dehashed
     def query(self, event, per_page, start):
         if event.eventType == "EMAILADDR":
-            queryString = f"https://api.dehashed.com/search?query=email:\"{event.data}\"&page={start}&size={self.opts['per_page']}"
+            queryString = f'https://api.dehashed.com/search?query=email:"{event.data}"&page={start}&size={self.opts["per_page"]}'
         if event.eventType == "DOMAIN_NAME":
-            queryString = f"https://api.dehashed.com/search?query=email:\"@{event.data}\"&page={start}&size={self.opts['per_page']}"
+            queryString = f'https://api.dehashed.com/search?query=email:"@{event.data}"&page={start}&size={self.opts["per_page"]}'
 
         token = (
             base64.b64encode(

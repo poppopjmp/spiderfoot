@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_metadefender(SpiderFootPlugin):
-
     meta = {
         "name": "MetaDefender",
         "summary": "Search MetaDefender API for IP address and domain IP reputation.",

@@ -21,7 +21,6 @@ from spiderfoot import SpiderFootPlugin, SpiderFootEvent
 
 
 class sfp_tool_trufflehog(SpiderFootPlugin):
-
     meta = {
         "name": "Tool - TruffleHog",
         "summary": "Searches through git repositories for high entropy strings and secrets, digging deep into commit history.",

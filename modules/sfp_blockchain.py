@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_blockchain(SpiderFootPlugin):
-
     meta = {
         "name": "Blockchain",
         "summary": "Queries blockchain.info to find the balance of identified bitcoin wallet addresses.",

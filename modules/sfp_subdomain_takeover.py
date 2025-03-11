@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_subdomain_takeover(SpiderFootPlugin):
-
     meta = {
         "name": "Subdomain Takeover Checker",
         "summary": "Check if affiliated subdomains are vulnerable to takeover.",

@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_punkspider(SpiderFootPlugin):
-
     meta = {
         "name": "PunkSpider",
         "summary": "Check the QOMPLX punkspider.io service to see if the target is listed as vulnerable.",

@@ -21,7 +21,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_koodous(SpiderFootPlugin):
-
     meta = {
         "name": "Koodous",
         "summary": "Search Koodous for mobile apps.",

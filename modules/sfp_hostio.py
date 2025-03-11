@@ -15,7 +15,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_hostio(SpiderFootPlugin):
-
     meta = {
         "name": "Host.io",
         "summary": "Obtain information about domain names from host.io.",

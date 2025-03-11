@@ -535,7 +535,6 @@ class SpiderFootScanner:
 
             # watch for newly-generated events
             while True:
-
                 # log status of threads every 10 iterations
                 log_status = counter % 10 == 0
                 counter += 1

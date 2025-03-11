@@ -18,7 +18,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_torch(SpiderFootPlugin):
-
     meta = {
         "name": "TORCH",
         "summary": "Search Tor 'TORCH' search engine for mentions of the target domain.",

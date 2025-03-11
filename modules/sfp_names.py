@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_names(SpiderFootPlugin):
-
     meta = {
         "name": "Human Name Extractor",
         "summary": "Attempt to identify human names in fetched content.",

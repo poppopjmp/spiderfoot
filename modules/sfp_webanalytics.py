@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_webanalytics(SpiderFootPlugin):
-
     meta = {
         "name": "Web Analytics Extractor",
         "summary": "Identify web analytics IDs in scraped webpages and DNS TXT records.",

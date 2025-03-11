@@ -20,7 +20,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootHelpers
 
 
 class sfp_tool_nbtscan(SpiderFootPlugin):
-
     meta = {
         "name": "Tool - nbtscan",
         "summary": "Scans for open NETBIOS nameservers on your target's network.",

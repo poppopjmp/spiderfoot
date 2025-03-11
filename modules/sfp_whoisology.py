@@ -16,7 +16,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_whoisology(SpiderFootPlugin):
-
     meta = {
         "name": "Whoisology",
         "summary": "Reverse Whois lookups using Whoisology.com.",

@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_googlesafebrowsing(SpiderFootPlugin):
-
     meta = {
         "name": "Google SafeBrowsing",
         "summary": "Check if the URL is included on any of the Safe Browsing lists.",
@@ -90,7 +89,6 @@ class sfp_googlesafebrowsing(SpiderFootPlugin):
         ]
 
     def query(self, qry):
-
         headers = {"Content-Type": "application/json"}
         url = (
             "https://safebrowsing.googleapis.com/v4/threatMatches"

@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_quad9(SpiderFootPlugin):
-
     meta = {
         "name": "Quad9",
         "summary": "Check if a host would be blocked by Quad9 DNS.",

@@ -17,7 +17,6 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_nameapi(SpiderFootPlugin):
-
     meta = {
         "name": "NameAPI",
         "summary": "Check whether an email is disposable",
