@@ -23,7 +23,7 @@ jobs:
         run: npm install -g jscpd
 
       - name: Run jscpd
-        run: jscpd --min-tokens 50 --reporters console --path .
+        run: jscpd --min-tokens 50 --reporters console .
 
       - name: Set up Python
         uses: actions/setup-python@v4
