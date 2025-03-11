@@ -30,8 +30,17 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install docformatter
-        run: pip install docformatter
+      - name: Install docformatter, black, and autopep8
+        run: |
+          pip install docformatter
+          pip install black
+          pip install autopep8
 
       - name: Run docformatter
         run: docformatter --in-place --recursive .
+
+      - name: Run black
+        run: black .
+
+      - name: Run autopep8
+        run: autopep8 --in-place --recursive .
