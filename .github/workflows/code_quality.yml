@@ -1,0 +1,37 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [master, v5.0.3-dev]
+  pull_request:
+    branches: [master, v5.0.3-dev]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install jscpd
+        run: npm install -g jscpd
+
+      - name: Run jscpd
+        run: jscpd --min-tokens 50 --reporters console --path .
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install docformatter
+        run: pip install docformatter
+
+      - name: Run docformatter
+        run: docformatter --in-place --recursive .
