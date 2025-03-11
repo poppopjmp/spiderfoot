@@ -1,6 +1,7 @@
 # test_spiderfoot.py
 import pytest
 import unittest
+import os
 
 from spiderfoot import SpiderFootHelpers
 
@@ -270,7 +271,7 @@ class TestSpiderFootHelpers(unittest.TestCase):
     def test_validLEI_should_return_a_boolean(self):
         invalid_types = [None, "", bytes(), list(), dict(), int()]
         for invalid_type in invalid_types:
-            with self.subTest(invalid_type=invalid_type):
+            with self.subTest(invalid_type=invalid_types):
                 valid_phone = SpiderFootHelpers.validLEI(invalid_type)
                 self.assertIsInstance(valid_phone, bool)
                 self.assertFalse(valid_phone)
