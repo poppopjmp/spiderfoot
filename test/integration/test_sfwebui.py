@@ -132,7 +132,6 @@ class TestSpiderFootWebUiRoutes(helper.CPWebCase):
         self.assertStatus("200 OK")
         self.assertInBody("Scan ID not found.")
 
-    @unittest.skip("todo")
     def test_opts_returns_200(self):
         self.getPage("/opts")
         self.assertStatus("200 OK")
@@ -156,12 +155,10 @@ class TestSpiderFootWebUiRoutes(helper.CPWebCase):
         self.assertStatus("404 Not Found")
         self.assertInBody("Scan doesnotexist does not exist")
 
-    @unittest.skip("todo")
     def test_savesettings(self):
         self.getPage("/savesettings")
         self.assertStatus("200 OK")
 
-    @unittest.skip("todo")
     def test_savesettingsraw(self):
         self.getPage("/savesettingsraw")
         self.assertStatus("200 OK")

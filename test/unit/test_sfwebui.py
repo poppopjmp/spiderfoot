@@ -169,20 +169,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
         search_results = sfwebui.searchBase(None, None, "//")
         self.assertIsInstance(search_results, list)
 
-    @unittest.skip("todo")
-    def test_scan_correlations_export(self):
-        opts = self.default_options
-        opts["__modules__"] = dict()
-        scan_id = ""
-        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
-        search_results = sfwebui.scancorrelationsexport(
-            scan_id, "csv", "excel")
-        self.assertIsInstance(search_results, bytes)
-        search_results = sfwebui.scancorrelationsexport(
-            scan_id, "xlxs", "excel")
-        self.assertIsInstance(search_results, bytes)
-
-    @unittest.skip("todo")
     def test_scan_event_result_export_should_return_bytes(self):
         """
         Test scaneventresultexport(self, id, type, filetype="csv", dialect="excel")
@@ -195,7 +181,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
         search_results = sfwebui.scaneventresultexport("", "", "excel")
         self.assertIsInstance(search_results, bytes)
 
-    @unittest.skip("todo")
     def test_scan_event_result_export_multi(self):
         """
         Test scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel")
@@ -208,7 +193,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
         search_results = sfwebui.scaneventresultexportmulti("", "excel")
         self.assertIsInstance(search_results, bytes)
 
-    @unittest.skip("todo")
     def test_scan_search_result_export(self):
         """
         Test scansearchresultexport(self, id, eventType=None, value=None, filetype="csv", dialect="excel")
@@ -233,7 +217,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIsInstance(logs, str)
         self.assertIn("Scan ID not found.", logs)
 
-    @unittest.skip("todo")
     def test_scan_export_logs_should_return_bytes(self):
         """
         Test scanexportlogs(self: 'SpiderFootWebUi', id: str, dialect: str = "excel") -> str
@@ -244,7 +227,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
         logs = sfwebui.scanexportlogs("scan id", "excel")
         self.assertIsInstance(logs, bytes)
 
-    @unittest.skip("todo")
     def test_scan_export_json_multi(self):
         """
         Test scanexportjsonmulti(self, ids)
@@ -255,7 +237,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
         search_results = sfwebui.scanexportjsonmulti(None)
         self.assertIsInstance(search_results, bytes)
 
-    @unittest.skip("todo")
     def test_scan_viz_should_return_a_string(self):
         """
         Test scanviz(self, id, gexf="0")
@@ -266,7 +247,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
         scan_viz = sfwebui.scanviz(None, None)
         self.assertIsInstance(scan_viz, str)
 
-    @unittest.skip("todo")
     def test_scan_viz_multi_should_return_a_string(self):
         """
         Test scanvizmulti(self, ids, gexf="1")
@@ -293,7 +273,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIsInstance(rerunscan, str)
         self.assertIn("Invalid scan ID", rerunscan)
 
-    @unittest.skip("todo")
     def test_rerunscanmulti(self):
         """
         Test rerunscanmulti(self, ids)
@@ -304,12 +283,15 @@ class TestSpiderFootWebUi(unittest.TestCase):
         rerunscanmulti = sfwebui.rerunscanmulti("example scan instance")
         self.assertIsInstance(rerunscanmulti, str)
 
-    @unittest.skip("todo")
     def test_newscan(self):
         """
         Test newscan(self)
         """
-        self.assertEqual("TBD", "TBD")
+        opts = self.default_options
+        opts["__modules__"] = dict()
+        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+        new_scan = sfwebui.newscan()
+        self.assertIsInstance(new_scan, str)
 
     def test_clonescan(self):
         """
@@ -400,9 +382,15 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIsInstance(save_settings, str)
         self.assertIn("Invalid token", save_settings)
 
-    @unittest.skip("todo")
     def test_savesettings(self):
-        self.assertEqual("TBD", "TBD")
+        """
+        Test savesettings(self, allopts, token, configFile=None)
+        """
+        opts = self.default_options
+        opts["__modules__"] = dict()
+        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+        save_settings = sfwebui.savesettings(None, "valid token", None)
+        self.assertIsInstance(save_settings, str)
 
     def test_savesettingsraw_invalid_csrf_token_should_return_an_error(self):
         opts = self.default_options
@@ -412,9 +400,15 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIsInstance(save_settings_raw, bytes)
         self.assertIn(b"Invalid token", save_settings_raw)
 
-    @unittest.skip("todo")
     def test_savesettingsraw(self):
-        self.assertEqual("TBD", "TBD")
+        """
+        Test savesettingsraw(self, allopts, token)
+        """
+        opts = self.default_options
+        opts["__modules__"] = dict()
+        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+        save_settings_raw = sfwebui.savesettingsraw(None, "valid token")
+        self.assertIsInstance(save_settings_raw, bytes)
 
     def test_reset_settings_should_return_true(self):
         opts = self.default_options
@@ -424,12 +418,15 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIsInstance(reset_settings, bool)
         self.assertTrue(reset_settings)
 
-    @unittest.skip("todo")
     def test_result_set_fp(self):
         """
         Test resultsetfp(self, id, resultids, fp)
         """
-        self.assertEqual("TBD", "TBD")
+        opts = self.default_options
+        opts["__modules__"] = dict()
+        sfwebui = SpiderFootWebUi(self.web_default_options, opts)
+        result_set_fp = sfwebui.resultsetfp("example scan id", "example result ids", "example fp")
+        self.assertIsInstance(result_set_fp, str)
 
     def test_eventtypes_should_return_list(self):
         opts = self.default_options
@@ -496,7 +493,6 @@ class TestSpiderFootWebUi(unittest.TestCase):
             query.get("error").get("message"),
         )
 
-    @unittest.skip("todo")
     def test_start_scan_should_start_a_scan(self):
         """
         Test startscan(self, scanname, scantarget, modulelist, typelist, usecase)
