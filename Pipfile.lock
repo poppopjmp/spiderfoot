@@ -675,12 +675,12 @@
         },
         "publicsuffixlist": {
             "hashes": [
-                "sha256:15d6dda9e2cb573cd6367a55532c483831349dde46eae687d89e8ba466da78b0",
-                "sha256:2e00bc29b04279a842237583a3b0e47832d59f5ff9ddbcbf1052cd9c8e0162c4"
+                "sha256:729f13e1ce3aee005059bed3b76a43175420235bc8bbbe0a295a432bfa94ff83",
+                "sha256:c5af1995384716ec3ded22d5571592d98505503f6643557ebf27d53d8619e8f9"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.5'",
-            "version": "==1.0.2.20250307"
+            "version": "==1.0.2.20250312"
         },
         "pycparser": {
             "hashes": [
