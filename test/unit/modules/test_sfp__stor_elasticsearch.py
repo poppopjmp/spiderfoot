@@ -18,14 +18,14 @@ class TestModuleStorElasticsearch(SpiderFootModuleTestCase):
         patcher1 = patch('logging.getLogger', return_value=self.log_mock)
         self.addCleanup(patcher1.stop)
         self.mock_logger = patcher1.start()
-        
+
         # Create module wrapper class dynamically
         module_attributes = {
             'descr': "Description for sfp__stor_elasticsearch",
             # Add module-specific options
 
         }
-        
+
         self.module_class = self.create_module_wrapper(
             sfp__stor_elasticsearch,
             module_attributes=module_attributes
