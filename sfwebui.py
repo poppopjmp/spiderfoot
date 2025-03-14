@@ -1630,11 +1630,6 @@ class SpiderFootWebUi:
             return json.dumps(["ERROR", "Vacuuming the database failed"]).encode('utf-8')
         except Exception as e:
             return json.dumps(["ERROR", f"Vacuuming the database failed: {e}"]).encode('utf-8')
-
-    #
-    # DATA PROVIDERS
-    #
-
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanlog(self: 'SpiderFootWebUi', id: str, limit: str = None, rowId: str = None, reverse: str = None) -> list:
@@ -1694,25 +1689,36 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanlist_rendered(self: 'SpiderFootWebUi') -> str:
+    def scanlist_rendered(self: 'SpiderFootWebUi', newscan: str = None, rerunscans: str = None, stoppedscan: str = None, errors: list = None) -> str:
         """Display the scan list page.
+
+        Args:
+            newscan (str): If set, displays notification about a successful new scan
+            rerunscans (str): If set, displays notification about rerunning scans
+            stoppedscan (str): If set, displays notification about stopped scan
+            errors (list): List of errors to display
 
         Returns:
             str: Scan list page HTML
         """
         templ = Template(
             filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
-        return templ.render(docroot=self.docroot, pageid="SCANLIST", version=__version__)
+        return templ.render(docroot=self.docroot, pageid="SCANLIST", version=__version__,
+                            newscan=newscan, rerunscans=rerunscans, stoppedscan=stoppedscan,
+                            errors=errors if errors else [])
 
-    # Redirect the root scanlist endpoint to the rendered version
     @cherrypy.expose
-    def scanlist(self: 'SpiderFootWebUi') -> list:
-        """Produce a list of scans.
+    def scanlist(self: 'SpiderFootWebUi', newscan: str = None, rerunscans: str = None, stoppedscan: str = None) -> str:
+        """Produce a list of scans or render the scan list page.
+
+        Args:
+            newscan (str): If set, displays notification about a successful new scan
+            rerunscans (str): If set, displays notification about rerunning scans
+            stoppedscan (str): If set, displays notification about stopped scan
 
         Returns:
-            list: scan list if JSON is requested, otherwise redirects to HTML page
+            str: scan list if JSON is requested, otherwise returns the HTML page
         """
-        # If this is an AJAX request or specifically asking for JSON, return JSON
         if (cherrypy.request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
             (cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'))):
             
@@ -1752,8 +1758,11 @@ class SpiderFootWebUi:
             cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
             return retdata
         
-        # For direct browser access, redirect to the HTML template version
-        raise cherrypy.HTTPRedirect(f"{self.docroot}/scanlist_rendered")
+        templ = Template(
+            filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
+        return templ.render(docroot=self.docroot, pageid="SCANLIST", version=__version__,
+                           newscan=newscan, rerunscans=rerunscans, stoppedscan=stoppedscan,
+                           errors=[])
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -1980,14 +1989,14 @@ class SpiderFootWebUi:
         datamap = dict()
         retdata = dict()
 
-        # Get the events we will be tracing back from
+
         try:
             leafSet = dbh.scanResultEvent(id, eventType)
             [datamap, pc] = dbh.scanElementSourcesAll(id, leafSet)
         except Exception:
             return retdata
 
-        # Delete the ROOT key as it adds no value from a viz perspective
+
         del pc['ROOT']
         retdata['tree'] = SpiderFootHelpers.dataParentChildToTree(pc)
         retdata['data'] = datamap
