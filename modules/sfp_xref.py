@@ -20,7 +20,7 @@ class sfp_xref(SpiderFootPlugin):
         "summary": "Cross-references data collected from various sources to identify relationships between entities.",
         "flags": [],
         "useCases": ["Footprint", "Investigate"],
-        "categories": ["Passive"],
+        "categories": ["Search Engines"],
         "dataSource": {
             "website": "https://github.com/smicallef/spiderfoot",
             "model": "FREE_NOAUTH_UNLIMITED",
