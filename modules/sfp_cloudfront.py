@@ -21,7 +21,7 @@ class sfp_cloudfront(SpiderFootPlugin):
         "summary": "Identify domains using Amazon CloudFront CDN.",
         "flags": [],
         "useCases": ["Footprint", "Investigate", "Passive"],
-        "categories": ["Content Delivery Networks"],
+        "categories": ["Reputation Systems"],
         "dataSource": {
             "website": "https://aws.amazon.com/cloudfront/",
             "model": "FREE_NOAUTH_UNLIMITED",

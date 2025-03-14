@@ -1,54 +1,45 @@
 <%include file="HEADER.tmpl"/>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <h2>Scans &nbsp;<img id="loader" src="${docroot}/static/img/loader.gif"></h2>
-        </div>
-    </div>
+    <h2>Scans &nbsp;<img id="loader" src="${docroot}/static/img/loader.gif"></h2>
+<div id="scancontent">
+% if newscan:
+<div class="alert alert-success">
+ <button type="button" class="close" data-dismiss="alert">&times;</button>
+ <h4>Success!</h4>
+ Scan '${newscan}' has successfully been initiated. Reload this page for up-to-date status on the scan.
+</div>
+% endif
+% if rerunscans:
+<div class="alert alert-success">
+ <button type="button" class="close" data-dismiss="alert">&times;</button>
+ <h4>Success!</h4>
+ Scans have successfully been re-initiated as separate instances. Reload this page for up-to-date status on the scans.
+</div>
+% endif
+% if stoppedscan and len(errors) == 0:
+<div class="alert alert-warning">
+ <button type="button" class="close" data-dismiss="alert">&times;</button>
+ <h4>Scan aborted.</h4>
+ Please allow a minute or two for the scan to cleanly shut itself down.
+</div>
+% endif
 
-    <div id="scancontent" class="row">
-        <div class="col-md-12">
-            % if newscan:
-            <div class="alert alert-success alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4><i class="icon fa fa-check"></i> Success!</h4>
-                <p>Scan '${newscan}' has successfully been initiated. Reload this page for up-to-date status on the scan.</p>
-            </div>
-            % endif
-
-            % if rerunscans:
-            <div class="alert alert-success alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4><i class="icon fa fa-check"></i> Success!</h4>
-                <p>Scans have successfully been re-initiated as separate instances. Reload this page for up-to-date status on the scans.</p>
-            </div>
-            % endif
-
-            % if stoppedscan and len(errors) == 0:
-            <div class="alert alert-warning alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4><i class="icon fa fa-warning"></i> Scan aborted.</h4>
-                <p>Please allow a minute or two for the scan to cleanly shut itself down.</p>
-            </div>
-            % endif
-
-            % if stoppedscan and len(errors) > 0:
-            <div class="alert alert-warning alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4><i class="icon fa fa-warning"></i> Error</h4>
-                <p>Some or all of the scans could not be aborted:</p>
-                <ul>
-                    % for err in errors:
-                        <li>${err}</li>
-                    % endfor
-                </ul>
-            </div>
-            % endif
-        </div>
-    </div>
+% if stoppedscan and len(errors) > 0:
+<div class="alert alert-warning">
+ <button type="button" class="close" data-dismiss="alert">&times;</button>
+ <h4>Error</h4>
+ Some or all of the scans could not be aborted:<br>
+<ul>
+    % for err in errors:
+        <li>${err}</li>
+    % endfor
+</ul>
 </div>
 
+% endif
+
 <script type='text/javascript' src="${docroot}/static/js/spiderfoot.scanlist.js"></script>
+</div>
+
 <iframe class='hidden' id='exportframe'></iframe>
 
 <%include file="FOOTER.tmpl"/>

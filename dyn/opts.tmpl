@@ -1,0 +1,17 @@
+<%!
+from modules.helpers import safe_get
+%>
+
+## Replace the problematic line (around line 149) with:
+## Instead of:
+## ${opts.get('something')}
+## Use:
+## ${safe_get(opts, 'something')}
+
+## For example, if the issue is with a specific section:
+% if safe_get(opts, 'section_name') is not None:
+    ## Process the section
+% else:
+    ## Handle the None case
+% endif
+# ...existing code...

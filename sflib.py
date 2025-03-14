@@ -390,7 +390,7 @@ class SpiderFoot:
             raise TypeError(
                 f"referencePoint is {type(referencePoint)}; expected dict()")
 
-        returnOpts = referencePoint
+        returnOpts = deepcopy(referencePoint)
 
         # Global options
         for opt in list(referencePoint.keys()):
@@ -431,9 +431,29 @@ class SpiderFoot:
             raise TypeError(
                 f"referencePoint['__modules__'] is {type(referencePoint['__modules__'])}; expected dict()")
 
+        if '__modules__' in referencePoint:
+            if '__modules__' not in returnOpts:
+                returnOpts['__modules__'] = dict()
+
+            for modName in referencePoint['__modules__']:
+                if modName not in returnOpts['__modules__']:
+                    returnOpts['__modules__'][modName] = dict()
+
+                # Check if 'opts' key exists before trying to access it
+                if 'opts' in referencePoint['__modules__'][modName]:
+                    for opt in referencePoint['__modules__'][modName]['opts']:
+                        returnOpts['__modules__'][modName][opt] = referencePoint['__modules__'][modName]['opts'][opt]
+                else:
+                    # Initialize an empty 'opts' dictionary if it doesn't exist
+                    returnOpts['__modules__'][modName]['opts'] = dict()
+
         # Module options
         # A lot of mess to handle typing..
         for modName in referencePoint['__modules__']:
+            # Check if 'opts' exists in the module configuration
+            if 'opts' not in referencePoint['__modules__'][modName]:
+                continue
+
             for opt in referencePoint['__modules__'][modName]['opts']:
                 if opt.startswith('_') and filterSystem:
                     continue
