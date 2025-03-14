@@ -943,13 +943,13 @@ class SpiderFootWebUi:
         """
         dbh = SpiderFootDb(self.config)
         types = dbh.eventTypes()
-        
+
         # Ensure modules dictionary has all required keys
         modules = deepcopy(self.config['__modules__'])
         for module_name, module_data in modules.items():
             if 'name' not in module_data:
                 modules[module_name]['name'] = module_name
-        
+
         templ = Template(
             filename='spiderfoot/templates/newscan.tmpl', lookup=self.lookup)
         return templ.render(pageid='NEWSCAN', types=types, docroot=self.docroot,
@@ -1039,11 +1039,11 @@ class SpiderFootWebUi:
         templ = Template(
             filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
         self.token = random.SystemRandom().randint(0, 99999999)
-        
+
         # Ensure config is initialized
         if self.config is None:
             self.config = {}
-        
+
         return templ.render(opts=self.config, pageid='SETTINGS', token=self.token, version=__version__,
                             updated=updated, docroot=self.docroot)
 
