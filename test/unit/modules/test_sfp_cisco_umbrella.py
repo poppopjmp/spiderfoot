@@ -18,14 +18,14 @@ class TestModuleCiscoUmbrella(SpiderFootModuleTestCase):
         patcher1 = patch('logging.getLogger', return_value=self.log_mock)
         self.addCleanup(patcher1.stop)
         self.mock_logger = patcher1.start()
-        
+
         # Create module wrapper class dynamically
         module_attributes = {
             'descr': "Description for sfp_cisco_umbrella",
             # Add module-specific options
 
         }
-        
+
         self.module_class = self.create_module_wrapper(
             sfp_cisco_umbrella,
             module_attributes=module_attributes
