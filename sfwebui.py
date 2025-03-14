@@ -943,7 +943,7 @@ class SpiderFootWebUi:
         """
         dbh = SpiderFootDb(self.config)
         types = dbh.eventTypes()
-        
+
         # Ensure modules dictionary has all required keys
         modules = deepcopy(self.config['__modules__'])
         for module_name, module_data in modules.items():
