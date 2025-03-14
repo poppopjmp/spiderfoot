@@ -1,0 +1,52 @@
+# MISP integration module configuration for SpiderFoot
+
+section: MISP
+options:
+  - option: misp_url
+    type: str
+    default: ""
+    description: "MISP URL for direct publishing (optional)"
+    validation: "^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$"
+    required: false
+    
+  - option: misp_key
+    type: str
+    default: ""
+    description: "MISP API key for direct publishing (optional)"
+    validation: "^.+$"
+    required: false
+    
+  - option: create_misp_event
+    type: bool
+    default: false
+    description: "Create a MISP event from the scan"
+    validation: "^(True|False)$"
+    required: false
+    
+  - option: create_misp_objects
+    type: bool
+    default: true
+    description: "Create MISP objects from SpiderFoot events"
+    validation: "^(True|False)$"
+    required: false
+    
+  - option: tag_tlp
+    type: str
+    default: "tlp:amber"
+    description: "TLP tag to apply to MISP events"
+    validation: "^tlp:(white|green|amber|red)$"
+    required: false
+    
+  - option: confidence_threshold
+    type: int
+    default: 50
+    description: "Minimum confidence score (0-100) for including events"
+    validation: "^([0-9]|[1-9][0-9]|100)$"
+    required: false
+    
+  - option: enable_auto_publishing
+    type: bool
+    default: false
+    description: "Automatically publish events to MISP"
+    validation: "^(True|False)$"
+    required: false

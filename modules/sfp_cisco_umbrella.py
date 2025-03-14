@@ -17,30 +17,29 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_cisco_umbrella(SpiderFootPlugin):
-
     meta = {
-        'name': "Cisco Umbrella Investigate",
-        'summary': "Query Cisco Umbrella Investigate API for domain information.",
-        'flags': ["apikey"],
-        'useCases': ["Passive", "Investigate"],
-        'categories': ["Search Engines"],
-        'dataSource': {
-            'website': "https://umbrella.cisco.com/products/investigate",
-            'model': "FREE_AUTH_LIMITED",
-            'references': [
+        "name": "Cisco Umbrella Investigate",
+        "summary": "Query Cisco Umbrella Investigate API for domain information.",
+        "flags": ["apikey"],
+        "useCases": ["Passive", "Investigate"],
+        "categories": ["Search Engines"],
+        "dataSource": {
+            "website": "https://umbrella.cisco.com/products/investigate",
+            "model": "FREE_AUTH_LIMITED",
+            "references": [
                 "https://docs.umbrella.com/investigate-api/",
             ],
-            'apiKeyInstructions': [
+            "apiKeyInstructions": [
                 "Visit https://umbrella.cisco.com/products/investigate",
                 "Sign up for a free account or log in with your Cisco account",
                 "Navigate to 'API Keys' under 'Configuration'",
                 "Generate a new API key",
             ],
-            'favIcon': "https://umbrella.cisco.com/favicon.ico",
-            'logo': "https://umbrella.cisco.com/images/umbrella-logo.svg",
-            'description': "Cisco Umbrella Investigate provides insights into domain reputation, "
-                           "security categories, malware analysis, and other threat intelligence data."
-        }
+            "favIcon": "https://umbrella.cisco.com/favicon.ico",
+            "logo": "https://umbrella.cisco.com/images/umbrella-logo.svg",
+            "description": "Cisco Umbrella Investigate provides insights into domain reputation, "
+            "security categories, malware analysis, and other threat intelligence data.",
+        },
     }
 
     opts = {
@@ -68,45 +67,54 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
         return ["DOMAIN_NAME"]
 
     def producedEvents(self):
-        return ["DOMAIN_NAME", "RAW_RIR_DATA", "DOMAIN_REGISTRAR", "CO_HOSTED_SITE",
-                "IP_ADDRESS", "IPV6_ADDRESS", "DOMAIN_WHOIS", "GEOINFO"]
+        return [
+            "DOMAIN_NAME",
+            "RAW_RIR_DATA",
+            "DOMAIN_REGISTRAR",
+            "CO_HOSTED_SITE",
+            "IP_ADDRESS",
+            "IPV6_ADDRESS",
+            "DOMAIN_WHOIS",
+            "GEOINFO",
+        ]
 
     def query(self, qry):
         if self.errorState:
             return None
 
-        headers = {
-            'Authorization': f"Bearer {self.opts['api_key']}"
-        }
+        headers = {"Authorization": f"Bearer {self.opts['api_key']}"}
 
         queryurl = f"https://investigate.api.umbrella.com/domains/categorization/{qry}"
 
         res = self.sf.fetchUrl(
             queryurl,
-            timeout=self.opts['_fetchtimeout'],
+            timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",
-            headers=headers
+            headers=headers,
         )
 
-        time.sleep(self.opts['delay'])
+        time.sleep(self.opts["delay"])
 
-        if res['code'] in ["429", "500", "502", "503", "504"]:
-            self.error("Umbrella Investigate API key seems to have been rejected or you have exceeded usage limits.")
+        if res["code"] in ["429", "500", "502", "503", "504"]:
+            self.error(
+                "Umbrella Investigate API key seems to have been rejected or you have exceeded usage limits."
+            )
             self.errorState = True
             return None
-        if res['code'] == 401:
+        if res["code"] == 401:
             self.error("Umbrella Investigate API key is invalid.")
             self.errorState = True
             return None
 
-        if not res['content']:
+        if not res["content"]:
             self.info(f"No Umbrella Investigate info found for {qry}")
             return None
 
         try:
-            return json.loads(res['content'])
+            return json.loads(res["content"])
         except json.JSONDecodeError as e:
-            self.error(f"Error processing JSON response from Umbrella Investigate: {e}")
+            self.error(
+                f"Error processing JSON response from Umbrella Investigate: {e}")
             return None
 
     def handleEvent(self, event):
@@ -137,42 +145,64 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
             if data is None:
                 return
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(data), self.__name__, event)
             self.notifyListeners(evt)
 
-            domain = data.get('domain')
+            domain = data.get("domain")
             if domain:
-                evt = SpiderFootEvent("DOMAIN_NAME", domain, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "DOMAIN_NAME", domain, self.__name__, event)
                 self.notifyListeners(evt)
 
-            for result in data.get('data',):
-                for category in result.get('categories',):
-                    evt = SpiderFootEvent("RAW_RIR_DATA", category, self.__name__, event)
+            for result in data.get(
+                "data",
+            ):
+                for category in result.get(
+                    "categories",
+                ):
+                    evt = SpiderFootEvent(
+                        "RAW_RIR_DATA", category, self.__name__, event
+                    )
                     self.notifyListeners(evt)
 
-                for cohosted_site in result.get('cohosted_sites',):
-                    evt = SpiderFootEvent("CO_HOSTED_SITE", cohosted_site, self.__name__, event)
+                for cohosted_site in result.get(
+                    "cohosted_sites",
+                ):
+                    evt = SpiderFootEvent(
+                        "CO_HOSTED_SITE", cohosted_site, self.__name__, event
+                    )
                     self.notifyListeners(evt)
 
-                for geo in result.get('geos',):
+                for geo in result.get(
+                    "geos",
+                ):
                     evt = SpiderFootEvent("GEOINFO", geo, self.__name__, event)
                     self.notifyListeners(evt)
 
-                for ip in result.get('ips',):
+                for ip in result.get(
+                    "ips",
+                ):
                     if ":" in ip:
-                        evt = SpiderFootEvent("IPV6_ADDRESS", ip, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "IPV6_ADDRESS", ip, self.__name__, event)
                     else:
-                        evt = SpiderFootEvent("IP_ADDRESS", ip, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "IP_ADDRESS", ip, self.__name__, event)
                     self.notifyListeners(evt)
 
-                registrar = result.get('registrar')
+                registrar = result.get("registrar")
                 if registrar:
-                    evt = SpiderFootEvent("DOMAIN_REGISTRAR", registrar, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "DOMAIN_REGISTRAR", registrar, self.__name__, event
+                    )
                     self.notifyListeners(evt)
 
-                whois = result.get('whois')
+                whois = result.get("whois")
                 if whois:
-                    evt = SpiderFootEvent("DOMAIN_WHOIS", whois, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "DOMAIN_WHOIS", whois, self.__name__, event)
                     self.notifyListeners(evt)
+
 
 # End of sfp_cisco_umbrella class

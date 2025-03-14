@@ -91,7 +91,7 @@ def main() -> None:
             'cors_origins': [],
         }
 
-        p = argparse.ArgumentParser(description="SpiderFoot {__version__}: Open Source Intelligence Automation.")  # Define p first
+        p = argparse.ArgumentParser(description=f"SpiderFoot {__version__}: Open Source Intelligence Automation.")  # Define p first
         p.add_argument("-d", "--debug", action='store_true', help="Enable debug output.")
         p.add_argument("-l", "--listen", metavar="IP:port", help="IP and port to listen on.")
         p.add_argument("-m", metavar="mod1,mod2,...", type=str, help="Modules to enable.")
@@ -113,12 +113,11 @@ def main() -> None:
         p.add_argument("-q", action='store_true', help="Disable logging. This will also hide errors!")
         p.add_argument("-V", "--version", action='store_true', help="Display the version of SpiderFoot and exit.")
         p.add_argument("-max-threads", type=int, help="Max number of modules to run concurrently.")
-        p.add_argument("--rest-api", action='store_true', help="Start the REST API server using FastAPI.")  # P9f5e
 
         args = p.parse_args()  # Parse arguments after defining p
 
         if args.version:
-            print("SpiderFoot {__version__}: Open Source Intelligence Automation.")  # Removed f-string as no place holders are used.
+            print(f"SpiderFoot {__version__}: Open Source Intelligence Automation.")  # Removed f-string as no place holders are used.
             sys.exit(0)
 
         if args.max_threads:
@@ -231,9 +230,6 @@ def main() -> None:
             start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
             sys.exit(0)
 
-        if args.rest_api:  # P217d
-            start_rest_api_server()  # P217d
-            sys.exit(0)  # P217d
 
         start_scan(sfConfig, sfModules, args, loggingQueue)
     except Exception as e:
@@ -648,19 +644,11 @@ def handle_abort(signal, frame) -> None:
         sys.exit(-1)
 
 
-def start_rest_api_server() -> None:  # P3926
-    """
-    Start the REST API server using FastAPI.
-    """
-    import uvicorn
-    from spiderfoot.api import app
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)  # P3926
 
 
 if __name__ == '__main__':
-    if sys.version_info < (3, 7):
-        print("SpiderFoot requires Python 3.7 or higher.")
+    if sys.version_info < (3, 9):
+        print("SpiderFoot requires Python 3.9 or higher.")
         sys.exit(-1)
 
     if len(sys.argv) <= 1:

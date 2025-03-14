@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, v5.0.3-rc1 ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, v5.0.3-rc1 ]
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.9", "3.10"]
         os: [ubuntu-latest]
 
     steps:
@@ -41,15 +41,33 @@ jobs:
             echo "Flake8 found no errors."
           fi
 
-      #- name: Test with pytest
-      #  run: |
-      #    pytest -n auto --dist loadfile --durations=5 --cov-report term --cov=. .
+      - name: Test with pytest
+        run: |
+            python -m pytest -n auto --dist loadfile --verbose  --ignore=test/integration/ --durations=5 --cov-report term --cov=. .
       - uses: codecov/codecov-action@v1
         with:
-          fail_ci_if_error: false
-          verbose: true
+            fail_ci_if_error: false
+            verbose: true
+
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: poppopjmp/spiderfoot
+
+      - name: Measure test coverage
+        run: |
+          coverage run -m pytest
+          coverage report -m
+          coverage xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: coverage.xml
+          fail_ci_if_error: true
+
+      - name: Enforce minimum coverage threshold
+        run: |
+          coverage run -m pytest
+          coverage report --fail-under=80
