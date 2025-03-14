@@ -166,6 +166,10 @@ class SpiderFootHelpers():
             mod_dict = sfModules[modName]['object'].asdict()
             sfModules[modName].update(mod_dict)
 
+            # Ensure 'cats' key exists to avoid KeyError
+            if 'cats' not in sfModules[modName]:
+                sfModules[modName]['cats'] = []
+
             if len(sfModules[modName]['cats']) > 1:
                 raise SyntaxError(
                     f"Module {modName} has multiple categories defined but only one is supported.")
