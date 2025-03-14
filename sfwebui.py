@@ -1694,46 +1694,66 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
+    def scanlist_rendered(self: 'SpiderFootWebUi') -> str:
+        """Display the scan list page.
+
+        Returns:
+            str: Scan list page HTML
+        """
+        templ = Template(
+            filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
+        return templ.render(docroot=self.docroot, pageid="SCANLIST", version=__version__)
+
+    # Redirect the root scanlist endpoint to the rendered version
+    @cherrypy.expose
     def scanlist(self: 'SpiderFootWebUi') -> list:
         """Produce a list of scans.
 
         Returns:
-            list: scan list
+            list: scan list if JSON is requested, otherwise redirects to HTML page
         """
-        dbh = SpiderFootDb(self.config)
-        data = dbh.scanInstanceList()
-        retdata = []
+        # If this is an AJAX request or specifically asking for JSON, return JSON
+        if (cherrypy.request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+            (cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'))):
+            
+            dbh = SpiderFootDb(self.config)
+            data = dbh.scanInstanceList()
+            retdata = []
 
-        for row in data:
-            created = time.strftime(
-                "%Y-%m-%d %H:%M:%S", time.localtime(row[3]))
-            riskmatrix = {
-                "HIGH": 0,
-                "MEDIUM": 0,
-                "LOW": 0,
-                "INFO": 0
-            }
-            correlations = dbh.scanCorrelationSummary(row[0], by="risk")
-            if correlations:
-                for c in correlations:
-                    riskmatrix[c[0]] = c[1]
+            for row in data:
+                created = time.strftime(
+                    "%Y-%m-%d %H:%M:%S", time.localtime(row[3]))
+                riskmatrix = {
+                    "HIGH": 0,
+                    "MEDIUM": 0,
+                    "LOW": 0,
+                    "INFO": 0
+                }
+                correlations = dbh.scanCorrelationSummary(row[0], by="risk")
+                if correlations:
+                    for c in correlations:
+                        riskmatrix[c[0]] = c[1]
 
-            if row[4] == 0:
-                started = "Not yet"
-            else:
-                started = time.strftime(
-                    "%Y-%m-%d %H:%M:%S", time.localtime(row[4]))
+                if row[4] == 0:
+                    started = "Not yet"
+                else:
+                    started = time.strftime(
+                        "%Y-%m-%d %H:%M:%S", time.localtime(row[4]))
 
-            if row[5] == 0:
-                finished = "Not yet"
-            else:
-                finished = time.strftime(
-                    "%Y-%m-%d %H:%M:%S", time.localtime(row[5]))
+                if row[5] == 0:
+                    finished = "Not yet"
+                else:
+                    finished = time.strftime(
+                        "%Y-%m-%d %H:%M:%S", time.localtime(row[5]))
 
-            retdata.append([row[0], row[1], row[2], created,
-                           started, finished, row[6], row[7], riskmatrix])
-
-        return retdata
+                retdata.append([row[0], row[1], row[2], created,
+                            started, finished, row[6], row[7], riskmatrix])
+            
+            cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+            return retdata
+        
+        # For direct browser access, redirect to the HTML template version
+        raise cherrypy.HTTPRedirect(f"{self.docroot}/scanlist_rendered")
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
