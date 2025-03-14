@@ -1630,6 +1630,7 @@ class SpiderFootWebUi:
             return json.dumps(["ERROR", "Vacuuming the database failed"]).encode('utf-8')
         except Exception as e:
             return json.dumps(["ERROR", f"Vacuuming the database failed: {e}"]).encode('utf-8')
+
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanlog(self: 'SpiderFootWebUi', id: str, limit: str = None, rowId: str = None, reverse: str = None) -> list:
@@ -1757,12 +1758,12 @@ class SpiderFootWebUi:
 
             cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
             return retdata
-        
+
         templ = Template(
             filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, pageid="SCANLIST", version=__version__,
-                           newscan=newscan, rerunscans=rerunscans, stoppedscan=stoppedscan,
-                           errors=[])
+                            newscan=newscan, rerunscans=rerunscans, stoppedscan=stoppedscan,
+                            errors=[])
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -1989,13 +1990,11 @@ class SpiderFootWebUi:
         datamap = dict()
         retdata = dict()
 
-
         try:
             leafSet = dbh.scanResultEvent(id, eventType)
             [datamap, pc] = dbh.scanElementSourcesAll(id, leafSet)
         except Exception:
             return retdata
-
 
         del pc['ROOT']
         retdata['tree'] = SpiderFootHelpers.dataParentChildToTree(pc)
