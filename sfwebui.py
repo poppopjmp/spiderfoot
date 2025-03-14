@@ -276,8 +276,7 @@ class SpiderFootWebUi:
         return retdata
 
     def buildExcel(self: 'SpiderFootWebUi', data: list, columnNames: list, sheetNameIndex: int = 0) -> str:
-        """Convert supplied raw data into GEXF (Graph Exchange XML Format)
-        format (e.g. for Gephi).
+        """Convert supplied raw data into GEXF (Graph Exchange XML Format) format (e.g. for Gephi).
 
         Args:
             data (list): Scan result as list
@@ -331,7 +330,7 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     def scanexportlogs(self: 'SpiderFootWebUi', id: str, dialect: str = "excel") -> bytes:
-        """Get scan log.
+        """Get scan log
 
         Args:
             id (str): scan ID
@@ -439,7 +438,7 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     def scaneventresultexport(self: 'SpiderFootWebUi', id: str, type: str, filetype: str = "csv", dialect: str = "excel") -> str:
-        """Get scan event result data in CSV or Excel format.
+        """Get scan event result data in CSV or Excel format
 
         Args:
             id (str): scan ID
@@ -490,8 +489,7 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     def scaneventresultexportmulti(self: 'SpiderFootWebUi', ids: str, filetype: str = "csv", dialect: str = "excel") -> str:
-        """Get scan event result data in CSV or Excel format for multiple
-        scans.
+        """Get scan event result data in CSV or Excel format for multiple scans
 
         Args:
             ids (str): comma separated list of scan IDs
@@ -563,7 +561,7 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     def scansearchresultexport(self: 'SpiderFootWebUi', id: str, eventType: str = None, value: str = None, filetype: str = "csv", dialect: str = "excel") -> str:
-        """Get search result data in CSV or Excel format.
+        """Get search result data in CSV or Excel format
 
         Args:
             id (str): scan ID
@@ -1655,8 +1653,7 @@ class SpiderFootWebUi:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanstatus(self: 'SpiderFootWebUi', id: str) -> list:
-        """Show basic information about a scan, including status and number of
-        each event type.
+        """Show basic information about a scan, including status and number of each event type.
 
         Args:
             id (str): scan ID
