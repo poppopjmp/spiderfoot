@@ -115,7 +115,7 @@ class sfp_phishtank(SpiderFootPlugin):
         return self.parseBlacklist(res['content'])
 
     def parseBlacklist(self, blacklist):
-        """Parse plaintext blacklist
+        """Parse plaintext blacklist.
 
         Args:
             blacklist (str): plaintext blacklist from phishtank.com

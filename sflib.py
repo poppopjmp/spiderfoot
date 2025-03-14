@@ -42,7 +42,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # noqa: DUO
 
 
 class SpiderFoot:
-    """SpiderFoot
+    """SpiderFoot.
 
     Attributes:
         dbh (SpiderFootDb): database handle
@@ -81,7 +81,7 @@ class SpiderFoot:
 
     @property
     def dbh(self):
-        """Database handle
+        """Database handle.
 
         Returns:
             SpiderFootDb: database handle
@@ -90,7 +90,7 @@ class SpiderFoot:
 
     @property
     def scanId(self) -> str:
-        """Scan instance ID
+        """Scan instance ID.
 
         Returns:
             str: scan instance ID
@@ -99,7 +99,7 @@ class SpiderFoot:
 
     @property
     def socksProxy(self) -> str:
-        """SOCKS proxy
+        """SOCKS proxy.
 
         Returns:
             str: socks proxy
@@ -108,9 +108,9 @@ class SpiderFoot:
 
     @dbh.setter
     def dbh(self, dbh):
-        """Called usually some time after instantiation
-        to set up a database handle and scan ID, used
-        for logging events to the database about a scan.
+        """Called usually some time after instantiation to set up a database
+        handle and scan ID, used for logging events to the database about a
+        scan.
 
         Args:
             dbh (SpiderFootDb): database handle
@@ -128,7 +128,7 @@ class SpiderFoot:
 
     @socksProxy.setter
     def socksProxy(self, socksProxy: str) -> str:
-        """SOCKS proxy
+        """SOCKS proxy.
 
         Bit of a hack to support SOCKS because of the loading order of
         modules. sfscan will call this to update the socket reference
@@ -140,10 +140,10 @@ class SpiderFoot:
         self._socksProxy = socksProxy
 
     def optValueToData(self, val: str) -> str:
-        """Supplied an option value, return the data based on what the
-        value is. If val is a URL, you'll get back the fetched content,
-        if val is a file path it will be loaded and get back the contents,
-        and if a string it will simply be returned back.
+        """Supplied an option value, return the data based on what the value
+        is. If val is a URL, you'll get back the fetched content, if val is a
+        file path it will be loaded and get back the contents, and if a string
+        it will simply be returned back.
 
         Args:
             val (str): option name
@@ -180,7 +180,7 @@ class SpiderFoot:
         return val
 
     def error(self, message: str) -> None:
-        """Print and log an error message
+        """Print and log an error message.
 
         Args:
             message (str): error message
@@ -368,8 +368,8 @@ class SpiderFoot:
         return storeopts
 
     def configUnserialize(self, opts: dict, referencePoint: dict, filterSystem: bool = True):
-        """Take strings, etc. from the database or UI and convert them
-        to a dictionary for Python to process.
+        """Take strings, etc. from the database or UI and convert them to a
+        dictionary for Python to process.
 
         Args:
             opts (dict): SpiderFoot configuration options
@@ -532,7 +532,8 @@ class SpiderFoot:
         return list(set(modlist))
 
     def eventsFromModules(self, modules: list) -> list:
-        """Return an array of types that are produced by the list of modules supplied.
+        """Return an array of types that are produced by the list of modules
+        supplied.
 
         Args:
             modules (list): list of modules
@@ -560,7 +561,8 @@ class SpiderFoot:
         return evtlist
 
     def eventsToModules(self, modules: list) -> list:
-        """Return an array of types that are consumed by the list of modules supplied.
+        """Return an array of types that are consumed by the list of modules
+        supplied.
 
         Args:
             modules (list): list of modules
@@ -610,7 +612,8 @@ class SpiderFoot:
         return baseurl.split('/')[count].lower()
 
     def domainKeyword(self, domain: str, tldList: list) -> str:
-        """Extract the keyword (the domain without the TLD or any subdomains) from a domain.
+        """Extract the keyword (the domain without the TLD or any subdomains)
+        from a domain.
 
         Args:
             domain (str): The domain to check.
@@ -638,7 +641,8 @@ class SpiderFoot:
         return ret
 
     def domainKeywords(self, domainList: list, tldList: list) -> set:
-        """Extract the keywords (the domains without the TLD or any subdomains) from a list of domains.
+        """Extract the keywords (the domains without the TLD or any subdomains)
+        from a list of domains.
 
         Args:
             domainList (list): The list of domains to check.
@@ -677,7 +681,8 @@ class SpiderFoot:
         return ps.privatesuffix(hostname)
 
     def validHost(self, hostname: str, tldList: str) -> bool:
-        """Check if the provided string is a valid hostname with a valid public suffix TLD.
+        """Check if the provided string is a valid hostname with a valid public
+        suffix TLD.
 
         Args:
             hostname (str): The hostname to check.
@@ -799,7 +804,7 @@ class SpiderFoot:
         return True
 
     def normalizeDNS(self, res: list) -> list:
-        """Clean DNS results to be a simple list
+        """Clean DNS results to be a simple list.
 
         Args:
             res (list): List of DNS names
@@ -956,7 +961,8 @@ class SpiderFoot:
         return sock
 
     def safeSSLSocket(self, host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
-        """Create a safe SSL connection that's using SOCKs/TOR if it was enabled.
+        """Create a safe SSL connection that's using SOCKs/TOR if it was
+        enabled.
 
         Args:
             host (str): host
@@ -1097,7 +1103,8 @@ class SpiderFoot:
         return session
 
     def removeUrlCreds(self, url: str) -> str:
-        """Remove potentially sensitive strings (such as "key=..." and "password=...") from a string.
+        """Remove potentially sensitive strings (such as "key=..." and
+        "password=...") from a string.
 
         Used to remove potential credentials from URLs prior during logging.
 
@@ -1121,7 +1128,8 @@ class SpiderFoot:
         return ret
 
     def isValidLocalOrLoopbackIp(self, ip: str) -> bool:
-        """Check if the specified IPv4 or IPv6 address is a loopback or local network IP address (IPv4 RFC1918 / IPv6 RFC4192 ULA).
+        """Check if the specified IPv4 or IPv6 address is a loopback or local
+        network IP address (IPv4 RFC1918 / IPv6 RFC4192 ULA).
 
         Args:
             ip (str): IPv4 or IPv6 address
@@ -1141,7 +1149,8 @@ class SpiderFoot:
         return False
 
     def useProxyForUrl(self, url: str) -> bool:
-        """Check if the configured proxy should be used to connect to a specified URL.
+        """Check if the configured proxy should be used to connect to a
+        specified URL.
 
         Args:
             url (str): The URL to check
@@ -1439,7 +1448,8 @@ class SpiderFoot:
         return result
 
     def checkDnsWildcard(self, target: str) -> bool:
-        """Check if wildcard DNS is enabled for a domain by looking up a random subdomain.
+        """Check if wildcard DNS is enabled for a domain by looking up a random
+        subdomain.
 
         Args:
             target (str): domain

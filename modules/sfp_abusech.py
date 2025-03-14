@@ -157,7 +157,7 @@ class sfp_abusech(SpiderFootPlugin):
         return self.parseFeodoTrackerBlacklist(res['content'])
 
     def parseFeodoTrackerBlacklist(self, blacklist):
-        """Parse plaintext blacklist
+        """Parse plaintext blacklist.
 
         Args:
             blacklist (str): plaintext blacklist from Abuse.ch Feodo Tracker
@@ -228,7 +228,7 @@ class sfp_abusech(SpiderFootPlugin):
         return self.parseSslBlacklist(res['content'])
 
     def parseSslBlacklist(self, blacklist):
-        """Parse plaintext blacklist
+        """Parse plaintext blacklist.
 
         Args:
             blacklist (str): CSV blacklist from Abuse.ch SSL Blacklist
@@ -307,7 +307,7 @@ class sfp_abusech(SpiderFootPlugin):
         return self.parseUrlHausBlacklist(res['content'])
 
     def parseUrlHausBlacklist(self, blacklist):
-        """Parse plaintext blacklist
+        """Parse plaintext blacklist.
 
         Args:
             blacklist (str): plaintext blacklist from Abuse.ch URL Haus

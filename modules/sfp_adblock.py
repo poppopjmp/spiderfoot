@@ -104,7 +104,7 @@ class sfp_adblock(SpiderFootPlugin):
         return self.setBlocklistRules(res['content'])
 
     def setBlocklistRules(self, blocklist):
-        """Parse AdBlock Plus blocklist and set blocklist rules
+        """Parse AdBlock Plus blocklist and set blocklist rules.
 
         Args:
             blocklist (str): plaintext AdBlock Plus blocklist

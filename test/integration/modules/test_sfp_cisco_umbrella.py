@@ -17,9 +17,7 @@ from sfp_cisco_umbrella import sfp_cisco_umbrella
 
 
 class TestSFPCiscoUmbrella(unittest.TestCase):
-    """
-    Test Cisco Umbrella Investigate module.
-    """
+    """Test Cisco Umbrella Investigate module."""
 
     @classmethod
     def setUpClass(cls):
@@ -48,9 +46,8 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         self.assertTrue(module.errorState)
 
     def test_query_domain_not_found(self):
-        """
-        Test the query of a domain that is not known by Cisco Umbrella Investigate.
-        """
+        """Test the query of a domain that is not known by Cisco Umbrella
+        Investigate."""
 
         module = sfp_cisco_umbrella()
         # Note: The API key here is a placeholder, replace with your actual key for testing
@@ -59,9 +56,8 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         self.assertEqual(result, {'domain': 'thisdomaindoesnotexist.com', 'data': None})
 
     def test_query_domain_found(self):
-        """
-        Test the query of a domain that is known by Cisco Umbrella Investigate.
-        """
+        """Test the query of a domain that is known by Cisco Umbrella
+        Investigate."""
 
         module = sfp_cisco_umbrella()
         # Note: The API key here is a placeholder, replace with your actual key for testing

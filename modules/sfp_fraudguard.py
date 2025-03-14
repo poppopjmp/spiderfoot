@@ -112,7 +112,7 @@ class sfp_fraudguard(SpiderFootPlugin):
         ]
 
     def query(self, qry):
-        """Query IP address
+        """Query IP address.
 
         Args:
             qry (str): IPv4/IPv6 address

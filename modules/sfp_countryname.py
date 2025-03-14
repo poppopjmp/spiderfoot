@@ -124,7 +124,8 @@ class sfp_countryname(SpiderFootPlugin):
         return SpiderFootHelpers.countryNameFromCountryCode(srcIBAN[0:2])
 
     def detectCountryFromData(self, srcData: str) -> list:
-        """Detect name of country from event data (WHOIS lookup, Geo Info, Physical Address, etc)
+        """Detect name of country from event data (WHOIS lookup, Geo Info,
+        Physical Address, etc)
 
         Args:
             srcData (str): event data

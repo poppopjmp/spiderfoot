@@ -101,7 +101,7 @@ class sfp_hackertarget(SpiderFootPlugin):
         ]
 
     def httpHeaders(self, ip):
-        """Retrieve HTTP headers for IP address
+        """Retrieve HTTP headers for IP address.
 
         Args:
             ip (str): IPv4 address
@@ -144,7 +144,7 @@ class sfp_hackertarget(SpiderFootPlugin):
         return headers
 
     def zoneTransfer(self, ip):
-        """Retrieve DNS zone transfer
+        """Retrieve DNS zone transfer.
 
         Args:
             ip (str): IPv4 address
@@ -183,7 +183,7 @@ class sfp_hackertarget(SpiderFootPlugin):
         return records
 
     def reverseIpLookup(self, ip):
-        """Reverse lookup hosts on the same IP address
+        """Reverse lookup hosts on the same IP address.
 
         Args:
             ip (str): IPv4 address

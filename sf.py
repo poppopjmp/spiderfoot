@@ -238,8 +238,8 @@ def main() -> None:
 
 
 def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
-    """
-    Start a scan based on the provided configuration and command-line arguments.
+    """Start a scan based on the provided configuration and command-line
+    arguments.
 
     Args:
         sfConfig (dict): SpiderFoot config options
@@ -489,8 +489,7 @@ def execute_scan(loggingQueue, target, targetType, modlist, cfg, log):
 
 
 def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> None:
-    """
-    Start the web server so you can start looking at results
+    """Start the web server so you can start looking at results.
 
     Args:
         sfWebUiConfig (dict): web server options
@@ -622,8 +621,7 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
 
 
 def handle_abort(signal, frame) -> None:
-    """
-    Handle interrupt and abort scan.
+    """Handle interrupt and abort scan.
 
     Args:
         signal: TBD

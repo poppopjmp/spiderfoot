@@ -17,10 +17,10 @@ from spiderfoot import SpiderFootPlugin
 
 
 class sfp__stor_stdout(SpiderFootPlugin):
-    """
-    SpiderFoot plug-in for dumping events to standard output.
+    """SpiderFoot plug-in for dumping events to standard output.
 
-    This class is responsible for outputting scan results to the standard output.
+    This class is responsible for outputting scan results to the
+    standard output.
     """
 
     meta = {
@@ -56,8 +56,7 @@ class sfp__stor_stdout(SpiderFootPlugin):
     }
 
     def setup(self, sfc, userOpts=dict()):
-        """
-        Set up the module with user options.
+        """Set up the module with user options.
 
         Args:
             sfc: SpiderFoot instance
@@ -72,8 +71,7 @@ class sfp__stor_stdout(SpiderFootPlugin):
             self.es = Elasticsearch([{'host': self.opts['elasticsearch_host'], 'port': self.opts['elasticsearch_port']}])
 
     def watchedEvents(self):
-        """
-        Define the events this module is interested in for input.
+        """Define the events this module is interested in for input.
 
         Returns:
             list: List of event types
@@ -81,8 +79,7 @@ class sfp__stor_stdout(SpiderFootPlugin):
         return ["*"]
 
     def output(self, event):
-        """
-        Output the event data to standard output.
+        """Output the event data to standard output.
 
         Args:
             event: SpiderFoot event
@@ -137,8 +134,7 @@ class sfp__stor_stdout(SpiderFootPlugin):
             print(json.dumps(d), end='')
 
     def handleEvent(self, sfEvent):
-        """
-        Handle events sent to this module.
+        """Handle events sent to this module.
 
         Args:
             sfEvent: SpiderFoot event

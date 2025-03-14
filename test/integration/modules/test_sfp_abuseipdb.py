@@ -39,8 +39,8 @@ class TestModuleIntegrationAbuseIPDB(BaseTestModuleIntegration):
 
     @patch('modules.sfp_abuseipdb.requests.get')
     def test_handleEvent_malicious_ip(self, mock_get):
-        """
-        Test handleEvent(mock_get) with a malicious IP address.
+        """Test handleEvent(mock_get) with a malicious IP address.
+
         Args:
             mock_get: Mock for requests.get
         """

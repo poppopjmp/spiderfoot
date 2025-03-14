@@ -25,8 +25,7 @@ from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootPlugin, SpiderFo
 
 
 def startSpiderFootScanner(loggingQueue, *args, **kwargs):
-    """
-    Initialize and start the SpiderFootScanner.
+    """Initialize and start the SpiderFootScanner.
 
     Args:
         loggingQueue (Queue): Queue for logging events

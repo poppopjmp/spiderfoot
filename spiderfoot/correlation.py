@@ -269,9 +269,8 @@ class SpiderFootCorrelator:
                 })
 
     def enrich_event_entities(self, events: dict) -> None:
-        """Given our starting set of ids, loop through the source
-        of each until you have a match according to the criteria
-        provided.
+        """Given our starting set of ids, loop through the source of each until
+        you have a match according to the criteria provided.
 
         Args:
             events (dict): events
@@ -687,7 +686,8 @@ class SpiderFootCorrelator:
                     del (buckets[bucket])
 
     def analysis_first_collection_only(self, rule: dict, buckets: dict) -> None:
-        """Analyze buckets to keep only events from the first collection (collection 0).
+        """Analyze buckets to keep only events from the first collection
+        (collection 0).
 
         Args:
             rule (dict): The correlation rule (not used in this method, but kept for consistency).
@@ -734,10 +734,11 @@ class SpiderFootCorrelator:
             del (buckets[bucket])
 
     def analysis_threshold(self, rule: dict, buckets: dict) -> None:
-        """Analyze event buckets based on the occurrence frequency of a specific field.
+        """Analyze event buckets based on the occurrence frequency of a
+        specific field.
 
-        This method filters buckets by checking if the number of occurrences of a specified field's value 
-        falls within a defined threshold (minimum and maximum values). It can count occurrences of all values 
+        This method filters buckets by checking if the number of occurrences of a specified field's value
+        falls within a defined threshold (minimum and maximum values). It can count occurrences of all values
         or only unique values of the field.
         Args:
             rule (dict): A dictionary containing the analysis rule:
@@ -783,7 +784,8 @@ class SpiderFootCorrelator:
             ]
 
     def analyze_rule_scope(self, rule: dict) -> tuple:
-        """Analyze the rule to determine if child events, sources, or entities need to be fetched during collection.
+        """Analyze the rule to determine if child events, sources, or entities
+        need to be fetched during collection.
 
         Args:
             rule (dict): The correlation rule dictionary to analyze.
@@ -821,8 +823,8 @@ class SpiderFootCorrelator:
         return fetchChildren, fetchSources, fetchEntities
 
     def process_rule(self, rule: dict) -> list:
-        """Work through all the components of the rule to produce a final
-        set of data elements for building into correlations.
+        """Work through all the components of the rule to produce a final set
+        of data elements for building into correlations.
 
         Args:
             rule (dict): correlation rule

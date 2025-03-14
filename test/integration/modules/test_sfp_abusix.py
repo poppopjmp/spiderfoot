@@ -39,8 +39,8 @@ class TestModuleIntegrationAbusix(BaseTestModuleIntegration):
 
     @patch('modules.sfp_abusix.requests.get')
     def test_handleEvent_malicious_ip(self, mock_get):
-        """
-        Test handleEvent(mock_get) with a malicious IP address.
+        """Test handleEvent(mock_get) with a malicious IP address.
+
         Args:
             mock_get: Mock for requests.get
         """

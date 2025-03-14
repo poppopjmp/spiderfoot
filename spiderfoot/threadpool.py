@@ -6,8 +6,8 @@ from contextlib import suppress
 
 
 class SpiderFootThreadPool:
-    """
-    Each thread in the pool is spawned only once, and reused for best performance.
+    """Each thread in the pool is spawned only once, and reused for best
+    performance.
 
     Example 1: using map()
         with SpiderFootThreadPool(self.opts["_maxthreads"]) as pool:
@@ -115,8 +115,8 @@ class SpiderFootThreadPool:
         return results
 
     def submit(self, callback, *args, **kwargs) -> None:
-        """Submit a function call to the pool.
-        The "taskName" and "maxThreads" arguments are optional.
+        """Submit a function call to the pool. The "taskName" and "maxThreads"
+        arguments are optional.
 
         Args:
             callback (function): callback function
@@ -134,7 +134,7 @@ class SpiderFootThreadPool:
 
     def countQueuedTasks(self, taskName: str) -> int:
         """For the specified task, returns the number of queued function calls
-        plus the number of functions which are currently executing
+        plus the number of functions which are currently executing.
 
         Args:
             taskName (str): Name of task
