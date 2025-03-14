@@ -949,13 +949,13 @@ class SpiderFootWebUi:
         for module_name, module_data in modules.items():
             if 'name' not in module_data:
                 modules[module_name]['name'] = module_name
-        
+
         # Add the missing descr dictionary
         descr = {}
         for mod in self.config['__modules__']:
             if mod in self.config['__modules__']:
                 descr[mod] = self.config['__modules__'][mod].get('descr', '')
-        
+
         templ = Template(
             filename='spiderfoot/templates/newscan.tmpl', lookup=self.lookup)
         return templ.render(pageid='NEWSCAN', types=types, docroot=self.docroot,
@@ -1045,35 +1045,35 @@ class SpiderFootWebUi:
         templ = Template(
             filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
         self.token = random.SystemRandom().randint(0, 99999999)
-        
+
         # Ensure config is initialized with all required structures
         if self.config is None:
             self.config = {}
-            
+
         # Make sure __modules__ exists
         if '__modules__' not in self.config:
             self.config['__modules__'] = {}
-            
+
         # Ensure all module entries have required structure
         for module_name in self.config.get('__modules__', {}):
             if self.config['__modules__'][module_name] is None:
                 self.config['__modules__'][module_name] = {}
-                
+
             if 'opts' not in self.config['__modules__'][module_name]:
                 self.config['__modules__'][module_name]['opts'] = {}
-                
+
             if 'optdescs' not in self.config['__modules__'][module_name]:
                 self.config['__modules__'][module_name]['optdescs'] = {}
-        
+
         # Ensure __globaloptdescs__ exists
         if '__globaloptdescs__' not in self.config:
             self.config['__globaloptdescs__'] = {}
-            
+
         # Ensure global config options are initialized
         for opt in self.defaultConfig:
             if opt not in self.config:
                 self.config[opt] = self.defaultConfig[opt]
-        
+
         return templ.render(opts=self.config, pageid='SETTINGS', token=self.token, version=__version__,
                             updated=updated, docroot=self.docroot)
 
