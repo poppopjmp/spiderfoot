@@ -118,7 +118,7 @@ class sfp_coinblocker(SpiderFootPlugin):
         return self.parseBlocklist(res['content'])
 
     def parseBlocklist(self, blocklist):
-        """Parse plaintext CoinBlocker list
+        """Parse plaintext CoinBlocker list.
 
         Args:
             blocklist (str): plaintext CoinBlocker list

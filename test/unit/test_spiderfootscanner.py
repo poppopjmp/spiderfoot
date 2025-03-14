@@ -8,14 +8,11 @@ from sfscan import SpiderFootScanner
 
 @pytest.mark.usefixtures
 class TestSpiderFootScanner(unittest.TestCase):
-    """
-    Test SpiderFootScanStatus
-    """
+    """Test SpiderFootScanStatus."""
 
     def test_init_argument_start_false_should_create_a_scan_without_starting_the_scan(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts, start=True)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts, start=True)"""
         opts = self.default_options
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())
@@ -36,9 +33,8 @@ class TestSpiderFootScanner(unittest.TestCase):
         self.assertEqual(sfscan.status, "ERROR-FAILED")
 
     def test_init_argument_scanName_of_invalid_type_should_raise_TypeError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts, start=True)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts, start=True)"""
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
@@ -49,9 +45,8 @@ class TestSpiderFootScanner(unittest.TestCase):
                     SpiderFootScanner(invalid_type, scan_id, "securitybsides.it", "IP_ADDRESS", module_list, self.default_options, start=False)
 
     def test_init_argument_scanName_as_empty_string_should_raise_ValueError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts, start=True)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts, start=True)"""
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
@@ -59,9 +54,8 @@ class TestSpiderFootScanner(unittest.TestCase):
             SpiderFootScanner("", scan_id, "securitybsides.it", "IP_ADDRESS", module_list, self.default_options, start=False)
 
     def test_init_argument_scanId_of_invalid_type_should_raise_TypeError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts, start=True)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts, start=True)"""
         module_list = ['sfp__stor_db']
 
         invalid_types = [None, list(), dict(), int()]
@@ -71,9 +65,8 @@ class TestSpiderFootScanner(unittest.TestCase):
                     SpiderFootScanner("example scan name", invalid_type, "securitybsides.it", "IP_ADDRESS", module_list, self.default_options, start=False)
 
     def test_init_argument_scanId_as_empty_string_should_raise_ValueError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts, start=True)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts, start=True)"""
         scan_id = ""
         module_list = ['sfp__stor_db']
 
@@ -81,9 +74,8 @@ class TestSpiderFootScanner(unittest.TestCase):
             SpiderFootScanner("example scan name", scan_id, "securitybsides.it", "IP_ADDRESS", module_list, self.default_options, start=False)
 
     def test_init_argument_targetValue_of_invalid_type_should_raise_TypeError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts, start=True)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts, start=True)"""
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
@@ -94,9 +86,8 @@ class TestSpiderFootScanner(unittest.TestCase):
                     SpiderFootScanner("example scan name", scan_id, invalid_type, "IP_ADDRESS", module_list, self.default_options, start=False)
 
     def test_init_argument_targetValue_as_empty_string_should_raise_ValueError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts, start=True)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts, start=True)"""
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
@@ -104,9 +95,8 @@ class TestSpiderFootScanner(unittest.TestCase):
             SpiderFootScanner("example scan name", scan_id, "", "IP_ADDRESS", module_list, self.default_options, start=False)
 
     def test_init_argument_targetType_of_invalid_type_should_raise_TypeError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts)"""
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
@@ -117,9 +107,8 @@ class TestSpiderFootScanner(unittest.TestCase):
                     SpiderFootScanner("example scan name", scan_id, "securitybsides.it", invalid_type, module_list, self.default_options, start=False)
 
     def test_init_argument_targetType_invalid_value_should_raise_ValueError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts)"""
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
@@ -132,9 +121,8 @@ class TestSpiderFootScanner(unittest.TestCase):
             SpiderFootScanner("example scan name", scan_id, "securitybsides.it", target_type, module_list, self.default_options, start=False)
 
     def test_init_argument_moduleList_of_invalid_type_should_raise_TypeError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts)"""
         scan_id = str(uuid.uuid4())
 
         invalid_types = [None, "", dict(), int()]
@@ -144,9 +132,8 @@ class TestSpiderFootScanner(unittest.TestCase):
                     SpiderFootScanner("example scan name", scan_id, "securitybsides.it", "IP_ADDRESS", invalid_type, self.default_options, start=False)
 
     def test_init_argument_moduleList_as_empty_list_should_raise_ValueError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts)"""
         scan_id = str(uuid.uuid4())
         module_list = list()
 
@@ -154,9 +141,8 @@ class TestSpiderFootScanner(unittest.TestCase):
             SpiderFootScanner("example scan name", scan_id, "securitybsides.it", "IP_ADDRESS", module_list, self.default_options, start=False)
 
     def test_init_argument_globalOpts_of_invalid_type_should_raise_TypeError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts)"""
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
@@ -167,9 +153,8 @@ class TestSpiderFootScanner(unittest.TestCase):
                     SpiderFootScanner("example scan name", scan_id, "securitybsides.it", "IP_ADDRESS", module_list, invalid_type, start=False)
 
     def test_init_argument_globalOpts_as_empty_dict_should_raise_ValueError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts)"""
         scan_id = str(uuid.uuid4())
         module_list = ['sfp__stor_db']
 
@@ -177,9 +162,8 @@ class TestSpiderFootScanner(unittest.TestCase):
             SpiderFootScanner("example scan name", scan_id, "securitybsides.it", "IP_ADDRESS", module_list, dict(), start=False)
 
     def test_init_argument_globalOpts_proxy_invalid_proxy_type_should_raise_ValueError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts)"""
         opts = self.default_options
         opts['_socks1type'] = 'invalid proxy type'
         opts['__modules__'] = dict()
@@ -190,9 +174,8 @@ class TestSpiderFootScanner(unittest.TestCase):
             SpiderFootScanner("example scan name", scan_id, "securitybsides.it", "IP_ADDRESS", module_list, opts, start=False)
 
     def test_init_argument_globalOpts_proxy_type_without_host_should_raise_ValueError(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts)"""
         opts = self.default_options
         opts['_socks1type'] = 'HTTP'
         opts['__modules__'] = dict()
@@ -203,9 +186,8 @@ class TestSpiderFootScanner(unittest.TestCase):
             SpiderFootScanner("example scan name", scan_id, "securitybsides.it", "IP_ADDRESS", module_list, opts, start=False)
 
     def test_init_argument_globalOpts_proxy_should_set_proxy(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts)"""
         opts = self.default_options
         opts['_socks1type'] = 'HTTP'
         opts['_socks2addr'] = '127.0.0.1'
@@ -221,9 +203,8 @@ class TestSpiderFootScanner(unittest.TestCase):
         self.assertEqual('TBD', 'TBD')
 
     def test_init_argument_globalOpts_proxy_without_port_should_set_proxy(self):
-        """
-        Test __init__(self, scanName, scanId, scanTarget, targetType, moduleList, globalOpts)
-        """
+        """Test __init__(self, scanName, scanId, scanTarget, targetType,
+        moduleList, globalOpts)"""
         opts = self.default_options
         opts['_socks1type'] = 'HTTP'
         opts['_socks2addr'] = '127.0.0.1'
@@ -262,9 +243,7 @@ class TestSpiderFootScanner(unittest.TestCase):
         self.assertIsInstance(status, str)
 
     def test__setStatus_argument_status_of_invalid_type_should_raise_TypeError(self):
-        """
-        Test __setStatus(self, status, started=None, ended=None)
-        """
+        """Test __setStatus(self, status, started=None, ended=None)"""
         opts = self.default_options
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())
@@ -279,9 +258,7 @@ class TestSpiderFootScanner(unittest.TestCase):
                     sfscan._SpiderFootScanner__setStatus(invalid_type)
 
     def test__setStatus_argument_status_with_blank_value_should_raise_ValueError(self):
-        """
-        Test __setStatus(self, status, started=None, ended=None)
-        """
+        """Test __setStatus(self, status, started=None, ended=None)"""
         opts = self.default_options
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())

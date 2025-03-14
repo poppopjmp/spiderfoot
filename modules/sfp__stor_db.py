@@ -16,10 +16,11 @@ from spiderfoot import SpiderFootPlugin
 
 
 class sfp__stor_db(SpiderFootPlugin):
-    """
-    SpiderFoot plug-in for storing events to the local SpiderFoot SQLite database.
+    """SpiderFoot plug-in for storing events to the local SpiderFoot SQLite
+    database.
 
-    This class is responsible for storing scan results into the back-end SpiderFoot database.
+    This class is responsible for storing scan results into the back-end
+    SpiderFoot database.
     """
 
     meta = {
@@ -49,8 +50,7 @@ class sfp__stor_db(SpiderFootPlugin):
     }
 
     def setup(self, sfc, userOpts=dict()):
-        """
-        Set up the module with user options.
+        """Set up the module with user options.
 
         Args:
             sfc: SpiderFoot instance
@@ -65,8 +65,7 @@ class sfp__stor_db(SpiderFootPlugin):
             self.es = Elasticsearch([{'host': self.opts['elasticsearch_host'], 'port': self.opts['elasticsearch_port']}])
 
     def watchedEvents(self):
-        """
-        Define the events this module is interested in for input.
+        """Define the events this module is interested in for input.
 
         Returns:
             list: List of event types
@@ -74,8 +73,7 @@ class sfp__stor_db(SpiderFootPlugin):
         return ["*"]
 
     def handleEvent(self, sfEvent):
-        """
-        Handle events sent to this module.
+        """Handle events sent to this module.
 
         Args:
             sfEvent: SpiderFoot event

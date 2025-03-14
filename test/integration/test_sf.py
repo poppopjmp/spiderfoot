@@ -5,9 +5,7 @@ import unittest
 
 
 class TestSf(unittest.TestCase):
-    """
-    Test TestSf
-    """
+    """Test TestSf."""
 
     default_types = [
         ""

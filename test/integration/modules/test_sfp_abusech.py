@@ -39,8 +39,8 @@ class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
 
     @patch('modules.sfp_abusech.requests.get')
     def test_handleEvent_malicious_ip(self, mock_get):
-        """
-        Test handleEvent(mock_get) with a malicious IP address.
+        """Test handleEvent(mock_get) with a malicious IP address.
+
         Args:
             mock_get: Mock for requests.get
         """
@@ -61,8 +61,8 @@ class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
 
     @patch('modules.sfp_abusech.requests.get')
     def test_handleEvent_benign_ip(self, mock_get):
-        """
-        Test handleEvent(mock_get) with a benign IP address.
+        """Test handleEvent(mock_get) with a benign IP address.
+
         Args:
             mock_get: Mock for requests.get
         """
@@ -81,8 +81,8 @@ class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
 
     @patch('modules.sfp_abusech.requests.get')
     def test_handleEvent_api_error(self, mock_get):
-        """
-        Test handleEvent(mock_get) when the API request returns an error.
+        """Test handleEvent(mock_get) when the API request returns an error.
+
         Args:
             mock_get: Mock for requests.get
         """
@@ -102,9 +102,7 @@ class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
         # Optionally, check if an error message was logged (using self.sf.debug())
 
     def test_handleEvent_invalid_target(self):
-        """
-        Test handleEvent() with an invalid target type.
-        """
+        """Test handleEvent() with an invalid target type."""
         target_value = 'example.com'
         target_type = 'INTERNET_NAME'  # Invalid target type for this module
         target, evt = self.create_event(target_value, target_type, 'ROOT', '')

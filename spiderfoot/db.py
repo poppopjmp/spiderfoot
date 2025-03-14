@@ -22,7 +22,7 @@ import psycopg2.extras
 
 
 class SpiderFootDb:
-    """SpiderFoot database
+    """SpiderFoot database.
 
     Attributes:
         conn: Database connection
@@ -287,9 +287,9 @@ class SpiderFootDb:
     ]
 
     def __init__(self, opts: dict, init: bool = False) -> None:
-        """Initialize database and create handle to the database file.
-        Creates the database file if it does not exist.
-        Creates database schema if it does not exist.
+        """Initialize database and create handle to the database file. Creates
+        the database file if it does not exist. Creates database schema if it
+        does not exist.
 
         Args:
             opts (dict): must specify the database file path in the '__database' key
@@ -334,8 +334,8 @@ class SpiderFootDb:
             self.dbh = dbh.cursor()
 
             def __dbregex__(qry: str, data: str) -> bool:
-                """SQLite doesn't support regex queries, so we create
-                a custom function to do so.
+                """SQLite doesn't support regex queries, so we create a custom
+                function to do so.
 
                 Args:
                     qry (str): TBD
@@ -715,7 +715,8 @@ class SpiderFootDb:
                 raise IOError("Unable to create scan instance in database") from e
 
     def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None) -> None:
-        """Update the start time, end time or status (or all 3) of a scan instance.
+        """Update the start time, end time or status (or all 3) of a scan
+        instance.
 
         Args:
             instanceId (str): scan instance ID
@@ -758,7 +759,8 @@ class SpiderFootDb:
                 raise IOError("Unable to set information for the scan instance.") from None
 
     def scanInstanceGet(self, instanceId: str) -> list:
-        """Return info about a scan instance (name, target, created, started, ended, status)
+        """Return info about a scan instance (name, target, created, started,
+        ended, status)
 
         Args:
             instanceId (str): scan instance ID
@@ -787,7 +789,8 @@ class SpiderFootDb:
                 raise IOError("SQL error encountered when retrieving scan instance") from e
 
     def scanResultSummary(self, instanceId: str, by: str = "type") -> list:
-        """Obtain a summary of the results, filtered by event type, module or entity.
+        """Obtain a summary of the results, filtered by event type, module or
+        entity.
 
         Args:
             instanceId (str): scan instance ID
@@ -841,7 +844,7 @@ class SpiderFootDb:
                 raise IOError("SQL error encountered when fetching result summary") from e
 
     def scanCorrelationSummary(self, instanceId: str, by: str = "rule") -> list:
-        """Obtain a summary of the correlations, filtered by rule or risk
+        """Obtain a summary of the correlations, filtered by rule or risk.
 
         Args:
             instanceId (str): scan instance ID
@@ -886,7 +889,7 @@ class SpiderFootDb:
                 raise IOError("SQL error encountered when fetching correlation summary") from e
 
     def scanCorrelationList(self, instanceId: str) -> list:
-        """Obtain a list of the correlations from a scan
+        """Obtain a list of the correlations from a scan.
 
         Args:
             instanceId (str): scan instance ID
@@ -1259,7 +1262,7 @@ class SpiderFootDb:
         return True
 
     def configGet(self) -> dict:
-        """Retreive the config from the database
+        """Retreive the config from the database.
 
         Returns:
             dict: config
@@ -1637,7 +1640,8 @@ class SpiderFootDb:
                 raise IOError("SQL error encountered when getting child element IDs") from e
 
     def scanElementSourcesAll(self, instanceId: str, childData: list) -> list:
-        """Get the full set of upstream IDs which are parents to the supplied set of IDs.
+        """Get the full set of upstream IDs which are parents to the supplied
+        set of IDs.
 
         Args:
             instanceId (str): scan instance ID
@@ -1708,7 +1712,8 @@ class SpiderFootDb:
         return [datamap, pc]
 
     def scanElementChildrenAll(self, instanceId: str, parentIds: list) -> list:
-        """Get the full set of downstream IDs which are children of the supplied set of IDs.
+        """Get the full set of downstream IDs which are children of the
+        supplied set of IDs.
 
         Args:
             instanceId (str): scan instance ID

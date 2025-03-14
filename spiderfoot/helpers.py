@@ -77,7 +77,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def dataPath() -> str:
-        """Returns the file system location of SpiderFoot data and configuration files.
+        """Returns the file system location of SpiderFoot data and
+        configuration files.
 
         Returns:
             str: SpiderFoot data file system path
@@ -210,7 +211,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def targetTypeFromString(target: str) -> typing.Optional[str]:
-        """Return the scan target seed data type for the specified scan target input.
+        """Return the scan target seed data type for the specified scan target
+        input.
 
         Args:
             target (str): scan target seed input
@@ -284,7 +286,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def urlBaseDir(url: str) -> typing.Optional[str]:
-        """Extract the top level directory from a URL
+        """Extract the top level directory from a URL.
 
         Args:
             url (str): URL
@@ -426,7 +428,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def buildGraphGexf(root: str, title: str, data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> str:
-        """Convert supplied raw data into GEXF (Graph Exchange XML Format) format (e.g. for Gephi).
+        """Convert supplied raw data into GEXF (Graph Exchange XML Format)
+        format (e.g. for Gephi).
 
         Args:
             root (str): TBD
@@ -557,8 +560,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def buildGraphData(data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> typing.Set[typing.Tuple[str, str]]:
-        """Return a format-agnostic collection of tuples to use as the
-        basis for building graphs in various formats.
+        """Return a format-agnostic collection of tuples to use as the basis
+        for building graphs in various formats.
 
         Args:
             data (list[str]): Scan result as list
@@ -634,8 +637,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def dataParentChildToTree(data: typing.Dict[str, typing.Optional[typing.List[str]]]) -> typing.Union[Tree, EmptyTree]:
-        """Converts a dictionary of k -> array to a nested
-        tree that can be digested by d3 for visualizations.
+        """Converts a dictionary of k -> array to a nested tree that can be
+        digested by d3 for visualizations.
 
         Args:
             data (dict): dictionary of k -> array
@@ -691,7 +694,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def validLEI(lei: str) -> bool:
-        """Check if the provided string is a valid Legal Entity Identifier (LEI).
+        """Check if the provided string is a valid Legal Entity Identifier
+        (LEI).
 
         Args:
             lei (str): The LEI number to check.
@@ -993,7 +997,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def extractIbansFromText(data: str) -> typing.List[str]:
-        """Find all International Bank Account Numbers (IBANs) within the supplied content.
+        """Find all International Bank Account Numbers (IBANs) within the
+        supplied content.
 
         Extracts possible IBANs using a generic regex.
 
@@ -1141,7 +1146,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def sslDerToPem(der_cert: bytes) -> str:
-        """Given a certificate as a DER-encoded blob of bytes, returns a PEM-encoded string version of the same certificate.
+        """Given a certificate as a DER-encoded blob of bytes, returns a PEM-
+        encoded string version of the same certificate.
 
         Args:
             der_cert (bytes): certificate in DER format
@@ -1476,7 +1482,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def sanitiseInput(cmd: str, extra: typing.Optional[typing.List[str]] = None) -> bool:
-        """Verify input command is safe to execute
+        """Verify input command is safe to execute.
 
         Args:
             cmd (str): The command to check

@@ -15,8 +15,8 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
 
     @patch('modules.sfp_cloudflaredns.socket.getaddrinfo')
     def test_handleEvent_safe_domain(self, mock_getaddrinfo):
-        """
-        Test handleEvent() with a safe domain.
+        """Test handleEvent() with a safe domain.
+
         Args:
             mock_getaddrinfo (MagicMock): Mock for requests.getaddrinfo.
         """
@@ -37,8 +37,8 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
 
     @patch('modules.sfp_cloudflaredns.socket.getaddrinfo')
     def test_handleEvent_blocked_domain(self, mock_getaddrinfo):
-        """
-        Test handleEvent() with a blocked domain.
+        """Test handleEvent() with a blocked domain.
+
         Args:
             mock_getaddrinfo (MagicMock): Mock for requests.getaddrinfo.
         """

@@ -10,9 +10,7 @@ from spiderfoot import SpiderFootHelpers
 
 @pytest.mark.usefixtures
 class TestSpiderFootModuleLoading(unittest.TestCase):
-    """
-    Test SpiderFoot module loading
-    """
+    """Test SpiderFoot module loading."""
 
     @staticmethod
     def load_modules(sf):

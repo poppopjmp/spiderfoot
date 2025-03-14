@@ -158,8 +158,7 @@ class SpiderFootCli(cmd.Cmd):
 
     # Shortcut commands
     def do_debug(self, line):
-        """debug
-        Short-cut command for set cli.debug = 1"""
+        """Debug Short-cut command for set cli.debug = 1."""
         if self.ownopts['cli.debug']:
             val = "0"
         else:
@@ -167,8 +166,7 @@ class SpiderFootCli(cmd.Cmd):
         return self.do_set("cli.debug = " + val)
 
     def do_spool(self, line):
-        """spool
-        Short-cut command for set cli.spool = 1/0"""
+        """Spool Short-cut command for set cli.spool = 1/0."""
         if self.ownopts['cli.spool']:
             val = "0"
         else:
@@ -182,9 +180,10 @@ class SpiderFootCli(cmd.Cmd):
         return None
 
     def do_history(self, line):
-        """history [-l]
-        Short-cut command for set cli.history = 1/0.
-        Add -l to just list the history."""
+        """History [-l] Short-cut command for set cli.history = 1/0.
+
+        Add -l to just list the history.
+        """
         c = self.myparseline(line)
 
         if '-l' in c[0]:
@@ -534,8 +533,7 @@ class SpiderFootCli(cmd.Cmd):
 
     # Run SQL against the DB.
     def do_query(self, line):
-        """query <SQL query>
-        Run an <SQL query> against the database."""
+        """Query <SQL query> Run an <SQL query> against the database."""
         c = self.myparseline(line)
         if len(c[0]) < 1:
             self.edprint("Invalid syntax.")
@@ -553,8 +551,7 @@ class SpiderFootCli(cmd.Cmd):
 
     # Ping the server.
     def do_ping(self, line):
-        """ping
-        Ping the SpiderFoot server to ensure it's responding."""
+        """Ping Ping the SpiderFoot server to ensure it's responding."""
         d = self.request(self.ownopts['cli.server_baseurl'] + "/ping")
         if not d:
             return
@@ -572,8 +569,7 @@ class SpiderFootCli(cmd.Cmd):
 
     # List all SpiderFoot modules.
     def do_modules(self, line, cacheonly=False):
-        """modules
-        List all available modules and their descriptions."""
+        """Modules List all available modules and their descriptions."""
         d = self.request(self.ownopts['cli.server_baseurl'] + "/modules")
         if not d:
             return
@@ -589,8 +585,8 @@ class SpiderFootCli(cmd.Cmd):
 
     # List all SpiderFoot correlation rules
     def do_correlationrules(self, line, cacheonly=False):
-        """correlations
-        List all available correlation rules and their descriptions."""
+        """Correlations List all available correlation rules and their
+        descriptions."""
         d = self.request(self.ownopts['cli.server_baseurl'] + "/correlationrules")
         if not d:
             return
@@ -607,8 +603,7 @@ class SpiderFootCli(cmd.Cmd):
 
     # List all SpiderFoot data element types.
     def do_types(self, line, cacheonly=False):
-        """types
-        List all available element types and their descriptions."""
+        """Types List all available element types and their descriptions."""
         d = self.request(self.ownopts['cli.server_baseurl'] + "/eventtypes")
 
         if not d:
@@ -631,15 +626,13 @@ class SpiderFootCli(cmd.Cmd):
 
     # Load commands from a file.
     def do_load(self, line):
-        """load <file>
-        Execute SpiderFoot CLI commands found in <file>."""
+        """Load <file> Execute SpiderFoot CLI commands found in <file>."""
         pass
 
     # Get scan info and config.
     def do_scaninfo(self, line):
-        """scaninfo <sid> [-c]
-        Get status information for scan ID <sid>, optionally also its
-        configuration if -c is supplied."""
+        """Scaninfo <sid> [-c] Get status information for scan ID <sid>,
+        optionally also its configuration if -c is supplied."""
         c = self.myparseline(line)
         if len(c[0]) < 1:
             self.edprint("Invalid syntax.")
@@ -671,8 +664,10 @@ class SpiderFootCli(cmd.Cmd):
 
     # List scans.
     def do_scans(self, line):
-        """scans [-x]
-        List all scans, past and present. -x for extended view."""
+        """Scans [-x] List all scans, past and present.
+
+        -x for extended view.
+        """
         d = self.request(self.ownopts['cli.server_baseurl'] + "/scanlist")
         if not d:
             return
@@ -705,10 +700,10 @@ class SpiderFootCli(cmd.Cmd):
 
     # Show the correlation results from a scan.
     def do_correlations(self, line):
-        """correlations <sid> [-c correlation_id]
-        Get the correlation results for scan ID <sid> and optionally the
-        events associated with a correlation result [correlation_id] to
-        get the results for a particular correlation."""
+        """Correlations <sid> [-c correlation_id] Get the correlation results
+        for scan ID <sid> and optionally the events associated with a
+        correlation result [correlation_id] to get the results for a particular
+        correlation."""
         c = self.myparseline(line)
         if len(c[0]) < 1:
             self.edprint("Invalid syntax.")
@@ -744,10 +739,11 @@ class SpiderFootCli(cmd.Cmd):
 
     # Show the data from a scan.
     def do_data(self, line):
-        """data <sid> [-t type] [-x] [-u]
-        Get the scan data for scan ID <sid> and optionally the element
-        type [type] (e.g. EMAILADDR), [type]. Use -x for extended format.
-        Use -u for a unique set of results."""
+        """Data <sid> [-t type] [-x] [-u] Get the scan data for scan ID <sid>
+        and optionally the element type [type] (e.g. EMAILADDR), [type].
+
+        Use -x for extended format. Use -u for a unique set of results.
+        """
         c = self.myparseline(line)
         if len(c[0]) < 1:
             self.edprint("Invalid syntax.")
@@ -790,9 +786,11 @@ class SpiderFootCli(cmd.Cmd):
 
     # Export data from a scan.
     def do_export(self, line):
-        """export <sid> [-t type] [-f file]
-        Export the scan data for scan ID <sid> as type [type] to file [file].
-        Valid types: csv, json, gexf (default: json)."""
+        """Export <sid> [-t type] [-f file] Export the scan data for scan ID
+        <sid> as type [type] to file [file].
+
+        Valid types: csv, json, gexf (default: json).
+        """
         c = self.myparseline(line)
 
         if len(c[0]) < 1:
@@ -852,11 +850,12 @@ class SpiderFootCli(cmd.Cmd):
 
     # Show logs.
     def do_logs(self, line):
-        """logs <sid> [-l count] [-w]
-        Show the most recent [count] logs for a given scan ID, <sid>.
-        If no count is supplied, all logs are given.
-        If -w is supplied, logs will be streamed to the console until
-        Ctrl-C is entered."""
+        """Logs <sid> [-l count] [-w] Show the most recent [count] logs for a
+        given scan ID, <sid>.
+
+        If no count is supplied, all logs are given. If -w is supplied,
+        logs will be streamed to the console until Ctrl-C is entered.
+        """
         c = self.myparseline(line)
 
         if len(c[0]) < 1:
@@ -953,15 +952,14 @@ class SpiderFootCli(cmd.Cmd):
 
     # Start a new scan.
     def do_start(self, line):
-        """start <target> (-m m1,... | -t t1,... | -u case) [-n name] [-w]
-        Start a scan against <target> using modules m1,... OR looking
-        for types t1,...
-        OR by use case ("all", "investigate", "passive" and "footprint").
+        """Start <target> (-m m1,... | -t t1,... | -u case) [-n name] [-w]
+        Start a scan against <target> using modules m1,... OR looking for types
+        t1,... OR by use case ("all", "investigate", "passive" and
+        "footprint").
 
         Scan be be optionally named [name], without a name the target
-        will be used.
-        Use -w to watch the logs from the scan. Ctrl-C to abort the
-        logging (but will not abort the scan).
+        will be used. Use -w to watch the logs from the scan. Ctrl-C to
+        abort the logging (but will not abort the scan).
         """
         c = self.myparseline(line)
         if len(c[0]) < 3:
@@ -1021,8 +1019,7 @@ class SpiderFootCli(cmd.Cmd):
 
     # Stop a running scan.
     def do_stop(self, line):
-        """stop <sid>
-        Abort the running scan with scan ID, <sid>."""
+        """Stop <sid> Abort the running scan with scan ID, <sid>."""
         c = self.myparseline(line)
         try:
             scan_id = c[0][0]
@@ -1035,15 +1032,16 @@ class SpiderFootCli(cmd.Cmd):
 
     # Search for data, alias to find
     def do_search(self, line):
-        """search (look up 'find')
-        """
+        """Search (look up 'find')"""
         return self.do_find(line)
 
     # Search for data
     def do_find(self, line):
-        """find "<string|/regex/>" <[-s sid]|[-t type]> [-x]
-        Search for string/regex, limited to the scope of either a scan ID or
-        event type. -x for extended format."""
+        """Find "<string|/regex/>" <[-s sid]|[-t type]> [-x] Search for
+        string/regex, limited to the scope of either a scan ID or event type.
+
+        -x for extended format.
+        """
         c = self.myparseline(line)
         if len(c[0]) < 1:
             self.edprint("Invalid syntax.")
@@ -1085,9 +1083,11 @@ class SpiderFootCli(cmd.Cmd):
 
     # Summary of a scan
     def do_summary(self, line):
-        """summary <sid> [-t]
-        Summarise the results for a scan ID, <sid>. -t to only show
-        the element types."""
+        """Summary <sid> [-t] Summarise the results for a scan ID, <sid>.
+
+        -t to only show
+        the element types.
+        """
         c = self.myparseline(line)
         if len(c[0]) < 1:
             self.edprint("Invalid syntax.")
@@ -1122,8 +1122,7 @@ class SpiderFootCli(cmd.Cmd):
 
     # Delete a scan
     def do_delete(self, line):
-        """delete <sid>
-        Delete a scan with scan ID, <sid>."""
+        """Delete <sid> Delete a scan with scan ID, <sid>."""
         c = self.myparseline(line)
         try:
             scan_id = c[0][0]
@@ -1175,8 +1174,7 @@ class SpiderFootCli(cmd.Cmd):
 
     # Get/Set configuration
     def do_set(self, line):
-        """set [opt [= <val>]]
-        Set a configuration variable in SpiderFoot."""
+        """Set [opt [= <val>]] Set a configuration variable in SpiderFoot."""
 
         c = self.myparseline(line, replace=False)
         cfg = None
@@ -1324,26 +1322,22 @@ class SpiderFootCli(cmd.Cmd):
 
     # Execute a shell command locally and return the output
     def do_shell(self, line):
-        """shell
-        Run a shell command locally."""
+        """Shell Run a shell command locally."""
         self.dprint("Running shell command:" + str(line))
         self.dprint(os.popen(line).read(), plain=True)  # noqa: DUO106
 
     def do_clear(self, line):
-        """clear
-        Clear the screen."""
+        """Clear Clear the screen."""
         sys.stderr.write("\x1b[2J\x1b[H")
 
     # Exit the CLI
     def do_exit(self, line):
-        """exit
-        Exit the SpiderFoot CLI."""
+        """Exit Exit the SpiderFoot CLI."""
         return True
 
     # Ctrl-D
     def do_EOF(self, line):
-        """EOF (Ctrl-D)
-        Exit the SpiderFoot CLI."""
+        """EOF (Ctrl-D) Exit the SpiderFoot CLI."""
         print("\n")
         return True
 

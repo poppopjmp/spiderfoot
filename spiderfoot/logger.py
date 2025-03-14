@@ -11,8 +11,8 @@ from spiderfoot import SpiderFootDb, SpiderFootHelpers
 class SpiderFootSqliteLogHandler(logging.Handler):
     """Handler for logging to SQLite database.
 
-    This ensure all sqlite logging is done from a single
-    process and a single database handle.
+    This ensure all sqlite logging is done from a single process and a
+    single database handle.
     """
 
     def __init__(self, opts: dict) -> None:

@@ -74,7 +74,7 @@ class sfp_opencorporates(SpiderFootPlugin):
         return ["COMPANY_NAME", "PHYSICAL_ADDRESS", "RAW_RIR_DATA"]
 
     def searchCompany(self, qry):
-        """Search for company name
+        """Search for company name.
 
         Args:
             qry (str): company name

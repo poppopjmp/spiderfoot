@@ -4,7 +4,8 @@ import time
 
 
 class SpiderFootEvent():
-    """SpiderFootEvent object representing identified data and associated meta data.
+    """SpiderFootEvent object representing identified data and associated meta
+    data.
 
     Attributes:
         generated (float): Timestamp of event creation time

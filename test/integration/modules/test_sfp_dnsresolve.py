@@ -188,9 +188,7 @@ class TestModuleIntegrationDnsResolve(unittest.TestCase):
         self.assertEqual("OK", str(cm.exception))
 
     def test_handleEvent_event_data_raw_rir_data_containing_subdomain_should_return_internet_name_event(self):
-        """
-        Test handleEvent(self, event)
-        """
+        """Test handleEvent(self, event)"""
         sf = SpiderFoot(self.default_options)
 
         module = sfp_dnsresolve()
