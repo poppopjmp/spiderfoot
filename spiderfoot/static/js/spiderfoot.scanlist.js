@@ -148,7 +148,7 @@ function showlist(types, filter) {
         }
 
         showlisttable(types, filter, data)
-    }, "json");  // Explicitly request JSON format
+    });
 }
 
 function showlisttable(types, filter, data) {

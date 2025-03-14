@@ -72,26 +72,22 @@
                 % endif
 
                 % if item != "sfp__stor_db" and item != "sfp__stor_stdout":
-                    <tr><td><input type=checkbox id="module_${item}" checked></td><td>${modules[item]['name']}${keyicon}</td><td>${modules[item].get('descr', 'No description available')}</td></tr>
+                    <tr><td><input type=checkbox id="module_${item}" checked></td><td>${modules[item]['name']}${keyicon}</td><td>${modules[item]['descr']}</td></tr>
                 % endif
             % endfor
         </table>
         <table class="table table-striped table-condensed" id="typetable" style="display: none">
             <% count = 0 %>
-            % if 'types' in locals() and types:
-                % for item in sorted(types):
-                    % if count % 2 == 0:
-                        <tr>
-                    % endif
-                    <td><input type=checkbox id="type_${item[1]}" checked></td><td>${item[0]}</td>
-                    % if not count % 2 == 0:
-                        </tr>
-                    % endif
-                    <% count = count + 1 %>
-                % endfor
-            % else:
-                <tr><td colspan="2">No type data available</td></tr>
-            % endif
+            % for item in sorted(types):
+                % if count % 2 == 0:
+                    <tr>
+                % endif
+                <td><input type=checkbox id="type_${item[1]}" checked></td><td>${item[0]}</td>
+                % if not count % 2 == 0:
+                    </tr>
+                % endif
+                <% count = count + 1 %>
+            % endfor
         </table>
     </div>
     <div class="control-group">
