@@ -32,6 +32,5 @@ pillow>=10.3.0 # not directly required, pinned by Snyk to avoid a vulnerability
 setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
 uvicorn
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
-netlas
 python-jose
 passlib
