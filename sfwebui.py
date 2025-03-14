@@ -1714,8 +1714,8 @@ class SpiderFootWebUi:
         """
         # If this is an AJAX request or specifically asking for JSON, return JSON
         if (cherrypy.request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
-            (cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'))):
-            
+                (cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'))):
+
             dbh = SpiderFootDb(self.config)
             data = dbh.scanInstanceList()
             retdata = []
@@ -1747,11 +1747,11 @@ class SpiderFootWebUi:
                         "%Y-%m-%d %H:%M:%S", time.localtime(row[5]))
 
                 retdata.append([row[0], row[1], row[2], created,
-                            started, finished, row[6], row[7], riskmatrix])
-            
+                                started, finished, row[6], row[7], riskmatrix])
+
             cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
             return retdata
-        
+
         # For direct browser access, redirect to the HTML template version
         raise cherrypy.HTTPRedirect(f"{self.docroot}/scanlist_rendered")
 
