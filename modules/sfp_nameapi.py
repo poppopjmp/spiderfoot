@@ -120,10 +120,12 @@ class sfp_nameapi(SpiderFootPlugin):
         isDisposable = data.get('disposable')
 
         if isDisposable == "YES":
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(data), self.__name__, event)
             self.notifyListeners(evt)
 
-            evt = SpiderFootEvent("EMAILADDR_DISPOSABLE", eventData, self.__name__, event)
+            evt = SpiderFootEvent("EMAILADDR_DISPOSABLE",
+                                  eventData, self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_nameapi class

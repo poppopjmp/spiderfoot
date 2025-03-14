@@ -163,7 +163,8 @@ class sfp_jsonwhoiscom(SpiderFootPlugin):
             return
 
         if self.opts['api_key'] == "":
-            self.error("You enabled sfp_jsonwhoiscom but did not set an API key!")
+            self.error(
+                "You enabled sfp_jsonwhoiscom but did not set an API key!")
             self.errorState = True
             return
 
@@ -224,11 +225,14 @@ class sfp_jsonwhoiscom(SpiderFootPlugin):
 
             phone = contact.get('phone')
             if phone:
-                phone = phone.replace(" ", "").replace("-", "").replace("(", "").replace(")", "").replace(".", "")
+                phone = phone.replace(" ", "").replace(
+                    "-", "").replace("(", "").replace(")", "").replace(".", "")
                 phones.append(phone)
 
-            country = SpiderFootHelpers.countryNameFromCountryCode(contact.get('country_code'))
-            location = ', '.join([_f for _f in [contact.get('address'), contact.get('city'), contact.get('state'), contact.get('zip'), country] if _f])
+            country = SpiderFootHelpers.countryNameFromCountryCode(
+                contact.get('country_code'))
+            location = ', '.join([_f for _f in [contact.get('address'), contact.get(
+                'city'), contact.get('state'), contact.get('zip'), country] if _f])
             if location:
                 locations.append(location)
 
@@ -242,47 +246,56 @@ class sfp_jsonwhoiscom(SpiderFootPlugin):
                 evt = SpiderFootEvent(evttype, email, self.__name__, event)
                 self.notifyListeners(evt)
             else:
-                evt = SpiderFootEvent("AFFILIATE_EMAILADDR", email, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "AFFILIATE_EMAILADDR", email, self.__name__, event)
                 self.notifyListeners(evt)
 
         if eventName in ["DOMAIN_NAME"]:
             raw = res.get('raw')
             if raw:
-                evt = SpiderFootEvent("DOMAIN_WHOIS", raw, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "DOMAIN_WHOIS", raw, self.__name__, event)
                 self.notifyListeners(evt)
 
             registrar = res.get("registrar")
             if registrar:
                 registrar_name = registrar.get("name")
                 if registrar_name:
-                    evt = SpiderFootEvent("DOMAIN_REGISTRAR", registrar_name, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "DOMAIN_REGISTRAR", registrar_name, self.__name__, event)
                     self.notifyListeners(evt)
 
             for dns_provider in set(dns_providers):
-                evt = SpiderFootEvent("PROVIDER_DNS", dns_provider, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "PROVIDER_DNS", dns_provider, self.__name__, event)
                 self.notifyListeners(evt)
 
             for name in set(names):
-                evt = SpiderFootEvent("RAW_RIR_DATA", f"Possible full name {name}", self.__name__, event)
+                evt = SpiderFootEvent(
+                    "RAW_RIR_DATA", f"Possible full name {name}", self.__name__, event)
                 self.notifyListeners(evt)
 
             for phone in set(phones):
-                evt = SpiderFootEvent("PHONE_NUMBER", phone, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "PHONE_NUMBER", phone, self.__name__, event)
                 self.notifyListeners(evt)
 
             for location in set(locations):
-                evt = SpiderFootEvent("PHYSICAL_ADDRESS", location, self.__name__, event)
+                evt = SpiderFootEvent("PHYSICAL_ADDRESS",
+                                      location, self.__name__, event)
                 self.notifyListeners(evt)
 
         if eventName in ["AFFILIATE_DOMAIN_NAME"]:
             raw = res.get('raw')
             if raw:
-                evt = SpiderFootEvent("AFFILIATE_DOMAIN_WHOIS", raw, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "AFFILIATE_DOMAIN_WHOIS", raw, self.__name__, event)
                 self.notifyListeners(evt)
 
             available = res.get('available?')
             if available:
-                evt = SpiderFootEvent("AFFILIATE_DOMAIN_UNREGISTERED", eventData, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "AFFILIATE_DOMAIN_UNREGISTERED", eventData, self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_jsonwhoiscom class

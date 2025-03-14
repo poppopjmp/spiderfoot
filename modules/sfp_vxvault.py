@@ -109,7 +109,8 @@ class sfp_vxvault(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from VXVault.net.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from VXVault.net.")
             self.errorState = True
             return None
 
@@ -191,7 +192,8 @@ class sfp_vxvault(SpiderFootPlugin):
         else:
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with VXVault.net")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with VXVault.net")
 
         if self.queryBlacklist(eventData):
             url = "http://vxvault.net/URL_List.php"

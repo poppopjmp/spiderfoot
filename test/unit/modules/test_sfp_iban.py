@@ -55,7 +55,8 @@ class TestModuleIban(unittest.TestCase):
         event_module = ''
         source_event = ''
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         with self.assertRaises(Exception) as cm:
             module.handleEvent(evt)
@@ -83,7 +84,8 @@ class TestModuleIban(unittest.TestCase):
         event_module = ''
         source_event = ''
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)

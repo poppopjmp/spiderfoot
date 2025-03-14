@@ -9,11 +9,13 @@ from sflib import SpiderFoot
 class TestModuleIntegrationAccounts(unittest.TestCase):
 
     def setUp(self):
-        self.sf = SpiderFoot(self.default_options)  # Assuming default_options is defined
+        # Assuming default_options is defined
+        self.sf = SpiderFoot(self.default_options)
         self.module = sfp_accounts()
         self.module.setup(self.sf, dict())
 
-    @patch('modules.sfp_accounts.some_external_function')  # Mock external interaction
+    # Mock external interaction
+    @patch('modules.sfp_accounts.some_external_function')
     def test_handleEvent_with_accounts(self, mock_external_function):
         # Mock the external interaction to return some account data
         mock_external_function.return_value = [
@@ -35,6 +37,7 @@ class TestModuleIntegrationAccounts(unittest.TestCase):
         self.assertTrue(any(e.eventType == 'EMAILADDR' for e in events))
 
         # Check the data in the events (example)
-        social_media_event = next((e for e in events if e.eventType == 'SOCIAL_MEDIA'), None)
+        social_media_event = next(
+            (e for e in events if e.eventType == 'SOCIAL_MEDIA'), None)
         self.assertIsNotNone(social_media_event)
         self.assertEqual(social_media_event.data, "Twitter: johndoe")

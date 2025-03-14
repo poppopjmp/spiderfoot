@@ -135,7 +135,8 @@ class sfp_ipregistry(SpiderFootPlugin):
             security.get(k) for k in ("is_abuser", "is_attacker", "is_threat")
         )
         if malicious:
-            self.emit("MALICIOUS_IPADDR", f"ipregistry [{pevent.data}]", pevent)
+            self.emit("MALICIOUS_IPADDR",
+                      f"ipregistry [{pevent.data}]", pevent)
 
     def generate_events(self, data, pevent):
         if not isinstance(data, dict):
@@ -150,7 +151,8 @@ class sfp_ipregistry(SpiderFootPlugin):
         self.debug(f"Received event, {event.eventType}, from {event.module}")
 
         if self.opts["api_key"] == "":
-            self.error(f"You enabled {self.__class__.__name__} but did not set an API key!")
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set an API key!")
             self.errorState = True
             return
 

@@ -159,7 +159,8 @@ class sfp_emailcrawlr(SpiderFootPlugin):
             return
 
         if self.opts['api_key'] == "":
-            self.error("You enabled sfp_emailcrawlr but did not set an API key!")
+            self.error(
+                "You enabled sfp_emailcrawlr but did not set an API key!")
             self.errorState = True
             return
 
@@ -174,7 +175,8 @@ class sfp_emailcrawlr(SpiderFootPlugin):
                 self.debug(f"No information found for domain {eventData}")
                 return
 
-            evt = SpiderFootEvent('RAW_RIR_DATA', str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                'RAW_RIR_DATA', str(data), self.__name__, event)
             self.notifyListeners(evt)
 
             emails = data.get("emails")
@@ -193,7 +195,8 @@ class sfp_emailcrawlr(SpiderFootPlugin):
                         else:
                             evttype = "EMAILADDR"
 
-                        evt = SpiderFootEvent(evttype, email, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            evttype, email, self.__name__, event)
                         self.notifyListeners(evt)
 
                 name = res.get('name')
@@ -208,14 +211,17 @@ class sfp_emailcrawlr(SpiderFootPlugin):
                 if phone_numbers:
                     for number in phone_numbers:
                         if number:
-                            evt = SpiderFootEvent("PHONE_NUMBER", number, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "PHONE_NUMBER", number, self.__name__, event)
                             self.notifyListeners(evt)
 
                 location = res.get('location')
                 if location:
-                    loc = ', '.join([_f for _f in [location.get('city'), location.get('country')] if _f])
+                    loc = ', '.join(
+                        [_f for _f in [location.get('city'), location.get('country')] if _f])
                     if loc:
-                        evt = SpiderFootEvent("GEOINFO", loc, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "GEOINFO", loc, self.__name__, event)
                         self.notifyListeners(evt)
 
 # End of sfp_emailcrawlr class

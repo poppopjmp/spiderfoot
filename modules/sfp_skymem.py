@@ -77,7 +77,8 @@ class sfp_skymem(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         # Get e-mail addresses on this domain
-        res = self.sf.fetchUrl("http://www.skymem.info/srch?q=" + eventData, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
+        res = self.sf.fetchUrl("http://www.skymem.info/srch?q=" + eventData,
+                               timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
         if res['content'] is None:
             return
@@ -103,7 +104,8 @@ class sfp_skymem(SpiderFootPlugin):
                 self.results[email] = True
 
         # Loop through first 20 pages of results
-        domain_ids = re.findall(r'<a href="/domain/([a-z0-9]+)\?p=', str(res['content']))
+        domain_ids = re.findall(
+            r'<a href="/domain/([a-z0-9]+)\?p=', str(res['content']))
 
         if not domain_ids:
             return
@@ -140,7 +142,8 @@ class sfp_skymem(SpiderFootPlugin):
 
             # Check if we're on the last page of results
             max_page = 0
-            pages = re.findall(r'/domain/' + domain_id + r'\?p=(\d+)', str(res['content']))
+            pages = re.findall(r'/domain/' + domain_id +
+                               r'\?p=(\d+)', str(res['content']))
             for p in pages:
                 if int(p) >= max_page:
                     max_page = int(p)

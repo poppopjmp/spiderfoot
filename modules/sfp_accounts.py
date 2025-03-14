@@ -90,7 +90,8 @@ class sfp_accounts(SpiderFootPlugin):
             self.sf.cachePut("sfaccountsv2", content)
 
         try:
-            self.sites = [site for site in json.loads(content)['sites'] if not site.get('valid', True) is False]
+            self.sites = [site for site in json.loads(
+                content)['sites'] if not site.get('valid', True) is False]
         except Exception as e:
             self.error(f"Unable to parse social media accounts list: {e}")
             self.errorState = True
@@ -145,7 +146,8 @@ class sfp_accounts(SpiderFootPlugin):
 
         if self.opts['musthavename']:
             if name.lower() not in res['content'].lower():
-                self.debug(f"Skipping {site['name']} as username not mentioned.")
+                self.debug(
+                    f"Skipping {site['name']} as username not mentioned.")
                 with self.lock:
                     self.siteResults[retname] = False
                 return
@@ -170,7 +172,8 @@ class sfp_accounts(SpiderFootPlugin):
                     try:
                         self.checkSite(username, site)
                     except Exception as e:
-                        self.debug(f'Thread {threading.current_thread().name} exception: {e}')
+                        self.debug(
+                            f'Thread {threading.current_thread().name} exception: {e}')
             except QueueEmpty:
                 return
 
@@ -202,7 +205,8 @@ class sfp_accounts(SpiderFootPlugin):
 
         duration = time.monotonic() - startTime
         scanRate = len(sites) / duration
-        self.debug(f'Scan statistics: name={username}, count={len(self.siteResults)}, duration={duration:.2f}, rate={scanRate:.0f}')
+        self.debug(
+            f'Scan statistics: name={username}, count={len(self.siteResults)}, duration={duration:.2f}, rate={scanRate:.0f}')
 
         return [site for site, found in self.siteResults.items() if found]
 
@@ -281,7 +285,8 @@ class sfp_accounts(SpiderFootPlugin):
         # Search for double character usernames
         pos = 0
         for c in username:
-            permutations.append(username[0:pos] + c + c + username[(pos + 1):len(username)])
+            permutations.append(
+                username[0:pos] + c + c + username[(pos + 1):len(username)])
             pos += 1
 
         return list(set(permutations))
@@ -319,10 +324,12 @@ class sfp_accounts(SpiderFootPlugin):
                         if line == '':
                             continue
                         delsites.append(line)
-                    self.sites = [d for d in self.sites if d['name'] not in delsites]
+                    self.sites = [
+                        d for d in self.sites if d['name'] not in delsites]
             else:
                 randpool = 'abcdefghijklmnopqrstuvwxyz1234567890'
-                randuser = ''.join([random.SystemRandom().choice(randpool) for x in range(10)])
+                randuser = ''.join(
+                    [random.SystemRandom().choice(randpool) for x in range(10)])
                 res = self.checkSites(randuser)
                 if res:
                     delsites = list()
@@ -330,7 +337,8 @@ class sfp_accounts(SpiderFootPlugin):
                         sitename = site.split(" (Category:")[0]
                         self.debug(f"Distrusting {sitename}")
                         delsites.append(sitename)
-                    self.sites = [d for d in self.sites if d['name'] not in delsites]
+                    self.sites = [
+                        d for d in self.sites if d['name'] not in delsites]
                 else:
                     # The caching code needs *some* content
                     delsites = "None"
@@ -339,7 +347,8 @@ class sfp_accounts(SpiderFootPlugin):
             self.distrustedChecked = True
 
         if eventName == "HUMAN_NAME":
-            names = [eventData.lower().replace(" ", ""), eventData.lower().replace(" ", ".")]
+            names = [eventData.lower().replace(
+                " ", ""), eventData.lower().replace(" ", ".")]
             for name in names:
                 users.append(name)
 
@@ -363,11 +372,13 @@ class sfp_accounts(SpiderFootPlugin):
                 continue
 
             if self.opts['ignorenamedict'] and user in self.commonNames:
-                self.debug(f"{user} is found in our name dictionary, skipping.")
+                self.debug(
+                    f"{user} is found in our name dictionary, skipping.")
                 continue
 
             if self.opts['ignoreworddict'] and user in self.words:
-                self.debug(f"{user} is found in our word dictionary, skipping.")
+                self.debug(
+                    f"{user} is found in our word dictionary, skipping.")
                 continue
 
             if user not in self.reportedUsers and eventData != user:

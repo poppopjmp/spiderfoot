@@ -129,15 +129,18 @@ class sfp_ipapicom(SpiderFootPlugin):
             return
 
         if data.get('country_name'):
-            location = ', '.join(filter(None, [data.get('city'), data.get('region_name'), data.get('region_code'), data.get('country_name'), data.get('country_code')]))
+            location = ', '.join(filter(None, [data.get('city'), data.get('region_name'), data.get(
+                'region_code'), data.get('country_name'), data.get('country_code')]))
             evt = SpiderFootEvent('GEOINFO', location, self.__name__, event)
             self.notifyListeners(evt)
 
             if data.get('latitude') and data.get('longitude'):
-                evt = SpiderFootEvent("PHYSICAL_COORDINATES", f"{data.get('latitude')}, {data.get('longitude')}", self.__name__, event)
+                evt = SpiderFootEvent(
+                    "PHYSICAL_COORDINATES", f"{data.get('latitude')}, {data.get('longitude')}", self.__name__, event)
                 self.notifyListeners(evt)
 
-            evt = SpiderFootEvent('RAW_RIR_DATA', str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                'RAW_RIR_DATA', str(data), self.__name__, event)
             self.notifyListeners(evt)
 
 

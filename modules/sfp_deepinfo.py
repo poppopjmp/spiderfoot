@@ -14,6 +14,7 @@ import json
 import time
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
+
 class sfp_deepinfo(SpiderFootPlugin):
     meta = {
         'name': "Deepinfo",
@@ -86,7 +87,8 @@ class sfp_deepinfo(SpiderFootPlugin):
                                postData=request)
 
         if res['code'] not in ["200"]:
-            self.error("Deepinfo API key seems to have been rejected or you have exceeded usage limits for the month.")
+            self.error(
+                "Deepinfo API key seems to have been rejected or you have exceeded usage limits for the month.")
             self.errorState = True
             return None
 
@@ -98,7 +100,8 @@ class sfp_deepinfo(SpiderFootPlugin):
             info = json.loads(res['content'])
             self.info(f"result_count {info.get('result_count')}, page {page}")
             if info.get("result_count", 0) > 100:
-                domains = [item.get("punycode", "") for item in info.get("results", [])]
+                domains = [item.get("punycode", "")
+                           for item in info.get("results", [])]
                 if len(domains) >= 100:
                     # Avoid throttling
                     time.sleep(1)
@@ -114,7 +117,8 @@ class sfp_deepinfo(SpiderFootPlugin):
             else:
                 return info.get('results', [])
         except Exception as e:
-            self.error("Error processing JSON response from Deepinfo: " + str(e))
+            self.error(
+                "Error processing JSON response from Deepinfo: " + str(e))
             return None
 
     # Search Deepinfo for Passive DNS
@@ -125,7 +129,8 @@ class sfp_deepinfo(SpiderFootPlugin):
                                useragent="SpiderFoot", headers=headers)
 
         if res['code'] not in ["200"]:
-            self.error("Deepinfo API key seems to have been rejected or you have exceeded usage limits for the month.")
+            self.error(
+                "Deepinfo API key seems to have been rejected or you have exceeded usage limits for the month.")
             self.errorState = True
             return None
 
@@ -136,7 +141,8 @@ class sfp_deepinfo(SpiderFootPlugin):
         try:
             return json.loads(res['content'])
         except Exception as e:
-            self.error("Error processing JSON response from Deepinfo: " + str(e))
+            self.error(
+                "Error processing JSON response from Deepinfo: " + str(e))
             return None
 
     # Handle events sent to this module
@@ -151,7 +157,8 @@ class sfp_deepinfo(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts['api_key'] == "":
-            self.error("You enabled sfp_deepinfo but did not set an API uid/secret!")
+            self.error(
+                "You enabled sfp_deepinfo but did not set an API uid/secret!")
             self.errorState = True
             return
 

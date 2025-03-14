@@ -53,7 +53,8 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         # Note: The API key here is a placeholder, replace with your actual key for testing
         module.opts['api_key'] = 'API_KEY'
         result = module.query('thisdomaindoesnotexist.com')
-        self.assertEqual(result, {'domain': 'thisdomaindoesnotexist.com', 'data': None})
+        self.assertEqual(
+            result, {'domain': 'thisdomaindoesnotexist.com', 'data': None})
 
     def test_query_domain_found(self):
         """Test the query of a domain that is known by Cisco Umbrella
@@ -71,7 +72,8 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         sf = SpiderFootHelpers.SpiderFootHelpers()
         module = sfp_cisco_umbrella()
         module.setup(sf, dict())
-        evt = SpiderFootEvent("DOMAIN_NAME", "example.com", self.__class__.__name__, dict())
+        evt = SpiderFootEvent("DOMAIN_NAME", "example.com",
+                              self.__class__.__name__, dict())
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
@@ -79,7 +81,8 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         sf = SpiderFootHelpers.SpiderFootHelpers()
         module = sfp_cisco_umbrella()
         module.setup(sf, dict(api_key='ABCDEFG'))
-        evt = SpiderFootEvent("DOMAIN_NAME", "example.com", self.__class__.__name__, dict())
+        evt = SpiderFootEvent("DOMAIN_NAME", "example.com",
+                              self.__class__.__name__, dict())
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
@@ -88,7 +91,8 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         module = sfp_cisco_umbrella()
         # Note: The API key here is a placeholder, replace with your actual key for testing
         module.setup(sf, dict(api_key='API_KEY'))
-        evt = SpiderFootEvent("DOMAIN_NAME", "thisdomaindoesnotexist.com", self.__class__.__name__, dict())
+        evt = SpiderFootEvent(
+            "DOMAIN_NAME", "thisdomaindoesnotexist.com", self.__class__.__name__, dict())
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
@@ -97,7 +101,8 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         module = sfp_cisco_umbrella()
         # Note: The API key here is a placeholder, replace with your actual key for testing
         module.setup(sf, dict(api_key='API_KEY'))
-        evt = SpiderFootEvent("DOMAIN_NAME", "google.com", self.__class__.__name__, dict())
+        evt = SpiderFootEvent("DOMAIN_NAME", "google.com",
+                              self.__class__.__name__, dict())
         result = module.handleEvent(evt)
         self.assertIsNone(result)  # handleEvent() does not return any value
 

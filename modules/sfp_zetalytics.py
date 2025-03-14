@@ -132,7 +132,7 @@ class sfp_zetalytics(SpiderFootPlugin):
             if self.verify_emit_internet_name(qname, pevent):
                 events_generated = True
 
-        return events_generated # noqa R504
+        return events_generated  # noqa R504
 
     def generate_hostname_events(self, data, pevent):
         if not isinstance(data, dict):
@@ -153,7 +153,7 @@ class sfp_zetalytics(SpiderFootPlugin):
             if self.verify_emit_internet_name(hostname, pevent):
                 events_generated = True
 
-        return events_generated # noqa R504
+        return events_generated  # noqa R504
 
     def generate_email_events(self, data, pevent):
         if not isinstance(data, dict):
@@ -170,7 +170,7 @@ class sfp_zetalytics(SpiderFootPlugin):
                 self.emit("AFFILIATE_DOMAIN_NAME", domain, pevent)
                 events_generated = True
 
-        return events_generated # noqa R504
+        return events_generated  # noqa R504
 
     def generate_email_domain_events(self, data, pevent):
         if not isinstance(data, dict):
@@ -187,7 +187,7 @@ class sfp_zetalytics(SpiderFootPlugin):
                 self.emit("AFFILIATE_DOMAIN_NAME", domain, pevent)
                 events_generated = True
 
-        return events_generated # noqa R504
+        return events_generated  # noqa R504
 
     def handleEvent(self, event):
         eventName = event.eventType

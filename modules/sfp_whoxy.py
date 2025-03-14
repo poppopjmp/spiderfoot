@@ -84,14 +84,16 @@ class sfp_whoxy(SpiderFootPlugin):
     def query(self, qry, querytype, page=1, accum=None):
         info = None
 
-        url = "https://api.whoxy.com/?key=" + self.opts['api_key'] + "&reverse=whois"
+        url = "https://api.whoxy.com/?key=" + \
+            self.opts['api_key'] + "&reverse=whois"
         url += "&" + querytype + "=" + qry + "&page=" + str(page)
 
         res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
                                useragent="SpiderFoot")
 
         if res['code'] in ["400", "429", "500", "403"]:
-            self.error("Whoxy API key seems to have been rejected or you have exceeded usage limits.")
+            self.error(
+                "Whoxy API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
 
@@ -103,7 +105,8 @@ class sfp_whoxy(SpiderFootPlugin):
             info = json.loads(res['content'])
 
             if info.get("status", 0) == 0:
-                self.error("Error querying Whoxy: " + info.get("status_reason", "Unknown"))
+                self.error("Error querying Whoxy: " +
+                           info.get("status_reason", "Unknown"))
                 self.errorState = True
                 return None
 
@@ -157,11 +160,13 @@ class sfp_whoxy(SpiderFootPlugin):
                     else:
                         continue
 
-                    e = SpiderFootEvent("AFFILIATE_INTERNET_NAME", h, self.__name__, event)
+                    e = SpiderFootEvent(
+                        "AFFILIATE_INTERNET_NAME", h, self.__name__, event)
                     self.notifyListeners(e)
 
                     if self.sf.isDomain(h, self.opts['_internettlds']):
-                        evt = SpiderFootEvent('AFFILIATE_DOMAIN_NAME', h, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            'AFFILIATE_DOMAIN_NAME', h, self.__name__, event)
                         self.notifyListeners(evt)
 
 # End of sfp_whoxy class

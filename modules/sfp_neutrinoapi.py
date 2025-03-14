@@ -94,7 +94,8 @@ class sfp_neutrinoapi(SpiderFootPlugin):
     def queryPhoneValidate(self, qry):
         res = self.sf.fetchUrl(
             'https://neutrinoapi.com/phone-validate',
-            postData={"output-format": "json", "number": qry, "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
+            postData={"output-format": "json", "number": qry,
+                      "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
             timeout=self.opts['timeout'],
             useragent=self.opts['_useragent']
         )
@@ -106,7 +107,8 @@ class sfp_neutrinoapi(SpiderFootPlugin):
     def queryIpInfo(self, qry):
         res = self.sf.fetchUrl(
             "https://neutrinoapi.com/ip-info",
-            postData={"output-format": "json", "ip": qry, "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
+            postData={"output-format": "json", "ip": qry,
+                      "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
             timeout=self.opts['timeout'],
             useragent=self.opts['_useragent']
         )
@@ -118,7 +120,8 @@ class sfp_neutrinoapi(SpiderFootPlugin):
     def queryIpBlocklist(self, qry):
         res = self.sf.fetchUrl(
             "https://neutrinoapi.com/ip-blocklist",
-            postData={"output-format": "json", "ip": qry, "vpn-lookup": True, "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
+            postData={"output-format": "json", "ip": qry, "vpn-lookup": True,
+                      "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
             timeout=self.opts['timeout'],
             useragent=self.opts['_useragent']
         )
@@ -130,7 +133,8 @@ class sfp_neutrinoapi(SpiderFootPlugin):
     def queryHostReputation(self, qry):
         res = self.sf.fetchUrl(
             "https://neutrinoapi.com/host-reputation",
-            postData={"output-format": "json", "host": qry, "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
+            postData={"output-format": "json", "host": qry,
+                      "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
             timeout=self.opts['timeout'],
             useragent=self.opts['_useragent']
         )
@@ -179,7 +183,8 @@ class sfp_neutrinoapi(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {event.module}")
 
         if self.opts['api_key'] == "":
-            self.error("You enabled sfp_neutrinoapi but did not set an API key!")
+            self.error(
+                "You enabled sfp_neutrinoapi but did not set an API key!")
             self.errorState = True
             return
 
@@ -203,11 +208,14 @@ class sfp_neutrinoapi(SpiderFootPlugin):
                     if data.get('location') == data.get('country'):
                         location = data.get('location')
                     else:
-                        location = data.get('location') + ', ' + data.get('country')
+                        location = data.get('location') + \
+                            ', ' + data.get('country')
 
-                    evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "GEOINFO", location, self.__name__, event)
                     self.notifyListeners(evt)
-                    evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "RAW_RIR_DATA", str(data), self.__name__, event)
                     self.notifyListeners(evt)
 
         if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
@@ -217,8 +225,10 @@ class sfp_neutrinoapi(SpiderFootPlugin):
                 self.debug("No IP info results found for " + eventData)
             else:
                 if data.get('city') is not None and data.get('region') is not None and data.get('country-code') is not None:
-                    location = data.get('city') + ', ' + data.get('region') + ', ' + data.get('country-code')
-                    evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
+                    location = data.get(
+                        'city') + ', ' + data.get('region') + ', ' + data.get('country-code')
+                    evt = SpiderFootEvent(
+                        "GEOINFO", location, self.__name__, event)
                     self.notifyListeners(evt)
 
             data = self.queryIpBlocklist(eventData)
@@ -227,23 +237,29 @@ class sfp_neutrinoapi(SpiderFootPlugin):
                 self.debug("No IP blocklist results found for " + eventData)
             else:
                 if data.get('is-listed'):
-                    evt = SpiderFootEvent("MALICIOUS_IPADDR", f"NeutrinoAPI - IP Blocklist [{eventData}]", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "MALICIOUS_IPADDR", f"NeutrinoAPI - IP Blocklist [{eventData}]", self.__name__, event)
                     self.notifyListeners(evt)
-                    evt = SpiderFootEvent("BLACKLISTED_IPADDR", f"NeutrinoAPI - IP Blocklist [{eventData}]", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "BLACKLISTED_IPADDR", f"NeutrinoAPI - IP Blocklist [{eventData}]", self.__name__, event)
                     self.notifyListeners(evt)
-                    evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "RAW_RIR_DATA", str(data), self.__name__, event)
                     self.notifyListeners(evt)
 
                     if data.get('is-proxy'):
-                        evt = SpiderFootEvent("PROXY_HOST", eventData, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "PROXY_HOST", eventData, self.__name__, event)
                         self.notifyListeners(evt)
 
                     if data.get('is-vpn'):
-                        evt = SpiderFootEvent("VPN_HOST", eventData, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "VPN_HOST", eventData, self.__name__, event)
                         self.notifyListeners(evt)
 
                     if data.get('is-tor'):
-                        evt = SpiderFootEvent("TOR_EXIT_NODE", eventData, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "TOR_EXIT_NODE", eventData, self.__name__, event)
                         self.notifyListeners(evt)
 
             data = self.queryHostReputation(eventData)
@@ -252,11 +268,14 @@ class sfp_neutrinoapi(SpiderFootPlugin):
                 self.debug("No host reputation results found for " + eventData)
             else:
                 if data.get('is-listed'):
-                    evt = SpiderFootEvent("MALICIOUS_IPADDR", f"NeutrinoAPI - Host Reputation [{eventData}]", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "MALICIOUS_IPADDR", f"NeutrinoAPI - Host Reputation [{eventData}]", self.__name__, event)
                     self.notifyListeners(evt)
-                    evt = SpiderFootEvent("BLACKLISTED_IPADDR", f"NeutrinoAPI - Host Reputation [{eventData}]", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "BLACKLISTED_IPADDR", f"NeutrinoAPI - Host Reputation [{eventData}]", self.__name__, event)
                     self.notifyListeners(evt)
-                    evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "RAW_RIR_DATA", str(data), self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_neutrinoapi class

@@ -205,7 +205,8 @@ class sfp_virustotal(SpiderFootPlugin):
             net_size = IPNetwork(eventData).prefixlen
             max_netblock = self.opts['maxnetblock']
             if net_size < max_netblock:
-                self.debug(f"Network size {net_size} bigger than permitted: {max_netblock}")
+                self.debug(
+                    f"Network size {net_size} bigger than permitted: {max_netblock}")
                 return
 
         if eventName == 'NETBLOCK_MEMBER':
@@ -215,7 +216,8 @@ class sfp_virustotal(SpiderFootPlugin):
             net_size = IPNetwork(eventData).prefixlen
             max_subnet = self.opts['maxsubnet']
             if net_size < max_subnet:
-                self.debug(f"Network size {net_size} bigger than permitted: {max_subnet}")
+                self.debug(
+                    f"Network size {net_size} bigger than permitted: {max_subnet}")
                 return
 
         qrylist = list()
@@ -302,10 +304,12 @@ class sfp_virustotal(SpiderFootPlugin):
 
                 if self.sf.isDomain(domain, self.opts['_internettlds']):
                     if evt_type.startswith('AFFILIATE'):
-                        evt = SpiderFootEvent('AFFILIATE_DOMAIN_NAME', domain, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            'AFFILIATE_DOMAIN_NAME', domain, self.__name__, event)
                         self.notifyListeners(evt)
                     else:
-                        evt = SpiderFootEvent('DOMAIN_NAME', domain, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            'DOMAIN_NAME', domain, self.__name__, event)
                         self.notifyListeners(evt)
 
 # End of sfp_virustotal class

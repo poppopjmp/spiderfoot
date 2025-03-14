@@ -44,7 +44,8 @@ class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
         Args:
             mock_get: Mock for requests.get
         """
-        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(url, timeout)
+        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(
+            url, timeout)
 
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
@@ -55,9 +56,11 @@ class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
 
         events = self.sf.getEvents()
         self.assertTrue(any(e.eventType == 'MALICIOUS_IPADDR' for e in events))
-        malicious_ip_event = next((e for e in events if e.eventType == 'MALICIOUS_IPADDR'), None)
+        malicious_ip_event = next(
+            (e for e in events if e.eventType == 'MALICIOUS_IPADDR'), None)
         self.assertIsNotNone(malicious_ip_event)
-        self.assertEqual(malicious_ip_event.data, "1.2.3.4 (Malware: Example Malware)")
+        self.assertEqual(malicious_ip_event.data,
+                         "1.2.3.4 (Malware: Example Malware)")
 
     @patch('modules.sfp_abusech.requests.get')
     def test_handleEvent_benign_ip(self, mock_get):
@@ -66,7 +69,8 @@ class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
         Args:
             mock_get: Mock for requests.get
         """
-        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(url, timeout)
+        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(
+            url, timeout)
 
         target_value = '192.168.1.1'  # Example benign IP
         target_type = 'IP_ADDRESS'
@@ -77,7 +81,8 @@ class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
 
         # Check that no MALICIOUS_IPADDR event was produced
         events = self.sf.getEvents()
-        self.assertFalse(any(e.eventType == 'MALICIOUS_IPADDR' for e in events))
+        self.assertFalse(
+            any(e.eventType == 'MALICIOUS_IPADDR' for e in events))
 
     @patch('modules.sfp_abusech.requests.get')
     def test_handleEvent_api_error(self, mock_get):
@@ -86,7 +91,8 @@ class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
         Args:
             mock_get: Mock for requests.get
         """
-        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(url, timeout)
+        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(
+            url, timeout)
 
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
@@ -97,7 +103,8 @@ class TestModuleIntegrationAbusech(BaseTestModuleIntegration):
 
         # Check that no MALICIOUS_IPADDR event was produced
         events = self.sf.getEvents()
-        self.assertFalse(any(e.eventType == 'MALICIOUS_IPADDR' for e in events))
+        self.assertFalse(
+            any(e.eventType == 'MALICIOUS_IPADDR' for e in events))
 
         # Optionally, check if an error message was logged (using self.sf.debug())
 

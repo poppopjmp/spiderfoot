@@ -109,7 +109,8 @@ class sfp_whois(SpiderFootPlugin):
                 whoisdata = whois.whois(eventData)
                 data = str(whoisdata.text)
             except Exception as e:
-                self.error(f"Unable to perform WHOIS query on {eventData}: {e}")
+                self.error(
+                    f"Unable to perform WHOIS query on {eventData}: {e}")
 
         if not data:
             self.error(f"No WHOIS record for {eventData}")
@@ -117,7 +118,8 @@ class sfp_whois(SpiderFootPlugin):
 
         # This is likely to be an error about being throttled rather than real data
         if len(str(data)) < 250:
-            self.error(f"WHOIS data ({len(data)} bytes) is smaller than 250 bytes. Throttling from WHOIS server is probably happening. Ignoring response.")
+            self.error(
+                f"WHOIS data ({len(data)} bytes) is smaller than 250 bytes. Throttling from WHOIS server is probably happening. Ignoring response.")
             return
 
         rawevt = SpiderFootEvent(typ, data, self.__name__, event)
@@ -127,7 +129,8 @@ class sfp_whois(SpiderFootPlugin):
             if whoisdata:
                 registrar = whoisdata.get('registrar')
                 if registrar:
-                    evt = SpiderFootEvent("DOMAIN_REGISTRAR", registrar, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "DOMAIN_REGISTRAR", registrar, self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_whois class

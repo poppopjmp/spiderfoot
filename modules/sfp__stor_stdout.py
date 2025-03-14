@@ -68,7 +68,8 @@ class sfp__stor_stdout(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
         if self.opts['use_elasticsearch']:
-            self.es = Elasticsearch([{'host': self.opts['elasticsearch_host'], 'port': self.opts['elasticsearch_port']}])
+            self.es = Elasticsearch(
+                [{'host': self.opts['elasticsearch_host'], 'port': self.opts['elasticsearch_port']}])
 
     def watchedEvents(self):
         """Define the events this module is interested in for input.
@@ -117,12 +118,14 @@ class sfp__stor_stdout(SpiderFootPlugin):
         if self.opts['_format'] == "tab":
             event_type = self.opts['_eventtypes'][event.eventType]
             if self.opts['_showsource']:
-                print(f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{srcdata}\t{data}")
+                print(
+                    f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{srcdata}\t{data}")
             else:
                 print(f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{data}")
 
         if self.opts['_format'] == "csv":
-            print((event.module + d + self.opts['_eventtypes'][event.eventType] + d + srcdata + d + data))
+            print((event.module + d +
+                  self.opts['_eventtypes'][event.eventType] + d + srcdata + d + data))
 
         if self.opts['_format'] == "json":
             d = event.asDict()
@@ -150,7 +153,8 @@ class sfp__stor_stdout(SpiderFootPlugin):
                 'sourceEvent': sfEvent.sourceEvent.data if sfEvent.sourceEvent else None,
                 'generated': sfEvent.generated
             }
-            self.es.index(index=self.opts['elasticsearch_index'], body=event_data)
+            self.es.index(
+                index=self.opts['elasticsearch_index'], body=event_data)
             return
 
         if self.opts['_showonlyrequested']:

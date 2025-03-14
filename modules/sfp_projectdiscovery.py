@@ -71,7 +71,8 @@ class sfp_projectdiscovery(SpiderFootPlugin):
         return ["RAW_RIR_DATA", "INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
     def query(self, qry):
-        headers = {"Accept": "application/json", "Authorization": self.opts["api_key"]}
+        headers = {"Accept": "application/json",
+                   "Authorization": self.opts["api_key"]}
         res = self.sf.fetchUrl(
             f"https://dns.projectdiscovery.io/dns/{qry}/subdomains",
             timeout=self.opts["_fetchtimeout"],
@@ -80,7 +81,8 @@ class sfp_projectdiscovery(SpiderFootPlugin):
         )
 
         if res["content"] is None:
-            self.info("No DNS info found in chaos projectdiscovery API for " + qry)
+            self.info(
+                "No DNS info found in chaos projectdiscovery API for " + qry)
             return None
 
         try:
@@ -127,7 +129,8 @@ class sfp_projectdiscovery(SpiderFootPlugin):
         if not isinstance(subdomains, list):
             return
 
-        evt = SpiderFootEvent("RAW_RIR_DATA", str(result), self.__name__, event)
+        evt = SpiderFootEvent("RAW_RIR_DATA", str(
+            result), self.__name__, event)
         self.notifyListeners(evt)
 
         resultsSet = set()

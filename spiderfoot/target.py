@@ -45,10 +45,12 @@ class SpiderFootTarget():
     @targetType.setter
     def targetType(self, targetType: str) -> None:
         if not isinstance(targetType, str):
-            raise TypeError(f"targetType is {type(targetType)}; expected str()")
+            raise TypeError(
+                f"targetType is {type(targetType)}; expected str()")
 
         if targetType not in self._validTypes:
-            raise ValueError(f"targetType value is {targetType}; expected {self._validTypes}")
+            raise ValueError(
+                f"targetType value is {targetType}; expected {self._validTypes}")
 
         self._targetType = targetType
 
@@ -59,7 +61,8 @@ class SpiderFootTarget():
     @targetValue.setter
     def targetValue(self, targetValue: str) -> None:
         if not isinstance(targetValue, str):
-            raise TypeError(f"targetValue is {type(targetValue)}; expected str()")
+            raise TypeError(
+                f"targetValue is {type(targetValue)}; expected str()")
         if not targetValue:
             raise ValueError("targetValue value is blank")
 

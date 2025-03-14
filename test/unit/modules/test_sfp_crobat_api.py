@@ -33,7 +33,8 @@ class TestModuleCrobatApi(unittest.TestCase):
             with self.subTest(code=code):
                 module = sfp_crobat_api()
                 module.setup(sf, dict())
-                result = module.parseApiResponse({"code": code, "content": None})
+                result = module.parseApiResponse(
+                    {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertFalse(module.errorState)
 
@@ -45,6 +46,7 @@ class TestModuleCrobatApi(unittest.TestCase):
             with self.subTest(code=code):
                 module = sfp_crobat_api()
                 module.setup(sf, dict())
-                result = module.parseApiResponse({"code": code, "content": None})
+                result = module.parseApiResponse(
+                    {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertTrue(module.errorState)

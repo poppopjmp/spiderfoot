@@ -90,7 +90,8 @@ class sfp_callername(SpiderFootPlugin):
             return
 
         # Strip country code (+1) and formatting
-        number = eventData.lstrip('+1').strip('(').strip(')').strip('-').strip(' ')
+        number = eventData.lstrip(
+            '+1').strip('(').strip(')').strip('-').strip(' ')
 
         if not number.isdigit():
             self.debug('Invalid phone number: ' + number)
@@ -98,7 +99,8 @@ class sfp_callername(SpiderFootPlugin):
 
         # Query CallerName.com for the specified phone number
         url = f"https://callername.com/{number}"
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
+        res = self.sf.fetchUrl(
+            url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
         time.sleep(1)
 
@@ -110,7 +112,8 @@ class sfp_callername(SpiderFootPlugin):
             self.debug('No phone information found for ' + eventData)
             return
 
-        location_match = re.findall(r'<div class="callerid"><h4>.*?</h4><p>(.+?)</p></div>', str(res['content']), re.MULTILINE | re.DOTALL)
+        location_match = re.findall(
+            r'<div class="callerid"><h4>.*?</h4><p>(.+?)</p></div>', str(res['content']), re.MULTILINE | re.DOTALL)
 
         if location_match:
             location = location_match[0]
@@ -118,11 +121,14 @@ class sfp_callername(SpiderFootPlugin):
             if len(location) < 5 or len(location) > 100:
                 self.debug("Skipping likely invalid location.")
             else:
-                evt = SpiderFootEvent('GEOINFO', location, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'GEOINFO', location, self.__name__, event)
                 self.notifyListeners(evt)
 
-        rep_good_match = re.findall(r'>SAFE.*?>(\d+) votes?<', str(res['content']))
-        rep_bad_match = re.findall(r'>UNSAFE.*?>(\d+) votes?<', str(res['content']))
+        rep_good_match = re.findall(
+            r'>SAFE.*?>(\d+) votes?<', str(res['content']))
+        rep_bad_match = re.findall(
+            r'>UNSAFE.*?>(\d+) votes?<', str(res['content']))
 
         if rep_good_match and rep_bad_match:
             good_votes = int(rep_good_match[0])
@@ -130,7 +136,8 @@ class sfp_callername(SpiderFootPlugin):
 
             if bad_votes > good_votes:
                 text = f"CallerName [{eventData}]\n<SFURL>{url}</SFURL>"
-                evt = SpiderFootEvent('MALICIOUS_PHONE_NUMBER', text, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'MALICIOUS_PHONE_NUMBER', text, self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_callername class

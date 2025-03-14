@@ -151,7 +151,8 @@ class SpiderFootCli(cmd.Cmd):
             print(cout)
 
         if self.ownopts['cli.spool']:
-            f = codecs.open(self.ownopts['cli.spool_file'], "a", encoding="utf-8")
+            f = codecs.open(
+                self.ownopts['cli.spool_file'], "a", encoding="utf-8")
             f.write(sout)
             f.write('\n')
             f.close()
@@ -175,7 +176,8 @@ class SpiderFootCli(cmd.Cmd):
         if self.ownopts['cli.spool_file']:
             return self.do_set("cli.spool = " + val)
 
-        self.edprint("You haven't set cli.spool_file. Set that before enabling spooling.")
+        self.edprint(
+            "You haven't set cli.spool_file. Set that before enabling spooling.")
 
         return None
 
@@ -203,12 +205,14 @@ class SpiderFootCli(cmd.Cmd):
     # Run before all commands to handle history and spooling
     def precmd(self, line):
         if self.ownopts['cli.history'] and line != "EOF":
-            f = codecs.open(self.ownopts["cli.history_file"], "a", encoding="utf-8")
+            f = codecs.open(
+                self.ownopts["cli.history_file"], "a", encoding="utf-8")
             f.write(line)
             f.write('\n')
             f.close()
         if self.ownopts['cli.spool']:
-            f = codecs.open(self.ownopts["cli.spool_file"], "a", encoding="utf-8")
+            f = codecs.open(
+                self.ownopts["cli.spool_file"], "a", encoding="utf-8")
             f.write(self.prompt + line)
             f.write('\n')
             f.close()
@@ -468,7 +472,8 @@ class SpiderFootCli(cmd.Cmd):
                 out = self.pretty(j, titlemap=titles)
 
             if not out:
-                self.edprint(f"Unknown output format '{self.ownopts['cli.output']}'.")
+                self.edprint(
+                    f"Unknown output format '{self.ownopts['cli.output']}'.")
                 return
 
         c = self.myparseline(cmd)
@@ -558,14 +563,16 @@ class SpiderFootCli(cmd.Cmd):
 
         s = json.loads(d)
         if s[0] == "SUCCESS":
-            self.dprint(f"Server {self.ownopts['cli.server_baseurl']} responding.")
+            self.dprint(
+                f"Server {self.ownopts['cli.server_baseurl']} responding.")
             self.do_modules("", cacheonly=True)
             self.do_types("", cacheonly=True)
         else:
             self.dprint(f"Something odd happened: {d}")
 
         if s[1] != self.version:
-            self.edprint(f"Server and CLI version are not the same ({s[1]} / {self.version}). This could lead to unpredictable results!")
+            self.edprint(
+                f"Server and CLI version are not the same ({s[1]} / {self.version}). This could lead to unpredictable results!")
 
     # List all SpiderFoot modules.
     def do_modules(self, line, cacheonly=False):
@@ -587,7 +594,8 @@ class SpiderFootCli(cmd.Cmd):
     def do_correlationrules(self, line, cacheonly=False):
         """Correlations List all available correlation rules and their
         descriptions."""
-        d = self.request(self.ownopts['cli.server_baseurl'] + "/correlationrules")
+        d = self.request(
+            self.ownopts['cli.server_baseurl'] + "/correlationrules")
         if not d:
             return
 
@@ -639,7 +647,8 @@ class SpiderFootCli(cmd.Cmd):
             return
 
         sid = c[0][0]
-        d = self.request(self.ownopts['cli.server_baseurl'] + f"/scanopts?id={sid}")
+        d = self.request(
+            self.ownopts['cli.server_baseurl'] + f"/scanopts?id={sid}")
         if not d:
             return
         j = json.loads(d)
@@ -757,7 +766,8 @@ class SpiderFootCli(cmd.Cmd):
             post["eventType"] = "ALL"
 
         if "-u" in c[0]:
-            url = self.ownopts['cli.server_baseurl'] + "/scaneventresultsunique"
+            url = self.ownopts['cli.server_baseurl'] + \
+                "/scaneventresultsunique"
             titles = {
                 "0": "Data"
             }
@@ -829,7 +839,8 @@ class SpiderFootCli(cmd.Cmd):
             data = json.dumps(j)
 
         elif export_format == 'csv':
-            data = self.request(base_url + '/scaneventresultexportmulti', post=post)
+            data = self.request(
+                base_url + '/scaneventresultexportmulti', post=post)
 
         elif export_format == 'gexf':
             data = self.request(base_url + '/scanvizmulti', post=post)
@@ -846,7 +857,8 @@ class SpiderFootCli(cmd.Cmd):
                     fp.write(data)
                 self.dprint(f"Wrote scan {c[0][0]} data to {file}")
             except Exception as e:
-                self.edprint(f"Could not write scan {c[0][0]} data to file '{file}': {e}")
+                self.edprint(
+                    f"Could not write scan {c[0][0]} data to file '{file}': {e}")
 
     # Show logs.
     def do_logs(self, line):
@@ -1027,8 +1039,10 @@ class SpiderFootCli(cmd.Cmd):
             self.edprint("Invalid syntax.")
             return
 
-        self.request(self.ownopts['cli.server_baseurl'] + f"/stopscan?id={scan_id}")
-        self.dprint(f"Successfully requested scan {id} to stop. This could take some minutes to complete.")
+        self.request(
+            self.ownopts['cli.server_baseurl'] + f"/stopscan?id={scan_id}")
+        self.dprint(
+            f"Successfully requested scan {id} to stop. This could take some minutes to complete.")
 
     # Search for data, alias to find
     def do_search(self, line):
@@ -1105,7 +1119,8 @@ class SpiderFootCli(cmd.Cmd):
                 "4": "Unique"
             }
 
-        d = self.request(self.ownopts['cli.server_baseurl'] + f"/scansummary?id={sid}&by=type")
+        d = self.request(
+            self.ownopts['cli.server_baseurl'] + f"/scansummary?id={sid}&by=type")
         if not d:
             return
 
@@ -1130,7 +1145,8 @@ class SpiderFootCli(cmd.Cmd):
             self.edprint("Invalid syntax.")
             return
 
-        self.request(self.ownopts['cli.server_baseurl'] + f"/scandelete?id={scan_id}")
+        self.request(self.ownopts['cli.server_baseurl'] +
+                     f"/scandelete?id={scan_id}")
         self.dprint(f"Successfully deleted scan {scan_id}.")
 
     # Override the default help
@@ -1310,14 +1326,16 @@ class SpiderFootCli(cmd.Cmd):
 
             j = json.loads(d)
             if j[0] == "ERROR":
-                self.edprint(f"Error setting SpiderFoot server-side config: {j[1]}")
+                self.edprint(
+                    f"Error setting SpiderFoot server-side config: {j[1]}")
                 return
 
             self.dprint(f"{cfg} set to {val}")
             return
 
         if cfg not in self.ownopts:
-            self.edprint("Variable not found, so not set. Did you mean to use a $ variable?")
+            self.edprint(
+                "Variable not found, so not set. Did you mean to use a $ variable?")
             return
 
     # Execute a shell command locally and return the output
@@ -1343,20 +1361,33 @@ class SpiderFootCli(cmd.Cmd):
 
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser(description='SpiderFoot: Open Source Intelligence Automation.')
-    p.add_argument("-d", "--debug", help="Enable debug output.", action='store_true')
-    p.add_argument("-s", metavar="URL", type=str, help="Connect to SpiderFoot server on URL. By default, a connection to http://127.0.0.1:5001 will be attempted.")
-    p.add_argument("-u", metavar="USER", type=str, help="Username to authenticate to SpiderFoot server.")
-    p.add_argument("-p", metavar="PASS", type=str, help="Password to authenticate to SpiderFoot server. Consider using -P PASSFILE instead so that your password isn't visible in your shell history or in process lists!")
-    p.add_argument("-P", metavar="PASSFILE", type=str, help="File containing password to authenticate to SpiderFoot server. Ensure permissions on the file are set appropriately!")
-    p.add_argument("-e", metavar="FILE", type=str, help="Execute commands from FILE.")
-    p.add_argument("-l", metavar="FILE", type=str, help="Log command history to FILE. By default, history is stored to ~/.spiderfoot_history unless disabled with -n.")
+    p = argparse.ArgumentParser(
+        description='SpiderFoot: Open Source Intelligence Automation.')
+    p.add_argument("-d", "--debug", help="Enable debug output.",
+                   action='store_true')
+    p.add_argument("-s", metavar="URL", type=str,
+                   help="Connect to SpiderFoot server on URL. By default, a connection to http://127.0.0.1:5001 will be attempted.")
+    p.add_argument("-u", metavar="USER", type=str,
+                   help="Username to authenticate to SpiderFoot server.")
+    p.add_argument("-p", metavar="PASS", type=str,
+                   help="Password to authenticate to SpiderFoot server. Consider using -P PASSFILE instead so that your password isn't visible in your shell history or in process lists!")
+    p.add_argument("-P", metavar="PASSFILE", type=str,
+                   help="File containing password to authenticate to SpiderFoot server. Ensure permissions on the file are set appropriately!")
+    p.add_argument("-e", metavar="FILE", type=str,
+                   help="Execute commands from FILE.")
+    p.add_argument("-l", metavar="FILE", type=str,
+                   help="Log command history to FILE. By default, history is stored to ~/.spiderfoot_history unless disabled with -n.")
     p.add_argument("-n", action='store_true', help="Disable history logging.")
-    p.add_argument("-o", metavar="FILE", type=str, help="Spool commands and output to FILE.")
-    p.add_argument("-i", help="Allow insecure server connections when using SSL", action='store_true')
-    p.add_argument("-q", help="Silent output, only errors reported.", action='store_true')
-    p.add_argument("-k", help="Turn off color-coded output.", action='store_true')
-    p.add_argument("-b", "-v", help="Print the banner w/ version and exit.", action='store_true')
+    p.add_argument("-o", metavar="FILE", type=str,
+                   help="Spool commands and output to FILE.")
+    p.add_argument(
+        "-i", help="Allow insecure server connections when using SSL", action='store_true')
+    p.add_argument(
+        "-q", help="Silent output, only errors reported.", action='store_true')
+    p.add_argument("-k", help="Turn off color-coded output.",
+                   action='store_true')
+    p.add_argument(
+        "-b", "-v", help="Print the banner w/ version and exit.", action='store_true')
 
     args = p.parse_args()
 
@@ -1401,7 +1432,8 @@ if __name__ == "__main__":
         s.ownopts['cli.history_file'] = args.l
     else:
         try:
-            s.ownopts['cli.history_file'] = expanduser("~") + "/.spiderfoot_history"
+            s.ownopts['cli.history_file'] = expanduser(
+                "~") + "/.spiderfoot_history"
         except Exception as e:
             s.dprint(f"Failed to set 'cli.history_file': {e}")
             s.dprint("Using '.spiderfoot_history' in working directory")
@@ -1433,7 +1465,8 @@ if __name__ == "__main__":
 
     if not args.n:
         try:
-            f = codecs.open(s.ownopts['cli.history_file'], "r", encoding="utf-8")
+            f = codecs.open(
+                s.ownopts['cli.history_file'], "r", encoding="utf-8")
             for line in f.readlines():
                 readline.add_history(line.strip())
             s.dprint("Loaded previous command history.")

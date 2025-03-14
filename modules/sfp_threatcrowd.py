@@ -101,7 +101,8 @@ class sfp_threatcrowd(SpiderFootPlugin):
         if not url:
             url = "https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=" + qry
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
+        res = self.sf.fetchUrl(
+            url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
 
         if res['content'] is None:
             self.info(f"No ThreatCrowd info found for {qry}")
@@ -143,7 +144,8 @@ class sfp_threatcrowd(SpiderFootPlugin):
                 return
             max_netblock = self.opts['maxnetblock']
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
         if eventName == 'NETBLOCK_MEMBER':
@@ -151,7 +153,8 @@ class sfp_threatcrowd(SpiderFootPlugin):
                 return
             max_subnet = self.opts['maxsubnet']
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
         qrylist = list()
@@ -192,7 +195,8 @@ class sfp_threatcrowd(SpiderFootPlugin):
                 infourl = "<SFURL>" + info.get('permalink') + "</SFURL>"
 
                 # Notify other modules of what you've found
-                e = SpiderFootEvent(evt, "ThreatCrowd [" + addr + "]\n" + infourl, self.__name__, event)
+                e = SpiderFootEvent(
+                    evt, "ThreatCrowd [" + addr + "]\n" + infourl, self.__name__, event)
                 self.notifyListeners(e)
 
 # End of sfp_threatcrowd class

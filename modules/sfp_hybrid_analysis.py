@@ -177,19 +177,22 @@ class sfp_hybrid_analysis(SpiderFootPlugin):
             return None
 
         if res['code'] == '400':
-            self.error("Failed to retrieve content from Hybrid Analysis: Invalid request")
+            self.error(
+                "Failed to retrieve content from Hybrid Analysis: Invalid request")
             self.debug(f"API response: {res['content']}")
             return None
 
         # Future proofing - Hybrid Analysis does not implement rate limiting
         if res['code'] == '429':
-            self.error("Failed to retrieve content from Hybrid Analysis: rate limit exceeded")
+            self.error(
+                "Failed to retrieve content from Hybrid Analysis: rate limit exceeded")
             self.errorState = True
             return None
 
         # Catch all non-200 status codes, and presume something went wrong
         if res['code'] != '200':
-            self.error(f"Failed to retrieve content from Hybrid Analysis: Unexpected response status {res['code']}")
+            self.error(
+                f"Failed to retrieve content from Hybrid Analysis: Unexpected response status {res['code']}")
             self.errorState = True
             return None
 
@@ -262,7 +265,8 @@ class sfp_hybrid_analysis(SpiderFootPlugin):
                 self.debug(f"No information found for hash {file_hash}")
                 continue
 
-            evt = SpiderFootEvent('RAW_RIR_DATA', str(results), self.__name__, event)
+            evt = SpiderFootEvent('RAW_RIR_DATA', str(
+                results), self.__name__, event)
             self.notifyListeners(evt)
 
             for result in results:
@@ -289,7 +293,8 @@ class sfp_hybrid_analysis(SpiderFootPlugin):
 
             domains.append(host)
 
-            evt = SpiderFootEvent('LINKED_URL_INTERNAL', url, self.__name__, event)
+            evt = SpiderFootEvent('LINKED_URL_INTERNAL',
+                                  url, self.__name__, event)
             self.notifyListeners(evt)
 
         for domain in set(domains):
@@ -304,10 +309,12 @@ class sfp_hybrid_analysis(SpiderFootPlugin):
 
             if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
                 self.debug(f"Host {domain} could not be resolved")
-                evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", domain, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "INTERNET_NAME_UNRESOLVED", domain, self.__name__, event)
                 self.notifyListeners(evt)
             else:
-                evt = SpiderFootEvent("INTERNET_NAME", domain, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "INTERNET_NAME", domain, self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_hybrid_analysis class

@@ -101,7 +101,8 @@ class sfp_dnsdb(SpiderFootPlugin):
             self.error(f"Query type MUST be name or ip, you sent {queryType}")
             return None
 
-        headers = {"Accept": "application/x-ndjson", "X-API-Key": self.opts["api_key"]}
+        headers = {"Accept": "application/x-ndjson",
+                   "X-API-Key": self.opts["api_key"]}
 
         res = self.sf.fetchUrl(
             f"https://api.dnsdb.info/dnsdb/v2/lookup/{endpoint}/{queryType}/{query}",
@@ -173,7 +174,8 @@ class sfp_dnsdb(SpiderFootPlugin):
             if rrsetRecords is None:
                 return
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(rrsetRecords), self.__name__, event)
+            evt = SpiderFootEvent("RAW_RIR_DATA", str(
+                rrsetRecords), self.__name__, event)
             self.notifyListeners(evt)
 
             for record in rrsetRecords:
@@ -213,7 +215,8 @@ class sfp_dnsdb(SpiderFootPlugin):
                             )
                             continue
 
-                        evt = SpiderFootEvent("IP_ADDRESS", data, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "IP_ADDRESS", data, self.__name__, event)
 
                     if record.get("rrtype") == "AAAA":
 
@@ -234,15 +237,19 @@ class sfp_dnsdb(SpiderFootPlugin):
                             )
                             continue
 
-                        evt = SpiderFootEvent("IPV6_ADDRESS", data, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "IPV6_ADDRESS", data, self.__name__, event)
                     elif record.get("rrtype") == "MX":
                         data = re.sub(r'.*\s+(.*)', r'\1', data)
-                        evt = SpiderFootEvent("PROVIDER_MAIL", data, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "PROVIDER_MAIL", data, self.__name__, event)
                     elif record.get("rrtype") == "NS":
-                        evt = SpiderFootEvent("PROVIDER_DNS", data, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "PROVIDER_DNS", data, self.__name__, event)
                     elif record.get("rrtype") == "TXT":
                         data = data.replace('"', '')
-                        evt = SpiderFootEvent("DNS_TEXT", data, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "DNS_TEXT", data, self.__name__, event)
                     elif record.get("rrtype") == "CNAME":
                         if not self.getTarget().matches(data):
                             coHosts.add(data)
@@ -254,7 +261,8 @@ class sfp_dnsdb(SpiderFootPlugin):
             if rdataRecords is None:
                 return
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(rdataRecords), self.__name__, event)
+            evt = SpiderFootEvent("RAW_RIR_DATA", str(
+                rdataRecords), self.__name__, event)
             self.notifyListeners(evt)
 
             for record in rdataRecords:
@@ -270,7 +278,8 @@ class sfp_dnsdb(SpiderFootPlugin):
                     continue
                 responseData.add(data)
                 if record.get("rrtype") == "NS":
-                    evt = SpiderFootEvent("PROVIDER_DNS", data, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "PROVIDER_DNS", data, self.__name__, event)
                 elif record.get("rrtype") == "CNAME":
                     if not self.getTarget().matches(data):
                         coHosts.add(data)
@@ -280,7 +289,8 @@ class sfp_dnsdb(SpiderFootPlugin):
             if rdataRecords is None:
                 return
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(rdataRecords), self.__name__, event)
+            evt = SpiderFootEvent("RAW_RIR_DATA", str(
+                rdataRecords), self.__name__, event)
             self.notifyListeners(evt)
 
             for record in rdataRecords:
@@ -306,9 +316,11 @@ class sfp_dnsdb(SpiderFootPlugin):
 
                 if self.opts["verify"] and not self.sf.resolveHost(data) and not self.sf.resolveHost6(data):
                     self.debug(f"Host {data} could not be resolved")
-                    evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", data, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "INTERNET_NAME_UNRESOLVED", data, self.__name__, event)
                 else:
-                    evt = SpiderFootEvent("INTERNET_NAME", data, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "INTERNET_NAME", data, self.__name__, event)
                 self.notifyListeners(evt)
 
         for co in coHosts:
@@ -326,7 +338,8 @@ class sfp_dnsdb(SpiderFootPlugin):
                     continue
 
             if self.cohostcount < self.opts["maxcohost"]:
-                evt = SpiderFootEvent("CO_HOSTED_SITE", co, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "CO_HOSTED_SITE", co, self.__name__, event)
                 self.notifyListeners(evt)
                 self.cohostcount += 1
 

@@ -75,9 +75,11 @@ class sfp_countryname(SpiderFootPlugin):
             return None
 
         try:
-            countryCode = region_code_for_country_code(phoneNumber.country_code)
+            countryCode = region_code_for_country_code(
+                phoneNumber.country_code)
         except Exception:
-            self.debug(f"Lookup of region code failed for phone number: {srcPhoneNumber}")
+            self.debug(
+                f"Lookup of region code failed for phone number: {srcPhoneNumber}")
             return None
 
         if not countryCode:
@@ -149,7 +151,8 @@ class sfp_countryname(SpiderFootPlugin):
             # Look for country name in source data
             # Spaces are not included since "New Jersey" and others
             # will get interpreted as "Jersey", etc.
-            matchCountries = re.findall(r"[,'\"\:\=\[\(\[\n\t\r\.] ?" + countryName + r"[,'\"\:\=\[\(\[\n\t\r\.]", srcData, re.IGNORECASE)
+            matchCountries = re.findall(
+                r"[,'\"\:\=\[\(\[\n\t\r\.] ?" + countryName + r"[,'\"\:\=\[\(\[\n\t\r\.]", srcData, re.IGNORECASE)
 
             if matchCountries:
                 countries.append(countryName)
@@ -221,7 +224,8 @@ class sfp_countryname(SpiderFootPlugin):
             countryNames.extend(self.detectCountryFromData(eventData))
 
         if not countryNames:
-            self.debug(f"Found no country names associated with {eventName}: {eventData}")
+            self.debug(
+                f"Found no country names associated with {eventName}: {eventData}")
             return
 
         for countryName in set(countryNames):
@@ -230,7 +234,8 @@ class sfp_countryname(SpiderFootPlugin):
 
             self.debug(f"Found country name: {countryName}")
 
-            evt = SpiderFootEvent("COUNTRY_NAME", countryName, self.__name__, event)
+            evt = SpiderFootEvent(
+                "COUNTRY_NAME", countryName, self.__name__, event)
             evt.moduleDataSource = moduleDataSource
             self.notifyListeners(evt)
 

@@ -32,7 +32,8 @@ class sfp_tldsearch(SpiderFootPlugin):
 
     # Default options
     opts = {
-        'activeonly': False,  # Only report domains that have content (try to fetch the page)
+        # Only report domains that have content (try to fetch the page)
+        'activeonly': False,
         'skipwildcards': True,
         '_maxthreads': 50
     }
@@ -101,8 +102,10 @@ class sfp_tldsearch(SpiderFootPlugin):
         self.info(f"Spawning threads to check TLDs: {tldList}")
         for i, pair in enumerate(tldList):
             (domain, tld) = pair
-            tn = 'thread_sfp_tldsearch_' + str(random.SystemRandom().randint(0, 999999999))
-            t.append(threading.Thread(name=tn, target=self.tryTld, args=(domain, tld,)))
+            tn = 'thread_sfp_tldsearch_' + \
+                str(random.SystemRandom().randint(0, 999999999))
+            t.append(threading.Thread(
+                name=tn, target=self.tryTld, args=(domain, tld,)))
             t[i].start()
 
         # Block until all threads are finished
@@ -139,10 +142,12 @@ class sfp_tldsearch(SpiderFootPlugin):
                                            noLog=True,
                                            verify=False)
             if pageContent['content'] is not None:
-                evt = SpiderFootEvent("SIMILARDOMAIN", result, self.__name__, source)
+                evt = SpiderFootEvent(
+                    "SIMILARDOMAIN", result, self.__name__, source)
                 self.notifyListeners(evt)
         else:
-            evt = SpiderFootEvent("SIMILARDOMAIN", result, self.__name__, source)
+            evt = SpiderFootEvent("SIMILARDOMAIN", result,
+                                  self.__name__, source)
             self.notifyListeners(evt)
 
     # Search for similar sounding domains

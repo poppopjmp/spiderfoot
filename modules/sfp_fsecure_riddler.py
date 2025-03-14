@@ -102,11 +102,13 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
         try:
             data = json.loads(res['content'])
         except Exception as e:
-            self.debug(f"Error processing JSON response from F-Secure Riddler: {e}")
+            self.debug(
+                f"Error processing JSON response from F-Secure Riddler: {e}")
             return
 
         try:
-            token = data.get('response').get('user').get('authentication_token')
+            token = data.get('response').get(
+                'user').get('authentication_token')
         except Exception:
             self.error('Login failed')
             self.errorState = True
@@ -138,7 +140,8 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
         time.sleep(1)
 
         if res['code'] in ["400", "401", "402", "403", "500"]:
-            self.error(f"Unexpected HTTP response code {res['code']} from F-Secure Riddler")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from F-Secure Riddler")
             self.errorState = True
             return None
 
@@ -148,7 +151,8 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
         try:
             data = json.loads(res['content'])
         except Exception as e:
-            self.debug(f"Error processing JSON response from F-Secure Riddler: {e}")
+            self.debug(
+                f"Error processing JSON response from F-Secure Riddler: {e}")
             return None
 
         if not data:
@@ -176,7 +180,8 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
             return
 
         if self.opts['username'] == '' or self.opts['password'] == '':
-            self.error('You enabled sfp_fsecure_riddler but did not set an API username/password!')
+            self.error(
+                'You enabled sfp_fsecure_riddler but did not set an API username/password!')
             self.errorState = True
             return
 
@@ -247,10 +252,12 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
 
             if self.sf.isDomain(host, self.opts['_internettlds']):
                 if evt_type.startswith('AFFILIATE'):
-                    evt = SpiderFootEvent('AFFILIATE_DOMAIN_NAME', host, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'AFFILIATE_DOMAIN_NAME', host, self.__name__, event)
                     self.notifyListeners(evt)
                 else:
-                    evt = SpiderFootEvent('DOMAIN_NAME', host, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'DOMAIN_NAME', host, self.__name__, event)
                     self.notifyListeners(evt)
 
         for addr in set(addrs):
@@ -259,7 +266,8 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
                 self.notifyListeners(evt)
 
         for coord in set(coords):
-            evt = SpiderFootEvent('PHYSICAL_COORDINATES', coord, self.__name__, event)
+            evt = SpiderFootEvent('PHYSICAL_COORDINATES',
+                                  coord, self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_fsecure_riddler class

@@ -88,7 +88,8 @@ class sfp_apple_itunes(SpiderFootPlugin):
         try:
             data = json.loads(res['content'])
         except Exception as e:
-            self.debug(f"Error processing JSON response from Apple iTunes: {e}")
+            self.debug(
+                f"Error processing JSON response from Apple iTunes: {e}")
             return None
 
         results = data.get('results')
@@ -115,7 +116,8 @@ class sfp_apple_itunes(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        domain_reversed = '.'.join(list(reversed(eventData.lower().split('.'))))
+        domain_reversed = '.'.join(
+            list(reversed(eventData.lower().split('.'))))
         data = self.query(domain_reversed)
 
         if not data:
@@ -145,12 +147,13 @@ class sfp_apple_itunes(SpiderFootPlugin):
             app_full_name = f"{trackName} {version} ({bundleId})"
 
             if (
-                domain_reversed != bundleId.lower()
-                and not bundleId.lower().startswith(f"{domain_reversed}.")
-                and not bundleId.lower().endswith(f".{domain_reversed}")
-                and f".{domain_reversed}." not in bundleId.lower()
+                domain_reversed != bundleId.lower() and
+                not bundleId.lower().startswith(f"{domain_reversed}.") and
+                not bundleId.lower().endswith(f".{domain_reversed}") and
+                f".{domain_reversed}." not in bundleId.lower()
             ):
-                self.debug(f"App {app_full_name} does not match {domain_reversed}, skipping")
+                self.debug(
+                    f"App {app_full_name} does not match {domain_reversed}, skipping")
                 continue
 
             trackViewUrl = result.get('trackViewUrl')
@@ -160,7 +163,8 @@ class sfp_apple_itunes(SpiderFootPlugin):
 
             app_data = f"{app_full_name}\n<SFURL>{trackViewUrl}</SFURL>"
 
-            evt = SpiderFootEvent('APPSTORE_ENTRY', app_data, self.__name__, event)
+            evt = SpiderFootEvent(
+                'APPSTORE_ENTRY', app_data, self.__name__, event)
             self.notifyListeners(evt)
             found = True
 
@@ -178,7 +182,8 @@ class sfp_apple_itunes(SpiderFootPlugin):
                 continue
 
             if self.getTarget().matches(host, includeChildren=True, includeParents=True):
-                evt = SpiderFootEvent('LINKED_URL_INTERNAL', url, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'LINKED_URL_INTERNAL', url, self.__name__, event)
                 self.notifyListeners(evt)
                 found = True
 
@@ -189,15 +194,18 @@ class sfp_apple_itunes(SpiderFootPlugin):
                 continue
 
             if self.getTarget().matches(host, includeChildren=True, includeParents=True):
-                evt = SpiderFootEvent('INTERNET_NAME', host, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'INTERNET_NAME', host, self.__name__, event)
                 self.notifyListeners(evt)
             else:
-                evt = SpiderFootEvent('AFFILIATE_INTERNET_NAME', host, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'AFFILIATE_INTERNET_NAME', host, self.__name__, event)
                 self.notifyListeners(evt)
             found = True
 
         if found:
-            evt = SpiderFootEvent('RAW_RIR_DATA', json.dumps(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                'RAW_RIR_DATA', json.dumps(data), self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_apple_itunes class

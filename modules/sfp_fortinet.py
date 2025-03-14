@@ -79,7 +79,8 @@ class sfp_fortinet(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from FortiGuard Antispam.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from FortiGuard Antispam.")
             self.errorState = True
             return None
 

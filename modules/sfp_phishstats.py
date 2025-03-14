@@ -101,7 +101,8 @@ class sfp_phishstats(SpiderFootPlugin):
         }
 
         res = self.sf.fetchUrl(
-            'https://phishstats.info:2096/api/phishing?' + urllib.parse.urlencode(params),
+            'https://phishstats.info:2096/api/phishing?' +
+            urllib.parse.urlencode(params),
             headers=headers,
             timeout=15,
             useragent=self.opts['_useragent']
@@ -147,7 +148,8 @@ class sfp_phishstats(SpiderFootPlugin):
 
             max_subnet = self.opts['maxsubnet']
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
             malicious_type = "MALICIOUS_SUBNET"
@@ -158,7 +160,8 @@ class sfp_phishstats(SpiderFootPlugin):
 
             max_netblock = self.opts['maxnetblock']
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
             malicious_type = "MALICIOUS_NETBLOCK"
@@ -195,21 +198,25 @@ class sfp_phishstats(SpiderFootPlugin):
                 continue
 
             if addr != maliciousIP:
-                self.error(f"Reported address {maliciousIP} doesn't match queried IP address {addr}, skipping")
+                self.error(
+                    f"Reported address {maliciousIP} doesn't match queried IP address {addr}, skipping")
                 continue
 
             # For netblocks, we need to create the IP address event so that
             # the threat intel event is more meaningful.
             if eventName == 'NETBLOCK_OWNER':
-                pevent = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "IP_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             elif eventName == 'NETBLOCK_MEMBER':
-                pevent = SpiderFootEvent("AFFILIATE_IPADDR", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "AFFILIATE_IPADDR", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             else:
                 pevent = event
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, pevent)
+            evt = SpiderFootEvent("RAW_RIR_DATA", str(
+                data), self.__name__, pevent)
             self.notifyListeners(evt)
 
             text = f"PhishStats [{addr}]"

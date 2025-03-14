@@ -90,12 +90,14 @@ class sfp_adblock(SpiderFootPlugin):
         res = self.sf.fetchUrl(blocklist_url, timeout=30)
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} for {blocklist_url}")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} for {blocklist_url}")
             self.errorState = True
             return None
 
         if res['content'] is None:
-            self.error(f"Unable to download AdBlock Plus blocklist: {blocklist_url}")
+            self.error(
+                f"Unable to download AdBlock Plus blocklist: {blocklist_url}")
             self.errorState = True
             return None
 
@@ -129,7 +131,8 @@ class sfp_adblock(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventData in self.results:
-            self.debug("Already checked this URL for AdBlock matching, skipping.")
+            self.debug(
+                "Already checked this URL for AdBlock matching, skipping.")
             return
 
         self.results[eventData] = True
@@ -155,17 +158,20 @@ class sfp_adblock(SpiderFootPlugin):
         try:
             if eventName == 'PROVIDER_JAVASCRIPT':
                 if self.rules and self.rules.should_block(eventData, {'third-party': True, 'script': True}):
-                    evt = SpiderFootEvent("URL_ADBLOCKED_EXTERNAL", eventData, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "URL_ADBLOCKED_EXTERNAL", eventData, self.__name__, event)
                     self.notifyListeners(evt)
 
             if eventName == 'LINKED_URL_EXTERNAL':
                 if self.rules and self.rules.should_block(eventData, {'third-party': True}):
-                    evt = SpiderFootEvent("URL_ADBLOCKED_EXTERNAL", eventData, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "URL_ADBLOCKED_EXTERNAL", eventData, self.__name__, event)
                     self.notifyListeners(evt)
 
             if eventName == 'LINKED_URL_INTERNAL':
                 if self.rules and self.rules.should_block(eventData):
-                    evt = SpiderFootEvent("URL_ADBLOCKED_INTERNAL", eventData, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "URL_ADBLOCKED_INTERNAL", eventData, self.__name__, event)
                     self.notifyListeners(evt)
 
         except ValueError as e:

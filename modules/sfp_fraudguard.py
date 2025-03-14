@@ -128,7 +128,8 @@ class sfp_fraudguard(SpiderFootPlugin):
         api_key_password = self.opts['fraudguard_api_key_password']
         if not isinstance(api_key_password, str):
             api_key_password = api_key_password.encode('utf-8')
-        token = base64.b64encode(api_key_account + ':'.encode('utf-8') + api_key_password)
+        token = base64.b64encode(
+            api_key_account + ':'.encode('utf-8') + api_key_password)
         headers = {
             'Authorization': "Basic " + token.decode('utf-8')
         }
@@ -141,7 +142,8 @@ class sfp_fraudguard(SpiderFootPlugin):
         )
 
         if res['code'] in ["400", "429", "500", "403"]:
-            self.error("Fraudguard.io API key seems to have been rejected or you have exceeded usage limits for the month.")
+            self.error(
+                "Fraudguard.io API key seems to have been rejected or you have exceeded usage limits for the month.")
             self.errorState = True
             return None
 
@@ -152,7 +154,8 @@ class sfp_fraudguard(SpiderFootPlugin):
         try:
             return json.loads(res['content'])
         except Exception as e:
-            self.error(f"Error processing JSON response from Fraudguard.io: {e}")
+            self.error(
+                f"Error processing JSON response from Fraudguard.io: {e}")
 
         return None
 
@@ -167,7 +170,8 @@ class sfp_fraudguard(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts['fraudguard_api_key_account'] == "" or self.opts['fraudguard_api_key_password'] == "":
-            self.error("You enabled sfp_fraudguard but did not set an API username/password!")
+            self.error(
+                "You enabled sfp_fraudguard but did not set an API username/password!")
             self.errorState = True
             return
 
@@ -188,7 +192,8 @@ class sfp_fraudguard(SpiderFootPlugin):
                 max_netblock = self.opts['maxnetblock']
 
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
         if eventName in ['NETBLOCK_MEMBER', 'NETBLOCKV6_MEMBER']:
@@ -201,7 +206,8 @@ class sfp_fraudguard(SpiderFootPlugin):
                 max_subnet = self.opts['maxsubnet']
 
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
         if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS', 'NETBLOCK_OWNER', 'NETBLOCKV6_OWNER']:
@@ -233,26 +239,33 @@ class sfp_fraudguard(SpiderFootPlugin):
             self.debug(f"Found results for {addr} in Fraudguard.io")
 
             # Format: 2016-12-24T07:25:35+00:00'
-            created_dt = datetime.strptime(data.get('discover_date'), '%Y-%m-%d %H:%M:%S')
+            created_dt = datetime.strptime(
+                data.get('discover_date'), '%Y-%m-%d %H:%M:%S')
             created_ts = int(time.mktime(created_dt.timetuple()))
-            age_limit_ts = int(time.time()) - (86400 * self.opts['age_limit_days'])
+            age_limit_ts = int(time.time()) - \
+                (86400 * self.opts['age_limit_days'])
             if self.opts['age_limit_days'] > 0 and created_ts < age_limit_ts:
-                self.debug(f"Record found but too old ({created_dt}), skipping.")
+                self.debug(
+                    f"Record found but too old ({created_dt}), skipping.")
                 continue
 
             # For netblocks, we need to create the IP address event so that
             # the threat intel event is more meaningful.
             if eventName == 'NETBLOCK_OWNER':
-                pevent = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "IP_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             elif eventName == 'NETBLOCKV6_OWNER':
-                pevent = SpiderFootEvent("IPV6_ADDRESS", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "IPV6_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             elif eventName == 'NETBLOCK_MEMBER':
-                pevent = SpiderFootEvent("AFFILIATE_IPADDR", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "AFFILIATE_IPADDR", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             elif eventName == 'NETBLOCKV6_MEMBER':
-                pevent = SpiderFootEvent("AFFILIATE_IPV6_ADDRESS", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "AFFILIATE_IPV6_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             else:
                 pevent = event
@@ -273,7 +286,8 @@ class sfp_fraudguard(SpiderFootPlugin):
             threat = data.get('threat')
             if threat and threat != "unknown":
                 risk_level = data.get('risk_level')
-                e = SpiderFootEvent(evtType, f"{threat} (risk level: {risk_level}) [{addr}]", self.__name__, pevent)
+                e = SpiderFootEvent(
+                    evtType, f"{threat} (risk level: {risk_level}) [{addr}]", self.__name__, pevent)
                 self.notifyListeners(e)
 
 # End of sfp_fraudguard class

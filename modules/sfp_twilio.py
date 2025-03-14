@@ -75,7 +75,8 @@ class sfp_twilio(SpiderFootPlugin):
     # to do so and avoid putting it in handleEvent()
     def queryPhoneNumber(self, phoneNumber):
 
-        token = (base64.b64encode(self.opts['api_key_account_sid'].encode('utf8') + ":".encode('utf-8') + self.opts['api_key_auth_token'].encode('utf-8'))).decode('utf-8')
+        token = (base64.b64encode(self.opts['api_key_account_sid'].encode(
+            'utf8') + ":".encode('utf-8') + self.opts['api_key_auth_token'].encode('utf-8'))).decode('utf-8')
 
         headers = {
             'Accept': "application/json",
@@ -125,7 +126,8 @@ class sfp_twilio(SpiderFootPlugin):
         # Always check if the API key is set and complain if it isn't, then set
         # self.errorState to avoid this being a continual complaint during the scan.
         if self.opts['api_key_account_sid'] == "" or self.opts['api_key_auth_token'] == "":
-            self.error("You enabled sfp_twilio but did not set account sid/auth token")
+            self.error(
+                "You enabled sfp_twilio but did not set account sid/auth token")
             self.errorState = True
             return
 
@@ -150,7 +152,8 @@ class sfp_twilio(SpiderFootPlugin):
             callerName = callerName.get('caller_name')
 
         if callerName:
-            evt = SpiderFootEvent("COMPANY_NAME", callerName, self.__name__, event)
+            evt = SpiderFootEvent(
+                "COMPANY_NAME", callerName, self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_twilio class

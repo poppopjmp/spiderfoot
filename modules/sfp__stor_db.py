@@ -32,7 +32,8 @@ class sfp__stor_db(SpiderFootPlugin):
 
     # Default options
     opts = {
-        'maxstorage': 1024,  # max bytes for any piece of info stored (0 = unlimited)
+        # max bytes for any piece of info stored (0 = unlimited)
+        'maxstorage': 1024,
         '_store': True,
         'use_elasticsearch': False,
         'elasticsearch_host': 'localhost',
@@ -62,7 +63,8 @@ class sfp__stor_db(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
         if self.opts['use_elasticsearch']:
-            self.es = Elasticsearch([{'host': self.opts['elasticsearch_host'], 'port': self.opts['elasticsearch_port']}])
+            self.es = Elasticsearch(
+                [{'host': self.opts['elasticsearch_host'], 'port': self.opts['elasticsearch_port']}])
 
     def watchedEvents(self):
         """Define the events this module is interested in for input.
@@ -89,12 +91,14 @@ class sfp__stor_db(SpiderFootPlugin):
                 'sourceEvent': sfEvent.sourceEvent.data if sfEvent.sourceEvent else None,
                 'generated': sfEvent.generated
             }
-            self.es.index(index=self.opts['elasticsearch_index'], body=event_data)
+            self.es.index(
+                index=self.opts['elasticsearch_index'], body=event_data)
             return
 
         if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
             self.debug("Storing an event: " + sfEvent.eventType)
-            self.__sfdb__.scanEventStore(self.getScanId(), sfEvent, self.opts['maxstorage'])
+            self.__sfdb__.scanEventStore(
+                self.getScanId(), sfEvent, self.opts['maxstorage'])
             return
 
         self.debug("Storing an event: " + sfEvent.eventType)

@@ -149,7 +149,8 @@ class sfp_sociallinks(SpiderFootPlugin):
             return
 
         if self.opts['api_key'] == "":
-            self.error("You enabled sfp_sociallinks but did not set an API key!")
+            self.error(
+                "You enabled sfp_sociallinks but did not set an API key!")
             self.errorState = True
             return
 
@@ -167,13 +168,16 @@ class sfp_sociallinks(SpiderFootPlugin):
             resultSet = data.get('result')
             if resultSet:
                 if resultSet.get('first_name') and resultSet.get('last_name'):
-                    evt = SpiderFootEvent("HUMAN_NAME", f"{resultSet.get('first_name')} {resultSet.get('last_name')}", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "HUMAN_NAME", f"{resultSet.get('first_name')} {resultSet.get('last_name')}", self.__name__, event)
                     self.notifyListeners(evt)
                 if resultSet.get('username'):
-                    evt = SpiderFootEvent("USERNAME", resultSet.get('username'), self.__name__, event)
+                    evt = SpiderFootEvent("USERNAME", resultSet.get(
+                        'username'), self.__name__, event)
                     self.notifyListeners(evt)
 
-                evt = SpiderFootEvent('RAW_RIR_DATA', str(resultSet), self.__name__, event)
+                evt = SpiderFootEvent('RAW_RIR_DATA', str(
+                    resultSet), self.__name__, event)
                 self.notifyListeners(evt)
 
         elif eventName == "USERNAME":
@@ -184,13 +188,16 @@ class sfp_sociallinks(SpiderFootPlugin):
             resultSet = data.get('result')
             if resultSet:
                 if resultSet.get('first_name') and resultSet.get('last_name'):
-                    evt = SpiderFootEvent("HUMAN_NAME", f"{resultSet.get('first_name')} {resultSet.get('last_name')}", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "HUMAN_NAME", f"{resultSet.get('first_name')} {resultSet.get('last_name')}", self.__name__, event)
                     self.notifyListeners(evt)
                 if resultSet.get('phone_number'):
-                    evt = SpiderFootEvent("PHONE_NUMBER", resultSet.get('phone_number'), self.__name__, event)
+                    evt = SpiderFootEvent("PHONE_NUMBER", resultSet.get(
+                        'phone_number'), self.__name__, event)
                     self.notifyListeners(evt)
 
-                evt = SpiderFootEvent('RAW_RIR_DATA', str(resultSet), self.__name__, event)
+                evt = SpiderFootEvent('RAW_RIR_DATA', str(
+                    resultSet), self.__name__, event)
                 self.notifyListeners(evt)
 
         elif eventName == "EMAILADDR":
@@ -204,14 +211,17 @@ class sfp_sociallinks(SpiderFootPlugin):
                 resultSet = data[0].get('entities')[0].get('data')
                 if resultSet:
                     if resultSet.get('realname').get('_content'):
-                        humanNames.add(resultSet.get('realname').get('_content'))
+                        humanNames.add(resultSet.get(
+                            'realname').get('_content'))
                     if resultSet.get('location').get('_content'):
                         geoInfos.add(resultSet.get('location').get('_content'))
                     if resultSet.get('profileurl').get('_content'):
-                        evt = SpiderFootEvent("SOCIAL_MEDIA", f"Flickr: <SFURL>{resultSet.get('profileurl').get('_content')}</SFURL>", self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "SOCIAL_MEDIA", f"Flickr: <SFURL>{resultSet.get('profileurl').get('_content')}</SFURL>", self.__name__, event)
                         self.notifyListeners(evt)
 
-                    evt = SpiderFootEvent('RAW_RIR_DATA', str(resultSet), self.__name__, event)
+                    evt = SpiderFootEvent('RAW_RIR_DATA', str(
+                        resultSet), self.__name__, event)
                     self.notifyListeners(evt)
 
             data = self.querySkype(eventData)
@@ -224,14 +234,17 @@ class sfp_sociallinks(SpiderFootPlugin):
                     if resultSet.get('name'):
                         humanNames.add(resultSet.get('name'))
                     if resultSet.get('skypeId'):
-                        evt = SpiderFootEvent("ACCOUNT_EXTERNAL_OWNED", f"Skype [{resultSet.get('skypeId')}]", self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "ACCOUNT_EXTERNAL_OWNED", f"Skype [{resultSet.get('skypeId')}]", self.__name__, event)
                         self.notifyListeners(evt)
-                        evt = SpiderFootEvent("USERNAME", resultSet.get('skypeId'), self.__name__, event)
+                        evt = SpiderFootEvent("USERNAME", resultSet.get(
+                            'skypeId'), self.__name__, event)
                         self.notifyListeners(evt)
                     if resultSet.get('address'):
                         geoInfos.add(resultSet.get('address'))
 
-                    evt = SpiderFootEvent('RAW_RIR_DATA', str(resultSet), self.__name__, event)
+                    evt = SpiderFootEvent('RAW_RIR_DATA', str(
+                        resultSet), self.__name__, event)
                     self.notifyListeners(evt)
 
             data = self.queryLinkedin(eventData)
@@ -246,20 +259,25 @@ class sfp_sociallinks(SpiderFootPlugin):
                     if resultSet.get('location'):
                         geoInfos.add(resultSet.get('location'))
                     if resultSet.get('companyName'):
-                        evt = SpiderFootEvent("COMPANY_NAME", resultSet.get('companyName'), self.__name__, event)
+                        evt = SpiderFootEvent("COMPANY_NAME", resultSet.get(
+                            'companyName'), self.__name__, event)
                         self.notifyListeners(evt)
                     if resultSet.get('headline'):
-                        evt = SpiderFootEvent("JOB_TITLE", resultSet.get('headline'), self.__name__, event)
+                        evt = SpiderFootEvent("JOB_TITLE", resultSet.get(
+                            'headline'), self.__name__, event)
                         self.notifyListeners(evt)
 
-                    evt = SpiderFootEvent("SOCIAL_MEDIA", f"LinkedIn: <SFURL>{resultSet.get('linkedInUrl')}</SFURL>", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "SOCIAL_MEDIA", f"LinkedIn: <SFURL>{resultSet.get('linkedInUrl')}</SFURL>", self.__name__, event)
                     self.notifyListeners(evt)
 
-                    evt = SpiderFootEvent('RAW_RIR_DATA', str(resultSet), self.__name__, event)
+                    evt = SpiderFootEvent('RAW_RIR_DATA', str(
+                        resultSet), self.__name__, event)
                     self.notifyListeners(evt)
 
             for humanName in humanNames:
-                evt = SpiderFootEvent("HUMAN_NAME", humanName, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "HUMAN_NAME", humanName, self.__name__, event)
                 self.notifyListeners(evt)
 
             for geoInfo in geoInfos:

@@ -140,9 +140,9 @@ class sfp_maltiverse(SpiderFootPlugin):
                 return
 
             if IPNetwork(eventData).prefixlen < self.opts['maxnetblock']:
-                self.debug("Network size bigger than permitted: "
-                           + str(IPNetwork(eventData).prefixlen) + " > "
-                           + str(self.opts['maxnetblock']))
+                self.debug("Network size bigger than permitted: " +
+                           str(IPNetwork(eventData).prefixlen) + " > " +
+                           str(self.opts['maxnetblock']))
                 return
 
         if eventName == 'NETBLOCK_MEMBER':
@@ -150,9 +150,9 @@ class sfp_maltiverse(SpiderFootPlugin):
                 return
 
             if IPNetwork(eventData).prefixlen < self.opts['maxsubnet']:
-                self.debug("Network size bigger than permitted: "
-                           + str(IPNetwork(eventData).prefixlen) + " > "
-                           + str(self.opts['maxsubnet']))
+                self.debug("Network size bigger than permitted: " +
+                           str(IPNetwork(eventData).prefixlen) + " > " +
+                           str(self.opts['maxsubnet']))
                 return
 
         qrylist = list()
@@ -182,7 +182,8 @@ class sfp_maltiverse(SpiderFootPlugin):
                 continue
 
             if addr != maliciousIP:
-                self.error("Reported address doesn't match requested, skipping")
+                self.error(
+                    "Reported address doesn't match requested, skipping")
                 continue
 
             blacklistedRecords = data.get('blacklist')
@@ -193,14 +194,17 @@ class sfp_maltiverse(SpiderFootPlugin):
 
             # Data is reported about the IP Address
             if eventName.startswith("NETBLOCK_"):
-                ipEvt = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                ipEvt = SpiderFootEvent(
+                    "IP_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(ipEvt)
 
             if eventName.startswith("NETBLOCK_"):
-                evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, ipEvt)
+                evt = SpiderFootEvent(
+                    "RAW_RIR_DATA", str(data), self.__name__, ipEvt)
                 self.notifyListeners(evt)
             else:
-                evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+                evt = SpiderFootEvent(
+                    "RAW_RIR_DATA", str(data), self.__name__, event)
                 self.notifyListeners(evt)
 
             maliciousIPDesc = f"Maltiverse [{maliciousIP}]\n"
@@ -211,7 +215,8 @@ class sfp_maltiverse(SpiderFootPlugin):
                     continue
 
                 try:
-                    lastSeenDate = datetime.strptime(str(lastSeen), "%Y-%m-%d %H:%M:%S")
+                    lastSeenDate = datetime.strptime(
+                        str(lastSeen), "%Y-%m-%d %H:%M:%S")
                 except Exception:
                     self.error("Invalid date in JSON response, skipping")
                     continue
@@ -221,10 +226,12 @@ class sfp_maltiverse(SpiderFootPlugin):
                 difference = (today - lastSeenDate).days
 
                 if difference > int(self.opts["age_limit_days"]):
-                    self.debug("Record found is older than age limit, skipping")
+                    self.debug(
+                        "Record found is older than age limit, skipping")
                     continue
 
-                maliciousIPDesc += " - DESCRIPTION : " + str(blacklistedRecord.get("description")) + "\n"
+                maliciousIPDesc += " - DESCRIPTION : " + \
+                    str(blacklistedRecord.get("description")) + "\n"
 
             maliciousIPDescHash = self.sf.hashstring(maliciousIPDesc)
 
@@ -234,11 +241,14 @@ class sfp_maltiverse(SpiderFootPlugin):
             self.results[maliciousIPDescHash] = True
 
             if eventName.startswith("NETBLOCK_"):
-                evt = SpiderFootEvent("MALICIOUS_IPADDR", maliciousIPDesc, self.__name__, ipEvt)
+                evt = SpiderFootEvent("MALICIOUS_IPADDR",
+                                      maliciousIPDesc, self.__name__, ipEvt)
             elif eventName.startswith("AFFILIATE_"):
-                evt = SpiderFootEvent("MALICIOUS_AFFILIATE_IPADDR", maliciousIPDesc, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "MALICIOUS_AFFILIATE_IPADDR", maliciousIPDesc, self.__name__, event)
             else:
-                evt = SpiderFootEvent("MALICIOUS_IPADDR", maliciousIPDesc, self.__name__, event)
+                evt = SpiderFootEvent("MALICIOUS_IPADDR",
+                                      maliciousIPDesc, self.__name__, event)
 
             self.notifyListeners(evt)
 

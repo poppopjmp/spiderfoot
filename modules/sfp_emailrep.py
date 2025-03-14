@@ -136,7 +136,8 @@ class sfp_emailrep(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts['api_key'] == '' and not self.errorWarned:
-            self.error("Warning: You enabled sfp_emailrep but did not set an API key! Queries will be rate limited.")
+            self.error(
+                "Warning: You enabled sfp_emailrep but did not set an API key! Queries will be rate limited.")
             self.errorWarned = True
 
         res = self.query(eventData)
@@ -151,16 +152,19 @@ class sfp_emailrep(SpiderFootPlugin):
 
         credentials_leaked = details.get('credentials_leaked')
         if credentials_leaked:
-            evt = SpiderFootEvent('EMAILADDR_COMPROMISED', eventData + " [Unknown]", self.__name__, event)
+            evt = SpiderFootEvent('EMAILADDR_COMPROMISED',
+                                  eventData + " [Unknown]", self.__name__, event)
             self.notifyListeners(evt)
 
         malicious_activity = details.get('malicious_activity')
         if malicious_activity:
-            evt = SpiderFootEvent('MALICIOUS_EMAILADDR', 'EmailRep [' + eventData + ']', self.__name__, event)
+            evt = SpiderFootEvent(
+                'MALICIOUS_EMAILADDR', 'EmailRep [' + eventData + ']', self.__name__, event)
             self.notifyListeners(evt)
 
         if malicious_activity or credentials_leaked:
-            evt = SpiderFootEvent('RAW_RIR_DATA', str(res), self.__name__, event)
+            evt = SpiderFootEvent(
+                'RAW_RIR_DATA', str(res), self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_emailrep class

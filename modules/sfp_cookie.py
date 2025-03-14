@@ -62,18 +62,21 @@ class sfp_cookie(SpiderFootPlugin):
 
         fqdn = self.sf.urlFQDN(eventSource)
         if not self.getTarget().matches(fqdn):
-            self.debug(f"Not collecting cookies from external sites. Ignoring HTTP headers from {fqdn}")
+            self.debug(
+                f"Not collecting cookies from external sites. Ignoring HTTP headers from {fqdn}")
             return
 
         try:
             data = json.loads(eventData)
         except Exception:
-            self.error("Received HTTP headers from another module in an unexpected format.")
+            self.error(
+                "Received HTTP headers from another module in an unexpected format.")
             return
 
         cookie = data.get('cookie')
         if cookie:
-            evt = SpiderFootEvent("TARGET_WEB_COOKIE", cookie, self.__name__, event)
+            evt = SpiderFootEvent("TARGET_WEB_COOKIE",
+                                  cookie, self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_cookie class

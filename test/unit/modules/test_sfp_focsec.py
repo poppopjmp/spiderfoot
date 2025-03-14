@@ -41,7 +41,8 @@ class TestModuleFocsec(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         result = module.handleEvent(evt)
 

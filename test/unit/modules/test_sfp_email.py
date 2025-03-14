@@ -55,13 +55,15 @@ class TestModuleEmail(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         event_type = 'TARGET_WEB_CONTENT'
         event_data = '<p>sample data firstname.lastname@spiderfoot.net sample data.</p>'
         event_module = 'example module'
         source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         with self.assertRaises(Exception) as cm:
             module.handleEvent(evt)

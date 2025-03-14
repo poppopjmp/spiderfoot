@@ -78,7 +78,8 @@ class sfp_bitcoin(SpiderFootPlugin):
 
         # thanks to https://stackoverflow.com/questions/21683680/regex-to-match-bitcoin-addresses
         # Does not support keys or testnet addresses
-        matches = re.findall(r"[\s:=\>](bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})", eventData)
+        matches = re.findall(
+            r"[\s:=\>](bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})", eventData)
         for m in matches:
             address = m[0]
             self.debug(f"Potential Bitcoin address match: {address}")
@@ -90,7 +91,8 @@ class sfp_bitcoin(SpiderFootPlugin):
                 addrs.append(address)
 
         for address in set(addrs):
-            evt = SpiderFootEvent("BITCOIN_ADDRESS", address, self.__name__, event)
+            evt = SpiderFootEvent(
+                "BITCOIN_ADDRESS", address, self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_bitcoin class

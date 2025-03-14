@@ -288,7 +288,8 @@ class sfp_template(SpiderFootPlugin):
             max_netblock = self.opts['maxnetblock']
             net_size = IPNetwork(eventData).prefixlen
             if net_size < max_netblock:
-                self.debug(f"Network size {net_size} bigger than permitted: {max_netblock}")
+                self.debug(
+                    f"Network size {net_size} bigger than permitted: {max_netblock}")
                 return
 
         # When handling netblocks/subnets, assuming the user set
@@ -324,13 +325,15 @@ class sfp_template(SpiderFootPlugin):
                 # event of this event. This enables SpiderFoot to link events so users
                 # can see what events generated other events, seeing a full chain of
                 # discovery from their target to the data returned here.
-                pevent = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "IP_ADDRESS", addr, self.__name__, event)
                 # With the event created, we can now notify any other modules listening
                 # for IP_ADDRESS events (which they define in their watchedEvents()
                 # function).
                 self.notifyListeners(pevent)
             elif eventName == 'NETBLOCK_MEMBER':
-                pevent = SpiderFootEvent("AFFILIATE_IPADDR", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "AFFILIATE_IPADDR", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             else:
                 # If the event received wasn't a netblock, then use that event
@@ -344,7 +347,8 @@ class sfp_template(SpiderFootPlugin):
             # So now we have NETBLOCK_OWNER (event we received) -> IP_ADDRESS
             # (event we generated above) -> RAW_RIR_DATA (event from the third
             # party about the IP Address we queried).
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(rec), self.__name__, pevent)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(rec), self.__name__, pevent)
             self.notifyListeners(evt)
 
             # Whenever operating in a loop, call this to check whether the user
@@ -374,7 +378,8 @@ class sfp_template(SpiderFootPlugin):
             # directly in case the key doesn't exist.
             os = rec.get('os')
             if os:
-                evt = SpiderFootEvent("OPERATING_SYSTEM", f"{os} ({addr})", self.__name__, pevent)
+                evt = SpiderFootEvent("OPERATING_SYSTEM",
+                                      f"{os} ({addr})", self.__name__, pevent)
                 self.notifyListeners(evt)
 
 # End of sfp_template class

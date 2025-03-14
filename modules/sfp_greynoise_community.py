@@ -106,7 +106,8 @@ class sfp_greynoise_community(SpiderFootPlugin):
                 res = ip_res
 
         if not res:
-            self.error("Greynoise API key seems to have been rejected or you have exceeded usage limits.")
+            self.error(
+                "Greynoise API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
 
@@ -124,7 +125,8 @@ class sfp_greynoise_community(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts["api_key"] == "":
-            self.error("You enabled sfp_greynoise_community but did not set an API key!")
+            self.error(
+                "You enabled sfp_greynoise_community but did not set an API key!")
             self.errorState = True
             return
 
@@ -154,26 +156,30 @@ class sfp_greynoise_community(SpiderFootPlugin):
                 lastseen = ret.get("last_seen", "1970-01-01")
                 lastseen_dt = datetime.strptime(lastseen, "%Y-%m-%d")
                 lastseen_ts = int(time.mktime(lastseen_dt.timetuple()))
-                age_limit_ts = int(time.time()) - (86400 * self.opts["age_limit_days"])
+                age_limit_ts = int(time.time()) - \
+                    (86400 * self.opts["age_limit_days"])
                 if self.opts["age_limit_days"] > 0 and lastseen_ts < age_limit_ts:
                     self.debug("Record found but too old, skipping.")
                     return
-                e = SpiderFootEvent("RAW_RIR_DATA", str(ret), self.__name__, event)
+                e = SpiderFootEvent("RAW_RIR_DATA", str(
+                    ret), self.__name__, event)
                 self.notifyListeners(e)
 
                 # Only report meta data about the target, not affiliates
                 if ret.get("name", "unknown") != "unknown":
-                    e = SpiderFootEvent("COMPANY_NAME", ret.get("name"), self.__name__, event)
+                    e = SpiderFootEvent("COMPANY_NAME", ret.get(
+                        "name"), self.__name__, event)
                     self.notifyListeners(e)
 
                 if ret.get("classification"):
                     descr = (
-                        "GreyNoise - Mass-Scanning IP Detected ["
-                        + eventData
-                        + "]\n - Classification: "
-                        + ret.get("classification")
+                        "GreyNoise - Mass-Scanning IP Detected [" +
+                        eventData +
+                        "]\n - Classification: " +
+                        ret.get("classification")
                     )
-                    descr += "\n<SFURL>https://viz.greynoise.io/ip/" + ret.get("ip") + "</SFURL>"
+                    descr += "\n<SFURL>https://viz.greynoise.io/ip/" + \
+                        ret.get("ip") + "</SFURL>"
                     e = SpiderFootEvent(evtType, descr, self.__name__, event)
                     self.notifyListeners(e)
 

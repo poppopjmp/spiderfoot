@@ -143,7 +143,8 @@ class sfp_archiveorg(SpiderFootPlugin):
             try:
                 newDate = datetime.datetime.now() - datetime.timedelta(days=int(daysback))
             except Exception:
-                self.error("Unable to parse option for number of days back to search.")
+                self.error(
+                    "Unable to parse option for number of days back to search.")
                 self.errorState = True
                 return
 
@@ -161,7 +162,8 @@ class sfp_archiveorg(SpiderFootPlugin):
             try:
                 ret = json.loads(res['content'])
             except Exception as e:
-                self.debug(f"Error processing JSON response from Archive.org: {e}")
+                self.debug(
+                    f"Error processing JSON response from Archive.org: {e}")
                 ret = None
 
             if not ret:

@@ -31,7 +31,8 @@ class TestModuleNetlas(unittest.TestCase):
     def test_watchedEvents(self):
         module = sfp_netlas()
         module.setup(self.sf, dict())
-        self.assertEqual(module.watchedEvents(), ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"])
+        self.assertEqual(module.watchedEvents(), [
+                         "DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"])
 
     @patch('modules.sfp_netlas.sfp_netlas.queryNetlas')
     def test_handleEvent(self, mock_queryNetlas):
@@ -47,7 +48,8 @@ class TestModuleNetlas(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         mock_queryNetlas.return_value = None
         result = module.handleEvent(evt)

@@ -52,7 +52,8 @@ class TestSFPRrocketreach(unittest.TestCase):
         # Note: Replace with your actual API key
         module.opts['api_key'] = 'API_KEY'
         result = module.query('thisdomaindoesnotexist.com', 'domain')
-        self.assertEqual(result, [{'matches': [], 'total': 0, 'page': 1, 'size': 10}])
+        self.assertEqual(
+            result, [{'matches': [], 'total': 0, 'page': 1, 'size': 10}])
 
     def test_query_domain_found(self):
         """Test the query method for a domain that is found."""
@@ -69,7 +70,8 @@ class TestSFPRrocketreach(unittest.TestCase):
         # Note: Replace with your actual API key
         module.opts['api_key'] = 'API_KEY'
         result = module.query('thisdoesnotexist@example.com', 'email')
-        self.assertEqual(result, [{'matches': [], 'total': 0, 'page': 1, 'size': 10}])
+        self.assertEqual(
+            result, [{'matches': [], 'total': 0, 'page': 1, 'size': 10}])
 
     def test_query_email_found(self):
         """Test the query method for an email that is found."""
@@ -85,7 +87,8 @@ class TestSFPRrocketreach(unittest.TestCase):
         sf = SpiderFootHelpers.SpiderFootHelpers()
         module = sfp_rocketreach()
         module.setup(sf, dict())
-        evt = SpiderFootEvent("DOMAIN_NAME", "example.com", self.__class__.__name__, dict())
+        evt = SpiderFootEvent("DOMAIN_NAME", "example.com",
+                              self.__class__.__name__, dict())
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
@@ -94,7 +97,8 @@ class TestSFPRrocketreach(unittest.TestCase):
         sf = SpiderFootHelpers.SpiderFootHelpers()
         module = sfp_rocketreach()
         module.setup(sf, dict(api_key='ABCDEFG'))
-        evt = SpiderFootEvent("DOMAIN_NAME", "example.com", self.__class__.__name__, dict())
+        evt = SpiderFootEvent("DOMAIN_NAME", "example.com",
+                              self.__class__.__name__, dict())
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
@@ -104,7 +108,8 @@ class TestSFPRrocketreach(unittest.TestCase):
         module = sfp_rocketreach()
         # Note: Replace with your actual API key
         module.setup(sf, dict(api_key='API_KEY'))
-        evt = SpiderFootEvent("DOMAIN_NAME", "thisdomaindoesnotexist.com", self.__class__.__name__, dict())
+        evt = SpiderFootEvent(
+            "DOMAIN_NAME", "thisdomaindoesnotexist.com", self.__class__.__name__, dict())
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
@@ -114,7 +119,8 @@ class TestSFPRrocketreach(unittest.TestCase):
         module = sfp_rocketreach()
         # Note: Replace with your actual API key
         module.setup(sf, dict(api_key='API_KEY'))
-        evt = SpiderFootEvent("DOMAIN_NAME", "google.com", self.__class__.__name__, dict())
+        evt = SpiderFootEvent("DOMAIN_NAME", "google.com",
+                              self.__class__.__name__, dict())
         result = module.handleEvent(evt)
         self.assertIsNone(result)  # handleEvent() does not return any value
 

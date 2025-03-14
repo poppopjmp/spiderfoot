@@ -129,11 +129,13 @@ class sfp_yandexdns(SpiderFootPlugin):
             if k not in self.checks:
                 continue
 
-            evt = SpiderFootEvent(blacklist_type, f"{self.checks[k]} [{eventData}]", self.__name__, event)
+            evt = SpiderFootEvent(
+                blacklist_type, f"{self.checks[k]} [{eventData}]", self.__name__, event)
             self.notifyListeners(evt)
 
             if k == '213.180.193.250':
-                evt = SpiderFootEvent(malicious_type, f"{self.checks[k]} [{eventData}]", self.__name__, event)
+                evt = SpiderFootEvent(
+                    malicious_type, f"{self.checks[k]} [{eventData}]", self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_yandexdns class

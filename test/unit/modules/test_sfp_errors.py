@@ -40,20 +40,23 @@ class TestModuleErrors(unittest.TestCase):
         def new_notifyListeners(self, event):
             raise Exception(f"Raised event {event.eventType}: {event.data}")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_errors)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_errors)
 
         event_type = 'ROOT'
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         event_type = 'TARGET_WEB_CONTENT'
         event_data = 'example data Internal Server Error example data'
         event_module = 'something else entirely'
         source_event = evt
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         evt.actualSource = 'https://spiderfoot.net/'
         result = module.handleEvent(evt)
 
@@ -73,20 +76,23 @@ class TestModuleErrors(unittest.TestCase):
         def new_notifyListeners(self, event):
             raise Exception(f"Raised event {event.eventType}: {event.data}")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_errors)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_errors)
 
         event_type = 'ROOT'
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         event_type = 'TARGET_WEB_CONTENT'
         event_data = 'example data Internal Server Error example data'
         event_module = 'sfp_spider'
         source_event = evt
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         evt.actualSource = 'https://something.else.entirely/'
         result = module.handleEvent(evt)
 
@@ -114,14 +120,16 @@ class TestModuleErrors(unittest.TestCase):
 
             raise Exception("OK")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_errors)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_errors)
 
         event_type = 'ROOT'
         event_data = 'example data'
         event_module = ''
         source_event = ''
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
@@ -130,7 +138,8 @@ class TestModuleErrors(unittest.TestCase):
         event_module = 'sfp_spider'
         source_event = evt
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         evt.actualSource = 'https://spiderfoot.net/'
 
         with self.assertRaises(Exception) as cm:
@@ -152,14 +161,16 @@ class TestModuleErrors(unittest.TestCase):
         def new_notifyListeners(self, event):
             raise Exception(f"Raised event {event.eventType}: {event.data}")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_errors)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_errors)
 
         event_type = 'ROOT'
         event_data = 'example data'
         event_module = ''
         source_event = ''
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         result = module.handleEvent(evt)
 
         event_type = 'TARGET_WEB_CONTENT'
@@ -167,7 +178,8 @@ class TestModuleErrors(unittest.TestCase):
         event_module = 'sfp_spider'
         source_event = evt
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         evt.actualSource = 'https://spiderfoot.net/'
         result = module.handleEvent(evt)
 

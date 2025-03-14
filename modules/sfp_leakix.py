@@ -153,7 +153,8 @@ class sfp_leakix(SpiderFootPlugin):
         self.results[eventData] = True
 
         if self.opts['api_key'] == "":
-            self.debug("You enabled sfp_leakix but did not set an API key, results are limited")
+            self.debug(
+                "You enabled sfp_leakix but did not set an API key, results are limited")
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventName in ["IP_ADDRESS", "DOMAIN_NAME"]:
@@ -166,7 +167,8 @@ class sfp_leakix(SpiderFootPlugin):
                 self.debug("No information found for host " + eventData)
                 return
 
-            evt = SpiderFootEvent('RAW_RIR_DATA', str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                'RAW_RIR_DATA', str(data), self.__name__, event)
             self.notifyListeners(evt)
 
             services = data.get("Services")
@@ -178,22 +180,27 @@ class sfp_leakix(SpiderFootPlugin):
                     hostname = service.get('host')
                     if hostname and eventName == "DOMAIN_NAME" and self.getTarget().matches(hostname) and hostname not in hosts:
                         if self.opts["verify"] and not self.sf.resolveHost(hostname) and not self.sf.resolveHost6(hostname):
-                            self.debug(f"Host {hostname} could not be resolved")
-                            evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", hostname, self.__name__, event)
+                            self.debug(
+                                f"Host {hostname} could not be resolved")
+                            evt = SpiderFootEvent(
+                                "INTERNET_NAME_UNRESOLVED", hostname, self.__name__, event)
                         else:
-                            evt = SpiderFootEvent("INTERNET_NAME", hostname, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "INTERNET_NAME", hostname, self.__name__, event)
                         self.notifyListeners(evt)
                         src = evt
                         hosts.append(hostname)
                     ip = service.get('ip')
                     if ip and eventName != "IP_ADDRESS" and self.sf.validIP(ip) and ip not in ips:
-                        evt = SpiderFootEvent("IP_ADDRESS", ip, self.__name__, src)
+                        evt = SpiderFootEvent(
+                            "IP_ADDRESS", ip, self.__name__, src)
                         self.notifyListeners(evt)
                         ips.append(ip)
                         ipevt = evt
                     port = service.get('port')
                     if port and ip + ":" + port not in ports:
-                        evt = SpiderFootEvent("TCP_PORT_OPEN", ip + ':' + port, self.__name__, src)
+                        evt = SpiderFootEvent(
+                            "TCP_PORT_OPEN", ip + ':' + port, self.__name__, src)
                         self.notifyListeners(evt)
                         ports.append(ip + ":" + port)
                     headers = service.get('headers')
@@ -202,31 +209,37 @@ class sfp_leakix(SpiderFootPlugin):
                         if servers:
                             for server in servers:
                                 if server and server not in banners:
-                                    evt = SpiderFootEvent('WEBSERVER_BANNER', server, self.__name__, src)
+                                    evt = SpiderFootEvent(
+                                        'WEBSERVER_BANNER', server, self.__name__, src)
                                     self.notifyListeners(evt)
                                     banners.append(server)
 
                     geoip = service.get('geoip')
                     if geoip:
-                        location = ', '.join([_f for _f in [geoip.get('city_name'), geoip.get('region_name'), geoip.get('country_name')] if _f])
+                        location = ', '.join([_f for _f in [geoip.get('city_name'), geoip.get(
+                            'region_name'), geoip.get('country_name')] if _f])
                         if location:
                             if ip and self.sf.validIP(ip) and ipevt:
                                 # GEOINFO should be linked to an IP_ADDRESS
-                                evt = SpiderFootEvent("GEOINFO", location, self.__name__, ipevt)
+                                evt = SpiderFootEvent(
+                                    "GEOINFO", location, self.__name__, ipevt)
                                 self.notifyListeners(evt)
                                 locs.append(location)
 
                     software = service.get('software')
                     if software:
-                        software_version = ' '.join([_f for _f in [software.get('name'), software.get('version')] if _f])
+                        software_version = ' '.join(
+                            [_f for _f in [software.get('name'), software.get('version')] if _f])
                         if software_version and software_version not in softwares:
-                            evt = SpiderFootEvent("SOFTWARE_USED", software_version, self.__name__, src)
+                            evt = SpiderFootEvent(
+                                "SOFTWARE_USED", software_version, self.__name__, src)
                             self.notifyListeners(evt)
                             softwares.append(software_version)
 
                         os = software.get('os')
                         if os and os not in oses:
-                            evt = SpiderFootEvent('OPERATING_SYSTEM', os, self.__name__, src)
+                            evt = SpiderFootEvent(
+                                'OPERATING_SYSTEM', os, self.__name__, src)
                             self.notifyListeners(evt)
                             oses.append(os)
 
@@ -242,7 +255,8 @@ class sfp_leakix(SpiderFootPlugin):
                         continue
                     leak_data = leak.get('data')
                     if leak_data:
-                        evt = SpiderFootEvent("LEAKSITE_CONTENT", leak_data, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "LEAKSITE_CONTENT", leak_data, self.__name__, event)
                         self.notifyListeners(evt)
 
 # End of sfp_leakix class

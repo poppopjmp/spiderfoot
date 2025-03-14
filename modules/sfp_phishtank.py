@@ -83,7 +83,8 @@ class sfp_phishtank(SpiderFootPlugin):
             if not item:
                 continue
             if target.lower() in item[1]:
-                self.debug(f"Host name {target} found in phishtank.com blacklist.")
+                self.debug(
+                    f"Host name {target} found in phishtank.com blacklist.")
                 return item[0]
 
         return None
@@ -101,7 +102,8 @@ class sfp_phishtank(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from phishtank.com.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from phishtank.com.")
             self.errorState = True
             return None
 
@@ -179,7 +181,8 @@ class sfp_phishtank(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with phishtank.com")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with phishtank.com")
 
         phish_id = self.queryBlacklist(eventData)
 

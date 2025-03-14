@@ -97,7 +97,8 @@ class sfp_dnsraw(SpiderFootPlugin):
                 return
 
             try:
-                req = dns.message.make_query(eventData, dns.rdatatype.from_text(rec))
+                req = dns.message.make_query(
+                    eventData, dns.rdatatype.from_text(rec))
 
                 if self.opts.get('_dnsserver', "") != "":
                     n = self.opts['_dnsserver']
@@ -110,7 +111,8 @@ class sfp_dnsraw(SpiderFootPlugin):
                 if not len(res.answer):
                     continue
             except Exception as e:
-                self.error(f"Failed to obtain DNS response for {eventData} ({e})")
+                self.error(
+                    f"Failed to obtain DNS response for {eventData} ({e})")
                 continue
 
             # Iterate through DNS answers
@@ -120,7 +122,8 @@ class sfp_dnsraw(SpiderFootPlugin):
 
                 self.checked[str(x)] = True
 
-                evt = SpiderFootEvent("RAW_DNS_RECORDS", str(x), self.__name__, parentEvent)
+                evt = SpiderFootEvent("RAW_DNS_RECORDS", str(
+                    x), self.__name__, parentEvent)
                 self.notifyListeners(evt)
 
                 for rx in list(recs.keys()):
@@ -139,24 +142,29 @@ class sfp_dnsraw(SpiderFootPlugin):
                             domains.append(strdata.lower())
 
                         if rx == "MX":
-                            evt = SpiderFootEvent("PROVIDER_MAIL", strdata.lower(), self.__name__, parentEvent)
+                            evt = SpiderFootEvent(
+                                "PROVIDER_MAIL", strdata.lower(), self.__name__, parentEvent)
                             self.notifyListeners(evt)
                             domains.append(strdata.lower())
 
                         if rx == "NS":
-                            evt = SpiderFootEvent("PROVIDER_DNS", strdata.lower(), self.__name__, parentEvent)
+                            evt = SpiderFootEvent(
+                                "PROVIDER_DNS", strdata.lower(), self.__name__, parentEvent)
                             self.notifyListeners(evt)
                             domains.append(strdata.lower())
 
                         if rx == "TXT":
-                            evt = SpiderFootEvent("DNS_TEXT", strdata, self.__name__, parentEvent)
+                            evt = SpiderFootEvent(
+                                "DNS_TEXT", strdata, self.__name__, parentEvent)
                             self.notifyListeners(evt)
 
                             if "v=spf" in strdata or "spf2.0/" in strdata:
-                                evt = SpiderFootEvent("DNS_SPF", strdata, self.__name__, parentEvent)
+                                evt = SpiderFootEvent(
+                                    "DNS_SPF", strdata, self.__name__, parentEvent)
                                 self.notifyListeners(evt)
 
-                                matches = re.findall(r'include:(.+?) ', strdata, re.IGNORECASE | re.DOTALL)
+                                matches = re.findall(
+                                    r'include:(.+?) ', strdata, re.IGNORECASE | re.DOTALL)
                                 if matches:
                                     for domain in matches:
                                         if '_' in domain:

@@ -77,7 +77,8 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
             return False
 
         if target.lower() in blocklist:
-            self.debug(f"Host name {target} found in Steven Black Hosts block list.")
+            self.debug(
+                f"Host name {target} found in Steven Black Hosts block list.")
             return True
 
         return False
@@ -96,7 +97,8 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from {url}")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from {url}")
             self.errorState = True
             return None
 
@@ -170,7 +172,8 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with Steven Black Hosts blocklist")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with Steven Black Hosts blocklist")
 
         if not self.queryBlocklist(eventData):
             return
