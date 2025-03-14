@@ -138,7 +138,8 @@ class SpiderFootHelpers():
             ignore_files = []
 
         if not isinstance(ignore_files, list):
-            raise TypeError(f"ignore_files is {type(ignore_files)}; expected list()")
+            raise TypeError(
+                f"ignore_files is {type(ignore_files)}; expected list()")
 
         if not os.path.isdir(path):
             raise ValueError(f"Modules directory does not exist: {path}")
@@ -159,16 +160,19 @@ class SpiderFootHelpers():
 
             modName = filename.split('.')[0]
             sfModules[modName] = dict()
-            mod = __import__('modules.' + modName, globals(), locals(), [modName])
+            mod = __import__('modules.' + modName,
+                             globals(), locals(), [modName])
             sfModules[modName]['object'] = getattr(mod, modName)()
             mod_dict = sfModules[modName]['object'].asdict()
             sfModules[modName].update(mod_dict)
 
             if len(sfModules[modName]['cats']) > 1:
-                raise SyntaxError(f"Module {modName} has multiple categories defined but only one is supported.")
+                raise SyntaxError(
+                    f"Module {modName} has multiple categories defined but only one is supported.")
 
             if sfModules[modName]['cats'] and sfModules[modName]['cats'][0] not in valid_categories:
-                raise SyntaxError(f"Module {modName} has invalid category '{sfModules[modName]['cats']}'.")
+                raise SyntaxError(
+                    f"Module {modName} has invalid category '{sfModules[modName]['cats']}'.")
 
         return sfModules
 
@@ -191,7 +195,8 @@ class SpiderFootHelpers():
             ignore_files = []
 
         if not isinstance(ignore_files, list):
-            raise TypeError(f"ignore_files is {type(ignore_files)}; expected list()")
+            raise TypeError(
+                f"ignore_files is {type(ignore_files)}; expected list()")
 
         if not os.path.isdir(path):
             raise ValueError(f"Correlations directory does not exist: {path}")
@@ -366,7 +371,8 @@ class SpiderFootHelpers():
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
-                raise IOError(f"Could not read wordlist file '{d}.dict'") from e
+                raise IOError(
+                    f"Could not read wordlist file '{d}.dict'") from e
 
         return words
 
@@ -394,7 +400,8 @@ class SpiderFootHelpers():
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
-                raise IOError(f"Could not read wordlist file '{d}.dict'") from e
+                raise IOError(
+                    f"Could not read wordlist file '{d}.dict'") from e
 
         return words
 
@@ -966,7 +973,8 @@ class SpiderFootHelpers():
 
         keys: typing.Set[str] = set()
 
-        pattern = re.compile("(-----BEGIN.*?END.*?BLOCK-----)", re.MULTILINE | re.DOTALL)
+        pattern = re.compile(
+            "(-----BEGIN.*?END.*?BLOCK-----)", re.MULTILINE | re.DOTALL)
         for key in re.findall(pattern, data):
             if len(key) >= 300:
                 keys.add(key)
@@ -987,7 +995,8 @@ class SpiderFootHelpers():
             return list()
 
         emails: typing.Set[str] = set()
-        matches = re.findall(r'([\%a-zA-Z\.0-9_\-\+]+@[a-zA-Z\.0-9\-]+\.[a-zA-Z\.0-9\-]+)', data)
+        matches = re.findall(
+            r'([\%a-zA-Z\.0-9_\-\+]+@[a-zA-Z\.0-9\-]+\.[a-zA-Z\.0-9\-]+)', data)
 
         for match in matches:
             if SpiderFootHelpers.validEmail(match):
@@ -1068,7 +1077,8 @@ class SpiderFootHelpers():
             iban_int = iban[4:] + iban[0:4]
             for character in iban_int:
                 if character.isalpha():
-                    iban_int = iban_int.replace(character, str((ord(character) - 65) + 10))
+                    iban_int = iban_int.replace(
+                        character, str((ord(character) - 65) + 10))
 
             # Check IBAN integer mod 97 for remainder
             if int(iban_int) % 97 != 1:

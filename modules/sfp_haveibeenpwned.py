@@ -108,14 +108,16 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
             retry += 1
 
             if res['code'] == "401":
-                self.error("Failed to authenticate key with HaveIBeenPwned.com.")
+                self.error(
+                    "Failed to authenticate key with HaveIBeenPwned.com.")
                 self.errorState = True
                 return None
 
         try:
             return json.loads(res['content'])
         except Exception as e:
-            self.error(f"Error processing JSON response from HaveIBeenPwned?: {e}")
+            self.error(
+                f"Error processing JSON response from HaveIBeenPwned?: {e}")
 
         return None
 
@@ -146,14 +148,16 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
             retry += 1
 
             if res['code'] == "401":
-                self.error("Failed to authenticate key with HaveIBeenPwned.com.")
+                self.error(
+                    "Failed to authenticate key with HaveIBeenPwned.com.")
                 self.errorState = True
                 return None
 
         try:
             return json.loads(res['content'])
         except Exception as e:
-            self.error(f"Error processing JSON response from HaveIBeenPwned?: {e}")
+            self.error(
+                f"Error processing JSON response from HaveIBeenPwned?: {e}")
 
         return None
 
@@ -167,7 +171,8 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
             return
 
         if self.opts['api_key'] == "":
-            self.error("You enabled sfp_haveibeenpwned but did not set an API key!")
+            self.error(
+                "You enabled sfp_haveibeenpwned but did not set an API key!")
             self.errorState = True
             return
 
@@ -185,7 +190,8 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
                 try:
                     site = n["Name"]
                 except Exception as e:
-                    self.debug(f"Unable to parse result from HaveIBeenPwned?: {e}")
+                    self.debug(
+                        f"Unable to parse result from HaveIBeenPwned?: {e}")
                     continue
 
                 # Notify other modules of what you've found
@@ -231,7 +237,8 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
                 if self.checkForStop():
                     return
 
-                res = self.sf.fetchUrl(link, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
+                res = self.sf.fetchUrl(
+                    link, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
                 if res['content'] is None:
                     self.debug(f"Ignoring {link} as no data returned")
@@ -240,10 +247,12 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
                 if re.search(r"[^a-zA-Z\-\_0-9]" + re.escape(eventData) + r"[^a-zA-Z\-\_0-9]", res['content'], re.IGNORECASE) is None:
                     continue
 
-                evt1 = SpiderFootEvent("LEAKSITE_URL", link, self.__name__, event)
+                evt1 = SpiderFootEvent(
+                    "LEAKSITE_URL", link, self.__name__, event)
                 self.notifyListeners(evt1)
 
-                evt2 = SpiderFootEvent("LEAKSITE_CONTENT", res['content'], self.__name__, evt1)
+                evt2 = SpiderFootEvent(
+                    "LEAKSITE_CONTENT", res['content'], self.__name__, evt1)
                 self.notifyListeners(evt2)
 
             except Exception as e:

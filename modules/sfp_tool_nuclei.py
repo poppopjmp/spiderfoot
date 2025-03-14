@@ -97,7 +97,8 @@ class sfp_tool_nuclei(SpiderFootPlugin):
             return
 
         if not self.opts['nuclei_path'] or not self.opts['template_path']:
-            self.error("You enabled sfp_tool_nuclei but did not set a path to the tool and/or templates!")
+            self.error(
+                "You enabled sfp_tool_nuclei but did not set a path to the tool and/or templates!")
             self.errorState = True
             return
 
@@ -124,7 +125,8 @@ class sfp_tool_nuclei(SpiderFootPlugin):
             for addr in self.results:
                 try:
                     if IPNetwork(eventData) in IPNetwork(addr):
-                        self.debug(f"Skipping {eventData} as already within a scanned range.")
+                        self.debug(
+                            f"Skipping {eventData} as already within a scanned range.")
                         return
                 except Exception:
                     # self.results will also contain hostnames
@@ -148,7 +150,8 @@ class sfp_tool_nuclei(SpiderFootPlugin):
                     target += str(addr) + "\n"
                     timeout += 240
         except Exception as e:
-            self.error(f"Strange netblock identified, unable to parse: {eventData} ({e})")
+            self.error(
+                f"Strange netblock identified, unable to parse: {eventData} ({e})")
             return
 
         try:
@@ -170,7 +173,8 @@ class sfp_tool_nuclei(SpiderFootPlugin):
             ]
             p = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             try:
-                stdout, stderr = p.communicate(input=target.encode(sys.stdin.encoding), timeout=timeout)
+                stdout, stderr = p.communicate(
+                    input=target.encode(sys.stdin.encoding), timeout=timeout)
                 if p.returncode == 0:
                     content = stdout.decode(sys.stdout.encoding)
                 else:
@@ -202,7 +206,8 @@ class sfp_tool_nuclei(SpiderFootPlugin):
                         srctype = "IP_ADDRESS"
                     else:
                         srctype = "INTERNET_NAME"
-                    srcevent = SpiderFootEvent(srctype, host, self.__name__, event)
+                    srcevent = SpiderFootEvent(
+                        srctype, host, self.__name__, event)
                     self.notifyListeners(srcevent)
 
                 matches = re.findall(r"CVE-\d{4}-\d{4,7}", line)

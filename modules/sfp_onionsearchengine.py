@@ -139,7 +139,8 @@ class sfp_onionsearchengine(SpiderFootPlugin):
                 blacklist = False
                 for r in self.opts['blacklist']:
                     if re.match(r, link, re.IGNORECASE):
-                        self.debug("Skipping " + link + " as it matches blacklist " + r)
+                        self.debug("Skipping " + link +
+                                   " as it matches blacklist " + r)
                         blacklist = True
                 if blacklist:
                     continue
@@ -150,7 +151,8 @@ class sfp_onionsearchengine(SpiderFootPlugin):
                     continue
 
                 if not self.opts['fetchlinks']:
-                    evt = SpiderFootEvent("DARKNET_MENTION_URL", link, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "DARKNET_MENTION_URL", link, self.__name__, event)
                     self.notifyListeners(evt)
                     continue
 
@@ -164,17 +166,20 @@ class sfp_onionsearchengine(SpiderFootPlugin):
                     continue
 
                 if eventData not in res['content']:
-                    self.debug("Ignoring " + link + " as no mention of " + eventData)
+                    self.debug("Ignoring " + link +
+                               " as no mention of " + eventData)
                     continue
 
-                evt = SpiderFootEvent("DARKNET_MENTION_URL", link, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "DARKNET_MENTION_URL", link, self.__name__, event)
                 self.notifyListeners(evt)
 
                 try:
                     startIndex = res['content'].index(eventData) - 120
                     endIndex = startIndex + len(eventData) + 240
                 except Exception:
-                    self.debug('String "' + eventData + '" not found in content.')
+                    self.debug('String "' + eventData +
+                               '" not found in content.')
                     continue
 
                 data = res['content'][startIndex:endIndex]

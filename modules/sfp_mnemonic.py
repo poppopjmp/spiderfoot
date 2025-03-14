@@ -141,7 +141,8 @@ class sfp_mnemonic(SpiderFootPlugin):
             return None
 
         if response_code == 402:
-            self.debug("Error retrieving search results: Resource limit exceeded")
+            self.debug(
+                "Error retrieving search results: Resource limit exceeded")
             self.errorState = True
             return None
 
@@ -207,7 +208,8 @@ class sfp_mnemonic(SpiderFootPlugin):
                     continue
 
                 if r['lastSeenTimestamp'] < agelimit:
-                    self.debug(f"Record {r['answer']} found for {r['query']} is too old, skipping.")
+                    self.debug(
+                        f"Record {r['answer']} found for {r['query']} is too old, skipping.")
                     continue
 
                 if eventName in ['IP_ADDRESS']:
@@ -237,9 +239,11 @@ class sfp_mnemonic(SpiderFootPlugin):
                             continue
 
                         if self.sf.isValidLocalOrLoopbackIp(answer):
-                            evt = SpiderFootEvent("INTERNAL_IP_ADDRESS", answer, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "INTERNAL_IP_ADDRESS", answer, self.__name__, event)
                         else:
-                            evt = SpiderFootEvent("IP_ADDRESS", answer, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "IP_ADDRESS", answer, self.__name__, event)
                         self.notifyListeners(evt)
 
                     if r['rrtype'] == 'aaaa':
@@ -247,9 +251,11 @@ class sfp_mnemonic(SpiderFootPlugin):
                             continue
 
                         if self.sf.isValidLocalOrLoopbackIp(answer):
-                            evt = SpiderFootEvent("INTERNAL_IP_ADDRESS", answer, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "INTERNAL_IP_ADDRESS", answer, self.__name__, event)
                         else:
-                            evt = SpiderFootEvent("IPV6_ADDRESS", answer, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "IPV6_ADDRESS", answer, self.__name__, event)
                         self.notifyListeners(evt)
 
         for co in set(cohosts):
@@ -266,7 +272,8 @@ class sfp_mnemonic(SpiderFootPlugin):
 
             if self.opts['cohostsamedomain']:
                 if self.cohostcount < self.opts['maxcohost']:
-                    evt = SpiderFootEvent("CO_HOSTED_SITE", co, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "CO_HOSTED_SITE", co, self.__name__, event)
                     self.notifyListeners(evt)
                     self.cohostcount += 1
                 continue
@@ -274,15 +281,18 @@ class sfp_mnemonic(SpiderFootPlugin):
             if self.getTarget().matches(co, includeParents=True):
                 if self.opts['verify'] and not self.sf.resolveHost(co) and not self.sf.resolveHost6(co):
                     self.debug(f"Host {co} could not be resolved")
-                    evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", co, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "INTERNET_NAME_UNRESOLVED", co, self.__name__, event)
                     self.notifyListeners(evt)
                     continue
 
-                evt = SpiderFootEvent("INTERNET_NAME", co, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "INTERNET_NAME", co, self.__name__, event)
                 self.notifyListeners(evt)
 
                 if self.sf.isDomain(co, self.opts['_internettlds']):
-                    evt = SpiderFootEvent("DOMAIN_NAME", co, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "DOMAIN_NAME", co, self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_mnemonic class

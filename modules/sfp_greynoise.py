@@ -134,7 +134,8 @@ class sfp_greynoise(SpiderFootPlugin):
                 res = json.loads(query_response["content"])
 
         if not res:
-            self.error("Greynoise API key seems to have been rejected or you have exceeded usage limits.")
+            self.error(
+                "Greynoise API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
 
@@ -168,7 +169,8 @@ class sfp_greynoise(SpiderFootPlugin):
 
             max_netblock = self.opts['maxnetblock']
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
         if eventName == "NETBLOCK_MEMBER":
@@ -177,7 +179,8 @@ class sfp_greynoise(SpiderFootPlugin):
 
             max_subnet = self.opts['maxsubnet']
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
         if eventName == "IP_ADDRESS":
@@ -205,9 +208,11 @@ class sfp_greynoise(SpiderFootPlugin):
                     lastseen = rec.get("last_seen", "1970-01-01")
                     lastseen_dt = datetime.strptime(lastseen, "%Y-%m-%d")
                     lastseen_ts = int(time.mktime(lastseen_dt.timetuple()))
-                    age_limit_ts = int(time.time()) - (86400 * self.opts["age_limit_days"])
+                    age_limit_ts = int(time.time()) - \
+                        (86400 * self.opts["age_limit_days"])
                     if self.opts["age_limit_days"] > 0 and lastseen_ts < age_limit_ts:
-                        self.debug(f"Record [{rec['ip']}] found but too old, skipping.")
+                        self.debug(
+                            f"Record [{rec['ip']}] found but too old, skipping.")
                         return
 
                     # Only report meta data about the target, not affiliates
@@ -218,36 +223,46 @@ class sfp_greynoise(SpiderFootPlugin):
                             if met.get("city"):
                                 loc = met.get("city") + ", "
                             loc += met.get("country")
-                            e = SpiderFootEvent("GEOINFO", loc, self.__name__, event)
+                            e = SpiderFootEvent(
+                                "GEOINFO", loc, self.__name__, event)
                             self.notifyListeners(e)
                         if met.get("asn", "unknown") != "unknown":
                             asn = met.get("asn").replace("AS", "")
-                            e = SpiderFootEvent("BGP_AS_MEMBER", asn, self.__name__, event)
+                            e = SpiderFootEvent(
+                                "BGP_AS_MEMBER", asn, self.__name__, event)
                             self.notifyListeners(e)
                         if met.get("organization", "unknown") != "unknown":
-                            e = SpiderFootEvent("COMPANY_NAME", met.get("organization"), self.__name__, event)
+                            e = SpiderFootEvent("COMPANY_NAME", met.get(
+                                "organization"), self.__name__, event)
                             self.notifyListeners(e)
                         if met.get("os", "unknown") != "unknown":
-                            e = SpiderFootEvent("OPERATING_SYSTEM", met.get("os"), self.__name__, event)
+                            e = SpiderFootEvent("OPERATING_SYSTEM", met.get(
+                                "os"), self.__name__, event)
                             self.notifyListeners(e)
-                        e = SpiderFootEvent("RAW_RIR_DATA", str(rec), self.__name__, event)
+                        e = SpiderFootEvent("RAW_RIR_DATA", str(
+                            rec), self.__name__, event)
                         self.notifyListeners(e)
 
                     if rec.get("classification"):
                         descr = (
-                            "GreyNoise - Mass-Scanning IP Detected ["
-                            + rec.get("ip")
-                            + "]\n - Classification: "
-                            + rec.get("classification")
+                            "GreyNoise - Mass-Scanning IP Detected [" +
+                            rec.get("ip") +
+                            "]\n - Classification: " +
+                            rec.get("classification")
                         )
                         if rec.get("tags"):
-                            descr += "\n - " + "Scans For Tags: " + ", ".join(rec.get("tags"))
+                            descr += "\n - " + "Scans For Tags: " + \
+                                ", ".join(rec.get("tags"))
                         if rec.get("cve"):
-                            descr += "\n - " + "Scans For CVEs: " + ", ".join(rec.get("cve"))
+                            descr += "\n - " + "Scans For CVEs: " + \
+                                ", ".join(rec.get("cve"))
                         if rec.get("raw_data") and not (rec.get("tags") or ret.get("cve")):
-                            descr += "\n - " + "Raw data: " + str(rec.get("raw_data"))
-                        descr += "\n<SFURL>https://viz.greynoise.io/ip/" + rec.get("ip") + "</SFURL>"
-                        e = SpiderFootEvent(evtType, descr, self.__name__, event)
+                            descr += "\n - " + "Raw data: " + \
+                                str(rec.get("raw_data"))
+                        descr += "\n<SFURL>https://viz.greynoise.io/ip/" + \
+                            rec.get("ip") + "</SFURL>"
+                        e = SpiderFootEvent(
+                            evtType, descr, self.__name__, event)
                         self.notifyListeners(e)
 
         if "seen" in ret:
@@ -255,7 +270,8 @@ class sfp_greynoise(SpiderFootPlugin):
                 lastseen = ret.get("last_seen", "1970-01-01")
                 lastseen_dt = datetime.strptime(lastseen, "%Y-%m-%d")
                 lastseen_ts = int(time.mktime(lastseen_dt.timetuple()))
-                age_limit_ts = int(time.time()) - (86400 * self.opts["age_limit_days"])
+                age_limit_ts = int(time.time()) - \
+                    (86400 * self.opts["age_limit_days"])
                 if self.opts["age_limit_days"] > 0 and lastseen_ts < age_limit_ts:
                     self.debug("Record found but too old, skipping.")
                     return
@@ -268,35 +284,44 @@ class sfp_greynoise(SpiderFootPlugin):
                         if met.get("city"):
                             loc = met.get("city") + ", "
                         loc += met.get("country")
-                        e = SpiderFootEvent("GEOINFO", loc, self.__name__, event)
+                        e = SpiderFootEvent(
+                            "GEOINFO", loc, self.__name__, event)
                         self.notifyListeners(e)
                     if met.get("asn", "unknown") != "unknown":
                         asn = met.get("asn").replace("AS", "")
-                        e = SpiderFootEvent("BGP_AS_MEMBER", asn, self.__name__, event)
+                        e = SpiderFootEvent(
+                            "BGP_AS_MEMBER", asn, self.__name__, event)
                         self.notifyListeners(e)
                     if met.get("organization", "unknown") != "unknown":
-                        e = SpiderFootEvent("COMPANY_NAME", met.get("organization"), self.__name__, event)
+                        e = SpiderFootEvent("COMPANY_NAME", met.get(
+                            "organization"), self.__name__, event)
                         self.notifyListeners(e)
                     if met.get("os", "unknown") != "unknown":
-                        e = SpiderFootEvent("OPERATING_SYSTEM", met.get("os"), self.__name__, event)
+                        e = SpiderFootEvent("OPERATING_SYSTEM", met.get(
+                            "os"), self.__name__, event)
                         self.notifyListeners(e)
-                    e = SpiderFootEvent("RAW_RIR_DATA", str(ret), self.__name__, event)
+                    e = SpiderFootEvent("RAW_RIR_DATA", str(
+                        ret), self.__name__, event)
                     self.notifyListeners(e)
 
                 if ret.get("classification"):
                     descr = (
-                        "GreyNoise - Mass-Scanning IP Detected ["
-                        + eventData
-                        + "]\n - Classification: "
-                        + ret.get("classification")
+                        "GreyNoise - Mass-Scanning IP Detected [" +
+                        eventData +
+                        "]\n - Classification: " +
+                        ret.get("classification")
                     )
                     if ret.get("tags"):
-                        descr += "\n - " + "Scans For Tags: " + ", ".join(ret.get("tags"))
+                        descr += "\n - " + "Scans For Tags: " + \
+                            ", ".join(ret.get("tags"))
                     if ret.get("cve"):
-                        descr += "\n - " + "Scans For CVEs: " + ", ".join(ret.get("cve"))
+                        descr += "\n - " + "Scans For CVEs: " + \
+                            ", ".join(ret.get("cve"))
                     if ret.get("raw_data") and not (ret.get("tags") or ret.get("cve")):
-                        descr += "\n - " + "Raw data: " + str(ret.get("raw_data"))
-                    descr += "\n<SFURL>https://viz.greynoise.io/ip/" + ret.get("ip") + "</SFURL>"
+                        descr += "\n - " + "Raw data: " + \
+                            str(ret.get("raw_data"))
+                    descr += "\n<SFURL>https://viz.greynoise.io/ip/" + \
+                        ret.get("ip") + "</SFURL>"
                     e = SpiderFootEvent(evtType, descr, self.__name__, event)
                     self.notifyListeners(e)
 

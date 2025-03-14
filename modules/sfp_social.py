@@ -94,7 +94,8 @@ class sfp_social(SpiderFootPlugin):
                 # Except for Google+, the link includes potential usernames
                 if regexpGrp != "Google+":
                     un = bits.group(1)
-                    evt = SpiderFootEvent("USERNAME", str(un), self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "USERNAME", str(un), self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_social class

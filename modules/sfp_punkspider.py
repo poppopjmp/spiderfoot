@@ -67,7 +67,8 @@ class sfp_punkspider(SpiderFootPlugin):
     def query(self, domain: str):
         domain_hash = hashlib.md5(domain.encode('utf-8', errors='replace').lower()).hexdigest()  # noqa: DUO130
         url = f"https://api.punkspider.org/api/partial-hash/{domain_hash}"
-        res = self.sf.fetchUrl(url, timeout=30, useragent=self.opts['_useragent'])
+        res = self.sf.fetchUrl(
+            url, timeout=30, useragent=self.opts['_useragent'])
 
         return self.parseApiResponse(res)
 
@@ -124,7 +125,8 @@ class sfp_punkspider(SpiderFootPlugin):
             for vuln in res[rec]['vulns']:
                 if res[rec]['vulns'][vuln] == 0:
                     continue
-                e = SpiderFootEvent("VULNERABILITY_GENERAL", f"{vuln}: {res[rec]['vulns'][vuln]}", self.__name__, event)
+                e = SpiderFootEvent(
+                    "VULNERABILITY_GENERAL", f"{vuln}: {res[rec]['vulns'][vuln]}", self.__name__, event)
                 self.notifyListeners(e)
 
 # End of sfp_punkspider class

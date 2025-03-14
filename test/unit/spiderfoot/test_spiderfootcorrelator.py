@@ -27,7 +27,8 @@ class TestSpiderFootCorrelator(unittest.TestCase):
             """
         }
         self.scanId = "test_scan"
-        self.correlator = SpiderFootCorrelator(self.dbh, self.ruleset, self.scanId)
+        self.correlator = SpiderFootCorrelator(
+            self.dbh, self.ruleset, self.scanId)
 
     def test_init_invalid_ruleset_type(self):
         with self.assertRaises(TypeError):
@@ -50,7 +51,8 @@ class TestSpiderFootCorrelator(unittest.TestCase):
             self.correlator.run_correlations()
 
     def test_run_correlations_running_scan(self):
-        self.dbh.scanInstanceGet.return_value = [None, None, None, None, None, "RUNNING"]
+        self.dbh.scanInstanceGet.return_value = [
+            None, None, None, None, None, "RUNNING"]
         with self.assertRaises(ValueError):
             self.correlator.run_correlations()
 
@@ -79,7 +81,8 @@ class TestSpiderFootCorrelator(unittest.TestCase):
         self.dbh.scanResultEvent.return_value = [
             [None, "data", None, "module", "type", None, None, None, "id"]
         ]
-        events = self.correlator.collect_from_db(matchrule, False, False, False)
+        events = self.correlator.collect_from_db(
+            matchrule, False, False, False)
         self.assertEqual(len(events), 1)
 
     def test_event_extract(self):
@@ -121,7 +124,8 @@ class TestSpiderFootCorrelator(unittest.TestCase):
         self.dbh.scanResultEvent.return_value = [
             [None, "data", None, "module", "type", None, None, None, "id"]
         ]
-        events = self.correlator.collect_events(collection, False, False, False, 0)
+        events = self.correlator.collect_events(
+            collection, False, False, False, 0)
         self.assertEqual(len(events), 1)
 
     def test_aggregate_events(self):

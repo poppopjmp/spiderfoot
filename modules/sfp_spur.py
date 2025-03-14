@@ -159,9 +159,9 @@ class sfp_spur(SpiderFootPlugin):
                 return
 
             if IPNetwork(eventData).prefixlen < self.opts['maxnetblock']:
-                self.debug("Network size bigger than permitted: "
-                           + str(IPNetwork(eventData).prefixlen) + " > "
-                           + str(self.opts['maxnetblock']))
+                self.debug("Network size bigger than permitted: " +
+                           str(IPNetwork(eventData).prefixlen) + " > " +
+                           str(self.opts['maxnetblock']))
                 return
 
         if eventName == 'NETBLOCK_MEMBER':
@@ -169,9 +169,9 @@ class sfp_spur(SpiderFootPlugin):
                 return
 
             if IPNetwork(eventData).prefixlen < self.opts['maxsubnet']:
-                self.debug("Network size bigger than permitted: "
-                           + str(IPNetwork(eventData).prefixlen) + " > "
-                           + str(self.opts['maxsubnet']))
+                self.debug("Network size bigger than permitted: " +
+                           str(IPNetwork(eventData).prefixlen) + " > " +
+                           str(self.opts['maxsubnet']))
                 return
 
         qrylist = list()
@@ -199,12 +199,15 @@ class sfp_spur(SpiderFootPlugin):
 
             # For netblocks, create the event for the IP address to link to later
             if eventName.startswith("NETBLOCK_"):
-                ipEvt = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                ipEvt = SpiderFootEvent(
+                    "IP_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(ipEvt)
-                evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, ipEvt)
+                evt = SpiderFootEvent(
+                    "RAW_RIR_DATA", str(data), self.__name__, ipEvt)
                 self.notifyListeners(evt)
             else:
-                evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+                evt = SpiderFootEvent(
+                    "RAW_RIR_DATA", str(data), self.__name__, event)
                 self.notifyListeners(evt)
 
             geoTag = data.get('geoLite')
@@ -225,13 +228,15 @@ class sfp_spur(SpiderFootPlugin):
                     geoInfo += country
 
                 if eventName.startswith("NETBLOCK_"):
-                    evt = SpiderFootEvent("GEOINFO", geoInfo, self.__name__, ipEvt)
+                    evt = SpiderFootEvent(
+                        "GEOINFO", geoInfo, self.__name__, ipEvt)
                     self.notifyListeners(evt)
                 elif eventName.startswith("AFFILIATE_"):
                     # Don't report GEOINFO for Affiliates
                     pass
                 else:
-                    evt = SpiderFootEvent("GEOINFO", geoInfo, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "GEOINFO", geoInfo, self.__name__, event)
                     self.notifyListeners(evt)
 
             asData = data.get('as')
@@ -241,13 +246,15 @@ class sfp_spur(SpiderFootPlugin):
 
                 if orgName:
                     if eventName.startswith("NETBLOCK_"):
-                        evt = SpiderFootEvent("COMPANY_NAME", orgName, self.__name__, ipEvt)
+                        evt = SpiderFootEvent(
+                            "COMPANY_NAME", orgName, self.__name__, ipEvt)
                         self.notifyListeners(evt)
                     elif eventName.startswith("AFFILIATE_"):
                         # Don't report COMPANY_NAME for Affiliates
                         pass
                     else:
-                        evt = SpiderFootEvent("COMPANY_NAME", orgName, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "COMPANY_NAME", orgName, self.__name__, event)
                         self.notifyListeners(evt)
 
             vpnOperators = data.get('vpnOperators')
@@ -269,13 +276,16 @@ class sfp_spur(SpiderFootPlugin):
                 maliciousIPDesc = maliciousIPDesc.strip(", ")
 
                 if eventName.startswith("NETBLOCK_"):
-                    evt = SpiderFootEvent("MALICIOUS_IPADDR", maliciousIPDesc, self.__name__, ipEvt)
+                    evt = SpiderFootEvent(
+                        "MALICIOUS_IPADDR", maliciousIPDesc, self.__name__, ipEvt)
                     self.notifyListeners(evt)
                 elif eventName.startswith("AFFILIATE_"):
-                    evt = SpiderFootEvent("MALICIOUS_AFFILIATE_IPADDR", maliciousIPDesc, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "MALICIOUS_AFFILIATE_IPADDR", maliciousIPDesc, self.__name__, event)
                     self.notifyListeners(evt)
                 else:
-                    evt = SpiderFootEvent("MALICIOUS_IPADDR", maliciousIPDesc, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "MALICIOUS_IPADDR", maliciousIPDesc, self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_spur class

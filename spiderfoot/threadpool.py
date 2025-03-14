@@ -51,7 +51,8 @@ class SpiderFootThreadPool:
         self._lock = threading.Lock()
 
     def start(self) -> None:
-        self.log.debug(f'Starting thread pool "{self.name}" with {self.threads:,} threads')
+        self.log.debug(
+            f'Starting thread pool "{self.name}" with {self.threads:,} threads')
         for i in range(self.threads):
             t = ThreadPoolWorker(pool=self, name=f"{self.name}_worker_{i + 1}")
             t.start()
@@ -79,7 +80,8 @@ class SpiderFootThreadPool:
             results (dict): (unordered) results in the format: {"taskName": [returnvalue1, returnvalue2, ...]}
         """
         results = dict()
-        self.log.debug(f'Shutting down thread pool "{self.name}" with wait={wait}')
+        self.log.debug(
+            f'Shutting down thread pool "{self.name}" with wait={wait}')
         if wait:
             while not self.finished and not self.stop:
                 with self._lock:
@@ -129,7 +131,8 @@ class SpiderFootThreadPool:
         while self.countQueuedTasks(taskName) >= maxThreads:
             sleep(.01)
             continue
-        self.log.debug(f"Submitting function \"{callback.__name__}\" from module \"{taskName}\" to thread pool \"{self.name}\"")
+        self.log.debug(
+            f"Submitting function \"{callback.__name__}\" from module \"{taskName}\" to thread pool \"{self.name}\"")
         self.inputQueue(taskName).put((callback, args, kwargs))
 
     def countQueuedTasks(self, taskName: str) -> int:
@@ -179,7 +182,8 @@ class SpiderFootThreadPool:
             return values from completed callback function
         """
         taskName = kwargs.get("taskName", "default")
-        self.inputThread = threading.Thread(target=self.feedQueue, args=(callback, iterable, args, kwargs))
+        self.inputThread = threading.Thread(
+            target=self.feedQueue, args=(callback, iterable, args, kwargs))
         self.inputThread.start()
         self.start()
         sleep(.1)
@@ -256,7 +260,8 @@ class ThreadPoolWorker(threading.Thread):
                         ran = True
                     except Exception:  # noqa: B902
                         import traceback
-                        self.log.error(f'Error in thread worker {self.name}: {traceback.format_exc()}')
+                        self.log.error(
+                            f'Error in thread worker {self.name}: {traceback.format_exc()}')
                         break
                     if saveResult:
                         self.pool.outputQueue(self.taskName).put(result)

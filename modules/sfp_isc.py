@@ -94,7 +94,8 @@ class sfp_isc(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from ISC.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from ISC.")
             self.errorState = True
             return None
 

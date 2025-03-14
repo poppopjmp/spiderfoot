@@ -155,7 +155,8 @@ class sfp_uceprotect(SpiderFootPlugin):
 
             max_subnet = self.opts['maxsubnet']
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
             malicious_type = "MALICIOUS_SUBNET"
@@ -166,7 +167,8 @@ class sfp_uceprotect(SpiderFootPlugin):
 
             max_netblock = self.opts['maxnetblock']
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
             malicious_type = "MALICIOUS_NETBLOCK"
@@ -200,19 +202,23 @@ class sfp_uceprotect(SpiderFootPlugin):
 
             if level1:
                 description = f"UCEPROTECT - Level 1 (high likelihood) [{addr}]\n<SFURL>{url}</SFURL>"
-                evt = SpiderFootEvent(blacklist_type, description, self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, description, self.__name__, event)
                 self.notifyListeners(evt)
 
-                evt = SpiderFootEvent(malicious_type, description, self.__name__, event)
+                evt = SpiderFootEvent(
+                    malicious_type, description, self.__name__, event)
                 self.notifyListeners(evt)
 
             if level2:
                 description = f"UCEPROTECT - Level 2 (some false positives) [{addr}]\n<SFURL>{url}</SFURL>"
 
-                evt = SpiderFootEvent(blacklist_type, description, self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, description, self.__name__, event)
                 self.notifyListeners(evt)
 
-                evt = SpiderFootEvent(malicious_type, description, self.__name__, event)
+                evt = SpiderFootEvent(
+                    malicious_type, description, self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_uceprotect class

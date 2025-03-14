@@ -4,9 +4,10 @@ import os
 
 
 class TestSpiderFootTemplates(unittest.TestCase):
-    
+
     def setUp(self):
-        self.template_dir = os.path.join(os.path.dirname(__file__), '../../spiderfoot/templates')
+        self.template_dir = os.path.join(os.path.dirname(
+            __file__), '../../spiderfoot/templates')
 
     def render_template(self, template_name, **context):
         template_path = os.path.join(self.template_dir, template_name)
@@ -15,7 +16,8 @@ class TestSpiderFootTemplates(unittest.TestCase):
         return template.render(context)
 
     def test_error_template(self):
-        rendered = self.render_template('error.tmpl', error_message='Test Error')
+        rendered = self.render_template(
+            'error.tmpl', error_message='Test Error')
         self.assertIn('Test Error', rendered)
 
     def test_footer_template(self):

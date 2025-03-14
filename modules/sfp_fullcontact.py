@@ -127,7 +127,8 @@ class sfp_fullcontact(SpiderFootPlugin):
         if "updated" in ret and int(self.opts['max_age_days']) > 0:
             last_dt = datetime.strptime(ret['updated'], '%Y-%m-%d')
             last_ts = int(time.mktime(last_dt.timetuple()))
-            age_limit_ts = int(time.time()) - (86400 * int(self.opts['max_age_days']))
+            age_limit_ts = int(time.time()) - \
+                (86400 * int(self.opts['max_age_days']))
 
             if last_ts < age_limit_ts:
                 self.debug("FullContact record found but too old.")
@@ -191,7 +192,8 @@ class sfp_fullcontact(SpiderFootPlugin):
             full_name = data.get('fullName')
 
             if full_name:
-                e = SpiderFootEvent("RAW_RIR_DATA", f"Possible full name: {full_name}", self.__name__, event)
+                e = SpiderFootEvent(
+                    "RAW_RIR_DATA", f"Possible full name: {full_name}", self.__name__, event)
                 self.notifyListeners(e)
 
             return
@@ -227,12 +229,14 @@ class sfp_fullcontact(SpiderFootPlugin):
                     if not phone:
                         continue
 
-                    e = SpiderFootEvent("PHONE_NUMBER", phone, self.__name__, event)
+                    e = SpiderFootEvent(
+                        "PHONE_NUMBER", phone, self.__name__, event)
                     self.notifyListeners(e)
 
             if data.get("locations"):
                 for r in data['locations']:
-                    location = ', '.join([_f for _f in [r.get('city'), r.get('country')] if _f])
+                    location = ', '.join(
+                        [_f for _f in [r.get('city'), r.get('country')] if _f])
                     if location:
                         e = SpiderFootEvent(
                             "GEOINFO",

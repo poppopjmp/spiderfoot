@@ -101,13 +101,15 @@ class sfp_github(SpiderFootPlugin):
         if eventName == "SOCIAL_MEDIA":
             try:
                 network = eventData.split(": ")[0]
-                url = eventData.split(": ")[1].replace("<SFURL>", "").replace("</SFURL>", "")
+                url = eventData.split(": ")[1].replace(
+                    "<SFURL>", "").replace("</SFURL>", "")
             except Exception as e:
                 self.debug(f"Unable to parse SOCIAL_MEDIA: {eventData} ({e})")
                 return
 
             if network != "Github":
-                self.debug(f"Skipping social network profile, {url}, as not a GitHub profile")
+                self.debug(
+                    f"Skipping social network profile, {url}, as not a GitHub profile")
                 return
 
             try:
@@ -142,7 +144,8 @@ class sfp_github(SpiderFootPlugin):
                 self.debug(f"{username} is not a valid GitHub profile")
                 return
 
-            e = SpiderFootEvent("RAW_RIR_DATA", f"Possible full name: {full_name}", self.__name__, event)
+            e = SpiderFootEvent(
+                "RAW_RIR_DATA", f"Possible full name: {full_name}", self.__name__, event)
             self.notifyListeners(e)
 
             location = json_data.get('location')
@@ -160,7 +163,8 @@ class sfp_github(SpiderFootPlugin):
             return
 
         if eventName == "DOMAIN_NAME":
-            username = self.sf.domainKeyword(eventData, self.opts['_internettlds'])
+            username = self.sf.domainKeyword(
+                eventData, self.opts['_internettlds'])
             if not username:
                 return
 
@@ -191,7 +195,8 @@ class sfp_github(SpiderFootPlugin):
                 ret = None
 
             if ret is None:
-                self.error(f"Unable to process empty response from Github for: {username}")
+                self.error(
+                    f"Unable to process empty response from Github for: {username}")
                 failed = True
 
         if not failed:
@@ -206,7 +211,8 @@ class sfp_github(SpiderFootPlugin):
                     if self.opts['namesonly'] and username != item['name']:
                         continue
 
-                    evt = SpiderFootEvent("PUBLIC_CODE_REPO", repo_info, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "PUBLIC_CODE_REPO", repo_info, self.__name__, event)
                     self.notifyListeners(evt)
 
         # Now look for users matching the name found
@@ -226,10 +232,12 @@ class sfp_github(SpiderFootPlugin):
             try:
                 ret = json.loads(res['content'])
                 if ret is None:
-                    self.error(f"Unable to process empty response from Github for: {username}")
+                    self.error(
+                        f"Unable to process empty response from Github for: {username}")
                     failed = True
             except Exception:
-                self.error(f"Unable to process invalid response from Github for: {username}")
+                self.error(
+                    f"Unable to process invalid response from Github for: {username}")
                 failed = True
 
         if not failed:
@@ -241,7 +249,8 @@ class sfp_github(SpiderFootPlugin):
             # For each user matching the username, get their repos
             for item in ret['items']:
                 if item.get('repos_url') is None:
-                    self.debug("Incomplete Github information found (repos_url).")
+                    self.debug(
+                        "Incomplete Github information found (repos_url).")
                     continue
 
                 url = item['repos_url']
@@ -259,12 +268,14 @@ class sfp_github(SpiderFootPlugin):
                     continue
 
                 if repret is None:
-                    self.error(f"Unable to process empty response from Github for: {username}")
+                    self.error(
+                        f"Unable to process empty response from Github for: {username}")
                     continue
 
                 for item in repret:
                     if not isinstance(item, dict):
-                        self.debug("Encountered an unexpected or empty response from Github.")
+                        self.debug(
+                            "Encountered an unexpected or empty response from Github.")
                         continue
 
                     repo_info = self.buildRepoInfo(item)

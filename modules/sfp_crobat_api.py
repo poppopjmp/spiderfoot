@@ -72,7 +72,8 @@ class sfp_crobat_api(SpiderFootPlugin):
         params = urllib.parse.urlencode({
             'page': page
         })
-        domain = qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
+        domain = qry.encode('raw_unicode_escape').decode(
+            "ascii", errors='replace')
         res = self.sf.fetchUrl(
             f"https://sonar.omnisint.io/subdomains/{domain}?{params}",
             headers=headers,
@@ -149,10 +150,12 @@ class sfp_crobat_api(SpiderFootPlugin):
             data = self.queryDomain(eventData, page)
 
             if not data:
-                self.debug(f"No information found for domain {eventData} (page: {page})")
+                self.debug(
+                    f"No information found for domain {eventData} (page: {page})")
                 return
 
-            evt = SpiderFootEvent('RAW_RIR_DATA', str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                'RAW_RIR_DATA', str(data), self.__name__, event)
             self.notifyListeners(evt)
 
             page += 1
@@ -166,10 +169,12 @@ class sfp_crobat_api(SpiderFootPlugin):
 
                 if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
                     self.debug(f"Host {domain} could not be resolved")
-                    evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", domain, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "INTERNET_NAME_UNRESOLVED", domain, self.__name__, event)
                     self.notifyListeners(evt)
                 else:
-                    evt = SpiderFootEvent("INTERNET_NAME", domain, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "INTERNET_NAME", domain, self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_crobat_api class

@@ -117,7 +117,8 @@ class sfp_viewdns(SpiderFootPlugin):
         )
 
         if res['code'] in ["400", "429", "500", "403"]:
-            self.error("ViewDNS.info API key seems to have been rejected or you have exceeded usage limits.")
+            self.error(
+                "ViewDNS.info API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return
 
@@ -133,11 +134,13 @@ class sfp_viewdns(SpiderFootPlugin):
         try:
             info = json.loads(res['content'])
         except Exception as e:
-            self.error(f"Error processing JSON response from ViewDNS.info: {e}")
+            self.error(
+                f"Error processing JSON response from ViewDNS.info: {e}")
             return
 
         if not info.get("query"):
-            self.error("Error querying ViewDNS.info. Could be unavailable right now.")
+            self.error(
+                "Error querying ViewDNS.info. Could be unavailable right now.")
             self.errorState = True
             return
 
@@ -186,7 +189,8 @@ class sfp_viewdns(SpiderFootPlugin):
             valkey = "name"
         elif eventName == "PROVIDER_DNS":
             if not self.getTarget().matches(eventData):
-                self.debug(f"DNS provider {eventData} not related to target, skipping")
+                self.debug(
+                    f"DNS provider {eventData} not related to target, skipping")
                 return
             ident = "reversens"
             valkey = "domain"
@@ -203,7 +207,8 @@ class sfp_viewdns(SpiderFootPlugin):
 
         # Leave out registrar parking sites, and other highly used IPs
         if eventName in ["IP_ADDRESS", "IPV6_ADDRESS"] and len(rec) > self.opts['maxcohost']:
-            self.debug(f"IP address {eventData} has {len(rec)} co-hosts; larger than {self.opts['maxcohost']}, skipping")
+            self.debug(
+                f"IP address {eventData} has {len(rec)} co-hosts; larger than {self.opts['maxcohost']}, skipping")
             return
 
         myres = list()
@@ -230,23 +235,27 @@ class sfp_viewdns(SpiderFootPlugin):
                 continue
 
             if eventName == "EMAILADDR":
-                e = SpiderFootEvent("AFFILIATE_INTERNET_NAME", domain, self.__name__, event)
+                e = SpiderFootEvent("AFFILIATE_INTERNET_NAME",
+                                    domain, self.__name__, event)
                 self.notifyListeners(e)
 
                 if self.sf.isDomain(domain, self.opts['_internettlds']):
-                    evt = SpiderFootEvent('AFFILIATE_DOMAIN_NAME', domain, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'AFFILIATE_DOMAIN_NAME', domain, self.__name__, event)
                     self.notifyListeners(evt)
             else:
                 if self.cohostcount >= self.opts['maxcohost']:
                     continue
 
                 if eventName in ["IP_ADDRESS", "IPV6_ADDRESS"] and self.opts['verify'] and not self.sf.validateIP(domain, eventData):
-                    self.debug(f"Host {domain} no longer resolves to IP address: {eventData}")
+                    self.debug(
+                        f"Host {domain} no longer resolves to IP address: {eventData}")
                     continue
 
                 self.cohostcount += 1
 
-                e = SpiderFootEvent("CO_HOSTED_SITE", domain, self.__name__, event)
+                e = SpiderFootEvent(
+                    "CO_HOSTED_SITE", domain, self.__name__, event)
                 self.notifyListeners(e)
 
 # End of sfp_viewdns class

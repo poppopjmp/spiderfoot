@@ -124,10 +124,12 @@ class sfp_comodo(SpiderFootPlugin):
         if found:
             return
 
-        evt = SpiderFootEvent(blacklist_type, f"Comodo Secure DNS [{eventData}]", self.__name__, event)
+        evt = SpiderFootEvent(
+            blacklist_type, f"Comodo Secure DNS [{eventData}]", self.__name__, event)
         self.notifyListeners(evt)
 
-        evt = SpiderFootEvent(malicious_type, f"Comodo Secure DNS [{eventData}]", self.__name__, event)
+        evt = SpiderFootEvent(
+            malicious_type, f"Comodo Secure DNS [{eventData}]", self.__name__, event)
         self.notifyListeners(evt)
 
 # End of sfp_comodo class

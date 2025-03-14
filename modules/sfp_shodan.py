@@ -97,7 +97,8 @@ class sfp_shodan(SpiderFootPlugin):
         time.sleep(1)
 
         if res['code'] in ["403", "401"]:
-            self.error("SHODAN API key seems to have been rejected or you have exceeded usage limits.")
+            self.error(
+                "SHODAN API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
 
@@ -131,7 +132,8 @@ class sfp_shodan(SpiderFootPlugin):
         time.sleep(1)
 
         if res['code'] in ["403", "401"]:
-            self.error("SHODAN API key seems to have been rejected or you have exceeded usage limits.")
+            self.error(
+                "SHODAN API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
 
@@ -165,7 +167,8 @@ class sfp_shodan(SpiderFootPlugin):
         time.sleep(1)
 
         if res['code'] in ["403", "401"]:
-            self.error("SHODAN API key seems to have been rejected or you have exceeded usage limits.")
+            self.error(
+                "SHODAN API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
 
@@ -215,7 +218,8 @@ class sfp_shodan(SpiderFootPlugin):
             if hosts is None:
                 return
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(hosts), self.__name__, event)
+            evt = SpiderFootEvent("RAW_RIR_DATA", str(
+                hosts), self.__name__, event)
             self.notifyListeners(evt)
 
         if eventName == 'WEB_ANALYTICS_ID':
@@ -223,7 +227,8 @@ class sfp_shodan(SpiderFootPlugin):
                 network = eventData.split(": ")[0]
                 analytics_id = eventData.split(": ")[1]
             except Exception as e:
-                self.error(f"Unable to parse WEB_ANALYTICS_ID: {eventData} ({e})")
+                self.error(
+                    f"Unable to parse WEB_ANALYTICS_ID: {eventData} ({e})")
                 return
 
             if network not in ['Google AdSense', 'Google Analytics', 'Google Site Verification']:
@@ -235,7 +240,8 @@ class sfp_shodan(SpiderFootPlugin):
             if rec is None:
                 return
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(rec), self.__name__, event)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(rec), self.__name__, event)
             self.notifyListeners(evt)
             return
 
@@ -244,7 +250,8 @@ class sfp_shodan(SpiderFootPlugin):
                 return
             max_netblock = self.opts['maxnetblock']
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
         qrylist = list()
@@ -263,28 +270,34 @@ class sfp_shodan(SpiderFootPlugin):
             # For netblocks, we need to create the IP address event so that
             # the threat intel event is more meaningful.
             if eventName == 'NETBLOCK_OWNER':
-                pevent = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "IP_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             else:
                 pevent = event
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(rec), self.__name__, pevent)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(rec), self.__name__, pevent)
             self.notifyListeners(evt)
 
             if self.checkForStop():
                 return
 
             if rec.get('os') is not None:
-                evt = SpiderFootEvent("OPERATING_SYSTEM", f"{rec.get('os')} ({addr})", self.__name__, pevent)
+                evt = SpiderFootEvent(
+                    "OPERATING_SYSTEM", f"{rec.get('os')} ({addr})", self.__name__, pevent)
                 self.notifyListeners(evt)
 
             if rec.get('devtype') is not None:
-                evt = SpiderFootEvent("DEVICE_TYPE", f"{rec.get('devtype')} ({addr})", self.__name__, pevent)
+                evt = SpiderFootEvent(
+                    "DEVICE_TYPE", f"{rec.get('devtype')} ({addr})", self.__name__, pevent)
                 self.notifyListeners(evt)
 
             if rec.get('country_name') is not None:
-                location = ', '.join([_f for _f in [rec.get('city'), rec.get('country_name')] if _f])
-                evt = SpiderFootEvent("GEOINFO", location, self.__name__, pevent)
+                location = ', '.join(
+                    [_f for _f in [rec.get('city'), rec.get('country_name')] if _f])
+                evt = SpiderFootEvent(
+                    "GEOINFO", location, self.__name__, pevent)
                 self.notifyListeners(evt)
 
             if 'data' not in rec:
@@ -307,25 +320,29 @@ class sfp_shodan(SpiderFootPlugin):
                     cp = addr + ":" + port
                     if cp not in ports:
                         ports.append(cp)
-                        evt = SpiderFootEvent("TCP_PORT_OPEN", cp, self.__name__, pevent)
+                        evt = SpiderFootEvent(
+                            "TCP_PORT_OPEN", cp, self.__name__, pevent)
                         self.notifyListeners(evt)
 
                 if banner is not None:
                     if banner not in banners:
                         banners.append(banner)
-                        evt = SpiderFootEvent("TCP_PORT_OPEN_BANNER", banner, self.__name__, pevent)
+                        evt = SpiderFootEvent(
+                            "TCP_PORT_OPEN_BANNER", banner, self.__name__, pevent)
                         self.notifyListeners(evt)
 
                 if product is not None:
                     if product not in products:
                         products.append(product)
-                        evt = SpiderFootEvent("SOFTWARE_USED", product, self.__name__, pevent)
+                        evt = SpiderFootEvent(
+                            "SOFTWARE_USED", product, self.__name__, pevent)
                         self.notifyListeners(evt)
 
                 if asn is not None:
                     if asn not in asns:
                         asns.append(asn)
-                        evt = SpiderFootEvent("BGP_AS_MEMBER", asn.replace("AS", ""), self.__name__, pevent)
+                        evt = SpiderFootEvent("BGP_AS_MEMBER", asn.replace(
+                            "AS", ""), self.__name__, pevent)
                         self.notifyListeners(evt)
 
                 if vulns is not None:
@@ -333,7 +350,8 @@ class sfp_shodan(SpiderFootPlugin):
                         if vuln not in vulnlist:
                             vulnlist.append(vuln)
                             etype, cvetext = self.sf.cveInfo(vuln)
-                            evt = SpiderFootEvent(etype, cvetext, self.__name__, pevent)
+                            evt = SpiderFootEvent(
+                                etype, cvetext, self.__name__, pevent)
                             self.notifyListeners(evt)
 
 # End of sfp_shodan class

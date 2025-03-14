@@ -91,7 +91,8 @@ class sfp_coinblocker(SpiderFootPlugin):
         return False
 
     def retrieveBlocklist(self):
-        blocklist = self.sf.cacheGet('coinblocker', self.opts.get('cacheperiod', 24))
+        blocklist = self.sf.cacheGet(
+            'coinblocker', self.opts.get('cacheperiod', 24))
 
         if blocklist is not None:
             return self.parseBlocklist(blocklist)
@@ -104,7 +105,8 @@ class sfp_coinblocker(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from {url}")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from {url}")
             self.errorState = True
             return None
 
@@ -179,7 +181,8 @@ class sfp_coinblocker(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with CoinBlocker list")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with CoinBlocker list")
 
         if not self.queryBlocklist(eventData):
             return

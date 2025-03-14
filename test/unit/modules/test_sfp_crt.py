@@ -33,7 +33,8 @@ class TestModuleCrt(unittest.TestCase):
             with self.subTest(code=code):
                 module = sfp_crt()
                 module.setup(sf, dict())
-                result = module.parseApiResponse({"code": code, "content": None})
+                result = module.parseApiResponse(
+                    {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertFalse(module.errorState)
 
@@ -45,6 +46,7 @@ class TestModuleCrt(unittest.TestCase):
             with self.subTest(code=code):
                 module = sfp_crt()
                 module.setup(sf, dict())
-                result = module.parseApiResponse({"code": code, "content": None})
+                result = module.parseApiResponse(
+                    {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertTrue(module.errorState)

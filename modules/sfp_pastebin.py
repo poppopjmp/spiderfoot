@@ -91,7 +91,8 @@ class sfp_pastebin(SpiderFootPlugin):
             return
 
         if self.opts['api_key'] == "":
-            self.error(f"You enabled {self.__class__.__name__} but did not set a Google API key!")
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set a Google API key!")
             self.errorState = True
             return
 
@@ -141,16 +142,19 @@ class sfp_pastebin(SpiderFootPlugin):
                     continue
 
                 if re.search(
-                    r"[^a-zA-Z\-\_0-9]" + re.escape(eventData) + r"[^a-zA-Z\-\_0-9]",
+                    r"[^a-zA-Z\-\_0-9]" +
+                        re.escape(eventData) + r"[^a-zA-Z\-\_0-9]",
                     res['content'],
                     re.IGNORECASE
                 ) is None:
                     continue
 
-                evt1 = SpiderFootEvent("LEAKSITE_URL", link, self.__name__, event)
+                evt1 = SpiderFootEvent(
+                    "LEAKSITE_URL", link, self.__name__, event)
                 self.notifyListeners(evt1)
 
-                evt2 = SpiderFootEvent("LEAKSITE_CONTENT", res['content'], self.__name__, evt1)
+                evt2 = SpiderFootEvent(
+                    "LEAKSITE_CONTENT", res['content'], self.__name__, evt1)
                 self.notifyListeners(evt2)
 
 # End of sfp_pastebin class

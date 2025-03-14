@@ -112,7 +112,8 @@ class sfp_focsec(SpiderFootPlugin):
             return None
 
         if res['code'] == "402":
-            self.error("Unauthorized - Payment Required. Subscription or trial period expired.")
+            self.error(
+                "Unauthorized - Payment Required. Subscription or trial period expired.")
             self.errorState = True
             return None
 
@@ -126,7 +127,8 @@ class sfp_focsec(SpiderFootPlugin):
             return None
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from Focsec.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from Focsec.")
             return None
 
         if not res['content']:
@@ -174,12 +176,14 @@ class sfp_focsec(SpiderFootPlugin):
 
         is_bot = data.get('is_bot')
         if is_bot:
-            e = SpiderFootEvent("MALICIOUS_IPADDR", f"Focsec [{eventData}]", self.__name__, event)
+            e = SpiderFootEvent("MALICIOUS_IPADDR",
+                                f"Focsec [{eventData}]", self.__name__, event)
             self.notifyListeners(e)
 
         is_tor = data.get('is_tor')
         if is_tor:
-            e = SpiderFootEvent("TOR_EXIT_NODE", eventData, self.__name__, event)
+            e = SpiderFootEvent("TOR_EXIT_NODE", eventData,
+                                self.__name__, event)
             self.notifyListeners(e)
 
         is_vpn = data.get('is_vpn')

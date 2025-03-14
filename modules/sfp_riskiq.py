@@ -117,7 +117,8 @@ class sfp_riskiq(SpiderFootPlugin):
         api_key_password = self.opts['api_key_password']
         if not isinstance(api_key_password, str):
             api_key_password = api_key_password.encode('utf-8')
-        cred = base64.b64encode(api_key_login + ":".encode('utf-8') + api_key_password)
+        cred = base64.b64encode(
+            api_key_login + ":".encode('utf-8') + api_key_password)
         headers = {
             'Authorization': "Basic " + cred.decode('utf-8'),
             'Content-Type': 'application/json'
@@ -129,7 +130,8 @@ class sfp_riskiq(SpiderFootPlugin):
                                postData=post)
 
         if res['code'] in ["400", "429", "500", "403"]:
-            self.error("RiskIQ access seems to have been rejected or you have exceeded usage limits.")
+            self.error(
+                "RiskIQ access seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
 
@@ -193,13 +195,16 @@ class sfp_riskiq(SpiderFootPlugin):
 
                     if self.getTarget().matches(host, includeChildren=True):
                         if self.sf.resolveHost(host) or self.sf.resolveHost6(host):
-                            e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, event)
+                            e = SpiderFootEvent(
+                                "INTERNET_NAME", host, self.__name__, event)
                         else:
-                            e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
+                            e = SpiderFootEvent(
+                                "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
                         self.notifyListeners(e)
 
                         if self.sf.isDomain(host, self.opts['_internettlds']):
-                            e = SpiderFootEvent("DOMAIN_NAME", host, self.__name__, event)
+                            e = SpiderFootEvent(
+                                "DOMAIN_NAME", host, self.__name__, event)
                             self.notifyListeners(e)
 
         if eventName == 'EMAILADDR':
@@ -218,7 +223,8 @@ class sfp_riskiq(SpiderFootPlugin):
                     self.notifyListeners(e)
 
                     if t == "AFFILIATE_INTERNET_NAME" and self.sf.isDomain(r['domain'], self.opts['_internettlds']):
-                        evt = SpiderFootEvent("AFFILIATE_DOMAIN_NAME", r['domain'], self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "AFFILIATE_DOMAIN_NAME", r['domain'], self.__name__, event)
                         self.notifyListeners(evt)
 
             return
@@ -260,18 +266,22 @@ class sfp_riskiq(SpiderFootPlugin):
                 if not self.opts['cohostsamedomain']:
                     if self.getTarget().matches(co, includeParents=True):
                         if self.sf.resolveHost(co) or self.sf.resolveHost6(co):
-                            e = SpiderFootEvent("INTERNET_NAME", co, self.__name__, event)
+                            e = SpiderFootEvent(
+                                "INTERNET_NAME", co, self.__name__, event)
                         else:
-                            e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", co, self.__name__, event)
+                            e = SpiderFootEvent(
+                                "INTERNET_NAME_UNRESOLVED", co, self.__name__, event)
                         self.notifyListeners(e)
 
                         if self.sf.isDomain(co, self.opts['_internettlds']):
-                            e = SpiderFootEvent("DOMAIN_NAME", co, self.__name__, event)
+                            e = SpiderFootEvent(
+                                "DOMAIN_NAME", co, self.__name__, event)
                             self.notifyListeners(e)
                         continue
 
                 if self.cohostcount < self.opts['maxcohost']:
-                    e = SpiderFootEvent("CO_HOSTED_SITE", co, self.__name__, event)
+                    e = SpiderFootEvent(
+                        "CO_HOSTED_SITE", co, self.__name__, event)
                     self.notifyListeners(e)
                     self.cohostcount += 1
 

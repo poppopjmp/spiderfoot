@@ -163,7 +163,8 @@ class sfp_clearbit(SpiderFootPlugin):
             return
 
         if self.opts['api_key'] == "":
-            self.error(f"You enabled {self.__class__.__name__} but did not set an API key!")
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set an API key!")
             self.errorState = True
             return
 
@@ -218,7 +219,8 @@ class sfp_clearbit(SpiderFootPlugin):
                 )
 
                 if location:
-                    evt = SpiderFootEvent("PHYSICAL_ADDRESS", location, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "PHYSICAL_ADDRESS", location, self.__name__, event)
                     self.notifyListeners(evt)
         except Exception:
             self.debug("Unable to extract location from JSON.")
@@ -246,7 +248,8 @@ class sfp_clearbit(SpiderFootPlugin):
                 if site:
                     if 'phoneNumbers' in site:
                         for p in site['phoneNumbers']:
-                            evt = SpiderFootEvent("PHONE_NUMBER", p, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "PHONE_NUMBER", p, self.__name__, event)
                             self.notifyListeners(evt)
 
                     if 'emailAddresses' in company['site']:
@@ -255,7 +258,8 @@ class sfp_clearbit(SpiderFootPlugin):
                                 evttype = "EMAILADDR_GENERIC"
                             else:
                                 evttype = "EMAILADDR"
-                            evt = SpiderFootEvent(evttype, e, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                evttype, e, self.__name__, event)
                             self.notifyListeners(evt)
 
                 # Get the location of the person, also indicating
@@ -277,7 +281,8 @@ class sfp_clearbit(SpiderFootPlugin):
                     )
 
                     if location:
-                        evt = SpiderFootEvent("PHYSICAL_ADDRESS", location, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "PHYSICAL_ADDRESS", location, self.__name__, event)
                         self.notifyListeners(evt)
         except Exception:
             self.debug("Unable to extract company info from JSON.")

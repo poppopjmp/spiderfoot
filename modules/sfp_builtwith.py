@@ -91,7 +91,8 @@ class sfp_builtwith(SpiderFootPlugin):
     def queryRelationships(self, t):
         url = f"https://api.builtwith.com/rv1/api.json?LOOKUP={t}&KEY={self.opts['api_key']}"
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
+        res = self.sf.fetchUrl(
+            url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
 
         if res['code'] == "404":
             return None
@@ -102,14 +103,16 @@ class sfp_builtwith(SpiderFootPlugin):
         try:
             return json.loads(res['content'])['Relationships']
         except Exception as e:
-            self.error(f"Error processing JSON response from builtwith.com: {e}")
+            self.error(
+                f"Error processing JSON response from builtwith.com: {e}")
 
         return None
 
     def queryDomainInfo(self, t):
         url = f"https://api.builtwith.com/rv1/api.json?LOOKUP={t}&KEY={self.opts['api_key']}"
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
+        res = self.sf.fetchUrl(
+            url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
 
         if res['code'] == "404":
             return None
@@ -120,7 +123,8 @@ class sfp_builtwith(SpiderFootPlugin):
         try:
             return json.loads(res['content'])['Results'][0]
         except Exception as e:
-            self.error(f"Error processing JSON response from builtwith.com: {e}")
+            self.error(
+                f"Error processing JSON response from builtwith.com: {e}")
 
         return None
 
@@ -178,18 +182,22 @@ class sfp_builtwith(SpiderFootPlugin):
 
                 if data['Meta'].get("Telephones", []):
                     for phone in data['Meta']['Telephones']:
-                        phone = phone.replace("-", "").replace("(", "").replace(")", "").replace(" ", "")
-                        e = SpiderFootEvent("PHONE_NUMBER", phone, self.__name__, event)
+                        phone = phone.replace(
+                            "-", "").replace("(", "").replace(")", "").replace(" ", "")
+                        e = SpiderFootEvent(
+                            "PHONE_NUMBER", phone, self.__name__, event)
                         self.notifyListeners(e)
 
             if "Paths" in data.get("Result", []):
                 for p in data["Result"]['Paths']:
                     if p.get("SubDomain", ""):
                         h = p["SubDomain"] + "." + eventData
-                        ev = SpiderFootEvent("INTERNET_NAME", h, self.__name__, event)
+                        ev = SpiderFootEvent(
+                            "INTERNET_NAME", h, self.__name__, event)
                         self.notifyListeners(ev)
                         if self.sf.isDomain(h, self.opts['_internettlds']):
-                            ev = SpiderFootEvent("DOMAIN_NAME", h, self.__name__, event)
+                            ev = SpiderFootEvent(
+                                "DOMAIN_NAME", h, self.__name__, event)
                             self.notifyListeners(ev)
                     else:
                         ev = None
@@ -201,7 +209,8 @@ class sfp_builtwith(SpiderFootPlugin):
                             src = ev
                         else:
                             src = event
-                        agelimit = int(time.time() * 1000) - (86400000 * self.opts['maxage'])
+                        agelimit = int(time.time() * 1000) - \
+                            (86400000 * self.opts['maxage'])
                         if t.get("LastDetected", 0) < agelimit:
                             self.debug("Data found too old, skipping.")
                             continue
@@ -221,7 +230,8 @@ class sfp_builtwith(SpiderFootPlugin):
                 continue
 
             if r['Domain'] != eventData:
-                self.debug("Data returned doesn't match data requested, skipping.")
+                self.debug(
+                    "Data returned doesn't match data requested, skipping.")
                 continue
 
             for i in r['Identifiers']:
@@ -253,18 +263,21 @@ class sfp_builtwith(SpiderFootPlugin):
 
                 # Related through shared analytics ID
                 txt = i['Type'] + ": " + str(i['Value'])
-                e = SpiderFootEvent("WEB_ANALYTICS_ID", txt, self.__name__, event)
+                e = SpiderFootEvent("WEB_ANALYTICS_ID",
+                                    txt, self.__name__, event)
                 self.notifyListeners(e)
 
                 if i['Matches']:
                     for m in i['Matches']:
                         if "Domain" not in m:
                             continue
-                        evt = SpiderFootEvent("AFFILIATE_INTERNET_NAME", m['Domain'], self.__name__, e)
+                        evt = SpiderFootEvent(
+                            "AFFILIATE_INTERNET_NAME", m['Domain'], self.__name__, e)
                         self.notifyListeners(evt)
 
                         if self.sf.isDomain(m['Domain'], self.opts['_internettlds']):
-                            evt = SpiderFootEvent("AFFILIATE_DOMAIN_NAME", m['Domain'], self.__name__, e)
+                            evt = SpiderFootEvent(
+                                "AFFILIATE_DOMAIN_NAME", m['Domain'], self.__name__, e)
                             self.notifyListeners(evt)
 
 # End of sfp_builtwith class

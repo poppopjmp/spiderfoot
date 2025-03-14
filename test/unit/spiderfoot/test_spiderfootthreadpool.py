@@ -21,7 +21,8 @@ class TestSpiderFootThreadPool(unittest.TestCase):
         with patch('spiderfoot.threadpool.ThreadPoolWorker') as mock_worker:
             self.pool.start()
             self.assertEqual(len(self.pool.pool), 5)
-            self.assertTrue(all(isinstance(t, mock_worker) for t in self.pool.pool))
+            self.assertTrue(all(isinstance(t, mock_worker)
+                            for t in self.pool.pool))
 
     def test_stop_setter(self):
         with patch('spiderfoot.threadpool.ThreadPoolWorker'):
@@ -102,13 +103,15 @@ class TestThreadPoolWorker(unittest.TestCase):
 
     def test_run(self):
         callback = MagicMock()
-        self.pool.inputQueues.values.return_value = [MagicMock(get_nowait=MagicMock(side_effect=[(callback, (), {}), queue.Empty]))]
+        self.pool.inputQueues.values.return_value = [
+            MagicMock(get_nowait=MagicMock(side_effect=[(callback, (), {}), queue.Empty]))]
         self.worker.run()
         callback.assert_called_once()
 
     def test_run_with_exception(self):
         callback = MagicMock(side_effect=Exception('test exception'))
-        self.pool.inputQueues.values.return_value = [MagicMock(get_nowait=MagicMock(side_effect=[(callback, (), {}), queue.Empty]))]
+        self.pool.inputQueues.values.return_value = [
+            MagicMock(get_nowait=MagicMock(side_effect=[(callback, (), {}), queue.Empty]))]
         with patch('spiderfoot.threadpool.logging.getLogger') as mock_logger:
             self.worker.run()
             mock_logger.return_value.error.assert_called_once()

@@ -139,13 +139,15 @@ class sfp_xforce(SpiderFootPlugin):
         api_key_password = self.opts['xforce_api_key_password']
         if isinstance(api_key_password, str):
             api_key_password = api_key_password.encode('utf-8')
-        token = base64.b64encode(api_key + ":".encode('utf-8') + api_key_password)
+        token = base64.b64encode(
+            api_key + ":".encode('utf-8') + api_key_password)
         headers = {
             'Accept': 'application/json',
             'Authorization': "Basic " + token.decode('utf-8')
         }
         url = xforce_url + "/" + querytype + "/" + qry
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot", headers=headers)
+        res = self.sf.fetchUrl(
+            url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot", headers=headers)
 
         return self.parseApiResponse(res)
 
@@ -196,7 +198,8 @@ class sfp_xforce(SpiderFootPlugin):
         try:
             return json.loads(res['content'])
         except Exception as e:
-            self.error(f"Error processing JSON response from X-Force Exchange: {e}")
+            self.error(
+                f"Error processing JSON response from X-Force Exchange: {e}")
 
         return None
 
@@ -212,7 +215,8 @@ class sfp_xforce(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {event.module}")
 
         if self.opts['xforce_api_key'] == "" or self.opts['xforce_api_key_password'] == "":
-            self.error("You enabled sfp_xforce but did not set an API key/password!")
+            self.error(
+                "You enabled sfp_xforce but did not set an API key/password!")
             self.errorState = True
             return
 
@@ -240,7 +244,8 @@ class sfp_xforce(SpiderFootPlugin):
                 max_subnet = self.opts['maxsubnet']
 
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
             malicious_type = "MALICIOUS_SUBNET"
@@ -255,7 +260,8 @@ class sfp_xforce(SpiderFootPlugin):
                 max_netblock = self.opts['maxnetblock']
 
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
             malicious_type = "MALICIOUS_NETBLOCK"
@@ -282,7 +288,8 @@ class sfp_xforce(SpiderFootPlugin):
                 if len(rec_history) > 0:
                     self.debug(f"Found history results for {addr} in XForce")
 
-                    e = SpiderFootEvent("RAW_RIR_DATA", str(rec_history), self.__name__, event)
+                    e = SpiderFootEvent("RAW_RIR_DATA", str(
+                        rec_history), self.__name__, event)
                     self.notifyListeners(e)
 
                     for result in rec_history:
@@ -291,11 +298,14 @@ class sfp_xforce(SpiderFootPlugin):
                         if not created:
                             continue
 
-                        created_dt = datetime.strptime(created, '%Y-%m-%dT%H:%M:%S.000Z')
+                        created_dt = datetime.strptime(
+                            created, '%Y-%m-%dT%H:%M:%S.000Z')
                         created_ts = int(time.mktime(created_dt.timetuple()))
-                        age_limit_ts = int(time.time()) - (86400 * self.opts['age_limit_days'])
+                        age_limit_ts = int(time.time()) - \
+                            (86400 * self.opts['age_limit_days'])
                         if self.opts['age_limit_days'] > 0 and created_ts < age_limit_ts:
-                            self.debug(f"Record found but too old ({created_dt}), skipping.")
+                            self.debug(
+                                f"Record found but too old ({created_dt}), skipping.")
                             continue
 
                         reason = result.get("reason", "")
@@ -304,15 +314,19 @@ class sfp_xforce(SpiderFootPlugin):
                         cats_description = " ".join(cats)
 
                         if int(score) < 2:
-                            self.debug(f"Non-malicious results (score: {score} < 2), skipping.")
+                            self.debug(
+                                f"Non-malicious results (score: {score} < 2), skipping.")
                             continue
 
-                        entry = infield_sep.join([str(reason), str(score), str(created), cats_description])
+                        entry = infield_sep.join(
+                            [str(reason), str(score), str(created), cats_description])
 
                         text = f"{entry}\n<SFURL>https://exchange.xforce.ibmcloud.com/ip/{addr}</SFURL>"
-                        e = SpiderFootEvent(malicious_type, text, self.__name__, event)
+                        e = SpiderFootEvent(
+                            malicious_type, text, self.__name__, event)
                         self.notifyListeners(e)
-                        e = SpiderFootEvent(blacklist_type, text, self.__name__, event)
+                        e = SpiderFootEvent(
+                            blacklist_type, text, self.__name__, event)
                         self.notifyListeners(e)
 
             rec = self.query(addr, "ipr/malware")
@@ -321,7 +335,8 @@ class sfp_xforce(SpiderFootPlugin):
                 if len(rec_malware) > 0:
                     self.debug(f"Found malware results for {addr} in XForce")
 
-                    e = SpiderFootEvent("RAW_RIR_DATA", str(rec_malware), self.__name__, event)
+                    e = SpiderFootEvent("RAW_RIR_DATA", str(
+                        rec_malware), self.__name__, event)
                     self.notifyListeners(e)
 
                     for result in rec_malware:
@@ -334,25 +349,31 @@ class sfp_xforce(SpiderFootPlugin):
                         family = result.get("family", [])
                         family_description = " ".join(family)
 
-                        entry = infield_sep.join([str(origin), family_description, str(md5), str(domain), str(uri), str(firstseen), str(lastseen)])
+                        entry = infield_sep.join([str(origin), family_description, str(
+                            md5), str(domain), str(uri), str(firstseen), str(lastseen)])
 
                         last = rec.get("last")
 
                         if not last:
                             continue
 
-                        last_dt = datetime.strptime(last, '%Y-%m-%dT%H:%M:%S.000Z')
+                        last_dt = datetime.strptime(
+                            last, '%Y-%m-%dT%H:%M:%S.000Z')
                         last_ts = int(time.mktime(last_dt.timetuple()))
-                        age_limit_ts = int(time.time()) - (86400 * self.opts['age_limit_days'])
+                        age_limit_ts = int(time.time()) - \
+                            (86400 * self.opts['age_limit_days'])
 
                         if self.opts['age_limit_days'] > 0 and last_ts < age_limit_ts:
-                            self.debug(f"Record found but too old ({last_dt}), skipping.")
+                            self.debug(
+                                f"Record found but too old ({last_dt}), skipping.")
                             continue
 
                         text = f"{entry}\n<SFURL>https://exchange.xforce.ibmcloud.com/ip/{addr}</SFURL>"
-                        e = SpiderFootEvent(malicious_type, text, self.__name__, event)
+                        e = SpiderFootEvent(
+                            malicious_type, text, self.__name__, event)
                         self.notifyListeners(e)
-                        e = SpiderFootEvent(blacklist_type, text, self.__name__, event)
+                        e = SpiderFootEvent(
+                            blacklist_type, text, self.__name__, event)
                         self.notifyListeners(e)
 
         # For IP addresses, do the additional passive DNS lookup
@@ -376,7 +397,8 @@ class sfp_xforce(SpiderFootPlugin):
 
             self.debug(f"Found passive DNS results for {eventData} in Xforce")
 
-            e = SpiderFootEvent("RAW_RIR_DATA", str(records), self.__name__, event)
+            e = SpiderFootEvent("RAW_RIR_DATA", str(
+                records), self.__name__, event)
             self.notifyListeners(e)
 
             for rec in records:
@@ -395,33 +417,39 @@ class sfp_xforce(SpiderFootPlugin):
 
                     last_dt = datetime.strptime(last, '%Y-%m-%dT%H:%M:%SZ')
                     last_ts = int(time.mktime(last_dt.timetuple()))
-                    age_limit_ts = int(time.time()) - (86400 * self.opts['age_limit_days'])
+                    age_limit_ts = int(time.time()) - \
+                        (86400 * self.opts['age_limit_days'])
 
                     if self.opts['verify']:
                         if not self.sf.validateIP(host, eventData):
-                            self.debug(f"Host {host} no longer resolves to {eventData}")
+                            self.debug(
+                                f"Host {host} no longer resolves to {eventData}")
                             continue
                     else:
                         if self.opts['age_limit_days'] > 0 and last_ts < age_limit_ts:
-                            self.debug(f"Record found but too old ({last_dt}), skipping.")
+                            self.debug(
+                                f"Record found but too old ({last_dt}), skipping.")
                             continue
 
                     if not self.opts["cohostsamedomain"]:
                         if self.getTarget().matches(host, includeParents=True):
                             if self.sf.resolveHost(host) or self.sf.resolveHost6(host):
-                                e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, event)
+                                e = SpiderFootEvent(
+                                    "INTERNET_NAME", host, self.__name__, event)
                             else:
-                                e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
+                                e = SpiderFootEvent(
+                                    "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
                             self.notifyListeners(e)
 
                             if self.sf.isDomain(host, self.opts['_internettlds']):
-                                e = SpiderFootEvent("DOMAIN_NAME", host, self.__name__, event)
+                                e = SpiderFootEvent(
+                                    "DOMAIN_NAME", host, self.__name__, event)
                                 self.notifyListeners(e)
                             continue
 
-                    e = SpiderFootEvent("CO_HOSTED_SITE", host, self.__name__, event)
+                    e = SpiderFootEvent(
+                        "CO_HOSTED_SITE", host, self.__name__, event)
                     self.notifyListeners(e)
                     self.cohostcount += 1
 
 # End of sfp_xforce class
-

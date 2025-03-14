@@ -143,7 +143,8 @@ class sfp_intelx(SpiderFootPlugin):
         try:
             ret = json.loads(res['content'])
         except Exception as e:
-            self.error(f"Error processing JSON response from IntelligenceX: {e}")
+            self.error(
+                f"Error processing JSON response from IntelligenceX: {e}")
             self.errorState = True
             return None
 
@@ -159,7 +160,8 @@ class sfp_intelx(SpiderFootPlugin):
 
                 res = self.sf.fetchUrl(resulturl, headers=headers)
                 if res['content'] is None:
-                    self.info("No IntelligenceX info found for results from " + qry)
+                    self.info(
+                        "No IntelligenceX info found for results from " + qry)
                     return None
 
                 if res['code'] == "402":
@@ -170,7 +172,8 @@ class sfp_intelx(SpiderFootPlugin):
                 try:
                     ret = json.loads(res['content'])
                 except Exception as e:
-                    self.error("Error processing JSON response from IntelligenceX: " + str(e))
+                    self.error(
+                        "Error processing JSON response from IntelligenceX: " + str(e))
                     return None
 
                 status = ret['status']
@@ -196,7 +199,8 @@ class sfp_intelx(SpiderFootPlugin):
             return
 
         if self.opts['api_key'] == "" or self.opts['base_url'] == "":
-            self.error("You enabled sfp_intelx but did not set an API key and/or base URL!")
+            self.error(
+                "You enabled sfp_intelx but did not set an API key and/or base URL!")
             self.errorState = True
             return
 
@@ -223,7 +227,8 @@ class sfp_intelx(SpiderFootPlugin):
         for info in data:
             for rec in info.get("records", dict()):
                 try:
-                    last_seen = int(datetime.datetime.strptime(rec['added'].split(".")[0], '%Y-%m-%dT%H:%M:%S').strftime('%s')) * 1000
+                    last_seen = int(datetime.datetime.strptime(rec['added'].split(".")[
+                                    0], '%Y-%m-%dT%H:%M:%S').strftime('%s')) * 1000
                     if self.opts['maxage'] > 0 and last_seen < agelimit:
                         self.debug("Record found but too old, skipping.")
                         continue
@@ -289,7 +294,8 @@ class sfp_intelx(SpiderFootPlugin):
                 self.notifyListeners(e)
 
                 if evt == "INTERNET_NAME" and self.sf.isDomain(val, self.opts['_internettlds']):
-                    e = SpiderFootEvent("DOMAIN_NAME", val, self.__name__, event)
+                    e = SpiderFootEvent("DOMAIN_NAME", val,
+                                        self.__name__, event)
                     self.notifyListeners(e)
 
 # End of sfp_intelx class

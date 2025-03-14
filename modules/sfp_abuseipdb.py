@@ -113,7 +113,8 @@ class sfp_abuseipdb(SpiderFootPlugin):
 
         res = self.sf.fetchUrl(
             f"https://api.abuseipdb.com/api/v2/blacklist?{params}",
-            timeout=60,  # retrieving 10,000 results (default) or more can sometimes take a while
+            # retrieving 10,000 results (default) or more can sometimes take a while
+            timeout=60,
             useragent=self.opts['_useragent'],
             headers=headers
         )
@@ -308,7 +309,8 @@ class sfp_abuseipdb(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of IP address {eventData} with AbuseIPDB")
+        self.debug(
+            f"Checking maliciousness of IP address {eventData} with AbuseIPDB")
 
         blacklist = self.queryBlacklist()
 
@@ -318,7 +320,8 @@ class sfp_abuseipdb(SpiderFootPlugin):
         if eventData not in blacklist:
             return
 
-        self.info(f"Malicious IP address {eventData} found in AbuseIPDB blacklist")
+        self.info(
+            f"Malicious IP address {eventData} found in AbuseIPDB blacklist")
 
         url = f"https://www.abuseipdb.com/check/{eventData}"
 

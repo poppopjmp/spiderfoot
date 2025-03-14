@@ -49,7 +49,8 @@ class TestModuleIntegrationAbusix(BaseTestModuleIntegration):
             "abuseTypes": ["Spamming", "Malware"],
             "lastSeen": "2023-10-26",
         }
-        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(url, timeout)
+        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(
+            url, timeout)
 
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
@@ -62,10 +63,12 @@ class TestModuleIntegrationAbusix(BaseTestModuleIntegration):
         self.assertTrue(any(e.eventType == 'MALICIOUS_IPADDR' for e in events))
         self.assertTrue(any(e.eventType == 'RAW_RIR_DATA' for e in events))
 
-        malicious_ip_event = next((e for e in events if e.eventType == 'MALICIOUS_IPADDR'), None)
+        malicious_ip_event = next(
+            (e for e in events if e.eventType == 'MALICIOUS_IPADDR'), None)
         self.assertIsNotNone(malicious_ip_event)
         self.assertIn("1.2.3.4", malicious_ip_event.data)
 
-        raw_data_event = next((e for e in events if e.eventType == 'RAW_RIR_DATA'), None)
+        raw_data_event = next(
+            (e for e in events if e.eventType == 'RAW_RIR_DATA'), None)
         self.assertIsNotNone(raw_data_event)
         self.assertEqual(raw_data_event.data, str(mock_response_data))

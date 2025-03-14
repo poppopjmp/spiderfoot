@@ -83,7 +83,8 @@ class sfp_bingsearch(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts['api_key'] == "":
-            self.error("You enabled sfp_bingsearch but did not set a Bing API key!")
+            self.error(
+                "You enabled sfp_bingsearch but did not set a Bing API key!")
             self.errorState = True
             return
 
@@ -121,7 +122,8 @@ class sfp_bingsearch(SpiderFootPlugin):
         for link in internal_links:
             self.debug("Found a link: " + link)
 
-            evt = SpiderFootEvent("LINKED_URL_INTERNAL", link, self.__name__, event)
+            evt = SpiderFootEvent("LINKED_URL_INTERNAL",
+                                  link, self.__name__, event)
             self.notifyListeners(evt)
 
         if internal_links:

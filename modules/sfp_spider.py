@@ -116,7 +116,8 @@ class sfp_spider(SpiderFootPlugin):
             return None
 
         if site in self.siteCookies:
-            self.debug(f"Restoring cookies for {site}: {self.siteCookies[site]}")
+            self.debug(
+                f"Restoring cookies for {site}: {self.siteCookies[site]}")
             cookies = self.siteCookies[site]
 
         # Fetch the contents of the supplied URL
@@ -137,11 +138,13 @@ class sfp_spider(SpiderFootPlugin):
         if self.opts['usecookies'] and fetched['headers'] is not None:
             if fetched['headers'].get('Set-Cookie'):
                 self.siteCookies[site] = fetched['headers'].get('Set-Cookie')
-                self.debug(f"Saving cookies for {site}: {self.siteCookies[site]}")
+                self.debug(
+                    f"Saving cookies for {site}: {self.siteCookies[site]}")
 
         if url not in self.urlEvents:
             # TODO: be more descriptive
-            self.error("Something strange happened - shouldn't get here: url not in self.urlEvents")
+            self.error(
+                "Something strange happened - shouldn't get here: url not in self.urlEvents")
             self.urlEvents[url] = None
 
         # Notify modules about the content obtained
@@ -153,7 +156,8 @@ class sfp_spider(SpiderFootPlugin):
             # Store the content for the redirect so that it isn't fetched again
             self.fetchedPages[real_url] = True
             # Notify modules about the new link
-            self.urlEvents[real_url] = self.linkNotify(real_url, self.urlEvents[url])
+            self.urlEvents[real_url] = self.linkNotify(
+                real_url, self.urlEvents[url])
             url = real_url  # override the URL if we had a redirect
 
         data = fetched['content']
@@ -317,7 +321,8 @@ class sfp_spider(SpiderFootPlugin):
             return None
 
         if eventData in self.urlEvents:
-            self.debug(f"Ignoring {eventData} as already spidered or is being spidered.")
+            self.debug(
+                f"Ignoring {eventData} as already spidered or is being spidered.")
             return None
 
         self.urlEvents[eventData] = event
@@ -376,7 +381,8 @@ class sfp_spider(SpiderFootPlugin):
                     robots_txt = res['content']
                     if robots_txt:
                         self.debug(f"robots.txt contents: {robots_txt}")
-                        self.robotsRules[targetBase] = SpiderFootHelpers.extractUrlsFromRobotsTxt(robots_txt)
+                        self.robotsRules[targetBase] = SpiderFootHelpers.extractUrlsFromRobotsTxt(
+                            robots_txt)
 
         # First iteration we are starting with the target link.
         nextLinks = [startingPoint]
@@ -409,7 +415,8 @@ class sfp_spider(SpiderFootPlugin):
 
                 pagesFetched += 1
                 if pagesFetched >= self.opts['maxpages']:
-                    self.info(f"Maximum number of pages ({self.opts['maxpages']}) reached.")
+                    self.info(
+                        f"Maximum number of pages ({self.opts['maxpages']}) reached.")
                     return
 
             nextLinks = self.cleanLinks(links)
@@ -419,6 +426,7 @@ class sfp_spider(SpiderFootPlugin):
             levelsTraversed += 1
             self.debug(f"At level: {levelsTraversed}, Pages: {pagesFetched}")
             if levelsTraversed > self.opts['maxlevels']:
-                self.info(f"Maximum number of levels ({self.opts['maxlevels']}) reached.")
+                self.info(
+                    f"Maximum number of levels ({self.opts['maxlevels']}) reached.")
 
 # End of sfp_spider class

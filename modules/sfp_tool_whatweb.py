@@ -86,7 +86,8 @@ class sfp_tool_whatweb(SpiderFootPlugin):
         self.results[eventData] = True
 
         if not self.opts['whatweb_path']:
-            self.error("You enabled sfp_tool_whatweb but did not set a path to the tool!")
+            self.error(
+                "You enabled sfp_tool_whatweb but did not set a path to the tool!")
             self.errorState = True
             return
 
@@ -129,7 +130,8 @@ class sfp_tool_whatweb(SpiderFootPlugin):
         except TimeoutExpired:
             p.kill()
             stdout, stderr = p.communicate()
-            self.debug(f"Timed out waiting for WhatWeb to finish against {eventData}")
+            self.debug(
+                f"Timed out waiting for WhatWeb to finish against {eventData}")
             return
         except Exception as e:
             self.error(f"Unable to run WhatWeb: {e}")
@@ -137,7 +139,8 @@ class sfp_tool_whatweb(SpiderFootPlugin):
 
         if p.returncode != 0:
             self.error("Unable to read WhatWeb output.")
-            self.debug("Error running WhatWeb: " + stderr.decode('utf-8') + ", " + stdout.decode('utf-8'))
+            self.debug("Error running WhatWeb: " +
+                       stderr.decode('utf-8') + ", " + stdout.decode('utf-8'))
             return
 
         if not stdout:
@@ -170,23 +173,27 @@ class sfp_tool_whatweb(SpiderFootPlugin):
 
             if plugin_matches.get('HTTPServer'):
                 for w in plugin_matches.get('HTTPServer').get('string'):
-                    evt = SpiderFootEvent('WEBSERVER_BANNER', w, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'WEBSERVER_BANNER', w, self.__name__, event)
                     self.notifyListeners(evt)
                     found = True
 
             if plugin_matches.get('X-Powered-By'):
                 for w in plugin_matches.get('X-Powered-By').get('string'):
-                    evt = SpiderFootEvent('WEBSERVER_TECHNOLOGY', w, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'WEBSERVER_TECHNOLOGY', w, self.__name__, event)
                     self.notifyListeners(evt)
                     found = True
 
             for plugin in plugin_matches:
                 if plugin in blacklist:
                     continue
-                evt = SpiderFootEvent('WEBSERVER_TECHNOLOGY', plugin, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'WEBSERVER_TECHNOLOGY', plugin, self.__name__, event)
                 self.notifyListeners(evt)
                 found = True
 
         if found:
-            evt = SpiderFootEvent('RAW_RIR_DATA', str(result_json), self.__name__, event)
+            evt = SpiderFootEvent('RAW_RIR_DATA', str(
+                result_json), self.__name__, event)
             self.notifyListeners(evt)

@@ -143,9 +143,12 @@ class SpiderFootPlugin():
     @property
     def log(self):
         if self._log is None:
-            logging.setLoggerClass(SpiderFootPluginLogger)  # temporarily set logger class
-            self._log = logging.getLogger(f"spiderfoot.{self.__name__}")  # init SpiderFootPluginLogger
-            logging.setLoggerClass(logging.Logger)  # reset logger class to default
+            # temporarily set logger class
+            logging.setLoggerClass(SpiderFootPluginLogger)
+            # init SpiderFootPluginLogger
+            self._log = logging.getLogger(f"spiderfoot.{self.__name__}")
+            # reset logger class to default
+            logging.setLoggerClass(logging.Logger)
         return self._log
 
     def _updateSocket(self, socksProxy: str) -> None:
@@ -228,7 +231,8 @@ class SpiderFootPlugin():
         from spiderfoot import SpiderFootTarget
 
         if not isinstance(target, SpiderFootTarget):
-            raise TypeError(f"target is {type(target)}; expected SpiderFootTarget")
+            raise TypeError(
+                f"target is {type(target)}; expected SpiderFootTarget")
 
         self._currentTarget = target
 
@@ -327,7 +331,8 @@ class SpiderFootPlugin():
         from spiderfoot import SpiderFootEvent
 
         if not isinstance(sfEvent, SpiderFootEvent):
-            raise TypeError(f"sfEvent is {type(sfEvent)}; expected SpiderFootEvent")
+            raise TypeError(
+                f"sfEvent is {type(sfEvent)}; expected SpiderFootEvent")
 
         eventName = sfEvent.eventType
         eventData = sfEvent.data
@@ -390,7 +395,8 @@ class SpiderFootPlugin():
                 try:
                     listener.handleEvent(sfEvent)
                 except Exception as e:
-                    self.sf.error(f"Module ({listener.__module__}) encountered an error: {e}")
+                    self.sf.error(
+                        f"Module ({listener.__module__}) encountered an error: {e}")
                     # set errorState
                     self.errorState = True
                     # clear incoming queue
@@ -505,7 +511,8 @@ class SpiderFootPlugin():
             self.sf._dbh = self.__sfdb__
 
             if not (self.incomingEventQueue and self.outgoingEventQueue):
-                self.sf.error("Please set up queues before starting module as thread")
+                self.sf.error(
+                    "Please set up queues before starting module as thread")
                 return
 
             while not self.checkForStop():
@@ -515,24 +522,27 @@ class SpiderFootPlugin():
                     sleep(.3)
                     continue
                 if sfEvent == 'FINISHED':
-                    self.sf.debug(f"{self.__name__}.threadWorker() got \"FINISHED\" from incomingEventQueue.")
+                    self.sf.debug(
+                        f"{self.__name__}.threadWorker() got \"FINISHED\" from incomingEventQueue.")
                     self.poolExecute(self.finish)
                 else:
-                    self.sf.debug(f"{self.__name__}.threadWorker() got event, {sfEvent.eventType}, from incomingEventQueue.")
+                    self.sf.debug(
+                        f"{self.__name__}.threadWorker() got event, {sfEvent.eventType}, from incomingEventQueue.")
                     self.poolExecute(self.handleEvent, sfEvent)
         except KeyboardInterrupt:
             self.sf.debug(f"Interrupted module {self.__name__}.")
             self._stopScanning = True
         except Exception as e:
             import traceback
-            self.sf.error(f"Exception ({e.__class__.__name__}) in module {self.__name__}."
-                          + traceback.format_exc())
+            self.sf.error(f"Exception ({e.__class__.__name__}) in module {self.__name__}." +
+                          traceback.format_exc())
             # set errorState
             self.sf.debug(f"Setting errorState for module {self.__name__}.")
             self.errorState = True
             # clear incoming queue
             if self.incomingEventQueue:
-                self.sf.debug(f"Emptying incomingEventQueue for module {self.__name__}.")
+                self.sf.debug(
+                    f"Emptying incomingEventQueue for module {self.__name__}.")
                 with suppress(queue.Empty):
                     while 1:
                         self.incomingEventQueue.get_nowait()
@@ -552,7 +562,8 @@ class SpiderFootPlugin():
         if self.__name__.startswith('sfp__stor_'):
             callback(*args, **kwargs)
         else:
-            self.sharedThreadPool.submit(callback, *args, taskName=f"{self.__name__}_threadWorker", maxThreads=self.maxThreads, **kwargs)
+            self.sharedThreadPool.submit(
+                callback, *args, taskName=f"{self.__name__}_threadWorker", maxThreads=self.maxThreads, **kwargs)
 
     def threadPool(self, *args, **kwargs):
         return SpiderFootThreadPool(*args, **kwargs)

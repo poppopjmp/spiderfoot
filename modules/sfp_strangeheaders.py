@@ -125,18 +125,21 @@ class sfp_strangeheaders(SpiderFootPlugin):
 
         fqdn = self.sf.urlFQDN(eventSource)
         if not self.getTarget().matches(fqdn):
-            self.debug(f"Not collecting header information for external sites. Ignoring HTTP headers from {fqdn}")
+            self.debug(
+                f"Not collecting header information for external sites. Ignoring HTTP headers from {fqdn}")
             return
 
         try:
             data = json.loads(eventData)
         except Exception:
-            self.error("Received HTTP headers from another module in an unexpected format.")
+            self.error(
+                "Received HTTP headers from another module in an unexpected format.")
             return
 
         for key in data:
             if key.lower() not in headers:
-                evt = SpiderFootEvent("WEBSERVER_STRANGEHEADER", f"{key}: {data[key]}", self.__name__, event)
+                evt = SpiderFootEvent(
+                    "WEBSERVER_STRANGEHEADER", f"{key}: {data[key]}", self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_strangeheaders class

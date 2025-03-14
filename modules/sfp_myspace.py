@@ -84,7 +84,8 @@ class sfp_myspace(SpiderFootPlugin):
                 return
 
             # Extract HTML containing potential profile matches
-            profiles = re.findall(r'<a href="/[a-zA-Z0-9_]+">[^<]+</a></h6>', str(res['content']))
+            profiles = re.findall(
+                r'<a href="/[a-zA-Z0-9_]+">[^<]+</a></h6>', str(res['content']))
 
             if not profiles:
                 self.debug(f"No profiles found for e-mail: {email}")
@@ -95,7 +96,8 @@ class sfp_myspace(SpiderFootPlugin):
 
             # Check for email address as name, at the risk of missed results.
             try:
-                matches = re.findall(r'<a href=\"\/([a-zA-Z0-9_]+)\".*[\&; :\"\#\*\(\"\'\;\,\>\.\?\!]+' + email + r'[\&; :\"\#\*\)\"\'\;\,\<\.\?\!]+', profile, re.IGNORECASE)
+                matches = re.findall(r'<a href=\"\/([a-zA-Z0-9_]+)\".*[\&; :\"\#\*\(\"\'\;\,\>\.\?\!]+' +
+                                     email + r'[\&; :\"\#\*\)\"\'\;\,\<\.\?\!]+', profile, re.IGNORECASE)
             except Exception:
                 self.debug("Malformed e-mail address, skipping.")
                 return
@@ -117,13 +119,15 @@ class sfp_myspace(SpiderFootPlugin):
         if eventName == "SOCIAL_MEDIA":
             try:
                 network = eventData.split(": ")[0]
-                url = eventData.split(": ")[1].replace("<SFURL>", "").replace("</SFURL>", "")
+                url = eventData.split(": ")[1].replace(
+                    "<SFURL>", "").replace("</SFURL>", "")
             except Exception as e:
                 self.debug(f"Unable to parse SOCIAL_MEDIA: {eventData} ({e})")
                 return
 
             if network != "MySpace":
-                self.debug(f"Skipping social network profile, {url}, as not a MySpace profile")
+                self.debug(
+                    f"Skipping social network profile, {url}, as not a MySpace profile")
                 return
 
             res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
@@ -132,7 +136,8 @@ class sfp_myspace(SpiderFootPlugin):
             if res['content'] is None:
                 return
 
-            data = re.findall(r'<div class="location_[^"]+" data-display-text="(.+?)"', res['content'])
+            data = re.findall(
+                r'<div class="location_[^"]+" data-display-text="(.+?)"', res['content'])
 
             if not data:
                 return

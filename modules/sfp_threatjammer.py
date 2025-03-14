@@ -115,11 +115,13 @@ class sfp_threatjammer(SpiderFootPlugin):
         time.sleep(1)
 
         if res['code'] == '400':
-            self.error("ThreatJammer.com rejected the IP address. Use only public IP addresses.")
+            self.error(
+                "ThreatJammer.com rejected the IP address. Use only public IP addresses.")
             return None
 
         if res['code'] == '422':
-            self.error("ThreatJammer.com could not process the IP address. Check the format.")
+            self.error(
+                "ThreatJammer.com could not process the IP address. Check the format.")
             return None
 
         if res['code'] == '429':
@@ -128,12 +130,14 @@ class sfp_threatjammer(SpiderFootPlugin):
             return None
 
         if res['code'] == '401':
-            self.error("You are not authorized by ThreatJammer.com. Check your API key.")
+            self.error(
+                "You are not authorized by ThreatJammer.com. Check your API key.")
             self.errorState = True
             return None
 
         if res['code'] != "200":
-            self.error("ThreatJammer.com could not process the IP address. Unknown error.")
+            self.error(
+                "ThreatJammer.com could not process the IP address. Unknown error.")
             self.errorState = True
             return None
 
@@ -189,33 +193,39 @@ class sfp_threatjammer(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of IP address {eventData} with ThreatJammer.com")
+        self.debug(
+            f"Checking maliciousness of IP address {eventData} with ThreatJammer.com")
 
         ip_info = self.queryIp(eventData)
 
         if ip_info is None:
-            self.sf.error(f"Error processing JSON response for {eventData} from ThreatJammer.com")
+            self.sf.error(
+                f"Error processing JSON response for {eventData} from ThreatJammer.com")
             return
 
         score = ip_info.get('score')
         if not score:
-            self.sf.error(f"No risk score found for {eventData} from ThreatJammer.com. Skipping.")
+            self.sf.error(
+                f"No risk score found for {eventData} from ThreatJammer.com. Skipping.")
             return
         risk_score = int(score)
 
         risk = ip_info.get("risk")
         if not risk:
-            self.sf.error(f"No risk type found for {eventData} from ThreatJammer.com. Skipping.")
+            self.sf.error(
+                f"No risk type found for {eventData} from ThreatJammer.com. Skipping.")
             return
 
         if risk_score < self.opts["risk_score_min"]:
-            self.debug(f"Skipping {eventData} for ThreatJammer.com, risk score below minimum threshold.")
+            self.debug(
+                f"Skipping {eventData} for ThreatJammer.com, risk score below minimum threshold.")
             return
 
         url = "https://threatjammer.com/info/"
         detail = f"Risk score: {risk_score} ({risk})\n<SFURL>{url}{eventData}</SFURL>"
 
-        self.info(f"Malicious IP address {eventData} found in any Threat Jammer lists")
+        self.info(
+            f"Malicious IP address {eventData} found in any Threat Jammer lists")
 
         evt = SpiderFootEvent(
             malicious_type,

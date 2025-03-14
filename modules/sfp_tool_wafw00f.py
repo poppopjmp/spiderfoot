@@ -78,7 +78,8 @@ class sfp_tool_wafw00f(SpiderFootPlugin):
         self.results[eventData] = True
 
         if not self.opts['wafw00f_path']:
-            self.error("You enabled sfp_tool_wafw00f but did not set a path to the tool!")
+            self.error(
+                "You enabled sfp_tool_wafw00f but did not set a path to the tool!")
             self.errorState = True
             return
 
@@ -112,14 +113,16 @@ class sfp_tool_wafw00f(SpiderFootPlugin):
         except TimeoutExpired:
             p.kill()
             stdout, stderr = p.communicate()
-            self.debug(f"Timed out waiting for wafw00f to finish on {eventData}")
+            self.debug(
+                f"Timed out waiting for wafw00f to finish on {eventData}")
             return
         except Exception as e:
             self.error(f"Unable to run wafw00f: {e}")
             return
 
         if p.returncode != 0:
-            self.error(f"Unable to read wafw00f output\nstderr: {stderr}\nstdout: {stdout}")
+            self.error(
+                f"Unable to read wafw00f output\nstderr: {stderr}\nstdout: {stdout}")
             return
 
         if not stdout:
@@ -129,14 +132,16 @@ class sfp_tool_wafw00f(SpiderFootPlugin):
         try:
             result_json = json.loads(stdout)
         except Exception as e:
-            self.error(f"Could not parse wafw00f output as JSON: {e}\nstdout: {stdout}")
+            self.error(
+                f"Could not parse wafw00f output as JSON: {e}\nstdout: {stdout}")
             return
 
         if not result_json:
             self.debug(f"wafw00f returned no output for {eventData}")
             return
 
-        evt = SpiderFootEvent('RAW_RIR_DATA', json.dumps(result_json), self.__name__, event)
+        evt = SpiderFootEvent('RAW_RIR_DATA', json.dumps(
+            result_json), self.__name__, event)
         self.notifyListeners(evt)
 
         for waf in result_json:
@@ -156,7 +161,8 @@ class sfp_tool_wafw00f(SpiderFootPlugin):
             software = ' '.join(filter(None, [manufacturer, firewall]))
 
             if software:
-                evt = SpiderFootEvent('WEBSERVER_TECHNOLOGY', software, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'WEBSERVER_TECHNOLOGY', software, self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_tool_wafw00f class

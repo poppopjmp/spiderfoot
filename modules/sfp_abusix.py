@@ -168,7 +168,8 @@ class sfp_abusix(SpiderFootPlugin):
         try:
             return self.sf.resolveHost(lookup)
         except Exception as e:
-            self.debug(f"Abusix Mail Intelligence did not resolve {qaddr} / {lookup}: {e}")
+            self.debug(
+                f"Abusix Mail Intelligence did not resolve {qaddr} / {lookup}: {e}")
 
         return None
 
@@ -182,7 +183,8 @@ class sfp_abusix(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {event.module}")
 
         if not self.opts['api_key']:
-            self.error(f"You enabled {self.__class__.__name__} but did not set an API key!")
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set an API key!")
             self.errorState = True
             return
 
@@ -209,7 +211,8 @@ class sfp_abusix(SpiderFootPlugin):
                 max_subnet = self.opts['maxsubnet']
 
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
             malicious_type = "MALICIOUS_SUBNET"
@@ -224,7 +227,8 @@ class sfp_abusix(SpiderFootPlugin):
                 max_netblock = self.opts['maxnetblock']
 
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
             malicious_type = "MALICIOUS_NETBLOCK"
@@ -275,15 +279,18 @@ class sfp_abusix(SpiderFootPlugin):
                 if k not in self.checks:
                     if 'mail.abusix.zone' not in result:
                         # This is an error. The "checks" dict may need to be updated.
-                        self.error(f"Abusix Mail Intelligence resolved address {addr} to unknown IP address {result} not found in Abusix Mail Intelligence list.")
+                        self.error(
+                            f"Abusix Mail Intelligence resolved address {addr} to unknown IP address {result} not found in Abusix Mail Intelligence list.")
                     continue
 
                 text = f"Abusix Mail Intelligence - {self.checks[k]} [{addr}]\n<SFURL>https://lookup.abusix.com/search?q={addr}</SFURL>"
 
-                evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, text, self.__name__, event)
                 self.notifyListeners(evt)
 
-                evt = SpiderFootEvent(malicious_type, text, self.__name__, event)
+                evt = SpiderFootEvent(
+                    malicious_type, text, self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_abusix class

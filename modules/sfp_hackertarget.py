@@ -120,7 +120,8 @@ class sfp_hackertarget(SpiderFootPlugin):
         )
 
         if res['content'] is None:
-            self.error(f"Unable to fetch HTTP headers for {ip} from HackerTarget.com.")
+            self.error(
+                f"Unable to fetch HTTP headers for {ip} from HackerTarget.com.")
             return None
 
         if res['code'] == '429':
@@ -163,7 +164,8 @@ class sfp_hackertarget(SpiderFootPlugin):
         )
 
         if res['content'] is None:
-            self.error(f"Unable to fetch DNS zone for {ip} from HackerTarget.com.")
+            self.error(
+                f"Unable to fetch DNS zone for {ip} from HackerTarget.com.")
             return None
 
         if res['code'] == '429':
@@ -245,7 +247,8 @@ class sfp_hackertarget(SpiderFootPlugin):
             max_netblock = self.opts['maxnetblock']
             net_size = IPNetwork(eventData).prefixlen
             if net_size < max_netblock:
-                self.debug(f"Network size bigger than permitted: {net_size} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {net_size} > {max_netblock}")
                 return
 
         if eventName == 'DOMAIN_NAME_PARENT':
@@ -254,12 +257,14 @@ class sfp_hackertarget(SpiderFootPlugin):
             if not records:
                 return
 
-            evt = SpiderFootEvent('RAW_DNS_RECORDS', "\n".join(records), self.__name__, event)
+            evt = SpiderFootEvent('RAW_DNS_RECORDS', "\n".join(
+                records), self.__name__, event)
             self.notifyListeners(evt)
 
             # Try and pull out individual records
             for row in records:
-                pat = re.compile(r"^(\S+)\.?\s+\d+\s+IN\s+[AC].*", re.IGNORECASE | re.DOTALL)
+                pat = re.compile(
+                    r"^(\S+)\.?\s+\d+\s+IN\s+[AC].*", re.IGNORECASE | re.DOTALL)
                 grps = re.findall(pat, row)
 
                 if len(grps) == 0:
@@ -289,10 +294,12 @@ class sfp_hackertarget(SpiderFootPlugin):
 
                     if self.sf.isDomain(host, self.opts['_internettlds']):
                         if evt_type.startswith('AFFILIATE'):
-                            evt = SpiderFootEvent('AFFILIATE_DOMAIN_NAME', host, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                'AFFILIATE_DOMAIN_NAME', host, self.__name__, event)
                             self.notifyListeners(evt)
                         else:
-                            evt = SpiderFootEvent('DOMAIN_NAME', host, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                'DOMAIN_NAME', host, self.__name__, event)
                             self.notifyListeners(evt)
 
             return
@@ -325,7 +332,8 @@ class sfp_hackertarget(SpiderFootPlugin):
 
                 if not self.opts['cohostsamedomain']:
                     if self.getTarget().matches(h, includeParents=True):
-                        self.debug(f"Skipping {h} because it is on the same domain.")
+                        self.debug(
+                            f"Skipping {h} because it is on the same domain.")
                         continue
 
                 if h not in myres and h != ip:
@@ -337,12 +345,15 @@ class sfp_hackertarget(SpiderFootPlugin):
                         # Create an IP Address event stemming from the netblock as the
                         # link to the co-host.
                         if eventName == "NETBLOCK_OWNER":
-                            ipe = SpiderFootEvent("IP_ADDRESS", ip, self.__name__, event)
+                            ipe = SpiderFootEvent(
+                                "IP_ADDRESS", ip, self.__name__, event)
                             self.notifyListeners(ipe)
-                            evt = SpiderFootEvent("CO_HOSTED_SITE", h.lower(), self.__name__, ipe)
+                            evt = SpiderFootEvent(
+                                "CO_HOSTED_SITE", h.lower(), self.__name__, ipe)
                             self.notifyListeners(evt)
                         else:
-                            evt = SpiderFootEvent("CO_HOSTED_SITE", h.lower(), self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "CO_HOSTED_SITE", h.lower(), self.__name__, event)
                             self.notifyListeners(evt)
 
                         myres.append(h.lower())
@@ -351,7 +362,8 @@ class sfp_hackertarget(SpiderFootPlugin):
             # For netblocks, we need to create the IP address event so that
             # the threat intel event is more meaningful.
             if eventName == 'NETBLOCK_OWNER':
-                pevent = SpiderFootEvent("IP_ADDRESS", ip, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "IP_ADDRESS", ip, self.__name__, event)
                 self.notifyListeners(pevent)
             else:
                 pevent = event
@@ -359,7 +371,8 @@ class sfp_hackertarget(SpiderFootPlugin):
             if self.opts.get('http_headers', True):
                 http_headers = self.httpHeaders(ip)
                 if http_headers is not None:
-                    e = SpiderFootEvent('WEBSERVER_HTTPHEADERS', json.dumps(http_headers), self.__name__, pevent)
+                    e = SpiderFootEvent('WEBSERVER_HTTPHEADERS', json.dumps(
+                        http_headers), self.__name__, pevent)
                     e.actualSource = ip
                     self.notifyListeners(e)
 

@@ -171,12 +171,14 @@ class sfp_whatcms(SpiderFootPlugin):
             return None
 
         if code == '121':
-            self.error('API error: You have exceeded your monthly request quota')
+            self.error(
+                'API error: You have exceeded your monthly request quota')
             self.errorState = True
             return None
 
         if code == '123':
-            self.error('API error: Account disabled per violation of Terms and Conditions')
+            self.error(
+                'API error: Account disabled per violation of Terms and Conditions')
             self.errorState = True
             return None
 
@@ -225,13 +227,16 @@ class sfp_whatcms(SpiderFootPlugin):
             self.debug('No web technology found for ' + eventData)
             return
 
-        evt = SpiderFootEvent('RAW_RIR_DATA', str(results), self.__name__, event)
+        evt = SpiderFootEvent('RAW_RIR_DATA', str(
+            results), self.__name__, event)
         self.notifyListeners(evt)
 
         for result in results:
             if result.get('name'):
-                software = ' '.join([_f for _f in [result.get('name'), result.get('version')] if _f])
-                evt = SpiderFootEvent('WEBSERVER_TECHNOLOGY', software, self.__name__, event)
+                software = ' '.join(
+                    [_f for _f in [result.get('name'), result.get('version')] if _f])
+                evt = SpiderFootEvent(
+                    'WEBSERVER_TECHNOLOGY', software, self.__name__, event)
                 self.notifyListeners(evt)
             else:
                 self.debug('No web technology found for ' + eventData)

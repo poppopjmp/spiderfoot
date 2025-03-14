@@ -116,7 +116,8 @@ class sfp_pulsedive(SpiderFootPlugin):
             'key': self.opts['api_key']
         }
 
-        url = 'https://pulsedive.com/api/info.php?' + urllib.parse.urlencode(params)
+        url = 'https://pulsedive.com/api/info.php?' + \
+            urllib.parse.urlencode(params)
         res = self.sf.fetchUrl(url, timeout=30, useragent="SpiderFoot")
 
         time.sleep(self.opts['delay'])
@@ -127,7 +128,8 @@ class sfp_pulsedive(SpiderFootPlugin):
             return None
 
         if res['code'] == "403":
-            self.error("Pulsedive API key seems to have been rejected or you have exceeded usage limits for the month.")
+            self.error(
+                "Pulsedive API key seems to have been rejected or you have exceeded usage limits for the month.")
             self.errorState = True
             return None
 
@@ -177,7 +179,8 @@ class sfp_pulsedive(SpiderFootPlugin):
                 max_netblock = self.opts['maxnetblock']
 
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
         if eventName in ['NETBLOCK_MEMBER', 'NETBLOCKV6_MEMBER']:
@@ -190,7 +193,8 @@ class sfp_pulsedive(SpiderFootPlugin):
                 max_subnet = self.opts['maxsubnet']
 
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
         qrylist = list()
@@ -226,7 +230,8 @@ class sfp_pulsedive(SpiderFootPlugin):
                 ports = attributes.get('port')
                 if ports:
                     for p in ports:
-                        e = SpiderFootEvent('TCP_PORT_OPEN', addr + ':' + p, self.__name__, event)
+                        e = SpiderFootEvent(
+                            'TCP_PORT_OPEN', addr + ':' + p, self.__name__, event)
                         self.notifyListeners(e)
 
             threats = rec.get('threats')
@@ -248,14 +253,18 @@ class sfp_pulsedive(SpiderFootPlugin):
                 created = result.get("stamp_linked", "")
                 # 2018-02-20 03:51:59
                 try:
-                    created_dt = datetime.strptime(created, '%Y-%m-%d %H:%M:%S')
+                    created_dt = datetime.strptime(
+                        created, '%Y-%m-%d %H:%M:%S')
                     created_ts = int(time.mktime(created_dt.timetuple()))
-                    age_limit_ts = int(time.time()) - (86400 * self.opts['age_limit_days'])
+                    age_limit_ts = int(time.time()) - \
+                        (86400 * self.opts['age_limit_days'])
                     if self.opts['age_limit_days'] > 0 and created_ts < age_limit_ts:
-                        self.debug(f"Threat found but too old ({created_dt}), skipping.")
+                        self.debug(
+                            f"Threat found but too old ({created_dt}), skipping.")
                         continue
                 except Exception:
-                    self.debug("Couldn't parse date from Pulsedive so assuming it's OK.")
+                    self.debug(
+                        "Couldn't parse date from Pulsedive so assuming it's OK.")
                 e = SpiderFootEvent(evtType, descr, self.__name__, event)
                 self.notifyListeners(e)
 

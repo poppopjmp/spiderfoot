@@ -344,7 +344,8 @@ class SpiderFoot:
             return storeopts
 
         if not isinstance(opts['__modules__'], dict):
-            raise TypeError(f"opts['__modules__'] is {type(opts['__modules__'])}; expected dict()")
+            raise TypeError(
+                f"opts['__modules__'] is {type(opts['__modules__'])}; expected dict()")
 
         for mod in opts['__modules__']:
             for opt in opts['__modules__'][mod]['opts']:
@@ -386,7 +387,8 @@ class SpiderFoot:
         if not isinstance(opts, dict):
             raise TypeError(f"opts is {type(opts)}; expected dict()")
         if not isinstance(referencePoint, dict):
-            raise TypeError(f"referencePoint is {type(referencePoint)}; expected dict()")
+            raise TypeError(
+                f"referencePoint is {type(referencePoint)}; expected dict()")
 
         returnOpts = referencePoint
 
@@ -426,7 +428,8 @@ class SpiderFoot:
             return returnOpts
 
         if not isinstance(referencePoint['__modules__'], dict):
-            raise TypeError(f"referencePoint['__modules__'] is {type(referencePoint['__modules__'])}; expected dict()")
+            raise TypeError(
+                f"referencePoint['__modules__'] is {type(referencePoint['__modules__'])}; expected dict()")
 
         # Module options
         # A lot of mess to handle typing..
@@ -445,20 +448,24 @@ class SpiderFoot:
                         continue
 
                     if isinstance(ref_mod, str):
-                        returnOpts['__modules__'][modName]['opts'][opt] = str(opts[modName + ":" + opt])
+                        returnOpts['__modules__'][modName]['opts'][opt] = str(
+                            opts[modName + ":" + opt])
                         continue
 
                     if isinstance(ref_mod, int):
-                        returnOpts['__modules__'][modName]['opts'][opt] = int(opts[modName + ":" + opt])
+                        returnOpts['__modules__'][modName]['opts'][opt] = int(
+                            opts[modName + ":" + opt])
                         continue
 
                     if isinstance(ref_mod, list):
                         if isinstance(ref_mod[0], int):
                             returnOpts['__modules__'][modName]['opts'][opt] = list()
                             for x in str(opts[modName + ":" + opt]).split(","):
-                                returnOpts['__modules__'][modName]['opts'][opt].append(int(x))
+                                returnOpts['__modules__'][modName]['opts'][opt].append(
+                                    int(x))
                         else:
-                            returnOpts['__modules__'][modName]['opts'][opt] = str(opts[modName + ":" + opt]).split(",")
+                            returnOpts['__modules__'][modName]['opts'][opt] = str(
+                                opts[modName + ":" + opt]).split(",")
 
         return returnOpts
 
@@ -868,7 +875,8 @@ class SpiderFoot:
         """
 
         if not self.validIP(ipaddr) and not self.validIP6(ipaddr):
-            self.error(f"Unable to reverse resolve {ipaddr} (Invalid IP address)")
+            self.error(
+                f"Unable to reverse resolve {ipaddr} (Invalid IP address)")
             return list()
 
         self.debug(f"Performing reverse resolve of {ipaddr}")
@@ -937,7 +945,8 @@ class SpiderFoot:
         elif self.validIP6(ip):
             addrs = self.resolveHost6(host)
         else:
-            self.error(f"Unable to verify hostname {host} resolves to {ip} (Invalid IP address)")
+            self.error(
+                f"Unable to verify hostname {host} resolves to {ip} (Invalid IP address)")
             return False
 
         if not addrs:
@@ -1004,8 +1013,10 @@ class SpiderFoot:
 
         from cryptography.hazmat.backends.openssl import backend
         cert = cryptography.x509.load_pem_x509_certificate(rawcert, backend)
-        sslcert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, rawcert)
-        sslcert_dump = OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_TEXT, sslcert)
+        sslcert = OpenSSL.crypto.load_certificate(
+            OpenSSL.crypto.FILETYPE_PEM, rawcert)
+        sslcert_dump = OpenSSL.crypto.dump_certificate(
+            OpenSSL.crypto.FILETYPE_TEXT, sslcert)
 
         ret['text'] = sslcert_dump.decode('utf-8', errors='replace')
         ret['issuer'] = str(cert.issuer)
@@ -1018,7 +1029,8 @@ class SpiderFoot:
 
         # Expiry info
         try:
-            notafter = datetime.strptime(sslcert.get_notAfter().decode('utf-8'), "%Y%m%d%H%M%SZ")
+            notafter = datetime.strptime(
+                sslcert.get_notAfter().decode('utf-8'), "%Y%m%d%H%M%SZ")
             ret['expiry'] = int(notafter.strftime("%s"))
             ret['expirystr'] = notafter.strftime("%Y-%m-%d %H:%M:%S")
             now = int(time.time())
@@ -1034,16 +1046,19 @@ class SpiderFoot:
 
         # SANs
         try:
-            ext = cert.extensions.get_extension_for_class(cryptography.x509.SubjectAlternativeName)
+            ext = cert.extensions.get_extension_for_class(
+                cryptography.x509.SubjectAlternativeName)
             for x in ext.value:
                 if isinstance(x, cryptography.x509.DNSName):
-                    ret['altnames'].append(x.value.lower().encode('raw_unicode_escape').decode("ascii", errors='replace'))
+                    ret['altnames'].append(x.value.lower().encode(
+                        'raw_unicode_escape').decode("ascii", errors='replace'))
         except Exception as e:
             self.debug(f"Problem processing certificate: {e}")
 
         certhosts = list()
         try:
-            attrs = cert.subject.get_attributes_for_oid(cryptography.x509.oid.NameOID.COMMON_NAME)
+            attrs = cert.subject.get_attributes_for_oid(
+                cryptography.x509.oid.NameOID.COMMON_NAME)
 
             if len(attrs) == 1:
                 name = attrs[0].value.lower()
@@ -1283,9 +1298,11 @@ class SpiderFoot:
 
         if sizeLimit or headOnly:
             if noLog:
-                self.debug(f"Fetching (HEAD): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
+                self.debug(
+                    f"Fetching (HEAD): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
             else:
-                self.info(f"Fetching (HEAD): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
+                self.info(
+                    f"Fetching (HEAD): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
 
             try:
                 hdr = self.getSession().head(
@@ -1297,9 +1314,11 @@ class SpiderFoot:
                 )
             except Exception as e:
                 if noLog:
-                    self.debug(f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {url}", exc_info=True)
+                    self.debug(
+                        f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {url}", exc_info=True)
                 else:
-                    self.error(f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {url}", exc_info=True)
+                    self.error(
+                        f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {url}", exc_info=True)
 
                 return result
 
@@ -1320,9 +1339,11 @@ class SpiderFoot:
 
             if result['realurl'] != url:
                 if noLog:
-                    self.debug(f"Fetching (HEAD): {self.removeUrlCreds(result['realurl'])} ({', '.join(request_log)})")
+                    self.debug(
+                        f"Fetching (HEAD): {self.removeUrlCreds(result['realurl'])} ({', '.join(request_log)})")
                 else:
-                    self.info(f"Fetching (HEAD): {self.removeUrlCreds(result['realurl'])} ({', '.join(request_log)})")
+                    self.info(
+                        f"Fetching (HEAD): {self.removeUrlCreds(result['realurl'])} ({', '.join(request_log)})")
 
                 try:
                     hdr = self.getSession().head(
@@ -1333,7 +1354,8 @@ class SpiderFoot:
                         timeout=timeout
                     )
                     size = int(hdr.headers.get('content-length', 0))
-                    result['realurl'] = hdr.headers.get('location', result['realurl'])
+                    result['realurl'] = hdr.headers.get(
+                        'location', result['realurl'])
                     result['code'] = str(hdr.status_code)
 
                     if size > sizeLimit:
@@ -1341,18 +1363,22 @@ class SpiderFoot:
 
                 except Exception as e:
                     if noLog:
-                        self.debug(f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {result['realurl']}", exc_info=True)
+                        self.debug(
+                            f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {result['realurl']}", exc_info=True)
                     else:
-                        self.error(f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {result['realurl']}", exc_info=True)
+                        self.error(
+                            f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {result['realurl']}", exc_info=True)
 
                     return result
 
         try:
             if postData:
                 if noLog:
-                    self.debug(f"Fetching (POST): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
+                    self.debug(
+                        f"Fetching (POST): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
                 else:
-                    self.info(f"Fetching (POST): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
+                    self.info(
+                        f"Fetching (POST): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
                 res = self.getSession().post(
                     url,
                     data=postData,
@@ -1365,9 +1391,11 @@ class SpiderFoot:
                 )
             else:
                 if noLog:
-                    self.debug(f"Fetching (GET): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
+                    self.debug(
+                        f"Fetching (GET): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
                 else:
-                    self.info(f"Fetching (GET): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
+                    self.info(
+                        f"Fetching (GET): {self.removeUrlCreds(url)} ({', '.join(request_log)})")
                 res = self.getSession().get(
                     url,
                     headers=header,
@@ -1382,9 +1410,11 @@ class SpiderFoot:
             return result
         except Exception as e:
             if noLog:
-                self.debug(f"Unexpected exception ({e}) occurred fetching URL: {url}", exc_info=True)
+                self.debug(
+                    f"Unexpected exception ({e}) occurred fetching URL: {url}", exc_info=True)
             else:
-                self.error(f"Unexpected exception ({e}) occurred fetching URL: {url}", exc_info=True)
+                self.error(
+                    f"Unexpected exception ({e}) occurred fetching URL: {url}", exc_info=True)
 
             return result
 
@@ -1398,7 +1428,8 @@ class SpiderFoot:
 
             # Sometimes content exceeds the size limit after decompression
             if sizeLimit and len(res.content) > sizeLimit:
-                self.debug(f"Content exceeded size limit ({sizeLimit}), so returning no data just headers")
+                self.debug(
+                    f"Content exceeded size limit ({sizeLimit}), so returning no data just headers")
                 return result
 
             refresh_header = result['headers'].get('refresh')
@@ -1406,10 +1437,12 @@ class SpiderFoot:
                 try:
                     newurl = refresh_header.split(";url=")[1]
                 except Exception as e:
-                    self.debug(f"Refresh header '{refresh_header}' found, but not parsable: {e}")
+                    self.debug(
+                        f"Refresh header '{refresh_header}' found, but not parsable: {e}")
                     return result
 
-                self.debug(f"Refresh header '{refresh_header}' found, re-directing to {self.removeUrlCreds(newurl)}")
+                self.debug(
+                    f"Refresh header '{refresh_header}' found, re-directing to {self.removeUrlCreds(newurl)}")
 
                 return self.fetchUrl(
                     newurl,
@@ -1438,13 +1471,15 @@ class SpiderFoot:
                     result["content"] = res.content
 
         except Exception as e:
-            self.error(f"Unexpected exception ({e}) occurred parsing response for URL: {url}", exc_info=True)
+            self.error(
+                f"Unexpected exception ({e}) occurred parsing response for URL: {url}", exc_info=True)
             result['content'] = None
             result['status'] = str(e)
 
         atime = time.time()
         t = str(atime - btime)
-        self.info(f"Fetched {self.removeUrlCreds(url)} ({len(result['content'] or '')} bytes in {t}s)")
+        self.info(
+            f"Fetched {self.removeUrlCreds(url)} ({len(result['content'] or '')} bytes in {t}s)")
         return result
 
     def checkDnsWildcard(self, target: str) -> bool:
@@ -1461,7 +1496,8 @@ class SpiderFoot:
             return False
 
         randpool = 'bcdfghjklmnpqrstvwxyz3456789'
-        randhost = ''.join([random.SystemRandom().choice(randpool) for x in range(10)])
+        randhost = ''.join([random.SystemRandom().choice(randpool)
+                           for x in range(10)])
 
         if not self.resolveHost(randhost + "." + target):
             return False
@@ -1502,9 +1538,11 @@ class SpiderFoot:
             if not jsondata:
                 # Fetch data from source
                 if source == "nist":
-                    ret = self.fetchUrl(f"https://services.nvd.nist.gov/rest/json/cve/1.0/{cveId}", timeout=5)
+                    ret = self.fetchUrl(
+                        f"https://services.nvd.nist.gov/rest/json/cve/1.0/{cveId}", timeout=5)
                 if source == "circl":
-                    ret = self.fetchUrl(f"https://cve.circl.lu/api/cve/{cveId}", timeout=5)
+                    ret = self.fetchUrl(
+                        f"https://cve.circl.lu/api/cve/{cveId}", timeout=5)
 
                 if not ret:
                     continue
@@ -1546,7 +1584,8 @@ class SpiderFoot:
                     return (eventType, f"{cveId}\n<SFURL>https://nvd.nist.gov/vuln/detail/{cveId}</SFURL>\n"
                             f"Score: {score}\nDescription: {descr}")
             except Exception as e:
-                self.debug(f"Unable to parse CVE response from {source.upper()}: {e}")
+                self.debug(
+                    f"Unable to parse CVE response from {source.upper()}: {e}")
                 continue
 
         return (eventType, f"{cveId}\nScore: Unknown\nDescription: Unknown")
@@ -1595,7 +1634,8 @@ class SpiderFoot:
         try:
             response_json = json.loads(response['content'])
         except ValueError:
-            self.error("The key 'content' in the Google API response doesn't contain valid JSON.")
+            self.error(
+                "The key 'content' in the Google API response doesn't contain valid JSON.")
             return None
 
         if "items" not in response_json:
@@ -1662,7 +1702,8 @@ class SpiderFoot:
         try:
             response_json = json.loads(response['content'])
         except ValueError:
-            self.error("The key 'content' in the bing API response doesn't contain valid JSON.")
+            self.error(
+                "The key 'content' in the bing API response doesn't contain valid JSON.")
             return None
 
         if ("webPages" in response_json and "value" in response_json["webPages"] and "webSearchUrl" in response_json["webPages"]):

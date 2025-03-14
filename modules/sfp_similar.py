@@ -155,7 +155,8 @@ class sfp_similar(SpiderFootPlugin):
                 for domain in [f"{d}{tld}", f"www.{d}{tld}"]:
                     if self.sf.resolveHost(domain) or self.sf.resolveHost6(domain):
                         self.debug(f"Resolved {domain}")
-                        evt = SpiderFootEvent("SIMILARDOMAIN", f"{d}{tld}", self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "SIMILARDOMAIN", f"{d}{tld}", self.__name__, event)
                         self.notifyListeners(evt)
                         break
             except Exception:
