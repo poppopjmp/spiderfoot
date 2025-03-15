@@ -955,12 +955,20 @@ class SpiderFootCorrelator:
 
         fields = re.findall(r"{([a-z\.]+)}", title)
         for m in fields:
-            try:
-                v = self.event_extract(data[0], m)[0]
-            except Exception:
-                self.log.error(f"Field requested was not available: {m}")
+            if not data:
+                v = f"[no data for {m}]"
+            else:
+                extracted_values = self.event_extract(data[0], m)
+                if extracted_values:
+                    v = extracted_values[0]
+                else:
+                    # Change to debug level since this is an expected scenario
+                    self.log.debug(f"Field requested was not available: {m}")
+                    v = f"[{m} not found]"
+            
             title = title.replace(
                 "{" + m + "}", v.replace("\r", "").split("\n")[0])
+        
         return title
 
     def create_correlation(self, rule: dict, data: list, readonly: bool = False) -> bool:
