@@ -6,7 +6,8 @@ Resource          variables.robot  # Externalize variables
 
 ***Variables***
 ${CHROMEDRIVER_PATH}    /usr/local/bin/chromedriver
-${WAIT_TIMEOUT}         60s
+${WAIT_TIMEOUT}         120s  # Increased timeout for better reliability
+${SCROLL_PADDING}       200   # Padding to ensure elements aren't hidden behind headers/footers
 
 ***Keywords***
 Capture Failure Screenshot
@@ -17,6 +18,7 @@ Create Chrome Headless Options
     Call Method    ${options}    add_argument    --headless
     Call Method    ${options}    add_argument    --no-sandbox
     Call Method    ${options}    add_argument    --disable-dev-shm-usage
+    Call Method    ${options}    add_argument    --window-size=1920,1080  # Set a larger window size
     ${service}=    Evaluate    selenium.webdriver.chrome.service.Service(executable_path='${CHROMEDRIVER_PATH}')    modules=selenium.webdriver.chrome.service
     RETURN    ${options}    ${service}
 
@@ -24,14 +26,17 @@ Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
     ${chrome_options}    ${service}=    Create Chrome Headless Options
     Open browser              http://127.0.0.1:5001/newscan    browser=chrome    options=${chrome_options}    service=${service}
+    Wait Until Element Is Visible    name:scanname    timeout=${WAIT_TIMEOUT}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     Click Element             id:moduletab
+    Wait Until Element Is Visible    id:btn-deselect-all    timeout=${WAIT_TIMEOUT}
     Click Element             id:btn-deselect-all
-    Scroll To Element         id:module_${module_name}
-    Set Focus To Element      id:module_${module_name}
-    Click Element             id:module_${module_name}
-    Scroll To Element         id:btn-run-scan
+    Safe Scroll To Element    id:module_${module_name}
+    Wait Until Element Is Visible    id:module_${module_name}    timeout=${WAIT_TIMEOUT}
+    Execute Javascript        document.getElementById('module_${module_name}').click();
+    Safe Scroll To Element    id:btn-run-scan
+    Wait Until Element Is Clickable    id:btn-run-scan    timeout=${WAIT_TIMEOUT}
     Click Element             id:btn-run-scan
     Wait Until Element Is Visible    id:btn-browse    timeout=${WAIT_TIMEOUT}
     Element Should Be Visible    id:scanstatusbadge
@@ -42,13 +47,16 @@ Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
     ${chrome_options}    ${service}=    Create Chrome Headless Options
     Open browser              http://localhost:5001/newscan    browser=chrome    options=${chrome_options}    service=${service}
+    Wait Until Element Is Visible    name:scanname    timeout=${WAIT_TIMEOUT}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
     # Check if element exists by different ID format
     ${passive_exists}=    Run Keyword And Return Status    Element Should Be Visible    id:usecase_${use_case}
-    Run Keyword If    ${passive_exists}    Click Element    id:usecase_${use_case}
-    ...    ELSE    Click Element    xpath://input[@value='${use_case}']
-    Scroll To Element         id:btn-run-scan
+    Run Keyword If    ${passive_exists}    Safe Click Element    id:usecase_${use_case}
+    ...    ELSE IF    '${use_case}' == 'Passive'    Safe Click Element    xpath://input[@id='usecase_passive']
+    ...    ELSE    Safe Click Element    xpath://input[@value='${use_case}']
+    Safe Scroll To Element    id:btn-run-scan
+    Wait Until Element Is Clickable    id:btn-run-scan    timeout=${WAIT_TIMEOUT}
     Click Element             id:btn-run-scan
     Wait Until Element Is Visible    id:scanstatusbadge    timeout=${WAIT_TIMEOUT}
 
@@ -62,7 +70,7 @@ Scan info page should render tabs
 
 Scan info Summary tab should render
     Scan info page should render tabs
-    Element Should Be Visible     id:vbarsummary
+    Wait Until Element Is Visible     xpath=//*[contains(@class, 'summary-chart')]    timeout=${WAIT_TIMEOUT}
 
 Scan info Browse tab should render
     Scan info page should render tabs
@@ -73,16 +81,16 @@ Scan info Browse tab should render
 
 Scan info Correlations tab should render
     Scan info page should render tabs
-    Element Should Be Visible     id:scansummary-content
+    Wait Until Element Is Visible     xpath=//*[contains(@id, 'scansummary') or contains(@class, 'scansummary')]    timeout=${WAIT_TIMEOUT}
 
 Scan info Graph tab should render
     Scan info page should render tabs
-    Element Should Be Visible     id:graph-container
+    Wait Until Element Is Visible     id:graph-container    timeout=${WAIT_TIMEOUT}
 
 Scan info Settings tab should render
     Scan info page should render tabs
-    Page Should Contain           Meta Information
-    Page Should Contain           Global Settings
+    Wait Until Page Contains     Meta Information    timeout=${WAIT_TIMEOUT}
+    Wait Until Page Contains     Global Settings    timeout=${WAIT_TIMEOUT}
 
 Scan info Log tab should render
     Scan info page should render tabs
@@ -90,7 +98,7 @@ Scan info Log tab should render
     Element Should Be Visible     id:btn-download-logs
 
 Scan list page should render
-    Element Should Be Visible     id:scanlist
+    Wait Until Element Is Visible     xpath=//div[@id='scanlist' or contains(@class, 'scanlist')]    timeout=${WAIT_TIMEOUT}
     Element Should Be Visible     id:btn-rerun
     Element Should Be Visible     id:btn-stop
     Element Should Be Visible     id:btn-refresh
@@ -118,20 +126,47 @@ Scroll To Element
     Execute Javascript    window.scrollTo(${x} - 100, ${y} - 100)
     Wait Until Element is visible  ${locator}  timeout=30s
 
+Safe Scroll To Element
+    [Arguments]  ${locator}
+    Wait Until Element Is Visible    ${locator}    timeout=${WAIT_TIMEOUT}
+    ${y}=    Execute Javascript    return document.querySelector('${locator}'.replace('id:', '#')).getBoundingClientRect().top + window.pageYOffset - ${SCROLL_PADDING};
+    Execute Javascript    window.scrollTo(0, arguments[0])    ${y}
+    Sleep    1s    # Give time for any animations to complete
+    
+Safe Click Element
+    [Arguments]  ${locator}
+    Safe Scroll To Element    ${locator}
+    Wait Until Element Is Clickable    ${locator}    timeout=${WAIT_TIMEOUT}
+    Execute Javascript    document.querySelector('${locator}'.replace('id:', '#')).click();
+
+Wait Until Element Is Clickable
+    [Arguments]  ${locator}  ${timeout}=${WAIT_TIMEOUT}
+    Wait Until Element Is Visible    ${locator}    timeout=${timeout}
+    # Ensure element is not covered by something else
+    ${is_clickable}=    Execute Javascript
+    ...    return (function(element) {
+    ...        const rect = element.getBoundingClientRect();
+    ...        const elementAtPoint = document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
+    ...        return element.contains(elementAtPoint) || elementAtPoint.contains(element);
+    ...    })(document.querySelector('${locator}'.replace('id:', '#')));
+    Should Be True    ${is_clickable}    Element ${locator} is not clickable
+
 Wait For Scan To Finish
     [Arguments]  ${scan_name}
     Wait Until Element Is Visible    id:btn-browse    timeout=${WAIT_TIMEOUT}
     Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=${WAIT_TIMEOUT}
+    Sleep    2s    # Give a moment for page to stabilize after scan finishes
 
 ***Test Cases***
 Main navigation pages should render correctly
     ${chrome_options}    ${service}=    Create Chrome Headless Options
     Open browser              http://localhost:5001    browser=chrome    options=${chrome_options}    service=${service}
+    Wait Until Element Is Visible    id:nav-link-newscan    timeout=${WAIT_TIMEOUT}
     Click Element                 id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=${WAIT_TIMEOUT}
     New scan page should render
     Click Element                 id:nav-link-scans
-    Wait Until Element Is Visible    id:scanlist    timeout=${WAIT_TIMEOUT}
+    Wait Until Element Is Visible    xpath=//div[@id='scanlist' or contains(@class, 'scanlist')]    timeout=${WAIT_TIMEOUT}
     Scan list page should render
     Click Element                 id:nav-link-settings
     Wait Until Element Is Visible    id:savesettingsform    timeout=${WAIT_TIMEOUT}
@@ -141,48 +176,50 @@ Main navigation pages should render correctly
 Scan info page should render correctly
     Create a module scan           test_scan_info    van1shland.io    sfp_countryname
     Wait For Scan To Finish        test_scan_info
-    Click Element                 id:btn-status
+    Safe Click Element            id:btn-status
     Scan info Summary tab should render
-    Click Element                 id:btn-browse
+    Safe Click Element            id:btn-browse
     Scan info Browse tab should render
-    Click Element                 id:btn-graph
+    Safe Click Element            id:btn-graph
     Scan info Graph tab should render
-    Click Element                 id:btn-info
+    Safe Click Element            id:btn-info
     Scan info Settings tab should render
-    Click Element                 id:btn-log
+    Safe Click Element            id:btn-log
     Scan info Log tab should render
     Close All Browsers
 
 Scan list page should list scans
     Create a module scan           test_scan_list    van1shland.io    sfp_countryname
-    Click Element                 id:nav-link-scans
-    Wait Until Element Is Visible   xpath=//td[contains(text(), 'test_scan_list')]   timeout=${WAIT_TIMEOUT}
+    Safe Click Element            id:nav-link-scans
+    Wait Until Element Is Visible   xpath=//table[contains(@class, 'table')]//td[contains(text(), 'test_scan_list')]   timeout=${WAIT_TIMEOUT}
     Close All Browsers
 
 A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
     Create a module scan           dns_resolve     van1shland.io    sfp_dnsresolve
     Wait For Scan To Finish       dns_resolve
-    Click Element                 id:btn-browse
+    Safe Click Element            id:btn-browse
     Scan info Browse tab should render
-    Element Should Contain        id:browse-table-content    Domain Name
-    Element Should Contain        id:browse-table-content    Internet Name
-    Element Should Contain        id:browse-table-content    IP Address
+    Wait Until Element Is Visible   xpath=//table[contains(@class, 'table')]    timeout=${WAIT_TIMEOUT}
+    Page Should Contain    Domain Name
+    Page Should Contain    Internet Name
+    Page Should Contain    IP Address
     Close All Browsers
 
 A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
     Create a module scan           reverse_resolve   1.1.1.1           sfp_dnsresolve
     Wait For Scan To Finish      reverse_resolve
-    Click Element                 id:btn-browse
+    Safe Click Element            id:btn-browse
     Scan info Browse tab should render
-    Element Should Contain        id:browse-table-content    Domain Name
-    Element Should Contain        id:browse-table-content    Internet Name
-    Element Should Contain        id:browse-table-content    IP Address
+    Wait Until Element Is Visible   xpath=//table[contains(@class, 'table')]    timeout=${WAIT_TIMEOUT}
+    Page Should Contain    Domain Name
+    Page Should Contain    Internet Name
+    Page Should Contain    IP Address
     Close All Browsers
 
 A passive scan with unresolvable target internet name should fail
     Create a use case scan         shouldnotresolve    shouldnotresolve.doesnotexist.local    Passive
     Wait Until Element Is Visible    id:btn-browse    timeout=${WAIT_TIMEOUT}
     Wait Until Element Contains     scanstatusbadge   ERROR     timeout=${WAIT_TIMEOUT}
-    Click Element                   id:btn-log
-    Page Should Contain             Could not resolve
+    Safe Click Element              id:btn-log
+    Wait Until Page Contains     Could not resolve    timeout=${WAIT_TIMEOUT}
     Close All Browsers

@@ -1,6 +1,7 @@
 ***Settings***
 Library           SeleniumLibrary
 Library           OperatingSystem
+Library           Collections
 Test Teardown     Run Keyword If Test Failed    Capture Failure Screenshot
 Resource          variables.robot  # Externalize variables
 

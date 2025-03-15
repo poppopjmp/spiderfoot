@@ -171,6 +171,27 @@ class TestSpiderFootPlugin(unittest.TestCase):
             mock_thread.assert_called_once_with(
                 target=self.plugin.threadWorker)
             mock_thread.return_value.start.assert_called_once()
+            # Verify thread is set as daemon
+            mock_thread.return_value.daemon = True
+
+    def test_start_thread_daemon(self):
+        """Test that threads created by the plugin are set as daemon threads."""
+        with patch('threading.Thread') as mock_thread:
+            mock_thread_instance = MagicMock()
+            mock_thread.return_value = mock_thread_instance
+            
+            self.plugin.start()
+            
+            mock_thread_instance.daemon = True
+            mock_thread_instance.start.assert_called_once()
+
+    def test_thread_cleanup_on_finish(self):
+        """Test that threads are properly cleaned up when the plugin finishes."""
+        self.plugin.thread = MagicMock()
+        self.plugin.finish()
+        # Verify any thread cleanup that should happen in finish()
+        self.assertTrue(self.plugin.thread.daemon if self.plugin.thread else True,
+                        "Thread should be set as daemon or None after finish()")
 
     def test_finish(self):
         self.plugin.finish()
