@@ -456,53 +456,88 @@
             $("#scanreminder").hide();
             navTo("btn-correlations");
             refresh = function() { browseCorrelations(instanceId); }
-            sf.fetchData('${docroot}/scancorrelations', {'id': instanceId}, function(data) {
-                if (data.length == 0) {
-                    table = "<div id='scansummary-content' class='alert alert-warning'><h4>No correlations.</h4>If the scan is still running please reload once it has completed.</div>";
+            
+            // Add a debug message to the console
+            console.log("Fetching correlation data for scan ID: " + instanceId);
+            
+            sf.fetchData('${docroot}/scancorrelations', {'id': instanceId}, 
+                function(data) {
+                    // Success handler
+                    console.log("Correlation data received:", data);
+                    
+                    if (!data || data.length == 0) {
+                        table = "<div id='scansummary-content' class='alert alert-warning'><h4>No correlations found.</h4>If the scan is still running please reload once it has completed. If the scan is complete, try refreshing the page.</div>";
+                        $("#loader").fadeOut(500);
+                        $("#mainbody").append(table);
+                        sf.updateTooltips();
+                        return;
+                    }
+                    
+                    var table = "<table id='scansummary-content' class='table table-bordered table-striped table-condensed tablesorter small'>";
+                    table += "<thead><tr><th>Correlation</th><th>Risk</th><th>Data Elements</th></tr></thead><tbody>";
+                    
+                    try {
+                        for (var i = 0; i < data.length; i++) {
+                            table += "<tr>";
+                            table += "<td><a style='cursor: pointer' onClick='toggleCorrelation(\"" + instanceId + "\",\"" + data[i][0] + "\")'>" + data[i][1] + "</a>&nbsp;&nbsp;";
+                            table += "<i class='glyphicon glyphicon-question-sign' style='color: #ccc' rel='tooltip' data-title=\"" + data[i][5] + "\"></i>";
+                            table += "</td>";
+                            var statusy = "";
+                            if (data[i][3] == "HIGH") {
+                                statusy = "alert-danger";
+                            }
+                            if (data[i][3] == "MEDIUM") {
+                                statusy = "alert-warning";
+                            }
+                            if (data[i][3] == "LOW") {
+                                statusy = "alert-info";
+                            }
+                            if (data[i][3] == "INFO") {
+                                statusy = "alert-success";
+                            }
+                            table += "<td><span class='badge " + statusy + "'>" + data[i][3] + "</span></td>";
+                            table += "<td>" + data[i][7] + "</td>";
+                            table += "</tr><tr class='hidden' id='corrwell_tr_" + data[i][0] + "'><td colspan=3 id='corrwell_td_" + data[i][0] + "'></td></tr>";
+                        }
+                    } catch (e) {
+                        console.error("Error processing correlation data:", e, data);
+                        table = "<div id='scansummary-content' class='alert alert-danger'><h4>Error displaying correlations</h4>An error occurred while processing correlation data: " + e.message + "</div>";
+                        $("#loader").fadeOut(500);
+                        $("#mainbody").append(table);
+                        return;
+                    }
+                    
+                    table += "</tbody></table>";
                     $("#loader").fadeOut(500);
                     $("#mainbody").append(table);
+                    $.tablesorter.addParser({ 
+                        id: 'criticality', 
+                        is: function(s) { 
+                            return false; 
+                        }, 
+                        format: function(s) { 
+                            return s.toLowerCase().replace(/high/,3).replace(/medium/,2).replace(/low/,1).replace(/info/,0); 
+                        }, 
+                        type: 'numeric' 
+                    });
+                    $("#scansummary-content").tablesorter({ headers: { 1: { sorter: 'criticality' } } });
                     sf.updateTooltips();
-                    return;
+                },
+                function(xhr, textStatus, errorThrown) {
+                    // Error handler - this is a new parameter for sf.fetchData
+                    console.error("Error fetching correlation data:", textStatus, errorThrown);
+                    var errorMsg = "<div id='scansummary-content' class='alert alert-danger'>";
+                    errorMsg += "<h4>Error retrieving correlation data</h4>";
+                    errorMsg += "<p>There was a problem retrieving the correlation data: " + textStatus + "</p>";
+                    if (xhr.responseText) {
+                        errorMsg += "<p>Server response: " + xhr.responseText + "</p>";
+                    }
+                    errorMsg += "<button class='btn btn-primary' onclick='browseCorrelations(\"" + instanceId + "\")'>Retry</button>";
+                    errorMsg += "</div>";
+                    $("#loader").fadeOut(500);
+                    $("#mainbody").append(errorMsg);
                 }
-                var table = "<table id='scansummary-content' class='table table-bordered table-striped table-condensed tablesorter small'>";
-                table += "<thead><tr><th>Correlation</th><th>Risk</th><th>Data Elements</th></tr></thead><tbody>";
-                for (var i = 0; i < data.length; i++) {
-                    table += "<tr>";
-                    table += "<td><a style='cursor: pointer' onClick='toggleCorrelation(\"" + instanceId + "\",\"" + data[i][0] + "\")'>" + data[i][1] + "</a>&nbsp;&nbsp;";
-                    table += "<i class='glyphicon glyphicon-question-sign' style='color: #ccc' rel='tooltip' data-title=\"" + data[i][5] + "\"></i>";
-                    table += "</td>";
-                    if (data[i][3] == "HIGH") {
-                        statusy = "alert-danger";
-                    }
-                    if (data[i][3] == "MEDIUM") {
-                        statusy = "alert-warning";
-                    }
-                    if (data[i][3] == "LOW") {
-                        statusy = "alert-info";
-                    }
-                    if (data[i][3] == "INFO") {
-                        statusy = "alert-success";
-                    }
-                    table += "<td><span class='badge " + statusy + "'>" + data[i][3] + "</span></td>";
-                    table += "<td>" + data[i][7] + "</td>";
-                    table += "</tr><tr class='hidden' id='corrwell_tr_" + data[i][0] + "'><td colspan=3 id='corrwell_td_" + data[i][0] + "'></td></tr>";
-                }
-                table += "</tbody></table>";
-                $("#loader").fadeOut(500);
-                $("#mainbody").append(table);
-                $.tablesorter.addParser({ 
-                    id: 'criticality', 
-                    is: function(s) { 
-                        return false; 
-                    }, 
-                    format: function(s) { 
-                        return s.toLowerCase().replace(/high/,3).replace(/medium/,2).replace(/low/,1).replace(/info/,0); 
-                    }, 
-                    type: 'numeric' 
-                });
-                $("#scansummary-content").tablesorter({ headers: { 1: { sorter: 'criticality' } } });
-                sf.updateTooltips();
-            });
+            );
         }
 
         // Logs for the scan
