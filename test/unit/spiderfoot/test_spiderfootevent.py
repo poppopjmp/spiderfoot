@@ -154,6 +154,3 @@ class TestSpiderFootEvent(unittest.TestCase):
         self.assertEqual(event_dict['data'], self.event.data)
         self.assertEqual(event_dict['module'], self.event.module)
         self.assertEqual(event_dict['source'], '')
-
-
-

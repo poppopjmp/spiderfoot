@@ -290,7 +290,7 @@ class sfp_abstractapi(SpiderFootPlugin):
             linkedin_url = data.get("linkedin_url")
             if linkedin_url:
                 parsed_url = urllib.parse.urlparse(linkedin_url)
-                if parsed_url.hostname and parsed_url.hostname.endswith("linkedin.com"):
+                if parsed_url.hostname and (parsed_url.hostname == "linkedin.com" or parsed_url.hostname.endswith(".linkedin.com")):
                     if not linkedin_url.startswith("http"):
                         linkedin_url = f"https://{linkedin_url}"
                 e = SpiderFootEvent(

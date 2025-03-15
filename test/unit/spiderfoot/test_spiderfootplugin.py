@@ -330,6 +330,3 @@ class TestSpiderFootPlugin(unittest.TestCase):
         sharedThreadPool = MagicMock()
         self.plugin.setSharedThreadPool(sharedThreadPool)
         self.assertEqual(self.plugin.sharedThreadPool, sharedThreadPool)
-
-
-

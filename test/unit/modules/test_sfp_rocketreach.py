@@ -6,7 +6,6 @@ from modules.sfp_rocketreach import sfp_rocketreach
 import unittest
 
 
-
 class TestModuleRocketreach(unittest.TestCase):
     """Test Rocketreach module."""
 

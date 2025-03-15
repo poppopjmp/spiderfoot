@@ -6,7 +6,6 @@ from modules.sfp_deepinfo import sfp_deepinfo
 import unittest
 
 
-
 class TestModuleDeepinfo(unittest.TestCase):
     """Test Deepinfo module."""
 

@@ -37,6 +37,3 @@ class TestSpiderFootStaticJS(unittest.TestCase):
     def test_viz_js_function(self):
         result = self.driver.execute_script("return vizFunction();")
         self.assertEqual(result, "expected result")
-
-
-

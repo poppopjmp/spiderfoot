@@ -6,7 +6,6 @@ from modules.sfp_whoisfreaks import sfp_whoisfreaks
 import unittest
 
 
-
 class TestModuleWhoisfreaks(unittest.TestCase):
     """Test Whoisfreaks module."""
 

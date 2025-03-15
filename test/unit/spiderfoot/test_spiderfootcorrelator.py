@@ -301,4 +301,3 @@ class TestSpiderFootCorrelator(unittest.TestCase):
         ]
         result = self.correlator.process_rule(rule)
         self.assertEqual(len(result), 1)
-

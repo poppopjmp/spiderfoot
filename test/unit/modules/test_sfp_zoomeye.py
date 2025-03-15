@@ -5,6 +5,7 @@ from spiderfoot import SpiderFootEvent
 from modules.sfp_zoomeye import sfp_zoomeye
 import unittest
 
+
 class TestModuleZoomeye(unittest.TestCase):
     """Test Zoomeye module."""
 

@@ -117,6 +117,3 @@ class TestSpiderFootTarget(unittest.TestCase):
             "sub.example.com", includeChildren=True))
         self.assertFalse(self.target.matches(
             "sub.example.com", includeChildren=False))
-
-
-

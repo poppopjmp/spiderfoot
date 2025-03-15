@@ -6,7 +6,6 @@ from modules.sfp_fofa import sfp_fofa
 import unittest
 
 
-
 class TestModuleFofa(unittest.TestCase):
     """Test Fofa module."""
 

@@ -6,7 +6,6 @@ from modules.sfp_cisco_umbrella import sfp_cisco_umbrella
 import unittest
 
 
-
 class TestModuleCiscoUmbrella(unittest.TestCase):
     """Test Cisco Umbrella module."""
 

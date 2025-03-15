@@ -6,7 +6,6 @@ from modules.sfp_leakcheck import sfp_leakcheck
 import unittest
 
 
-
 class TestModuleLeakcheck(unittest.TestCase):
     """Test Leakcheck module."""
 

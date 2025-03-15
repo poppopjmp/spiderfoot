@@ -6,7 +6,6 @@ from modules.sfp_cloudfront import sfp_cloudfront
 import unittest
 
 
-
 class TestModuleCloudfront(unittest.TestCase):
     """Test Cloudfront module."""
 

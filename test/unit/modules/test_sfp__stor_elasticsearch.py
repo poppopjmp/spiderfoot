@@ -6,7 +6,6 @@ from spiderfoot import SpiderFootEvent
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
 
 
-
 class TestModuleStorElasticsearch(unittest.TestCase):
     """Test Stor Elasticsearch module."""
 

@@ -6,7 +6,6 @@ from modules.sfp_tool_gobuster import sfp_tool_gobuster
 import unittest
 
 
-
 class TestModuleToolGobuster(unittest.TestCase):
     """Test Tool Gobuster module."""
 

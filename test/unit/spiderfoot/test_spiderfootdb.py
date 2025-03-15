@@ -401,6 +401,3 @@ class TestSpiderFootDb(unittest.TestCase):
             self.assertEqual(result, 'correlation_id')
             self.assertTrue(
                 mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
-
-
-
