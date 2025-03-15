@@ -302,6 +302,3 @@ class TestSpiderFootCorrelator(unittest.TestCase):
         result = self.correlator.process_rule(rule)
         self.assertEqual(len(result), 1)
 
-
-if __name__ == "__main__":
-    unittest.main()

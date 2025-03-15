@@ -3,10 +3,11 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_leakcheck import sfp_leakcheck
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+import unittest
 
 
-class TestModuleLeakcheck(SpiderFootModuleTestCase):
+
+class TestModuleLeakcheck(unittest.TestCase):
     """Test Leakcheck module."""
 
     def setUp(self):

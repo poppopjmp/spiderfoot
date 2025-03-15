@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Script to update SpiderFoot module test files to use the new wrapper
 pattern. This script will modify test files to use the create_module_wrapper
-method from the SpiderFootModuleTestCase class.
+method from the unittest.TestCase class.
 
 Enhanced version with better module detection and more robust handling.
 """
@@ -21,7 +21,7 @@ MODULES_DIR = BASE_DIR / "modules"
 # Regular expressions for matching patterns in test files
 MODULE_IMPORT_RE = re.compile(r"from modules\.([^\s]+) import ([^\s]+)")
 TEST_CLASS_RE = re.compile(
-    r"class TestModule([a-zA-Z0-9_]*)\s*\(\s*SpiderFootModuleTestCase\s*\):"
+    r"class TestModule([a-zA-Z0-9_]*)\s*\(\s*unittest.TestCase\s*\):"
 )
 MODULE_INSTANTIATION_RE = re.compile(
     r"(\s+)([a-zA-Z_]+)\s*=\s*([a-zA-Z0-9_]+)\(\)")
@@ -175,7 +175,7 @@ def update_test_file(file_path, dry_run=False, force=False):
 
         # Extract test class name with improved detection
         test_class_match = re.search(
-            r"class\s+(\w+)\s*\(\s*SpiderFootModuleTestCase\s*\):", content
+            r"class\s+(\w+)\s*\(\s*unittest.TestCase\s*\):", content
         )
         if not test_class_match:
             print(f"No test class found in {file_path_str}, skipping...")

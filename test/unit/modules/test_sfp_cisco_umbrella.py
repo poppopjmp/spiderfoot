@@ -3,10 +3,11 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_cisco_umbrella import sfp_cisco_umbrella
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+import unittest
 
 
-class TestModuleCiscoUmbrella(SpiderFootModuleTestCase):
+
+class TestModuleCiscoUmbrella(unittest.TestCase):
     """Test Cisco Umbrella module."""
 
     def setUp(self):

@@ -3,10 +3,11 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_rocketreach import sfp_rocketreach
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+import unittest
 
 
-class TestModuleRocketreach(SpiderFootModuleTestCase):
+
+class TestModuleRocketreach(unittest.TestCase):
     """Test Rocketreach module."""
 
     def setUp(self):

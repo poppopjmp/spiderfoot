@@ -3,10 +3,10 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_threatjammer import sfp_threatjammer
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+import unittest
 
 
-class TestModuleThreatjammer(SpiderFootModuleTestCase):
+class TestModuleThreatjammer(unittest.TestCase):
     """Test Threatjammer module."""
 
     def setUp(self):

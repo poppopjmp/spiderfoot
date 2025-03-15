@@ -332,5 +332,4 @@ class TestSpiderFootPlugin(unittest.TestCase):
         self.assertEqual(self.plugin.sharedThreadPool, sharedThreadPool)
 
 
-if __name__ == "__main__":
-    unittest.main()
+

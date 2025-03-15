@@ -3,10 +3,11 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_cloudfront import sfp_cloudfront
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+import unittest
 
 
-class TestModuleCloudfront(SpiderFootModuleTestCase):
+
+class TestModuleCloudfront(unittest.TestCase):
     """Test Cloudfront module."""
 
     def setUp(self):

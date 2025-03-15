@@ -24,10 +24,10 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.{module_file} import {module_class}
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
-class TestModule{test_class_name}(SpiderFootModuleTestCase):
+
+class TestModule{test_class_name}(unittest.TestCase):
     \"""Test {readable_name} module.\"""
 
     def setUp(self):

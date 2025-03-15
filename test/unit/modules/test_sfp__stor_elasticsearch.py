@@ -1,12 +1,13 @@
 # filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp__stor_elasticsearch.py
 from unittest.mock import patch, MagicMock
+import unittest
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
 
 
-class TestModuleStorElasticsearch(SpiderFootModuleTestCase):
+
+class TestModuleStorElasticsearch(unittest.TestCase):
     """Test Stor Elasticsearch module."""
 
     def setUp(self):

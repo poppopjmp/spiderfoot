@@ -3,10 +3,11 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_greynoise_community import sfp_greynoise_community
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+import unittest
 
 
-class TestModuleGreynoiseCommunity(SpiderFootModuleTestCase):
+
+class TestModuleGreynoiseCommunity(unittest.TestCase):
     """Test Greynoise Community module."""
 
     def setUp(self):

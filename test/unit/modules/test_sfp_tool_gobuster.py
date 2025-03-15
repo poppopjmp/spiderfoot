@@ -3,10 +3,11 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_tool_gobuster import sfp_tool_gobuster
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+import unittest
 
 
-class TestModuleToolGobuster(SpiderFootModuleTestCase):
+
+class TestModuleToolGobuster(unittest.TestCase):
     """Test Tool Gobuster module."""
 
     def setUp(self):

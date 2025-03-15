@@ -119,5 +119,4 @@ class TestSpiderFootTarget(unittest.TestCase):
             "sub.example.com", includeChildren=False))
 
 
-if __name__ == "__main__":
-    unittest.main()
+

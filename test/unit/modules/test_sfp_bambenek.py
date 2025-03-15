@@ -3,10 +3,10 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_bambenek import sfp_bambenek
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+import unittest
 
 
-class TestModuleBambenek(SpiderFootModuleTestCase):
+class TestModuleBambenek(unittest.TestCase):
     """Test Bambenek module."""
 
     def setUp(self):

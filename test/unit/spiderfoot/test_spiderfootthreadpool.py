@@ -117,5 +117,4 @@ class TestThreadPoolWorker(unittest.TestCase):
             mock_logger.return_value.error.assert_called_once()
 
 
-if __name__ == "__main__":
-    unittest.main()
+

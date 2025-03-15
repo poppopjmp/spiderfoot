@@ -403,5 +403,4 @@ class TestSpiderFootDb(unittest.TestCase):
                 mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
 
 
-if __name__ == "__main__":
-    unittest.main()
+

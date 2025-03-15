@@ -3,10 +3,11 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_whoisfreaks import sfp_whoisfreaks
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+import unittest
 
 
-class TestModuleWhoisfreaks(SpiderFootModuleTestCase):
+
+class TestModuleWhoisfreaks(unittest.TestCase):
     """Test Whoisfreaks module."""
 
     def setUp(self):

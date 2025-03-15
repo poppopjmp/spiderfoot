@@ -3,10 +3,11 @@ from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_deepinfo import sfp_deepinfo
-from test.unit.modules.test_module_base import SpiderFootModuleTestCase
+import unittest
 
 
-class TestModuleDeepinfo(SpiderFootModuleTestCase):
+
+class TestModuleDeepinfo(unittest.TestCase):
     """Test Deepinfo module."""
 
     def setUp(self):

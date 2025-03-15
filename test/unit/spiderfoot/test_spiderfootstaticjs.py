@@ -39,5 +39,4 @@ class TestSpiderFootStaticJS(unittest.TestCase):
         self.assertEqual(result, "expected result")
 
 
-if __name__ == "__main__":
-    unittest.main()
+

@@ -156,5 +156,4 @@ class TestSpiderFootEvent(unittest.TestCase):
         self.assertEqual(event_dict['source'], '')
 
 
-if __name__ == "__main__":
-    unittest.main()
+
