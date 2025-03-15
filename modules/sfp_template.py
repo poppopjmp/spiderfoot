@@ -196,7 +196,7 @@ class sfp_template(SpiderFootPlugin):
         # If you want to override that, for instance in cases where the module
         # is purely processing data from other modules instead of producing
         # data itself, you can do so with the following. Note that this is only
-        # utilised in SpiderFoot HX and not the open source version.
+        # utilised in SpiderFoot  and not the open source version.
         self.__dataSource__ = "Some Data Source"
 
         for opt in list(userOpts.keys()):

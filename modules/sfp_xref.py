@@ -22,7 +22,7 @@ class sfp_xref(SpiderFootPlugin):
         "useCases": ["Footprint", "Investigate"],
         "categories": ["Search Engines"],
         "dataSource": {
-            "website": "https://github.com/smicallef/spiderfoot",
+            "website": "https://github.com/poppopjmp/spiderfoot",
             "model": "FREE_NOAUTH_UNLIMITED",
             "description": "SpiderFoot's internal cross-referencing capability to identify relationships between discovered entities.",
         },

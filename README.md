@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.0.2-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.2)
+[![Stable Release](https://img.shields.io/badge/version-5.0.3-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.3)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
 [![Docker CI Build](https://github.com/poppopjmp/spiderfoot/workflows/Docker%20Image%20CI/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Docker%20Image%20CI")
 [![Browser Acceptance status](https://github.com/poppopjmp/spiderfoot/workflows/SpiderFoot%20Acceptance%20Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"SpiderFoot%20Acceptance%20Tests")
@@ -23,7 +23,7 @@
 
 SpiderFoot has an embedded web-server for providing a clean and intuitive web-based interface but can also be used completely via the command-line.  It's written in **Python 3** and **MIT-licensed**.
 
-<img src="./docs/images/v4.png" />
+<img src="./docs/images/v5.png" />
 
 ### FEATURES
 
@@ -123,8 +123,8 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 #### Stable build (packaged release):
 
 ```
- wget https://github.com/smicallef/spiderfoot/archive/v5.0.2.tar.gz
- tar zxvf v5.0.2.tar.gz
+ wget https://github.com/poppopjmp/spiderfoot/archive/v5.0.3.tar.gz
+ tar zxvf v5.0.3.tar.gz
  cd spiderfoot-5.0.2
  pip3 install -r requirements.txt
  python3 ./sf.py -l 127.0.0.1:5001
@@ -133,7 +133,7 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 #### Development build (cloning git master branch):
 
 ```
- git clone https://github.com/smicallef/spiderfoot.git
+ git clone https://github.com/poppopjmp/spiderfoot.git
  cd spiderfoot
  pip3 install -r requirements.txt
  python3 ./sf.py -l 127.0.0.1:5001
@@ -145,8 +145,8 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
  docker-compose up
 ```
 
-#### Running the REST API server:
-
+#### Running the REST API server: 
+##### Refactoring Feature, not available in the 5.0.3 version
 To run the REST API server, use the following command:
 
 ```

@@ -308,8 +308,6 @@ class SpiderFootPlugin():
         Todo:
             Move all module state to use this, which then would enable a scan to be paused/resumed.
 
-        Note:
-            Required for SpiderFoot HX compatibility of modules.
 
         Returns:
             dict: module temporary state data

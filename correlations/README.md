@@ -4,14 +4,14 @@ SpiderFoot’s goal is to automate OSINT collection and analysis to the greatest
 
 ## Introducing Correlations
 
-We started tackling this analysis gap with the launch of SpiderFoot HX in 2019 through the introduction of the "Correlations" feature. This feature was represented by some 30 "correlation rules" that ran with each scan, analyzing data and presenting results reflecting SpiderFoot's opinionated view on what may be important or interesting. Here are a few of those rules as examples:
+We started tackling this analysis gap with the launch of SpiderFoot  in 2019 through the introduction of the "Correlations" feature. This feature was represented by some 30 "correlation rules" that ran with each scan, analyzing data and presenting results reflecting SpiderFoot's opinionated view on what may be important or interesting. Here are a few of those rules as examples:
 * Hosts/IPs reported as malicious by multiple data sources
 * Outlier web servers (can be an indication of shadow IT)
 * Databases exposed on the Internet
 * Open ports revealing software versions
 * and many more.
 
-With the release of SpiderFoot 4.0 we wanted to bring this capability from SpiderFoot HX to the community, but also re-imagine it at the same time so that the community might not simply run rules we provide, but also write their own correlation rules and contribute them back. We also hope that just as with modules, we see a long list of contributions made in the years ahead so that all may benefit.
+
 
 With that said, let's get into what these rules look like and how to write one.
 
@@ -74,7 +74,7 @@ sfp_portscan_tcp    Open TCP Port Banner    SSH-2.0-OpenSSH_7.2p2 Ubuntu-4ubuntu
 ```
 We can see above that a port was found to be open by the `sfp_portscan_tcp` module, and it happens to include a version. The correlation rule `open_port_version` picked this up and reported it. This is also visible in the web interface:
 
-<img src="https://www.spiderfoot.net/wp-content/uploads/2022/04/sf4correlations.png" />
+<img src="./docs/images/correlations.png" />
 
 **NOTE:** Rules will only succeed if relevant data exists in your scan results in the first place. In other words, correlation rules analyze scan data, they don't collect data from targets.
 

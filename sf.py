@@ -610,7 +610,7 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
             warn_msg = "\n********************************************************************\n"
             warn_msg += "Warning: passwd file contains no passwords. Authentication disabled.\n"
             warn_msg += "Please consider adding authentication to protect this instance!\n"
-            warn_msg += "Refer to https://www.spiderfoot.net/documentation/#security.\n"
+            warn_msg += "Refer to https://github.com/poppopjmp/spiderfoot/wiki. \n"
             warn_msg += "********************************************************************\n"
             log.warning(warn_msg)
 
