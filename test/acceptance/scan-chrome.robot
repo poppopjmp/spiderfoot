@@ -15,6 +15,7 @@ Create Chrome Headless Options
     Call Method    ${options}    add_argument    --headless
     Call Method    ${options}    add_argument    --no-sandbox
     Call Method    ${options}    add_argument    --disable-dev-shm-usage
+    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
     RETURN    ${options}
 
 Create a module scan

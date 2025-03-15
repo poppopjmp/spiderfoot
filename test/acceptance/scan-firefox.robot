@@ -3,6 +3,9 @@ Library           SeleniumLibrary
 Test Teardown     Run Keyword If Test Failed    Capture Failure Screenshot
 Resource          variables.robot  # Externalize variables
 
+***Variables***
+${GECKODRIVER_PATH}    /usr/local/bin/geckodriver
+
 ***Keywords***
 Capture Failure Screenshot
     Capture Page Screenshot    failure-${TEST NAME}.png
@@ -10,7 +13,7 @@ Capture Failure Screenshot
 Create Firefox Headless Options
     ${options}=    Evaluate    selenium.webdriver.FirefoxOptions()    modules=selenium.webdriver
     Call Method    ${options}    add_argument    --headless
-    Set Environment Variable    webdriver.gecko.driver    /usr/local/bin/geckodriver
+    Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
     RETURN    ${options}
 
 Create a module scan
