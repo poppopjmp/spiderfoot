@@ -1,28 +1,28 @@
-# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/integration/modules/test_integration_sfp_adguard_dns.py
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/integration/modules/test_sfpbambenek.py
 import pytest
 from unittest.mock import patch, MagicMock
 import os
 
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from modules.sfp_adguard_dns import sfp_adguard_dns
+from modules.sfp_bambenek import sfp_bambenek
 
-# This test requires credentials for the Adguard Dns service
+# This test requires credentials for the Bambenek service
 # To run this test, set the environment variables:
-# - SF_SFP_ADGUARD_DNS_API_KEY
+# - SF_SFP_BAMBENEK_API_KEY
 
 
 @pytest.mark.skipif(
     not all(os.environ.get(env_var)
-            for env_var in ['SF_SFP_ADGUARD_DNS_API_KEY']),
-    reason="Integration test - requires Adguard Dns credentials"
+            for env_var in ['SF_SFP_BAMBENEK_API_KEY']),
+    reason="Integration test - requires Bambenek credentials"
 )
-class TestModuleIntegrationAdguardDns:
-    """Integration testing for the Adguard Dns module."""
+class TestModuleIntegrationBambenek:
+    """Integration testing for the Bambenek module."""
 
     @pytest.fixture
     def module(self):
-        """Return a Adguard Dns module."""
+        """Return a Bambenek module."""
         sf = SpiderFoot({
             '_debug': True,
             '__logging': True,
@@ -30,7 +30,7 @@ class TestModuleIntegrationAdguardDns:
             'api_key': os.environ.get('SF_API_KEY', ''),
             'checkaffiliates': True,
         })
-        module = sfp_adguard_dns()
+        module = sfp_bambenek()
         module.setup(sf, {
             '_debug': True,
             '__logging': True,

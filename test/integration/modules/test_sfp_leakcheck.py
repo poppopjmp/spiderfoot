@@ -1,27 +1,28 @@
-# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/integration/modules/test_integration_sfp_email.py
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/integration/modules/test_sfpleakcheck.py
 import pytest
 from unittest.mock import patch, MagicMock
 import os
 
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from modules.sfp_email import sfp_email
+from modules.sfp_leakcheck import sfp_leakcheck
 
-# This test requires credentials for the Email service
+# This test requires credentials for the Leakcheck service
 # To run this test, set the environment variables:
-# - SF_SFP_EMAIL_API_KEY
+# - SF_SFP_LEAKCHECK_API_KEY
 
 
 @pytest.mark.skipif(
-    not all(os.environ.get(env_var) for env_var in ['SF_SFP_EMAIL_API_KEY']),
-    reason="Integration test - requires Email credentials"
+    not all(os.environ.get(env_var)
+            for env_var in ['SF_SFP_LEAKCHECK_API_KEY']),
+    reason="Integration test - requires Leakcheck credentials"
 )
-class TestModuleIntegrationEmail:
-    """Integration testing for the Email module."""
+class TestModuleIntegrationLeakcheck:
+    """Integration testing for the Leakcheck module."""
 
     @pytest.fixture
     def module(self):
-        """Return a Email module."""
+        """Return a Leakcheck module."""
         sf = SpiderFoot({
             '_debug': True,
             '__logging': True,
@@ -29,7 +30,7 @@ class TestModuleIntegrationEmail:
             'api_key': os.environ.get('SF_API_KEY', ''),
             'checkaffiliates': True,
         })
-        module = sfp_email()
+        module = sfp_leakcheck()
         module.setup(sf, {
             '_debug': True,
             '__logging': True,

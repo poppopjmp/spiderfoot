@@ -1,28 +1,28 @@
-# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/integration/modules/test_integration_sfp_tool_dnstwist.py
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/integration/modules/test_sfpcloudfront.py
 import pytest
 from unittest.mock import patch, MagicMock
 import os
 
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from modules.sfp_tool_dnstwist import sfp_tool_dnstwist
+from modules.sfp_cloudfront import sfp_cloudfront
 
-# This test requires credentials for the Tool Dnstwist service
+# This test requires credentials for the Cloudfront service
 # To run this test, set the environment variables:
-# - SF_SFP_TOOL_DNSTWIST_API_KEY
+# - SF_SFP_CLOUDFRONT_API_KEY
 
 
 @pytest.mark.skipif(
     not all(os.environ.get(env_var)
-            for env_var in ['SF_SFP_TOOL_DNSTWIST_API_KEY']),
-    reason="Integration test - requires Tool Dnstwist credentials"
+            for env_var in ['SF_SFP_CLOUDFRONT_API_KEY']),
+    reason="Integration test - requires Cloudfront credentials"
 )
-class TestModuleIntegrationToolDnstwist:
-    """Integration testing for the Tool Dnstwist module."""
+class TestModuleIntegrationCloudfront:
+    """Integration testing for the Cloudfront module."""
 
     @pytest.fixture
     def module(self):
-        """Return a Tool Dnstwist module."""
+        """Return a Cloudfront module."""
         sf = SpiderFoot({
             '_debug': True,
             '__logging': True,
@@ -30,7 +30,7 @@ class TestModuleIntegrationToolDnstwist:
             'api_key': os.environ.get('SF_API_KEY', ''),
             'checkaffiliates': True,
         })
-        module = sfp_tool_dnstwist()
+        module = sfp_cloudfront()
         module.setup(sf, {
             '_debug': True,
             '__logging': True,

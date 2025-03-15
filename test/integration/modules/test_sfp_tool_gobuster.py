@@ -1,27 +1,28 @@
-# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/integration/modules/test_integration_sfp_circllu.py
+# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/integration/modules/test_sfptool_gobuster.py
 import pytest
 from unittest.mock import patch, MagicMock
 import os
 
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from modules.sfp_circllu import sfp_circllu
+from modules.sfp_tool_gobuster import sfp_tool_gobuster
 
-# This test requires credentials for the Circllu service
+# This test requires credentials for the Tool Gobuster service
 # To run this test, set the environment variables:
-# - SF_SFP_CIRCLLU_API_KEY
+# - SF_SFP_TOOL_GOBUSTER_API_KEY
 
 
 @pytest.mark.skipif(
-    not all(os.environ.get(env_var) for env_var in ['SF_SFP_CIRCLLU_API_KEY']),
-    reason="Integration test - requires Circllu credentials"
+    not all(os.environ.get(env_var)
+            for env_var in ['SF_SFP_TOOL_GOBUSTER_API_KEY']),
+    reason="Integration test - requires Tool Gobuster credentials"
 )
-class TestModuleIntegrationCircllu:
-    """Integration testing for the Circllu module."""
+class TestModuleIntegrationToolGobuster:
+    """Integration testing for the Tool Gobuster module."""
 
     @pytest.fixture
     def module(self):
-        """Return a Circllu module."""
+        """Return a Tool Gobuster module."""
         sf = SpiderFoot({
             '_debug': True,
             '__logging': True,
@@ -29,7 +30,7 @@ class TestModuleIntegrationCircllu:
             'api_key': os.environ.get('SF_API_KEY', ''),
             'checkaffiliates': True,
         })
-        module = sfp_circllu()
+        module = sfp_tool_gobuster()
         module.setup(sf, {
             '_debug': True,
             '__logging': True,
