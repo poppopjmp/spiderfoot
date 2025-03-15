@@ -168,7 +168,10 @@ class sfp_digitaloceanspace(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventName == "LINKED_URL_EXTERNAL":
-            if ".digitaloceanspaces.com" in eventData:
+            from urllib.parse import urlparse
+            parsed_url = urlparse(eventData)
+            host = parsed_url.hostname
+            if host and host.endswith(".digitaloceanspaces.com"):
                 b = self.sf.urlFQDN(eventData)
                 evt = SpiderFootEvent(
                     "CLOUD_STORAGE_BUCKET", b, self.__name__, event)
