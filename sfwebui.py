@@ -1787,41 +1787,41 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-def scancorrelations(self: 'SpiderFootWebUi', id: str) -> list:
-    """Correlation results from a scan.
+    def scancorrelations(self: 'SpiderFootWebUi', id: str) -> list:
+        """Correlation results from a scan.
 
-    Args:
-        id (str): scan ID
+        Args:
+            id (str): scan ID
 
-    Returns:
-        list: correlation result list or error message
-    """
-    retdata = []
-    dbh = SpiderFootDb(self.config)
-    
-    try:
-        self.log.debug(f"Fetching correlations for scan {id}")
-        corrdata = dbh.scanCorrelationList(id)
-        self.log.debug(f"Found {len(corrdata)} correlations")
+        Returns:
+            list: correlation result list or error message
+        """
+        retdata = []
+        dbh = SpiderFootDb(self.config)
         
-        if not corrdata:
-            self.log.debug(f"No correlations found for scan {id}")
-            return retdata
-        
-        for row in corrdata:
-            # Ensure we have all expected fields (8 of them)
-            if len(row) < 8:
-                self.log.error(f"Correlation data format error: expected 8 fields, got {len(row)}")
-                continue
-                
-            retdata.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]])
+        try:
+            self.log.debug(f"Fetching correlations for scan {id}")
+            corrdata = dbh.scanCorrelationList(id)
+            self.log.debug(f"Found {len(corrdata)} correlations")
             
-    except Exception as e:
-        self.log.error(f"Error fetching correlations for scan {id}: {e}")
-        # Consider whether to return an error indicator instead of empty list
-        # to help the UI distinguish between "no correlations" and "error fetching correlations"
-        
-    return retdata
+            if not corrdata:
+                self.log.debug(f"No correlations found for scan {id}")
+                return retdata
+            
+            for row in corrdata:
+                # Ensure we have all expected fields (8 of them)
+                if len(row) < 8:
+                    self.log.error(f"Correlation data format error: expected 8 fields, got {len(row)}")
+                    continue
+                    
+                retdata.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]])
+                
+        except Exception as e:
+            self.log.error(f"Error fetching correlations for scan {id}: {e}")
+            # Consider whether to return an error indicator instead of empty list
+            # to help the UI distinguish between "no correlations" and "error fetching correlations"
+            
+        return retdata
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
