@@ -97,7 +97,8 @@ class sfp_botvrij(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from botvrij.eu.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from botvrij.eu.")
             self.errorState = True
             return None
 
@@ -111,7 +112,7 @@ class sfp_botvrij(SpiderFootPlugin):
         return self.parseBlacklist(res['content'])
 
     def parseBlacklist(self, blacklist):
-        """Parse plaintext blacklist
+        """Parse plaintext blacklist.
 
         Args:
             blacklist (str): plaintext blacklist from botvrij.eu
@@ -169,7 +170,8 @@ class sfp_botvrij(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with botvrij.eu")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with botvrij.eu")
 
         if not self.queryBlacklist(eventData):
             return

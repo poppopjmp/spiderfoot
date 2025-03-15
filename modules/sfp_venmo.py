@@ -109,7 +109,8 @@ class sfp_venmo(SpiderFootPlugin):
             display_name = data['first_name'] + " " + data['last_name']
 
         if display_name:
-            evt = SpiderFootEvent('HUMAN_NAME', display_name, self.__name__, event)
+            evt = SpiderFootEvent(
+                'HUMAN_NAME', display_name, self.__name__, event)
             self.notifyListeners(evt)
 
             evt = SpiderFootEvent('RAW_RIR_DATA', str(data),

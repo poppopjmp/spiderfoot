@@ -137,7 +137,8 @@ class sfp_grayhatwarfare(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts['api_key'] == "":
-            self.error("You enabled sfp_grayhatwarfare but did not set an API key!")
+            self.error(
+                "You enabled sfp_grayhatwarfare but did not set an API key!")
             self.errorState = True
             return
 
@@ -166,13 +167,16 @@ class sfp_grayhatwarfare(SpiderFootPlugin):
                 bucketKeyword = bucketName.split('.')[0]
                 self.debug(bucketKeyword)
                 if bucketKeyword.startswith(keyword) or bucketKeyword.endswith(keyword):
-                    evt = SpiderFootEvent('CLOUD_STORAGE_BUCKET', bucketName, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'CLOUD_STORAGE_BUCKET', bucketName, self.__name__, event)
                     self.notifyListeners(evt)
 
-                    evt = SpiderFootEvent('CLOUD_STORAGE_BUCKET_OPEN', f"{bucketName}: {row.get('fileCount')} files found.", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'CLOUD_STORAGE_BUCKET_OPEN', f"{bucketName}: {row.get('fileCount')} files found.", self.__name__, event)
                     self.notifyListeners(evt)
 
-                    evt = SpiderFootEvent('RAW_RIR_DATA', str(row), self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'RAW_RIR_DATA', str(row), self.__name__, event)
                     self.notifyListeners(evt)
 
             currentPage += 1

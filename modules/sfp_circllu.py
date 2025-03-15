@@ -107,7 +107,8 @@ class sfp_circllu(SpiderFootPlugin):
         else:
             url = "https://www.circl.lu/v2pssl/query/" + qry
 
-        secret = self.opts['api_key_login'] + ':' + self.opts['api_key_password']
+        secret = self.opts['api_key_login'] + \
+            ':' + self.opts['api_key_password']
         b64_val = base64.b64encode(secret.encode('utf-8'))
         headers = {
             'Authorization': f"Basic {b64_val.decode('utf-8')}"
@@ -118,7 +119,8 @@ class sfp_circllu(SpiderFootPlugin):
                                useragent="SpiderFoot", headers=headers)
 
         if res['code'] not in ["200", "201"]:
-            self.error("CIRCL.LU access seems to have been rejected or you have exceeded usage limits.")
+            self.error(
+                "CIRCL.LU access seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
 
@@ -146,7 +148,8 @@ class sfp_circllu(SpiderFootPlugin):
             return
 
         if self.opts['api_key_login'] == "" or self.opts['api_key_password'] == "":
-            self.error("You enabled sfp_circllu but did not set an credentials!")
+            self.error(
+                "You enabled sfp_circllu but did not set an credentials!")
             self.errorState = True
             return
 
@@ -162,15 +165,18 @@ class sfp_circllu(SpiderFootPlugin):
             if "/" in eventData:
                 addr, mask = eventData.split("/")
                 if int(mask) < 23:
-                    self.debug("Network size bigger than permitted by CIRCL.LU.")
+                    self.debug(
+                        "Network size bigger than permitted by CIRCL.LU.")
                 else:
                     ret = self.query(eventData, "PSSL")
                     if not ret:
-                        self.info("No CIRCL.LU passive SSL data found for " + eventData)
+                        self.info(
+                            "No CIRCL.LU passive SSL data found for " + eventData)
             else:
                 ret = self.query(eventData, "PSSL")
                 if not ret:
-                    self.info("No CIRCL.LU passive SSL data found for " + eventData)
+                    self.info(
+                        "No CIRCL.LU passive SSL data found for " + eventData)
 
             if ret:
                 try:
@@ -180,16 +186,19 @@ class sfp_circllu(SpiderFootPlugin):
                     for ip in j:
                         ipe = event
                         if ip != eventData:
-                            ipe = SpiderFootEvent("IP_ADDRESS", ip, self.__name__, event)
+                            ipe = SpiderFootEvent(
+                                "IP_ADDRESS", ip, self.__name__, event)
                             self.notifyListeners(ipe)
                         for crt in j[ip]['subjects']:
                             r = re.findall(r".*[\"\'](.+CN=([a-zA-Z0-9\-\*\.])+)[\"\'].*",
                                            str(j[ip]['subjects'][crt]), re.IGNORECASE)
                             if r:
-                                e = SpiderFootEvent("SSL_CERTIFICATE_ISSUED", r[0][0], self.__name__, ipe)
+                                e = SpiderFootEvent(
+                                    "SSL_CERTIFICATE_ISSUED", r[0][0], self.__name__, ipe)
                                 self.notifyListeners(e)
                 except Exception as e:
-                    self.error("Invalid response returned from CIRCL.LU: " + str(e))
+                    self.error(
+                        "Invalid response returned from CIRCL.LU: " + str(e))
 
         if eventName in ['IP_ADDRESS', 'INTERNET_NAME', 'DOMAIN_NAME']:
             ret = self.query(eventData, "PDNS")
@@ -204,10 +213,12 @@ class sfp_circllu(SpiderFootPlugin):
                 try:
                     rec = json.loads(line)
                 except Exception as e:
-                    self.error("Invalid response returned from CIRCL.LU: " + str(e))
+                    self.error(
+                        "Invalid response returned from CIRCL.LU: " + str(e))
                     continue
 
-                age_limit_ts = int(time.time()) - (86400 * self.opts['age_limit_days'])
+                age_limit_ts = int(time.time()) - \
+                    (86400 * self.opts['age_limit_days'])
                 if self.opts['age_limit_days'] > 0 and rec['time_last'] < age_limit_ts:
                     self.debug("Record found but too old, skipping.")
                     continue
@@ -234,11 +245,13 @@ class sfp_circllu(SpiderFootPlugin):
 
                     if not self.opts['cohostsamedomain']:
                         if self.getTarget().matches(co, includeParents=True):
-                            self.debug("Skipping " + co + " because it is on the same domain.")
+                            self.debug("Skipping " + co +
+                                       " because it is on the same domain.")
                             continue
 
                     if self.cohostcount < self.opts['maxcohost']:
-                        e = SpiderFootEvent("CO_HOSTED_SITE", co, self.__name__, event)
+                        e = SpiderFootEvent(
+                            "CO_HOSTED_SITE", co, self.__name__, event)
                         self.notifyListeners(e)
                         self.cohostcount += 1
 

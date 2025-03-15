@@ -86,7 +86,8 @@ class sfp_textmagic(SpiderFootPlugin):
             error_str = f", message {error_message}"
         else:
             error_str = ""
-        self.error(f"Failed to get results for {qry}, code {res['code']}{error_str}")
+        self.error(
+            f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
     def queryPhoneNumber(self, qry):
         headers = {
@@ -142,10 +143,12 @@ class sfp_textmagic(SpiderFootPlugin):
 
         phoneNumberType = data.get("type")
         if phoneNumberType is not None:
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(data), self.__name__, event)
             self.notifyListeners(evt)
 
-            evt = SpiderFootEvent("PHONE_NUMBER_TYPE", phoneNumberType, self.__name__, event)
+            evt = SpiderFootEvent("PHONE_NUMBER_TYPE",
+                                  phoneNumberType, self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_textmagic class

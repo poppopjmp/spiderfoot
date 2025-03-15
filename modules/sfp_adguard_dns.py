@@ -118,12 +118,14 @@ class sfp_adguard_dns(SpiderFootPlugin):
 
         if '94.140.14.35' in family:
             self.debug(f"{eventData} blocked by AdGuard Family DNS")
-            evt = SpiderFootEvent(blacklist_type, f"AdGuard - Family Filter [{eventData}]", self.__name__, event)
+            evt = SpiderFootEvent(
+                blacklist_type, f"AdGuard - Family Filter [{eventData}]", self.__name__, event)
             self.notifyListeners(evt)
 
         if '94.140.14.35' in default:
             self.debug(f"{eventData} blocked by AdGuard Default DNS")
-            evt = SpiderFootEvent(blacklist_type, f"AdGuard - Default Filter [{eventData}]", self.__name__, event)
+            evt = SpiderFootEvent(
+                blacklist_type, f"AdGuard - Default Filter [{eventData}]", self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_adguard_dns class

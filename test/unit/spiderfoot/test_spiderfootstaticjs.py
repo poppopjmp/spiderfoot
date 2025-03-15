@@ -8,7 +8,8 @@ class TestSpiderFootStaticJS(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+        cls.driver = webdriver.Chrome(
+            service=ChromeService(ChromeDriverManager().install()))
         cls.driver.get("file:///path/to/spiderfoot/static/js/spiderfoot.html")
 
     @classmethod
@@ -20,7 +21,8 @@ class TestSpiderFootStaticJS(unittest.TestCase):
         self.assertEqual(result, "expected result")
 
     def test_spiderfoot_newscan_js_function(self):
-        result = self.driver.execute_script("return spiderfootNewScanFunction();")
+        result = self.driver.execute_script(
+            "return spiderfootNewScanFunction();")
         self.assertEqual(result, "expected result")
 
     def test_spiderfoot_opts_js_function(self):
@@ -28,7 +30,8 @@ class TestSpiderFootStaticJS(unittest.TestCase):
         self.assertEqual(result, "expected result")
 
     def test_spiderfoot_scanlist_js_function(self):
-        result = self.driver.execute_script("return spiderfootScanListFunction();")
+        result = self.driver.execute_script(
+            "return spiderfootScanListFunction();")
         self.assertEqual(result, "expected result")
 
     def test_viz_js_function(self):

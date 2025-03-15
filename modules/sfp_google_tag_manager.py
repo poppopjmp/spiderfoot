@@ -161,7 +161,8 @@ class sfp_google_tag_manager(SpiderFootPlugin):
         for host in hosts:
             # we ignore unresolved hosts due to large number of false positives
             if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
-                self.debug(f"Potential host name '{host}' could not be resolved")
+                self.debug(
+                    f"Potential host name '{host}' could not be resolved")
                 continue
 
             if self.getTarget().matches(host, includeChildren=True, includeParents=True):

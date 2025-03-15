@@ -4,7 +4,8 @@ import time
 
 
 class SpiderFootEvent():
-    """SpiderFootEvent object representing identified data and associated meta data.
+    """SpiderFootEvent object representing identified data and associated meta
+    data.
 
     Attributes:
         generated (float): Timestamp of event creation time
@@ -197,10 +198,12 @@ class SpiderFootEvent():
             ValueError: confidence value was invalid
         """
         if not isinstance(confidence, int):
-            raise TypeError(f"confidence is {type(confidence)}; expected int()")
+            raise TypeError(
+                f"confidence is {type(confidence)}; expected int()")
 
         if not 0 <= confidence <= 100:
-            raise ValueError(f"confidence value is {confidence}; expected 0 - 100")
+            raise ValueError(
+                f"confidence value is {confidence}; expected 0 - 100")
 
         self._confidence = confidence
 
@@ -216,10 +219,12 @@ class SpiderFootEvent():
             ValueError: visibility value was invalid
         """
         if not isinstance(visibility, int):
-            raise TypeError(f"visibility is {type(visibility)}; expected int()")
+            raise TypeError(
+                f"visibility is {type(visibility)}; expected int()")
 
         if not 0 <= visibility <= 100:
-            raise ValueError(f"visibility value is {visibility}; expected 0 - 100")
+            raise ValueError(
+                f"visibility value is {visibility}; expected 0 - 100")
 
         self._visibility = visibility
 
@@ -298,7 +303,8 @@ class SpiderFootEvent():
             return
 
         if not isinstance(sourceEvent, SpiderFootEvent):
-            raise TypeError(f"sourceEvent is {type(sourceEvent)}; expected SpiderFootEvent()")
+            raise TypeError(
+                f"sourceEvent is {type(sourceEvent)}; expected SpiderFootEvent()")
 
         self._sourceEvent = sourceEvent
         self._sourceEventHash = self.sourceEvent.hash

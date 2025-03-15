@@ -92,7 +92,8 @@ class sfp_hunter(SpiderFootPlugin):
 
         url = f"https://api.hunter.io/v2/domain-search?{urllib.parse.urlencode(params)}"
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
+        res = self.sf.fetchUrl(
+            url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
 
         if res['code'] == "404":
             return None

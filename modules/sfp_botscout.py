@@ -114,7 +114,8 @@ class sfp_botscout(SpiderFootPlugin):
             return None
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from BotScout.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from BotScout.")
             self.errorState = True
             return None
 
@@ -143,7 +144,8 @@ class sfp_botscout(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {event.module}")
 
         if not self.opts['api_key']:
-            self.info("You enabled sfp_botscout but did not set an API key! Queries will be limited to 100 per day.")
+            self.info(
+                "You enabled sfp_botscout but did not set an API key! Queries will be limited to 100 per day.")
 
         if eventData in self.results:
             self.debug(f"Skipping {eventData} as already searched.")
@@ -165,10 +167,12 @@ class sfp_botscout(SpiderFootPlugin):
             url = f"https://botscout.com/ipcheck.htm?ip={eventData}"
             text = f"BotScout [{eventData}]\n<SFURL>{url}</SFURL>"
 
-            evt = SpiderFootEvent("MALICIOUS_IPADDR", text, self.__name__, event)
+            evt = SpiderFootEvent("MALICIOUS_IPADDR",
+                                  text, self.__name__, event)
             self.notifyListeners(evt)
 
-            evt = SpiderFootEvent("BLACKLISTED_IPADDR", text, self.__name__, event)
+            evt = SpiderFootEvent("BLACKLISTED_IPADDR",
+                                  text, self.__name__, event)
             self.notifyListeners(evt)
         elif eventName == "EMAILADDR":
             res = self.queryEmail(eventData)
@@ -182,7 +186,8 @@ class sfp_botscout(SpiderFootPlugin):
             url = f"https://botscout.com/search.htm?sterm={eventData}&stype=q"
             text = f"BotScout [{eventData}]\n<SFURL>{url}</SFURL>"
 
-            evt = SpiderFootEvent("MALICIOUS_EMAILADDR", text, self.__name__, event)
+            evt = SpiderFootEvent("MALICIOUS_EMAILADDR",
+                                  text, self.__name__, event)
             self.notifyListeners(evt)
         else:
             self.debug(f"Unexpected event type {eventName}, skipping")

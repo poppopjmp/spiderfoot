@@ -143,18 +143,18 @@ class sfp_threatminer(SpiderFootPlugin):
             if not self.opts['netblocklookup']:
                 return
             if IPNetwork(eventData).prefixlen < self.opts['maxnetblock']:
-                self.debug("Network size bigger than permitted: "
-                           + str(IPNetwork(eventData).prefixlen) + " > "
-                           + str(self.opts['maxnetblock']))
+                self.debug("Network size bigger than permitted: " +
+                           str(IPNetwork(eventData).prefixlen) + " > " +
+                           str(self.opts['maxnetblock']))
                 return
 
         if eventName == 'NETBLOCK_MEMBER':
             if not self.opts['subnetlookup']:
                 return
             if IPNetwork(eventData).prefixlen < self.opts['maxsubnet']:
-                self.debug("Network size bigger than permitted: "
-                           + str(IPNetwork(eventData).prefixlen) + " > "
-                           + str(self.opts['maxsubnet']))
+                self.debug("Network size bigger than permitted: " +
+                           str(IPNetwork(eventData).prefixlen) + " > " +
+                           str(self.opts['maxsubnet']))
                 return
 
         qrylist = list()
@@ -185,9 +185,11 @@ class sfp_threatminer(SpiderFootPlugin):
                 # Skip stuff with no date
                 if rec.get('last_seen') == '':
                     continue
-                last_seen = datetime.strptime(rec.get('last_seen', "1970-01-01 00:00:00"), '%Y-%m-%d %H:%M:%S')
+                last_seen = datetime.strptime(
+                    rec.get('last_seen', "1970-01-01 00:00:00"), '%Y-%m-%d %H:%M:%S')
                 last_ts = int(time.mktime(last_seen.timetuple()))
-                age_limit_ts = int(time.time()) - (86400 * self.opts['age_limit_days'])
+                age_limit_ts = int(time.time()) - \
+                    (86400 * self.opts['age_limit_days'])
                 if self.opts['age_limit_days'] > 0 and last_ts < age_limit_ts:
                     self.debug("Record found but too old, skipping.")
                     continue
@@ -197,9 +199,11 @@ class sfp_threatminer(SpiderFootPlugin):
                     continue
                 if self.getTarget().matches(host, includeParents=True):
                     if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
-                        evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
                     else:
-                        evt = SpiderFootEvent("INTERNET_NAME", host, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "INTERNET_NAME", host, self.__name__, event)
                     self.notifyListeners(evt)
                     self.reportedhosts[host] = True
                     continue
@@ -229,9 +233,11 @@ class sfp_threatminer(SpiderFootPlugin):
                 self.reportedhosts[host] = True
 
                 if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
-                    evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
                 else:
-                    evt = SpiderFootEvent("INTERNET_NAME", host, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "INTERNET_NAME", host, self.__name__, event)
                 evt = SpiderFootEvent(evtType, host, self.__name__, event)
                 self.notifyListeners(evt)
 

@@ -5,9 +5,7 @@ import unittest
 
 
 class TestSfcli(unittest.TestCase):
-    """
-    Test TestSfcli
-    """
+    """Test TestSfcli."""
 
     def execute(self, command):
         proc = subprocess.Popen(

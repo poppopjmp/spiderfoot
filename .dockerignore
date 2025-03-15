@@ -17,7 +17,17 @@ __pycache__
 htmlcov/
 docs/
 
-.github
+.github/
 react-web-interface
-test
+test/
 docker-compose*
+Dockerfile
+Dockerfile.full
+.pre-commit-config.yml
+docker-compose-production-files/
+THANKYOU
+README.md
+generate-certificate
+.pylintrc
+.ruff_cache
+.pytest_cache

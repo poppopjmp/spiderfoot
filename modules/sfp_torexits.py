@@ -93,7 +93,8 @@ class sfp_torexits(SpiderFootPlugin):
         return False
 
     def retrieveExitNodes(self):
-        exit_addresses = self.sf.cacheGet('torexitnodes', self.opts.get('cacheperiod', 1))
+        exit_addresses = self.sf.cacheGet(
+            'torexitnodes', self.opts.get('cacheperiod', 1))
 
         if exit_addresses is not None:
             return self.parseExitNodes(exit_addresses)
@@ -105,7 +106,8 @@ class sfp_torexits(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from onionoo.torproject.org.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from onionoo.torproject.org.")
             self.errorState = True
             return None
 
@@ -119,7 +121,7 @@ class sfp_torexits(SpiderFootPlugin):
         return self.parseExitNodes(res['content'])
 
     def parseExitNodes(self, data):
-        """Extract exit node IP addresses from TOR relay search results
+        """Extract exit node IP addresses from TOR relay search results.
 
         Args:
             data (str): TOR relay search results
@@ -213,10 +215,12 @@ class sfp_torexits(SpiderFootPlugin):
 
             # For netblocks, we need to create the associated IP address event first.
             if eventName == 'NETBLOCK_OWNER':
-                pevent = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "IP_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             if eventName == 'NETBLOCKV6_OWNER':
-                pevent = SpiderFootEvent("IPV6_ADDRESS", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "IPV6_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             else:
                 pevent = event

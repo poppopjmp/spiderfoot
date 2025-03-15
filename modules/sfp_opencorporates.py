@@ -74,7 +74,7 @@ class sfp_opencorporates(SpiderFootPlugin):
         return ["COMPANY_NAME", "PHYSICAL_ADDRESS", "RAW_RIR_DATA"]
 
     def searchCompany(self, qry):
-        """Search for company name
+        """Search for company name.
 
         Args:
             qry (str): company name
@@ -170,7 +170,8 @@ class sfp_opencorporates(SpiderFootPlugin):
 
                 location = location.replace("\n", ',')
                 self.info("Found company address: " + location)
-                e = SpiderFootEvent("PHYSICAL_ADDRESS", location, self.__name__, sevt)
+                e = SpiderFootEvent("PHYSICAL_ADDRESS",
+                                    location, self.__name__, sevt)
                 self.notifyListeners(e)
 
         # Extract previous company names
@@ -192,7 +193,8 @@ class sfp_opencorporates(SpiderFootPlugin):
                 n = officer.get('name')
                 if n:
                     self.info("Found company officer: " + n)
-                    e = SpiderFootEvent("RAW_RIR_DATA", "Possible full name: " + n, self.__name__, sevt)
+                    e = SpiderFootEvent(
+                        "RAW_RIR_DATA", "Possible full name: " + n, self.__name__, sevt)
                     self.notifyListeners(e)
 
     def handleEvent(self, event):
@@ -209,7 +211,8 @@ class sfp_opencorporates(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts['api_key'] == '':
-            self.error(f"Warning: You enabled {self.__class__.__name__} but did not set an API key! Queries will be limited to 50 per day and 200 per month.")
+            self.error(
+                f"Warning: You enabled {self.__class__.__name__} but did not set an API key! Queries will be limited to 50 per day and 200 per month.")
 
         res = self.searchCompany(f"{eventData}*")
 
@@ -243,7 +246,8 @@ class sfp_opencorporates(SpiderFootPlugin):
             if not company_number or not jurisdiction_code:
                 continue
 
-            res = self.retrieveCompanyDetails(jurisdiction_code, company_number)
+            res = self.retrieveCompanyDetails(
+                jurisdiction_code, company_number)
 
             if not res:
                 continue

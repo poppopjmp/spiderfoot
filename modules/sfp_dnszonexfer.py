@@ -84,7 +84,8 @@ class sfp_dnszonexfer(SpiderFootPlugin):
                 return
 
             if not nsips:
-                self.error("Couldn't resolve the name server, so not attempting zone transfer.")
+                self.error(
+                    "Couldn't resolve the name server, so not attempting zone transfer.")
                 return
 
             for n in nsips:
@@ -98,17 +99,20 @@ class sfp_dnszonexfer(SpiderFootPlugin):
             self.debug("Trying for name: " + name)
             try:
                 ret = list()
-                z = dns.zone.from_xfr(dns.query.xfr(nsip, name, timeout=int(self.opts["timeout"])))
+                z = dns.zone.from_xfr(dns.query.xfr(
+                    nsip, name, timeout=int(self.opts["timeout"])))
                 names = list(z.nodes.keys())
                 for n in names:
                     ret.append(z[n].to_text(n))
 
-                evt = SpiderFootEvent("RAW_DNS_RECORDS", "\n".join(ret), self.__name__, parentEvent)
+                evt = SpiderFootEvent("RAW_DNS_RECORDS", "\n".join(
+                    ret), self.__name__, parentEvent)
                 self.notifyListeners(evt)
 
                 # Try and pull out individual records
                 for row in ret:
-                    pat = re.compile(r"^(\S+)\.?\s+\d+\s+IN\s+[AC].*", re.IGNORECASE | re.DOTALL)
+                    pat = re.compile(
+                        r"^(\S+)\.?\s+\d+\s+IN\s+[AC].*", re.IGNORECASE | re.DOTALL)
                     grps = re.findall(pat, row)
                     if len(grps) > 0:
                         for strdata in grps:
@@ -118,10 +122,12 @@ class sfp_dnszonexfer(SpiderFootPlugin):
                             else:
                                 strdata = strdata + "." + name
 
-                            evt = SpiderFootEvent("INTERNET_NAME", strdata, self.__name__, parentEvent)
+                            evt = SpiderFootEvent(
+                                "INTERNET_NAME", strdata, self.__name__, parentEvent)
                             self.notifyListeners(evt)
 
             except Exception as e:
-                self.info(f"Unable to perform DNS zone transfer for {eventData} ({name}): {e}")
+                self.info(
+                    f"Unable to perform DNS zone transfer for {eventData} ({name}): {e}")
 
 # End of sfp_dnszonexfer class

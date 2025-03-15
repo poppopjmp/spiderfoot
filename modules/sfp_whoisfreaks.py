@@ -85,14 +85,16 @@ class sfp_whoisfreaks(SpiderFootPlugin):
 
     # Search WhoisFreaks
     def query(self, qry, querytype, page=1, accum=None):
-        url = "https://api.whoisfreaks.com/v1.0/whois?whois=reverse&mode=mini&apiKey=" + self.opts['api_key']
+        url = "https://api.whoisfreaks.com/v1.0/whois?whois=reverse&mode=mini&apiKey=" + \
+            self.opts['api_key']
         url += "&" + querytype + "=" + qry + "&page=" + str(page)
 
         res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
                                useragent="SpiderFoot")
 
         if res['code'] in ["401", "429", "413", "412"]:
-            self.error("WhoisFreaks API key seems to have been rejected or you have exceeded usage limits.")
+            self.error(
+                "WhoisFreaks API key seems to have been rejected or you have exceeded usage limits.")
             self.errorState = True
             return None
 
@@ -127,7 +129,8 @@ class sfp_whoisfreaks(SpiderFootPlugin):
 
             return info.get('whois_domains_historical', [])
         except Exception as e:
-            self.error("Error processing JSON response from WhoisFreaks: " + str(e))
+            self.error(
+                "Error processing JSON response from WhoisFreaks: " + str(e))
             return None
 
     # Handle events sent to this module
@@ -165,9 +168,11 @@ class sfp_whoisfreaks(SpiderFootPlugin):
             for record in records:
                 domain_name = record.get('domain_name')
                 if domain_name:
-                    evt = SpiderFootEvent("AFFILIATE_INTERNET_NAME", domain_name, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "AFFILIATE_INTERNET_NAME", domain_name, self.__name__, event)
                     self.notifyListeners(evt)
 
                     if self.sf.isDomain(domain_name, self.opts['_internettlds']):
-                        evt = SpiderFootEvent('AFFILIATE_DOMAIN_NAME', domain_name, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            'AFFILIATE_DOMAIN_NAME', domain_name, self.__name__, event)
                         self.notifyListeners(evt)

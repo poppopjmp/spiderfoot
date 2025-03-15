@@ -120,12 +120,14 @@ class sfp_fullhunt(SpiderFootPlugin):
             return None
 
         if res['code'] == "404":
-            self.error("Not Found -- The requested resource could not be found.")
+            self.error(
+                "Not Found -- The requested resource could not be found.")
             return None
 
         if res['code'] == "429":
             self.errorState = True
-            self.error("Too Many Requests -- You are sending too many requests.")
+            self.error(
+                "Too Many Requests -- You are sending too many requests.")
             return None
 
         try:
@@ -199,7 +201,8 @@ class sfp_fullhunt(SpiderFootPlugin):
             network_ports = record.get('network_ports')
             if network_ports:
                 for port in network_ports:
-                    e = SpiderFootEvent("TCP_PORT_OPEN", f"{host}:{port}", self.__name__, event)
+                    e = SpiderFootEvent(
+                        "TCP_PORT_OPEN", f"{host}:{port}", self.__name__, event)
                     self.notifyListeners(e)
 
         for host in set(mail_servers):

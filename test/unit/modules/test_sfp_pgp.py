@@ -41,7 +41,8 @@ class TestModulePgp(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         module.opts['keyserver_search1'] = ''
         module.opts['keyserver_search2'] = ''

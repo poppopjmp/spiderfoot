@@ -48,14 +48,16 @@ class TestModuleEthereum(unittest.TestCase):
 
             raise Exception("OK")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_ethereum)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_ethereum)
 
         event_type = 'ROOT'
         event_data = 'example data 0x89205A3A3b2A69De6Dbf7f01ED13B2108B2c43e7 example data'
         event_module = ''
         source_event = ''
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         with self.assertRaises(Exception) as cm:
             module.handleEvent(evt)
@@ -76,14 +78,16 @@ class TestModuleEthereum(unittest.TestCase):
         def new_notifyListeners(self, event):
             raise Exception(f"Raised event {event.eventType}: {event.data}")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_ethereum)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_ethereum)
 
         event_type = 'ROOT'
         event_data = 'example data'
         event_module = ''
         source_event = ''
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)

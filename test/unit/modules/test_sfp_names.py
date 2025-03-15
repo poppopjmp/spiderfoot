@@ -54,13 +54,15 @@ class TestModuleNames(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         event_type = 'EMAILADDR'
         event_data = 'firstname.lastname@spiderfoot.net'
         event_module = 'example module'
         source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         with self.assertRaises(Exception) as cm:
             module.handleEvent(evt)
@@ -87,13 +89,15 @@ class TestModuleNames(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         event_type = 'EMAILADDR'
         event_data = 'firstname.lastname1@spiderfoot.net'
         event_module = 'example module'
         source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         result = module.handleEvent(evt)
 
@@ -119,13 +123,15 @@ class TestModuleNames(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         event_type = 'EMAILADDR'
         event_data = 'lastname@spiderfoot.net'
         event_module = 'example module'
         source_event = evt
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         result = module.handleEvent(evt)
 

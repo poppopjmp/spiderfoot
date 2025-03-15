@@ -155,7 +155,8 @@ class sfp_spamhaus(SpiderFootPlugin):
 
             max_subnet = self.opts['maxsubnet']
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
             malicious_type = "MALICIOUS_SUBNET"
@@ -166,7 +167,8 @@ class sfp_spamhaus(SpiderFootPlugin):
 
             max_netblock = self.opts['maxnetblock']
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
             malicious_type = "MALICIOUS_NETBLOCK"
@@ -203,25 +205,30 @@ class sfp_spamhaus(SpiderFootPlugin):
                     continue
 
                 if k == '127.255.255.254':
-                    self.error('Spamhaus denied query via public/open resolver')
+                    self.error(
+                        'Spamhaus denied query via public/open resolver')
                     self.errorState = True
                     continue
 
                 if k == '127.255.255.255':
-                    self.error('Spamhaus rejected query due to excessive number of queries')
+                    self.error(
+                        'Spamhaus rejected query due to excessive number of queries')
                     self.errorState = True
                     continue
 
                 if k not in self.checks:
                     if not k.endswith('.zen.spamhaus.org'):
                         # This is an error. The "checks" dict may need to be updated.
-                        self.error(f"Spamhaus Zen resolved address {addr} to unknown IP address {result} not found in Spamhaus Zen list.")
+                        self.error(
+                            f"Spamhaus Zen resolved address {addr} to unknown IP address {result} not found in Spamhaus Zen list.")
                     continue
 
-                evt = SpiderFootEvent(blacklist_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
                 self.notifyListeners(evt)
 
-                evt = SpiderFootEvent(malicious_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
+                evt = SpiderFootEvent(
+                    malicious_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_spamhaus class

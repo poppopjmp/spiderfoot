@@ -44,13 +44,15 @@ class TestSpiderFootHelpers(unittest.TestCase):
         with patch('spiderfoot.helpers.os') as mock_os, patch('spiderfoot.helpers.__import__') as mock_import:
             mock_os.path.isdir.return_value = True
             mock_os.listdir.return_value = ['sfp_test.py']
-            mock_import.return_value.sfp_test.asdict.return_value = {'cats': ['Content Analysis']}
+            mock_import.return_value.sfp_test.asdict.return_value = {
+                'cats': ['Content Analysis']}
             modules = SpiderFootHelpers.loadModulesAsDict('path')
             self.assertIn('sfp_test', modules)
 
     def test_loadCorrelationRulesRaw_invalid_ignore_files_type(self):
         with self.assertRaises(TypeError):
-            SpiderFootHelpers.loadCorrelationRulesRaw('path', 'invalid_ignore_files')
+            SpiderFootHelpers.loadCorrelationRulesRaw(
+                'path', 'invalid_ignore_files')
 
     def test_loadCorrelationRulesRaw_invalid_path(self):
         with self.assertRaises(ValueError):
@@ -64,110 +66,207 @@ class TestSpiderFootHelpers(unittest.TestCase):
             self.assertIn('test', rules)
 
     def test_targetTypeFromString(self):
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('1.2.3.4'), 'IP_ADDRESS')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('1.2.3.4/24'), 'NETBLOCK_OWNER')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('test@example.com'), 'EMAILADDR')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('+1234567890'), 'PHONE_NUMBER')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('"John Doe"'), 'HUMAN_NAME')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('"username"'), 'USERNAME')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('12345'), 'BGP_AS_OWNER')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('2001:0db8:85a3:0000:0000:8a2e:0370:7334'), 'IPV6_ADDRESS')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('2001:0db8::/32'), 'NETBLOCKV6_OWNER')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('example.com'), 'INTERNET_NAME')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'), 'BITCOIN_ADDRESS')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            '1.2.3.4'), 'IP_ADDRESS')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            '1.2.3.4/24'), 'NETBLOCK_OWNER')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            'test@example.com'), 'EMAILADDR')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            '+1234567890'), 'PHONE_NUMBER')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            '"John Doe"'), 'HUMAN_NAME')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            '"username"'), 'USERNAME')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            '12345'), 'BGP_AS_OWNER')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            '2001:0db8:85a3:0000:0000:8a2e:0370:7334'), 'IPV6_ADDRESS')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            '2001:0db8::/32'), 'NETBLOCKV6_OWNER')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            'example.com'), 'INTERNET_NAME')
+        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
+            '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'), 'BITCOIN_ADDRESS')
         self.assertIsNone(SpiderFootHelpers.targetTypeFromString('invalid'))
 
     def test_urlRelativeToAbsolute(self):
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/../test'), 'http://example.com/test')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2'), 'http://example.com/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/./test2'), 'http://example.com/test/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../../test2'), 'http://example.com/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/.././test2'), 'http://example.com/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3'), 'http://example.com/test3')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/./test3'), 'http://example.com/test2/test3')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/.././test3'), 'http://example.com/test3')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4'), 'http://example.com/test4')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/./test4'), 'http://example.com/test3/test4')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/.././test4'), 'http://example.com/test4')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5'), 'http://example.com/test5')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/./test5'), 'http://example.com/test4/test5')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/.././test5'), 'http://example.com/test5')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6'), 'http://example.com/test6')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/./test6'), 'http://example.com/test5/test6')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/.././test6'), 'http://example.com/test6')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7'), 'http://example.com/test7')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/./test7'), 'http://example.com/test6/test7')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/.././test7'), 'http://example.com/test7')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8'), 'http://example.com/test8')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/./test8'), 'http://example.com/test7/test8')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/.././test8'), 'http://example.com/test8')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/../test9'), 'http://example.com/test9')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/./test9'), 'http://example.com/test8/test9')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute('http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/.././test9'), 'http://example.com/test9')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/../test'), 'http://example.com/test')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2'), 'http://example.com/test2')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/./test2'), 'http://example.com/test/test2')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../../test2'), 'http://example.com/test2')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/.././test2'), 'http://example.com/test2')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3'), 'http://example.com/test3')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/./test3'), 'http://example.com/test2/test3')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/.././test3'), 'http://example.com/test3')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4'), 'http://example.com/test4')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/./test4'), 'http://example.com/test3/test4')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/.././test4'), 'http://example.com/test4')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5'), 'http://example.com/test5')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/./test5'), 'http://example.com/test4/test5')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/.././test5'), 'http://example.com/test5')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/../test6'), 'http://example.com/test6')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/./test6'), 'http://example.com/test5/test6')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/.././test6'), 'http://example.com/test6')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7'), 'http://example.com/test7')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/./test7'), 'http://example.com/test6/test7')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/.././test7'), 'http://example.com/test7')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8'), 'http://example.com/test8')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/./test8'), 'http://example.com/test7/test8')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/.././test8'), 'http://example.com/test8')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/../test9'), 'http://example.com/test9')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/./test9'), 'http://example.com/test8/test9')
+        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
+            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/.././test9'), 'http://example.com/test9')
 
     def test_urlBaseDir(self):
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test'), 'http://example.com/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/'), 'http://example.com/test/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2'), 'http://example.com/test/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/'), 'http://example.com/test/test2/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3'), 'http://example.com/test/test2/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/'), 'http://example.com/test/test2/test3/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4'), 'http://example.com/test/test2/test3/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/'), 'http://example.com/test/test2/test3/test4/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5'), 'http://example.com/test/test2/test3/test4/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/'), 'http://example.com/test/test2/test3/test4/test5/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6'), 'http://example.com/test/test2/test3/test4/test5/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/'), 'http://example.com/test/test2/test3/test4/test5/test6/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7'), 'http://example.com/test/test2/test3/test4/test5/test6/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15/'), 'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test'), 'http://example.com/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/'), 'http://example.com/test/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2'), 'http://example.com/test/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2/'), 'http://example.com/test/test2/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2/test3'), 'http://example.com/test/test2/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2/test3/'), 'http://example.com/test/test2/test3/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2/test3/test4'), 'http://example.com/test/test2/test3/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2/test3/test4/'), 'http://example.com/test/test2/test3/test4/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2/test3/test4/test5'), 'http://example.com/test/test2/test3/test4/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2/test3/test4/test5/'), 'http://example.com/test/test2/test3/test4/test5/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2/test3/test4/test5/test6'), 'http://example.com/test/test2/test3/test4/test5/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2/test3/test4/test5/test6/'), 'http://example.com/test/test2/test3/test4/test5/test6/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7'), 'http://example.com/test/test2/test3/test4/test5/test6/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/')
+        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15/'),
+                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15/')
 
     def test_urlBaseUrl(self):
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15'), 'http://example.com')
+        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
+            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15/'), 'http://example.com')
 
     def test_dictionaryWordsFromWordlists(self):
         with patch('spiderfoot.helpers.resources.open_text', unittest.mock.mock_open(read_data='word1\nword2\nword3')):
@@ -185,7 +284,8 @@ class TestSpiderFootHelpers(unittest.TestCase):
 
     def test_usernamesFromWordlists(self):
         with patch('spiderfoot.helpers.resources.open_text', unittest.mock.mock_open(read_data='user1\nuser2\nuser3')):
-            usernames = SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])
+            usernames = SpiderFootHelpers.usernamesFromWordlists(
+                ['generic-usernames'])
             self.assertIn('user1', usernames)
             self.assertIn('user2', usernames)
             self.assertIn('user3', usernames)
@@ -247,12 +347,15 @@ class TestSpiderFootHelpers(unittest.TestCase):
 
     def test_extractLinksFromHtml(self):
         with patch('spiderfoot.helpers.BeautifulSoup') as mock_bs:
-            mock_bs.return_value.find_all.return_value = [{'href': 'http://example.com'}]
-            links = SpiderFootHelpers.extractLinksFromHtml('http://example.com', '<a href="http://example.com">link</a>', ['example.com'])
+            mock_bs.return_value.find_all.return_value = [
+                {'href': 'http://example.com'}]
+            links = SpiderFootHelpers.extractLinksFromHtml(
+                'http://example.com', '<a href="http://example.com">link</a>', ['example.com'])
             self.assertIn('http://example.com', links)
 
     def test_extractHashesFromText(self):
-        hashes = SpiderFootHelpers.extractHashesFromText('d41d8cd98f00b204e9800998ecf8427e')
+        hashes = SpiderFootHelpers.extractHashesFromText(
+            'd41d8cd98f00b204e9800998ecf8427e')
         self.assertIn(('MD5', 'd41d8cd98f00b204e9800998ecf8427e'), hashes)
 
     def test_extractUrlsFromRobotsTxt(self):
@@ -260,19 +363,23 @@ class TestSpiderFootHelpers(unittest.TestCase):
         self.assertIn('/test', urls)
 
     def test_extractPgpKeysFromText(self):
-        keys = SpiderFootHelpers.extractPgpKeysFromText('-----BEGIN PGP PUBLIC KEY BLOCK-----\n...\n-----END PGP PUBLIC KEY BLOCK-----')
-        self.assertIn('-----BEGIN PGP PUBLIC KEY BLOCK-----\n...\n-----END PGP PUBLIC KEY BLOCK-----', keys)
+        keys = SpiderFootHelpers.extractPgpKeysFromText(
+            '-----BEGIN PGP PUBLIC KEY BLOCK-----\n...\n-----END PGP PUBLIC KEY BLOCK-----')
+        self.assertIn(
+            '-----BEGIN PGP PUBLIC KEY BLOCK-----\n...\n-----END PGP PUBLIC KEY BLOCK-----', keys)
 
     def test_extractEmailsFromText(self):
         emails = SpiderFootHelpers.extractEmailsFromText('test@example.com')
         self.assertIn('test@example.com', emails)
 
     def test_extractIbansFromText(self):
-        ibans = SpiderFootHelpers.extractIbansFromText('DE89370400440532013000')
+        ibans = SpiderFootHelpers.extractIbansFromText(
+            'DE89370400440532013000')
         self.assertIn('DE89370400440532013000', ibans)
 
     def test_extractCreditCardsFromText(self):
-        credit_cards = SpiderFootHelpers.extractCreditCardsFromText('4111111111111111')
+        credit_cards = SpiderFootHelpers.extractCreditCardsFromText(
+            '4111111111111111')
         self.assertIn('4111111111111111', credit_cards)
 
     def test_extractUrlsFromText(self):
@@ -290,11 +397,14 @@ class TestSpiderFootHelpers(unittest.TestCase):
             self.assertEqual(pem_cert, 'pem_cert')
 
     def test_countryNameFromCountryCode(self):
-        self.assertEqual(SpiderFootHelpers.countryNameFromCountryCode('US'), 'United States')
-        self.assertIsNone(SpiderFootHelpers.countryNameFromCountryCode('invalid_code'))
+        self.assertEqual(
+            SpiderFootHelpers.countryNameFromCountryCode('US'), 'United States')
+        self.assertIsNone(
+            SpiderFootHelpers.countryNameFromCountryCode('invalid_code'))
 
     def test_countryNameFromTld(self):
-        self.assertEqual(SpiderFootHelpers.countryNameFromTld('us'), 'United States')
+        self.assertEqual(
+            SpiderFootHelpers.countryNameFromTld('us'), 'United States')
         self.assertIsNone(SpiderFootHelpers.countryNameFromTld('invalid_tld'))
 
     def test_countryCodes(self):

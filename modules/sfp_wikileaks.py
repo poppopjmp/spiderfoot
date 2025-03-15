@@ -90,13 +90,16 @@ class sfp_wikileaks(SpiderFootPlugin):
             external = ""
 
         if self.opts['daysback'] is not None and self.opts['daysback'] != 0:
-            newDate = datetime.datetime.now() - datetime.timedelta(days=int(self.opts['daysback']))
+            newDate = datetime.datetime.now(
+            ) - datetime.timedelta(days=int(self.opts['daysback']))
             maxDate = newDate.strftime("%Y-%m-%d")
         else:
             maxDate = ""
 
         qdata = eventData.replace(" ", "+")
-        wlurl = "query=%22" + qdata + "%22" + "&released_date_start=" + maxDate + "&include_external_sources=" + external + "&new_search=True&order_by=most_relevant#results"
+        wlurl = "query=%22" + qdata + "%22" + "&released_date_start=" + maxDate + \
+            "&include_external_sources=" + external + \
+                "&new_search=True&order_by=most_relevant#results"
 
         res = self.sf.fetchUrl(
             "https://search.wikileaks.org/?" + wlurl
@@ -106,11 +109,13 @@ class sfp_wikileaks(SpiderFootPlugin):
             return
 
         links = dict()
-        p = SpiderFootHelpers.extractLinksFromHtml(wlurl, res['content'], "wikileaks.org")
+        p = SpiderFootHelpers.extractLinksFromHtml(
+            wlurl, res['content'], "wikileaks.org")
         if p:
             links.update(p)
 
-        p = SpiderFootHelpers.extractLinksFromHtml(wlurl, res['content'], "cryptome.org")
+        p = SpiderFootHelpers.extractLinksFromHtml(
+            wlurl, res['content'], "cryptome.org")
         if p:
             links.update(p)
 
@@ -140,7 +145,8 @@ class sfp_wikileaks(SpiderFootPlugin):
                 # Wikileaks leak links will have a nested folder structure link
                 if link.count('/') >= 4:
                     if not link.endswith(".js") and not link.endswith(".css"):
-                        evt = SpiderFootEvent("LEAKSITE_URL", link, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "LEAKSITE_URL", link, self.__name__, event)
                         self.notifyListeners(evt)
 
             # Fail-safe to prevent infinite looping
@@ -160,11 +166,13 @@ class sfp_wikileaks(SpiderFootPlugin):
                     break
 
                 links = dict()
-                p = SpiderFootHelpers.extractLinksFromHtml(wlurl, res['content'], "wikileaks.org")
+                p = SpiderFootHelpers.extractLinksFromHtml(
+                    wlurl, res['content'], "wikileaks.org")
                 if p:
                     links.update(p)
 
-                p = SpiderFootHelpers.extractLinksFromHtml(wlurl, res['content'], "cryptome.org")
+                p = SpiderFootHelpers.extractLinksFromHtml(
+                    wlurl, res['content'], "cryptome.org")
                 if p:
                     links.update(p)
 

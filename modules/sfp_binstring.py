@@ -143,7 +143,8 @@ class sfp_binstring(SpiderFootPlugin):
 
                 if words:
                     wordstr = '\n'.join(words[0:self.opts['maxwords']])
-                    evt = SpiderFootEvent("RAW_FILE_META_DATA", wordstr, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "RAW_FILE_META_DATA", wordstr, self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_binstring class

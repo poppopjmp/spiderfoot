@@ -9,7 +9,8 @@ class TestSpiderFootEvent(unittest.TestCase):
         self.data = "http://example.com"
         self.module = "example_module"
         self.sourceEvent = None
-        self.event = SpiderFootEvent(self.eventType, self.data, self.module, self.sourceEvent)
+        self.event = SpiderFootEvent(
+            self.eventType, self.data, self.module, self.sourceEvent)
 
     def test_generated(self):
         self.assertIsInstance(self.event.generated, float)
@@ -126,7 +127,8 @@ class TestSpiderFootEvent(unittest.TestCase):
             self.event.data = ""
 
     def test_sourceEvent_setter(self):
-        new_sourceEvent = SpiderFootEvent("ROOT", "root_data", "root_module", None)
+        new_sourceEvent = SpiderFootEvent(
+            "ROOT", "root_data", "root_module", None)
         self.event.sourceEvent = new_sourceEvent
         self.assertEqual(self.event.sourceEvent, new_sourceEvent)
 

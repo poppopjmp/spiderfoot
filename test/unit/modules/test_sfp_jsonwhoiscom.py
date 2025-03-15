@@ -34,7 +34,8 @@ class TestModuleJsonwhoiscom(unittest.TestCase):
             with self.subTest(code=code):
                 module = sfp_jsonwhoiscom()
                 module.setup(sf, dict())
-                result = module.parseApiResponse({"code": code, "content": None})
+                result = module.parseApiResponse(
+                    {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertFalse(module.errorState)
 
@@ -46,7 +47,8 @@ class TestModuleJsonwhoiscom(unittest.TestCase):
             with self.subTest(code=code):
                 module = sfp_jsonwhoiscom()
                 module.setup(sf, dict())
-                result = module.parseApiResponse({"code": code, "content": None})
+                result = module.parseApiResponse(
+                    {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertTrue(module.errorState)
 
@@ -65,7 +67,8 @@ class TestModuleJsonwhoiscom(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         result = module.handleEvent(evt)
 

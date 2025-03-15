@@ -1,14 +1,20 @@
-<a href="https://www.spiderfoot.net/r.php?u=aHR0cHM6Ly93d3cuc3BpZGVyZm9vdC5uZXQv&s=os_gh"><img src="https://www.spiderfoot.net/wp-content/themes/spiderfoot/img/spiderfoot-wide.png"></a>
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+  <a href="https://www.van1shland.io/spiderfoot">
+    <img src="./docs/images/spiderfoot-wide.png" alt="Spiderfoot Link">
+  </a>
+</div>
 
 ### **This fork aim to keep the project mantained and try to add more functionality to the project**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.0.2-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.2)
+[![Stable Release](https://img.shields.io/badge/version-5.0.3-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.3)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
+[![Docker CI Build](https://github.com/poppopjmp/spiderfoot/workflows/Docker%20Image%20CI/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Docker%20Image%20CI")
+[![Browser Acceptance status](https://github.com/poppopjmp/spiderfoot/workflows/SpiderFoot%20Acceptance%20Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"SpiderFoot%20Acceptance%20Tests")
+[![Code QL](https://github.com/poppopjmp/spiderfoot/workflows/CodeQL/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"CodeQL")
 [![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
 [![codecov](https://codecov.io/github/poppopjmp/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/poppopjmp/spiderfoot)
-[![Twitter Follow](https://img.shields.io/twitter/follow/spiderfoot?label=follow&style=social)](https://twitter.com/spiderfoot)
 [![Discord](https://img.shields.io/discord/770524432464216074)](https://discord.gg/vyvztrG)
 
 
@@ -17,13 +23,13 @@
 
 SpiderFoot has an embedded web-server for providing a clean and intuitive web-based interface but can also be used completely via the command-line.  It's written in **Python 3** and **MIT-licensed**.
 
-<img src="https://www.spiderfoot.net/wp-content/uploads/2022/04/opensource-screenshot-v4.png" />
+<img src="./docs/images/v5.png" />
 
 ### FEATURES
 
 - Web based UI or CLI
 - Over 200 modules (see below)
-- Python 3.7+
+- Python 3.9+
 - YAML-configurable [correlation engine](/correlations/README.md) with [37 pre-defined rules](/correlations)
 - CSV/JSON/GEXF export
 - API key export/import
@@ -34,7 +40,7 @@ SpiderFoot has an embedded web-server for providing a clean and intuitive web-ba
 - TOR integration for dark web searching
 - Dockerfile for Docker-based deployments
 - Can call other tools like DNSTwist, Whatweb, Nmap and CMSeeK
-- [Actively developed since 2012!](https://medium.com/@micallst/lessons-learned-from-my-10-year-open-source-project-4a4c8c2b4f64)
+- Actively developed since 2012!
 - REST API for programmatic access to all functionalities
 
 ### WANT MORE?
@@ -67,7 +73,6 @@ The following features are in the roadmap for SpiderFoot:
   - Enable notifications for project updates and scan results
 - Authenticated and 2FA
 - Investigations
-- Customer support
 - Third party tools pre-installed & configured
 - Drive it with a fully RESTful API
 - TOR integration built-in
@@ -118,8 +123,8 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 #### Stable build (packaged release):
 
 ```
- wget https://github.com/smicallef/spiderfoot/archive/v5.0.2.tar.gz
- tar zxvf v5.0.2.tar.gz
+ wget https://github.com/poppopjmp/spiderfoot/archive/v5.0.3.tar.gz
+ tar zxvf v5.0.3.tar.gz
  cd spiderfoot-5.0.2
  pip3 install -r requirements.txt
  python3 ./sf.py -l 127.0.0.1:5001
@@ -128,7 +133,7 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 #### Development build (cloning git master branch):
 
 ```
- git clone https://github.com/smicallef/spiderfoot.git
+ git clone https://github.com/poppopjmp/spiderfoot.git
  cd spiderfoot
  pip3 install -r requirements.txt
  python3 ./sf.py -l 127.0.0.1:5001
@@ -140,15 +145,15 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
  docker-compose up
 ```
 
-#### Running the REST API server:
-
+#### Running the REST API server: 
+##### Refactoring Feature, not available in the 5.0.3 version
 To run the REST API server, use the following command:
 
 ```
 python3 ./sf.py --rest-api
 ```
 
-Check out the [documentation](https://www.spiderfoot.net/documentation) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
+Check out the [documentation](https://github.com/poppopjmp/spiderfoot/wiki) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
 
 ### CONFIGURING POSTGRESQL
 
@@ -231,6 +236,7 @@ Bitcoin Finder|Identify bitcoin addresses in scraped webpages.|Internal
 [Censys](https://censys.io/)|Obtain host information from Censys.io.|Tiered API
 [Certificate Transparency](https://crt.sh/)|Gather hostnames from historical certificates in crt.sh.|Free API
 [CertSpotter](https://sslmate.com/certspotter/)|Gather information about SSL certificates from SSLMate CertSpotter API.|Tiered API
+[Cisco Umbrella](https://umbrella.cisco.com/) | Check if a domain is categorized as malicious or unsafe by Cisco Umbrella. | Tiered API
 [CINS Army List](https://cinsscore.com/)|Check if a netblock or IP address is malicious according to Collective Intelligence Network Security (CINS) Army list.|Free API
 [CIRCL.LU](https://www.circl.lu/)|Obtain information from CIRCL.LU's Passive DNS and Passive SSL databases.|Free API
 [CleanBrowsing.org](https://cleanbrowsing.org/)|Check if a host would be blocked by CleanBrowsing.org DNS content filters.|Free API
@@ -250,6 +256,7 @@ Cross-Referencer|Identify whether other domains are associated ('Affiliates') of
 Custom Threat Feed|Check if a host/domain, netblock, ASN or IP is malicious according to your custom feed.|Internal
 [CyberCrime-Tracker.net](https://cybercrime-tracker.net/)|Check if a host/domain or IP address is malicious according to CyberCrime-Tracker.net.|Free API
 [Debounce](https://debounce.io/)|Check whether an email is disposable|Free API
+[Deepinfo](https://deepinfo.com/) | Search Deepinfo.com for historical DNS records, WHOIS data, and associated domains. | Tiered API
 [Dehashed](https://www.dehashed.com/)|Gather breach data from Dehashed API.|Commercial API
 [Digital Ocean Space Finder](https://www.digitalocean.com/products/spaces/)|Search for potential Digital Ocean Spaces associated with the target and attempt to list their contents.|Free API
 DNS Brute-forcer|Attempts to identify hostnames through brute-forcing common names and iterations.|Internal
@@ -275,6 +282,7 @@ Ethereum Address Extractor|Identify ethereum addresses in scraped webpages.|Inte
 File Metadata Extractor|Extracts meta data from documents and images.|Internal
 [Flickr](https://www.flickr.com/)|Search Flickr for domains, URLs and emails related to the specified domain.|Free API
 [Focsec](https://focsec.com/)|Look up IP address information from Focsec.|Tiered API
+[Fofa](https://fofa.so/)|Look up domain, IP address, and other information from Fofa.|Tiered API
 [FortiGuard Antispam](https://www.fortiguard.com/)|Check if an IP address is malicious according to FortiGuard Antispam.|Free API
 [Fraudguard](https://fraudguard.io/)|Obtain threat information from Fraudguard.io|Tiered API
 [F-Secure Riddler.io](https://riddler.io/)|Obtain network information from F-Secure Riddler.io API.|Commercial API
@@ -316,6 +324,7 @@ Interesting File Finder|Identifies potential files of interest, e.g. office docu
 Junk File Finder|Looks for old/temporary and other similar files.|Internal
 [Keybase](https://keybase.io/)|Obtain additional information about domain names and identified usernames.|Free API
 [Koodous](https://koodous.com/apks/)|Search Koodous for mobile apps.|Tiered API
+[LeakCheck](https://leakcheck.net/) | Check LeakCheck.net for data breaches associated with a domain or email address. | Free API
 [LeakIX](https://leakix.net/)|Search LeakIX for host data leaks, open ports, software and geoip.|Free API
 [Leak-Lookup](https://leak-lookup.com/)|Searches Leak-Lookup.com's database of breaches.|Free API
 [Maltiverse](https://maltiverse.com)|Obtain information about any malicious activities involving IP addresses|Free API
@@ -325,6 +334,7 @@ Junk File Finder|Looks for old/temporary and other similar files.|Internal
 [multiproxy.org Open Proxies](https://multiproxy.org/)|Check if an IP address is an open proxy according to multiproxy.org open proxy list.|Free API
 [MySpace](https://myspace.com/)|Gather username and location from MySpace.com profiles.|Free API
 [NameAPI](https://www.nameapi.org/)|Check whether an email is disposable|Tiered API
+[Netlas](https://netlas.io/)|Look up domain and IP address information from Netlas API.|Tiered API
 [NetworksDB](https://networksdb.io/)|Search NetworksDB.io API for IP address and domain information.|Tiered API
 [NeutrinoAPI](https://www.neutrinoapi.com/)|Search NeutrinoAPI for phone location information, IP address information, and host reputation.|Tiered API
 [numverify](http://numverify.com/)|Lookup phone number location and carrier information from numverify.com.|Tiered API
@@ -354,6 +364,7 @@ Port Scanner - TCP|Scans for commonly open TCP ports on Internet-facing systems.
 [RIPE](https://www.ripe.net/)|Queries the RIPE registry (includes ARIN data) to identify netblocks and other info.|Free API
 [RiskIQ](https://community.riskiq.com/)|Obtain information from RiskIQ's (formerly PassiveTotal) Passive DNS and Passive SSL databases.|Tiered API
 [Robtex](https://www.robtex.com/)|Search Robtex.com for hosts sharing the same IP.|Free API
+[RocketReach](https://rocketreach.co/)|Look up email addresses, phone numbers, and social media profiles from RocketReach.|Tiered API
 [searchcode](https://searchcode.com/)|Search searchcode for code repositories mentioning the target domain.|Free API
 [SecurityTrails](https://securitytrails.com/)|Obtain Passive DNS and other information from SecurityTrails|Tiered API
 [Seon](https://seon.io/)|Queries seon.io to gather intelligence about IP Addresses, email addresses, and phone numbers|Commercial API
@@ -415,6 +426,7 @@ Web Framework Identifier|Identify the usage of popular web frameworks like jQuer
 Web Server Identifier|Obtain web server banners to identify versions of web servers being used.|Internal
 Web Spider|Spidering of web-pages to extract content for searching.|Internal
 [WhatCMS](https://whatcms.org/)|Check web technology using WhatCMS.org API.|Tiered API
+[WhoisFreaks](https://whoisfreaks.com/) | Perform WHOIS lookups and identify historical WHOIS records using WhoisFreaks.com. | Tiered API
 [Whoisology](https://whoisology.com/)|Reverse Whois lookups using Whoisology.com.|Commercial API
 Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 [Whoxy](https://www.whoxy.com/)|Reverse Whois lookups using Whoxy.com.|Commercial API
@@ -427,31 +439,10 @@ Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 [ZoneFile.io](https://zonefiles.io)|Search ZoneFiles.io Domain query API for domain information.|Tiered API
 [Zone-H Defacement Check](https://zone-h.org/)|Check if a hostname/domain appears on the zone-h.org 'special defacements' RSS feed.|Free API
 [ZoomEye](https://www.zoomeye.org/)|Look up domain, IP address, and other information from ZoomEye.|Tiered API
-[Fofa](https://fofa.so/)|Look up domain, IP address, and other information from Fofa.|Tiered API
-[RocketReach](https://rocketreach.co/)|Look up email addresses, phone numbers, and social media profiles from RocketReach.|Tiered API
-[Netlas](https://netlas.io/)|Look up domain and IP address information from Netlas API.|Tiered API
-[Cisco Umbrella](https://umbrella.cisco.com/) | Check if a domain is categorized as malicious or unsafe by Cisco Umbrella. | Tiered API
-[Deepinfo](https://deepinfo.com/) | Search Deepinfo.com for historical DNS records, WHOIS data, and associated domains. | Tiered API
-[WhoisFreaks](https://whoisfreaks.com/) | Perform WHOIS lookups and identify historical WHOIS records using WhoisFreaks.com. | Tiered API
-[LeakCheck](https://leakcheck.net/) | Check LeakCheck.net for data breaches associated with a domain or email address. | Free API
-[sfp__stor_db.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_db.py)|SpiderFoot plug-in for storing events to the local SpiderFoot SQLite database.|Internal
-[sfp__stor_elasticsearch.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_elasticsearch.py)|SpiderFoot plug-in for storing events to an ElasticSearch cluster.|Internal
-[sfp__stor_stdout.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp__stor_stdout.py)|SpiderFoot plug-in for dumping events to standard output.|Internal
-[sfp_abusech.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_abusech.py)|Check if a host/domain, IP address or netblock is malicious according to Abuse.ch.|Internal
-[sfp_abuseipdb.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_abuseipdb.py)|Check if an IP address is malicious according to AbuseIPDB.com blacklist.|Internal
-[sfp_accounts.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_accounts.py)|Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc.|Internal
-[sfp_adguard_dns.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_adguard_dns.py)|Check if a host would be blocked by AdGuard DNS.|Internal
-[sfp_ahmia.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_ahmia.py)|Search Tor 'Ahmia' search engine for mentions of the target.|Internal
-[sfp_alienvault.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_alienvault.py)|Obtain information from AlienVault Open Threat Exchange (OTX)|Internal
-[sfp_apple_itunes.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_apple_itunes.py)|Search Apple iTunes for mobile apps.|Internal
-[sfp_archiveorg.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_archiveorg.py)|Identifies historic versions of interesting files/pages from the Wayback Machine.|Internal
-[sfp_azureblobstorage.py](https://github.com/poppopjmp/spiderfoot/blob/master/modules/sfp_azureblobstorage.py)|Search for potential Azure blobs associated with the target and attempt to list their contents.|Internal
 
 ### DOCUMENTATION
 
-Read more at the [project website](https://www.spiderfoot.net/r.php?u=aHR0cHM6Ly93d3cuc3BpZGVyZm9vdC5uZXQv&s=os_gh), including more complete documentation, blog posts with tutorials/guides, plus information about [SpiderFoot HX](https://www.spiderfoot.net/r.php?u=aHR0cHM6Ly93d3cuc3BpZGVyZm9vdC5uZXQvaHgvCg==&s=os_gh).
-
-Latest updates announced on [Twitter](https://twitter.com/spiderfoot).
+Read more at the [project website](https://github.com/poppopjmp/spiderfoot/wiki), including more complete documentation, blog posts with tutorials/guides.
 
 ### ACTIVE MAINTENANCE STATUS
 
@@ -649,3 +640,76 @@ Contributions are welcome! Please open an issue or submit a pull request with yo
 #### License
 
 This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.
+
+### REST API Documentation
+
+The SpiderFoot REST API allows you to interact with SpiderFoot programmatically. The API provides endpoints for starting scans, stopping scans, retrieving scan results, listing available modules, listing active scans, getting scan status, listing scan history, exporting scan results, importing API keys, and exporting API keys.
+
+#### Available Endpoints
+
+- `POST /start_scan`: Start a new scan
+- `POST /stop_scan/{scan_id}`: Stop an ongoing scan
+- `GET /scan_results/{scan_id}`: Retrieve scan results
+- `GET /modules`: List available modules
+- `GET /active_scans`: List active scans
+- `GET /scan_status/{scan_id}`: Get the status of a specific scan
+- `GET /scan_history`: List the history of all scans performed
+- `GET /export_scan_results/{scan_id}`: Export scan results in various formats (e.g., CSV, JSON)
+- `POST /import_api_key`: Import API keys for various modules
+- `GET /export_api_keys`: Export API keys for various modules
+- `GET /scan_correlations/{scan_id}`: Get scan correlations
+- `GET /scan_logs/{scan_id}`: Get scan logs
+- `GET /scan_summary/{scan_id}`: Get scan summary
+
+#### Example Usage
+
+To start a new scan, send a `POST` request to the `/start_scan` endpoint with the required parameters:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/start_scan" -H "Content-Type: application/json" -d '{"target": "example.com", "modules": ["module1", "module2"]}'
+```
+
+To stop an ongoing scan, send a `POST` request to the `/stop_scan/{scan_id}` endpoint with the scan ID:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/stop_scan/12345"
+```
+
+To retrieve scan results, send a `GET` request to the `/scan_results/{scan_id}` endpoint with the scan ID:
+
+```bash
+curl -X GET "http://127.0.0.1:8000/scan_results/12345"
+```
+
+For more detailed instructions and examples, refer to the API documentation.
+
+#### Accessing the Swagger UI
+
+The SpiderFoot REST API includes a Swagger UI for testing and exploring the API endpoints. To access the Swagger UI, follow these steps:
+
+1. Start the REST API server using the following command:
+
+```bash
+python3 ./sf.py --rest-api
+```
+
+2. Open your web browser and navigate to `http://127.0.0.1:8000/docs`.
+
+The Swagger UI provides an interactive interface for testing the API endpoints, viewing request and response details, and exploring the available API documentation.
+
+## MISP Integration
+
+SpiderFoot supports integration with [MISP](https://www.misp-project.org/) (Malware Information Sharing Platform), allowing you to:
+
+- Export scan results to MISP-compatible format
+- Publish results directly to a MISP instance
+- Use MISP taxonomies for data classification
+- Create structured MISP objects from SpiderFoot data
+
+To use the MISP integration with direct publishing capabilities:
+
+```bash
+pip install -r requirements-misp.txt
+```
+
+Learn more in the [MISP integration documentation](docs/MISP_INTEGRATION.md).

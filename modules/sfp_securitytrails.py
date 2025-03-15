@@ -104,7 +104,8 @@ class sfp_securitytrails(SpiderFootPlugin):
             url = "https://api.securitytrails.com/v1/domain/" + qry + "/subdomains"
             request = None
         else:
-            url = "https://api.securitytrails.com/v1/search/list/?page=" + str(page)
+            url = "https://api.securitytrails.com/v1/search/list/?page=" + \
+                str(page)
             request = '{"filter": { "' + querytype + '": "' + qry + '" } }'
             headers['Content-Type'] = 'application/json'
 
@@ -113,7 +114,8 @@ class sfp_securitytrails(SpiderFootPlugin):
                                postData=request)
 
         if res['code'] in ["400", "429", "500", "403"]:
-            self.error("SecurityTrails API key seems to have been rejected or you have exceeded usage limits for the month.")
+            self.error(
+                "SecurityTrails API key seems to have been rejected or you have exceeded usage limits for the month.")
             self.errorState = True
             return None
 
@@ -142,7 +144,8 @@ class sfp_securitytrails(SpiderFootPlugin):
 
             return info.get('records', [])
         except Exception as e:
-            self.error("Error processing JSON response from SecurityTrails: " + str(e))
+            self.error(
+                "Error processing JSON response from SecurityTrails: " + str(e))
             return None
 
     # Handle events sent to this module
@@ -157,7 +160,8 @@ class sfp_securitytrails(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts['api_key'] == "":
-            self.error("You enabled sfp_securitytrails but did not set an API uid/secret!")
+            self.error(
+                "You enabled sfp_securitytrails but did not set an API uid/secret!")
             self.errorState = True
             return
 
@@ -194,15 +198,18 @@ class sfp_securitytrails(SpiderFootPlugin):
                             continue
                         if not self.opts['cohostsamedomain']:
                             if self.getTarget().matches(h, includeParents=True):
-                                self.debug("Skipping " + h + " because it is on the same domain.")
+                                self.debug("Skipping " + h +
+                                           " because it is on the same domain.")
                                 continue
 
                         if h not in myres and h != ip:
                             if self.opts['verify'] and not self.sf.validateIP(h, ip):
-                                self.debug("Host " + h + " no longer resolves to our IP.")
+                                self.debug("Host " + h +
+                                           " no longer resolves to our IP.")
                                 continue
                         myres.append(h.lower())
-                        e = SpiderFootEvent("CO_HOSTED_SITE", h, self.__name__, event)
+                        e = SpiderFootEvent(
+                            "CO_HOSTED_SITE", h, self.__name__, event)
                         self.notifyListeners(e)
                         self.cohostcount += 1
 
@@ -220,11 +227,13 @@ class sfp_securitytrails(SpiderFootPlugin):
                             myres.append(h.lower())
                         else:
                             continue
-                        e = SpiderFootEvent("AFFILIATE_INTERNET_NAME", h, self.__name__, event)
+                        e = SpiderFootEvent(
+                            "AFFILIATE_INTERNET_NAME", h, self.__name__, event)
                         self.notifyListeners(e)
 
                         if self.sf.isDomain(h, self.opts['_internettlds']):
-                            evt = SpiderFootEvent("AFFILIATE_DOMAIN_NAME", h, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "AFFILIATE_DOMAIN_NAME", h, self.__name__, event)
                             self.notifyListeners(evt)
 
         if eventName in ["DOMAIN_NAME"]:

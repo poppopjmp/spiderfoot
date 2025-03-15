@@ -65,7 +65,8 @@ class sfp_phone(SpiderFootPlugin):
             content = eventData.replace('.', '-')
 
             for match in phonenumbers.PhoneNumberMatcher(content, region=None):
-                n = phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.E164)
+                n = phonenumbers.format_number(
+                    match.number, phonenumbers.PhoneNumberFormat.E164)
                 evt = SpiderFootEvent("PHONE_NUMBER", n, self.__name__, event)
                 if event.moduleDataSource:
                     evt.moduleDataSource = event.moduleDataSource
@@ -90,7 +91,8 @@ class sfp_phone(SpiderFootPlugin):
                 self.debug(f"No carrier information found for {eventData}")
                 return
 
-            evt = SpiderFootEvent("PROVIDER_TELCO", number_carrier, self.__name__, event)
+            evt = SpiderFootEvent(
+                "PROVIDER_TELCO", number_carrier, self.__name__, event)
 
             if event.moduleDataSource:
                 evt.moduleDataSource = event.moduleDataSource

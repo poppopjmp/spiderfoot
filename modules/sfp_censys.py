@@ -109,7 +109,8 @@ class sfp_censys(SpiderFootPlugin):
         ]
 
     def queryHosts(self, qry):
-        secret = self.opts['censys_api_key_uid'] + ':' + self.opts['censys_api_key_secret']
+        secret = self.opts['censys_api_key_uid'] + \
+            ':' + self.opts['censys_api_key_secret']
         auth = base64.b64encode(secret.encode('utf-8')).decode('utf-8')
 
         headers = {
@@ -129,7 +130,8 @@ class sfp_censys(SpiderFootPlugin):
         return self.parseApiResponse(res)
 
     def queryHostsSearch(self, qry):
-        secret = self.opts['censys_api_key_uid'] + ':' + self.opts['censys_api_key_secret']
+        secret = self.opts['censys_api_key_uid'] + \
+            ':' + self.opts['censys_api_key_secret']
         auth = base64.b64encode(secret.encode('utf-8')).decode('utf-8')
 
         headers = {
@@ -177,7 +179,8 @@ class sfp_censys(SpiderFootPlugin):
 
         # Catch all non-200 status codes, and presume something went wrong
         if res['code'] != '200':
-            self.error(f"Unexpected HTTP response code {res['code']} from Censys API.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from Censys API.")
             self.errorState = True
             return None
 
@@ -207,7 +210,8 @@ class sfp_censys(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {event.module}")
 
         if self.opts['censys_api_key_uid'] == "" or self.opts['censys_api_key_secret'] == "":
-            self.error(f"You enabled {self.__class__.__name__} but did not set an API uid/secret!")
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set an API uid/secret!")
             self.errorState = True
             return
 
@@ -229,7 +233,8 @@ class sfp_censys(SpiderFootPlugin):
                 max_netblock = self.opts['maxnetblock']
 
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
         qrylist = list()
@@ -259,28 +264,35 @@ class sfp_censys(SpiderFootPlugin):
 
             # For netblocks, we need to create the associated IP address event first.
             if eventName == 'NETBLOCK_OWNER':
-                pevent = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "IP_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             elif eventName == 'NETBLOCKV6_OWNER':
-                pevent = SpiderFootEvent("IPV6_ADDRESS", addr, self.__name__, event)
+                pevent = SpiderFootEvent(
+                    "IPV6_ADDRESS", addr, self.__name__, event)
                 self.notifyListeners(pevent)
             else:
                 pevent = event
 
-            e = SpiderFootEvent("RAW_RIR_DATA", json.dumps(rec), self.__name__, pevent)
+            e = SpiderFootEvent("RAW_RIR_DATA", json.dumps(
+                rec), self.__name__, pevent)
             self.notifyListeners(e)
 
             try:
                 # Date format: 2021-09-22T16:46:47.623Z
-                created_dt = datetime.strptime(rec.get('last_updated_at', "1970-01-01T00:00:00.000Z"), '%Y-%m-%dT%H:%M:%S.%fZ')
+                created_dt = datetime.strptime(
+                    rec.get('last_updated_at', "1970-01-01T00:00:00.000Z"), '%Y-%m-%dT%H:%M:%S.%fZ')
                 created_ts = int(time.mktime(created_dt.timetuple()))
-                age_limit_ts = int(time.time()) - (86400 * self.opts['age_limit_days'])
+                age_limit_ts = int(time.time()) - \
+                    (86400 * self.opts['age_limit_days'])
 
                 if self.opts['age_limit_days'] > 0 and created_ts < age_limit_ts:
-                    self.debug(f"Record found but too old ({created_dt}), skipping.")
+                    self.debug(
+                        f"Record found but too old ({created_dt}), skipping.")
                     continue
             except Exception as e:
-                self.error(f"Error encountered processing last_updated_at record for {addr}: {e}")
+                self.error(
+                    f"Error encountered processing last_updated_at record for {addr}: {e}")
 
             try:
                 location = rec.get('location')
@@ -297,10 +309,12 @@ class sfp_censys(SpiderFootPlugin):
                         ]
                     )
                     if geoinfo:
-                        e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, pevent)
+                        e = SpiderFootEvent(
+                            "GEOINFO", geoinfo, self.__name__, pevent)
                         self.notifyListeners(e)
             except Exception as e:
-                self.error(f"Error encountered processing location record for {addr}: {e}")
+                self.error(
+                    f"Error encountered processing location record for {addr}: {e}")
 
             try:
                 services = rec.get('services')
@@ -311,14 +325,17 @@ class sfp_censys(SpiderFootPlugin):
                         port = service.get('port')
 
                         if port:
-                            transport_protocol = service.get('transport_protocol')
+                            transport_protocol = service.get(
+                                'transport_protocol')
                             banner = service.get('banner')
 
                             if transport_protocol == "UDP":
-                                evt = SpiderFootEvent("UDP_PORT_OPEN", f"{addr}:{port}", self.__name__, pevent)
+                                evt = SpiderFootEvent(
+                                    "UDP_PORT_OPEN", f"{addr}:{port}", self.__name__, pevent)
                                 self.notifyListeners(evt)
                             elif transport_protocol == "TCP":
-                                evt = SpiderFootEvent("TCP_PORT_OPEN", f"{addr}:{port}", self.__name__, pevent)
+                                evt = SpiderFootEvent(
+                                    "TCP_PORT_OPEN", f"{addr}:{port}", self.__name__, pevent)
                                 self.notifyListeners(evt)
                                 if banner:
                                     tcp_banners.append(banner)
@@ -347,7 +364,8 @@ class sfp_censys(SpiderFootPlugin):
                                 if headers:
                                     e = SpiderFootEvent(
                                         "WEBSERVER_HTTPHEADERS",
-                                        json.dumps(headers, ensure_ascii=False),
+                                        json.dumps(
+                                            headers, ensure_ascii=False),
                                         self.__name__,
                                         pevent
                                     )
@@ -355,32 +373,39 @@ class sfp_censys(SpiderFootPlugin):
                                     self.notifyListeners(e)
 
                     for software in set(softwares):
-                        evt = SpiderFootEvent("SOFTWARE_USED", software, self.__name__, pevent)
+                        evt = SpiderFootEvent(
+                            "SOFTWARE_USED", software, self.__name__, pevent)
                         self.notifyListeners(evt)
 
                     for banner in set(tcp_banners):
-                        evt = SpiderFootEvent("TCP_PORT_OPEN_BANNER", str(banner), self.__name__, pevent)
+                        evt = SpiderFootEvent("TCP_PORT_OPEN_BANNER", str(
+                            banner), self.__name__, pevent)
                         self.notifyListeners(evt)
             except Exception as e:
-                self.error(f"Error encountered processing services record for {addr}: {e}")
+                self.error(
+                    f"Error encountered processing services record for {addr}: {e}")
 
             try:
                 autonomous_system = rec.get('autonomous_system')
                 if autonomous_system:
                     asn = autonomous_system.get('asn')
                     if asn:
-                        e = SpiderFootEvent("BGP_AS_MEMBER", str(asn), self.__name__, pevent)
+                        e = SpiderFootEvent("BGP_AS_MEMBER", str(
+                            asn), self.__name__, pevent)
                         self.notifyListeners(e)
 
                     bgp_prefix = autonomous_system.get('bgp_prefix')
                     if bgp_prefix and self.sf.validIpNetwork(bgp_prefix):
                         if ':' in bgp_prefix:
-                            e = SpiderFootEvent("NETBLOCKV6_MEMBER", str(bgp_prefix), self.__name__, pevent)
+                            e = SpiderFootEvent("NETBLOCKV6_MEMBER", str(
+                                bgp_prefix), self.__name__, pevent)
                         else:
-                            e = SpiderFootEvent("NETBLOCK_MEMBER", str(bgp_prefix), self.__name__, pevent)
+                            e = SpiderFootEvent("NETBLOCK_MEMBER", str(
+                                bgp_prefix), self.__name__, pevent)
                         self.notifyListeners(e)
             except Exception as e:
-                self.error(f"Error encountered processing autonomous_system record for {addr}: {e}")
+                self.error(
+                    f"Error encountered processing autonomous_system record for {addr}: {e}")
 
             try:
                 operating_system = rec.get('operating_system')
@@ -398,9 +423,11 @@ class sfp_censys(SpiderFootPlugin):
                     )
 
                     if os:
-                        e = SpiderFootEvent("OPERATING_SYSTEM", os, self.__name__, pevent)
+                        e = SpiderFootEvent(
+                            "OPERATING_SYSTEM", os, self.__name__, pevent)
                         self.notifyListeners(e)
             except Exception as e:
-                self.error(f"Error encountered processing operating_system record for {addr}: {e}")
+                self.error(
+                    f"Error encountered processing operating_system record for {addr}: {e}")
 
 # End of sfp_censys class

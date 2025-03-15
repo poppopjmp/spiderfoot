@@ -86,12 +86,14 @@ class sfp_flickr(SpiderFootPlugin):
 
     # Retrieve API key
     def retrieveApiKey(self):
-        res = self.sf.fetchUrl("https://www.flickr.com/", timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
+        res = self.sf.fetchUrl(
+            "https://www.flickr.com/", timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
         if res['content'] is None:
             return None
 
-        keys = re.findall(r'YUI_config.flickr.api.site_key = "([a-zA-Z0-9]+)"', str(res['content']))
+        keys = re.findall(
+            r'YUI_config.flickr.api.site_key = "([a-zA-Z0-9]+)"', str(res['content']))
 
         if not keys:
             return None
@@ -238,7 +240,8 @@ class sfp_flickr(SpiderFootPlugin):
                     hosts.append(host)
 
                     self.debug(f"Found a URL: {link}")
-                    evt = SpiderFootEvent('LINKED_URL_INTERNAL', link, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'LINKED_URL_INTERNAL', link, self.__name__, event)
                     self.notifyListeners(evt)
                     self.results[link] = True
 
@@ -253,14 +256,16 @@ class sfp_flickr(SpiderFootPlugin):
 
             if self.opts['dns_resolve'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
                 self.debug(f"Host {host} could not be resolved")
-                evt = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
                 self.notifyListeners(evt)
                 continue
 
             evt = SpiderFootEvent("INTERNET_NAME", host, self.__name__, event)
             self.notifyListeners(evt)
             if self.sf.isDomain(host, self.opts["_internettlds"]):
-                evt = SpiderFootEvent("DOMAIN_NAME", host, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "DOMAIN_NAME", host, self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_flickr class

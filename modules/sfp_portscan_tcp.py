@@ -79,7 +79,8 @@ class sfp_portscan_tcp(SpiderFootPlugin):
             if file_ports:
                 portlist = file_ports.split("\n")
             else:
-                self.error(f"Could not load ports from {self.opts['ports'][0]}")
+                self.error(
+                    f"Could not load ports from {self.opts['ports'][0]}")
         else:
             portlist = self.opts['ports']
 
@@ -88,7 +89,8 @@ class sfp_portscan_tcp(SpiderFootPlugin):
             try:
                 self.portlist.append(int(port))
             except ValueError:
-                self.debug(f"Skipping invalid port '{port}' specified in port list")
+                self.debug(
+                    f"Skipping invalid port '{port}' specified in port list")
 
         if self.opts['randomize']:
             random.SystemRandom().shuffle(self.portlist)
@@ -137,7 +139,8 @@ class sfp_portscan_tcp(SpiderFootPlugin):
         while i < len(portList):
             port = portList[i]
             self.info(f"Spawning thread to check port: {port} on {ip}")
-            t.append(threading.Thread(name=f"sfp_portscan_tcp_{port}", target=self.tryPort, args=(ip, port)))
+            t.append(threading.Thread(
+                name=f"sfp_portscan_tcp_{port}", target=self.tryPort, args=(ip, port)))
             t[i].start()
             i += 1
 
@@ -166,7 +169,8 @@ class sfp_portscan_tcp(SpiderFootPlugin):
 
             if resArray[cp] is not True:
                 banner = str(resArray[cp], 'utf-8', errors='replace')
-                bevt = SpiderFootEvent("TCP_PORT_OPEN_BANNER", banner, self.__name__, evt)
+                bevt = SpiderFootEvent(
+                    "TCP_PORT_OPEN_BANNER", banner, self.__name__, evt)
                 self.notifyListeners(bevt)
 
     # Handle events sent to this module
@@ -188,17 +192,20 @@ class sfp_portscan_tcp(SpiderFootPlugin):
         scanIps = list()
         if eventName == "NETBLOCK_OWNER":
             if not self.opts['netblockscan']:
-                self.debug(f"Scanning of owned netblocks is disabled. Skipping netblock {eventData}.")
+                self.debug(
+                    f"Scanning of owned netblocks is disabled. Skipping netblock {eventData}.")
                 return
 
             try:
                 net = IPNetwork(eventData)
             except Exception as e:
-                self.error(f"Strange netblock identified, unable to parse: {eventData} ({e})")
+                self.error(
+                    f"Strange netblock identified, unable to parse: {eventData} ({e})")
                 return
 
             if net.prefixlen < self.opts['netblockscanmax']:
-                self.debug(f"Skipping port scanning of owned net block {eventData}, too big.")
+                self.debug(
+                    f"Skipping port scanning of owned net block {eventData}, too big.")
                 return
 
             for ip in net:

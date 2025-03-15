@@ -93,11 +93,13 @@ class sfp_tool_nmap(SpiderFootPlugin):
             if eventName == "NETBLOCK_OWNER" and self.opts['netblockscan']:
                 net = IPNetwork(eventData)
                 if net.prefixlen < self.opts['netblockscanmax']:
-                    self.debug("Skipping port scanning of " + eventData + ", too big.")
+                    self.debug("Skipping port scanning of " +
+                               eventData + ", too big.")
                     return
 
         except Exception as e:
-            self.error("Strange netblock identified, unable to parse: " + eventData + " (" + str(e) + ")")
+            self.error("Strange netblock identified, unable to parse: " +
+                       eventData + " (" + str(e) + ")")
             return
 
         # Don't look up stuff twice, check IP == IP here
@@ -108,13 +110,15 @@ class sfp_tool_nmap(SpiderFootPlugin):
         # Might be a subnet within a subnet or IP within a subnet
         for addr in self.results:
             if IPNetwork(eventData) in IPNetwork(addr):
-                self.debug(f"Skipping {eventData} as already within a scanned range.")
+                self.debug(
+                    f"Skipping {eventData} as already within a scanned range.")
                 return
 
         self.results[eventData] = True
 
         if not self.opts['nmappath']:
-            self.error("You enabled sfp_tool_nmap but did not set a path to the tool!")
+            self.error(
+                "You enabled sfp_tool_nmap but did not set a path to the tool!")
             self.errorState = True
             return
 
@@ -140,7 +144,8 @@ class sfp_tool_nmap(SpiderFootPlugin):
             return
 
         try:
-            p = Popen([exe, "-O", "--osscan-limit", eventData], stdout=PIPE, stderr=PIPE)
+            p = Popen([exe, "-O", "--osscan-limit", eventData],
+                      stdout=PIPE, stderr=PIPE)
             stdout, stderr = p.communicate(input=None)
             if p.returncode == 0:
                 content = stdout.decode('utf-8', errors='replace')
@@ -167,7 +172,8 @@ class sfp_tool_nmap(SpiderFootPlugin):
                     if "OS details:" in line:
                         junk, opsys = line.split(": ")
                 if opsys:
-                    evt = SpiderFootEvent("OPERATING_SYSTEM", opsys, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "OPERATING_SYSTEM", opsys, self.__name__, event)
                     self.notifyListeners(evt)
             except Exception as e:
                 self.error("Couldn't parse the output of Nmap: " + str(e))
@@ -184,10 +190,12 @@ class sfp_tool_nmap(SpiderFootPlugin):
                         junk, opsys = line.split(": ")
 
                     if opsys and currentIp:
-                        ipevent = SpiderFootEvent("IP_ADDRESS", currentIp, self.__name__, event)
+                        ipevent = SpiderFootEvent(
+                            "IP_ADDRESS", currentIp, self.__name__, event)
                         self.notifyListeners(ipevent)
 
-                        evt = SpiderFootEvent("OPERATING_SYSTEM", opsys, self.__name__, ipevent)
+                        evt = SpiderFootEvent(
+                            "OPERATING_SYSTEM", opsys, self.__name__, ipevent)
                         self.notifyListeners(evt)
                         currentIp = None
             except Exception as e:

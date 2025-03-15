@@ -702,12 +702,6 @@
             ],
             "version": "==21.0.0"
         },
-        "pypdf2": {
-            "hashes": [
-                "sha256:6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7"
-            ],
-            "version": "==1.28.6"
-        },
         "pysocks": {
             "hashes": [
                 "sha256:0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1"

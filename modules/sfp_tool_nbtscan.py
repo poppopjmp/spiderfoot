@@ -85,7 +85,8 @@ class sfp_tool_nbtscan(SpiderFootPlugin):
             return
 
         if not self.opts['nbtscan_path']:
-            self.error("You enabled sfp_tool_nbtscan but did not set a path to the tool!")
+            self.error(
+                "You enabled sfp_tool_nbtscan but did not set a path to the tool!")
             self.errorState = True
             return
 
@@ -110,7 +111,8 @@ class sfp_tool_nbtscan(SpiderFootPlugin):
                     return
                 timeout = timeout * net.size
         except Exception as e:
-            self.error(f"Strange netblock identified, unable to parse: {eventData} ({e})")
+            self.error(
+                f"Strange netblock identified, unable to parse: {eventData} ({e})")
             return
 
         # Don't look up stuff twice, check IP == IP here
@@ -121,7 +123,8 @@ class sfp_tool_nbtscan(SpiderFootPlugin):
         # Might be a subnet within a subnet or IP within a subnet
         for addr in self.results:
             if IPNetwork(eventData) in IPNetwork(addr):
-                self.debug(f"Skipping {eventData} as already within a scanned range.")
+                self.debug(
+                    f"Skipping {eventData} as already within a scanned range.")
                 return
 
         self.results[eventData] = True
@@ -139,7 +142,8 @@ class sfp_tool_nbtscan(SpiderFootPlugin):
         except TimeoutExpired:
             p.kill()
             stdout, stderr = p.communicate()
-            self.debug(f"Timed out waiting for nbtscan to finish on {eventData}")
+            self.debug(
+                f"Timed out waiting for nbtscan to finish on {eventData}")
             return
         except Exception as e:
             self.error(f"Unable to run nbtscan: {e}")
@@ -170,14 +174,18 @@ class sfp_tool_nbtscan(SpiderFootPlugin):
                 addr = eventData
                 if eventName == "NETBLOCK_OWNER":
                     # Extract the IP from the raw nbtscan output
-                    addr = info.split("\n")[0].split("for Host ")[1].replace(":", "")
-                    srcEvent = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                    addr = info.split("\n")[0].split(
+                        "for Host ")[1].replace(":", "")
+                    srcEvent = SpiderFootEvent(
+                        "IP_ADDRESS", addr, self.__name__, event)
                     self.notifyListeners(srcEvent)
 
-                evt = SpiderFootEvent('UDP_PORT_OPEN', f"{addr}:137", self.__name__, srcEvent)
+                evt = SpiderFootEvent(
+                    'UDP_PORT_OPEN', f"{addr}:137", self.__name__, srcEvent)
                 self.notifyListeners(evt)
 
-                evt = SpiderFootEvent('UDP_PORT_OPEN_INFO', info, self.__name__, evt)
+                evt = SpiderFootEvent(
+                    'UDP_PORT_OPEN_INFO', info, self.__name__, evt)
                 self.notifyListeners(evt)
                 info = ""
 

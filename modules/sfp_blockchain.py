@@ -92,7 +92,8 @@ class sfp_blockchain(SpiderFootPlugin):
             self.debug(f"Error processing JSON response: {e}")
             return
 
-        evt = SpiderFootEvent("BITCOIN_BALANCE", str(balance) + " BTC", self.__name__, event)
+        evt = SpiderFootEvent("BITCOIN_BALANCE", str(
+            balance) + " BTC", self.__name__, event)
         self.notifyListeners(evt)
 
 # End of sfp_blockchain class

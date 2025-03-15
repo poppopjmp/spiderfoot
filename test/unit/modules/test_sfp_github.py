@@ -40,20 +40,23 @@ class TestModuleGithub(unittest.TestCase):
         def new_notifyListeners(self, event):
             raise Exception(f"Raised event {event.eventType}: {event.data}")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_github)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_github)
 
         event_type = 'ROOT'
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         event_type = 'SOCIAL_MEDIA'
         event_data = 'Not GitHub: example_username'
         event_module = 'example module'
         source_event = evt
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)

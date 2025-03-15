@@ -69,14 +69,16 @@ class sfp_h1nobbdde(SpiderFootPlugin):
     def queryOBB(self, qry):
         ret = list()
         url = "http://h1.nobbd.de/search.php?q=" + qry
-        res = self.sf.fetchUrl(url, timeout=30, useragent=self.opts['_useragent'])
+        res = self.sf.fetchUrl(
+            url, timeout=30, useragent=self.opts['_useragent'])
 
         if res['content'] is None:
             self.debug("No content returned from h1.nobbd.de")
             return None
 
         try:
-            rx = re.compile("<a class=\"title\" href=.(.[^\"]+).*?title=.(.[^\"\']+)", re.IGNORECASE | re.DOTALL)
+            rx = re.compile(
+                "<a class=\"title\" href=.(.[^\"]+).*?title=.(.[^\"\']+)", re.IGNORECASE | re.DOTALL)
             for m in rx.findall(str(res['content'])):
                 # Report it
                 if qry in m[1]:
@@ -106,7 +108,8 @@ class sfp_h1nobbdde(SpiderFootPlugin):
             data.extend(obb)
 
         for n in data:
-            e = SpiderFootEvent("VULNERABILITY_DISCLOSURE", n, self.__name__, event)
+            e = SpiderFootEvent("VULNERABILITY_DISCLOSURE",
+                                n, self.__name__, event)
             self.notifyListeners(e)
 
 # End of sfp_h1nobbdde class

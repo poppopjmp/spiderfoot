@@ -157,7 +157,8 @@ class sfp_alienvault(SpiderFootPlugin):
             return None
 
         if res['code'] == "403":
-            self.error("AlienVault OTX API key seems to have been rejected or you have exceeded usage limits for the month.")
+            self.error(
+                "AlienVault OTX API key seems to have been rejected or you have exceeded usage limits for the month.")
             self.errorState = True
             return None
 
@@ -167,7 +168,8 @@ class sfp_alienvault(SpiderFootPlugin):
         try:
             return json.loads(res['content'])
         except Exception as e:
-            self.error(f"Error processing JSON response from AlienVault OTX: {e}")
+            self.error(
+                f"Error processing JSON response from AlienVault OTX: {e}")
 
         return None
 
@@ -263,7 +265,8 @@ class sfp_alienvault(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts['api_key'] == "":
-            self.error(f"You enabled {self.__class__.__name__} but did not set an API key!")
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set an API key!")
             self.errorState = True
             return
 
@@ -336,7 +339,8 @@ class sfp_alienvault(SpiderFootPlugin):
 
                 if url not in self.results:
                     self.results[url] = True
-                    evt = SpiderFootEvent('LINKED_URL_INTERNAL', url, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'LINKED_URL_INTERNAL', url, self.__name__, event)
                     self.notifyListeners(evt)
 
             return
@@ -351,7 +355,8 @@ class sfp_alienvault(SpiderFootPlugin):
                 max_netblock = self.opts['maxnetblock']
 
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
         if eventName in ['NETBLOCK_MEMBER', 'NETBLOCKV6_MEMBER']:
@@ -364,7 +369,8 @@ class sfp_alienvault(SpiderFootPlugin):
                 max_subnet = self.opts['maxsubnet']
 
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
         qrylist = list()
@@ -384,7 +390,8 @@ class sfp_alienvault(SpiderFootPlugin):
             else:
                 passive_dns = ret.get('passive_dns')
                 if passive_dns:
-                    self.debug(f"Found passive DNS results for {eventData} in AlienVault OTX")
+                    self.debug(
+                        f"Found passive DNS results for {eventData} in AlienVault OTX")
                     for rec in passive_dns:
                         host = rec.get('hostname')
 
@@ -395,32 +402,40 @@ class sfp_alienvault(SpiderFootPlugin):
                             evtType = "INTERNET_NAME"
                             if not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
                                 evtType = "INTERNET_NAME_UNRESOVLED"
-                            evt = SpiderFootEvent(evtType, host, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                evtType, host, self.__name__, event)
                             self.notifyListeners(evt)
                             continue
 
                         if self.opts['cohost_age_limit_days'] > 0:
                             try:
                                 last = rec.get("last", "")
-                                last_dt = datetime.strptime(last, '%Y-%m-%dT%H:%M:%S')
+                                last_dt = datetime.strptime(
+                                    last, '%Y-%m-%dT%H:%M:%S')
                                 last_ts = int(time.mktime(last_dt.timetuple()))
-                                age_limit_ts = int(time.time()) - (86400 * self.opts['cohost_age_limit_days'])
+                                age_limit_ts = int(
+                                    time.time()) - (86400 * self.opts['cohost_age_limit_days'])
                                 if last_ts < age_limit_ts:
-                                    self.debug(f"Passive DNS record {host} found for {eventData} is too old ({last_dt}), skipping.")
+                                    self.debug(
+                                        f"Passive DNS record {host} found for {eventData} is too old ({last_dt}), skipping.")
                                     continue
                             except Exception:
-                                self.info("Could not parse date from AlienVault data, so ignoring cohost_age_limit_days")
+                                self.info(
+                                    "Could not parse date from AlienVault data, so ignoring cohost_age_limit_days")
 
                         if self.opts["verify"] and not self.sf.validateIP(host, eventData):
-                            self.debug(f"Co-host {host} no longer resolves to {eventData}, skipping")
+                            self.debug(
+                                f"Co-host {host} no longer resolves to {eventData}, skipping")
                             continue
 
                         if self.cohostcount < self.opts['maxcohost']:
-                            e = SpiderFootEvent("CO_HOSTED_SITE", host, self.__name__, event)
+                            e = SpiderFootEvent(
+                                "CO_HOSTED_SITE", host, self.__name__, event)
                             self.notifyListeners(e)
                             self.cohostcount += 1
                         else:
-                            self.info(f"Maximum co-host threshold exceeded ({self.opts['maxcohost']}), ignoring co-host {host}")
+                            self.info(
+                                f"Maximum co-host threshold exceeded ({self.opts['maxcohost']}), ignoring co-host {host}")
 
         if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS', 'NETBLOCK_OWNER', 'NETBLOCKV6_OWNER']:
             evtType = 'MALICIOUS_IPADDR'
@@ -444,13 +459,15 @@ class sfp_alienvault(SpiderFootPlugin):
                 continue
 
             if rec.get("reputation"):
-                self.debug(f"Found reputation info for {addr} in AlienVault OTX")
+                self.debug(
+                    f"Found reputation info for {addr} in AlienVault OTX")
                 rec_history = rec['reputation'].get("activities", list())
                 threat_score = rec['reputation']['threat_score']
                 threat_score_min = self.opts['threat_score_min']
 
                 if threat_score < threat_score_min:
-                    self.debug(f"Threat score {threat_score} smaller than {threat_score_min}, skipping.")
+                    self.debug(
+                        f"Threat score {threat_score} smaller than {threat_score_min}, skipping.")
                     continue
 
                 descr = f"AlienVault Threat Score: {threat_score}"
@@ -466,28 +483,37 @@ class sfp_alienvault(SpiderFootPlugin):
                     if self.opts['reputation_age_limit_days'] > 0:
                         try:
                             # 2014-11-06T10:45:00.000
-                            created_dt = datetime.strptime(created, '%Y-%m-%dT%H:%M:%S')
-                            created_ts = int(time.mktime(created_dt.timetuple()))
-                            age_limit_ts = int(time.time()) - (86400 * self.opts['reputation_age_limit_days'])
+                            created_dt = datetime.strptime(
+                                created, '%Y-%m-%dT%H:%M:%S')
+                            created_ts = int(time.mktime(
+                                created_dt.timetuple()))
+                            age_limit_ts = int(
+                                time.time()) - (86400 * self.opts['reputation_age_limit_days'])
                             if created_ts < age_limit_ts:
-                                self.debug(f"Reputation record found for {addr} is too old ({created_dt}), skipping.")
+                                self.debug(
+                                    f"Reputation record found for {addr} is too old ({created_dt}), skipping.")
                                 continue
                         except Exception:
-                            self.info("Could not parse date from AlienVault data, so ignoring reputation_age_limit_days")
+                            self.info(
+                                "Could not parse date from AlienVault data, so ignoring reputation_age_limit_days")
 
                 # For netblocks, we need to create the IP address event so that
                 # the threat intel event is more meaningful.
                 if eventName == 'NETBLOCK_OWNER':
-                    pevent = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                    pevent = SpiderFootEvent(
+                        "IP_ADDRESS", addr, self.__name__, event)
                     self.notifyListeners(pevent)
                 if eventName == 'NETBLOCKV6_OWNER':
-                    pevent = SpiderFootEvent("IPV6_ADDRESS", addr, self.__name__, event)
+                    pevent = SpiderFootEvent(
+                        "IPV6_ADDRESS", addr, self.__name__, event)
                     self.notifyListeners(pevent)
                 elif eventName == 'NETBLOCK_MEMBER':
-                    pevent = SpiderFootEvent("AFFILIATE_IPADDR", addr, self.__name__, event)
+                    pevent = SpiderFootEvent(
+                        "AFFILIATE_IPADDR", addr, self.__name__, event)
                     self.notifyListeners(pevent)
                 elif eventName == 'NETBLOCKV6_MEMBER':
-                    pevent = SpiderFootEvent("AFFILIATE_IPV6_ADDRESS", addr, self.__name__, event)
+                    pevent = SpiderFootEvent(
+                        "AFFILIATE_IPV6_ADDRESS", addr, self.__name__, event)
                     self.notifyListeners(pevent)
                 else:
                     pevent = event

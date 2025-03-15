@@ -121,14 +121,17 @@ class sfp_reversewhois(SpiderFootPlugin):
         for domain in set(domains):
             # if this domain isn't the main target
             if not self.getTarget().matches(domain, includeChildren=False):
-                e = SpiderFootEvent("AFFILIATE_INTERNET_NAME", domain, self.__name__, event)
+                e = SpiderFootEvent("AFFILIATE_INTERNET_NAME",
+                                    domain, self.__name__, event)
                 self.notifyListeners(e)
                 if self.sf.isDomain(domain, self.opts["_internettlds"]):
-                    evt = SpiderFootEvent("AFFILIATE_DOMAIN_NAME", domain, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "AFFILIATE_DOMAIN_NAME", domain, self.__name__, event)
                     self.notifyListeners(evt)
 
         for registrar in set(registrars):
-            e = SpiderFootEvent("DOMAIN_REGISTRAR", registrar, self.__name__, event)
+            e = SpiderFootEvent("DOMAIN_REGISTRAR",
+                                registrar, self.__name__, event)
             self.notifyListeners(e)
 
 # End of sfp_reversewhois class

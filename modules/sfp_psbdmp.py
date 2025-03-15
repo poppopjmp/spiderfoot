@@ -120,13 +120,15 @@ class sfp_psbdmp(SpiderFootPlugin):
                 continue
 
             if re.search(
-                r"[^a-zA-Z\-\_0-9]" + re.escape(eventData) + r"[^a-zA-Z\-\_0-9]",
+                r"[^a-zA-Z\-\_0-9]" +
+                    re.escape(eventData) + r"[^a-zA-Z\-\_0-9]",
                 res['content'],
                 re.IGNORECASE
             ) is None:
                 continue
 
-            evt = SpiderFootEvent("LEAKSITE_CONTENT", res['content'], self.__name__, e)
+            evt = SpiderFootEvent("LEAKSITE_CONTENT",
+                                  res['content'], self.__name__, e)
             self.notifyListeners(evt)
 
 # End of sfp_psbdmp class

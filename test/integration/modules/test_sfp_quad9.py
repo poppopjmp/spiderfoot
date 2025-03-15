@@ -29,14 +29,16 @@ class TestModuleIntegrationQuad9(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         event_type = 'INTERNET_NAME'
         event_data = 'quad9.net'
         event_module = 'example module'
         source_event = evt
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)

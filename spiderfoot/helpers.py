@@ -77,7 +77,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def dataPath() -> str:
-        """Returns the file system location of SpiderFoot data and configuration files.
+        """Returns the file system location of SpiderFoot data and
+        configuration files.
 
         Returns:
             str: SpiderFoot data file system path
@@ -137,7 +138,8 @@ class SpiderFootHelpers():
             ignore_files = []
 
         if not isinstance(ignore_files, list):
-            raise TypeError(f"ignore_files is {type(ignore_files)}; expected list()")
+            raise TypeError(
+                f"ignore_files is {type(ignore_files)}; expected list()")
 
         if not os.path.isdir(path):
             raise ValueError(f"Modules directory does not exist: {path}")
@@ -158,16 +160,27 @@ class SpiderFootHelpers():
 
             modName = filename.split('.')[0]
             sfModules[modName] = dict()
-            mod = __import__('modules.' + modName, globals(), locals(), [modName])
+            mod = __import__('modules.' + modName,
+                             globals(), locals(), [modName])
             sfModules[modName]['object'] = getattr(mod, modName)()
             mod_dict = sfModules[modName]['object'].asdict()
             sfModules[modName].update(mod_dict)
 
+            # Ensure 'cats' key exists to avoid KeyError
+            if 'cats' not in sfModules[modName]:
+                sfModules[modName]['cats'] = []
+
+            # Ensure 'meta' key exists to avoid AttributeError in templates
+            if 'meta' not in sfModules[modName]:
+                sfModules[modName]['meta'] = {}
+
             if len(sfModules[modName]['cats']) > 1:
-                raise SyntaxError(f"Module {modName} has multiple categories defined but only one is supported.")
+                raise SyntaxError(
+                    f"Module {modName} has multiple categories defined but only one is supported.")
 
             if sfModules[modName]['cats'] and sfModules[modName]['cats'][0] not in valid_categories:
-                raise SyntaxError(f"Module {modName} has invalid category '{sfModules[modName]['cats']}'.")
+                raise SyntaxError(
+                    f"Module {modName} has invalid category '{sfModules[modName]['cats']}'.")
 
         return sfModules
 
@@ -190,7 +203,8 @@ class SpiderFootHelpers():
             ignore_files = []
 
         if not isinstance(ignore_files, list):
-            raise TypeError(f"ignore_files is {type(ignore_files)}; expected list()")
+            raise TypeError(
+                f"ignore_files is {type(ignore_files)}; expected list()")
 
         if not os.path.isdir(path):
             raise ValueError(f"Correlations directory does not exist: {path}")
@@ -210,7 +224,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def targetTypeFromString(target: str) -> typing.Optional[str]:
-        """Return the scan target seed data type for the specified scan target input.
+        """Return the scan target seed data type for the specified scan target
+        input.
 
         Args:
             target (str): scan target seed input
@@ -284,7 +299,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def urlBaseDir(url: str) -> typing.Optional[str]:
-        """Extract the top level directory from a URL
+        """Extract the top level directory from a URL.
 
         Args:
             url (str): URL
@@ -364,7 +379,8 @@ class SpiderFootHelpers():
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
-                raise IOError(f"Could not read wordlist file '{d}.dict'") from e
+                raise IOError(
+                    f"Could not read wordlist file '{d}.dict'") from e
 
         return words
 
@@ -392,7 +408,8 @@ class SpiderFootHelpers():
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
-                raise IOError(f"Could not read wordlist file '{d}.dict'") from e
+                raise IOError(
+                    f"Could not read wordlist file '{d}.dict'") from e
 
         return words
 
@@ -426,7 +443,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def buildGraphGexf(root: str, title: str, data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> str:
-        """Convert supplied raw data into GEXF (Graph Exchange XML Format) format (e.g. for Gephi).
+        """Convert supplied raw data into GEXF (Graph Exchange XML Format)
+        format (e.g. for Gephi).
 
         Args:
             root (str): TBD
@@ -557,8 +575,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def buildGraphData(data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> typing.Set[typing.Tuple[str, str]]:
-        """Return a format-agnostic collection of tuples to use as the
-        basis for building graphs in various formats.
+        """Return a format-agnostic collection of tuples to use as the basis
+        for building graphs in various formats.
 
         Args:
             data (list[str]): Scan result as list
@@ -634,8 +652,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def dataParentChildToTree(data: typing.Dict[str, typing.Optional[typing.List[str]]]) -> typing.Union[Tree, EmptyTree]:
-        """Converts a dictionary of k -> array to a nested
-        tree that can be digested by d3 for visualizations.
+        """Converts a dictionary of k -> array to a nested tree that can be
+        digested by d3 for visualizations.
 
         Args:
             data (dict): dictionary of k -> array
@@ -691,7 +709,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def validLEI(lei: str) -> bool:
-        """Check if the provided string is a valid Legal Entity Identifier (LEI).
+        """Check if the provided string is a valid Legal Entity Identifier
+        (LEI).
 
         Args:
             lei (str): The LEI number to check.
@@ -962,7 +981,8 @@ class SpiderFootHelpers():
 
         keys: typing.Set[str] = set()
 
-        pattern = re.compile("(-----BEGIN.*?END.*?BLOCK-----)", re.MULTILINE | re.DOTALL)
+        pattern = re.compile(
+            "(-----BEGIN.*?END.*?BLOCK-----)", re.MULTILINE | re.DOTALL)
         for key in re.findall(pattern, data):
             if len(key) >= 300:
                 keys.add(key)
@@ -983,7 +1003,8 @@ class SpiderFootHelpers():
             return list()
 
         emails: typing.Set[str] = set()
-        matches = re.findall(r'([\%a-zA-Z\.0-9_\-\+]+@[a-zA-Z\.0-9\-]+\.[a-zA-Z\.0-9\-]+)', data)
+        matches = re.findall(
+            r'([\%a-zA-Z\.0-9_\-\+]+@[a-zA-Z\.0-9\-]+\.[a-zA-Z\.0-9\-]+)', data)
 
         for match in matches:
             if SpiderFootHelpers.validEmail(match):
@@ -993,7 +1014,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def extractIbansFromText(data: str) -> typing.List[str]:
-        """Find all International Bank Account Numbers (IBANs) within the supplied content.
+        """Find all International Bank Account Numbers (IBANs) within the
+        supplied content.
 
         Extracts possible IBANs using a generic regex.
 
@@ -1063,7 +1085,8 @@ class SpiderFootHelpers():
             iban_int = iban[4:] + iban[0:4]
             for character in iban_int:
                 if character.isalpha():
-                    iban_int = iban_int.replace(character, str((ord(character) - 65) + 10))
+                    iban_int = iban_int.replace(
+                        character, str((ord(character) - 65) + 10))
 
             # Check IBAN integer mod 97 for remainder
             if int(iban_int) % 97 != 1:
@@ -1141,7 +1164,8 @@ class SpiderFootHelpers():
 
     @staticmethod
     def sslDerToPem(der_cert: bytes) -> str:
-        """Given a certificate as a DER-encoded blob of bytes, returns a PEM-encoded string version of the same certificate.
+        """Given a certificate as a DER-encoded blob of bytes, returns a PEM-
+        encoded string version of the same certificate.
 
         Args:
             der_cert (bytes): certificate in DER format
@@ -1476,7 +1500,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def sanitiseInput(cmd: str, extra: typing.Optional[typing.List[str]] = None) -> bool:
-        """Verify input command is safe to execute
+        """Verify input command is safe to execute.
 
         Args:
             cmd (str): The command to check

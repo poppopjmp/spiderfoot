@@ -92,12 +92,14 @@ class sfp_commoncrawl(SpiderFootPlugin):
                                useragent="SpiderFoot")
 
         if res['code'] in ["400", "401", "402", "403", "404"]:
-            self.error("CommonCrawl index collection doesn't seem to be available.")
+            self.error(
+                "CommonCrawl index collection doesn't seem to be available.")
             self.errorState = True
             return list()
 
         if not res['content']:
-            self.error("CommonCrawl index collection doesn't seem to be available.")
+            self.error(
+                "CommonCrawl index collection doesn't seem to be available.")
             self.errorState = True
             return list()
 
@@ -107,7 +109,8 @@ class sfp_commoncrawl(SpiderFootPlugin):
             ms = m.replace("CC-MAIN-", "").replace("-", "")
             indexlist[ms] = True
 
-        topindexes = sorted(list(indexlist.keys()), reverse=True)[0:self.opts['indexes']]
+        topindexes = sorted(list(indexlist.keys()), reverse=True)[
+            0:self.opts['indexes']]
 
         if len(topindexes) < self.opts['indexes']:
             self.error("Not able to find latest CommonCrawl indexes.")
@@ -176,7 +179,8 @@ class sfp_commoncrawl(SpiderFootPlugin):
                         continue
 
                     # CommonCrawl sometimes returns hosts with a trailing . after the domain
-                    link['url'] = link['url'].replace(eventData + ".", eventData)
+                    link['url'] = link['url'].replace(
+                        eventData + ".", eventData)
 
                     if link['url'] in sent:
                         continue
