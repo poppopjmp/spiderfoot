@@ -15,11 +15,13 @@ Create Chrome Headless Options
     Call Method    ${options}    add_argument    --headless
     Call Method    ${options}    add_argument    --no-sandbox
     Call Method    ${options}    add_argument    --disable-dev-shm-usage
+    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
     RETURN    ${options}
 
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
     ${chrome_options}=    Create Chrome Headless Options
+    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
     Open browser              http://127.0.0.1:5001/newscan chrome  options=${chrome_options}  executable_path=${CHROMEDRIVER_PATH}
     Press Keys                name:scanname            van1shland
     Press Keys                name:scantarget          van1shland.io
@@ -38,6 +40,7 @@ Create a module scan
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
     ${chrome_options}=    Create Chrome Headless Options
+    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
     Open browser              http://localhost:5001/newscan  chrome  options=${chrome_options}  executable_path=${CHROMEDRIVER_PATH}
     Press Keys                name:scanname            van1shland
     Press Keys                name:scantarget          van1shland.io
