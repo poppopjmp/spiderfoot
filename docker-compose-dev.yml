@@ -4,12 +4,10 @@ services:
       context: .
     volumes:
       - spiderfoot-data:/var/lib/spiderfoot
-      - ./new_directory:/var/lib/spiderfoot/new_directory
     image: spiderfoot
     container_name: spiderfoot
     ports:
       - "5001:5001"
-      - "5002:5002"
     restart: unless-stopped
 
 volumes:

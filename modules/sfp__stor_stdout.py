@@ -4,7 +4,6 @@
 # Purpose:      SpiderFoot plug-in for dumping events to standard output.
 #
 # Author:      Steve Micallef <steve@binarypool.com>
-# Maintainer:  poppopjmp
 #
 # Created:     22/10/2018
 # Copyright:   (c) Steve Micallef 2018
@@ -12,16 +11,11 @@
 # -------------------------------------------------------------------------------
 
 import json
-from elasticsearch import Elasticsearch
+
 from spiderfoot import SpiderFootPlugin
 
 
 class sfp__stor_stdout(SpiderFootPlugin):
-    """SpiderFoot plug-in for dumping events to standard output.
-
-    This class is responsible for outputting scan results to the
-    standard output.
-    """
 
     meta = {
         'name': "Command-line output",
@@ -40,58 +34,33 @@ class sfp__stor_stdout(SpiderFootPlugin):
         "_showsource": False,
         "_csvdelim": ",",
         "_maxlength": 0,
-        "_eventtypes": dict(),
-        'use_elasticsearch': False,
-        'elasticsearch_host': 'localhost',
-        'elasticsearch_port': 9200,
-        'elasticsearch_index': 'spiderfoot'
+        "_eventtypes": dict()
     }
 
     # Option descriptions
     optdescs = {
-        'use_elasticsearch': "Store events in ElasticSearch instead of standard output.",
-        'elasticsearch_host': "ElasticSearch host.",
-        'elasticsearch_port': "ElasticSearch port.",
-        'elasticsearch_index': "ElasticSearch index name."
     }
 
     def setup(self, sfc, userOpts=dict()):
-        """Set up the module with user options.
-
-        Args:
-            sfc: SpiderFoot instance
-            userOpts (dict): User options
-        """
         self.sf = sfc
 
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
-        if self.opts['use_elasticsearch']:
-            self.es = Elasticsearch(
-                [{'host': self.opts['elasticsearch_host'], 'port': self.opts['elasticsearch_port']}])
-
+    # What events is this module interested in for input
+    # Because this is a storage plugin, we are interested in everything so we
+    # can store all events for later analysis.
     def watchedEvents(self):
-        """Define the events this module is interested in for input.
-
-        Returns:
-            list: List of event types
-        """
         return ["*"]
 
     def output(self, event):
-        """Output the event data to standard output.
-
-        Args:
-            event: SpiderFoot event
-        """
         d = self.opts['_csvdelim']
         if type(event.data) in [list, dict]:
             data = str(event.data)
         else:
             data = event.data
 
-        if not isinstance(data, str):
+        if type(data) != str:
             data = str(event.data)
 
         if type(event.sourceEvent.data) in [list, dict]:
@@ -99,7 +68,7 @@ class sfp__stor_stdout(SpiderFootPlugin):
         else:
             srcdata = event.sourceEvent.data
 
-        if not isinstance(srcdata, str):
+        if type(srcdata) != str:
             srcdata = str(event.sourceEvent.data)
 
         if self.opts['_stripnewline']:
@@ -118,14 +87,12 @@ class sfp__stor_stdout(SpiderFootPlugin):
         if self.opts['_format'] == "tab":
             event_type = self.opts['_eventtypes'][event.eventType]
             if self.opts['_showsource']:
-                print(
-                    f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{srcdata}\t{data}")
+                print(f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{srcdata}\t{data}")
             else:
                 print(f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{data}")
 
         if self.opts['_format'] == "csv":
-            print((event.module + d +
-                  self.opts['_eventtypes'][event.eventType] + d + srcdata + d + data))
+            print((event.module + d + self.opts['_eventtypes'][event.eventType] + d + srcdata + d + data))
 
         if self.opts['_format'] == "json":
             d = event.asDict()
@@ -136,25 +103,9 @@ class sfp__stor_stdout(SpiderFootPlugin):
                 print(",")
             print(json.dumps(d), end='')
 
+    # Handle events sent to this module
     def handleEvent(self, sfEvent):
-        """Handle events sent to this module.
-
-        Args:
-            sfEvent: SpiderFoot event
-        """
         if sfEvent.eventType == "ROOT":
-            return
-
-        if self.opts['use_elasticsearch']:
-            event_data = {
-                'eventType': sfEvent.eventType,
-                'data': sfEvent.data,
-                'module': sfEvent.module,
-                'sourceEvent': sfEvent.sourceEvent.data if sfEvent.sourceEvent else None,
-                'generated': sfEvent.generated
-            }
-            self.es.index(
-                index=self.opts['elasticsearch_index'], body=event_data)
             return
 
         if self.opts['_showonlyrequested']:

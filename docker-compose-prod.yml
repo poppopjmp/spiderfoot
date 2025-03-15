@@ -9,8 +9,7 @@ services:
   spiderfoot:
     volumes:
       - spiderfoot-data:/var/lib/spiderfoot
-      -./new_directory:/var/lib/spiderfoot/new_directory
-      - spiderfoot-logs:/var/lib/spiderfoot/log
+      - spiderfoot-logs:/home/spiderfoot/.spiderfoot/logs
       - spiderfoot-cache:/var/lib/spiderfoot/cache
     image: ghcr.io/poppopjmp/spiderfoot:v5.0.0
     container_name: spiderfoot

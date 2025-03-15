@@ -20,7 +20,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 class sfp_tool_gobuster(SpiderFootPlugin):
     meta = {
-        "name": "Gobuster",
+        "name": "Tools - Gobuster",
         "summary": "Identify web paths on target websites using the Gobuster tool.",
         "flags": ["tool", "slow", "invasive"],
         "useCases": ["Footprint", "Investigation"],
