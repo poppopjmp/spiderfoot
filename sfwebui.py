@@ -1673,6 +1673,7 @@ class SpiderFootWebUi:
         return retdata
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def scanlist(self: 'SpiderFootWebUi') -> list:
         """Produce a list of scans.
 

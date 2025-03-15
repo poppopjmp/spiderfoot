@@ -176,6 +176,7 @@ function showlist(types, filter) {
                 // Log the response for debugging
                 console.error("AJAX Error Details:", {
                     status: status,
+                    httpStatus: xhr.status,
                     error: error,
                     responseText: xhr.responseText,
                     contentType: xhr.getResponseHeader('Content-Type')
@@ -188,14 +189,32 @@ function showlist(types, filter) {
                     return;
                 } else if (error === 'parsererror') {
                     errorMsg += "There was an error parsing the server response as JSON.<br>";
+                    
+                    // Specific check for empty responses
+                    if (!xhr.responseText || xhr.responseText.trim() === "") {
+                        errorMsg += "The server returned an empty response. This could indicate:<br>";
+                        errorMsg += "- A server error<br>";
+                        errorMsg += "- Your session may have timed out<br>";
+                        errorMsg += "- A network interruption<br><br>";
+                        errorMsg += "<button class='btn btn-primary' onclick='retryRequest()'>Try Again</button> ";
+                        errorMsg += "<button class='btn btn-default' onclick='window.location.reload()'>Refresh Page</button>";
+                    }
                     // If response is short enough, display it to help diagnose the issue
-                    if (xhr.responseText && xhr.responseText.length < 100) {
+                    else if (xhr.responseText && xhr.responseText.length < 100) {
                         errorMsg += "Server response: <pre>" + $("<div>").text(xhr.responseText).html() + "</pre>";
                     } else {
                         errorMsg += "Check the browser console for more details.";
                     }
+                    
+                    // Check if this looks like a session timeout
+                    if (xhr.responseText && xhr.responseText.indexOf("login") > -1) {
+                        errorMsg += "<br><br>Your session may have expired. <a href='" + docroot + "/login' class='btn btn-primary'>Log in again</a>";
+                    }
                 } else {
                     errorMsg += "There was an error retrieving scan data: " + error;
+                    if (xhr.status) {
+                        errorMsg += " (HTTP Status: " + xhr.status + ")";
+                    }
                 }
                 errorMsg += "</div>";
                 
@@ -220,6 +239,15 @@ function showlist(types, filter) {
         $("#scancontent-wrapper").remove();
         $("#scancontent").append("<div id='scancontent-wrapper'>" + errorMsg + "</div>");
     }
+}
+
+// Add retry functionality
+function retryRequest() {
+    alertify.message("Retrying request...");
+    // Wait a second before retrying to ensure any transient issues have cleared
+    setTimeout(function() {
+        reload();
+    }, 1000);
 }
 
 function showlisttable(types, filter, data) {
