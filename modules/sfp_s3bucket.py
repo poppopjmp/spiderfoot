@@ -15,6 +15,7 @@ import random
 import threading
 import time
 
+from urllib.parse import urlparse
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
@@ -164,7 +165,8 @@ class sfp_s3bucket(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventName == "LINKED_URL_EXTERNAL":
-            if ".amazonaws.com" in eventData:
+            parsed_url = urlparse(eventData)
+            if parsed_url.hostname and parsed_url.hostname.endswith(".amazonaws.com"):
                 b = self.sf.urlFQDN(eventData)
                 if b in self.opts["endpoints"]:
                     try:
