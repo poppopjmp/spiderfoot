@@ -457,87 +457,164 @@
             navTo("btn-correlations");
             refresh = function() { browseCorrelations(instanceId); }
             
-            // Add a debug message to the console
             console.log("Fetching correlation data for scan ID: " + instanceId);
             
-            sf.fetchData('${docroot}/scancorrelations', {'id': instanceId}, 
-                function(data) {
-                    // Success handler
-                    console.log("Correlation data received:", data);
+            // First try the scanstatus endpoint which is known to work in the scanlist view
+            sf.fetchData('${docroot}/scanstatus', {'id': instanceId}, 
+                function(statusData) {
+                    console.log("Got scan status data:", statusData);
                     
-                    if (!data || data.length == 0) {
-                        table = "<div id='scansummary-content' class='alert alert-warning'><h4>No correlations found.</h4>If the scan is still running please reload once it has completed. If the scan is complete, try refreshing the page.</div>";
-                        $("#loader").fadeOut(500);
-                        $("#mainbody").append(table);
-                        sf.updateTooltips();
-                        return;
+                    // Check if we have correlation data in the status response
+                    if (statusData && statusData[6] && (
+                        statusData[6]['HIGH'] > 0 || 
+                        statusData[6]['MEDIUM'] > 0 || 
+                        statusData[6]['LOW'] > 0 || 
+                        statusData[6]['INFO'] > 0
+                    )) {
+                        console.log("Correlation counts from status: ", statusData[6]);
+                        
+                        // Now fetch the detailed correlations
+                        sf.fetchData('${docroot}/scancorrelations', {'id': instanceId}, 
+                            function(data) {
+                                console.log("Correlation details received:", data);
+                                processCorrelationData(instanceId, data, statusData[6]);
+                            },
+                            function(xhr, textStatus, errorThrown) {
+                                handleCorrelationError(instanceId, xhr, textStatus, errorThrown, statusData[6]);
+                            }
+                        );
+                    } else {
+                        console.log("No correlation counts found in status data");
+                        noCorrelationsFound();
                     }
-                    
-                    var table = "<table id='scansummary-content' class='table table-bordered table-striped table-condensed tablesorter small'>";
-                    table += "<thead><tr><th>Correlation</th><th>Risk</th><th>Data Elements</th></tr></thead><tbody>";
-                    
-                    try {
-                        for (var i = 0; i < data.length; i++) {
-                            table += "<tr>";
-                            table += "<td><a style='cursor: pointer' onClick='toggleCorrelation(\"" + instanceId + "\",\"" + data[i][0] + "\")'>" + data[i][1] + "</a>&nbsp;&nbsp;";
-                            table += "<i class='glyphicon glyphicon-question-sign' style='color: #ccc' rel='tooltip' data-title=\"" + data[i][5] + "\"></i>";
-                            table += "</td>";
-                            var statusy = "";
-                            if (data[i][3] == "HIGH") {
-                                statusy = "alert-danger";
-                            }
-                            if (data[i][3] == "MEDIUM") {
-                                statusy = "alert-warning";
-                            }
-                            if (data[i][3] == "LOW") {
-                                statusy = "alert-info";
-                            }
-                            if (data[i][3] == "INFO") {
-                                statusy = "alert-success";
-                            }
-                            table += "<td><span class='badge " + statusy + "'>" + data[i][3] + "</span></td>";
-                            table += "<td>" + data[i][7] + "</td>";
-                            table += "</tr><tr class='hidden' id='corrwell_tr_" + data[i][0] + "'><td colspan=3 id='corrwell_td_" + data[i][0] + "'></td></tr>";
-                        }
-                    } catch (e) {
-                        console.error("Error processing correlation data:", e, data);
-                        table = "<div id='scansummary-content' class='alert alert-danger'><h4>Error displaying correlations</h4>An error occurred while processing correlation data: " + e.message + "</div>";
-                        $("#loader").fadeOut(500);
-                        $("#mainbody").append(table);
-                        return;
-                    }
-                    
-                    table += "</tbody></table>";
-                    $("#loader").fadeOut(500);
-                    $("#mainbody").append(table);
-                    $.tablesorter.addParser({ 
-                        id: 'criticality', 
-                        is: function(s) { 
-                            return false; 
-                        }, 
-                        format: function(s) { 
-                            return s.toLowerCase().replace(/high/,3).replace(/medium/,2).replace(/low/,1).replace(/info/,0); 
-                        }, 
-                        type: 'numeric' 
-                    });
-                    $("#scansummary-content").tablesorter({ headers: { 1: { sorter: 'criticality' } } });
-                    sf.updateTooltips();
                 },
                 function(xhr, textStatus, errorThrown) {
-                    // Error handler - this is a new parameter for sf.fetchData
-                    console.error("Error fetching correlation data:", textStatus, errorThrown);
-                    var errorMsg = "<div id='scansummary-content' class='alert alert-danger'>";
-                    errorMsg += "<h4>Error retrieving correlation data</h4>";
-                    errorMsg += "<p>There was a problem retrieving the correlation data: " + textStatus + "</p>";
-                    if (xhr.responseText) {
-                        errorMsg += "<p>Server response: " + xhr.responseText + "</p>";
-                    }
-                    errorMsg += "<button class='btn btn-primary' onclick='browseCorrelations(\"" + instanceId + "\")'>Retry</button>";
-                    errorMsg += "</div>";
-                    $("#loader").fadeOut(500);
-                    $("#mainbody").append(errorMsg);
+                    console.error("Error fetching scan status data:", textStatus, errorThrown);
+                    
+                    // Fall back to the original correlation endpoint
+                    sf.fetchData('${docroot}/scancorrelations', {'id': instanceId}, 
+                        function(data) {
+                            console.log("Correlation details received (fallback):", data);
+                            processCorrelationData(instanceId, data);
+                        },
+                        function(xhr2, textStatus2, errorThrown2) {
+                            handleCorrelationError(instanceId, xhr2, textStatus2, errorThrown2);
+                        }
+                    );
                 }
             );
+        }
+
+        // Helper function to process correlation data
+        function processCorrelationData(instanceId, data, counts) {
+            if (!data || data.length == 0) {
+                noCorrelationsFound();
+                return;
+            }
+            
+            // If we have counts but no details, show the counts
+            if (data.length == 0 && counts) {
+                var table = "<div id='scansummary-content' class='alert alert-info'>";
+                table += "<h4>Correlation Summary</h4>";
+                table += "<p>Found correlations but no details available:</p>";
+                table += "<ul>";
+                table += "<li>High: " + counts['HIGH'] + "</li>";
+                table += "<li>Medium: " + counts['MEDIUM'] + "</li>";
+                table += "<li>Low: " + counts['LOW'] + "</li>";
+                table += "<li>Info: " + counts['INFO'] + "</li>";
+                table += "</ul></div>";
+                
+                $("#loader").fadeOut(500);
+                $("#mainbody").append(table);
+                return;
+            }
+            
+            var table = "<table id='scansummary-content' class='table table-bordered table-striped table-condensed tablesorter small'>";
+            table += "<thead><tr><th>Correlation</th><th>Risk</th><th>Data Elements</th></tr></thead><tbody>";
+            
+            try {
+                for (var i = 0; i < data.length; i++) {
+                    table += "<tr>";
+                    table += "<td><a style='cursor: pointer' onClick='toggleCorrelation(\"" + instanceId + "\",\"" + data[i][0] + "\")'>" + data[i][1] + "</a>&nbsp;&nbsp;";
+                    table += "<i class='glyphicon glyphicon-question-sign' style='color: #ccc' rel='tooltip' data-title=\"" + data[i][5] + "\"></i>";
+                    table += "</td>";
+                    var statusy = "";
+                    if (data[i][3] == "HIGH") {
+                        statusy = "alert-danger";
+                    }
+                    if (data[i][3] == "MEDIUM") {
+                        statusy = "alert-warning";
+                    }
+                    if (data[i][3] == "LOW") {
+                        statusy = "alert-info";
+                    }
+                    if (data[i][3] == "INFO") {
+                        statusy = "alert-success";
+                    }
+                    table += "<td><span class='badge " + statusy + "'>" + data[i][3] + "</span></td>";
+                    table += "<td>" + data[i][7] + "</td>";
+                    table += "</tr><tr class='hidden' id='corrwell_tr_" + data[i][0] + "'><td colspan=3 id='corrwell_td_" + data[i][0] + "'></td></tr>";
+                }
+            } catch (e) {
+                console.error("Error processing correlation data:", e, data);
+                table = "<div id='scansummary-content' class='alert alert-danger'><h4>Error displaying correlations</h4>An error occurred while processing correlation data: " + e.message + "</div>";
+                $("#loader").fadeOut(500);
+                $("#mainbody").append(table);
+                return;
+            }
+            
+            table += "</tbody></table>";
+            $("#loader").fadeOut(500);
+            $("#mainbody").append(table);
+            $.tablesorter.addParser({ 
+                id: 'criticality', 
+                is: function(s) { 
+                    return false; 
+                }, 
+                format: function(s) { 
+                    return s.toLowerCase().replace(/high/,3).replace(/medium/,2).replace(/low/,1).replace(/info/,0); 
+                }, 
+                type: 'numeric' 
+            });
+            $("#scansummary-content").tablesorter({ headers: { 1: { sorter: 'criticality' } } });
+            sf.updateTooltips();
+        }
+
+        function handleCorrelationError(instanceId, xhr, textStatus, errorThrown, counts) {
+            console.error("Error fetching correlation data:", textStatus, errorThrown);
+            
+            var errorMsg = "<div id='scansummary-content' class='alert alert-warning'>";
+            
+            // If we have counts but failed to get details, at least show the counts
+            if (counts) {
+                errorMsg += "<h4>Correlation Summary</h4>";
+                errorMsg += "<p>Found correlations but couldn't retrieve details:</p>";
+                errorMsg += "<ul>";
+                errorMsg += "<li>High: " + counts['HIGH'] + "</li>";
+                errorMsg += "<li>Medium: " + counts['MEDIUM'] + "</li>";
+                errorMsg += "<li>Low: " + counts['LOW'] + "</li>";
+                errorMsg += "<li>Info: " + counts['INFO'] + "</li>";
+                errorMsg += "</ul>";
+            } else {
+                errorMsg += "<h4>Error retrieving correlation data</h4>";
+                errorMsg += "<p>There was a problem retrieving the correlation data: " + textStatus + "</p>";
+            }
+            
+            if (xhr.responseText) {
+                errorMsg += "<p>Server response: " + xhr.responseText + "</p>";
+            }
+            
+            errorMsg += "<button class='btn btn-primary' onclick='browseCorrelations(\"" + instanceId + "\")'>Retry</button>";
+            errorMsg += "</div>";
+            $("#loader").fadeOut(500);
+            $("#mainbody").append(errorMsg);
+        }
+
+        function noCorrelationsFound() {
+            var table = "<div id='scansummary-content' class='alert alert-warning'><h4>No correlations found.</h4>If the scan is still running please reload once it has completed. If the scan is complete, it may not have triggered any correlation rules.</div>";
+            $("#loader").fadeOut(500);
+            $("#mainbody").append(table);
+            sf.updateTooltips();
         }
 
         // Logs for the scan

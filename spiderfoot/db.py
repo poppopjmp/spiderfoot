@@ -88,7 +88,7 @@ class SpiderFootDb:
         )",
         "CREATE TABLE tbl_scan_correlation_results ( \
             id                  VARCHAR NOT NULL PRIMARY KEY, \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instances(guid), \
+            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
             title               VARCHAR NOT NULL, \
             rule_risk           VARCHAR NOT NULL, \
             rule_id             VARCHAR NOT NULL, \
