@@ -19,6 +19,7 @@ Create Firefox Headless Options
 Create a module scan
     [Arguments]    ${scan_name}    ${scan_target}    ${module_name}
     ${firefox_options}=    Create Firefox Headless Options
+    Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
     Open browser    http://localhost:5001/newscan   firefox    options=${firefox_options}
     Press Keys    name:scanname    van1shland
     Press Keys    name:scantarget    van1shland.io
@@ -37,6 +38,7 @@ Create a module scan
 Create a use case scan
     [Arguments]    ${scan_name}    ${scan_target}    ${use_case}
     ${firefox_options}=    Create Firefox Headless Options
+    Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
     Open browser    http://localhost:5001/newscan    firefox    options=${firefox_options}
     Press Keys    name:scanname    van1shland
     Press Keys    name:scantarget    van1shland.io
