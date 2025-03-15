@@ -169,7 +169,7 @@ class SpiderFootHelpers():
             # Ensure 'cats' key exists to avoid KeyError
             if 'cats' not in sfModules[modName]:
                 sfModules[modName]['cats'] = []
-                
+
             # Ensure 'meta' key exists to avoid AttributeError in templates
             if 'meta' not in sfModules[modName]:
                 sfModules[modName]['meta'] = {}
