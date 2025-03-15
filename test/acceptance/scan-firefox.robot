@@ -16,7 +16,7 @@ Create Firefox Headless Options
     ${options}=    Evaluate    selenium.webdriver.FirefoxOptions()    modules=selenium.webdriver
     Call Method    ${options}    add_argument    --headless
     # Set the Firefox binary path explicitly
-    Call Method    ${options}    /usr/bin/firefox    ${FIREFOX_BINARY_PATH}
+    Call Method    ${options}    set_binary    ${FIREFOX_BINARY_PATH}
     Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
     RETURN    ${options}
 

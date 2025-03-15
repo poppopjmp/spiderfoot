@@ -6,6 +6,7 @@ Resource          variables.robot  # Externalize variables
 
 ***Variables***
 ${CHROMEDRIVER_PATH}    /usr/local/bin/chromedriver
+${WAIT_TIMEOUT}         60s
 
 ***Keywords***
 Capture Failure Screenshot
@@ -16,16 +17,15 @@ Create Chrome Headless Options
     Call Method    ${options}    add_argument    --headless
     Call Method    ${options}    add_argument    --no-sandbox
     Call Method    ${options}    add_argument    --disable-dev-shm-usage
-    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
-    RETURN    ${options}
+    ${service}=    Evaluate    selenium.webdriver.chrome.service.Service(executable_path='${CHROMEDRIVER_PATH}')    modules=selenium.webdriver.chrome.service
+    RETURN    ${options}    ${service}
 
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
-    ${chrome_options}=    Create Chrome Headless Options
-    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
-    Open browser              http://127.0.0.1:5001/newscan chrome  options=${chrome_options}  executable_path=${CHROMEDRIVER_PATH}
-    Press Keys                name:scanname            van1shland
-    Press Keys                name:scantarget          van1shland.io
+    ${chrome_options}=    ${service}=    Create Chrome Headless Options
+    Open browser              http://127.0.0.1:5001/newscan    browser=chrome    options=${chrome_options}    service=${service}
+    Press Keys                name:scanname            ${scan_name}
+    Press Keys                name:scantarget          ${scan_target}
     Click Element             id:moduletab
     Click Element             id:btn-deselect-all
     Scroll To Element         id:module_${module_name}
@@ -33,22 +33,24 @@ Create a module scan
     Click Element             id:module_${module_name}
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
-    Wait Until Element Is Visible    id:btn-browse    timeout=30s
+    Wait Until Element Is Visible    id:btn-browse    timeout=${WAIT_TIMEOUT}
     Element Should Be Visible    id:scanstatusbadge
     ${scan_status}=    Get Text    id:scanstatusbadge
     Should Not Be Equal As Strings    ${scan_status}    ERROR    msg=Scan creation failed.
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
-    ${chrome_options}=    Create Chrome Headless Options
-    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
-    Open browser              http://localhost:5001/newscan  chrome  options=${chrome_options}  executable_path=${CHROMEDRIVER_PATH}
-    Press Keys                name:scanname            van1shland
-    Press Keys                name:scantarget          van1shland.io
-    Click Element             id:usecase_${use_case}
+    ${chrome_options}=    ${service}=    Create Chrome Headless Options
+    Open browser              http://localhost:5001/newscan    browser=chrome    options=${chrome_options}    service=${service}
+    Press Keys                name:scanname            ${scan_name}
+    Press Keys                name:scantarget          ${scan_target}
+    # Check if element exists by different ID format
+    ${passive_exists}=    Run Keyword And Return Status    Element Should Be Visible    id:usecase_${use_case}
+    Run Keyword If    ${passive_exists}    Click Element    id:usecase_${use_case}
+    ...    ELSE    Click Element    xpath://input[@value='${use_case}']
     Scroll To Element         id:btn-run-scan
     Click Element             id:btn-run-scan
-    Element Should Be Visible    id:scanstatusbadge
+    Wait Until Element Is Visible    id:scanstatusbadge    timeout=${WAIT_TIMEOUT}
 
 Scan info page should render tabs
     Element Should Be Visible     id:btn-status
@@ -118,27 +120,27 @@ Scroll To Element
 
 Wait For Scan To Finish
     [Arguments]  ${scan_name}
-    Wait Until Element Is Visible    id:btn-browse    timeout=30s
-    Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=60s
+    Wait Until Element Is Visible    id:btn-browse    timeout=${WAIT_TIMEOUT}
+    Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=${WAIT_TIMEOUT}
 
 ***Test Cases***
 Main navigation pages should render correctly
-    ${chrome_options}=    Create Chrome Headless Options
-    Open browser              http://localhost:5001  chrome  options=${chrome_options}  executable_path=${CHROMEDRIVER_PATH}
+    ${chrome_options}=    ${service}=    Create Chrome Headless Options
+    Open browser              http://localhost:5001    browser=chrome    options=${chrome_options}    service=${service}
     Click Element                 id:nav-link-newscan
-    Wait Until Element Is Visible    id:scanname    timeout=30s
+    Wait Until Element Is Visible    id:scanname    timeout=${WAIT_TIMEOUT}
     New scan page should render
     Click Element                 id:nav-link-scans
-    Wait Until Element Is Visible    id:scanlist    timeout=30s
+    Wait Until Element Is Visible    id:scanlist    timeout=${WAIT_TIMEOUT}
     Scan list page should render
     Click Element                 id:nav-link-settings
-    Wait Until Element Is Visible    id:savesettingsform    timeout=30s
+    Wait Until Element Is Visible    id:savesettingsform    timeout=${WAIT_TIMEOUT}
     Settings page should render
     Close All Browsers
 
 Scan info page should render correctly
-    Create a module scan           test scan info    van1shland.io    sfp_countryname
-    Wait For Scan To Finish        test scan info
+    Create a module scan           test_scan_info    van1shland.io    sfp_countryname
+    Wait For Scan To Finish        test_scan_info
     Click Element                 id:btn-status
     Scan info Summary tab should render
     Click Element                 id:btn-browse
@@ -152,14 +154,14 @@ Scan info page should render correctly
     Close All Browsers
 
 Scan list page should list scans
-    Create a module scan           test scan list    van1shland.io    sfp_countryname
+    Create a module scan           test_scan_list    van1shland.io    sfp_countryname
     Click Element                 id:nav-link-scans
-    Wait Until Element Is Visible   xpath=//td[contains(text(), 'test scan list')]   timeout=30s
+    Wait Until Element Is Visible   xpath=//td[contains(text(), 'test_scan_list')]   timeout=${WAIT_TIMEOUT}
     Close All Browsers
 
 A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
-    Create a module scan           dns resolve     van1shland.io    sfp_dnsresolve
-    Wait For Scan To Finish       dns resolve
+    Create a module scan           dns_resolve     van1shland.io    sfp_dnsresolve
+    Wait For Scan To Finish       dns_resolve
     Click Element                 id:btn-browse
     Scan info Browse tab should render
     Element Should Contain        id:browse-table-content    Domain Name
@@ -168,8 +170,8 @@ A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
     Close All Browsers
 
 A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
-    Create a module scan           reverse resolve   1.1.1.1           sfp_dnsresolve
-    Wait For Scan To Finish      reverse resolve
+    Create a module scan           reverse_resolve   1.1.1.1           sfp_dnsresolve
+    Wait For Scan To Finish      reverse_resolve
     Click Element                 id:btn-browse
     Scan info Browse tab should render
     Element Should Contain        id:browse-table-content    Domain Name
@@ -179,8 +181,8 @@ A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
 
 A passive scan with unresolvable target internet name should fail
     Create a use case scan         shouldnotresolve    shouldnotresolve.doesnotexist.local    Passive
-    Wait Until Element Is Visible    id:btn-browse    timeout=30s
-    Wait Until Element Contains     scanstatusbadge   ERROR     timeout=60s
+    Wait Until Element Is Visible    id:btn-browse    timeout=${WAIT_TIMEOUT}
+    Wait Until Element Contains     scanstatusbadge   ERROR     timeout=${WAIT_TIMEOUT}
     Click Element                   id:btn-log
     Page Should Contain             Could not resolve
     Close All Browsers
