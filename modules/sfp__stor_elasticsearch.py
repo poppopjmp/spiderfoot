@@ -17,8 +17,8 @@ from spiderfoot import SpiderFootPlugin
 class sfp__stor_elasticsearch(SpiderFootPlugin):
     """SpiderFoot plug-in for storing events to an ElasticSearch instance.
 
-    This module sends scan results to an external ElasticSearch instance for storage
-    and analysis.
+    This module sends scan results to an external ElasticSearch instance
+    for storage and analysis.
     """
 
     meta = {

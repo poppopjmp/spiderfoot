@@ -16,7 +16,8 @@ from spiderfoot import SpiderFootPlugin
 
 
 class sfp__stor_db(SpiderFootPlugin):
-    """SpiderFoot plug-in for storing events to the configured database backend.
+    """SpiderFoot plug-in for storing events to the configured database
+    backend.
 
     This class is responsible for storing scan results into the back-end
     SpiderFoot database (SQLite or PostgreSQL).
