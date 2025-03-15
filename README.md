@@ -251,6 +251,7 @@ Company Name Extractor|Identify company names in any obtained data.|Internal
 Cookie Extractor|Extract Cookies from HTTP headers.|Internal
 Country Name Extractor|Identify country names in any obtained data.|Internal
 Credit Card Number Extractor|Identify Credit Card Numbers in any data|Internal
+[CriminalIP](https://www.criminalip.io/)|Look up domain, phone and IP address information from CriminalIP.|Tiered API
 [Crobat API](https://sonar.omnisint.io/)|Search Crobat API for subdomains.|Free API
 Cross-Referencer|Identify whether other domains are associated ('Affiliates') of the target by looking for links back to the target site(s).|Internal
 [CRXcavator](https://crxcavator.io/)|Search CRXcavator for Chrome extensions.|Free API
