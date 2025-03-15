@@ -1,11 +1,12 @@
 ***Settings***
 Library           SeleniumLibrary
-Library    OperatingSystem
+Library           OperatingSystem
 Test Teardown     Run Keyword If Test Failed    Capture Failure Screenshot
 Resource          variables.robot  # Externalize variables
 
 ***Variables***
 ${GECKODRIVER_PATH}    /usr/local/bin/geckodriver
+${FIREFOX_BINARY_PATH}    /usr/bin/firefox  # Add path to Firefox binary
 
 ***Keywords***
 Capture Failure Screenshot
@@ -14,6 +15,8 @@ Capture Failure Screenshot
 Create Firefox Headless Options
     ${options}=    Evaluate    selenium.webdriver.FirefoxOptions()    modules=selenium.webdriver
     Call Method    ${options}    add_argument    --headless
+    # Set the Firefox binary path explicitly
+    Call Method    ${options}    /usr/bin/firefox    ${FIREFOX_BINARY_PATH}
     Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
     RETURN    ${options}
 
