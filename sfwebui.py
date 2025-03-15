@@ -1510,7 +1510,8 @@ class SpiderFootWebUi:
         # User selected a use case
         if len(modlist) == 0 and usecase:
             for mod in self.config['__modules__']:
-                if usecase == 'all' or usecase in self.config['__modules__'][mod]['group']:
+                if usecase == 'all' or ('group' in self.config['__modules__'][mod] and 
+                                       usecase in self.config['__modules__'][mod]['group']):
                     modlist.append(mod)
 
         # If we somehow got all the way through to here and still don't have any modules selected
@@ -1670,7 +1671,6 @@ class SpiderFootWebUi:
         return retdata
 
     @cherrypy.expose
-    @cherrypy.tools.json_out()
     def scanlist(self: 'SpiderFootWebUi') -> list:
         """Produce a list of scans.
 
