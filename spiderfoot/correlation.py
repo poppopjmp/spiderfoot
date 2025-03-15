@@ -804,21 +804,36 @@ class SpiderFootCorrelator:
                 if not (rule.get('minimum', 0) <= unique_count <= rule.get('maximum', 999999999)):
                     del buckets[bucket]
 
-        def analyze_field_scope(self, field: str) -> list:
-            """Analysis field scope.
+    def analyze_field_scope(self, field: str) -> list:
+        """Analysis field scope.
 
-            Args:
-                field (str): TBD
+        Args:
+            field (str): TBD
 
-            Returns:
-                list: TBD
-            """
+        Returns:
+            list: TBD
+        """
 
-            return [
-                field.startswith('child.'),
-                field.startswith('source.'),
-                field.startswith('entity.')
-            ]
+        fetch_children = False
+        fetch_sources = False
+        fetch_entities = False
+
+        if not field:
+            return fetch_children, fetch_sources, fetch_entities
+
+        # Check if we need to fetch children
+        if ".children" in field or ".family" in field:
+            fetch_children = True
+
+        # Check if we need to fetch sources
+        if ".source" in field:
+            fetch_sources = True
+
+        # Check if we need to fetch entities
+        if ".entity" in field or ".parent" in field:
+            fetch_entities = True
+
+        return fetch_children, fetch_sources, fetch_entities
 
     def analyze_rule_scope(self, rule: dict) -> tuple:
         """Analyze the rule to determine if child events, sources, or entities

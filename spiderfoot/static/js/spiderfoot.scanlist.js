@@ -247,7 +247,7 @@ function showlisttable(types, filter, data) {
         table += "<thead><tr><th class='sorter-false text-center'><input id='checkall' type='checkbox'></th> <th>Name</th> <th>Target</th> <th>Started</th> <th >Finished</th> <th class='text-center'>Status</th> <th class='text-center'>Elements</th><th class='text-center'>Correlations</th><th class='sorter-false text-center'>Action</th> </tr></thead><tbody>";
         filtered = 0;
         for (var i = 0; i < data.length; i++) {
-            if (types != null && $.inArray(data[i][6], types)) {
+            if (types != null && $.inArray(data[i][6], types) === -1) {
                 filtered++;
                 continue;
             }
