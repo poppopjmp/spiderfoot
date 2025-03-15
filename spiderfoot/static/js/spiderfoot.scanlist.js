@@ -172,11 +172,28 @@ function showlist(types, filter) {
                 $("#loader").fadeOut(500);
                 var errorMsg = "<div class='alert alert-danger'>";
                 errorMsg += "<h4>Error fetching scan data</h4><br>";
+                
+                // Log the response for debugging
+                console.error("AJAX Error Details:", {
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    contentType: xhr.getResponseHeader('Content-Type')
+                });
+                
                 if (status === 'timeout') {
                     errorMsg += "The request timed out. Please try again or refresh the page.";
                 } else if (status === 'abort') {
                     // Request was aborted, likely by a new request
                     return;
+                } else if (error === 'parsererror') {
+                    errorMsg += "There was an error parsing the server response as JSON.<br>";
+                    // If response is short enough, display it to help diagnose the issue
+                    if (xhr.responseText && xhr.responseText.length < 100) {
+                        errorMsg += "Server response: <pre>" + $("<div>").text(xhr.responseText).html() + "</pre>";
+                    } else {
+                        errorMsg += "Check the browser console for more details.";
+                    }
                 } else {
                     errorMsg += "There was an error retrieving scan data: " + error;
                 }
