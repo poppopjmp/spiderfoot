@@ -15,6 +15,7 @@ import random
 import threading
 import time
 
+from urllib.parse import urlparse
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
@@ -167,7 +168,8 @@ class sfp_googleobjectstorage(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventName == "LINKED_URL_EXTERNAL":
-            if ".storage.googleapis.com" in eventData:
+            parsed_url = urlparse(eventData)
+            if parsed_url.hostname and parsed_url.hostname.endswith(".storage.googleapis.com"):
                 b = self.sf.urlFQDN(eventData)
                 evt = SpiderFootEvent(
                     "CLOUD_STORAGE_BUCKET", b, self.__name__, event)
