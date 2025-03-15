@@ -32,7 +32,8 @@ class sfp__stor_db(SpiderFootPlugin):
 
     # Default options
     opts = {
-        'maxstorage': 1024,  # max bytes for any piece of info stored (0 = unlimited)
+        # max bytes for any piece of info stored (0 = unlimited)
+        'maxstorage': 1024,
         '_store': True,
         'db_type': 'sqlite',  # sqlite or postgresql
         'postgresql_host': 'localhost',
@@ -129,12 +130,12 @@ class sfp__stor_db(SpiderFootPlugin):
         """
         try:
             cursor = self.pg_conn.cursor()
-            
+
             # Truncate data if necessary
             data = sfEvent.data
             if self.opts['maxstorage'] != 0 and len(data) > self.opts['maxstorage']:
                 data = data[:self.opts['maxstorage']]
-            
+
             # Store event in PostgreSQL
             cursor.execute(
                 "INSERT INTO tbl_scan_events (scan_id, type, data, module, source_event_hash, generated) VALUES (%s, %s, %s, %s, %s, %s)",
@@ -143,14 +144,15 @@ class sfp__stor_db(SpiderFootPlugin):
                     sfEvent.eventType,
                     data,
                     sfEvent.module,
-                    sfEvent.sourceEventHash if hasattr(sfEvent, 'sourceEventHash') else None,
+                    sfEvent.sourceEventHash if hasattr(
+                        sfEvent, 'sourceEventHash') else None,
                     sfEvent.generated
                 )
             )
-            
+
             self.pg_conn.commit()
             cursor.close()
-            
+
             self.debug("Stored event in PostgreSQL: " + sfEvent.eventType)
         except Exception as e:
             self.error(f"Error storing event in PostgreSQL: {e}")

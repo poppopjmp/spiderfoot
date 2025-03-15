@@ -33,7 +33,8 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         else:
             self.batch_size = 5
         self.shutdown_hook = False
-        self.log_file = os.path.join(SpiderFootHelpers.logPath(), "spiderfoot.sqlite.log")
+        self.log_file = os.path.join(
+            SpiderFootHelpers.logPath(), "spiderfoot.sqlite.log")
         self.backup_count = 30
         self.rotate_logs()
         self.log_queue = Queue()
@@ -59,7 +60,6 @@ class SpiderFootSqliteLogHandler(logging.Handler):
                 (scanId, level, record.getMessage(), component, time.time()))
             if len(self.batch) >= self.batch_size:
                 self.logBatch()
-
 
     def logBatch(self):
         """Log a batch of records to the database."""
@@ -119,7 +119,8 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         Returns:
             str: Formatted log message
         """
-        formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(module)s : %(message)s")
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(module)s : %(message)s")
         return formatter.format(record)
 
     def process_log_queue(self):

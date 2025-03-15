@@ -88,18 +88,20 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
 
             # Add authentication if provided
             if self.opts['username'] and self.opts['password']:
-                es_conn_config['http_auth'] = (self.opts['username'], self.opts['password'])
+                es_conn_config['http_auth'] = (
+                    self.opts['username'], self.opts['password'])
             elif self.opts['api_key']:
                 es_conn_config['api_key'] = self.opts['api_key']
 
             self.es = Elasticsearch(**es_conn_config)
-            
+
             if not self.es.ping():
                 self.error("Could not connect to ElasticSearch")
                 self.errorState = True
                 return
-                
-            self.debug(f"Connected to ElasticSearch at {self.opts['host']}:{self.opts['port']}")
+
+            self.debug(
+                f"Connected to ElasticSearch at {self.opts['host']}:{self.opts['port']}")
         except Exception as e:
             self.error(f"ElasticSearch connection failed: {e}")
             self.errorState = True
@@ -151,14 +153,15 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
         try:
             from elasticsearch.helpers import bulk
             success, errors = bulk(self.es, self.buffer, refresh=True)
-            self.debug(f"Inserted {success} events to ElasticSearch, {len(errors)} errors")
-            
+            self.debug(
+                f"Inserted {success} events to ElasticSearch, {len(errors)} errors")
+
             if errors:
                 for error in errors:
                     self.error(f"ElasticSearch insertion error: {error}")
         except Exception as e:
             self.error(f"Failed to bulk insert events to ElasticSearch: {e}")
-        
+
         # Clear the buffer
         self.buffer = []
 

@@ -965,10 +965,10 @@ class SpiderFootCorrelator:
                     # Change to debug level since this is an expected scenario
                     self.log.debug(f"Field requested was not available: {m}")
                     v = f"[{m} not found]"
-            
+
             title = title.replace(
                 "{" + m + "}", v.replace("\r", "").split("\n")[0])
-        
+
         return title
 
     def create_correlation(self, rule: dict, data: list, readonly: bool = False) -> bool:

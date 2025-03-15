@@ -87,12 +87,14 @@ class sfp__stor_stdout(SpiderFootPlugin):
         if self.opts['_format'] == "tab":
             event_type = self.opts['_eventtypes'][event.eventType]
             if self.opts['_showsource']:
-                print(f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{srcdata}\t{data}")
+                print(
+                    f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{srcdata}\t{data}")
             else:
                 print(f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{data}")
 
         if self.opts['_format'] == "csv":
-            print((event.module + d + self.opts['_eventtypes'][event.eventType] + d + srcdata + d + data))
+            print((event.module + d +
+                  self.opts['_eventtypes'][event.eventType] + d + srcdata + d + data))
 
         if self.opts['_format'] == "json":
             d = event.asDict()

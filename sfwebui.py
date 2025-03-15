@@ -1798,22 +1798,23 @@ class SpiderFootWebUi:
         """
         retdata = []
         dbh = SpiderFootDb(self.config)
-        
+
         try:
             self.log.debug(f"Fetching correlations for scan {id}")
             corrdata = dbh.scanCorrelationList(id)
             self.log.debug(f"Found {len(corrdata)} correlations")
-            
+
             if not corrdata:
                 self.log.debug(f"No correlations found for scan {id}")
                 return retdata
-            
+
             for row in corrdata:
                 # Check if we have a valid row of data
                 if len(row) < 6:  # Need at least 6 elements to extract all required fields
-                    self.log.error(f"Correlation data format error: missing required fields, got {len(row)} fields")
+                    self.log.error(
+                        f"Correlation data format error: missing required fields, got {len(row)} fields")
                     continue
-                
+
                 # Extract specific fields based on their indices
                 correlation_id = row[0]
                 correlation = row[1]
@@ -1823,14 +1824,15 @@ class SpiderFootWebUi:
                 rule_description = row[5]
                 events = row[6] if len(row) > 6 else ""
                 created = row[7] if len(row) > 7 else ""
-                
-                retdata.append([correlation_id, correlation, rule_name, rule_risk, 
+
+                retdata.append([correlation_id, correlation, rule_name, rule_risk,
                                rule_id, rule_description, events, created])
-                
+
         except Exception as e:
-            self.log.error(f"Error fetching correlations for scan {id}: {e}", exc_info=True)
+            self.log.error(
+                f"Error fetching correlations for scan {id}: {e}", exc_info=True)
             # Return empty list on error
-            
+
         return retdata
 
     @cherrypy.expose
