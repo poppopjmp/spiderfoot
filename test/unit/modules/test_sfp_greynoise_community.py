@@ -6,7 +6,6 @@ from modules.sfp_greynoise_community import sfp_greynoise_community
 import unittest
 
 
-
 class TestModuleGreynoiseCommunity(unittest.TestCase):
     """Test Greynoise Community module."""
 

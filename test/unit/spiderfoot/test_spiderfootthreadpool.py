@@ -115,6 +115,3 @@ class TestThreadPoolWorker(unittest.TestCase):
         with patch('spiderfoot.threadpool.logging.getLogger') as mock_logger:
             self.worker.run()
             mock_logger.return_value.error.assert_called_once()
-
-
-
