@@ -1809,17 +1809,27 @@ class SpiderFootWebUi:
                 return retdata
             
             for row in corrdata:
-                # Ensure we have all expected fields (8 of them)
-                if len(row) < 8:
-                    self.log.error(f"Correlation data format error: expected 8 fields, got {len(row)}")
+                # Check if we have a valid row of data
+                if len(row) < 6:  # Need at least 6 elements to extract all required fields
+                    self.log.error(f"Correlation data format error: missing required fields, got {len(row)} fields")
                     continue
-                    
-                retdata.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]])
+                
+                # Extract specific fields based on their indices
+                correlation_id = row[0]
+                correlation = row[1]
+                rule_name = row[2]
+                rule_risk = row[3]
+                rule_id = row[4]
+                rule_description = row[5]
+                events = row[6] if len(row) > 6 else ""
+                created = row[7] if len(row) > 7 else ""
+                
+                retdata.append([correlation_id, correlation, rule_name, rule_risk, 
+                               rule_id, rule_description, events, created])
                 
         except Exception as e:
-            self.log.error(f"Error fetching correlations for scan {id}: {e}")
-            # Consider whether to return an error indicator instead of empty list
-            # to help the UI distinguish between "no correlations" and "error fetching correlations"
+            self.log.error(f"Error fetching correlations for scan {id}: {e}", exc_info=True)
+            # Return empty list on error
             
         return retdata
 
