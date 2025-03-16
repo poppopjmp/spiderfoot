@@ -715,3 +715,97 @@ pip install -r requirements-misp.txt
 ```
 
 Learn more in the [MISP integration documentation](docs/MISP_INTEGRATION.md).
+
+### New Modules
+
+#### CriminalIP
+
+CriminalIP is a comprehensive threat intelligence platform that provides information about domains, IP addresses, and phone numbers. It helps in identifying potential threats and vulnerabilities associated with these entities.
+
+- **Purpose**: To gather threat intelligence data related to domains, IP addresses, and phone numbers.
+- **API Key Instructions**:
+  1. Visit [CriminalIP](https://www.criminalip.io/).
+  2. Sign up for an account.
+  3. Navigate to the API section in your account settings.
+  4. Generate and copy your API key.
+- **Setting the API Key**: In the SpiderFoot configuration, set the `criminalip_api_key` option with your API key.
+
+#### Crobat API
+
+Crobat API is a service that provides subdomain enumeration for a given domain. It helps in identifying subdomains associated with a target domain.
+
+- **Purpose**: To enumerate subdomains for a given domain.
+- **API Key Instructions**: No API key is required for Crobat API.
+- **Setting the API Key**: Not applicable.
+
+#### Deepinfo
+
+Deepinfo is a service that provides historical DNS records, WHOIS data, and associated domains for a given target. It helps in gathering historical information about a domain.
+
+- **Purpose**: To gather historical DNS records, WHOIS data, and associated domains.
+- **API Key Instructions**:
+  1. Visit [Deepinfo](https://deepinfo.com/).
+  2. Sign up for an account.
+  3. Navigate to the API section in your account settings.
+  4. Generate and copy your API key.
+- **Setting the API Key**: In the SpiderFoot configuration, set the `deepinfo_api_key` option with your API key.
+
+#### LeakCheck
+
+LeakCheck is a service that provides information about data breaches associated with a domain or email address. It helps in identifying if a domain or email address has been involved in any data breaches.
+
+- **Purpose**: To check for data breaches associated with a domain or email address.
+- **API Key Instructions**:
+  1. Visit [LeakCheck](https://leakcheck.net/).
+  2. Sign up for an account.
+  3. Navigate to the API section in your account settings.
+  4. Generate and copy your API key.
+- **Setting the API Key**: In the SpiderFoot configuration, set the `leakcheck_api_key` option with your API key.
+
+#### Netlas
+
+Netlas is a service that provides information about domains and IP addresses. It helps in gathering information related to the target's attack surface.
+
+- **Purpose**: To gather information about domains and IP addresses.
+- **API Key Instructions**:
+  1. Visit [Netlas](https://netlas.io/).
+  2. Sign up for an account.
+  3. Navigate to the API section in your account settings.
+  4. Generate and copy your API key.
+- **Setting the API Key**: In the SpiderFoot configuration, set the `netlas_api_key` option with your API key.
+
+#### Seon
+
+Seon is a service that provides intelligence about IP addresses, email addresses, and phone numbers. It helps in identifying potential threats and fraudulent activities associated with these entities.
+
+- **Purpose**: To gather intelligence about IP addresses, email addresses, and phone numbers.
+- **API Key Instructions**:
+  1. Visit [Seon](https://seon.io/).
+  2. Sign up for an account.
+  3. Navigate to the API section in your account settings.
+  4. Generate and copy your API key.
+- **Setting the API Key**: In the SpiderFoot configuration, set the `seon_api_key` option with your API key.
+
+#### Social Links
+
+Social Links is a service that gathers intelligence from social media platforms and the dark web. It helps in identifying social media profiles and dark web mentions related to the target.
+
+- **Purpose**: To gather intelligence from social media platforms and the dark web.
+- **API Key Instructions**:
+  1. Visit [Social Links](https://sociallinks.io/).
+  2. Sign up for an account.
+  3. Navigate to the API section in your account settings.
+  4. Generate and copy your API key.
+- **Setting the API Key**: In the SpiderFoot configuration, set the `sociallinks_api_key` option with your API key.
+
+#### Trashpanda
+
+Trashpanda is a service that gathers intelligence about mentions of the target in pastesites. It helps in identifying if the target has been mentioned in any pastebin-like sites.
+
+- **Purpose**: To gather intelligence about mentions of the target in pastesites.
+- **API Key Instructions**:
+  1. Visit [Trashpanda](https://got-hacked.wtf).
+  2. Sign up for an account.
+  3. Navigate to the API section in your account settings.
+  4. Generate and copy your API key.
+- **Setting the API Key**: In the SpiderFoot configuration, set the `trashpanda_api_key` option with your API key.
