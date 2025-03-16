@@ -53,7 +53,9 @@ def start_global_timeout():
         logging.error("Global timeout exceeded. Terminating test run.")
         os._exit(1)
     
-    thread = threading.Thread(target=timeout_thread, daemon=True)
+    # Explicitly set daemon to True to ensure it doesn't prevent shutdown
+    thread = threading.Thread(target=timeout_thread)
+    thread.daemon = True  # Setting explicitly in case the keyword arg isn't working
     thread.start()
     
 # Detect tests that don't clean up resources
