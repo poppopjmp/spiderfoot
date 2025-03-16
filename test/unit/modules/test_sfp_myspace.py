@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_myspace import sfp_myspace
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleMyspace(unittest.TestCase):
+class TestModuleMyspace(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_myspace()
@@ -26,7 +28,8 @@ class TestModuleMyspace(unittest.TestCase):
         module = sfp_myspace()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_event_data_social_media_not_myspace_profile_should_not_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_social_media_not_myspace_profile_should_not_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_myspace()
@@ -60,3 +63,14 @@ class TestModuleMyspace(unittest.TestCase):
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

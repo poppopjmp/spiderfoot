@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_names import sfp_names
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleNames(unittest.TestCase):
+class TestModuleNames(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_names()
@@ -26,7 +28,8 @@ class TestModuleNames(unittest.TestCase):
         module = sfp_names()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_event_data_email_address_containing_human_names_should_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_email_address_containing_human_names_should_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_names()
@@ -69,7 +72,8 @@ class TestModuleNames(unittest.TestCase):
 
         self.assertEqual("OK", str(cm.exception))
 
-    def test_handleEvent_event_data_email_address_containing_human_names_containing_numbers_should_not_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_email_address_containing_human_names_containing_numbers_should_not_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_names()
@@ -103,7 +107,8 @@ class TestModuleNames(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    def test_handleEvent_event_data_email_address_not_containing_names_should_not_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_email_address_not_containing_names_should_not_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_names()
@@ -136,3 +141,14 @@ class TestModuleNames(unittest.TestCase):
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

@@ -2,12 +2,18 @@ import unittest
 from unittest.mock import MagicMock, patch
 from spiderfoot.threadpool import SpiderFootThreadPool, ThreadPoolWorker
 import queue
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootThreadPool(unittest.TestCase):
+class TestSpiderFootThreadPool(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.pool = SpiderFootThreadPool(threads=5, qsize=10, name='test_pool')
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
 
     def test_init(self):
         self.assertEqual(self.pool.threads, 5)
@@ -89,11 +95,15 @@ class TestSpiderFootThreadPool(unittest.TestCase):
             mock_shutdown.assert_called_once()
 
 
-class TestThreadPoolWorker(unittest.TestCase):
+class TestThreadPoolWorker(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.pool = MagicMock()
         self.worker = ThreadPoolWorker(pool=self.pool, name='test_worker')
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
 
     def test_init(self):
         self.assertEqual(self.worker.pool, self.pool)
@@ -115,3 +125,7 @@ class TestThreadPoolWorker(unittest.TestCase):
         with patch('spiderfoot.threadpool.logging.getLogger') as mock_logger:
             self.worker.run()
             mock_logger.return_value.error.assert_called_once()
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

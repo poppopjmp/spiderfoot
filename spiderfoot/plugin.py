@@ -493,6 +493,7 @@ class SpiderFootPlugin():
 
     def start(self) -> None:
         self.thread = threading.Thread(target=self.threadWorker)
+        thread.daemon = True
         self.thread.start()
 
     def finish(self):

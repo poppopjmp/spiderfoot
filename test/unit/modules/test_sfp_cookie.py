@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_cookie import sfp_cookie
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleCookie(unittest.TestCase):
+class TestModuleCookie(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_cookie()
@@ -26,7 +28,8 @@ class TestModuleCookie(unittest.TestCase):
         module = sfp_cookie()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_event_data_containing_cookie_should_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_containing_cookie_should_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_cookie()
@@ -71,7 +74,8 @@ class TestModuleCookie(unittest.TestCase):
 
         self.assertEqual("OK", str(cm.exception))
 
-    def test_handleEvent_event_data_not_containing_cookie_should_not_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_not_containing_cookie_should_not_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_cookie()
@@ -106,3 +110,14 @@ class TestModuleCookie(unittest.TestCase):
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

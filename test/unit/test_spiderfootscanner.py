@@ -4,6 +4,8 @@ import unittest
 import uuid
 
 from sfscan import SpiderFootScanner
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
@@ -290,3 +292,14 @@ class TestSpiderFootScanner(unittest.TestCase):
             "example scan name", scan_id, "securitybsides.it", "IP_ADDRESS", module_list, opts, start=False)
         with self.assertRaises(ValueError):
             sfscan._SpiderFootScanner__setStatus("example invalid scan status")
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

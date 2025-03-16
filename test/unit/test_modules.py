@@ -6,6 +6,8 @@ import unittest
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
@@ -463,3 +465,14 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
                     help_text, str, f"Module {module} option {opt} has invalid help type {type(help_text)}")
                 self.assertTrue(
                     help_text, f"Module {module} option {opt} has empty help")
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

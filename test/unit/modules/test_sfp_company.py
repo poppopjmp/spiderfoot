@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_company import sfp_company
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleCompany(unittest.TestCase):
+class TestModuleCompany(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_company()
@@ -27,7 +29,8 @@ class TestModuleCompany(unittest.TestCase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @unittest.skip("todo")
-    def test_handleEvent_event_data_ssl_certificate_issued_containing_company_name_should_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_ssl_certificate_issued_containing_company_name_should_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_company()
@@ -72,7 +75,8 @@ class TestModuleCompany(unittest.TestCase):
         self.assertEqual("OK", str(cm.exception))
 
     @unittest.skip("todo")
-    def test_handleEvent_event_data_domain_whois_containing_company_name_should_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_domain_whois_containing_company_name_should_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_company()
@@ -117,7 +121,8 @@ class TestModuleCompany(unittest.TestCase):
         self.assertEqual("OK", str(cm.exception))
 
     @unittest.skip("todo")
-    def test_handleEvent_event_data_target_web_content_containing_company_name_should_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_target_web_content_containing_company_name_should_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_company()
@@ -160,3 +165,14 @@ class TestModuleCompany(unittest.TestCase):
             module.handleEvent(evt)
 
         self.assertEqual("OK", str(cm.exception))
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

@@ -3,12 +3,18 @@ from unittest.mock import MagicMock, patch
 from spiderfoot.plugin import SpiderFootPlugin
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 import queue
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootPlugin(unittest.TestCase):
+class TestSpiderFootPlugin(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.plugin = SpiderFootPlugin()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
 
     def test_init(self):
         self.assertIsNone(self.plugin.thread)
@@ -141,7 +147,8 @@ class TestSpiderFootPlugin(unittest.TestCase):
     def test_producedEvents(self):
         self.assertEqual(self.plugin.producedEvents(), [])
 
-    def test_handleEvent(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent(selfdepth=0):
         sfEvent = SpiderFootEvent("ROOT", "data", "module", None)
         self.plugin.handleEvent(sfEvent)
         # No assertions as handleEvent is meant to be overridden
@@ -351,3 +358,7 @@ class TestSpiderFootPlugin(unittest.TestCase):
         sharedThreadPool = MagicMock()
         self.plugin.setSharedThreadPool(sharedThreadPool)
         self.assertEqual(self.plugin.sharedThreadPool, sharedThreadPool)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

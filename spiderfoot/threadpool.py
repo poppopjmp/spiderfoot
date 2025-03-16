@@ -185,6 +185,7 @@ class SpiderFootThreadPool:
         self.inputThread = threading.Thread(
             target=self.feedQueue, args=(callback, iterable, args, kwargs))
         self.inputThread.start()
+        self.daemon = True
         self.start()
         sleep(.1)
         yield from self.results(taskName, wait=True)

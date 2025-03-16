@@ -1,4 +1,4 @@
-# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/integration/modules/test_sfpbambenek.py
+# filepath: spiderfoot/test/integration/modules/test_sfpbambenek.py
 import pytest
 from unittest.mock import patch, MagicMock
 import os

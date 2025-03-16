@@ -39,6 +39,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         self.rotate_logs()
         self.log_queue = Queue()
         self.logging_thread = Thread(target=self.process_log_queue)
+        self.logging_thread.daemon = True
         self.logging_thread.start()
         super().__init__()
 

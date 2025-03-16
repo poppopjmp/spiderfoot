@@ -1,16 +1,22 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from spiderfoot.db import SpiderFootDb
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootDb(unittest.TestCase):
+class TestSpiderFootDb(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.opts = {
             '__database': 'test.db',
             '__dbtype': 'sqlite'
         }
         self.db = SpiderFootDb(self.opts)
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
 
     def test_init_invalid_opts_type(self):
         with self.assertRaises(TypeError):
@@ -401,3 +407,7 @@ class TestSpiderFootDb(unittest.TestCase):
             self.assertEqual(result, 'correlation_id')
             self.assertTrue(
                 mock_sqlite3.connect.return_value.cursor.return_value.execute.called)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()
