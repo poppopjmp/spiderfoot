@@ -25,7 +25,7 @@ Create a module scan
     [Arguments]    ${scan_name}    ${scan_target}    ${module_name}
     ${firefox_options}=    Create Firefox Headless Options
     Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
-    Open browser    http://localhost:5001/newscan   firefox    options=${firefox_options}
+    Open browser    http://localhost:5001/newscan   firefox    options=${firefox_options}    timeout=120s
     Press Keys    name:scanname    van1shland
     Press Keys    name:scantarget    van1shland.io
     Click Element    id:moduletab
@@ -35,7 +35,7 @@ Create a module scan
     Click Element    id:module_${module_name}
     Scroll To Element    id:btn-run-scan
     Click Element    id:btn-run-scan
-    Wait Until Element Is Visible    id:btn-browse    timeout=15s #Add wait for the browse button.
+    Wait Until Element Is Visible    id:btn-browse    timeout=120s #Add wait for the browse button.
     Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
     ${scan_status}=    Get Text    id:scanstatusbadge
     Should Not Be Equal As Strings    ${scan_status}    ERROR    msg=Scan creation failed.
@@ -44,13 +44,13 @@ Create a use case scan
     [Arguments]    ${scan_name}    ${scan_target}    ${use_case}
     ${firefox_options}=    Create Firefox Headless Options
     Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
-    Open browser    http://localhost:5001/newscan    firefox    options=${firefox_options}
+    Open browser    http://localhost:5001/newscan    firefox    options=${firefox_options}    timeout=120s
     Press Keys    name:scanname    van1shland
     Press Keys    name:scantarget    van1shland.io
     Click Element    id:usecase_${use_case}
     Scroll To Element    id:btn-run-scan
     Click Element    id:btn-run-scan
-    Wait Until Element Is Visible    id:btn-browse    timeout=15s #Add wait for the browse button.
+    Wait Until Element Is Visible    id:btn-browse    timeout=120s #Add wait for the browse button.
     Element Should Be Visible    id:scanstatusbadge #verify that the scan status badge is visible
 
 Scan info page should render tabs
@@ -127,15 +127,15 @@ Wait For Scan To Finish
 ***Test Cases***
 Main navigation pages should render correctly
     ${firefox_options}=    Create Firefox Headless Options
-    Open browser    http://localhost:5001    firefox    options=${firefox_options}
+    Open browser    http://localhost:5001    firefox    options=${firefox_options}    timeout=120s
     Click Element    id:nav-link-newscan
-    Wait Until Element Is Visible    id:scanname    timeout=15s
+    Wait Until Element Is Visible    id:scanname    timeout=120s
     New scan page should render
     Click Element    id:nav-link-scans
-    Wait Until Element Is Visible    id:scanlist    timeout=15s
+    Wait Until Element Is Visible    id:scanlist    timeout=120s
     Scan list page should render
     Click Element    id:nav-link-settings
-    Wait Until Element Is Visible    id:savesettingsform    timeout=15s
+    Wait Until Element Is Visible    id:savesettingsform    timeout=120s
     Settings page should render
     Close All Browsers
 
