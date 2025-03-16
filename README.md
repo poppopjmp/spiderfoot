@@ -15,7 +15,7 @@
 [![Code QL](https://github.com/poppopjmp/spiderfoot/workflows/CodeQL/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"CodeQL")
 [![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
 [![codecov](https://codecov.io/github/poppopjmp/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/poppopjmp/spiderfoot)
-[![PEP8 Test and Fix](https://github.com/poppopjmp/spiderfoot/actions/workflows/generic-pep8-test.yml/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions/workflows/generic-pep8-test.yml)
+[![Codacy Security Scan](https://github.com/poppopjmp/spiderfoot/actions/workflows/codacy.yml/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions/workflows/codacy.yml)
 [![Discord](https://img.shields.io/discord/770524432464216074)](https://discord.gg/vyvztrG)
 
 
