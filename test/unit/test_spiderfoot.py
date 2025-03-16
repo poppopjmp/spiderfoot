@@ -6,7 +6,7 @@ from sflib import SpiderFoot
 
 
 @pytest.mark.usefixtures
-class TestSpiderFoot(unittest.TestCase):
+class TestSpiderFoot(SpiderFootTestBase):
 
     default_modules = [
         "sfp_binstring",
@@ -772,6 +772,19 @@ class TestSpiderFoot(unittest.TestCase):
 
     def test_handle_abort_error_handling(self):
         from sf import handle_abort
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
         with self.assertRaises(SystemExit) as cm:
             handle_abort(None, None)
         self.assertEqual(cm.exception.code, -1)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

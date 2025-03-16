@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_phone import sfp_phone
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModulePhone(unittest.TestCase):
+class TestModulePhone(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_phone()
@@ -26,7 +28,8 @@ class TestModulePhone(unittest.TestCase):
         module = sfp_phone()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_domain_whois_event_data_containing_phone_string_should_create_phone_number_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_domain_whois_event_data_containing_phone_string_should_create_phone_number_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
@@ -69,7 +72,8 @@ class TestModulePhone(unittest.TestCase):
 
         self.assertEqual("OK", str(cm.exception))
 
-    def test_handleEvent_domain_whois_event_data_not_containing_phone_string_should_not_create_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_domain_whois_event_data_not_containing_phone_string_should_not_create_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
@@ -103,7 +107,8 @@ class TestModulePhone(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    def test_handleEvent_phone_number_event_data_containing_phone_string_should_return_provider_telco_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_phone_number_event_data_containing_phone_string_should_return_provider_telco_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
@@ -145,3 +150,14 @@ class TestModulePhone(unittest.TestCase):
             module.handleEvent(evt)
 
         self.assertEqual("OK", str(cm.exception))
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

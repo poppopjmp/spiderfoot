@@ -2,11 +2,14 @@ import unittest
 from unittest.mock import MagicMock
 from spiderfoot.correlation import SpiderFootCorrelator
 from spiderfoot import SpiderFootDb
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootCorrelator(unittest.TestCase):
+class TestSpiderFootCorrelator(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.dbh = MagicMock(spec=SpiderFootDb)
         self.ruleset = {
             "rule1": """
@@ -29,6 +32,9 @@ class TestSpiderFootCorrelator(unittest.TestCase):
         self.scanId = "test_scan"
         self.correlator = SpiderFootCorrelator(
             self.dbh, self.ruleset, self.scanId)
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
 
     def test_init_invalid_ruleset_type(self):
         with self.assertRaises(TypeError):
@@ -301,3 +307,7 @@ class TestSpiderFootCorrelator(unittest.TestCase):
         ]
         result = self.correlator.process_rule(rule)
         self.assertEqual(len(result), 1)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

@@ -2,10 +2,13 @@ import unittest
 from modules.sfp_mandiant_ti import sfp_mandiant_ti
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
-class TestModuleMandiantTI(unittest.TestCase):
+class TestModuleMandiantTI(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.default_options = {
             '_fetchtimeout': 5,
             '_useragent': 'SpiderFoot',
@@ -16,8 +19,12 @@ class TestModuleMandiantTI(unittest.TestCase):
         self.sf = SpiderFoot(self.default_options)
         self.module = sfp_mandiant_ti()
         self.module.setup(self.sf, dict())
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
 
-    def test_handleEvent(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent(selfdepth=0):
         target_value = 'example.com'
         target_type = 'DOMAIN_NAME'
         target = SpiderFootTarget(target_value, target_type)
@@ -46,3 +53,7 @@ class TestModuleMandiantTI(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

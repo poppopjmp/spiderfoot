@@ -5,10 +5,12 @@ from unittest.mock import patch, MagicMock
 from modules.sfp_criminalip import sfp_criminalip
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleCriminalip(unittest.TestCase):
+class TestModuleCriminalip(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_criminalip()
@@ -166,3 +168,14 @@ class TestModuleCriminalip(unittest.TestCase):
         module.handleEvent(evt)
 
         self.assertFalse(module.errorState)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

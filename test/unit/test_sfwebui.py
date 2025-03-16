@@ -2,14 +2,24 @@ import unittest
 from unittest.mock import patch, MagicMock
 import cherrypy
 from sfwebui import SpiderFootWebUi
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootWebUi(unittest.TestCase):
+class TestSpiderFootWebUi(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.web_config = {'root': '/'}
         self.config = {'_debug': False}
         self.webui = SpiderFootWebUi(self.web_config, self.config)
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+        # Backup original methods before monkey patching
+        self._original_mock_db_return_value_search_return_value = mock_db.return_value.search.return_value if hasattr(mock_db.return_value.search, 'return_value') else None
+        # Register monkey patches for automatic restoration
+
 
     def test_error_page(self):
         with patch('cherrypy.response') as mock_response:
@@ -408,3 +418,12 @@ class TestSpiderFootWebUi(unittest.TestCase):
             mock_template.return_value.render.return_value = 'footer'
             result = self.webui.footer()
             self.assertEqual(result, 'footer')
+
+    def tearDown(self):
+        """Clean up after each test."""
+        # Restore original methods after monkey patching
+        if hasattr(self, '_original_mock_db_return_value_search_return_value') and self._original_mock_db_return_value_search_return_value is not None:
+            mock_db.return_value.search.return_value = self._original_mock_db_return_value_search_return_value
+        elif hasattr(mock_db.return_value.search, 'return_value'):
+            delattr(mock_db.return_value.search, 'return_value')
+        super().tearDown()

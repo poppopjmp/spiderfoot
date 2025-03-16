@@ -1,12 +1,14 @@
-# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp_bambenek.py
+# filepath: spiderfoot/test/unit/modules/test_sfp_bambenek.py
 from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_bambenek import sfp_bambenek
 import unittest
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleBambenek(unittest.TestCase):
+class TestModuleBambenek(SpiderFootTestBase):
     """Test Bambenek module."""
 
     def setUp(self):
@@ -23,13 +25,36 @@ class TestModuleBambenek(unittest.TestCase):
         module_attributes = {
             'descr': "Description for sfp_bambenek",
             # Add module-specific options
-
         }
 
         self.module_class = self.create_module_wrapper(
             sfp_bambenek,
             module_attributes=module_attributes
         )
+
+        # Register mocks to be reset during tearDown
+        self.register_mock(self.log_mock)
+        
+        # Register patchers for cleanup during tearDown
+        self.register_patcher(patcher1)
+        
+        # Backup original methods before monkey patching
+        self._original_logging_getLogger = logging.getLogger if hasattr(logging, 'getLogger') else None
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+        # Register monkey patches for automatic restoration
+
+
+    def tearDown(self):
+        """Clean up after each test."""
+        # Restore original methods after monkey patching
+        if hasattr(self, '_original_logging_getLogger') and self._original_logging_getLogger is not None:
+            logging.getLogger = self._original_logging_getLogger
+        elif hasattr(logging, 'getLogger'):
+            delattr(logging, 'getLogger')
+            
+        super().tearDown()
 
     def test_opts(self):
         """Test the module options."""

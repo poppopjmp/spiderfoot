@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_webframework import sfp_webframework
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleWebFramework(unittest.TestCase):
+class TestModuleWebFramework(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_webframework()
@@ -26,7 +28,8 @@ class TestModuleWebFramework(unittest.TestCase):
         module = sfp_webframework()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_event_data_web_content_containing_webframework_string_should_create_url_web_framework_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_web_content_containing_webframework_string_should_create_url_web_framework_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webframework()
@@ -71,7 +74,8 @@ class TestModuleWebFramework(unittest.TestCase):
 
         self.assertEqual("OK", str(cm.exception))
 
-    def test_handleEvent_event_data_web_content_not_containing_webframework_string_should_not_create_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_web_content_not_containing_webframework_string_should_not_create_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webframework()
@@ -107,7 +111,8 @@ class TestModuleWebFramework(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    def test_handleEvent_event_data_web_content_from_external_url_containing_webframework_string_should_not_create_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_web_content_from_external_url_containing_webframework_string_should_not_create_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webframework()
@@ -142,3 +147,14 @@ class TestModuleWebFramework(unittest.TestCase):
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

@@ -1,12 +1,14 @@
-# filepath: /mnt/c/Users/van1sh/Documents/GitHub/spiderfoot/test/unit/modules/test_sfp_rocketreach.py
+# filepath: spiderfoot/test/unit/modules/test_sfp_rocketreach.py
 from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_rocketreach import sfp_rocketreach
 import unittest
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleRocketreach(unittest.TestCase):
+class TestModuleRocketreach(SpiderFootTestBase):
     """Test Rocketreach module."""
 
     def setUp(self):
@@ -30,6 +32,14 @@ class TestModuleRocketreach(unittest.TestCase):
             sfp_rocketreach,
             module_attributes=module_attributes
         )
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+        # Register mocks for cleanup during tearDown
+        self.register_mock(self.mock_logger)
+        # Register patchers for cleanup during tearDown
+        if 'patcher1' in locals():
+            self.register_patcher(patcher1)
 
     def test_opts(self):
         """Test the module options."""
@@ -54,3 +64,7 @@ class TestModuleRocketreach(unittest.TestCase):
         """Test the producedEvents function returns a list."""
         module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

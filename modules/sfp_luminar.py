@@ -3,11 +3,12 @@
 # Name:        sfp_luminar
 # Purpose:     Query Luminar API.
 #
-# Author:      Your Name <your-email@example.com>
 #
-# Created:     2023-04-01
-# Copyright:   (c) Your Name 2023
-# Licence:     MIT
+# Author:       Agostino Panico <van1sh@van1shland.io>
+#
+# Created:      14/03/2025
+# Copyright:    (c) poppopjmp
+# Licence:      MIT
 # -------------------------------------------------------------------------------
 
 import json

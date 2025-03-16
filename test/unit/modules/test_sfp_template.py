@@ -3,10 +3,12 @@ import unittest
 
 from modules.sfp_template import sfp_template
 from sflib import SpiderFoot
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleTemplate(unittest.TestCase):
+class TestModuleTemplate(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_template()
@@ -24,3 +26,14 @@ class TestModuleTemplate(unittest.TestCase):
     def test_producedEvents_should_return_list(self):
         module = sfp_template()
         self.assertIsInstance(module.producedEvents(), list)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

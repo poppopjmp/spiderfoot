@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_countryname import sfp_countryname
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleCountryName(unittest.TestCase):
+class TestModuleCountryName(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_countryname()
@@ -26,7 +28,8 @@ class TestModuleCountryName(unittest.TestCase):
         module = sfp_countryname()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_phone_number_event_data_containing_countrycode_should_create_country_name_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_phone_number_event_data_containing_countrycode_should_create_country_name_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_countryname()
@@ -70,7 +73,8 @@ class TestModuleCountryName(unittest.TestCase):
 
         self.assertEqual("OK", str(cm.exception))
 
-    def test_handleEvent_domain_whois_event_data_containing_countryname_string_should_create_country_name_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_domain_whois_event_data_containing_countryname_string_should_create_country_name_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_countryname()
@@ -114,7 +118,8 @@ class TestModuleCountryName(unittest.TestCase):
 
         self.assertEqual("OK", str(cm.exception))
 
-    def test_handleEvent_domain_whois_event_data_not_containing_countryname_string_should_not_create_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_domain_whois_event_data_not_containing_countryname_string_should_not_create_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_countryname()
@@ -148,3 +153,14 @@ class TestModuleCountryName(unittest.TestCase):
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_censys import sfp_censys
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleCensys(unittest.TestCase):
+class TestModuleCensys(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_censys()
@@ -52,7 +54,8 @@ class TestModuleCensys(unittest.TestCase):
                 self.assertIsNone(result)
                 self.assertTrue(module.errorState)
 
-    def test_handleEvent_no_api_key_should_set_errorState(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_no_api_key_should_set_errorState(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_censys()
@@ -74,3 +77,14 @@ class TestModuleCensys(unittest.TestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

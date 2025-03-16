@@ -1,16 +1,22 @@
 import unittest
 from spiderfoot.event import SpiderFootEvent
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootEvent(unittest.TestCase):
+class TestSpiderFootEvent(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.eventType = "URL_FORM"
         self.data = "http://example.com"
         self.module = "example_module"
         self.sourceEvent = None
         self.event = SpiderFootEvent(
             self.eventType, self.data, self.module, self.sourceEvent)
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
 
     def test_generated(self):
         self.assertIsInstance(self.event.generated, float)
@@ -154,3 +160,7 @@ class TestSpiderFootEvent(unittest.TestCase):
         self.assertEqual(event_dict['data'], self.event.data)
         self.assertEqual(event_dict['module'], self.event.module)
         self.assertEqual(event_dict['source'], '')
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

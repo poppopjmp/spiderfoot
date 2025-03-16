@@ -3,11 +3,11 @@
 # Name:        sfp_criminalip
 # Purpose:     Search CriminalIP for domain, phone and IP address information.
 #
-# Author:      Your Name <your.email@example.com>
+# Author:       Agostino Panico <van1sh@van1shland.io>
 #
-# Created:     01/01/2023
-# Copyright:   (c) Your Name
-# Licence:     MIT
+# Created:      14/03/2025
+# Copyright:    (c) poppopjmp
+# Licence:      MIT
 # -------------------------------------------------------------------------------
 
 import json

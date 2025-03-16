@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_strangeheaders import sfp_strangeheaders
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleStrangeHeaders(unittest.TestCase):
+class TestModuleStrangeHeaders(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_strangeheaders()
@@ -26,7 +28,8 @@ class TestModuleStrangeHeaders(unittest.TestCase):
         module = sfp_strangeheaders()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_event_data_containing_unusual_header_should_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_containing_unusual_header_should_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_strangeheaders()
@@ -71,7 +74,8 @@ class TestModuleStrangeHeaders(unittest.TestCase):
 
         self.assertEqual("OK", str(cm.exception))
 
-    def test_handleEvent_event_data_not_containing_unusual_header_should_not_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_not_containing_unusual_header_should_not_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_strangeheaders()
@@ -106,3 +110,14 @@ class TestModuleStrangeHeaders(unittest.TestCase):
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

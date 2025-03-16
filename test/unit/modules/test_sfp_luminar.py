@@ -2,10 +2,13 @@ import unittest
 from modules.sfp_luminar import sfp_luminar
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
-class TestModuleLuminar(unittest.TestCase):
+class TestModuleLuminar(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.default_options = {
             '_fetchtimeout': 5,
             '_useragent': 'SpiderFoot',
@@ -16,8 +19,12 @@ class TestModuleLuminar(unittest.TestCase):
         self.sf = SpiderFoot(self.default_options)
         self.module = sfp_luminar()
         self.module.setup(self.sf, dict())
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
 
-    def test_handleEvent(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent(selfdepth=0):
         target_value = 'example.com'
         target_type = 'DOMAIN_NAME'
         target = SpiderFootTarget(target_value, target_type)
@@ -46,3 +53,7 @@ class TestModuleLuminar(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

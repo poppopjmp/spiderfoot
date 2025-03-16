@@ -1,13 +1,19 @@
 import unittest
 from spiderfoot.target import SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootTarget(unittest.TestCase):
+class TestSpiderFootTarget(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.target_value = "example.com"
         self.target_type = "INTERNET_NAME"
         self.target = SpiderFootTarget(self.target_value, self.target_type)
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
 
     def test_init(self):
         self.assertEqual(self.target.targetType, self.target_type)
@@ -117,3 +123,7 @@ class TestSpiderFootTarget(unittest.TestCase):
             "sub.example.com", includeChildren=True))
         self.assertFalse(self.target.matches(
             "sub.example.com", includeChildren=False))
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

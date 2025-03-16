@@ -3,10 +3,12 @@ import unittest
 
 from modules.sfp_leakix import sfp_leakix
 from sflib import SpiderFoot
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleLeakix(unittest.TestCase):
+class TestModuleLeakix(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_leakix()
@@ -50,3 +52,14 @@ class TestModuleLeakix(unittest.TestCase):
                     {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertTrue(module.errorState)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

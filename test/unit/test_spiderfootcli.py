@@ -5,10 +5,12 @@ import sys
 import unittest
 
 from sfcli import SpiderFootCli
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestSpiderFootCli(unittest.TestCase):
+class TestSpiderFootCli(SpiderFootTestBase):
     """Test TestSpiderFootCli."""
 
     def test_default(self):
@@ -469,3 +471,14 @@ class TestSpiderFootCli(unittest.TestCase):
         sfcli = SpiderFootCli()
         do_eof = sfcli.do_EOF(None)
         self.assertTrue(do_eof)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

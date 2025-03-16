@@ -1,9 +1,11 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from spiderfoot.helpers import SpiderFootHelpers
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootHelpers(unittest.TestCase):
+class TestSpiderFootHelpers(SpiderFootTestBase):
 
     def test_dataPath(self):
         with patch('spiderfoot.helpers.os') as mock_os:
@@ -418,3 +420,23 @@ class TestSpiderFootHelpers(unittest.TestCase):
         self.assertFalse(SpiderFootHelpers.sanitiseInput('invalid_input..'))
         self.assertFalse(SpiderFootHelpers.sanitiseInput('-invalid_input'))
         self.assertFalse(SpiderFootHelpers.sanitiseInput('in'))
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+        # Backup original methods before monkey patching
+        self._original_mock_os_environ_get_return_value = mock_os.environ.get.return_value if hasattr(mock_os.environ.get, 'return_value') else None
+        # Register monkey patches for automatic restoration
+
+
+    def tearDown(self):
+        """Clean up after each test."""
+        # Restore original methods after monkey patching
+        if hasattr(self, '_original_mock_os_environ_get_return_value') and self._original_mock_os_environ_get_return_value is not None:
+            mock_os.environ.get.return_value = self._original_mock_os_environ_get_return_value
+        elif hasattr(mock_os.environ.get, 'return_value'):
+            delattr(mock_os.environ.get, 'return_value')
+        super().tearDown()
