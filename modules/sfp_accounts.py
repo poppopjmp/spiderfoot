@@ -196,6 +196,7 @@ class sfp_accounts(SpiderFootPlugin):
                 name=f'sfp_accounts_scan_{i}',
                 target=processSiteQueue,
                 args=(username, queue))
+            thread.daemon = True
             thread.start()
             threads.append(thread)
 
