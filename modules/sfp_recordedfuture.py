@@ -24,7 +24,7 @@ class sfp_recordedfuture(SpiderFootPlugin):
         'summary': "Obtain vulnerability information from Recorded Future's Vulnerability Database API.",
         'flags': ["apikey"],
         'useCases': ["Investigate", "Footprint", "Passive"],
-        'categories': ["Vulnerabilities"],
+        'categories': ["Reputation Systems"],
         'dataSource': {
             'website': "https://www.recordedfuture.com/",
             'model': "COMMERCIAL_ONLY",

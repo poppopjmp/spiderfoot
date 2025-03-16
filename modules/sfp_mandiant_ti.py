@@ -24,7 +24,7 @@ class sfp_mandiant_ti(SpiderFootPlugin):
         'summary': "Obtain threat intelligence information from Mandiant Threat Intelligence API.",
         'flags': ["apikey"],
         'useCases': ["Investigate", "Footprint", "Passive"],
-        'categories': ["Threat Intelligence"],
+        'categories': ["Reputation Systems"],
         'dataSource': {
             'website': "https://www.mandiant.com/",
             'model': "COMMERCIAL_ONLY",

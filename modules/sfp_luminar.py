@@ -24,7 +24,7 @@ class sfp_luminar(SpiderFootPlugin):
         'summary': "Obtain information from Luminar API.",
         'flags': ["apikey"],
         'useCases': ["Investigate", "Footprint", "Passive"],
-        'categories': ["Threat Intelligence"],
+        'categories': ["Reputation Systems"],
         'dataSource': {
             'website': "https://www.luminar.com/",
             'model': "COMMERCIAL_ONLY",
