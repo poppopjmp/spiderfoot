@@ -148,7 +148,11 @@ class SpiderFootHelpers():
         valid_categories = ["Content Analysis", "Crawling and Scanning", "DNS",
                             "Leaks, Dumps and Breaches", "Passive DNS",
                             "Public Registries", "Real World", "Reputation Systems",
-                            "Search Engines", "Secondary Networks", "Social Media"]
+                            "Search Engines", "Secondary Networks", "Social Media", 
+                            "Threat Intelligence", "Vulnerability Analysis", "Web APIs", 
+                            "Web Crawling", "Web Scraping", "Web Services", "Whois", "Wireless", 
+                            "Cryptocurrency", "Dark Web", "Deep Web", "Forensics", "Geolocation", 
+                            "Network Analysis", "Network Security", "Social Engineering"]
 
         for filename in os.listdir(path):
             if not filename.startswith("sfp_"):

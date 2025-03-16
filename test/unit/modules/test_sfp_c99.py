@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_c99.
+This module contains unit tests for the C99 SpiderFoot plugin.
+"""
 from modules.sfp_c99 import sfp_c99
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -55,10 +58,10 @@ class TestModuleC99(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_c99()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_viewdns.
+This module contains unit tests for the Viewdns SpiderFoot plugin.
+"""
 from modules.sfp_viewdns import sfp_viewdns
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -54,10 +57,10 @@ class TestModulViewdns(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_viewdns()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

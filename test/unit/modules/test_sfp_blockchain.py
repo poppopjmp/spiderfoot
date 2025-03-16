@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_blockchain.
+This module contains unit tests for the Blockchain SpiderFoot plugin.
+"""
 from modules.sfp_blockchain import sfp_blockchain
 from sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
@@ -30,10 +33,10 @@ class TestModuleBlockchain(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_blockchain()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

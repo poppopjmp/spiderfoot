@@ -5,12 +5,21 @@ from sflib import SpiderFoot, SpiderFootEvent, SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
+"""
+Test module for sfp_netlas.
+This module contains unit tests for the Netlas SpiderFoot plugin.
+"""
 
 class TestModuleNetlas(SpiderFootTestBase):
 
     def setUp(self):
+        """Set up before each test."""
         super().setUp()
-        self.default_options = {
+        # Initialize module
+        self.module = sfp_netlas()
+        # Register event emitters if they exist
+        self.register_event_emitter(self.module)
+    def ault_options = {
             '_debug': False,
             '_useragent': 'SpiderFoot',
             '_dnsserver': '',

@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_numverify.
+This module contains unit tests for the Numverify SpiderFoot plugin.
+"""
 from modules.sfp_numverify import sfp_numverify
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -55,10 +58,10 @@ class TestModuleNumverify(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_numverify()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

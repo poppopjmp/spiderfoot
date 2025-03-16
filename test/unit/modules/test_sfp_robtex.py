@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_robtex.
+This module contains unit tests for the Robtex SpiderFoot plugin.
+"""
 from modules.sfp_robtex import sfp_robtex
 from sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
@@ -30,10 +33,10 @@ class TestModuleRobtex(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_robtex()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

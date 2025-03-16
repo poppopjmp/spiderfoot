@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_customfeed.
+This module contains unit tests for the Customfeed SpiderFoot plugin.
+"""
 from modules.sfp_customfeed import sfp_customfeed
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -55,10 +58,10 @@ class TestModuleCustomfeed(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_customfeed()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

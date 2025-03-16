@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_tool_testsslsh.
+This module contains unit tests for the ToolTestsslsh SpiderFoot plugin.
+"""
 from modules.sfp_tool_testsslsh import sfp_tool_testsslsh
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -55,10 +58,10 @@ class TestModuleToolTestsslsh(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_tool_testsslsh()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

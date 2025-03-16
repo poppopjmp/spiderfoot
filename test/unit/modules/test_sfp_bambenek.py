@@ -7,6 +7,10 @@ import unittest
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
+"""
+Test module for sfp_bambenek.
+This module contains unit tests for the Bambenek SpiderFoot plugin.
+"""
 
 class TestModuleBambenek(SpiderFootTestBase):
     """Test Bambenek module."""
@@ -14,39 +18,11 @@ class TestModuleBambenek(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
-        # Create a mock for any logging calls
-        self.log_mock = MagicMock()
-        # Apply patches in setup to affect all tests
-        patcher1 = patch('logging.getLogger', return_value=self.log_mock)
-        self.addCleanup(patcher1.stop)
-        self.mock_logger = patcher1.start()
-
-        # Create module wrapper class dynamically
-        module_attributes = {
-            'descr': "Description for sfp_bambenek",
-            # Add module-specific options
-        }
-
-        self.module_class = self.create_module_wrapper(
-            sfp_bambenek,
-            module_attributes=module_attributes
-        )
-
-        # Register mocks to be reset during tearDown
-        self.register_mock(self.log_mock)
-        
-        # Register patchers for cleanup during tearDown
-        self.register_patcher(patcher1)
-        
-        # Backup original methods before monkey patching
-        self._original_logging_getLogger = logging.getLogger if hasattr(logging, 'getLogger') else None
+        # Initialize module
+        self.module = sfp_bambenek()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-        # Register monkey patches for automatic restoration
-
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         # Restore original methods after monkey patching
         if hasattr(self, '_original_logging_getLogger') and self._original_logging_getLogger is not None:

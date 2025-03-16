@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_s3bucket.
+This module contains unit tests for the S3Bucket SpiderFoot plugin.
+"""
 from modules.sfp_s3bucket import sfp_s3bucket
 from sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
@@ -30,10 +33,10 @@ class TestModuleS3bucket(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_s3bucket()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

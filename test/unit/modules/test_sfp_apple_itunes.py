@@ -1,5 +1,8 @@
+"""Test module for sfp_apple_itunes.
+
+This module contains unit tests for the Apple iTunes SpiderFoot plugin.
+"""
 import pytest
-import unittest
 
 from modules.sfp_apple_itunes import sfp_apple_itunes
 from sflib import SpiderFoot
@@ -9,6 +12,16 @@ from test.unit.utils.test_helpers import safe_recursion
 
 @pytest.mark.usefixtures
 class TestModuleAppleItunes(SpiderFootTestBase):
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Initialize default options
+        self.default_options = self.default_options or {}
+        # Initialize module
+        self.module = sfp_apple_itunes()
+        # Register event emitters if they exist
+        self.register_event_emitter(self.module)
 
     def test_opts(self):
         module = sfp_apple_itunes()
@@ -26,13 +39,6 @@ class TestModuleAppleItunes(SpiderFootTestBase):
     def test_producedEvents_should_return_list(self):
         module = sfp_apple_itunes()
         self.assertIsInstance(module.producedEvents(), list)
-
-    def setUp(self):
-        """Set up before each test."""
-        super().setUp()
-        # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
 
     def tearDown(self):
         """Clean up after each test."""

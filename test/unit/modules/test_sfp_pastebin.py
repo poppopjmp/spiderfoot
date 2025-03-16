@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_pastebin.
+This module contains unit tests for the Pastebin SpiderFoot plugin.
+"""
 from modules.sfp_pastebin import sfp_pastebin
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -55,10 +58,10 @@ class TestModulePastebin(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_pastebin()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

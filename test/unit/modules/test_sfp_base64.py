@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_base64.
+This module contains unit tests for the Base64 SpiderFoot plugin.
+"""
 from modules.sfp_base64 import sfp_base64
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -30,16 +33,13 @@ class TestModuleBase64(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     def setUp(self):
+        """Set up before each test."""
         super().setUp()
-        # ... existing setUp code ...
-        
-        # Register any event emitters used in the test
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-    
-    @safe_recursion(max_depth=5)
-    @safe_recursion(max_depth=5)
-    def test_handleEvent(self, depth=0):
+        # Initialize module
+        self.module = sfp_base64()
+        # Register event emitters if they exist
+        self.register_event_emitter(self.module)
+    def  test_handleEvent(self, depth=0):
         # ... existing test code, modified to include depth param ...
         
     @safe_recursion(max_depth=5)

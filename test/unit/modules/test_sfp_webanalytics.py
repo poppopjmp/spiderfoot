@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_webanalytics.
+This module contains unit tests for the Webanalytics SpiderFoot plugin.
+"""
 from modules.sfp_webanalytics import sfp_webanalytics
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -193,10 +196,10 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_webanalytics()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_etherscan.
+This module contains unit tests for the Etherscan SpiderFoot plugin.
+"""
 from modules.sfp_etherscan import sfp_etherscan
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -55,10 +58,10 @@ class TestModuleEtherscan(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_etherscan()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

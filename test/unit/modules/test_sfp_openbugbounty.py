@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_openbugbounty.
+This module contains unit tests for the Openbugbounty SpiderFoot plugin.
+"""
 from modules.sfp_openbugbounty import sfp_openbugbounty
 from sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
@@ -30,10 +33,10 @@ class TestModuleOpenbugbounty(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_openbugbounty()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_tool_nuclei.
+This module contains unit tests for the ToolNuclei SpiderFoot plugin.
+"""
 from modules.sfp_tool_nuclei import sfp_tool_nuclei
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -55,10 +58,10 @@ class TestModuleToolNuclei(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_tool_nuclei()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

@@ -1,6 +1,4 @@
 import pytest
-import unittest
-
 from modules.sfp_quad9 import sfp_quad9
 from sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase

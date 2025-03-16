@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_isc.
+This module contains unit tests for the Isc SpiderFoot plugin.
+"""
 from modules.sfp_isc import sfp_isc
 from sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
@@ -30,10 +33,10 @@ class TestModuleisc(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_isc()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

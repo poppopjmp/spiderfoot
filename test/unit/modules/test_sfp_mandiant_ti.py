@@ -5,11 +5,18 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
+"""
+Test module for sfp_mandiant_ti.
+This module contains unit tests for the MandiantTi SpiderFoot plugin.
+"""
 class TestModuleMandiantTI(SpiderFootTestBase):
 
     def setUp(self):
+        """Set up before each test."""
         super().setUp()
-        self.default_options = {
+        # Register event emitters if they exist
+        self.register_event_emitter(self.module)
+    def ault_options = {
             '_fetchtimeout': 5,
             '_useragent': 'SpiderFoot',
             '_dnsserver': '8.8.8.8',

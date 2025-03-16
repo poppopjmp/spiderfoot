@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_botscout.
+This module contains unit tests for the Botscout SpiderFoot plugin.
+"""
 from modules.sfp_botscout import sfp_botscout
 from sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
@@ -56,10 +59,10 @@ class TestModuleBotscout(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_botscout()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

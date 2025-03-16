@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_googlesearch.
+This module contains unit tests for the Googlesearch SpiderFoot plugin.
+"""
 from modules.sfp_googlesearch import sfp_googlesearch
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -55,10 +58,10 @@ class TestModuleGoogleSearch(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_googlesearch()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

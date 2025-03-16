@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_cinsscore.
+This module contains unit tests for the Cinsscore SpiderFoot plugin.
+"""
 from modules.sfp_cinsscore import sfp_cinsscore
 from sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
@@ -30,10 +33,10 @@ class TestModuleCinsscore(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_cinsscore()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

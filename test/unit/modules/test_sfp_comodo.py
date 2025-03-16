@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_comodo.
+This module contains unit tests for the Comodo SpiderFoot plugin.
+"""
 from modules.sfp_comodo import sfp_comodo
 from sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
@@ -30,10 +33,10 @@ class TestModuleComodo(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_comodo()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

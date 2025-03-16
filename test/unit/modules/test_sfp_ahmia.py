@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_ahmia.
+This module contains unit tests for the Ahmia SpiderFoot plugin.
+"""
 from modules.sfp_ahmia import sfp_ahmia
 from sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
@@ -31,10 +34,10 @@ class TestModuleAhmia(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_ahmia()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

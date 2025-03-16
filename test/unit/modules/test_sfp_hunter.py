@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_hunter.
+This module contains unit tests for the Hunter SpiderFoot plugin.
+"""
 from modules.sfp_hunter import sfp_hunter
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -55,10 +58,10 @@ class TestModuleHunter(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_hunter()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

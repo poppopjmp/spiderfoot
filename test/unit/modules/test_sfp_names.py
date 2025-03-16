@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_names.
+This module contains unit tests for the Names SpiderFoot plugin.
+"""
 from modules.sfp_names import sfp_names
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -145,10 +148,10 @@ class TestModuleNames(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_names()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

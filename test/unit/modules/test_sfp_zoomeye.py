@@ -7,41 +7,22 @@ import unittest
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
+"""
+Test module for sfp_zoomeye.
+This module contains unit tests for the Zoomeye SpiderFoot plugin.
+"""
 
 class TestModuleZoomeye(SpiderFootTestBase):
     """Test Zoomeye module."""
 
     def setUp(self):
-        """Set up before each test."""
-        super().setUp()
-        # Create a mock for any logging calls
-        self.log_mock = MagicMock()
-        # Apply patches in setup to affect all tests
-        patcher1 = patch('logging.getLogger', return_value=self.log_mock)
-        self.addCleanup(patcher1.stop)
-        self.mock_logger = patcher1.start()
-
-        # Create module wrapper class dynamically
-        module_attributes = {
-            'descr': "Description for sfp_zoomeye",
-            # Add module-specific options
-
-        }
-
-        self.module_class = self.create_module_wrapper(
-            sfp_zoomeye,
-            module_attributes=module_attributes
-        )
-        # Register event emitters if they exist
-        if hasattr(self, 'module'):
+            """Set up before each test."""
+            super().setUp()
+            # Initialize module
+            self.module = sfp_zoomeye()
+            # Register event emitters if they exist
             self.register_event_emitter(self.module)
-        # Register mocks for cleanup during tearDown
-        self.register_mock(self.mock_logger)
-        # Register patchers for cleanup during tearDown
-        if 'patcher1' in locals():
-            self.register_patcher(patcher1)
-
-    def test_opts(self):
+    def  test_opts(self):
         """Test the module options."""
         module = self.module_class()
         self.assertEqual(len(module.opts), len(module.optdescs))

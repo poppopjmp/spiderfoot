@@ -2,6 +2,10 @@ import pytest
 import unittest
 from unittest.mock import patch, MagicMock
 
+"""
+Test module for sfp_criminalip.
+This module contains unit tests for the Criminalip SpiderFoot plugin.
+"""
 from modules.sfp_criminalip import sfp_criminalip
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -172,10 +176,10 @@ class TestModuleCriminalip(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_criminalip()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()

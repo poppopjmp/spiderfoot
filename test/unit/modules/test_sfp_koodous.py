@@ -1,6 +1,9 @@
 import pytest
-import unittest
 
+"""
+Test module for sfp_koodous.
+This module contains unit tests for the Koodous SpiderFoot plugin.
+"""
 from modules.sfp_koodous import sfp_koodous
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
@@ -81,10 +84,10 @@ class TestModuleKoodous(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Initialize module
+        self.module = sfp_koodous()
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
+        self.register_event_emitter(self.module)
+    def  tearDown(self):
         """Clean up after each test."""
         super().tearDown()
