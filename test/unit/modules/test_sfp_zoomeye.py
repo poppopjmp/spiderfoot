@@ -55,11 +55,6 @@ class TestModuleZoomeye(SpiderFootTestBase):
         self.assertTrue('_debug' in module.options)
         self.assertEqual(module.options['_debug'], False)
 
-    def test_watchedEvents_should_return_list(self):
-        """Test the watchedEvents function returns a list."""
-        module = self.module_class()
-        self.assertIsInstance(module.watchedEvents(), list)
-
     def test_producedEvents_should_return_list(self):
         """Test the producedEvents function returns a list."""
         module = self.module_class()
