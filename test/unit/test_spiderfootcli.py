@@ -10,7 +10,7 @@ from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestSpiderFootCli(SpiderFootTestBase):
+class TestSpiderFootCli(unittest.TestCase):
     """Test TestSpiderFootCli."""
 
     def test_default(self):

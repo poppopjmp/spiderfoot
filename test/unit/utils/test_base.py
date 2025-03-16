@@ -2,11 +2,10 @@
 
 import unittest
 from test.unit.utils.test_common import cleanup_listeners, reset_mock_objects, restore_monkey_patch
-from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class SpiderFootTestBase(SpiderFootTestBase):
+class SpiderFootTestBase(unittest.TestCase):
     """Base test class that handles common cleanup tasks."""
     
     def __init__(self, *args, **kwargs):
