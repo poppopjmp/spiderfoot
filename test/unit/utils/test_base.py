@@ -2,7 +2,6 @@
 
 import unittest
 from test.unit.utils.test_common import cleanup_listeners, reset_mock_objects, restore_monkey_patch
-from test.unit.utils.test_helpers import safe_recursion
 
 
 class SpiderFootTestBase(unittest.TestCase):

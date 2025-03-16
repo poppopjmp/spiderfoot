@@ -2,7 +2,7 @@
 
 import functools
 import logging
-from test.unit.utils.test_helpers import safe_recursion
+
 
 
 def safe_recursion(max_depth=10):
