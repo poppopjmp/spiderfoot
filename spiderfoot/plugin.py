@@ -492,8 +492,12 @@ class SpiderFootPlugin():
         }
 
     def start(self) -> None:
-        self.thread = threading.Thread(target=self.threadWorker)
+        """Start the module thread, no actual use."""
+        # Replace the undefined 'thread' with a proper thread creation
+        import threading
+        thread = threading.Thread(target=self.threadWorker)
         thread.daemon = True
+        self.thread = thread
         self.thread.start()
 
     def finish(self):
