@@ -145,6 +145,51 @@ class sfp_zoomeye(SpiderFootPlugin):
             self.errorState = True
             return None
 
+    def queryHost(self, qry, page=1, pageSize=20):
+        """Query ZoomEye for host information."""
+        headers = {
+            'API-KEY': self.opts['api_key'],
+        }
+        
+        try:
+            res = self.sf.fetchUrl(
+                f"https://api.zoomeye.org/host/search?query={qry}&page={page}&pageSize={pageSize}",
+                timeout=self.opts['_fetchtimeout'],
+                useragent="SpiderFoot",
+                headers=headers
+            )
+
+            if res['code'] == "404":
+                self.error("Invalid ZoomEye API key or credits expired.")
+                return None
+            
+            if res['code'] == "429":
+                self.error("You are being rate-limited by ZoomEye")
+                return None
+                
+            if res['code'] != "200":
+                self.error(f"Unexpected HTTP response code {res['code']} from ZoomEye.")
+                return None
+                
+            try:
+                return json.loads(res['content'])
+            except Exception as e:
+                self.error(f"Error processing JSON response from ZoomEye: {e}")
+                return None
+                
+        except urllib.error.HTTPError as e:
+            self.error(f"HTTP error when connecting to ZoomEye API: {e}")
+            return None
+        except urllib.error.URLError as e:
+            self.error(f"URL error when connecting to ZoomEye API: {e}")
+            return None
+        except ConnectionError as e:
+            self.error(f"Connection error when querying ZoomEye API: {e}")
+            return None
+        except Exception as e:
+            self.error(f"Error querying ZoomEye API: {e}")
+            return None
+
     def handleEvent(self, event):
         eventName = event.eventType
         srcModuleName = event.module
