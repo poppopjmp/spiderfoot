@@ -18,7 +18,7 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_DB=spiderfoot
       - POSTGRES_USER=spiderfoot
-      - POSTGRES_PASSWORD=your_password
+      - POSTGRES_PASSWORD=v8086942069!!
 
   postgres:
     image: postgres:latest
@@ -26,7 +26,7 @@ services:
     environment:
       - POSTGRES_DB=spiderfoot
       - POSTGRES_USER=spiderfoot
-      - POSTGRES_PASSWORD=your_password
+      - POSTGRES_PASSWORD=v8086942069!!
     volumes:
       - postgres-data:/var/lib/postgresql/data
 ### Generate Certificate with generate-certificate script that will populate certs folder with the key
@@ -39,8 +39,8 @@ services:
       - "443:443"  # Expose port 80 on the host
       - "80:80"
     volumes:
-      -./docker-compose-production-files/nginx.conf:/etc/nginx/nginx.conf:ro 
-      -./docker-compose-production-files/certs:/etc/nginx/certs:ro 
+      - ./docker-compose-production-files/nginx.conf:/etc/nginx/nginx.conf:ro 
+      - ./docker-compose-production-files/certs:/etc/nginx/certs:ro 
     depends_on:  # Ensure Nginx starts after SpiderFoot
       - spiderfoot
 
