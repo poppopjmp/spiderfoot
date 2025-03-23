@@ -74,13 +74,15 @@ class sfp_twitter(SpiderFootPlugin):
         # Retrieve profile
         try:
             network = eventData.split(": ")[0]
-            url = eventData.split(": ")[1].replace("<SFURL>", "").replace("</SFURL>", "")
+            url = eventData.split(": ")[1].replace(
+                "<SFURL>", "").replace("</SFURL>", "")
         except Exception as e:
             self.debug(f"Unable to parse SOCIAL_MEDIA: {eventData} ({e})")
             return
 
         if network != "Twitter":
-            self.debug(f"Skipping social network profile, {url}, as not a Twitter profile")
+            self.debug(
+                f"Skipping social network profile, {url}, as not a Twitter profile")
             return
 
         res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
@@ -103,13 +105,15 @@ class sfp_twitter(SpiderFootPlugin):
             self.notifyListeners(e)
 
         # Retrieve location
-        location = re.findall(r'<div class="location">([^<]+)</div>', res['content'])
+        location = re.findall(
+            r'<div class="location">([^<]+)</div>', res['content'])
 
         if location:
             if len(location[0]) < 3 or len(location[0]) > 100:
                 self.debug("Skipping likely invalid location.")
             else:
-                e = SpiderFootEvent("GEOINFO", location[0], self.__name__, event)
+                e = SpiderFootEvent(
+                    "GEOINFO", location[0], self.__name__, event)
                 self.notifyListeners(e)
 
 # End of sfp_twitter class

@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [master]
   pull_request:
-    branches: [ "master" ]
+    branches: [master]
 
 jobs:
   build:
@@ -37,7 +37,7 @@ jobs:
         file: Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}:v5.0.2
+          ghcr.io/${{ github.repository }}:v5.0.3
           ghcr.io/${{ github.repository }}:${{ github.sha }}
     - name: Trivy vulnerability scan
       uses: aquasecurity/trivy-action@master
@@ -49,37 +49,3 @@ jobs:
       run: |
         docker run --rm ghcr.io/${{ github.repository }}:${{ github.sha }} sf.py -h
         docker run --rm ghcr.io/${{ github.repository }}:${{ github.sha }} sf.py --version
-
-  build-react-web-app:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Lint Dockerfile with Hadolint
-      uses: hadolint/hadolint-action@v3.1.0
-      with:
-        dockerfile: react-web-interface/Dockerfile
-        failure-threshold: error
-
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Build and push React web app Docker image
-      id: docker_build_react
-      uses: docker/build-push-action@v5
-      with:
-        context: react-web-interface
-        file: react-web-interface/Dockerfile
-        push: true
-        tags: |
-          ghcr.io/${{ github.repository }}:spiderfoot-react-v5.0.2
-          ghcr.io/${{ github.repository }}:spiderfoot-react-${{ github.sha }}

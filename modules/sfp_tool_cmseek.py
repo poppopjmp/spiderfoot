@@ -87,14 +87,16 @@ class sfp_tool_cmseek(SpiderFootPlugin):
         self.results[eventData] = True
 
         if not self.opts['cmseekpath']:
-            self.error("You enabled sfp_tool_cmseek but did not set a path to the tool!")
+            self.error(
+                "You enabled sfp_tool_cmseek but did not set a path to the tool!")
             self.errorState = True
             return
 
         # Normalize path
         if self.opts['cmseekpath'].endswith('cmseek.py'):
             exe = self.opts['cmseekpath']
-            resultpath = self.opts['cmseekpath'].split("cmseek.py")[0] + "/Result"
+            resultpath = self.opts['cmseekpath'].split("cmseek.py")[
+                0] + "/Result"
         elif self.opts['cmseekpath'].endswith('/'):
             exe = self.opts['cmseekpath'] + "cmseek.py"
             resultpath = self.opts['cmseekpath'] + "Result"
@@ -129,7 +131,8 @@ class sfp_tool_cmseek(SpiderFootPlugin):
             return
 
         if p.returncode != 0:
-            self.error(f"Unable to read CMSeeK output\nstderr: {stderr}\nstdout: {stdout}")
+            self.error(
+                f"Unable to read CMSeeK output\nstderr: {stderr}\nstdout: {stdout}")
             return
 
         if b"CMS Detection failed" in stdout:
@@ -145,7 +148,8 @@ class sfp_tool_cmseek(SpiderFootPlugin):
             f = io.open(log_path, encoding='utf-8')
             j = json.loads(f.read())
         except Exception as e:
-            self.error(f"Could not parse CMSeeK output file {log_path} as JSON: {e}")
+            self.error(
+                f"Could not parse CMSeeK output file {log_path} as JSON: {e}")
             return
 
         cms_name = j.get('cms_name')
@@ -160,7 +164,8 @@ class sfp_tool_cmseek(SpiderFootPlugin):
         if not software:
             return
 
-        evt = SpiderFootEvent("WEBSERVER_TECHNOLOGY", software, self.__name__, event)
+        evt = SpiderFootEvent("WEBSERVER_TECHNOLOGY",
+                              software, self.__name__, event)
         self.notifyListeners(evt)
 
 # End of sfp_tool_cmseek class

@@ -123,13 +123,15 @@ class sfp_stackoverflow(SpiderFootPlugin):
             return None
 
         if res['code'] == '502':
-            self.error("Throttling Error. To increase requests, use an API key.")
+            self.error(
+                "Throttling Error. To increase requests, use an API key.")
             return None
 
         try:
             return json.loads(res['content'])
         except Exception as e:
-            self.error(f"Error processing JSON response from StackOverflow: {e}")
+            self.error(
+                f"Error processing JSON response from StackOverflow: {e}")
             self.errorState = True
             return None
 
@@ -241,24 +243,28 @@ class sfp_stackoverflow(SpiderFootPlugin):
             if self.getTarget().matches(email):
                 e = SpiderFootEvent('EMAILADDR', email, self.__name__, event)
             else:
-                e = SpiderFootEvent('AFFILIATE_EMAILADDR', email, self.__name__, event)
+                e = SpiderFootEvent('AFFILIATE_EMAILADDR',
+                                    email, self.__name__, event)
             self.notifyListeners(e)
 
         for username in set(allUsernames):
             if " " in username:
-                e = SpiderFootEvent('RAW_RIR_DATA', 'Possible full name: ' + username, self.__name__, event)
+                e = SpiderFootEvent(
+                    'RAW_RIR_DATA', 'Possible full name: ' + username, self.__name__, event)
             else:
                 e = SpiderFootEvent('USERNAME', username, self.__name__, event)
             self.notifyListeners(e)
 
         for ip in set(allIP4s):
             ip = str(ip)
-            e = SpiderFootEvent('AFFILIATE_IP_ADDRESS', ip, self.__name__, event)
+            e = SpiderFootEvent('AFFILIATE_IP_ADDRESS',
+                                ip, self.__name__, event)
             self.notifyListeners(e)
 
         for ip in set(allIP6s):
             ip = str(ip)
-            e = SpiderFootEvent('AFFILIATE_IPV6_ADDRESS', ip, self.__name__, event)
+            e = SpiderFootEvent('AFFILIATE_IPV6_ADDRESS',
+                                ip, self.__name__, event)
             self.notifyListeners(e)
 
 # End of sfp_stackoverflow class

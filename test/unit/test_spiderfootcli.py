@@ -5,18 +5,16 @@ import sys
 import unittest
 
 from sfcli import SpiderFootCli
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
 class TestSpiderFootCli(unittest.TestCase):
-    """
-    Test TestSpiderFootCli
-    """
+    """Test TestSpiderFootCli."""
 
     def test_default(self):
-        """
-        Test default(self, line)
-        """
+        """Test default(self, line)"""
         sfcli = SpiderFootCli()
 
         io_output = io.StringIO()
@@ -28,9 +26,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertIn("Unknown command", output)
 
     def test_default_should_ignore_comments(self):
-        """
-        Test default(self, line)
-        """
+        """Test default(self, line)"""
         sfcli = SpiderFootCli()
 
         io_output = io.StringIO()
@@ -43,36 +39,28 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertEqual("", output)
 
     def test_complete_start_should_return_a_list(self):
-        """
-        Test complete_start(self, text, line, startidx, endidx)
-        """
+        """Test complete_start(self, text, line, startidx, endidx)"""
         sfcli = SpiderFootCli()
         start = sfcli.complete_start(None, None, None, None)
         self.assertIsInstance(start, list)
         self.assertEqual([], start)
 
     def test_complete_find_should_return_a_list(self):
-        """
-        Test complete_find(self, text, line, startidx, endidx)
-        """
+        """Test complete_find(self, text, line, startidx, endidx)"""
         sfcli = SpiderFootCli()
         find = sfcli.complete_find(None, None, None, None)
         self.assertIsInstance(find, list)
         self.assertEqual([], find)
 
     def test_complete_data_should_return_a_list(self):
-        """
-        Test complete_data(self, text, line, startidx, endidx)
-        """
+        """Test complete_data(self, text, line, startidx, endidx)"""
         sfcli = SpiderFootCli()
         data = sfcli.complete_data(None, None, None, None)
         self.assertIsInstance(data, list)
         self.assertEqual([], data)
 
     def test_complete_default(self):
-        """
-        Test complete_default(self, text, line, startidx, endidx)
-        """
+        """Test complete_default(self, text, line, startidx, endidx)"""
         sfcli = SpiderFootCli()
         default = sfcli.complete_default("", "-t -m", None, None)
         self.assertIsInstance(default, list)
@@ -83,27 +71,21 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertEqual('TBD', 'TBD')
 
     def test_complete_default_invalid_text_should_return_a_string(self):
-        """
-        Test complete_default(self, text, line, startidx, endidx)
-        """
+        """Test complete_default(self, text, line, startidx, endidx)"""
         sfcli = SpiderFootCli()
         default = sfcli.complete_default(None, "example line", None, None)
         self.assertIsInstance(default, list)
         self.assertEqual([], default)
 
     def test_complete_default_invalid_line_should_return_a_string(self):
-        """
-        Test complete_default(self, text, line, startidx, endidx)
-        """
+        """Test complete_default(self, text, line, startidx, endidx)"""
         sfcli = SpiderFootCli()
         default = sfcli.complete_default("example text", None, None, None)
         self.assertIsInstance(default, list)
         self.assertEqual([], default)
 
     def test_do_debug_should_toggle_debug(self):
-        """
-        Test do_debug(self, line)
-        """
+        """Test do_debug(self, line)"""
         sfcli = SpiderFootCli(self.cli_default_options)
 
         sfcli.do_debug(None)
@@ -114,9 +96,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertNotEqual(initial_debug_state, new_debug_state)
 
     def test_do_spool_should_toggle_spool(self):
-        """
-        Test do_spool(self, line)
-        """
+        """Test do_spool(self, line)"""
         sfcli = SpiderFootCli()
 
         sfcli.ownopts['cli.spool_file'] = '/dev/null'
@@ -129,9 +109,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertNotEqual(initial_spool_state, new_spool_state)
 
     def test_do_history_should_toggle_history_option(self):
-        """
-        Test do_history(self, line)
-        """
+        """Test do_history(self, line)"""
         sfcli = SpiderFootCli(self.cli_default_options)
 
         sfcli.do_history("0")
@@ -142,9 +120,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertNotEqual(initial_history_state, new_history_state)
 
     def test_precmd_should_return_line(self):
-        """
-        Test precmd(self, line)
-        """
+        """Test precmd(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.history'] = False
         sfcli.ownopts['cli.spool'] = False
@@ -157,9 +133,7 @@ class TestSpiderFootCli(unittest.TestCase):
 
     @unittest.skip("todo")
     def test_precmd_should_print_line_to_history_file(self):
-        """
-        Test precmd(self, line)
-        """
+        """Test precmd(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.history'] = True
         sfcli.ownopts['cli.spool'] = False
@@ -174,9 +148,7 @@ class TestSpiderFootCli(unittest.TestCase):
 
     @unittest.skip("todo")
     def test_precmd_should_print_line_to_spool_file(self):
-        """
-        Test precmd(self, line)
-        """
+        """Test precmd(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.history'] = False
         sfcli.ownopts['cli.spool'] = True
@@ -191,9 +163,8 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertEqual('TBD', 'TBD')
 
     def test_dprint_should_print_if_debug_option_is_set(self):
-        """
-        Test dprint(self, msg, err=False, deb=False, plain=False, color=None)
-        """
+        """Test dprint(self, msg, err=False, deb=False, plain=False,
+        color=None)"""
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = True
         sfcli.ownopts['cli.spool'] = False
@@ -207,9 +178,8 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertIn("example output", output)
 
     def test_dprint_should_not_print_unless_debug_option_is_set(self):
-        """
-        Test dprint(self, msg, err=False, deb=False, plain=False, color=None)
-        """
+        """Test dprint(self, msg, err=False, deb=False, plain=False,
+        color=None)"""
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = False
         sfcli.ownopts['cli.spool'] = False
@@ -223,9 +193,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertIn("", output)
 
     def test_ddprint_should_print_if_debug_option_is_set(self):
-        """
-        Test ddprint(self, msg)
-        """
+        """Test ddprint(self, msg)"""
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = True
         sfcli.ownopts['cli.spool'] = False
@@ -239,9 +207,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertIn("example debug output", output)
 
     def test_ddprint_should_not_print_unless_debug_option_is_set(self):
-        """
-        Test ddprint(self, msg)
-        """
+        """Test ddprint(self, msg)"""
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = False
         sfcli.ownopts['cli.spool'] = False
@@ -255,9 +221,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertEqual("", output)
 
     def test_edprint_should_print_error_regardless_of_debug_option(self):
-        """
-        Test edprint(self, msg)
-        """
+        """Test edprint(self, msg)"""
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = False
         sfcli.ownopts['cli.spool'] = False
@@ -271,9 +235,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertIn("example debug output", output)
 
     def test_pretty_should_return_a_string(self):
-        """
-        Test pretty(self, data, titlemap=None)
-        """
+        """Test pretty(self, data, titlemap=None)"""
         sfcli = SpiderFootCli()
 
         invalid_types = [None, "", list(), dict()]
@@ -283,9 +245,7 @@ class TestSpiderFootCli(unittest.TestCase):
                 self.assertEqual("", pretty)
 
     def test_request_invalid_url_should_return_none(self):
-        """
-        Test request(self, url, post=None)
-        """
+        """Test request(self, url, post=None)"""
         sfcli = SpiderFootCli()
 
         invalid_types = [None, list(), dict()]
@@ -295,26 +255,20 @@ class TestSpiderFootCli(unittest.TestCase):
                 self.assertEqual(None, result)
 
     def test_emptyline_should_return_none(self):
-        """
-        Test emptyline(self)
-        """
+        """Test emptyline(self)"""
         sfcli = SpiderFootCli()
         emptyline = sfcli.emptyline()
         self.assertEqual(None, emptyline)
 
     def test_completedefault_should_return_empty_list(self):
-        """
-        Test completedefault(self, text, line, begidx, endidx)
-        """
+        """Test completedefault(self, text, line, begidx, endidx)"""
         sfcli = SpiderFootCli()
         completedefault = sfcli.completedefault(None, None, None, None)
         self.assertIsInstance(completedefault, list)
         self.assertEqual([], completedefault)
 
     def test_myparseline_should_return_a_list_of_two_lists(self):
-        """
-        Test myparseline(self, cmdline, replace=True)
-        """
+        """Test myparseline(self, cmdline, replace=True)"""
         sfcli = SpiderFootCli()
         parsed_line = sfcli.myparseline(None)
 
@@ -331,9 +285,8 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertIsInstance(parsed_line[1], list)
 
     def test_send_output(self):
-        """
-        Test send_output(self, data, cmd, titles=None, total=True, raw=False)
-        """
+        """Test send_output(self, data, cmd, titles=None, total=True,
+        raw=False)"""
         sfcli = SpiderFootCli()
 
         io_output = io.StringIO()
@@ -347,153 +300,119 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertEqual('TBD', 'TBD')
 
     def test_do_query(self):
-        """
-        Test do_query(self, line)
-        """
+        """Test do_query(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_query(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_ping(self):
-        """
-        Test do_ping(self, line)
-        """
+        """Test do_ping(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_ping(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_modules(self):
-        """
-        Test do_modules(self, line, cacheonly=False)
-        """
+        """Test do_modules(self, line, cacheonly=False)"""
         sfcli = SpiderFootCli()
         sfcli.do_modules(None, None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_types(self):
-        """
-        Test do_types(self, line, cacheonly=False)
-        """
+        """Test do_types(self, line, cacheonly=False)"""
         sfcli = SpiderFootCli()
         sfcli.do_types(None, None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_load(self):
-        """
-        Test do_load(self, line)
-        """
+        """Test do_load(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_load(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_scaninfo(self):
-        """
-        Test do_scaninfo(self, line)
-        """
+        """Test do_scaninfo(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_scaninfo(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_scans(self):
-        """
-        Test do_scans(self, line)
-        """
+        """Test do_scans(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_scans(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_data(self):
-        """
-        Test do_data(self, line)
-        """
+        """Test do_data(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_data(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_export(self):
-        """
-        Test do_export(self, line)
-        """
+        """Test do_export(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_export(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_logs(self):
-        """
-        Test do_logs(self, line)
-        """
+        """Test do_logs(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_logs(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_start(self):
-        """
-        Test do_start(self, line)
-        """
+        """Test do_start(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_start(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_stop(self):
-        """
-        Test do_stop(self, line)
-        """
+        """Test do_stop(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_stop(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_search(self):
-        """
-        Test do_search(self, line)
-        """
+        """Test do_search(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_search(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_find(self):
-        """
-        Test do_find(self, line)
-        """
+        """Test do_find(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_find(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_summary(self):
-        """
-        Test do_summary(self, line)
-        """
+        """Test do_summary(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_summary(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_delete(self):
-        """
-        Test do_delete(self, line)
-        """
+        """Test do_delete(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.do_delete(None)
 
         self.assertEqual('TBD', 'TBD')
 
     def test_print_topic(self):
-        """
-        Test print_topics(self, header, cmds, cmdlen, maxcol)
-        """
+        """Test print_topics(self, header, cmds, cmdlen, maxcol)"""
         sfcli = SpiderFootCli()
 
         io_output = io.StringIO()
@@ -508,9 +427,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertEqual('TBD', 'TBD')
 
     def test_do_set_should_set_option(self):
-        """
-        Test do_set(self, line)
-        """
+        """Test do_set(self, line)"""
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.test_opt'] = None
 
@@ -520,9 +437,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertEqual(new_test_opt, 'test value')
 
     def test_do_shell(self):
-        """
-        Test do_shell(self, line)
-        """
+        """Test do_shell(self, line)"""
         sfcli = SpiderFootCli()
 
         io_output = io.StringIO()
@@ -534,9 +449,7 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertIn("Running shell command:", output)
 
     def test_do_clear(self):
-        """
-        Test do_clear(self, line)
-        """
+        """Test do_clear(self, line)"""
         sfcli = SpiderFootCli()
 
         io_output = io.StringIO()
@@ -548,17 +461,24 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertEqual("\x1b[2J\x1b[H", output)
 
     def test_do_exit(self):
-        """
-        Test do_exit(self, line)
-        """
+        """Test do_exit(self, line)"""
         sfcli = SpiderFootCli()
         do_exit = sfcli.do_exit(None)
         self.assertTrue(do_exit)
 
     def test_do_eof(self):
-        """
-        Test do_EOF(self, line)
-        """
+        """Test do_EOF(self, line)"""
         sfcli = SpiderFootCli()
         do_eof = sfcli.do_EOF(None)
         self.assertTrue(do_eof)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

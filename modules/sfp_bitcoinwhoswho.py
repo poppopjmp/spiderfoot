@@ -86,7 +86,8 @@ class sfp_bitcoinwhoswho(SpiderFootPlugin):
         try:
             return json.loads(res["content"])
         except Exception as e:
-            self.error(f"Error processing JSON response from {self.meta['name']}: {e}")
+            self.error(
+                f"Error processing JSON response from {self.meta['name']}: {e}")
 
         return None
 
@@ -102,7 +103,8 @@ class sfp_bitcoinwhoswho(SpiderFootPlugin):
 
         scams = data.get("scams", [])
         if scams:
-            self.emit("MALICIOUS_BITCOIN_ADDRESS", f"Bitcoin Who's Who [{pevent.data}][https://bitcoinwhoswho.com/address/{pevent.data}]", pevent)
+            self.emit("MALICIOUS_BITCOIN_ADDRESS",
+                      f"Bitcoin Who's Who [{pevent.data}][https://bitcoinwhoswho.com/address/{pevent.data}]", pevent)
             return True
 
         return False
@@ -114,7 +116,8 @@ class sfp_bitcoinwhoswho(SpiderFootPlugin):
         self.debug(f"Received event, {event.eventType}, from {event.module}")
 
         if self.opts["api_key"] == "":
-            self.error(f"You enabled {self.__class__.__name__} but did not set an API key!")
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set an API key!")
             self.errorState = True
             return
 

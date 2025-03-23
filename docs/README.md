@@ -8,7 +8,7 @@ SpiderFoot is an open source intelligence (OSINT) automation tool. It integrates
 
 - Web based UI or CLI
 - Over 200 modules
-- Python 3.7+
+- Python 3.9+
 - YAML-configurable correlation engine with 37 pre-defined rules
 - CSV/JSON/GEXF export
 - API key export/import
@@ -28,9 +28,9 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 ### Stable build (packaged release):
 
 ```
- wget https://github.com/smicallef/spiderfoot/archive/v5.0.1.tar.gz
- tar zxvf v5.0.1.tar.gz
- cd spiderfoot-5.0.1
+ wget https://github.com/poppopjmp/spiderfoot/archive/v5.0.3.tar.gz
+ tar zxvf v5.0.3.tar.gz
+ cd spiderfoot-5.0.3
  pip3 install -r requirements.txt
  python3 ./sf.py -l 127.0.0.1:5001
 ```
@@ -38,7 +38,7 @@ To install and run SpiderFoot, you need at least Python 3.7 and a number of Pyth
 ### Development build (cloning git master branch):
 
 ```
- git clone https://github.com/smicallef/spiderfoot.git
+ git clone https://github.com/poppopjmp/spiderfoot.git
  cd spiderfoot
  pip3 install -r requirements.txt
  python3 ./sf.py -l 127.0.0.1:5001
@@ -82,7 +82,7 @@ SpiderFoot's 200+ modules feed each other in a publisher/subscriber model to ens
 
 ## Documentation
 
-Read more at the [project website](https://www.spiderfoot.net/r.php?u=aHR0cHM6Ly93d3cuc3BpZGVyZm9vdC5uZXQv&s=os_gh), including more complete documentation, blog posts with tutorials/guides, plus information about [SpiderFoot HX](https://www.spiderfoot.net/r.php?u=aHR0cHM6Ly93d3cuc3BpZGVyZm9vdC5uZXQvaHgvCg==&s=os_gh).
+Read more at the [project website](https://github.com/poppopjmp/spiderfoot/wiki), including more complete documentation, blog posts with tutorials/guides.
 
 Latest updates announced on [Twitter](https://twitter.com/spiderfoot).
 
@@ -97,7 +97,7 @@ Poppopjmp <van1sh@van1shland.io>
 
 ## Release Notes
 
-### Version 5.0.1
+### Version 5.0.3
 
 - Added new modules for enhanced data extraction and analysis.
 - Improved performance and stability of existing modules.

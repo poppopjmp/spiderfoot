@@ -155,7 +155,8 @@ class sfp_dronebl(SpiderFootPlugin):
 
             max_netblock = self.opts['maxnetblock']
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
         if eventName == 'NETBLOCK_MEMBER':
@@ -164,7 +165,8 @@ class sfp_dronebl(SpiderFootPlugin):
 
             max_subnet = self.opts['maxsubnet']
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
         if eventName == "AFFILIATE_IPADDR":
@@ -208,10 +210,12 @@ class sfp_dronebl(SpiderFootPlugin):
                 if k not in self.checks:
                     if not result.endswith('.dnsbl.dronebl.org'):
                         # This is an error. The "checks" dict may need to be updated.
-                        self.error(f"DroneBL resolved address {addr} to unknown IP address {result} not found in DroneBL list.")
+                        self.error(
+                            f"DroneBL resolved address {addr} to unknown IP address {result} not found in DroneBL list.")
                     continue
 
-                evt = SpiderFootEvent(blacklist_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
                 self.notifyListeners(evt)
 
                 if k in [
@@ -226,15 +230,18 @@ class sfp_dronebl(SpiderFootPlugin):
                     "127.0.0.18",
                     "127.0.0.19",
                 ]:
-                    evt = SpiderFootEvent(malicious_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        malicious_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
                     self.notifyListeners(evt)
 
                 if k in ["127.0.0.8", "127.0.0.9", "127.0.0.10", "127.0.0.11", "127.0.0.14"]:
-                    evt = SpiderFootEvent("PROXY_HOST", addr, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "PROXY_HOST", addr, self.__name__, event)
                     self.notifyListeners(evt)
 
                 if k == "127.0.0.19":
-                    evt = SpiderFootEvent("VPN_HOST", addr, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "VPN_HOST", addr, self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_dronebl class

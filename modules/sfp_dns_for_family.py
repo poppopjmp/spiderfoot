@@ -112,7 +112,8 @@ class sfp_dns_for_family(SpiderFootPlugin):
                 continue
 
             self.debug(f"{eventData} blocked by DNS for Family")
-            evt = SpiderFootEvent(blacklist_type, f"DNS for Family [{eventData}]", self.__name__, event)
+            evt = SpiderFootEvent(
+                blacklist_type, f"DNS for Family [{eventData}]", self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_dns_for_family class

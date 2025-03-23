@@ -3,10 +3,12 @@ import unittest
 
 from modules.sfp_zonefiles import sfp_zonefiles
 from sflib import SpiderFoot
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleZoneFiles(unittest.TestCase):
+class TestModuleZoneFiles(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_zonefiles()
@@ -33,7 +35,8 @@ class TestModuleZoneFiles(unittest.TestCase):
             with self.subTest(code=code):
                 module = sfp_zonefiles()
                 module.setup(sf, dict())
-                result = module.parseApiResponse({"code": code, "content": None})
+                result = module.parseApiResponse(
+                    {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertFalse(module.errorState)
 
@@ -45,6 +48,18 @@ class TestModuleZoneFiles(unittest.TestCase):
             with self.subTest(code=code):
                 module = sfp_zonefiles()
                 module.setup(sf, dict())
-                result = module.parseApiResponse({"code": code, "content": None})
+                result = module.parseApiResponse(
+                    {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertTrue(module.errorState)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

@@ -3,10 +3,12 @@ import unittest
 
 from modules.sfp_dns_for_family import sfp_dns_for_family
 from sflib import SpiderFoot
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleDnsForFamily(unittest.TestCase):
+class TestModuleDnsForFamily(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_dns_for_family()
@@ -24,3 +26,14 @@ class TestModuleDnsForFamily(unittest.TestCase):
     def test_producedEvents_should_return_list(self):
         module = sfp_dns_for_family()
         self.assertIsInstance(module.producedEvents(), list)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

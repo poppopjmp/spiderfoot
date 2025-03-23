@@ -77,7 +77,7 @@ class sfp_zonefiles(SpiderFootPlugin):
         ]
 
     def queryDomain(self, qry):
-        """Query a domain
+        """Query a domain.
 
         Args:
             qry (str): domain
@@ -171,16 +171,19 @@ class sfp_zonefiles(SpiderFootPlugin):
         if ip:
             if self.opts['verify']:
                 if self.sf.validateIP(eventData, str(ip)):
-                    evt = SpiderFootEvent('IP_ADDRESS', str(ip), self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'IP_ADDRESS', str(ip), self.__name__, event)
                     self.notifyListeners(evt)
             else:
-                evt = SpiderFootEvent('IP_ADDRESS', str(ip), self.__name__, event)
+                evt = SpiderFootEvent(
+                    'IP_ADDRESS', str(ip), self.__name__, event)
                 self.notifyListeners(evt)
 
         dns = data.get('dns')
         if dns:
             for nameserver in set(dns.split(',')):
-                evt = SpiderFootEvent('PROVIDER_DNS', nameserver, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'PROVIDER_DNS', nameserver, self.__name__, event)
                 self.notifyListeners(evt)
 
         emails = data.get('emails')
@@ -203,13 +206,15 @@ class sfp_zonefiles(SpiderFootPlugin):
         if phones:
             for phone in set(phones.split(',')):
                 if SpiderFootHelpers.validPhoneNumber(phone):
-                    evt = SpiderFootEvent('PHONE_NUMBER', phone, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'PHONE_NUMBER', phone, self.__name__, event)
                     self.notifyListeners(evt)
 
         technologies = data.get('technologies')
         if technologies and isinstance(technologies, dict):
             for tech in technologies.keys():
-                evt = SpiderFootEvent('SOFTWARE_USED', tech, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'SOFTWARE_USED', tech, self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_zonefiles class

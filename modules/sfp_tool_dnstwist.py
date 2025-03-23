@@ -113,7 +113,8 @@ class sfp_tool_dnstwist(SpiderFootPlugin):
             cmd = ['dnstwist']
         else:
             if not self.opts['dnstwistpath']:
-                self.error("You enabled sfp_tool_dnstwist but did not set a path to the tool!")
+                self.error(
+                    "You enabled sfp_tool_dnstwist but did not set a path to the tool!")
                 self.errorState = True
                 return
 
@@ -134,7 +135,8 @@ class sfp_tool_dnstwist(SpiderFootPlugin):
             cmd = [self.opts['pythonpath'], exe]
 
         try:
-            p = Popen(cmd + ["-f", "json", "-r", eventData], stdout=PIPE, stderr=PIPE)
+            p = Popen(cmd + ["-f", "json", "-r", eventData],
+                      stdout=PIPE, stderr=PIPE)
             stdout, stderr = p.communicate(input=None, timeout=300)
             if p.returncode == 0:
                 content = stdout
@@ -158,12 +160,14 @@ class sfp_tool_dnstwist(SpiderFootPlugin):
                                           self.__name__, event)
                     self.notifyListeners(evt)
             except Exception as e:
-                self.error("Couldn't parse the JSON output of DNSTwist: " + str(e))
+                self.error(
+                    "Couldn't parse the JSON output of DNSTwist: " + str(e))
                 return
         except TimeoutExpired:
             p.kill()
             stdout, stderr = p.communicate()
-            self.debug(f"Timed out waiting for DNSTwist to finish on {eventData}")
+            self.debug(
+                f"Timed out waiting for DNSTwist to finish on {eventData}")
             return
         except Exception as e:
             self.error("Unable to run DNSTwist: " + str(e))

@@ -129,7 +129,8 @@ class sfp_ipinfo(SpiderFootPlugin):
         if 'country' not in data:
             return
 
-        location = ', '.join([_f for _f in [data.get('city'), data.get('region'), data.get('country')] if _f])
+        location = ', '.join(
+            [_f for _f in [data.get('city'), data.get('region'), data.get('country')] if _f])
         self.info("Found GeoIP for " + eventData + ": " + location)
 
         evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)

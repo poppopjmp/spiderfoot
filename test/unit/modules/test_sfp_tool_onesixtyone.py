@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_tool_onesixtyone import sfp_tool_onesixtyone
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleToolOnesixtyone(unittest.TestCase):
+class TestModuleToolOnesixtyone(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_tool_onesixtyone()
@@ -26,7 +28,8 @@ class TestModuleToolOnesixtyone(unittest.TestCase):
         module = sfp_tool_onesixtyone()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_no_tool_path_configured_should_set_errorState(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_no_tool_path_configured_should_set_errorState(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_tool_onesixtyone()
@@ -41,9 +44,21 @@ class TestModuleToolOnesixtyone(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

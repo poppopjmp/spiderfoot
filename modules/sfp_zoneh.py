@@ -87,7 +87,8 @@ class sfp_zoneh(SpiderFootPlugin):
                 "DEFACED_COHOST", "DEFACED_AFFILIATE_IPADDR"]
 
     def lookupItem(self, target, content):
-        grps = re.findall(r"<title><\!\[CDATA\[(.[^\]]*)\]\]></title>\s+<link><\!\[CDATA\[(.[^\]]*)\]\]></link>", content)
+        grps = re.findall(
+            r"<title><\!\[CDATA\[(.[^\]]*)\]\]></title>\s+<link><\!\[CDATA\[(.[^\]]*)\]\]></link>", content)
         for m in grps:
             if target in m[0]:
                 self.info("Found zoneh site: " + m[0])

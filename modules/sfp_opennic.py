@@ -157,16 +157,20 @@ class sfp_opennic(SpiderFootPlugin):
         for addr in set(addrs):
             if self.sf.validIP(addr):
                 if affiliate and not self.getTarget().matches(addr, includeParents=True):
-                    evt = SpiderFootEvent("AFFILIATE_IPADDR", addr, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "AFFILIATE_IPADDR", addr, self.__name__, event)
                 else:
-                    evt = SpiderFootEvent("IP_ADDRESS", addr, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "IP_ADDRESS", addr, self.__name__, event)
 
                 self.notifyListeners(evt)
             elif self.sf.validIP6(addr):
                 if affiliate and not self.getTarget().matches(addr, includeParents=True):
-                    evt = SpiderFootEvent("AFFILIATE_IPV6_ADDRESS", addr, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "AFFILIATE_IPV6_ADDRESS", addr, self.__name__, event)
                 else:
-                    evt = SpiderFootEvent("IPV6_ADDRESS", addr, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "IPV6_ADDRESS", addr, self.__name__, event)
 
                 self.notifyListeners(evt)
             else:

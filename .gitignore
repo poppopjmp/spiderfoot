@@ -173,3 +173,5 @@ cover/
 # Documentation #
 #################
 docs/_build/
+.ruff_cache
+.pytest_cache

@@ -137,7 +137,8 @@ class sfp_spamcop(SpiderFootPlugin):
 
             max_subnet = self.opts['maxsubnet']
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
             malicious_type = "MALICIOUS_SUBNET"
@@ -148,7 +149,8 @@ class sfp_spamcop(SpiderFootPlugin):
 
             max_netblock = self.opts['maxnetblock']
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
             malicious_type = "MALICIOUS_NETBLOCK"
@@ -182,16 +184,19 @@ class sfp_spamcop(SpiderFootPlugin):
                 if k != '127.0.0.2':
                     if not result.endswith('.bl.spamcop.net'):
                         # This is an error. SpamCop should only return 127.0.0.2 for matches.
-                        self.error(f"SpamCop resolved address {addr} to unknown IP address {result}.")
+                        self.error(
+                            f"SpamCop resolved address {addr} to unknown IP address {result}.")
                     continue
 
                 url = f"https://www.spamcop.net/w3m?action=checkblock&ip={addr}"
                 description = f"SpamCop Blacklist [{addr}]\n<SFURL>{url}</SFURL>"
 
-                evt = SpiderFootEvent(blacklist_type, description, self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, description, self.__name__, event)
                 self.notifyListeners(evt)
 
-                evt = SpiderFootEvent(malicious_type, description, self.__name__, event)
+                evt = SpiderFootEvent(
+                    malicious_type, description, self.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_spamcop class

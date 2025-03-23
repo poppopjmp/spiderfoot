@@ -130,7 +130,8 @@ class sfp_certspotter(SpiderFootPlugin):
             return None
 
         if res['code'] != '200':
-            self.error(f"Unexpected HTTP response code {res['code']} from CertSpotter")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from CertSpotter")
             self.errorState = True
             return None
 
@@ -154,7 +155,8 @@ class sfp_certspotter(SpiderFootPlugin):
             return
 
         if self.opts['api_key'] == "":
-            self.error(f"You enabled {self.__class__.__name__} but did not set an API key!")
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set an API key!")
             self.errorState = True
             return
 
@@ -180,7 +182,8 @@ class sfp_certspotter(SpiderFootPlugin):
 
             page += 1
 
-            evt = SpiderFootEvent('RAW_RIR_DATA', str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                'RAW_RIR_DATA', str(data), self.__name__, event)
             self.notifyListeners(evt)
 
             for result in data:
@@ -199,7 +202,8 @@ class sfp_certspotter(SpiderFootPlugin):
                     rawcert = "-----BEGIN CERTIFICATE-----\n"
                     rawcert += result.get('cert').get('data')
                     rawcert += "\n-----END CERTIFICATE-----\n"
-                    cert = self.sf.parseCert(rawcert, eventData, self.opts['certexpiringdays'])
+                    cert = self.sf.parseCert(
+                        rawcert, eventData, self.opts['certexpiringdays'])
                 except Exception as e:
                     self.info(f"Error parsing certificate: {e}")
                     continue
@@ -208,27 +212,32 @@ class sfp_certspotter(SpiderFootPlugin):
                     self.info("Failed to parse the SSL certificate")
                     continue
 
-                evt = SpiderFootEvent('SSL_CERTIFICATE_RAW', cert['text'], self.__name__, event)
+                evt = SpiderFootEvent(
+                    'SSL_CERTIFICATE_RAW', cert['text'], self.__name__, event)
                 self.notifyListeners(evt)
 
                 if cert.get('issuer'):
-                    evt = SpiderFootEvent('SSL_CERTIFICATE_ISSUER', cert['issuer'], self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'SSL_CERTIFICATE_ISSUER', cert['issuer'], self.__name__, event)
                     self.notifyListeners(evt)
 
                 if cert.get('issued'):
-                    evt = SpiderFootEvent('SSL_CERTIFICATE_ISSUED', cert['issued'], self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'SSL_CERTIFICATE_ISSUED', cert['issued'], self.__name__, event)
                     self.notifyListeners(evt)
 
                 for san in set(cert.get('altnames', list())):
                     hosts.append(san.replace("*.", ""))
 
                 if cert.get('expired'):
-                    evt = SpiderFootEvent("SSL_CERTIFICATE_EXPIRED", cert.get('expirystr', 'Unknown'), self.__name__, event)
+                    evt = SpiderFootEvent("SSL_CERTIFICATE_EXPIRED", cert.get(
+                        'expirystr', 'Unknown'), self.__name__, event)
                     self.notifyListeners(evt)
                     continue
 
                 if cert.get('expiring'):
-                    evt = SpiderFootEvent("SSL_CERTIFICATE_EXPIRING", cert.get('expirystr', 'Unknown'), self.__name__, event)
+                    evt = SpiderFootEvent("SSL_CERTIFICATE_EXPIRING", cert.get(
+                        'expirystr', 'Unknown'), self.__name__, event)
                     self.notifyListeners(evt)
                     continue
 
@@ -264,10 +273,12 @@ class sfp_certspotter(SpiderFootPlugin):
 
             if self.sf.isDomain(domain, self.opts['_internettlds']):
                 if evt_type == 'CO_HOSTED_SITE':
-                    evt = SpiderFootEvent('CO_HOSTED_SITE_DOMAIN', domain, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'CO_HOSTED_SITE_DOMAIN', domain, self.__name__, event)
                     self.notifyListeners(evt)
                 else:
-                    evt = SpiderFootEvent('DOMAIN_NAME', domain, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'DOMAIN_NAME', domain, self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_certspotter class

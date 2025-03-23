@@ -82,7 +82,8 @@ class sfp_trashpanda(SpiderFootPlugin):
         ]
 
     def query(self, qry, eventName):
-        secret = self.opts['api_key_username'] + ':' + self.opts['api_key_password']
+        secret = self.opts['api_key_username'] + \
+            ':' + self.opts['api_key_password']
         auth = base64.b64encode(secret.encode('utf-8')).decode('utf-8')
 
         queryString = ""
@@ -104,7 +105,8 @@ class sfp_trashpanda(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error("Error retrieving search results from Trashpanda(got-hacked.wtf)")
+            self.error(
+                "Error retrieving search results from Trashpanda(got-hacked.wtf)")
             return None
 
         return json.loads(res['content'])
@@ -121,7 +123,8 @@ class sfp_trashpanda(SpiderFootPlugin):
             return
 
         if self.opts['api_key_username'] == "" or self.opts['api_key_password'] == "":
-            self.error("You enabled sfp_trashpanda but did not set an API username / password!")
+            self.error(
+                "You enabled sfp_trashpanda but did not set an API username / password!")
             self.errorState = True
             return
 
@@ -138,7 +141,8 @@ class sfp_trashpanda(SpiderFootPlugin):
 
         leaksiteUrls = set()
         for row in data:
-            evt = SpiderFootEvent("PASSWORD_COMPROMISED", f"{row.get('email')}:{row.get('password')} [{row.get('paste')}]", self.__name__, event)
+            evt = SpiderFootEvent(
+                "PASSWORD_COMPROMISED", f"{row.get('email')}:{row.get('password')} [{row.get('paste')}]", self.__name__, event)
             self.notifyListeners(evt)
 
             leaksiteUrls.add(row.get("paste"))
@@ -158,16 +162,19 @@ class sfp_trashpanda(SpiderFootPlugin):
                     continue
 
                 if re.search(
-                    r"[^a-zA-Z\-\_0-9]" + re.escape(eventData) + r"[^a-zA-Z\-\_0-9]",
+                    r"[^a-zA-Z\-\_0-9]" +
+                        re.escape(eventData) + r"[^a-zA-Z\-\_0-9]",
                     res['content'],
                     re.IGNORECASE
                 ) is None:
                     continue
 
-                evt = SpiderFootEvent("LEAKSITE_URL", leaksiteUrl, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "LEAKSITE_URL", leaksiteUrl, self.__name__, event)
                 self.notifyListeners(evt)
 
-                evt = SpiderFootEvent("LEAKSITE_CONTENT", res['content'], self.__name__, evt)
+                evt = SpiderFootEvent("LEAKSITE_CONTENT",
+                                      res['content'], self.__name__, evt)
                 self.notifyListeners(evt)
             except Exception as e:
                 self.debug(f"Error while fetching leaksite content : {str(e)}")

@@ -23,20 +23,23 @@ class TestModuleIntegrationOpendns(unittest.TestCase):
         def new_notifyListeners(self, event):
             raise Exception(f"Raised event {event.eventType}: {event.data}")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_opendns)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_opendns)
 
         event_type = 'ROOT'
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         event_type = 'INTERNET_NAME'
         event_data = 'opendns.com'
         event_module = 'example module'
         source_event = evt
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
@@ -63,20 +66,23 @@ class TestModuleIntegrationOpendns(unittest.TestCase):
 
             raise Exception("OK")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_opendns)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_opendns)
 
         event_type = 'ROOT'
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         event_type = 'INTERNET_NAME'
         event_data = 'pornhub.com'
         event_module = 'example module'
         source_event = evt
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         with self.assertRaises(Exception) as cm:
             module.handleEvent(evt)

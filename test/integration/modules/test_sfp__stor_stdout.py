@@ -31,7 +31,8 @@ class TestModuleIntegration_stor_stdout(BaseTestModuleIntegration):
         target_type = 'IP_ADDRESS'
         event_type = 'ROOT'
         event_data = 'example data'
-        target, evt = self.create_event(target_value, target_type, event_type, event_data)
+        target, evt = self.create_event(
+            target_value, target_type, event_type, event_data)
 
         module.setTarget(target)
         result = module.handleEvent(evt)

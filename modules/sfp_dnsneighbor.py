@@ -80,13 +80,17 @@ class sfp_dnsneighbor(SpiderFootPlugin):
 
         try:
             address = ipaddress.ip_address(eventData)
-            netmask = address.max_prefixlen - min(address.max_prefixlen, max(1, int(self.opts.get("lookasidebits"))))
-            network = ipaddress.ip_network(f"{eventData}/{netmask}", strict=False)
+            netmask = address.max_prefixlen - \
+                min(address.max_prefixlen, max(
+                    1, int(self.opts.get("lookasidebits"))))
+            network = ipaddress.ip_network(
+                f"{eventData}/{netmask}", strict=False)
         except ValueError:
             self.error(f"Invalid IP address received: {eventData}")
             return
 
-        self.debug(f"Lookaside max: {network.network_address}, min: {network.broadcast_address}")
+        self.debug(
+            f"Lookaside max: {network.network_address}, min: {network.broadcast_address}")
 
         for ip in network:
             sip = str(ip)

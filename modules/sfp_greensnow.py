@@ -89,10 +89,12 @@ class sfp_greensnow(SpiderFootPlugin):
         url = "https://blocklist.greensnow.co/greensnow.txt"
 
         data = dict()
-        data["content"] = self.sf.cacheGet("sfmal_" + cid, self.opts.get('cacheperiod', 0))
+        data["content"] = self.sf.cacheGet(
+            "sfmal_" + cid, self.opts.get('cacheperiod', 0))
 
         if data["content"] is None:
-            data = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
+            data = self.sf.fetchUrl(
+                url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
             if data["code"] != "200":
                 self.error(f"Unable to fetch {url}")
@@ -112,7 +114,8 @@ class sfp_greensnow(SpiderFootPlugin):
             if targetType == "netblock":
                 try:
                     if IPAddress(ip) in IPNetwork(qry):
-                        self.debug(f"{ip} found within netblock/subnet {qry} in greensnow.co list.")
+                        self.debug(
+                            f"{ip} found within netblock/subnet {qry} in greensnow.co list.")
                         return f"https://greensnow.co/view/{ip}"
                 except Exception as e:
                     self.debug(f"Error encountered parsing: {e}")
@@ -167,7 +170,8 @@ class sfp_greensnow(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with greensnow.co")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with greensnow.co")
 
         url = self.query(eventData, targetType)
 

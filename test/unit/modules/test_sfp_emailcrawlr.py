@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_emailcrawlr import sfp_emailcrawlr
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleEmailcrawlr(unittest.TestCase):
+class TestModuleEmailcrawlr(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_emailcrawlr()
@@ -34,7 +36,8 @@ class TestModuleEmailcrawlr(unittest.TestCase):
             with self.subTest(code=code):
                 module = sfp_emailcrawlr()
                 module.setup(sf, dict())
-                result = module.parseApiResponse({"code": code, "content": None})
+                result = module.parseApiResponse(
+                    {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertFalse(module.errorState)
 
@@ -46,11 +49,13 @@ class TestModuleEmailcrawlr(unittest.TestCase):
             with self.subTest(code=code):
                 module = sfp_emailcrawlr()
                 module.setup(sf, dict())
-                result = module.parseApiResponse({"code": code, "content": None})
+                result = module.parseApiResponse(
+                    {"code": code, "content": None})
                 self.assertIsNone(result)
                 self.assertTrue(module.errorState)
 
-    def test_handleEvent_no_api_key_should_set_errorState(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_no_api_key_should_set_errorState(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_emailcrawlr()
@@ -65,9 +70,21 @@ class TestModuleEmailcrawlr(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

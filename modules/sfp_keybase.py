@@ -84,7 +84,8 @@ class sfp_keybase(SpiderFootPlugin):
             return None
 
         params = {
-            selector: qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
+            selector: qry.encode('raw_unicode_escape').decode(
+                "ascii", errors='replace')
         }
 
         headers = {
@@ -92,7 +93,8 @@ class sfp_keybase(SpiderFootPlugin):
         }
 
         res = self.sf.fetchUrl(
-            'https://keybase.io/_/api/1.0/user/lookup.json?' + urllib.parse.urlencode(params),
+            'https://keybase.io/_/api/1.0/user/lookup.json?' +
+            urllib.parse.urlencode(params),
             headers=headers,
             timeout=15,
             useragent=self.opts['_useragent']
@@ -117,7 +119,8 @@ class sfp_keybase(SpiderFootPlugin):
         code = status.get('code')
 
         if code != 0:
-            self.error(f"Unexpected JSON response code reply from Keybase: {code}")
+            self.error(
+                f"Unexpected JSON response code reply from Keybase: {code}")
             return None
 
         them = content.get('them')
@@ -181,7 +184,8 @@ class sfp_keybase(SpiderFootPlugin):
             # Failsafe to prevent reporting any wrongly received data
             if eventName == "USERNAME":
                 if eventData.lower() != username.lower():
-                    self.error("Username does not match received response, skipping")
+                    self.error(
+                        "Username does not match received response, skipping")
                     continue
 
             # For newly discovereed usernames, create a username event to be used as a source event
@@ -190,13 +194,15 @@ class sfp_keybase(SpiderFootPlugin):
                     self.debug(f"Skipping {userName}, already checked.")
                     continue
 
-                source_event = SpiderFootEvent("USERNAME", username, self.__name__, event)
+                source_event = SpiderFootEvent(
+                    "USERNAME", username, self.__name__, event)
                 self.notifyListeners(source_event)
                 self.results[username] = True
             else:
                 source_event = event
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(user), self.__name__, source_event)
+            evt = SpiderFootEvent("RAW_RIR_DATA", str(
+                user), self.__name__, source_event)
             self.notifyListeners(evt)
 
             # Profile information about the username
@@ -205,13 +211,15 @@ class sfp_keybase(SpiderFootPlugin):
                 # Get and report full name of user
                 fullName = profile.get('full_name')
                 if fullName:
-                    evt = SpiderFootEvent("RAW_RIR_DATA", f"Possible full name: {fullName}", self.__name__, source_event)
+                    evt = SpiderFootEvent(
+                        "RAW_RIR_DATA", f"Possible full name: {fullName}", self.__name__, source_event)
                     self.notifyListeners(evt)
 
                 # Get and report location of user
                 location = profile.get('location')
                 if location:
-                    evt = SpiderFootEvent("GEOINFO", location, self.__name__, source_event)
+                    evt = SpiderFootEvent(
+                        "GEOINFO", location, self.__name__, source_event)
                     self.notifyListeners(evt)
 
             # Extract social media information
@@ -227,7 +235,8 @@ class sfp_keybase(SpiderFootPlugin):
 
                         if socialMediaSite and socialMediaURL:
                             socialMedia = socialMediaSite + ": " + "<SFURL>" + socialMediaURL + "</SFURL>"
-                            evt = SpiderFootEvent("SOCIAL_MEDIA", socialMedia, self.__name__, source_event)
+                            evt = SpiderFootEvent(
+                                "SOCIAL_MEDIA", socialMedia, self.__name__, source_event)
                             self.notifyListeners(evt)
 
             # Get cryptocurrency addresses
@@ -244,7 +253,8 @@ class sfp_keybase(SpiderFootPlugin):
                         if not btcAddress:
                             continue
 
-                        evt = SpiderFootEvent("BITCOIN_ADDRESS", btcAddress, self.__name__, source_event)
+                        evt = SpiderFootEvent(
+                            "BITCOIN_ADDRESS", btcAddress, self.__name__, source_event)
                         self.notifyListeners(evt)
 
             # Extract PGP Keys
@@ -254,7 +264,8 @@ class sfp_keybase(SpiderFootPlugin):
 
             for pgpKey in pgpKeys:
                 if len(pgpKey) < 300:
-                    self.debug(f"PGP key size ({len(pgpKey)} bytes) is likely invalid (smaller than 300 bytes), skipping.")
+                    self.debug(
+                        f"PGP key size ({len(pgpKey)} bytes) is likely invalid (smaller than 300 bytes), skipping.")
                     continue
 
                 # Remove unescaped \n literals
@@ -268,7 +279,8 @@ class sfp_keybase(SpiderFootPlugin):
 
                 self.results[pgpKeyHash] = True
 
-                evt = SpiderFootEvent("PGP_KEY", pgpKey, self.__name__, source_event)
+                evt = SpiderFootEvent(
+                    "PGP_KEY", pgpKey, self.__name__, source_event)
                 self.notifyListeners(evt)
 
 # End of sfp_keybase class

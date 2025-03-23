@@ -108,8 +108,10 @@ class sfp_dnsbrute(SpiderFootPlugin):
         # Spawn threads for scanning
         self.info("Spawning threads to check hosts: " + str(hostList))
         for name in hostList:
-            tn = 'thread_sfp_dnsbrute_' + str(random.SystemRandom().randint(1, 999999999))
-            t.append(threading.Thread(name=tn, target=self.tryHost, args=(name,)))
+            tn = 'thread_sfp_dnsbrute_' + \
+                str(random.SystemRandom().randint(1, 999999999))
+            t.append(threading.Thread(
+                name=tn, target=self.tryHost, args=(name,)))
             t[i].start()
             i += 1
 
@@ -164,7 +166,8 @@ class sfp_dnsbrute(SpiderFootPlugin):
             # Try resolving common names
             wildcard = self.sf.checkDnsWildcard(dom)
             if self.opts['skipcommonwildcard'] and wildcard:
-                self.debug("Wildcard DNS detected on " + dom + " so skipping host iteration.")
+                self.debug("Wildcard DNS detected on " +
+                           dom + " so skipping host iteration.")
                 return
 
             dom = "." + dom

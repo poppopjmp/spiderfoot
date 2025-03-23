@@ -4,10 +4,12 @@ import unittest
 from modules.sfp_pgp import sfp_pgp
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModulePgp(unittest.TestCase):
+class TestModulePgp(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_pgp()
@@ -26,7 +28,8 @@ class TestModulePgp(unittest.TestCase):
         module = sfp_pgp()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_no_keyserver_urls_should_set_errorState(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_no_keyserver_urls_should_set_errorState(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_pgp()
@@ -41,7 +44,8 @@ class TestModulePgp(unittest.TestCase):
         event_data = 'example data'
         event_module = ''
         source_event = ''
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         module.opts['keyserver_search1'] = ''
         module.opts['keyserver_search2'] = ''
@@ -52,3 +56,14 @@ class TestModulePgp(unittest.TestCase):
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
+
+    def setUp(self):
+        """Set up before each test."""
+        super().setUp()
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

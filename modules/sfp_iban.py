@@ -62,7 +62,8 @@ class sfp_iban(SpiderFootPlugin):
         ibans = SpiderFootHelpers.extractIbansFromText(eventData)
         for ibanNumber in set(ibans):
             self.info(f"Found IBAN number: {ibanNumber}")
-            evt = SpiderFootEvent("IBAN_NUMBER", ibanNumber, self.__name__, event)
+            evt = SpiderFootEvent(
+                "IBAN_NUMBER", ibanNumber, self.__name__, event)
             if event.moduleDataSource:
                 evt.moduleDataSource = event.moduleDataSource
             else:

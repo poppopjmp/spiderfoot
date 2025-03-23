@@ -1,6 +1,7 @@
 globalTypes = null;
 globalFilter = null;
 lastChecked = null;
+currentRequest = null;
 
 function switchSelectAll() {
     if (!$("#checkall")[0].checked) {
@@ -129,6 +130,10 @@ function exportSelected(type) {
 
 function reload() {
     $("#loader").show();
+    // Abort any pending request before making a new one
+    if (currentRequest && currentRequest.readyState !== 4) {
+        currentRequest.abort();
+    }
     showlist(globalTypes, globalFilter);
     return;
 }
@@ -136,160 +141,289 @@ function reload() {
 function showlist(types, filter) {
     globalTypes = types;
     globalFilter = filter;
-    sf.fetchData(docroot + '/scanlist', null, function(data) {
-        if (data.length == 0) {
-            $("#loader").fadeOut(500);
-            welcome = "<div class='alert alert-info'>";
-            welcome += "<h4>No scan history</h4><br>";
-            welcome += "There is currently no history of previously run scans. Please click 'New Scan' to initiate a new scan."
-            welcome += "</div>";
-            $("#scancontent").append(welcome);
-            return;
-        }
+    
+    $("#loader").show();
+    
+    // Abort any pending request
+    if (currentRequest && currentRequest.readyState !== 4) {
+        currentRequest.abort();
+    }
+    
+    try {
+        currentRequest = $.ajax({
+            url: docroot + '/scanlist',
+            type: 'GET',
+            dataType: 'json',
+            timeout: 30000, // 30 second timeout
+            success: function(data) {
+                if (data.length == 0) {
+                    $("#loader").fadeOut(500);
+                    welcome = "<div class='alert alert-info'>";
+                    welcome += "<h4>No scan history</h4><br>";
+                    welcome += "There is currently no history of previously run scans. Please click 'New Scan' to initiate a new scan."
+                    welcome += "</div>";
+                    $("#scancontent").append(welcome);
+                    return;
+                }
 
-        showlisttable(types, filter, data)
-    });
+                showlisttable(types, filter, data);
+            },
+            error: function(xhr, status, error) {
+                $("#loader").fadeOut(500);
+                var errorMsg = "<div class='alert alert-danger'>";
+                errorMsg += "<h4>Error fetching scan data</h4><br>";
+                
+                // Log the response for debugging
+                console.error("AJAX Error Details:", {
+                    status: status,
+                    httpStatus: xhr.status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    contentType: xhr.getResponseHeader('Content-Type')
+                });
+                
+                if (status === 'timeout') {
+                    errorMsg += "The request timed out. Please try again or refresh the page.";
+                } else if (status === 'abort') {
+                    // Request was aborted, likely by a new request
+                    return;
+                } else if (error === 'parsererror') {
+                    errorMsg += "There was an error parsing the server response as JSON.<br>";
+                    
+                    // Specific check for empty responses
+                    if (!xhr.responseText || xhr.responseText.trim() === "") {
+                        errorMsg += "The server returned an empty response. This could indicate:<br>";
+                        errorMsg += "- A server error<br>";
+                        errorMsg += "- Your session may have timed out<br>";
+                        errorMsg += "- A network interruption<br><br>";
+                        errorMsg += "<button class='btn btn-primary' onclick='retryRequest()'>Try Again</button> ";
+                        errorMsg += "<button class='btn btn-default' onclick='window.location.reload()'>Refresh Page</button>";
+                    }
+                    // If response is short enough, display it to help diagnose the issue
+                    else if (xhr.responseText && xhr.responseText.length < 100) {
+                        errorMsg += "Server response: <pre>" + $("<div>").text(xhr.responseText).html() + "</pre>";
+                    } else {
+                        errorMsg += "Check the browser console for more details.";
+                    }
+                    
+                    // Check if this looks like a session timeout
+                    if (xhr.responseText && xhr.responseText.indexOf("login") > -1) {
+                        errorMsg += "<br><br>Your session may have expired. <a href='" + docroot + "/login' class='btn btn-primary'>Log in again</a>";
+                    }
+                } else {
+                    errorMsg += "There was an error retrieving scan data: " + error;
+                    if (xhr.status) {
+                        errorMsg += " (HTTP Status: " + xhr.status + ")";
+                    }
+                }
+                errorMsg += "</div>";
+                
+                $("#scancontent-wrapper").remove();
+                $("#scancontent").append("<div id='scancontent-wrapper'>" + errorMsg + "</div>");
+            },
+            complete: function() {
+                // Ensure loader is hidden in all cases
+                if ($("#loader").is(":visible")) {
+                    $("#loader").fadeOut(500);
+                }
+            }
+        });
+    } catch (e) {
+        console.error("Exception in showlist:", e);
+        $("#loader").fadeOut(500);
+        var errorMsg = "<div class='alert alert-danger'>";
+        errorMsg += "<h4>Error in application</h4><br>";
+        errorMsg += "There was an error in the application: " + e.message;
+        errorMsg += "</div>";
+        
+        $("#scancontent-wrapper").remove();
+        $("#scancontent").append("<div id='scancontent-wrapper'>" + errorMsg + "</div>");
+    }
+}
+
+// Add retry functionality
+function retryRequest() {
+    alertify.message("Retrying request...");
+    // Wait a second before retrying to ensure any transient issues have cleared
+    setTimeout(function() {
+        reload();
+    }, 1000);
 }
 
 function showlisttable(types, filter, data) {
-    if (filter == null) {
-        filter = "None";
-    }
-    var buttons = "<div class='btn-toolbar'>";
-    buttons += "<div class='btn-group'>";
-    buttons += "<button id='btn-filter' class='btn btn-default'><i class='glyphicon glyphicon-filter'></i>&nbsp;Filter: " + filter + "</button>";
-    buttons += "<button class='btn dropdown-toggle btn-default' data-toggle='dropdown'><span class='caret'></span></button>";
-    buttons += "<ul class='dropdown-menu'>";
-    buttons += "<li><a href='javascript:filter(\"all\")'>None</a></li>";
-    buttons += "<li><a href='javascript:filter(\"running\")'>Running</a></li>";
-    buttons += "<li><a href='javascript:filter(\"finished\")'>Finished</a></li>";
-    buttons += "<li><a href='javascript:filter(\"failed\")'>Failed/Aborted</a></li></ul>";
-    buttons += "</div>";
-
-    buttons += "<div class='btn-group pull-right'>";
-    buttons += "<button rel='tooltip' data-title='Delete Selected' id='btn-delete' class='btn btn-default btn-danger'><i class='glyphicon glyphicon-trash glyphicon-white'></i></button>";
-    buttons += "</div>";
-
-    buttons += "<div class='btn-group pull-right'>";
-    buttons += "<button rel='tooltip' data-title='Refresh' id='btn-refresh' class='btn btn-default btn-success'><i class='glyphicon glyphicon-refresh glyphicon-white'></i></a>";
-    buttons += "<button rel='tooltip' data-toggle='dropdown' data-title='Export Selected' id='btn-export' class='btn btn-default btn-success dropdown-toggle download-button'><i class='glyphicon glyphicon-download-alt glyphicon-white'></i></button>";
-    buttons += "<ul class='dropdown-menu'>";
-    buttons += "<li><a href='javascript:exportSelected(\"csv\")'>CSV</a></li>";
-    buttons += "<li><a href='javascript:exportSelected(\"excel\")'>Excel</a></li>";
-    buttons += "<li><a href='javascript:exportSelected(\"gexf\")'>GEXF</a></li>";
-    buttons += "<li><a href='javascript:exportSelected(\"json\")'>JSON</a></li>";
-    buttons += "</ul>";
-    buttons += "</div>";
-
-    buttons += "<div class='btn-group pull-right'>";
-    buttons += "<button rel='tooltip' data-title='Re-run Selected' id='btn-rerun' class='btn btn-default'><i class='glyphicon glyphicon-repeat glyphicon-white'></i></button>";
-    buttons += "<button rel='tooltip' data-title='Stop Selected' id='btn-stop' class='btn btn-default'>";
-    buttons += "<i class='glyphicon glyphicon-stop glyphicon-white'></i></button>";
-    buttons += "</div>";
-
-    buttons += "</div>";
-    var table = "<table id='scanlist' class='table table-bordered table-striped'>";
-    table += "<thead><tr><th class='sorter-false text-center'><input id='checkall' type='checkbox'></th> <th>Name</th> <th>Target</th> <th>Started</th> <th >Finished</th> <th class='text-center'>Status</th> <th class='text-center'>Elements</th><th class='text-center'>Correlations</th><th class='sorter-false text-center'>Action</th> </tr></thead><tbody>";
-    filtered = 0;
-    for (var i = 0; i < data.length; i++) {
-        if (types != null && $.inArray(data[i][6], types)) {
-            filtered++;
-            continue;
+    try {
+        if (filter == null) {
+            filter = "None";
         }
-        table += "<tr><td class='text-center'><input type='checkbox' id='cb_" + data[i][0] + "'></td>"
-        table += "<td><a href=" + docroot + "/scaninfo?id=" + data[i][0] + ">" + data[i][1] + "</a></td>";
-        table += "<td>" + data[i][2] + "</td>";
-        table += "<td>" + data[i][3] + "</td>";
-        table += "<td>" + data[i][5] + "</td>";
+        var buttons = "<div class='btn-toolbar'>";
+        buttons += "<div class='btn-group'>";
+        buttons += "<button id='btn-filter' class='btn btn-default'><i class='glyphicon glyphicon-filter'></i>&nbsp;Filter: " + filter + "</button>";
+        buttons += "<button class='btn dropdown-toggle btn-default' data-toggle='dropdown'><span class='caret'></span></button>";
+        buttons += "<ul class='dropdown-menu'>";
+        buttons += "<li><a href='javascript:filter(\"all\")'>None</a></li>";
+        buttons += "<li><a href='javascript:filter(\"running\")'>Running</a></li>";
+        buttons += "<li><a href='javascript:filter(\"finished\")'>Finished</a></li>";
+        buttons += "<li><a href='javascript:filter(\"failed\")'>Failed/Aborted</a></li></ul>";
+        buttons += "</div>";
 
-        var statusy = "";
+        buttons += "<div class='btn-group pull-right'>";
+        buttons += "<button rel='tooltip' data-title='Delete Selected' id='btn-delete' class='btn btn-default btn-danger'><i class='glyphicon glyphicon-trash glyphicon-white'></i></button>";
+        buttons += "</div>";
 
-        if (data[i][6] == "FINISHED") {
-            statusy = "alert-success";
-        } else if (data[i][6].indexOf("ABORT") >= 0) {
-            statusy = "alert-warning";
-        } else if (data[i][6] == "CREATED" || data[i][6] == "RUNNING" || data[i][6] == "STARTED" || data[i][6] == "STARTING" || data[i][6] == "INITIALIZING") {
-            statusy = "alert-info";
-        } else if (data[i][6].indexOf("FAILED") >= 0) {
-            statusy = "alert-danger";
-        } else {
-            statusy = "alert-info";
+        buttons += "<div class='btn-group pull-right'>";
+        buttons += "<button rel='tooltip' data-title='Refresh' id='btn-refresh' class='btn btn-default btn-success'><i class='glyphicon glyphicon-refresh glyphicon-white'></i></a>";
+        buttons += "<button rel='tooltip' data-toggle='dropdown' data-title='Export Selected' id='btn-export' class='btn btn-default btn-success dropdown-toggle download-button'><i class='glyphicon glyphicon-download-alt glyphicon-white'></i></button>";
+        buttons += "<ul class='dropdown-menu'>";
+        buttons += "<li><a href='javascript:exportSelected(\"csv\")'>CSV</a></li>";
+        buttons += "<li><a href='javascript:exportSelected(\"excel\")'>Excel</a></li>";
+        buttons += "<li><a href='javascript:exportSelected(\"gexf\")'>GEXF</a></li>";
+        buttons += "<li><a href='javascript:exportSelected(\"json\")'>JSON</a></li>";
+        buttons += "</ul>";
+        buttons += "</div>";
+
+        buttons += "<div class='btn-group pull-right'>";
+        buttons += "<button rel='tooltip' data-title='Re-run Selected' id='btn-rerun' class='btn btn-default'><i class='glyphicon glyphicon-repeat glyphicon-white'></i></button>";
+        buttons += "<button rel='tooltip' data-title='Stop Selected' id='btn-stop' class='btn btn-default'>";
+        buttons += "<i class='glyphicon glyphicon-stop glyphicon-white'></i></button>";
+        buttons += "</div>";
+
+        buttons += "</div>";
+        var table = "<table id='scanlist' class='table table-bordered table-striped'>";
+        table += "<thead><tr><th class='sorter-false text-center'><input id='checkall' type='checkbox'></th> <th>Name</th> <th>Target</th> <th>Started</th> <th >Finished</th> <th class='text-center'>Status</th> <th class='text-center'>Elements</th><th class='text-center'>Correlations</th><th class='sorter-false text-center'>Action</th> </tr></thead><tbody>";
+        filtered = 0;
+        for (var i = 0; i < data.length; i++) {
+            if (types != null && $.inArray(data[i][6], types) === -1) {
+                filtered++;
+                continue;
+            }
+            table += "<tr><td class='text-center'><input type='checkbox' id='cb_" + data[i][0] + "'></td>"
+            table += "<td><a href=" + docroot + "/scaninfo?id=" + data[i][0] + ">" + data[i][1] + "</a></td>";
+            table += "<td>" + data[i][2] + "</td>";
+            table += "<td>" + data[i][3] + "</td>";
+            table += "<td>" + data[i][5] + "</td>";
+
+            var statusy = "";
+
+            if (data[i][6] == "FINISHED") {
+                statusy = "alert-success";
+            } else if (data[i][6].indexOf("ABORT") >= 0) {
+                statusy = "alert-warning";
+            } else if (data[i][6] == "CREATED" || data[i][6] == "RUNNING" || data[i][6] == "STARTED" || data[i][6] == "STARTING" || data[i][6] == "INITIALIZING") {
+                statusy = "alert-info";
+            } else if (data[i][6].indexOf("FAILED") >= 0) {
+                statusy = "alert-danger";
+            } else {
+                statusy = "alert-info";
+            }
+            table += "<td class='text-center'><span class='badge " + statusy + "'>" + data[i][6] + "</span></td>";
+            table += "<td class='text-center'>" + data[i][7] + "</td>";
+            table += "<td class='text-center'>";
+            table += "<span class='badge alert-danger'>" + data[i][8]['HIGH'] + "</span>";
+            table += "<span class='badge alert-warning'>" + data[i][8]['MEDIUM'] + "</span>";
+            table += "<span class='badge alert-info'>" + data[i][8]['LOW'] + "</span>";
+            table += "<span class='badge alert-success'>" + data[i][8]['INFO'] + "</span>";
+            table += "</td>";
+            table += "<td class='text-center'>";
+            if (data[i][6] == "RUNNING" || data[i][6] == "STARTING" || data[i][6] == "STARTED" || data[i][6] == "INITIALIZING") {
+                table += "<a rel='tooltip' title='Stop Scan' href='javascript:stopScan(\"" + data[i][0] + "\");'><i class='glyphicon glyphicon-stop text-muted'></i></a>";
+            } else {
+                table += "<a rel='tooltip' title='Delete Scan' href='javascript:deleteScan(\"" + data[i][0] + "\");'><i class='glyphicon glyphicon-trash text-muted'></i></a>";
+                table += "&nbsp;&nbsp;<a rel='tooltip' title='Re-run Scan' href=" + docroot + "/rerunscan?id=" + data[i][0] + "><i class='glyphicon glyphicon-repeat text-muted'></i></a>";
+            }
+            table += "&nbsp;&nbsp;<a rel='tooltip' title='Clone Scan' href=" + docroot + "/clonescan?id=" + data[i][0] + "><i class='glyphicon glyphicon-plus-sign text-muted'></i></a>";
+            table += "</td></tr>";
         }
-        table += "<td class='text-center'><span class='badge " + statusy + "'>" + data[i][6] + "</span></td>";
-        table += "<td class='text-center'>" + data[i][7] + "</td>";
-        table += "<td class='text-center'>";
-        table += "<span class='badge alert-danger'>" + data[i][8]['HIGH'] + "</span>";
-        table += "<span class='badge alert-warning'>" + data[i][8]['MEDIUM'] + "</span>";
-        table += "<span class='badge alert-info'>" + data[i][8]['LOW'] + "</span>";
-        table += "<span class='badge alert-success'>" + data[i][8]['INFO'] + "</span>";
-        table += "</td>";
-        table += "<td class='text-center'>";
-        if (data[i][6] == "RUNNING" || data[i][6] == "STARTING" || data[i][6] == "STARTED" || data[i][6] == "INITIALIZING") {
-            table += "<a rel='tooltip' title='Stop Scan' href='javascript:stopScan(\"" + data[i][0] + "\");'><i class='glyphicon glyphicon-stop text-muted'></i></a>";
-        } else {
-            table += "<a rel='tooltip' title='Delete Scan' href='javascript:deleteScan(\"" + data[i][0] + "\");'><i class='glyphicon glyphicon-trash text-muted'></i></a>";
-            table += "&nbsp;&nbsp;<a rel='tooltip' title='Re-run Scan' href=" + docroot + "/rerunscan?id=" + data[i][0] + "><i class='glyphicon glyphicon-repeat text-muted'></i></a>";
+
+        table += '</tbody><tfoot><tr><th colspan="8" class="ts-pager form-inline">';
+        table += '<div class="btn-group btn-group-sm" role="group">';
+        table += '<button type="button" class="btn btn-default first"><span class="glyphicon glyphicon-step-backward"></span></button>';
+        table += '<button type="button" class="btn btn-default prev"><span class="glyphicon glyphicon-backward"></span></button>';
+        table += '</div>';
+        table += '<div class="btn-group btn-group-sm" role="group">';
+        table += '<button type="button" class="btn btn-default next"><span class="glyphicon glyphicon-forward"></span></button>';
+        table += '<button type="button" class="btn btn-default last"><span class="glyphicon glyphicon-step-forward"></span></button>';
+        table += '</div>';
+        table += '<select class="form-control input-sm pagesize" title="Select page size">';
+        table += '<option selected="selected" value="10">10</option>';
+        table += '<option value="20">20</option>';
+        table += '<option value="30">30</option>';
+        table += '<option value="all">All Rows</option>';
+        table += '</select>';
+        table += '<select class="form-control input-sm pagenum" title="Select page number"></select>';
+        table += '<span class="pagedisplay pull-right"></span>';
+        table += '</th></tr></tfoot>';
+        table += "</table>";
+
+        $("#loader").fadeOut(500);
+        $("#scancontent-wrapper").remove();
+        $("#scancontent").append("<div id='scancontent-wrapper'> " + buttons + table + "</div>");
+        sf.updateTooltips();
+        
+        // Add error handling around tablesorter initialization
+        try {
+            $("#scanlist").tablesorter().tablesorterPager({
+                container: $(".ts-pager"),
+                cssGoto: ".pagenum",
+                output: 'Scans {startRow} - {endRow} / {filteredRows} ({totalRows})'
+            });
+        } catch (e) {
+            console.error("Error initializing tablesorter:", e);
+            // Continue execution even if tablesorter fails
         }
-        table += "&nbsp;&nbsp;<a rel='tooltip' title='Clone Scan' href=" + docroot + "/clonescan?id=" + data[i][0] + "><i class='glyphicon glyphicon-plus-sign text-muted'></i></a>";
-        table += "</td></tr>";
-    }
+        
+        $("[class^=tooltip]").remove();
 
-    table += '</tbody><tfoot><tr><th colspan="8" class="ts-pager form-inline">';
-    table += '<div class="btn-group btn-group-sm" role="group">';
-    table += '<button type="button" class="btn btn-default first"><span class="glyphicon glyphicon-step-backward"></span></button>';
-    table += '<button type="button" class="btn btn-default prev"><span class="glyphicon glyphicon-backward"></span></button>';
-    table += '</div>';
-    table += '<div class="btn-group btn-group-sm" role="group">';
-    table += '<button type="button" class="btn btn-default next"><span class="glyphicon glyphicon-forward"></span></button>';
-    table += '<button type="button" class="btn btn-default last"><span class="glyphicon glyphicon-step-forward"></span></button>';
-    table += '</div>';
-    table += '<select class="form-control input-sm pagesize" title="Select page size">';
-    table += '<option selected="selected" value="10">10</option>';
-    table += '<option value="20">20</option>';
-    table += '<option value="30">30</option>';
-    table += '<option value="all">All Rows</option>';
-    table += '</select>';
-    table += '<select class="form-control input-sm pagenum" title="Select page number"></select>';
-    table += '<span class="pagedisplay pull-right"></span>';
-    table += '</th></tr></tfoot>';
-    table += "</table>";
+        $(document).ready(function() {
+            var chkboxes = $('input[id*=cb_]');
+            chkboxes.click(function(e) {
+                if(!lastChecked) {
+                    lastChecked = this;
+                    return;
+                }
 
-    $("#loader").fadeOut(500);
-    $("#scancontent-wrapper").remove();
-    $("#scancontent").append("<div id='scancontent-wrapper'> " + buttons + table + "</div>");
-    sf.updateTooltips();
-    $("#scanlist").tablesorter().tablesorterPager({
-      container: $(".ts-pager"),
-      cssGoto: ".pagenum",
-      output: 'Scans {startRow} - {endRow} / {filteredRows} ({totalRows})'
-    });
-    $("[class^=tooltip]").remove();
+                if(e.shiftKey) {
+                    var start = chkboxes.index(this);
+                    var end = chkboxes.index(lastChecked);
 
-    $(document).ready(function() {
-        var chkboxes = $('input[id*=cb_]');
-        chkboxes.click(function(e) {
-            if(!lastChecked) {
+                    chkboxes.slice(Math.min(start,end), Math.max(start,end)+ 1).prop('checked', lastChecked.checked);
+                }
+
                 lastChecked = this;
-                return;
-            }
+            });
 
-            if(e.shiftKey) {
-                var start = chkboxes.index(this);
-                var end = chkboxes.index(lastChecked);
-
-                chkboxes.slice(Math.min(start,end), Math.max(start,end)+ 1).prop('checked', lastChecked.checked);
-            }
-
-            lastChecked = this;
+            $("#btn-delete").click(function() { deleteSelected(); });
+            $("#btn-refresh").click(function() { reload(); });
+            $("#btn-rerun").click(function() { rerunSelected(); });
+            $("#btn-stop").click(function() { stopSelected(); });
+            $("#checkall").click(function() { switchSelectAll(); });
         });
-
-        $("#btn-delete").click(function() { deleteSelected(); });
-        $("#btn-refresh").click(function() { reload(); });
-        $("#btn-rerun").click(function() { rerunSelected(); });
-        $("#btn-stop").click(function() { stopSelected(); });
-        $("#checkall").click(function() { switchSelectAll(); });
-    });
+    } catch (e) {
+        console.error("Exception in showlisttable:", e);
+        $("#loader").fadeOut(500);
+        var errorMsg = "<div class='alert alert-danger'>";
+        errorMsg += "<h4>Error displaying scan list</h4><br>";
+        errorMsg += "There was an error displaying the scan list: " + e.message;
+        errorMsg += "</div>";
+        
+        $("#scancontent-wrapper").remove();
+        $("#scancontent").append("<div id='scancontent-wrapper'>" + errorMsg + "</div>");
+    }
 }
 
-showlist();
+// Initialize when document is ready
+$(document).ready(function() {
+    try {
+        // Call showlist to populate data
+        showlist();
+    } catch (e) {
+        console.error("Error in document ready handler:", e);
+        $("#loader").fadeOut(500);
+        var errorMsg = "<div class='alert alert-danger'>";
+        errorMsg += "<h4>Initialization error</h4><br>";
+        errorMsg += "There was an error initializing the application: " + e.message;
+        errorMsg += "</div>";
+        
+        $("#scancontent").append(errorMsg);
+    }
+});
 

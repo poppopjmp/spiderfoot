@@ -32,7 +32,7 @@
         if len(apikeylist) > 0: 
             keyicon = "&nbsp;&nbsp;<i class=\"glyphicon glyphicon-lock\"></i>"
         %>
-        <li id='tab_${mod}'><a href='#' onclick='switchTab("${mod}");' >${opts['__modules__'][mod]['name']}${keyicon}</a></li>
+        <li id='tab_${mod}'><a href='#' onclick='switchTab("${mod}");' >${opts['__modules__'][mod].get('name', mod)}${keyicon}</a></li>
     % endif
 % endfor
 </ul>
@@ -94,7 +94,7 @@
         summary = opts['__modules__'][mod].get('descr') or 'No summary available.'
         categories = opts['__modules__'][mod].get('cats') or []
         labels = opts['__modules__'][mod].get('labels') or []
-        meta = opts['__modules__'][mod].get('meta')
+        meta = opts['__modules__'][mod].get('meta') or {}
         modopts = opts['__modules__'][mod].get('opts')
         optdescs = opts['__modules__'][mod].get('optdescs')
         data_source = meta.get('dataSource') or {}
@@ -103,7 +103,7 @@
         apiKeyInstructions = data_source.get('apiKeyInstructions') or ''
     %>
     <div id='optsect_${mod}' class="tab-pane" style="display: none">
-    <h4>${opts['__modules__'][mod]['name']} (${mod})</h4>
+    <h4>${opts['__modules__'][mod].get('name', mod)} (${mod})</h4>
 
     <table class='table table-bordered table-striped'>
     <tbody>

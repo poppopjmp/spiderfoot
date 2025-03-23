@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 jobs:
-  acceptance-tests:
+  acceptance-tests-chrome:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +29,7 @@ jobs:
 
       - name: Start SpiderFoot container
         run: |
-          docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.0.1
+          timeout 60 docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.0.3
 
       - name: Wait for SpiderFoot to start
         run: |
@@ -38,18 +38,75 @@ jobs:
 
       - name: Install chromedriver
         run: |
-          wget "https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip"
+          wget "https://storage.googleapis.com/chrome-for-testing-public/134.0.6998.35/linux64/chromedriver-linux64.zip"
           unzip chromedriver-linux64.zip
           sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
-
       - name: Run Robot Framework tests
         run: |
           cd test/acceptance
-          robot --variable BROWSER:Chrome --outputdir results scan.robot
+          robot --variable BROWSER:Chrome --outputdir results scan-chrome.robot
 
       - name: Stop SpiderFoot container
-        run: docker stop $(docker ps -q --filter ancestor=ghcr.io/poppopjmp/spiderfoot)
+        run: timeout 60 docker stop $(docker ps -q --filter ancestor=ghcr.io/poppopjmp/spiderfoot)
+
+      - name: Upload Robot Framework results
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-results
+          path: test/acceptance/results
+          
+  acceptance-tests-firefox:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Acceptance Test dependencies
+        run: pip3 install -r test/acceptance/requirements.txt
+
+      - name: Install Firefox
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y firefox
+      - name: Download GeckoDriver
+        run: |
+            wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux64.tar.gz
+  
+      - name: Extract GeckoDriver
+        run: tar -xzf geckodriver-v0.36.0-linux64.tar.gz
+  
+      - name: Make GeckoDriver Executable
+        run: chmod +x geckodriver
+  
+      - name: Move GeckoDriver to PATH
+        run: sudo mv geckodriver /usr/local/bin/
+  
+      - name: Verify Installation
+        run: geckodriver --version
+
+      - name: Start SpiderFoot container
+        run: |
+          timeout 60 docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.0.3
+
+      - name: Wait for SpiderFoot to start
+        run: |
+          timeout 60 bash -c 'until curl --output /dev/null --silent --head --fail http://127.0.0.1:5001; do printf "."; sleep 1; done'
+          echo "SpiderFoot is up!"
+
+      - name: Run Robot Framework tests with Firefox
+        run: |
+          cd test/acceptance
+          robot --variable BROWSER:Firefox --outputdir results scan-firefox.robot
+
+      - name: Stop SpiderFoot container
+        run: timeout 60 docker stop $(docker ps -q --filter ancestor=ghcr.io/poppopjmp/spiderfoot)
 
       - name: Upload Robot Framework results
         uses: actions/upload-artifact@v4

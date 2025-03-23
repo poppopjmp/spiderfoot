@@ -76,20 +76,24 @@ class sfp_openbugbounty(SpiderFootPlugin):
         ret = list()
         base = "https://www.openbugbounty.org"
         url = "https://www.openbugbounty.org/search/?search=" + qry
-        res = self.sf.fetchUrl(url, timeout=30, useragent=self.opts['_useragent'])
+        res = self.sf.fetchUrl(
+            url, timeout=30, useragent=self.opts['_useragent'])
 
         if res['content'] is None:
             self.debug("No content returned from openbugbounty.org")
             return None
 
         try:
-            rx = re.compile(".*<div class=.cell1.><a href=.(.*).>(.*" + qry + ").*?</a></div>.*", re.IGNORECASE)
+            rx = re.compile(".*<div class=.cell1.><a href=.(.*).>(.*" +
+                            qry + ").*?</a></div>.*", re.IGNORECASE)
             for m in rx.findall(str(res['content'])):
                 # Report it
                 if m[1] == qry or m[1].endswith("." + qry):
-                    ret.append("From openbugbounty.org: <SFURL>" + base + m[0] + "</SFURL>")
+                    ret.append("From openbugbounty.org: <SFURL>" +
+                               base + m[0] + "</SFURL>")
         except Exception as e:
-            self.error("Error processing response from openbugbounty.org: " + str(e))
+            self.error(
+                "Error processing response from openbugbounty.org: " + str(e))
             return None
         return ret
 
@@ -114,7 +118,8 @@ class sfp_openbugbounty(SpiderFootPlugin):
 
         for n in data:
             # Notify other modules of what you've found
-            e = SpiderFootEvent("VULNERABILITY_DISCLOSURE", n, self.__name__, event)
+            e = SpiderFootEvent("VULNERABILITY_DISCLOSURE",
+                                n, self.__name__, event)
             self.notifyListeners(e)
 
 # End of sfp_openbugbounty class

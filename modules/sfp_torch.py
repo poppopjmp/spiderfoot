@@ -141,9 +141,11 @@ class sfp_torch(SpiderFootPlugin):
                             continue
 
                         if eventData not in res['content']:
-                            self.debug(f"Ignoring {link} as no mention of {eventData}")
+                            self.debug(
+                                f"Ignoring {link} as no mention of {eventData}")
                             continue
-                        evt = SpiderFootEvent("DARKNET_MENTION_URL", link, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "DARKNET_MENTION_URL", link, self.__name__, event)
                         self.notifyListeners(evt)
                         linkcount += 1
 
@@ -160,7 +162,8 @@ class sfp_torch(SpiderFootPlugin):
                         self.notifyListeners(evt)
 
                     else:
-                        evt = SpiderFootEvent("DARKNET_MENTION_URL", link, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "DARKNET_MENTION_URL", link, self.__name__, event)
                         self.notifyListeners(evt)
                         linkcount += 1
 

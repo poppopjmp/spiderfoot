@@ -4,10 +4,13 @@ import unittest
 from modules.sfp_base64 import sfp_base64
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
+from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestModuleBase64(unittest.TestCase):
+class TestModuleBase64(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_base64()
@@ -26,7 +29,21 @@ class TestModuleBase64(unittest.TestCase):
         module = sfp_base64()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_handleEvent_event_data_url_containing_base64_string_should_return_event(self):
+    def setUp(self):
+        super().setUp()
+        # ... existing setUp code ...
+        
+        # Register any event emitters used in the test
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+    
+    @safe_recursion(max_depth=5)
+    @safe_recursion(max_depth=5)
+    def test_handleEvent(self, depth=0):
+        # ... existing test code, modified to include depth param ...
+        
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_url_containing_base64_string_should_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_base64()
@@ -48,21 +65,24 @@ class TestModuleBase64(unittest.TestCase):
 
             raise Exception("OK")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_base64)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_base64)
 
         event_type = 'ROOT'
         event_data = 'https://spiderfoot.net/path?param=example%20data%20U3BpZGVyRm9vdA%3d%3d%20example%20data'
         event_module = ''
         source_event = ''
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
 
         with self.assertRaises(Exception) as cm:
             module.handleEvent(evt)
 
         self.assertEqual("OK", str(cm.exception))
 
-    def test_handleEvent_event_data_not_containing_base64_string_should_not_return_event(self):
+    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_not_containing_base64_string_should_not_return_event(selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_base64()
@@ -76,14 +96,20 @@ class TestModuleBase64(unittest.TestCase):
         def new_notifyListeners(self, event):
             raise Exception(f"Raised event {event.eventType}: {event.data}")
 
-        module.notifyListeners = new_notifyListeners.__get__(module, sfp_base64)
+        module.notifyListeners = new_notifyListeners.__get__(
+            module, sfp_base64)
 
         event_type = 'ROOT'
         event_data = 'example data'
         event_module = ''
         source_event = ''
 
-        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

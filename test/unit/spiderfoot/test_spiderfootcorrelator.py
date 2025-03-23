@@ -2,11 +2,14 @@ import unittest
 from unittest.mock import MagicMock
 from spiderfoot.correlation import SpiderFootCorrelator
 from spiderfoot import SpiderFootDb
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootCorrelator(unittest.TestCase):
+class TestSpiderFootCorrelator(SpiderFootTestBase):
 
     def setUp(self):
+        super().setUp()
         self.dbh = MagicMock(spec=SpiderFootDb)
         self.ruleset = {
             "rule1": """
@@ -27,7 +30,11 @@ class TestSpiderFootCorrelator(unittest.TestCase):
             """
         }
         self.scanId = "test_scan"
-        self.correlator = SpiderFootCorrelator(self.dbh, self.ruleset, self.scanId)
+        self.correlator = SpiderFootCorrelator(
+            self.dbh, self.ruleset, self.scanId)
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
 
     def test_init_invalid_ruleset_type(self):
         with self.assertRaises(TypeError):
@@ -50,7 +57,8 @@ class TestSpiderFootCorrelator(unittest.TestCase):
             self.correlator.run_correlations()
 
     def test_run_correlations_running_scan(self):
-        self.dbh.scanInstanceGet.return_value = [None, None, None, None, None, "RUNNING"]
+        self.dbh.scanInstanceGet.return_value = [
+            None, None, None, None, None, "RUNNING"]
         with self.assertRaises(ValueError):
             self.correlator.run_correlations()
 
@@ -79,7 +87,8 @@ class TestSpiderFootCorrelator(unittest.TestCase):
         self.dbh.scanResultEvent.return_value = [
             [None, "data", None, "module", "type", None, None, None, "id"]
         ]
-        events = self.correlator.collect_from_db(matchrule, False, False, False)
+        events = self.correlator.collect_from_db(
+            matchrule, False, False, False)
         self.assertEqual(len(events), 1)
 
     def test_event_extract(self):
@@ -121,7 +130,8 @@ class TestSpiderFootCorrelator(unittest.TestCase):
         self.dbh.scanResultEvent.return_value = [
             [None, "data", None, "module", "type", None, None, None, "id"]
         ]
-        events = self.correlator.collect_events(collection, False, False, False, 0)
+        events = self.correlator.collect_events(
+            collection, False, False, False, 0)
         self.assertEqual(len(events), 1)
 
     def test_aggregate_events(self):
@@ -298,6 +308,6 @@ class TestSpiderFootCorrelator(unittest.TestCase):
         result = self.correlator.process_rule(rule)
         self.assertEqual(len(result), 1)
 
-
-if __name__ == "__main__":
-    unittest.main()
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()

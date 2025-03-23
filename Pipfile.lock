@@ -675,12 +675,12 @@
         },
         "publicsuffixlist": {
             "hashes": [
-                "sha256:33b3a9e8ac4c125bcffbde42c65375cb72c7ff7352466395328146bf53ef1e55",
-                "sha256:fb78dab1e437a84aacaed63c40fd18a0d34e0bf280d6d8acab890b472fdfd764"
+                "sha256:15d6dda9e2cb573cd6367a55532c483831349dde46eae687d89e8ba466da78b0",
+                "sha256:2e00bc29b04279a842237583a3b0e47832d59f5ff9ddbcbf1052cd9c8e0162c4"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.5'",
-            "version": "==1.0.2.20250225"
+            "version": "==1.0.2.20250307"
         },
         "pycparser": {
             "hashes": [
@@ -701,12 +701,6 @@
                 "sha256:9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0"
             ],
             "version": "==21.0.0"
-        },
-        "pypdf2": {
-            "hashes": [
-                "sha256:6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7"
-            ],
-            "version": "==1.28.6"
         },
         "pysocks": {
             "hashes": [

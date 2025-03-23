@@ -9,7 +9,8 @@ from sflib import SpiderFoot
 class TestModuleIntegrationC99(unittest.TestCase):
 
     def setUp(self):
-        self.sf = SpiderFoot(self.default_options)  # Assuming default_options is defined
+        # Assuming default_options is defined
+        self.sf = SpiderFoot(self.default_options)
         self.module = sfp_c99()
         self.module.setup(self.sf, dict())
 
@@ -39,11 +40,13 @@ class TestModuleIntegrationC99(unittest.TestCase):
         self.assertTrue(any(e.eventType == 'RAW_RIR_DATA' for e in events))
 
         # Check the data in the events
-        malicious_ip_event = next((e for e in events if e.eventType == 'MALICIOUS_IPADDR'), None)
+        malicious_ip_event = next(
+            (e for e in events if e.eventType == 'MALICIOUS_IPADDR'), None)
         self.assertIsNotNone(malicious_ip_event)
         # Adjust assertion based on how sfp_c99 formats the event data
         self.assertIn("1.2.3.4", malicious_ip_event.data)
 
-        raw_data_event = next((e for e in events if e.eventType == 'RAW_RIR_DATA'), None)
+        raw_data_event = next(
+            (e for e in events if e.eventType == 'RAW_RIR_DATA'), None)
         self.assertIsNotNone(raw_data_event)
         self.assertEqual(raw_data_event.data, str(mock_response_data))

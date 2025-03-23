@@ -91,10 +91,12 @@ class sfp_emergingthreats(SpiderFootPlugin):
         url = "https://rules.emergingthreats.net/blockrules/compromised-ips.txt"
 
         data = dict()
-        data["content"] = self.sf.cacheGet("sfmal_" + cid, self.opts.get('cacheperiod', 0))
+        data["content"] = self.sf.cacheGet(
+            "sfmal_" + cid, self.opts.get('cacheperiod', 0))
 
         if data["content"] is None:
-            data = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
+            data = self.sf.fetchUrl(
+                url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
             if data["code"] != "200":
                 self.error(f"Unable to fetch {url}")
@@ -114,7 +116,8 @@ class sfp_emergingthreats(SpiderFootPlugin):
             if targetType == "netblock":
                 try:
                     if IPAddress(ip) in IPNetwork(qry):
-                        self.debug(f"{ip} found within netblock/subnet {qry} in EmergingThreats.net list.")
+                        self.debug(
+                            f"{ip} found within netblock/subnet {qry} in EmergingThreats.net list.")
                         return url
                 except Exception as e:
                     self.debug(f"Error encountered parsing: {e}")
@@ -168,7 +171,8 @@ class sfp_emergingthreats(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} with EmergingThreats.net")
+        self.debug(
+            f"Checking maliciousness of {eventData} with EmergingThreats.net")
 
         url = self.query(eventData, targetType)
 

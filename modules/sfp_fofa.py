@@ -79,7 +79,8 @@ class sfp_fofa(SpiderFootPlugin):
         max_age_days = self.opts['max_age_days']
 
         if not api_key or not api_email:
-            self.error("You enabled sfp_fofa but did not set an API key or email!")
+            self.error(
+                "You enabled sfp_fofa but did not set an API key or email!")
             self.errorState = True
             return None
 
@@ -89,7 +90,8 @@ class sfp_fofa(SpiderFootPlugin):
             'key': api_key,
             'qbase64': query_encoded,
             'size': 100,  # Get a reasonable amount of data.
-            'fields': 'host,ip,domain,ipv6',  # retrieve only the fields we care about.
+            # retrieve only the fields we care about.
+            'fields': 'host,ip,domain,ipv6',
             'time': f'-{max_age_days}d',  # limit to max_age_days
         })
 
@@ -157,14 +159,18 @@ class sfp_fofa(SpiderFootPlugin):
 
         for result in data['results']:
             if 'host' in result:
-                e = SpiderFootEvent("INTERNET_NAME", result['host'], self.__name__, event)
+                e = SpiderFootEvent(
+                    "INTERNET_NAME", result['host'], self.__name__, event)
                 self.notifyListeners(e)
             if 'domain' in result:
-                e = SpiderFootEvent("DOMAIN_NAME", result['domain'], self.__name__, event)
+                e = SpiderFootEvent(
+                    "DOMAIN_NAME", result['domain'], self.__name__, event)
                 self.notifyListeners(e)
             if 'ip' in result:
-                e = SpiderFootEvent("IP_ADDRESS", result['ip'], self.__name__, event)
+                e = SpiderFootEvent(
+                    "IP_ADDRESS", result['ip'], self.__name__, event)
                 self.notifyListeners(e)
             if 'ipv6' in result:
-                e = SpiderFootEvent("IPV6_ADDRESS", result['ipv6'], self.__name__, event)
+                e = SpiderFootEvent(
+                    "IPV6_ADDRESS", result['ipv6'], self.__name__, event)
                 self.notifyListeners(e)

@@ -89,14 +89,16 @@ class sfp_company(SpiderFootPlugin):
                 self.debug("Ignoring web content from CSS/JS.")
                 return
 
-        self.debug(f"Received event, {eventName}, from {srcModuleName} ({len(eventData)} bytes)")
+        self.debug(
+            f"Received event, {eventName}, from {srcModuleName} ({len(eventData)} bytes)")
 
         # Strip out everything before the O=
         try:
             if eventName == "SSL_CERTIFICATE_ISSUED":
                 eventData = eventData.split("O=")[1]
         except Exception:
-            self.debug("Couldn't strip out 'O=' from certificate issuer, proceeding anyway...")
+            self.debug(
+                "Couldn't strip out 'O=' from certificate issuer, proceeding anyway...")
 
         # Find chunks of text containing what might be a company name first.
         # This is to avoid running very expensive regexps on large chunks of
@@ -119,7 +121,8 @@ class sfp_company(SpiderFootPlugin):
         myres = list()
         for chunk in chunks:
             for pat in pattern_match_re:
-                matches = re.findall(pattern_prefix + "(" + pat + ")" + pattern_suffix, chunk, re.MULTILINE | re.DOTALL)
+                matches = re.findall(
+                    pattern_prefix + "(" + pat + ")" + pattern_suffix, chunk, re.MULTILINE | re.DOTALL)
                 for match in matches:
                     matched = 0
                     for m in match:
@@ -152,7 +155,8 @@ class sfp_company(SpiderFootPlugin):
                     else:
                         etype = "COMPANY_NAME"
 
-                    evt = SpiderFootEvent(etype, fullcompany, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        etype, fullcompany, self.__name__, event)
                     if event.moduleDataSource:
                         evt.moduleDataSource = event.moduleDataSource
                     else:

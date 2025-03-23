@@ -175,7 +175,8 @@ class sfp_sorbs(SpiderFootPlugin):
 
             max_subnet = self.opts['maxsubnet']
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
             malicious_type = "MALICIOUS_SUBNET"
@@ -186,7 +187,8 @@ class sfp_sorbs(SpiderFootPlugin):
 
             max_netblock = self.opts['maxnetblock']
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
             malicious_type = "MALICIOUS_NETBLOCK"
@@ -220,10 +222,12 @@ class sfp_sorbs(SpiderFootPlugin):
                 if k not in self.checks:
                     if not result.endswith('.dnsbl.sorbs.net'):
                         # This is an error. The "checks" dict may need to be updated.
-                        self.error(f"SORBS resolved address {addr} to unknown IP address {result} not found in SORBS list.")
+                        self.error(
+                            f"SORBS resolved address {addr} to unknown IP address {result} not found in SORBS list.")
                     continue
 
-                evt = SpiderFootEvent(blacklist_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
+                evt = SpiderFootEvent(
+                    blacklist_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
                 self.notifyListeners(evt)
 
                 if k in [
@@ -231,7 +235,8 @@ class sfp_sorbs(SpiderFootPlugin):
                     "127.0.0.3",
                     "127.0.0.4",
                 ]:
-                    evt = SpiderFootEvent("PROXY_HOST", eventData, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "PROXY_HOST", eventData, self.__name__, event)
                     self.notifyListeners(evt)
 
                 if k not in [
@@ -241,7 +246,8 @@ class sfp_sorbs(SpiderFootPlugin):
                     "127.0.0.12",
                     "127.0.0.14",
                 ]:
-                    evt = SpiderFootEvent(malicious_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        malicious_type, f"{self.checks[k]} [{addr}]", self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_sorbs class

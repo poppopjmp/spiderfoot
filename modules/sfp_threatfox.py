@@ -71,7 +71,7 @@ class sfp_threatfox(SpiderFootPlugin):
         ]
 
     def query(self, qry):
-        """Query IOCs
+        """Query IOCs.
 
         Args:
             qry (str): IP address

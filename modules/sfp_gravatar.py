@@ -139,7 +139,8 @@ class sfp_gravatar(SpiderFootPlugin):
             for name in names:
                 full_name = name.get('formatted')
                 if full_name:
-                    evt = SpiderFootEvent("RAW_RIR_DATA", f"Possible full name: {full_name}", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "RAW_RIR_DATA", f"Possible full name: {full_name}", self.__name__, event)
                     self.notifyListeners(evt)
 
         # TODO: re-enable once location validation is implemented
@@ -155,7 +156,8 @@ class sfp_gravatar(SpiderFootPlugin):
         if data.get('phoneNumbers') is not None:
             for number in data.get('phoneNumbers'):
                 if number.get('value') is not None:
-                    evt = SpiderFootEvent("PHONE_NUMBER", number.get('value'), self.__name__, event)
+                    evt = SpiderFootEvent("PHONE_NUMBER", number.get(
+                        'value'), self.__name__, event)
                     self.notifyListeners(evt)
 
         if data.get('emails') is not None:
@@ -178,7 +180,8 @@ class sfp_gravatar(SpiderFootPlugin):
                 if v is None:
                     continue
                 t = im.get('type').capitalize() + " (Instant Messenger)\n" + v
-                evt = SpiderFootEvent("ACCOUNT_EXTERNAL_OWNED", t, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "ACCOUNT_EXTERNAL_OWNED", t, self.__name__, event)
                 self.notifyListeners(evt)
                 if v not in self.reportedUsers:
                     evt = SpiderFootEvent("USERNAME", v, self.__name__, event)
@@ -191,7 +194,8 @@ class sfp_gravatar(SpiderFootPlugin):
                 platform = account.get('shortname')
                 if platform is not None and url is not None:
                     t = platform.capitalize() + ": <SFURL>" + url + "</SFURL>"
-                    evt = SpiderFootEvent("SOCIAL_MEDIA", t, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "SOCIAL_MEDIA", t, self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_gravatar class

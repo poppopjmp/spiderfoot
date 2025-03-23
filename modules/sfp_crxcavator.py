@@ -144,14 +144,16 @@ class sfp_crxcavator(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        domain_keyword = self.sf.domainKeyword(eventData, self.opts['_internettlds'])
+        domain_keyword = self.sf.domainKeyword(
+            eventData, self.opts['_internettlds'])
         results = self.query(domain_keyword)
 
         if not results:
             self.info(f"No results found for {domain_keyword}")
             return
 
-        evt = SpiderFootEvent('RAW_RIR_DATA', json.dumps(results), self.__name__, event)
+        evt = SpiderFootEvent('RAW_RIR_DATA', json.dumps(
+            results), self.__name__, event)
         self.notifyListeners(evt)
 
         urls = list()
@@ -175,7 +177,8 @@ class sfp_crxcavator(SpiderFootPlugin):
             if not extensions:
                 continue
 
-            evt = SpiderFootEvent('RAW_RIR_DATA', json.dumps(extensions), self.__name__, event)
+            evt = SpiderFootEvent('RAW_RIR_DATA', json.dumps(
+                extensions), self.__name__, event)
             self.notifyListeners(evt)
 
             for extension in extensions:
@@ -215,17 +218,20 @@ class sfp_crxcavator(SpiderFootPlugin):
                     continue
 
                 if (
-                    not self.getTarget().matches(self.sf.urlFQDN(privacy_policy), includeChildren=True, includeParents=True)
-                    and not self.getTarget().matches(self.sf.urlFQDN(website), includeChildren=True, includeParents=True)
-                    and not self.getTarget().matches(self.sf.urlFQDN(offered_by), includeChildren=True, includeParents=True)
-                    and not self.getTarget().matches(self.sf.urlFQDN(support_site), includeChildren=True, includeParents=True)
+                    not self.getTarget().matches(self.sf.urlFQDN(privacy_policy), includeChildren=True, includeParents=True) and
+                    not self.getTarget().matches(self.sf.urlFQDN(website), includeChildren=True, includeParents=True) and
+                    not self.getTarget().matches(self.sf.urlFQDN(offered_by), includeChildren=True, includeParents=True) and
+                    not self.getTarget().matches(self.sf.urlFQDN(support_site),
+                                                 includeChildren=True, includeParents=True)
                 ):
-                    self.debug(f"Extension {app_full_name} does not match {eventData}, skipping")
+                    self.debug(
+                        f"Extension {app_full_name} does not match {eventData}, skipping")
                     continue
 
                 app_data = f"{name} {version}\n<SFURL>https://chrome.google.com/webstore/detail/{extension_id}</SFURL>"
 
-                evt = SpiderFootEvent('APPSTORE_ENTRY', app_data, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'APPSTORE_ENTRY', app_data, self.__name__, event)
                 self.notifyListeners(evt)
 
                 if privacy_policy:
@@ -255,7 +261,8 @@ class sfp_crxcavator(SpiderFootPlugin):
                 continue
 
             if self.getTarget().matches(host, includeChildren=True, includeParents=True):
-                evt = SpiderFootEvent('LINKED_URL_INTERNAL', url, self.__name__, event)
+                evt = SpiderFootEvent(
+                    'LINKED_URL_INTERNAL', url, self.__name__, event)
                 self.notifyListeners(evt)
 
             hosts.append(host)
@@ -277,7 +284,8 @@ class sfp_crxcavator(SpiderFootPlugin):
             self.notifyListeners(evt)
 
         for location in set(locations):
-            evt = SpiderFootEvent("PHYSICAL_ADDRESS", location, self.__name__, event)
+            evt = SpiderFootEvent("PHYSICAL_ADDRESS",
+                                  location, self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_crxcavator class

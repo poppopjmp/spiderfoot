@@ -2,37 +2,52 @@ import unittest
 from unittest.mock import patch, MagicMock
 import cherrypy
 from sfwebui import SpiderFootWebUi
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 class TestSpiderFootWebUi(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         self.web_config = {'root': '/'}
         self.config = {'_debug': False}
         self.webui = SpiderFootWebUi(self.web_config, self.config)
+        # Register event emitters if they exist
+        if hasattr(self, 'module'):
+            self.register_event_emitter(self.module)
+        # Backup original methods before monkey patching
+        self._original_mock_db_return_value_search_return_value = mock_db.return_value.search.return_value if hasattr(mock_db.return_value.search, 'return_value') else None
+        # Register monkey patches for automatic restoration
+
 
     def test_error_page(self):
         with patch('cherrypy.response') as mock_response:
             self.webui.error_page()
             self.assertEqual(mock_response.status, 500)
-            self.assertEqual(mock_response.body, b"<html><body>Error</body></html>")
+            self.assertEqual(mock_response.body,
+                             b"<html><body>Error</body></html>")
 
     def test_error_page_401(self):
-        result = self.webui.error_page_401('401 Unauthorized', 'Unauthorized', '', '1.0')
+        result = self.webui.error_page_401(
+            '401 Unauthorized', 'Unauthorized', '', '1.0')
         self.assertEqual(result, "")
 
     def test_error_page_404(self):
         with patch('sfwebui.Template') as mock_template:
             mock_template.return_value.render.return_value = 'Not Found'
-            result = self.webui.error_page_404('404 Not Found', 'Not Found', '', '1.0')
+            result = self.webui.error_page_404(
+                '404 Not Found', 'Not Found', '', '1.0')
             self.assertEqual(result, 'Not Found')
 
     def test_jsonify_error(self):
         with patch('cherrypy.response') as mock_response:
             result = self.webui.jsonify_error('404 Not Found', 'Not Found')
-            self.assertEqual(mock_response.headers['Content-Type'], 'application/json')
+            self.assertEqual(
+                mock_response.headers['Content-Type'], 'application/json')
             self.assertEqual(mock_response.status, '404 Not Found')
-            self.assertEqual(result, {'error': {'http_status': '404 Not Found', 'message': 'Not Found'}})
+            self.assertEqual(
+                result, {'error': {'http_status': '404 Not Found', 'message': 'Not Found'}})
 
     def test_error(self):
         with patch('sfwebui.Template') as mock_template:
@@ -47,10 +62,12 @@ class TestSpiderFootWebUi(unittest.TestCase):
     def test_searchBase(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.search.return_value = [
-                [1627846261, 'data', 'source', 'type', '', '', '', '', '', '', 'ROOT', '', '']
+                [1627846261, 'data', 'source', 'type', '',
+                    '', '', '', '', '', 'ROOT', '', '']
             ]
             result = self.webui.searchBase('id', 'eventType', 'value')
-            self.assertEqual(result, [['2021-08-01 00:31:01', 'data', 'source', 'type', '', '', '', '', '', '', 'ROOT', '', '']])
+            self.assertEqual(result, [
+                             ['2021-08-01 00:31:01', 'data', 'source', 'type', '', '', '', '', '', '', 'ROOT', '', '']])
 
     def test_buildExcel(self):
         with patch('sfwebui.openpyxl.Workbook') as mock_workbook:
@@ -83,7 +100,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
     def test_scaneventresultexport(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanResultEvent.return_value = [
-                [1627846261, 'data', 'source', 'type', 'ROOT', '', '', '', '', '', '', '', '', '']
+                [1627846261, 'data', 'source', 'type', 'ROOT',
+                    '', '', '', '', '', '', '', '', '']
             ]
             with patch('sfwebui.StringIO') as mock_stringio:
                 mock_stringio.return_value.getvalue.return_value = 'csv_data'
@@ -94,7 +112,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanInstanceGet.return_value = ['scan_name']
             mock_db.return_value.scanResultEvent.return_value = [
-                [1627846261, 'data', 'source', 'type', 'ROOT', '', '', '', '', '', '', '', '', '']
+                [1627846261, 'data', 'source', 'type', 'ROOT',
+                    '', '', '', '', '', '', '', '', '']
             ]
             with patch('sfwebui.StringIO') as mock_stringio:
                 mock_stringio.return_value.getvalue.return_value = 'csv_data'
@@ -104,7 +123,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
     def test_scansearchresultexport(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.search.return_value = [
-                [1627846261, 'data', 'source', 'type', '', '', '', '', '', '', 'ROOT', '', '']
+                [1627846261, 'data', 'source', 'type', '',
+                    '', '', '', '', '', 'ROOT', '', '']
             ]
             with patch('sfwebui.StringIO') as mock_stringio:
                 mock_stringio.return_value.getvalue.return_value = 'csv_data'
@@ -115,7 +135,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanInstanceGet.return_value = ['scan_name']
             mock_db.return_value.scanResultEvent.return_value = [
-                [1627846261, 'data', 'source', 'type', 'ROOT', '', '', '', '', '', '', '', '', '']
+                [1627846261, 'data', 'source', 'type', 'ROOT',
+                    '', '', '', '', '', '', '', '', '']
             ]
             result = self.webui.scanexportjsonmulti('id')
             self.assertEqual(result, b'[]')
@@ -123,32 +144,40 @@ class TestSpiderFootWebUi(unittest.TestCase):
     def test_scanviz(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanResultEvent.return_value = [
-                [1627846261, 'data', 'source', 'type', 'ROOT', '', '', '', '', '', '', '', '', '']
+                [1627846261, 'data', 'source', 'type', 'ROOT',
+                    '', '', '', '', '', '', '', '', '']
             ]
-            mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'root']
+            mock_db.return_value.scanInstanceGet.return_value = [
+                'scan_name', 'root']
             result = self.webui.scanviz('id')
             self.assertIsInstance(result, str)
 
     def test_scanvizmulti(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanResultEvent.return_value = [
-                [1627846261, 'data', 'source', 'type', 'ROOT', '', '', '', '', '', '', '', '', '']
+                [1627846261, 'data', 'source', 'type', 'ROOT',
+                    '', '', '', '', '', '', '', '', '']
             ]
-            mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'root']
+            mock_db.return_value.scanInstanceGet.return_value = [
+                'scan_name', 'root']
             result = self.webui.scanvizmulti('id')
             self.assertIsInstance(result, str)
 
     def test_scanopts(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'target', '', 0, 0, 'status']
-            mock_db.return_value.scanConfigGet.return_value = {'config': 'value'}
+            mock_db.return_value.scanInstanceGet.return_value = [
+                'scan_name', 'target', '', 0, 0, 'status']
+            mock_db.return_value.scanConfigGet.return_value = {
+                'config': 'value'}
             result = self.webui.scanopts('id')
             self.assertIsInstance(result, dict)
 
     def test_rerunscan(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'target']
-            mock_db.return_value.scanConfigGet.return_value = {'_modulesenabled': 'module'}
+            mock_db.return_value.scanInstanceGet.return_value = [
+                'scan_name', 'target']
+            mock_db.return_value.scanConfigGet.return_value = {
+                '_modulesenabled': 'module'}
             with patch('sfwebui.mp.Process') as mock_process:
                 mock_process.return_value.start.return_value = None
                 with self.assertRaises(cherrypy.HTTPRedirect):
@@ -156,8 +185,10 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def test_rerunscanmulti(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'target']
-            mock_db.return_value.scanConfigGet.return_value = {'_modulesenabled': 'module'}
+            mock_db.return_value.scanInstanceGet.return_value = [
+                'scan_name', 'target']
+            mock_db.return_value.scanConfigGet.return_value = {
+                '_modulesenabled': 'module'}
             with patch('sfwebui.mp.Process') as mock_process:
                 mock_process.return_value.start.return_value = None
                 result = self.webui.rerunscanmulti('id')
@@ -173,8 +204,10 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def test_clonescan(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'target']
-            mock_db.return_value.scanConfigGet.return_value = {'_modulesenabled': 'module'}
+            mock_db.return_value.scanInstanceGet.return_value = [
+                'scan_name', 'target']
+            mock_db.return_value.scanConfigGet.return_value = {
+                '_modulesenabled': 'module'}
             with patch('sfwebui.Template') as mock_template:
                 mock_template.return_value.render.return_value = 'clonescan'
                 result = self.webui.clonescan('id')
@@ -202,7 +235,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def test_optsexport(self):
         with patch('sfwebui.SpiderFoot') as mock_spiderfoot:
-            mock_spiderfoot.return_value.configSerialize.return_value = {'opt': 'value'}
+            mock_spiderfoot.return_value.configSerialize.return_value = {
+                'opt': 'value'}
             result = self.webui.optsexport()
             self.assertIsInstance(result, str)
 
@@ -212,7 +246,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def test_scandelete(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'target', '', 0, 0, 'status']
+            mock_db.return_value.scanInstanceGet.return_value = [
+                'scan_name', 'target', '', 0, 0, 'status']
             result = self.webui.scandelete('id')
             self.assertEqual(result, '')
 
@@ -242,7 +277,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def test_eventtypes(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.eventTypes.return_value = [['type', 'description']]
+            mock_db.return_value.eventTypes.return_value = [
+                ['type', 'description']]
             result = self.webui.eventtypes()
             self.assertIsInstance(result, list)
 
@@ -260,21 +296,25 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def test_query(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.dbh.execute.return_value.fetchall.return_value = [['result']]
+            mock_db.return_value.dbh.execute.return_value.fetchall.return_value = [
+                ['result']]
             result = self.webui.query('SELECT 1')
             self.assertIsInstance(result, list)
 
     def test_startscan(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'target', '', 0, 0, 'status']
+            mock_db.return_value.scanInstanceGet.return_value = [
+                'scan_name', 'target', '', 0, 0, 'status']
             with patch('sfwebui.mp.Process') as mock_process:
                 mock_process.return_value.start.return_value = None
                 with self.assertRaises(cherrypy.HTTPRedirect):
-                    self.webui.startscan('scanname', 'scantarget', 'modulelist', 'typelist', 'usecase')
+                    self.webui.startscan(
+                        'scanname', 'scantarget', 'modulelist', 'typelist', 'usecase')
 
     def test_stopscan(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'target', '', 0, 0, 'status']
+            mock_db.return_value.scanInstanceGet.return_value = [
+                'scan_name', 'target', '', 0, 0, 'status']
             result = self.webui.stopscan('id')
             self.assertEqual(result, '')
 
@@ -303,14 +343,16 @@ class TestSpiderFootWebUi(unittest.TestCase):
     def test_scanlist(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanInstanceList.return_value = [
-                ['id', 'name', 'target', 1627846261, 1627846261, 1627846261, 'status', 'type']
+                ['id', 'name', 'target', 1627846261,
+                    1627846261, 1627846261, 'status', 'type']
             ]
             result = self.webui.scanlist()
             self.assertIsInstance(result, list)
 
     def test_scanstatus(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'target', '', 0, 0, 'status']
+            mock_db.return_value.scanInstanceGet.return_value = [
+                'scan_name', 'target', '', 0, 0, 'status']
             result = self.webui.scanstatus('id')
             self.assertIsInstance(result, list)
 
@@ -325,7 +367,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
     def test_scaneventresults(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanResultEvent.return_value = [
-                [1627846261, 'data', 'source', 'type', 'ROOT', '', '', '', '', '', '', '', '', '']
+                [1627846261, 'data', 'source', 'type', 'ROOT',
+                    '', '', '', '', '', '', '', '', '']
             ]
             result = self.webui.scaneventresults('id')
             self.assertIsInstance(result, list)
@@ -341,7 +384,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
     def test_search(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.search.return_value = [
-                [1627846261, 'data', 'source', 'type', '', '', '', '', '', '', 'ROOT', '', '']
+                [1627846261, 'data', 'source', 'type', '',
+                    '', '', '', '', '', 'ROOT', '', '']
             ]
             result = self.webui.search('id', 'eventType', 'value')
             self.assertIsInstance(result, list)
@@ -357,7 +401,8 @@ class TestSpiderFootWebUi(unittest.TestCase):
     def test_scanelementtypediscovery(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanResultEvent.return_value = [
-                [1627846261, 'data', 'source', 'type', 'ROOT', '', '', '', '', '', '', '', '', '']
+                [1627846261, 'data', 'source', 'type', 'ROOT',
+                    '', '', '', '', '', '', '', '', '']
             ]
             result = self.webui.scanelementtypediscovery('id', 'type')
             self.assertIsInstance(result, dict)
@@ -373,3 +418,12 @@ class TestSpiderFootWebUi(unittest.TestCase):
             mock_template.return_value.render.return_value = 'footer'
             result = self.webui.footer()
             self.assertEqual(result, 'footer')
+
+    def tearDown(self):
+        """Clean up after each test."""
+        # Restore original methods after monkey patching
+        if hasattr(self, '_original_mock_db_return_value_search_return_value') and self._original_mock_db_return_value_search_return_value is not None:
+            mock_db.return_value.search.return_value = self._original_mock_db_return_value_search_return_value
+        elif hasattr(mock_db.return_value.search, 'return_value'):
+            delattr(mock_db.return_value.search, 'return_value')
+        super().tearDown()

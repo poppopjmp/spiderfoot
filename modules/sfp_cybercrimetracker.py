@@ -90,7 +90,8 @@ class sfp_cybercrimetracker(SpiderFootPlugin):
             return False
 
         if target.lower() in blacklist:
-            self.debug(f"Host name {target} found in CyberCrime-Tracker.net blacklist.")
+            self.debug(
+                f"Host name {target} found in CyberCrime-Tracker.net blacklist.")
             return True
 
         return False
@@ -108,7 +109,8 @@ class sfp_cybercrimetracker(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from CyberCrime-Tracker.net.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from CyberCrime-Tracker.net.")
             self.errorState = True
             return None
 
@@ -122,7 +124,7 @@ class sfp_cybercrimetracker(SpiderFootPlugin):
         return self.parseBlacklist(res['content'])
 
     def parseBlacklist(self, blacklist):
-        """Parse plaintext blacklist
+        """Parse plaintext blacklist.
 
         Args:
             blacklist (str): plaintext blacklist from CyberCrime-Tracker.net
@@ -192,7 +194,8 @@ class sfp_cybercrimetracker(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with CyberCrime-Tracker.net")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with CyberCrime-Tracker.net")
 
         if not self.queryBlacklist(eventData):
             return

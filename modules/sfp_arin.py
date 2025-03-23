@@ -17,34 +17,33 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_arin(SpiderFootPlugin):
-
     meta = {
-        'name': "ARIN",
-        'summary': "Queries ARIN registry for contact information.",
-        'flags': [],
-        'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Public Registries"],
-        'dataSource': {
-            'website': "https://www.arin.net/",
-            'model': "FREE_NOAUTH_UNLIMITED",
-            'references': [
+        "name": "ARIN",
+        "summary": "Queries ARIN registry for contact information.",
+        "flags": [],
+        "useCases": ["Footprint", "Investigate", "Passive"],
+        "categories": ["Public Registries"],
+        "dataSource": {
+            "website": "https://www.arin.net/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [
                 "https://www.arin.net/resources/",
                 "https://www.arin.net/reference/",
                 "https://www.arin.net/participate/",
                 "https://www.arin.net/resources/guide/request/",
                 "https://www.arin.net/resources/registry/transfers/",
-                "https://www.arin.net/resources/guide/ipv6/"
+                "https://www.arin.net/resources/guide/ipv6/",
             ],
-            'favIcon': "https://www.arin.net/img/favicon.ico",
-            'logo': "https://www.arin.net/img/logo-stnd.svg",
-            'description': "ARIN is a nonprofit, member-based organization that administers IP addresses & "
+            "favIcon": "https://www.arin.net/img/favicon.ico",
+            "logo": "https://www.arin.net/img/logo-stnd.svg",
+            "description": "ARIN is a nonprofit, member-based organization that administers IP addresses & "
             "ASNs in support of the operation and growth of the Internet.\n"
             "Established in December 1997 as a Regional Internet Registry, "
             "the American Registry for Internet Numbers (ARIN) is responsible for the management "
             "and distribution of Internet number resources such as Internet Protocol (IP) addresses "
             "and Autonomous System Numbers (ASNs). ARIN manages these resources within its service region, "
             "which is comprised of Canada, the United States, and many Caribbean and North Atlantic islands.",
-        }
+        },
     }
 
     # Default options
@@ -65,7 +64,7 @@ class sfp_arin(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ['DOMAIN_NAME', 'HUMAN_NAME']
+        return ["DOMAIN_NAME", "HUMAN_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
@@ -76,9 +75,13 @@ class sfp_arin(SpiderFootPlugin):
     # Fetch content and notify of the raw data
     def fetchRir(self, url):
         head = {"Accept": "application/json"}
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
-                               useragent=self.opts['_useragent'], headers=head)
-        if res['content'] is not None and res['code'] != "404":
+        res = self.sf.fetchUrl(
+            url,
+            timeout=self.opts["_fetchtimeout"],
+            useragent=self.opts["_useragent"],
+            headers=head,
+        )
+        if res["content"] is not None and res["code"] != "404":
             return res
         return None
 
@@ -110,12 +113,14 @@ class sfp_arin(SpiderFootPlugin):
             return None
 
         try:
-            data = json.loads(res['content'])
+            data = json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
             return None
 
-        evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, self.currentEventSrc)
+        evt = SpiderFootEvent(
+            "RAW_RIR_DATA", str(data), self.__name__, self.currentEventSrc
+        )
         self.notifyListeners(evt)
         return data
 
@@ -140,42 +145,44 @@ class sfp_arin(SpiderFootPlugin):
             if not ret:
                 return
             if "pocs" in ret:
-                if "pocRef" in ret['pocs']:
+                if "pocRef" in ret["pocs"]:
                     ref = list()
                     # Might be a list or a dictionary
-                    if isinstance(ret['pocs']['pocRef'], dict):
-                        ref = [ret['pocs']['pocRef']]
+                    if type(ret["pocs"]["pocRef"]) == dict:
+                        ref = [ret["pocs"]["pocRef"]]
                     else:
-                        ref = ret['pocs']['pocRef']
+                        ref = ret["pocs"]["pocRef"]
                     for p in ref:
-                        name = p['@name']
+                        name = p["@name"]
                         if "," in name:
                             sname = name.split(", ", 1)
                             name = sname[1] + " " + sname[0]
 
-                        evt = SpiderFootEvent("HUMAN_NAME", name,
-                                              self.__name__, self.currentEventSrc)
+                        evt = SpiderFootEvent(
+                            "HUMAN_NAME", name, self.__name__, self.currentEventSrc
+                        )
                         self.notifyListeners(evt)
 
                         # We just want the raw data so we can get potential
                         # e-mail addresses.
-                        self.query("contact", p['$'])
+                        self.query("contact", p["$"])
 
         if eventName == "HUMAN_NAME":
             ret = self.query("name", eventData)
             if not ret:
                 return
             if "pocs" in ret:
-                if "pocRef" in ret['pocs']:
+                if "pocRef" in ret["pocs"]:
                     ref = list()
                     # Might be a list or a dictionary
-                    if isinstance(ret['pocs']['pocRef'], dict):
-                        ref = [ret['pocs']['pocRef']]
+                    if type(ret["pocs"]["pocRef"]) == dict:
+                        ref = [ret["pocs"]["pocRef"]]
                     else:
-                        ref = ret['pocs']['pocRef']
+                        ref = ret["pocs"]["pocRef"]
                     for p in ref:
                         # We just want the raw data so we can get potential
                         # e-mail addresses.
-                        self.query("contact", p['$'])
+                        self.query("contact", p["$"])
+
 
 # End of sfp_arin class

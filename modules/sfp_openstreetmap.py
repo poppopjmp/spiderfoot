@@ -110,11 +110,13 @@ class sfp_openstreetmap(SpiderFootPlugin):
             self.debug("Skipping PO BOX address")
             return
 
-        rx1 = re.compile(r'^(c/o|care of|attn:|attention:)\s+[0-9a-z\s\.]', flags=re.IGNORECASE)
+        rx1 = re.compile(
+            r'^(c/o|care of|attn:|attention:)\s+[0-9a-z\s\.]', flags=re.IGNORECASE)
         # Remove address prefixes for delivery instructions
         address = re.sub(rx1, r'', address)
 
-        rx2 = re.compile(r'^(Level|Floor|Suite|Room)\s+[0-9a-z]+,', flags=re.IGNORECASE)
+        rx2 = re.compile(
+            r'^(Level|Floor|Suite|Room)\s+[0-9a-z]+,', flags=re.IGNORECASE)
         # Remove address prefixes known to return no results (floor, level, suite, etc).
         address = re.sub(rx2, r'', address)
 
@@ -144,7 +146,8 @@ class sfp_openstreetmap(SpiderFootPlugin):
             coords = str(lat) + "," + str(lon)
             self.debug("Found coordinates: " + coords)
 
-            evt = SpiderFootEvent("PHYSICAL_COORDINATES", coords, self.__name__, event)
+            evt = SpiderFootEvent("PHYSICAL_COORDINATES",
+                                  coords, self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_openstreetmap class

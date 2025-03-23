@@ -71,7 +71,8 @@ class sfp_sublist3r(SpiderFootPlugin):
             self.error("Error querying Sublist3r API")
 
         if res["code"] not in ["200"]:
-            self.error(f"Bad response code \"{res['code']}\" from Sublist3r API")
+            self.error(
+                f"Bad response code \"{res['code']}\" from Sublist3r API")
 
         return list(set(ret))
 
@@ -79,7 +80,8 @@ class sfp_sublist3r(SpiderFootPlugin):
         if self.sf.resolveHost(host) or self.sf.resolveHost6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)
         else:
-            e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED", host, self.__name__, source)
+            e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED",
+                                host, self.__name__, source)
         self.notifyListeners(e)
 
     def handleEvent(self, event):
@@ -93,7 +95,8 @@ class sfp_sublist3r(SpiderFootPlugin):
         if eventDataHash in self.results or \
                 (target.matches(query, includeParents=True) and not
                  target.matches(query, includeChildren=False)):
-            self.debug(f"Skipping already-processed event, {event.eventType}, from {event.module}")
+            self.debug(
+                f"Skipping already-processed event, {event.eventType}, from {event.module}")
             return
         self.results[eventDataHash] = True
 

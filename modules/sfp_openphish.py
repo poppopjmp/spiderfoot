@@ -102,7 +102,8 @@ class sfp_openphish(SpiderFootPlugin):
         )
 
         if res['code'] != "200":
-            self.error(f"Unexpected HTTP response code {res['code']} from OpenPhish.")
+            self.error(
+                f"Unexpected HTTP response code {res['code']} from OpenPhish.")
             self.errorState = True
             return None
 
@@ -116,7 +117,7 @@ class sfp_openphish(SpiderFootPlugin):
         return self.parseBlacklist(res['content'])
 
     def parseBlacklist(self, blacklist):
-        """Parse plaintext blacklist
+        """Parse plaintext blacklist.
 
         Args:
             blacklist (str): plaintext blacklist from OpenPhish
@@ -180,7 +181,8 @@ class sfp_openphish(SpiderFootPlugin):
             self.debug(f"Unexpected event type {eventName}, skipping")
             return
 
-        self.debug(f"Checking maliciousness of {eventData} ({eventName}) with OpenPhish")
+        self.debug(
+            f"Checking maliciousness of {eventData} ({eventName}) with OpenPhish")
 
         if not self.queryBlacklist(eventData):
             return

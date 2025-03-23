@@ -212,7 +212,8 @@ class sfp_googlesafebrowsing(SpiderFootPlugin):
         self.notifyListeners(evt)
 
         evt = SpiderFootEvent(
-            evtType, "Google SafeBrowsing [" + eventData + "]", self.__name__, event
+            evtType, "Google SafeBrowsing [" +
+            eventData + "]", self.__name__, event
         )
         self.notifyListeners(evt)
 

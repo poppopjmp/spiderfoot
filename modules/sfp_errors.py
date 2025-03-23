@@ -88,7 +88,8 @@ class sfp_errors(SpiderFootPlugin):
 
         # We only want web content for pages on the target site
         if not self.getTarget().matches(self.sf.urlFQDN(eventSource)):
-            self.debug("Not collecting web content information for external sites.")
+            self.debug(
+                "Not collecting web content information for external sites.")
             return
 
         for regexpGrp in list(regexps.keys()):
@@ -99,7 +100,8 @@ class sfp_errors(SpiderFootPlugin):
                 pat = re.compile(regex, re.IGNORECASE)
                 matches = re.findall(pat, eventData)
                 if len(matches) > 0 and regexpGrp not in self.results[eventSource]:
-                    self.info("Matched " + regexpGrp + " in content from " + eventSource)
+                    self.info("Matched " + regexpGrp +
+                              " in content from " + eventSource)
                     self.results[eventSource] = self.results[eventSource] + [regexpGrp]
                     evt = SpiderFootEvent("ERROR_MESSAGE", regexpGrp,
                                           self.__name__, event)

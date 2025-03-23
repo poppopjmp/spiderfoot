@@ -61,7 +61,7 @@ class sfp_gleif(SpiderFootPlugin):
         return ["COMPANY_NAME", "LEI", "PHYSICAL_ADDRESS", "RAW_RIR_DATA"]
 
     def searchLegalName(self, qry):
-        """Fuzzy search for legal entity by name
+        """Fuzzy search for legal entity by name.
 
         Args:
             qry (str): legal entity name
@@ -105,7 +105,7 @@ class sfp_gleif(SpiderFootPlugin):
         return data
 
     def searchAutocompletions(self, qry):
-        """Search for legal entity name autocompletions
+        """Search for legal entity name autocompletions.
 
         Args:
             qry (str): legal entity name
@@ -261,14 +261,16 @@ class sfp_gleif(SpiderFootPlugin):
             if legal_name:
                 entity_name = legal_name.get('value')
                 if entity_name:
-                    e = SpiderFootEvent("COMPANY_NAME", entity_name, self.__name__, event)
+                    e = SpiderFootEvent(
+                        "COMPANY_NAME", entity_name, self.__name__, event)
                     self.notifyListeners(e)
 
             addresses = list()
 
             address = entity.get('legalAddress')
             if address.get('addressLines'):
-                address_lines = ', '.join(filter(None, address.get('addressLines')))
+                address_lines = ', '.join(
+                    filter(None, address.get('addressLines')))
                 location = ', '.join(
                     filter(
                         None,
@@ -287,7 +289,8 @@ class sfp_gleif(SpiderFootPlugin):
 
             address = entity.get('headquartersAddress')
             if address.get('addressLines'):
-                address_lines = ', '.join(filter(None, address.get('addressLines')))
+                address_lines = ', '.join(
+                    filter(None, address.get('addressLines')))
                 location = ', '.join(
                     filter(
                         None,
@@ -305,7 +308,8 @@ class sfp_gleif(SpiderFootPlugin):
                     addresses.append(location)
 
             for address in set(addresses):
-                e = SpiderFootEvent("PHYSICAL_ADDRESS", address, self.__name__, event)
+                e = SpiderFootEvent("PHYSICAL_ADDRESS",
+                                    address, self.__name__, event)
                 self.notifyListeners(e)
 
 # End of sfp_gleif class

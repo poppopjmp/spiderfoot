@@ -97,7 +97,8 @@ class sfp_bingsharedip(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if self.opts['api_key'] == "" and self.opts['api_key'] == "":
-            self.error("You enabled sfp_bingsharedip but did not set a Bing API key!")
+            self.error(
+                "You enabled sfp_bingsharedip but did not set a Bing API key!")
             self.errorState = True
             return
 
@@ -161,7 +162,8 @@ class sfp_bingsharedip(SpiderFootPlugin):
                     # Create an IP Address event stemming from the netblock as the
                     # link to the co-host.
                     if eventName == "NETBLOCK_OWNER":
-                        ipe = SpiderFootEvent("IP_ADDRESS", ip, self.__name__, event)
+                        ipe = SpiderFootEvent(
+                            "IP_ADDRESS", ip, self.__name__, event)
                         self.notifyListeners(ipe)
                         evt = SpiderFootEvent(
                             "CO_HOSTED_SITE", site, self.__name__, ipe

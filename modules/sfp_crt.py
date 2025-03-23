@@ -142,7 +142,8 @@ class sfp_crt(SpiderFootPlugin):
         data = self.queryDomain(event.data)
 
         if not data:
-            self.debug(f"No certificate transparency results for domain {event.data}")
+            self.debug(
+                f"No certificate transparency results for domain {event.data}")
             return
 
         evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
@@ -201,7 +202,8 @@ class sfp_crt(SpiderFootPlugin):
             time.sleep(0.5)
 
             if not res or not res['content']:
-                self.error(f"Error retrieving certificate with ID {cert_id}. No response from crt.sh")
+                self.error(
+                    f"Error retrieving certificate with ID {cert_id}. No response from crt.sh")
                 continue
 
             try:
@@ -213,7 +215,8 @@ class sfp_crt(SpiderFootPlugin):
             cert_text = cert.get('text')
 
             if cert_text:
-                evt = SpiderFootEvent("SSL_CERTIFICATE_RAW", str(cert_text), self.__name__, event)
+                evt = SpiderFootEvent("SSL_CERTIFICATE_RAW", str(
+                    cert_text), self.__name__, event)
                 self.notifyListeners(evt)
 
             sans = cert.get('altnames', list())
@@ -249,10 +252,12 @@ class sfp_crt(SpiderFootPlugin):
 
             if self.sf.isDomain(domain, self.opts['_internettlds']):
                 if evt_type == 'CO_HOSTED_SITE':
-                    evt = SpiderFootEvent('CO_HOSTED_SITE_DOMAIN', domain, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'CO_HOSTED_SITE_DOMAIN', domain, self.__name__, event)
                     self.notifyListeners(evt)
                 else:
-                    evt = SpiderFootEvent('DOMAIN_NAME', domain, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        'DOMAIN_NAME', domain, self.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_crt class

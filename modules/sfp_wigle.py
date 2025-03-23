@@ -102,7 +102,8 @@ class sfp_wigle(SpiderFootPlugin):
         }
 
         if self.opts['days_limit'] != "0":
-            dt = datetime.datetime.now() - datetime.timedelta(days=int(self.opts['days_limit']))
+            dt = datetime.datetime.now() - \
+                datetime.timedelta(days=int(self.opts['days_limit']))
             date_calc = dt.strftime("%Y%m%d")
             params['lastupdt'] = date_calc
 
@@ -112,7 +113,8 @@ class sfp_wigle(SpiderFootPlugin):
         }
 
         res = self.sf.fetchUrl(
-            "https://api.wigle.net/api/v2/network/search?" + urllib.parse.urlencode(params),
+            "https://api.wigle.net/api/v2/network/search?" +
+            urllib.parse.urlencode(params),
             timeout=30,
             useragent="SpiderFoot",
             headers=hdrs

@@ -107,10 +107,12 @@ class sfp_trumail(SpiderFootPlugin):
         isDisposable = data.get('disposable')
 
         if isDisposable:
-            evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(data), self.__name__, event)
             self.notifyListeners(evt)
 
-            evt = SpiderFootEvent("EMAILADDR_DISPOSABLE", eventData, self.__name__, event)
+            evt = SpiderFootEvent("EMAILADDR_DISPOSABLE",
+                                  eventData, self.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_trumail class

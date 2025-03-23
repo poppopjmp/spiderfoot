@@ -131,7 +131,8 @@ class sfp_etherscan(SpiderFootPlugin):
         # Value returned by etherscan was too large in comparison to actual wallet balance
         balance = float(data.get('result')) / 1000000000000000000
 
-        evt = SpiderFootEvent("ETHEREUM_BALANCE", f"{str(balance)} ETH", self.__name__, event)
+        evt = SpiderFootEvent("ETHEREUM_BALANCE",
+                              f"{str(balance)} ETH", self.__name__, event)
         self.notifyListeners(evt)
 
         evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)

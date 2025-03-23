@@ -112,11 +112,13 @@ class sfp_ipapico(SpiderFootPlugin):
             return
 
         if data.get('country'):
-            location = ', '.join(filter(None, [data.get('city'), data.get('region'), data.get('region_code'), data.get('country_name'), data.get('country')]))
+            location = ', '.join(filter(None, [data.get('city'), data.get('region'), data.get(
+                'region_code'), data.get('country_name'), data.get('country')]))
             evt = SpiderFootEvent('GEOINFO', location, self.__name__, event)
             self.notifyListeners(evt)
 
-            evt = SpiderFootEvent('RAW_RIR_DATA', str(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                'RAW_RIR_DATA', str(data), self.__name__, event)
             self.notifyListeners(evt)
 
 

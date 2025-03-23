@@ -96,7 +96,8 @@ class sfp_spyonweb(SpiderFootPlugin):
         url += "?limit=" + str(limit)
         url += "&access_token=" + self.opts['api_key']
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['timeout'], useragent=self.opts['_useragent'])
+        res = self.sf.fetchUrl(
+            url, timeout=self.opts['timeout'], useragent=self.opts['_useragent'])
 
         if res['content'] is None:
             self.debug("No results found for " + qry)
@@ -223,14 +224,16 @@ class sfp_spyonweb(SpiderFootPlugin):
 
             if google_adsense:
                 for r in list(google_adsense.keys()):
-                    evt = SpiderFootEvent("WEB_ANALYTICS_ID", f"Google AdSense: {r}", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "WEB_ANALYTICS_ID", f"Google AdSense: {r}", self.__name__, event)
                     self.notifyListeners(evt)
 
             google_analytics = data.get('analytics')
 
             if google_analytics:
                 for r in list(google_analytics.keys()):
-                    evt = SpiderFootEvent("WEB_ANALYTICS_ID", f"Google Analytics: {r}", self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "WEB_ANALYTICS_ID", f"Google Analytics: {r}", self.__name__, event)
                     self.notifyListeners(evt)
 
         # Find affiliate domains for the specified Google AdSense ID or Google Analytics ID
@@ -239,14 +242,17 @@ class sfp_spyonweb(SpiderFootPlugin):
                 network = eventData.split(": ")[0]
                 analytics_id = eventData.split(": ")[1]
             except Exception as e:
-                self.error(f"Unable to parse WEB_ANALYTICS_ID: {eventData} ({e})")
+                self.error(
+                    f"Unable to parse WEB_ANALYTICS_ID: {eventData} ({e})")
                 return
 
             data = dict()
             if network == 'Google AdSense':
-                data = self.queryGoogleAdsense(analytics_id, limit=self.opts['limit'])
+                data = self.queryGoogleAdsense(
+                    analytics_id, limit=self.opts['limit'])
             elif network == 'Google Analytics':
-                data = self.queryGoogleAnalytics(analytics_id, limit=self.opts['limit'])
+                data = self.queryGoogleAnalytics(
+                    analytics_id, limit=self.opts['limit'])
             else:
                 return
 
@@ -255,17 +261,20 @@ class sfp_spyonweb(SpiderFootPlugin):
                 return
 
             for r in list(data.keys()):
-                last_seen = int(datetime.datetime.strptime(data[r], '%Y-%m-%d').strftime('%s')) * 1000
+                last_seen = int(datetime.datetime.strptime(
+                    data[r], '%Y-%m-%d').strftime('%s')) * 1000
 
                 if last_seen < agelimit:
                     self.debug("Record found too old, skipping.")
                     continue
 
-                evt = SpiderFootEvent("AFFILIATE_INTERNET_NAME", r, self.__name__, event)
+                evt = SpiderFootEvent(
+                    "AFFILIATE_INTERNET_NAME", r, self.__name__, event)
                 self.notifyListeners(evt)
 
                 if self.sf.isDomain(r, self.opts['_internettlds']):
-                    evt = SpiderFootEvent("AFFILIATE_DOMAIN_NAME", r, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "AFFILIATE_DOMAIN_NAME", r, self.__name__, event)
                     self.notifyListeners(evt)
 
         # Find co-hosts on the same IP address
@@ -279,7 +288,8 @@ class sfp_spyonweb(SpiderFootPlugin):
             self.cohostcount = 0
 
             for co in list(data.keys()):
-                last_seen = int(datetime.datetime.strptime(data[co], '%Y-%m-%d').strftime('%s')) * 1000
+                last_seen = int(datetime.datetime.strptime(
+                    data[co], '%Y-%m-%d').strftime('%s')) * 1000
 
                 if last_seen < agelimit:
                     self.debug("Record found too old, skipping.")
@@ -291,15 +301,18 @@ class sfp_spyonweb(SpiderFootPlugin):
 
                 if not self.opts['cohostsamedomain']:
                     if self.getTarget().matches(co, includeParents=True):
-                        evt = SpiderFootEvent("INTERNET_NAME", co, self.__name__, event)
+                        evt = SpiderFootEvent(
+                            "INTERNET_NAME", co, self.__name__, event)
                         self.notifyListeners(evt)
                         if self.sf.isDomain(co, self.opts['_internettlds']):
-                            evt = SpiderFootEvent("DOMAIN_NAME", co, self.__name__, event)
+                            evt = SpiderFootEvent(
+                                "DOMAIN_NAME", co, self.__name__, event)
                             self.notifyListeners(evt)
                         continue
 
                 if self.cohostcount < self.opts['maxcohost']:
-                    evt = SpiderFootEvent("CO_HOSTED_SITE", co, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "CO_HOSTED_SITE", co, self.__name__, event)
                     self.notifyListeners(evt)
                     self.cohostcount += 1
 

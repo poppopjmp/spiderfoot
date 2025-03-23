@@ -128,7 +128,8 @@ class sfp_robtex(SpiderFootPlugin):
                 max_netblock = self.opts['maxnetblock']
 
             if IPNetwork(eventData).prefixlen < max_netblock:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_netblock}")
                 return
 
         if eventName in ['NETBLOCK_MEMBER', 'NETBLOCKV6_MEMBER']:
@@ -141,7 +142,8 @@ class sfp_robtex(SpiderFootPlugin):
                 max_subnet = self.opts['maxsubnet']
 
             if IPNetwork(eventData).prefixlen < max_subnet:
-                self.debug(f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
+                self.debug(
+                    f"Network size bigger than permitted: {IPNetwork(eventData).prefixlen} > {max_subnet}")
                 return
 
         qrylist = list()
@@ -160,7 +162,8 @@ class sfp_robtex(SpiderFootPlugin):
                 if self.checkForStop():
                     return
 
-                res = self.sf.fetchUrl("https://freeapi.robtex.com/ipquery/" + ip, timeout=self.opts['_fetchtimeout'])
+                res = self.sf.fetchUrl(
+                    "https://freeapi.robtex.com/ipquery/" + ip, timeout=self.opts['_fetchtimeout'])
 
                 if res['code'] == "200":
                     break
@@ -196,7 +199,8 @@ class sfp_robtex(SpiderFootPlugin):
                 self.errorState = True
                 return
 
-            evt = SpiderFootEvent("RAW_RIR_DATA", json.dumps(data), self.__name__, event)
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", json.dumps(data), self.__name__, event)
             self.notifyListeners(evt)
 
             pas = data.get('pas')
@@ -216,7 +220,8 @@ class sfp_robtex(SpiderFootPlugin):
 
                 if not self.opts['cohostsamedomain']:
                     if self.getTarget().matches(host, includeParents=True):
-                        self.debug(f"Skipping {host} because it is on the same domain.")
+                        self.debug(
+                            f"Skipping {host} because it is on the same domain.")
                         continue
 
                 if self.opts['verify'] and not self.sf.validateIP(host, ip):
@@ -224,17 +229,22 @@ class sfp_robtex(SpiderFootPlugin):
                     continue
 
                 if eventName == "NETBLOCK_OWNER":
-                    ipe = SpiderFootEvent("IP_ADDRESS", ip, self.__name__, event)
+                    ipe = SpiderFootEvent(
+                        "IP_ADDRESS", ip, self.__name__, event)
                     self.notifyListeners(ipe)
-                    evt = SpiderFootEvent("CO_HOSTED_SITE", host, self.__name__, ipe)
+                    evt = SpiderFootEvent(
+                        "CO_HOSTED_SITE", host, self.__name__, ipe)
                     self.notifyListeners(evt)
                 elif eventName == "NETBLOCKV6_OWNER":
-                    ipe = SpiderFootEvent("IPV6_ADDRESS", ip, self.__name__, event)
+                    ipe = SpiderFootEvent(
+                        "IPV6_ADDRESS", ip, self.__name__, event)
                     self.notifyListeners(ipe)
-                    evt = SpiderFootEvent("CO_HOSTED_SITE", host, self.__name__, ipe)
+                    evt = SpiderFootEvent(
+                        "CO_HOSTED_SITE", host, self.__name__, ipe)
                     self.notifyListeners(evt)
                 else:
-                    evt = SpiderFootEvent("CO_HOSTED_SITE", host, self.__name__, event)
+                    evt = SpiderFootEvent(
+                        "CO_HOSTED_SITE", host, self.__name__, event)
                     self.notifyListeners(evt)
 
                 self.cohostcount += 1

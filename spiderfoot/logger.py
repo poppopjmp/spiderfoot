@@ -15,8 +15,8 @@ from spiderfoot import SpiderFootDb, SpiderFootHelpers
 class SpiderFootSqliteLogHandler(logging.Handler):
     """Handler for logging to SQLite database.
 
-    This ensure all sqlite logging is done from a single
-    process and a single database handle.
+    This ensure all sqlite logging is done from a single process and a
+    single database handle.
     """
 
     def __init__(self, opts: dict) -> None:
@@ -33,11 +33,13 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         else:
             self.batch_size = 5
         self.shutdown_hook = False
-        self.log_file = os.path.join(SpiderFootHelpers.logPath(), "spiderfoot.sqlite.log")
+        self.log_file = os.path.join(
+            SpiderFootHelpers.logPath(), "spiderfoot.sqlite.log")
         self.backup_count = 30
         self.rotate_logs()
         self.log_queue = Queue()
         self.logging_thread = Thread(target=self.process_log_queue)
+        self.logging_thread.daemon = True
         self.logging_thread.start()
         super().__init__()
 
@@ -53,8 +55,12 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         scanId = getattr(record, "scanId", None)
         component = getattr(record, "module", None)
         if scanId:
-            level = ("STATUS" if record.levelname == "INFO" else record.levelname)
-            self.log_queue.put((scanId, level, record.getMessage(), component, time.time()))
+            level = ("STATUS" if record.levelname ==
+                     "INFO" else record.levelname)
+            self.batch.append(
+                (scanId, level, record.getMessage(), component, time.time()))
+            if len(self.batch) >= self.batch_size:
+                self.logBatch()
 
     def logBatch(self):
         """Log a batch of records to the database."""
@@ -114,7 +120,8 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         Returns:
             str: Formatted log message
         """
-        formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(module)s : %(message)s")
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(module)s : %(message)s")
         return formatter.format(record)
 
     def process_log_queue(self):
@@ -169,8 +176,10 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
     error_handler.addFilter(lambda x: x.levelno >= logging.WARN)
 
     # Set log format
-    log_format = logging.Formatter("%(asctime)s [%(levelname)s] %(module)s : %(message)s")
-    debug_format = logging.Formatter("%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s : %(message)s")
+    log_format = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(module)s : %(message)s")
+    debug_format = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s : %(message)s")
     console_handler.setFormatter(log_format)
     debug_handler.setFormatter(debug_format)
     error_handler.setFormatter(debug_format)
