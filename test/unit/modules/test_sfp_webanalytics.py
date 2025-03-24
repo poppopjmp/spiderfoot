@@ -29,7 +29,7 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_target_web_content_containing_web_analytics_string_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_target_web_content_containing_web_analytics_string_should_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webanalytics()
@@ -74,7 +74,7 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_target_web_content_not_containing_web_analytics_string_should_not_create_event(selfdepth=0):
+    def test_handleEvent_event_data_target_web_content_not_containing_web_analytics_string_should_not_create_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webanalytics()
@@ -110,7 +110,7 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
         self.assertIsNone(result)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_dns_text_containing_web_analytics_string_should_return_event(selfdepth=0):
+    def test_handleEvent_event_dns_text_containing_web_analytics_string_should_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webanalytics()
@@ -155,7 +155,7 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_dns_text_not_containing_web_analytics_string_should_not_create_event(selfdepth=0):
+    def test_handleEvent_event_data_dns_text_not_containing_web_analytics_string_should_not_create_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webanalytics()

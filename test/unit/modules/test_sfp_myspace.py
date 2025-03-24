@@ -29,7 +29,7 @@ class TestModuleMyspace(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_social_media_not_myspace_profile_should_not_return_event(selfdepth=0):
+    def test_handleEvent_event_data_social_media_not_myspace_profile_should_not_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_myspace()

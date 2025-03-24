@@ -7,7 +7,7 @@ def cleanup_listeners():
     # Copy the implementation from test_helpers.py
     pass
 
-def reset_mock_objects():
+def reset_mock_objects(self):
     """Reset mock objects between tests."""
     # Copy the implementation from test_helpers.py
     pass

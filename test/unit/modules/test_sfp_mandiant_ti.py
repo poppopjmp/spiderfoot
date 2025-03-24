@@ -24,7 +24,7 @@ class TestModuleMandiantTI(SpiderFootTestBase):
             self.register_event_emitter(self.module)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent(selfdepth=0):
+    def test_handleEvent(self, depth=0):
         target_value = 'example.com'
         target_type = 'DOMAIN_NAME'
         target = SpiderFootTarget(target_value, target_type)
@@ -50,6 +50,10 @@ class TestModuleMandiantTI(SpiderFootTestBase):
 
     def test_watchedEvents(self):
         self.assertEqual(self.module.watchedEvents(), ['DOMAIN_NAME', 'INTERNET_NAME', 'IP_ADDRESS'])
+
+    def reset_mock_objects(self):
+        # Implementation details
+        pass
 
 if __name__ == '__main__':
     unittest.main()

@@ -30,7 +30,7 @@ class TestModuleEmail(SpiderFootTestBase):
 
     @unittest.skip("todo")
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_target_web_content_containing_email_address_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_target_web_content_containing_email_address_should_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_email()

@@ -43,7 +43,7 @@ class TestModuleBase64(SpiderFootTestBase):
         # ... existing test code, modified to include depth param ...
         
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_url_containing_base64_string_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_url_containing_base64_string_should_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_base64()
@@ -82,7 +82,7 @@ class TestModuleBase64(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_not_containing_base64_string_should_not_return_event(selfdepth=0):
+    def test_handleEvent_event_data_not_containing_base64_string_should_not_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_base64()

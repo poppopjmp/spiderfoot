@@ -29,7 +29,7 @@ class TestModuleBitcoin(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_containing_bitcoin_string_in_legacy_base58_format_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_containing_bitcoin_string_in_legacy_base58_format_should_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_bitcoin()
@@ -68,7 +68,7 @@ class TestModuleBitcoin(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_containing_bitcoin_string_in_bech32_format_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_containing_bitcoin_string_in_bech32_format_should_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_bitcoin()
@@ -107,7 +107,7 @@ class TestModuleBitcoin(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_not_containing_bitcoin_string_should_not_return_event(selfdepth=0):
+    def test_handleEvent_event_data_not_containing_bitcoin_string_should_not_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_bitcoin()

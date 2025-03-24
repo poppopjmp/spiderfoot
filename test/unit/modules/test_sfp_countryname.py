@@ -29,7 +29,7 @@ class TestModuleCountryName(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_phone_number_event_data_containing_countrycode_should_create_country_name_event(selfdepth=0):
+    def test_handleEvent_phone_number_event_data_containing_countrycode_should_create_country_name_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_countryname()
@@ -74,7 +74,7 @@ class TestModuleCountryName(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_domain_whois_event_data_containing_countryname_string_should_create_country_name_event(selfdepth=0):
+    def test_handleEvent_domain_whois_event_data_containing_countryname_string_should_create_country_name_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_countryname()
@@ -119,7 +119,7 @@ class TestModuleCountryName(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_domain_whois_event_data_not_containing_countryname_string_should_not_create_event(selfdepth=0):
+    def test_handleEvent_domain_whois_event_data_not_containing_countryname_string_should_not_create_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_countryname()

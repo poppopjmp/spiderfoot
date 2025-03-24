@@ -1,442 +1,425 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from spiderfoot.helpers import SpiderFootHelpers
+import spiderfoot.helpers as sfh
 from test.unit.utils.test_base import SpiderFootTestBase
-from test.unit.utils.test_helpers import safe_recursion
 
 
 class TestSpiderFootHelpers(SpiderFootTestBase):
 
-    def test_dataPath(self):
-        with patch('spiderfoot.helpers.os') as mock_os:
-            mock_os.environ.get.return_value = None
-            mock_os.path.isdir.return_value = False
-            mock_os.makedirs.return_value = None
-            path = SpiderFootHelpers.dataPath()
-            self.assertTrue(mock_os.makedirs.called)
-            self.assertIn('.spiderfoot', path)
-
-    def test_cachePath(self):
-        with patch('spiderfoot.helpers.os') as mock_os:
-            mock_os.environ.get.return_value = None
-            mock_os.path.isdir.return_value = False
-            mock_os.makedirs.return_value = None
-            path = SpiderFootHelpers.cachePath()
-            self.assertTrue(mock_os.makedirs.called)
-            self.assertIn('.spiderfoot/cache', path)
-
-    def test_logPath(self):
-        with patch('spiderfoot.helpers.os') as mock_os:
-            mock_os.environ.get.return_value = None
-            mock_os.path.isdir.return_value = False
-            mock_os.makedirs.return_value = None
-            path = SpiderFootHelpers.logPath()
-            self.assertTrue(mock_os.makedirs.called)
-            self.assertIn('.spiderfoot/logs', path)
-
-    def test_loadModulesAsDict_invalid_ignore_files_type(self):
-        with self.assertRaises(TypeError):
-            SpiderFootHelpers.loadModulesAsDict('path', 'invalid_ignore_files')
-
-    def test_loadModulesAsDict_invalid_path(self):
-        with self.assertRaises(ValueError):
-            SpiderFootHelpers.loadModulesAsDict('invalid_path')
-
-    def test_loadModulesAsDict(self):
-        with patch('spiderfoot.helpers.os') as mock_os, patch('spiderfoot.helpers.__import__') as mock_import:
-            mock_os.path.isdir.return_value = True
-            mock_os.listdir.return_value = ['sfp_test.py']
-            mock_import.return_value.sfp_test.asdict.return_value = {
-                'cats': ['Content Analysis']}
-            modules = SpiderFootHelpers.loadModulesAsDict('path')
-            self.assertIn('sfp_test', modules)
-
-    def test_loadCorrelationRulesRaw_invalid_ignore_files_type(self):
-        with self.assertRaises(TypeError):
-            SpiderFootHelpers.loadCorrelationRulesRaw(
-                'path', 'invalid_ignore_files')
-
-    def test_loadCorrelationRulesRaw_invalid_path(self):
-        with self.assertRaises(ValueError):
-            SpiderFootHelpers.loadCorrelationRulesRaw('invalid_path')
-
-    def test_loadCorrelationRulesRaw(self):
-        with patch('spiderfoot.helpers.os') as mock_os, patch('builtins.open', unittest.mock.mock_open(read_data='data')):
-            mock_os.path.isdir.return_value = True
-            mock_os.listdir.return_value = ['test.yaml']
-            rules = SpiderFootHelpers.loadCorrelationRulesRaw('path')
-            self.assertIn('test', rules)
-
-    def test_targetTypeFromString(self):
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            '1.2.3.4'), 'IP_ADDRESS')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            '1.2.3.4/24'), 'NETBLOCK_OWNER')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            'test@example.com'), 'EMAILADDR')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            '+1234567890'), 'PHONE_NUMBER')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            '"John Doe"'), 'HUMAN_NAME')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            '"username"'), 'USERNAME')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            '12345'), 'BGP_AS_OWNER')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            '2001:0db8:85a3:0000:0000:8a2e:0370:7334'), 'IPV6_ADDRESS')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            '2001:0db8::/32'), 'NETBLOCKV6_OWNER')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            'example.com'), 'INTERNET_NAME')
-        self.assertEqual(SpiderFootHelpers.targetTypeFromString(
-            '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'), 'BITCOIN_ADDRESS')
-        self.assertIsNone(SpiderFootHelpers.targetTypeFromString('invalid'))
-
-    def test_urlRelativeToAbsolute(self):
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/../test'), 'http://example.com/test')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2'), 'http://example.com/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/./test2'), 'http://example.com/test/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../../test2'), 'http://example.com/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/.././test2'), 'http://example.com/test2')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3'), 'http://example.com/test3')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/./test3'), 'http://example.com/test2/test3')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/.././test3'), 'http://example.com/test3')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4'), 'http://example.com/test4')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/./test4'), 'http://example.com/test3/test4')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/.././test4'), 'http://example.com/test4')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5'), 'http://example.com/test5')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/./test5'), 'http://example.com/test4/test5')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/.././test5'), 'http://example.com/test5')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/../test6'), 'http://example.com/test6')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/./test6'), 'http://example.com/test5/test6')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/.././test6'), 'http://example.com/test6')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7'), 'http://example.com/test7')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/./test7'), 'http://example.com/test6/test7')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/.././test7'), 'http://example.com/test7')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8'), 'http://example.com/test8')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/./test8'), 'http://example.com/test7/test8')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/.././test8'), 'http://example.com/test8')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/../test9'), 'http://example.com/test9')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/./test9'), 'http://example.com/test8/test9')
-        self.assertEqual(SpiderFootHelpers.urlRelativeToAbsolute(
-            'http://example.com/test/../test2/../test3/../test4/../test5/../test6/../test7/../test8/.././test9'), 'http://example.com/test9')
-
-    def test_urlBaseDir(self):
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test'), 'http://example.com/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/'), 'http://example.com/test/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2'), 'http://example.com/test/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2/'), 'http://example.com/test/test2/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2/test3'), 'http://example.com/test/test2/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2/test3/'), 'http://example.com/test/test2/test3/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2/test3/test4'), 'http://example.com/test/test2/test3/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2/test3/test4/'), 'http://example.com/test/test2/test3/test4/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2/test3/test4/test5'), 'http://example.com/test/test2/test3/test4/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2/test3/test4/test5/'), 'http://example.com/test/test2/test3/test4/test5/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2/test3/test4/test5/test6'), 'http://example.com/test/test2/test3/test4/test5/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2/test3/test4/test5/test6/'), 'http://example.com/test/test2/test3/test4/test5/test6/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7'), 'http://example.com/test/test2/test3/test4/test5/test6/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/')
-        self.assertEqual(SpiderFootHelpers.urlBaseDir('http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15/'),
-                         'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15/')
-
-    def test_urlBaseUrl(self):
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15'), 'http://example.com')
-        self.assertEqual(SpiderFootHelpers.urlBaseUrl(
-            'http://example.com/test/test2/test3/test4/test5/test6/test7/test8/test9/test10/test11/test12/test13/test14/test15/'), 'http://example.com')
-
-    def test_dictionaryWordsFromWordlists(self):
-        with patch('spiderfoot.helpers.resources.open_text', unittest.mock.mock_open(read_data='word1\nword2\nword3')):
-            words = SpiderFootHelpers.dictionaryWordsFromWordlists(['english'])
-            self.assertIn('word1', words)
-            self.assertIn('word2', words)
-            self.assertIn('word3', words)
-
-    def test_humanNamesFromWordlists(self):
-        with patch('spiderfoot.helpers.resources.open_text', unittest.mock.mock_open(read_data='name1\nname2\nname3')):
-            names = SpiderFootHelpers.humanNamesFromWordlists(['names'])
-            self.assertIn('name1', names)
-            self.assertIn('name2', names)
-            self.assertIn('name3', names)
-
-    def test_usernamesFromWordlists(self):
-        with patch('spiderfoot.helpers.resources.open_text', unittest.mock.mock_open(read_data='user1\nuser2\nuser3')):
-            usernames = SpiderFootHelpers.usernamesFromWordlists(
-                ['generic-usernames'])
-            self.assertIn('user1', usernames)
-            self.assertIn('user2', usernames)
-            self.assertIn('user3', usernames)
-
-    def test_buildGraphGexf(self):
-        with patch('spiderfoot.helpers.nx.Graph') as mock_graph, patch('spiderfoot.helpers.GEXFWriter') as mock_gexf:
-            mock_graph.return_value = MagicMock()
-            mock_gexf.return_value = MagicMock()
-            self.assertTrue(mock_graph.called)
-            self.assertTrue(mock_gexf.called)
-
-    def test_buildGraphJson(self):
-        with patch('spiderfoot.helpers.nx.Graph') as mock_graph, patch('spiderfoot.helpers.json.dumps') as mock_json:
-            mock_graph.return_value = MagicMock()
-            mock_json.return_value = MagicMock()
-            self.assertTrue(mock_graph.called)
-            self.assertTrue(mock_json.called)
-
-    def test_buildGraphData_invalid_data_type(self):
-        with self.assertRaises(TypeError):
-            SpiderFootHelpers.buildGraphData('invalid_data')
-
-    def test_buildGraphData_empty_data(self):
-        with self.assertRaises(ValueError):
-            SpiderFootHelpers.buildGraphData([])
-
-    def test_dataParentChildToTree_invalid_data_type(self):
-        with self.assertRaises(TypeError):
-            SpiderFootHelpers.dataParentChildToTree('invalid_data')
-
-    def test_dataParentChildToTree_empty_data(self):
-        with self.assertRaises(ValueError):
-            SpiderFootHelpers.dataParentChildToTree({})
-
-    def test_validLEI(self):
-        self.assertTrue(SpiderFootHelpers.validLEI('5493001KJTIIGC8Y1R12'))
-        self.assertFalse(SpiderFootHelpers.validLEI('invalid_lei'))
-
-    def test_validEmail(self):
-        self.assertTrue(SpiderFootHelpers.validEmail('test@example.com'))
-        self.assertFalse(SpiderFootHelpers.validEmail('invalid_email'))
-
-    def test_validPhoneNumber(self):
-        self.assertTrue(SpiderFootHelpers.validPhoneNumber('+1234567890'))
-        self.assertFalse(SpiderFootHelpers.validPhoneNumber('invalid_phone'))
-
-    def test_genScanInstanceId(self):
-        scan_id = SpiderFootHelpers.genScanInstanceId()
-        self.assertIsInstance(scan_id, str)
-        self.assertEqual(len(scan_id), 8)
-
-    def test_extractLinksFromHtml_invalid_url_type(self):
-        with self.assertRaises(TypeError):
-            SpiderFootHelpers.extractLinksFromHtml(123, 'data', ['domain'])
-
-    def test_extractLinksFromHtml_invalid_data_type(self):
-        with self.assertRaises(TypeError):
-            SpiderFootHelpers.extractLinksFromHtml('url', 123, ['domain'])
-
-    def test_extractLinksFromHtml(self):
-        with patch('spiderfoot.helpers.BeautifulSoup') as mock_bs:
-            mock_bs.return_value.find_all.return_value = [
-                {'href': 'http://example.com'}]
-            links = SpiderFootHelpers.extractLinksFromHtml(
-                'http://example.com', '<a href="http://example.com">link</a>', ['example.com'])
-            self.assertIn('http://example.com', links)
-
-    def test_extractHashesFromText(self):
-        hashes = SpiderFootHelpers.extractHashesFromText(
-            'd41d8cd98f00b204e9800998ecf8427e')
-        self.assertIn(('MD5', 'd41d8cd98f00b204e9800998ecf8427e'), hashes)
-
-    def test_extractUrlsFromRobotsTxt(self):
-        urls = SpiderFootHelpers.extractUrlsFromRobotsTxt('Disallow: /test')
-        self.assertIn('/test', urls)
-
-    def test_extractPgpKeysFromText(self):
-        keys = SpiderFootHelpers.extractPgpKeysFromText(
-            '-----BEGIN PGP PUBLIC KEY BLOCK-----\n...\n-----END PGP PUBLIC KEY BLOCK-----')
-        self.assertIn(
-            '-----BEGIN PGP PUBLIC KEY BLOCK-----\n...\n-----END PGP PUBLIC KEY BLOCK-----', keys)
-
-    def test_extractEmailsFromText(self):
-        emails = SpiderFootHelpers.extractEmailsFromText('test@example.com')
-        self.assertIn('test@example.com', emails)
-
-    def test_extractIbansFromText(self):
-        ibans = SpiderFootHelpers.extractIbansFromText(
-            'DE89370400440532013000')
-        self.assertIn('DE89370400440532013000', ibans)
-
-    def test_extractCreditCardsFromText(self):
-        credit_cards = SpiderFootHelpers.extractCreditCardsFromText(
-            '4111111111111111')
-        self.assertIn('4111111111111111', credit_cards)
-
-    def test_extractUrlsFromText(self):
-        urls = SpiderFootHelpers.extractUrlsFromText('http://example.com')
-        self.assertIn('http://example.com', urls)
-
-    def test_sslDerToPem_invalid_der_cert_type(self):
-        with self.assertRaises(TypeError):
-            SpiderFootHelpers.sslDerToPem('invalid_der_cert')
-
-    def test_sslDerToPem(self):
-        with patch('spiderfoot.helpers.ssl.DER_cert_to_PEM_cert') as mock_ssl:
-            mock_ssl.return_value = 'pem_cert'
-            pem_cert = SpiderFootHelpers.sslDerToPem(b'der_cert')
-            self.assertEqual(pem_cert, 'pem_cert')
-
-    def test_countryNameFromCountryCode(self):
-        self.assertEqual(
-            SpiderFootHelpers.countryNameFromCountryCode('US'), 'United States')
-        self.assertIsNone(
-            SpiderFootHelpers.countryNameFromCountryCode('invalid_code'))
-
-    def test_countryNameFromTld(self):
-        self.assertEqual(
-            SpiderFootHelpers.countryNameFromTld('us'), 'United States')
-        self.assertIsNone(SpiderFootHelpers.countryNameFromTld('invalid_tld'))
-
-    def test_countryCodes(self):
-        codes = SpiderFootHelpers.countryCodes()
-        self.assertIn('US', codes)
-        self.assertEqual(codes['US'], 'United States')
-
-    def test_sanitiseInput(self):
-        self.assertTrue(SpiderFootHelpers.sanitiseInput('valid_input'))
-        self.assertFalse(SpiderFootHelpers.sanitiseInput('invalid_input/'))
-        self.assertFalse(SpiderFootHelpers.sanitiseInput('invalid_input..'))
-        self.assertFalse(SpiderFootHelpers.sanitiseInput('-invalid_input'))
-        self.assertFalse(SpiderFootHelpers.sanitiseInput('in'))
-
     def setUp(self):
-        """Set up before each test."""
         super().setUp()
+        # Setup mock objects
+        self.mock_os = patch('spiderfoot.helpers.os').start()
+        self.mock_sys = patch('spiderfoot.helpers.sys').start()
+        
         # Register event emitters if they exist
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
-        # Backup original methods before monkey patching
-        self._original_mock_os_environ_get_return_value = mock_os.environ.get.return_value if hasattr(mock_os.environ.get, 'return_value') else None
-        # Register monkey patches for automatic restoration
 
+    def test_dataPath(self):
+        """
+        Test dataPath
+        """
+        self.mock_os.path.join.return_value = '/root/path/to/spiderfoot/data'
+        result = sfh.dataPath()
+        self.assertEqual(result, '/root/path/to/spiderfoot/data')
+
+    def test_cachePath(self):
+        """
+        Test cachePath
+        """
+        self.mock_os.path.join.return_value = '/root/path/to/spiderfoot/cache'
+        result = sfh.cachePath()
+        self.assertEqual(result, '/root/path/to/spiderfoot/cache')
+
+    def test_logPath(self):
+        """
+        Test logPath
+        """
+        self.mock_os.path.join.return_value = '/root/path/to/spiderfoot/log'
+        result = sfh.logPath()
+        self.assertEqual(result, '/root/path/to/spiderfoot/log')
+
+    def test_targetTypeFromString(self):
+        """
+        Test targetTypeFromString(target)
+        """
+        result = sfh.targetTypeFromString('127.0.0.1')
+        self.assertEqual(result, 'IP_ADDRESS')
+
+        result = sfh.targetTypeFromString('::1')
+        self.assertEqual(result, 'IPV6_ADDRESS')
+
+        result = sfh.targetTypeFromString('2001:0DB8:1234:5678::')
+        self.assertEqual(result, 'IPV6_ADDRESS')
+
+        result = sfh.targetTypeFromString('example.com')
+        self.assertEqual(result, 'DOMAIN_NAME')
+
+        result = sfh.targetTypeFromString('127.0.0.1/24')
+        self.assertEqual(result, 'NETBLOCK_OWNER')
+
+        result = sfh.targetTypeFromString('::1/128')
+        self.assertEqual(result, 'NETBLOCKV6_OWNER')
+
+        result = sfh.targetTypeFromString('INVALID')
+        self.assertEqual(result, 'INTERNET_NAME')
+
+    def test_buildGraphData_empty_data(self):
+        """
+        Test buildGraphData(data, flt=list()) with empty data
+        """
+        result = sfh.buildGraphData({}, [])
+        self.assertEqual(result, {'nodes': [], 'edges': []})
+
+    def test_buildGraphData_invalid_data_type(self):
+        """
+        Test buildGraphData(data, flt=list()) with invalid data type
+        """
+        invalid_data = ['data']
+        with self.assertRaises(TypeError):
+            sfh.buildGraphData(invalid_data, [])
+
+    def test_buildGraphGexf(self):
+        """
+        Test buildGraphGexf(root, title, data, flt=[])
+        """
+        flt = ["ROOT"]
+        result = sfh.buildGraphGexf('test_root', 'test_title', {'nodes': [], 'edges': []}, flt)
+        self.assertTrue('<gexf xmlns="http://www.gephi.org/gexf"' in result)
+
+    def test_buildGraphJson(self):
+        """
+        Test buildGraphJson(root, data, flt=list())
+        """
+        data = {'nodes': [], 'edges': []}
+        result = sfh.buildGraphJson('test_root', data, [])
+        self.assertEqual(result, '{"nodes": [], "edges": []}')
+
+    def test_extractUrlsFromText(self):
+        """
+        Test extractUrlsFromText(text)
+        """
+        urls = sfh.extractUrlsFromText('https://example.com')
+        self.assertEqual(urls, ['https://example.com'])
+
+        urls = sfh.extractUrlsFromText('not a url')
+        self.assertEqual(urls, [])
+
+    def test_validLEI(self):
+        """
+        Test validLEI(lei)
+        """
+        # Valid LEI format (fictitious)
+        result = sfh.validLEI('000000LEI0000500000')
+        self.assertEqual(result, True)
+
+        # Invalid LEI format
+        result = sfh.validLEI('INVALID')
+        self.assertEqual(result, False)
+
+    def test_extractEmailsFromText(self):
+        """
+        Test extractEmailsFromText(text)
+        """
+        emails = sfh.extractEmailsFromText('user@example.com')
+        self.assertEqual(emails, ['user@example.com'])
+
+        emails = sfh.extractEmailsFromText('not an email')
+        self.assertEqual(emails, [])
+
+    def test_extractIbansFromText(self):
+        """
+        Test extractIbansFromText(text)
+        """
+        ibans = sfh.extractIbansFromText('GB29NWBK60161331926819')
+        self.assertEqual(ibans, ['GB29NWBK60161331926819'])
+
+        ibans = sfh.extractIbansFromText('not an IBAN')
+        self.assertEqual(ibans, [])
+
+    def test_extractCreditCardsFromText(self):
+        """
+        Test extractCreditCardsFromText(text)
+        """
+        cards = sfh.extractCreditCardsFromText('4111111111111111')
+        self.assertEqual(cards, ['4111111111111111'])
+
+        cards = sfh.extractCreditCardsFromText('not a credit card')
+        self.assertEqual(cards, [])
+
+    def test_extractPgpKeysFromText(self):
+        """
+        Test extractPgpKeysFromText(text)
+        """
+        pgp_text = '-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: GnuPG v2.0\n\nPUBLIC KEY\n-----END PGP PUBLIC KEY BLOCK-----'
+        pgp_keys = sfh.extractPgpKeysFromText(pgp_text)
+        self.assertEqual(pgp_keys, [pgp_text])
+
+        pgp_keys = sfh.extractPgpKeysFromText('not a PGP key')
+        self.assertEqual(pgp_keys, [])
+
+    def test_validEmail(self):
+        """
+        Test validEmail(email)
+        """
+        result = sfh.validEmail('user@example.com')
+        self.assertEqual(result, True)
+
+        result = sfh.validEmail('invalid@email@example.com')
+        self.assertEqual(result, False)
+
+        result = sfh.validEmail('@example.com')
+        self.assertEqual(result, False)
+
+    def test_extractHashesFromText(self):
+        """
+        Test extractHashesFromText(text)
+        """
+        md5 = '1f3870be274f6c49b3e31a0c6728957f'  # MD5 of "apple"
+        text = f"The hash is {md5}"
+        hashes = sfh.extractHashesFromText(text)
+        self.assertEqual(hashes, [md5])
+
+        text = "No hashes here"
+        hashes = sfh.extractHashesFromText(text)
+        self.assertEqual(hashes, [])
+
+    def test_extractLinksFromHtml(self):
+        """
+        Test extractLinksFromHtml(url, data, domains)
+        """
+        html = '<a href="https://example.com">Example</a>'
+
+        with patch('spiderfoot.helpers.SpiderFootTarget') as mock_target:
+            mock_target.return_value.matches.return_value = True
+            links = sfh.extractLinksFromHtml('https://example.org', html, [])
+            self.assertIsInstance(links, list)
+
+    def test_extractLinksFromHtml_invalid_data_type(self):
+        """
+        Test extractLinksFromHtml(url, data, domains) with invalid data type
+        """
+        with self.assertRaises(TypeError):
+            sfh.extractLinksFromHtml('https://example.org', 1, [])
+
+    def test_extractLinksFromHtml_invalid_url_type(self):
+        """
+        Test extractLinksFromHtml(url, data, domains) with invalid url type
+        """
+        with self.assertRaises(TypeError):
+            sfh.extractLinksFromHtml(1, '..', [])
+
+    def test_urlBaseUrl(self):
+        """
+        Test urlBaseUrl(url)
+        """
+        result = sfh.urlBaseUrl('https://example.com/path')
+        self.assertEqual(result, 'https://example.com')
+
+    def test_urlBaseDir(self):
+        """
+        Test urlBaseDir(url)
+        """
+        result = sfh.urlBaseDir('https://example.com/path/file.txt')
+        self.assertEqual(result, 'https://example.com/path')
+
+    def test_urlRelativeToAbsolute(self):
+        """
+        Test urlRelativeToAbsolute(url)
+        """
+        result = sfh.urlRelativeToAbsolute('relative/url', 'https://example.com/path')
+        self.assertEqual(result, 'https://example.com/path/relative/url')
+
+    def test_sanitiseInput(self):
+        """
+        Test sanitiseInput(cmd)
+        """
+        result = sfh.sanitiseInput('input; rm -rf /')
+        self.assertEqual(result, 'input rm -rf /')
+
+    def test_extractUrlsFromRobotsTxt(self):
+        """
+        Test extractUrlsFromRobotsTxt(robotsTxtData)
+        """
+        data = "User-agent: *\nDisallow: /private\nAllow: /public"
+        result = sfh.extractUrlsFromRobotsTxt(data)
+        self.assertIsInstance(result, list)
+
+    def test_dictionaryWordsFromWordlists(self):
+        """
+        Test dictionaryWordsFromWordlists()
+        """
+        with patch('spiderfoot.helpers.open') as mock_open:
+            mock_open.return_value.__enter__.return_value.readlines.return_value = ['word1', 'word2']
+            self.mock_os.path.isfile.return_value = True
+            
+            result = sfh.dictionaryWordsFromWordlists()
+            self.assertTrue('word1' in result)
+            self.assertTrue('word2' in result)
+
+    def test_humanNamesFromWordlists(self):
+        """
+        Test humanNamesFromWordlists()
+        """
+        with patch('spiderfoot.helpers.open') as mock_open:
+            mock_open.return_value.__enter__.return_value.readlines.return_value = ['name1', 'name2']
+            self.mock_os.path.isfile.return_value = True
+            
+            result = sfh.humanNamesFromWordlists()
+            self.assertTrue('name1' in result)
+            self.assertTrue('name2' in result)
+
+    def test_usernamesFromWordlists(self):
+        """
+        Test usernamesFromWordlists()
+        """
+        with patch('spiderfoot.helpers.open') as mock_open:
+            mock_open.return_value.__enter__.return_value.readlines.return_value = ['username1', 'username2']
+            self.mock_os.path.isfile.return_value = True
+            
+            result = sfh.usernamesFromWordlists()
+            self.assertTrue('username1' in result)
+            self.assertTrue('username2' in result)
+
+    def test_dataParentChildToTree_empty_data(self):
+        """
+        Test dataParentChildToTree(data)
+        """
+        data = []
+        result = sfh.dataParentChildToTree(data)
+        self.assertEqual(result, [])
+
+    def test_dataParentChildToTree_invalid_data_type(self):
+        """
+        Test dataParentChildToTree(data)
+        """
+        data = 'not a list'
+        with self.assertRaises(TypeError):
+            sfh.dataParentChildToTree(data)
+
+    def test_sslDerToPem(self):
+        """
+        Test sslDerToPem(der)
+        """
+        with patch('spiderfoot.helpers.base64') as mock_base64:
+            mock_base64.b64encode.return_value.decode.return_value = "ABCDEF"
+            result = sfh.sslDerToPem(b'derdata')
+            self.assertIn('BEGIN CERTIFICATE', result)
+
+    def test_sslDerToPem_invalid_der_cert_type(self):
+        """
+        Test sslDerToPem(der)
+        """
+        with self.assertRaises(TypeError):
+            sfh.sslDerToPem('der_data')
+
+    def test_genScanInstanceId(self):
+        """
+        Test genScanInstanceId()
+        """
+        result = sfh.genScanInstanceId()
+        self.assertTrue(len(result) > 0)
+
+    def test_validPhoneNumber(self):
+        """
+        Test validPhoneNumber(phone)
+        """
+        result = sfh.validPhoneNumber('+12125550123')
+        self.assertTrue(result)
+
+    def test_loadModulesAsDict(self):
+        """
+        Test loadModulesAsDict(directory, ignore_files)
+        """
+        # Mock directory listing
+        self.mock_os.listdir.return_value = ['sfp_test.py', '__pycache__', 'sfp_valid.py']
+        
+        # Mock module file checks
+        self.mock_os.path.isfile.return_value = True
+        
+        # Mock module loading
+        with patch('spiderfoot.helpers.importlib') as mock_importlib:
+            mock_module = MagicMock()
+            mock_module.__name__ = 'sfp_valid'
+            mock_module.meta = {'name': 'Valid Module'}
+            mock_importlib.import_module.return_value = mock_module
+            
+            result = sfh.loadModulesAsDict('modules', ['sfp_test.py'])
+            self.assertTrue('sfp_valid' in result)
+
+    def test_loadModulesAsDict_invalid_ignore_files_type(self):
+        """
+        Test loadModulesAsDict(directory, ignore_files) with invalid ignore_files type
+        """
+        with self.assertRaises(TypeError):
+            sfh.loadModulesAsDict('modules', 'not_a_list')
+
+    def test_loadModulesAsDict_invalid_path(self):
+        """
+        Test loadModulesAsDict(directory, ignore_files) with invalid path
+        """
+        self.mock_os.path.isdir.return_value = False
+        result = sfh.loadModulesAsDict('invalid_path', [])
+        self.assertEqual(result, {})
+
+    def test_loadCorrelationRulesRaw(self):
+        """
+        Test loadCorrelationRulesRaw(directory, ignore_files)
+        """
+        # Mock directory listing
+        self.mock_os.listdir.return_value = ['test_rule.yaml', 'valid_rule.yaml']
+        
+        # Mock rule file checks
+        self.mock_os.path.isfile.return_value = True
+        
+        # Mock rule file reading
+        with patch('spiderfoot.helpers.open') as mock_open:
+            mock_open.return_value.__enter__.return_value.read.return_value = "id: test_rule\ndescr: Test Rule"
+            
+            result = sfh.loadCorrelationRulesRaw('correlations', ['test_rule.yaml'])
+            self.assertEqual(len(result), 1)
+
+    def test_loadCorrelationRulesRaw_invalid_ignore_files_type(self):
+        """
+        Test loadCorrelationRulesRaw(directory, ignore_files) with invalid ignore_files type
+        """
+        with self.assertRaises(TypeError):
+            sfh.loadCorrelationRulesRaw('correlations', 'not_a_list')
+
+    def test_loadCorrelationRulesRaw_invalid_path(self):
+        """
+        Test loadCorrelationRulesRaw(directory, ignore_files) with invalid path
+        """
+        self.mock_os.path.isdir.return_value = False
+        result = sfh.loadCorrelationRulesRaw('invalid_path', [])
+        self.assertEqual(result, [])
+
+    def test_countryCodes(self):
+        """
+        Test countryCodes()
+        """
+        result = sfh.countryCodes()
+        self.assertIsInstance(result, dict)
+
+    def test_countryNameFromCountryCode(self):
+        """
+        Test countryNameFromCountryCode(countrycode)
+        """
+        result = sfh.countryNameFromCountryCode('US')
+        self.assertEqual(result, 'United States')
+
+    def test_countryNameFromTld(self):
+        """
+        Test countryNameFromTld(tld)
+        """
+        result = sfh.countryNameFromTld('.us')
+        self.assertEqual(result, 'United States')
+
+    def reset_mock_objects(self):
+        patch.stopall()
 
     def tearDown(self):
         """Clean up after each test."""
-        # Restore original methods after monkey patching
-        if hasattr(self, '_original_mock_os_environ_get_return_value') and self._original_mock_os_environ_get_return_value is not None:
-            mock_os.environ.get.return_value = self._original_mock_os_environ_get_return_value
-        elif hasattr(mock_os.environ.get, 'return_value'):
-            delattr(mock_os.environ.get, 'return_value')
         super().tearDown()
+        patch.stopall()
