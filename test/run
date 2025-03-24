@@ -5,8 +5,43 @@
 # Must be run from SpiderFoot root directory; ie:
 # ./test/run
 
+# Parse arguments
+SEQUENTIAL=0
+THREADS="auto"
+MEMORY_CHECK=0
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --sequential)
+      SEQUENTIAL=1
+      shift
+      ;;
+    --threads)
+      THREADS="$2"
+      shift
+      shift
+      ;;
+    --memory-check)
+      MEMORY_CHECK=1
+      shift
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
 echo Running flake8 ...
 time python3 -m flake8 . --count --show-source --statistics || exit
 
 echo Running pytest ...
-time python3 -m pytest -n auto --dist loadfile --ignore=test/integration/modules/ --durations=5 --cov-report html --cov=. .
+if [ $SEQUENTIAL -eq 1 ]; then
+  echo "Running tests sequentially (this may take longer)..."
+  time python3 test/run_sequential.py --test-dir test/unit
+elif [ $MEMORY_CHECK -eq 1 ]; then
+  echo "Running tests with memory profiling..."
+  time python3 -m pytest -n 1 --memray --ignore=test/integration/modules/ --durations=5 
+else
+  echo "Running tests in parallel with $THREADS threads..."
+  time python3 -m pytest -n $THREADS --dist loadfile --ignore=test/integration/modules/ --durations=5 --cov-report html --cov=. .
+fi

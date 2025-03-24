@@ -6,6 +6,14 @@ import logging
 import threading
 from _pytest.runner import runtestprotocol
 from spiderfoot import SpiderFootHelpers
+from test.unit.utils.thread_manager import ThreadManager
+
+# Try to import ConnectionMonitor, but don't fail if dependencies are missing
+try:
+    from test.unit.utils.connection_monitor import ConnectionMonitor
+    HAS_CONNECTION_MONITOR = True
+except ImportError:
+    HAS_CONNECTION_MONITOR = False
 
 # Set up logging
 logging.basicConfig(
@@ -78,6 +86,55 @@ def check_resource_leaks():
         thread_names = [t.name for t in new_threads if t.is_alive()]
         if thread_names:  # Only report if threads are still alive
             logging.warning(f"Potential thread leak detected: {thread_names}")
+
+# Add a stronger test isolation mechanism
+@pytest.fixture(autouse=True)
+def test_isolation():
+    """Ensure tests are properly isolated from one another."""
+    # Record initial state
+    initial_threads = set(threading.enumerate())
+    thread_info_before = ThreadManager.get_thread_info()
+    logging.info(f"Active threads before test: {thread_info_before['count']}")
+    
+    # Monitor connections if available
+    if HAS_CONNECTION_MONITOR:
+        connections_before = len(ConnectionMonitor.get_open_connections())
+        logging.info(f"Open connections before test: {connections_before}")
+    
+    # Let the test run
+    yield
+    
+    # Give threads a moment to clean up
+    time.sleep(0.5)
+    
+    # Close any open connections
+    if HAS_CONNECTION_MONITOR:
+        closed = ConnectionMonitor.close_all_connections()
+        if closed > 0:
+            logging.info(f"Closed {closed} connections")
+        
+        connections_after = len(ConnectionMonitor.get_open_connections())
+        logging.info(f"Open connections after test: {connections_after}")
+    
+    # Try to wait for threads to complete
+    ThreadManager.wait_for_threads_completion()
+    
+    # Check if new threads were created and not cleaned up
+    current_threads = set(threading.enumerate())
+    new_threads = current_threads - initial_threads
+    
+    thread_info_after = ThreadManager.get_thread_info()
+    logging.info(f"Active threads after test: {thread_info_after['count']}")
+    
+    if new_threads:
+        thread_info = [f"{t.name} (daemon={t.daemon})" for t in new_threads if t.is_alive()]
+        if thread_info:  # Only report if threads are still alive
+            logging.warning(f"Test left behind {len(thread_info)} thread(s): {', '.join(thread_info)}")
+            
+            # Try to identify threads that might be hanging
+            for thread in new_threads:
+                if not thread.daemon and thread.is_alive():
+                    logging.warning(f"Non-daemon thread still running: {thread.name}")
 
 @pytest.fixture(autouse=True)
 def default_options(request):

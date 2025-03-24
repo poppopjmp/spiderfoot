@@ -4,6 +4,7 @@ from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_bambenek import sfp_bambenek
 import unittest
+import logging  # Add this missing import
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 

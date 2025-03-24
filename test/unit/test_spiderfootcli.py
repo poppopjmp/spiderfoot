@@ -13,6 +13,26 @@ from test.unit.utils.test_helpers import safe_recursion
 class TestSpiderFootCli(unittest.TestCase):
     """Test TestSpiderFootCli."""
 
+    def setUp(self):
+        """Set up before each test."""
+        self.cli = SpiderFootCli(False)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        if hasattr(self, 'cli'):
+            del self.cli
+
+    def test_cli_init(self):
+        """Test SpiderFootCli initialization."""
+        cli = SpiderFootCli(False)
+        self.assertIsInstance(cli, SpiderFootCli)
+
+    def test_cli_default_settings(self):
+        """Test default CLI settings."""
+        cli = SpiderFootCli(False)
+        self.assertFalse(cli.debug)
+        # Add more assertions about default settings
+
     def test_default(self):
         """Test default(self, line)"""
         sfcli = SpiderFootCli()
@@ -471,14 +491,3 @@ class TestSpiderFootCli(unittest.TestCase):
         sfcli = SpiderFootCli()
         do_eof = sfcli.do_EOF(None)
         self.assertTrue(do_eof)
-
-    def setUp(self):
-        """Set up before each test."""
-        super().setUp()
-        # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
-        """Clean up after each test."""
-        super().tearDown()

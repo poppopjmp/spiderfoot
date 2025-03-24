@@ -2,35 +2,45 @@ name: Tests
 
 on:
   push:
-    branches: [master]
+    branches: [master, v5.0.1-dev]
   pull_request:
     branches: [master]
 
 jobs:
   build:
-
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.9", "3.10"]
         os: [ubuntu-latest]
+        test-mode: ['parallel', 'sequential']
+        include:
+          - test-mode: 'parallel'
+            pytest-args: '-n auto --dist loadfile'
+          - test-mode: 'sequential'
+            pytest-args: '-n 0'
 
     steps:
       - uses: actions/checkout@v2
+      
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+          
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest
+          pip install flake8 pytest pytest-xdist pytest-timeout pytest-rerunfailures psutil
           pip install -r test/requirements.txt
+          
       - name: Lint with flake8
         run: |
           # stop the build if there are Python Flake8 violations
           flake8 . --count --show-source --statistics  > flake8_errors.txt || true
         continue-on-error: true
+        
       - name: Report flake8 errors (if any)
         run: |
           if [ -s "flake8_errors.txt" ]; then
@@ -41,9 +51,14 @@ jobs:
             echo "Flake8 found no errors."
           fi
 
-      - name: Test with pytest
+      - name: Test with pytest (${{ matrix.test-mode }})
         run: |
-            python -m pytest -n auto --dist loadfile --verbose  --ignore=test/integration/ --durations=5 --cov-report term --cov=. .
+          if [ "${{ matrix.test-mode }}" == "sequential" ]; then
+            python test/run_sequential.py --test-dir test/unit
+          else
+            python -m pytest ${{ matrix.pytest-args }} --verbose --ignore=test/integration/ --durations=5 --timeout=300 --cov-report term --cov=. .
+          fi
+          
       - uses: codecov/codecov-action@v1
         with:
             fail_ci_if_error: false
@@ -57,7 +72,7 @@ jobs:
 
       - name: Measure test coverage
         run: |
-          coverage run -m pytest
+          coverage run -m pytest --timeout=300
           coverage report -m
           coverage xml
 
@@ -67,7 +82,14 @@ jobs:
           files: coverage.xml
           fail_ci_if_error: true
 
-      - name: Enforce minimum coverage threshold
+      # Only run memory check on Python 3.10 parallel job to save CI resources
+      - name: Memory usage check
+        if: ${{ matrix.python-version == '3.10' && matrix.test-mode == 'parallel' }}
         run: |
-          coverage run -m pytest
+          pip install pytest-memray
+          python -m pytest -n 1 --memray --ignore=test/integration/ --durations=5
+
+      - name: Enforce minimum coverage threshold  
+        run: |
+          coverage run -m pytest --timeout=300
           coverage report --fail-under=80

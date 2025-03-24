@@ -2,6 +2,15 @@
 
 import unittest
 from test.unit.utils.test_common import cleanup_listeners, reset_mock_objects, restore_monkey_patch
+import gc
+import threading
+import time
+from test.unit.utils.thread_manager import ThreadManager
+try:
+    from test.unit.utils.connection_monitor import ConnectionMonitor
+    HAS_CONNECTION_MONITOR = True
+except ImportError:
+    HAS_CONNECTION_MONITOR = False
 
 
 class SpiderFootTestBase(unittest.TestCase):
@@ -54,6 +63,51 @@ class SpiderFootTestBase(unittest.TestCase):
         # Restore all monkey patches
         for obj, attr_name, orig_value in self._monkey_patches:
             restore_monkey_patch(obj, attr_name, orig_value)
+        
+        # Clean up registered mocks
+        if hasattr(self, '_registered_mocks'):
+            for mock in self._registered_mocks:
+                mock.reset_mock()
+        
+        # Clean up registered patchers
+        if hasattr(self, '_registered_patchers'):
+            for patcher in self._registered_patchers:
+                if patcher.is_started():
+                    patcher.stop()
+        
+        # Clean up event emitters
+        if hasattr(self, '_event_emitters'):
+            for emitter in self._event_emitters:
+                if hasattr(emitter, 'cleanup'):
+                    emitter.cleanup()
+                # Ensure no running threads created by the module
+                if hasattr(emitter, '_stopThreads'):
+                    emitter._stopThreads()
+        
+        # Clear any references
+        if hasattr(self, 'module'):
+            del self.module
+        
+        # Close any open connections if ConnectionMonitor is available
+        if HAS_CONNECTION_MONITOR:
+            ConnectionMonitor.close_all_connections()
+        
+        # Use ThreadManager to wait for threads to complete
+        ThreadManager.wait_for_threads_completion()
+        
+        # Force garbage collection to free up resources
+        gc.collect()
+        
+        # Brief pause to allow any threads to terminate
+        time.sleep(0.1)
+        
+        # Check for and report any non-daemon threads created during the test
+        thread_info = ThreadManager.get_thread_info()
+        non_daemon_threads = [t for t in thread_info['threads'] 
+                              if not t['daemon'] and t['alive'] and t['name'] != threading.current_thread().name]
+        
+        if non_daemon_threads:
+            print(f"Warning: {len(non_daemon_threads)} non-daemon thread(s) still running: {[t['name'] for t in non_daemon_threads]}")
         
         # Call parent tearDown
         super().tearDown()
