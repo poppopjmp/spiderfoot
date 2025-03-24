@@ -33,10 +33,10 @@ class sfp__stor_db(SpiderFootPlugin):
     # Default options
     opts = {
         # max bytes for any piece of info stored (0 = unlimited)
-        'maxstorage': 1024,
+        'maxstorage': 2048,
         '_store': True,
-        'db_type': 'sqlite',  # sqlite or postgresql
-        'postgresql_host': 'localhost',
+        'db_type': 'postgresql',  # sqlite or postgresql
+        'postgresql_host': 'postgres',
         'postgresql_port': 5432,
         'postgresql_database': 'spiderfoot',
         'postgresql_username': 'spiderfoot',
