@@ -172,6 +172,15 @@ class TestModuleCriminalip(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Setup proper mock objects
+        if hasattr(self, 'plugin'):
+            self.plugin.__sfdb__ = MagicMock()
+            self.plugin.sf = MagicMock()
+        # Setup proper module mock objects
+        if hasattr(self, 'module'):
+            self.module.__sfdb__ = MagicMock()
+            self.module.sf = MagicMock()
+        
         # Register event emitters if they exist
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
@@ -179,3 +188,4 @@ class TestModuleCriminalip(SpiderFootTestBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+        patch.stopall()

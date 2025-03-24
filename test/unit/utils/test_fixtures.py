@@ -5,6 +5,10 @@ import json
 import tempfile
 import random
 import string
+import unittest
+from unittest.mock import MagicMock, patch
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 def get_test_data_path(filename):
     """Get the full path to a test data file.

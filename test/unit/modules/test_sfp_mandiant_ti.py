@@ -4,11 +4,21 @@ from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
+from unittest.mock import MagicMock, patch
 
 class TestModuleMandiantTI(SpiderFootTestBase):
 
     def setUp(self):
         super().setUp()
+        # Setup proper mock objects
+        if hasattr(self, 'plugin'):
+            self.plugin.__sfdb__ = MagicMock()
+            self.plugin.sf = MagicMock()
+        # Setup proper module mock objects
+        if hasattr(self, 'module'):
+            self.module.__sfdb__ = MagicMock()
+            self.module.sf = MagicMock()
+        
         self.default_options = {
             '_fetchtimeout': 5,
             '_useragent': 'SpiderFoot',
@@ -61,3 +71,4 @@ if __name__ == '__main__':
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+        patch.stopall()

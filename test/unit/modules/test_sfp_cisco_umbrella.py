@@ -14,6 +14,15 @@ class TestModuleCiscoUmbrella(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Setup proper mock objects
+        if hasattr(self, 'plugin'):
+            self.plugin.__sfdb__ = MagicMock()
+            self.plugin.sf = MagicMock()
+        # Setup proper module mock objects
+        if hasattr(self, 'module'):
+            self.module.__sfdb__ = MagicMock()
+            self.module.sf = MagicMock()
+        
         # Create a mock for any logging calls
         self.log_mock = MagicMock()
         # Apply patches in setup to affect all tests
@@ -68,3 +77,4 @@ class TestModuleCiscoUmbrella(SpiderFootTestBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+        patch.stopall()

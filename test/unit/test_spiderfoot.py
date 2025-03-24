@@ -781,6 +781,7 @@ class TestSpiderFoot(unittest.TestCase):
             self.register_event_emitter(self.module)
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
+from unittest.mock import MagicMock, patch
         with self.assertRaises(SystemExit) as cm:
             handle_abort(None, None)
         self.assertEqual(cm.exception.code, -1)

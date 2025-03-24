@@ -4,6 +4,8 @@ import json
 import re
 from unittest.mock import patch, MagicMock
 from contextlib import contextmanager
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 class RequestMock:

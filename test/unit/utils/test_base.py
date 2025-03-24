@@ -8,6 +8,8 @@ import time
 from test.unit.utils.thread_manager import ThreadManager
 try:
     from test.unit.utils.connection_monitor import ConnectionMonitor
+from unittest.mock import MagicMock, patch
+from test.unit.utils.test_helpers import safe_recursion
     HAS_CONNECTION_MONITOR = True
 except ImportError:
     HAS_CONNECTION_MONITOR = False

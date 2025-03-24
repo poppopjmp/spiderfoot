@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 import os
 import tempfile
 import sys
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 def mock_cli_arguments():

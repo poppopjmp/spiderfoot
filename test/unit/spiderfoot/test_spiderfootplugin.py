@@ -210,7 +210,7 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
         # No assertions as finish is meant to be overridden
 
     def test_threadWorker(self):
-        with patch('spiderfoot.plugin.SpiderFootDb', create=True), patch.object(self.plugin, 'poolExecute'):
+        with patch(\'spiderfoot.plugin.SpiderFootDb\', create=True, create=True), patch.object(self.plugin, 'poolExecute'):
             self.plugin.incomingEventQueue = MagicMock()
             self.plugin.outgoingEventQueue = MagicMock()
             self.plugin.incomingEventQueue.get_nowait.side_effect = [
@@ -317,7 +317,7 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
         self.assertFalse(self.plugin.checkForStop())
 
     def test_threadWorker_with_incomingEventQueue(self):
-        with patch('spiderfoot.plugin.SpiderFootDb', create=True) as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute'):
+        with patch(\'spiderfoot.plugin.SpiderFootDb\', create=True, create=True) as mock_SpiderFootDb, patch.object(self.plugin, 'poolExecute'):
             self.plugin.incomingEventQueue = MagicMock()
             self.plugin.outgoingEventQueue = MagicMock()
             
@@ -331,7 +331,7 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
             self.assertEqual(self.plugin.poolExecute.call_count, 2)
 
     def test_threadWorker_with_exception(self):
-        with patch('spiderfoot.plugin.SpiderFootDb', create=True), patch.object(self.plugin, 'sf'):
+        with patch(\'spiderfoot.plugin.SpiderFootDb\', create=True, create=True), patch.object(self.plugin, 'sf'):
             self.plugin.incomingEventQueue = MagicMock()
             self.plugin.outgoingEventQueue = MagicMock()
             self.plugin.incomingEventQueue.get_nowait.side_effect = Exception(
@@ -342,7 +342,7 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
             self.plugin.incomingEventQueue.get_nowait.assert_called()
 
     def test_threadWorker_with_keyboard_interrupt(self):
-        with patch('spiderfoot.plugin.SpiderFootDb', create=True), patch.object(self.plugin, 'sf'):
+        with patch(\'spiderfoot.plugin.SpiderFootDb\', create=True, create=True), patch.object(self.plugin, 'sf'):
             self.plugin.incomingEventQueue = MagicMock()
             self.plugin.outgoingEventQueue = MagicMock()
             self.plugin.incomingEventQueue.get_nowait.side_effect = KeyboardInterrupt
@@ -392,5 +392,6 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+        patch.stopall()
         if hasattr(self, 'plugin'):
             self.plugin = None

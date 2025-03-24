@@ -7,6 +7,8 @@ from unittest.mock import MagicMock, patch
 import sqlite3
 import os
 import tempfile
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 def create_mock_db(test_instance):

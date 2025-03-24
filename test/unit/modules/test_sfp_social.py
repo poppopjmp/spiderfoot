@@ -6,6 +6,7 @@ from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
+from unittest.mock import MagicMock, patch
 
 
 @pytest.mark.usefixtures
@@ -99,6 +100,15 @@ class TestModuleSocial(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        # Setup proper mock objects
+        if hasattr(self, 'plugin'):
+            self.plugin.__sfdb__ = MagicMock()
+            self.plugin.sf = MagicMock()
+        # Setup proper module mock objects
+        if hasattr(self, 'module'):
+            self.module.__sfdb__ = MagicMock()
+            self.module.sf = MagicMock()
+        
         # Register event emitters if they exist
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
@@ -106,3 +116,4 @@ class TestModuleSocial(SpiderFootTestBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+        patch.stopall()

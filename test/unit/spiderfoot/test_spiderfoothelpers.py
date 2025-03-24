@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 import spiderfoot.helpers as sfh
 from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
 
 
 class TestSpiderFootHelpers(SpiderFootTestBase):

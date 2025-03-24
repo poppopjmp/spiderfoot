@@ -2,6 +2,9 @@
 
 import functools
 import logging
+import unittest
+from unittest.mock import MagicMock, patch
+from test.unit.utils.test_base import SpiderFootTestBase
 
 
 

@@ -10,6 +10,15 @@ class TestModuleNetlas(SpiderFootTestBase):
 
     def setUp(self):
         super().setUp()
+        # Setup proper mock objects
+        if hasattr(self, 'plugin'):
+            self.plugin.__sfdb__ = MagicMock()
+            self.plugin.sf = MagicMock()
+        # Setup proper module mock objects
+        if hasattr(self, 'module'):
+            self.module.__sfdb__ = MagicMock()
+            self.module.sf = MagicMock()
+        
         self.default_options = {
             '_debug': False,
             '_useragent': 'SpiderFoot',
@@ -71,3 +80,4 @@ class TestModuleNetlas(SpiderFootTestBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+        patch.stopall()

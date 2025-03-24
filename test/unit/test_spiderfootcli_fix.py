@@ -28,6 +28,8 @@ def fix_cli_test_file():
     if "from unittest.mock import MagicMock, patch" not in content:
         pattern = r"(import unittest.*?)\n"
         replacement = r"\1\nfrom unittest.mock import MagicMock, patch\nfrom test.unit.utils.cli_test_helpers import setup_cli_test_environment, mock_cli_arguments\n"
+from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_helpers import safe_recursion
         content = re.sub(pattern, replacement, content, flags=re.DOTALL)
 
     # Fix setUp method to properly mock CLI dependencies

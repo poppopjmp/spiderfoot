@@ -7,6 +7,7 @@ import unittest
 from sfcli import SpiderFootCli
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
+from unittest.mock import MagicMock, patch
 
 
 @pytest.mark.usefixtures
