@@ -29,15 +29,13 @@ def fix_webui_test_file():
     # Fix imports
     if "from unittest.mock import MagicMock, patch" not in content:
         pattern = r"(import unittest.*?)\n"
-        replacement = r"\1\nfrom unittest.mock import MagicMock, patch\nfrom test.unit.utils.web_test_helpers import create_web_test_environment\n"
-from test.unit.utils.test_base import SpiderFootTestBase
-from test.unit.utils.test_helpers import safe_recursion
+        replacement = r"\1\nfrom unittest.mock import MagicMock, patch\nfrom test.unit.utils.web_test_helpers import create_web_test_environment\nfrom test.unit.utils.test_base import SpiderFootTestBase\nfrom test.unit.utils.test_helpers import safe_recursion\n"
         content = re.sub(pattern, replacement, content, flags=re.DOTALL)
 
     # Fix setUp method to create a valid temp database for testing
     setup_code = """
     def setUp(self):
-        """Set up before each test."""
+        \"\"\"Set up before each test.\"\"\"
         super().setUp()
         
         # Create a valid test environment
@@ -61,7 +59,7 @@ from test.unit.utils.test_helpers import safe_recursion
     # Add proper tearDown method
     teardown_code = """
     def tearDown(self):
-        """Clean up after each test."""
+        \"\"\"Clean up after each test.\"\"\"
         super().tearDown()
         patch.stopall()
     """

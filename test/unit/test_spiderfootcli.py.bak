@@ -29,8 +29,6 @@ class TestSpiderFootCli(unittest.TestCase):
         self.assertIsInstance(cli, SpiderFootCli)
 
     def test_cli_default_settings(self):
-        # Mock necessary methods
-        self.cli.debug = MagicMock()
         """Test default CLI settings."""
         cli = SpiderFootCli(False)
         self.assertFalse(cli.debug)

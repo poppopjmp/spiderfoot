@@ -1,8 +1,4 @@
 import unittest
-from unittest.mock import MagicMock, patch
-from test.unit.utils.web_test_helpers import create_web_test_environment
-from test.unit.utils.test_base import SpiderFootTestBase
-from test.unit.utils.test_helpers import safe_recursion
 from unittest.mock import patch, MagicMock
 import cherrypy
 from sfwebui import SpiderFootWebUi

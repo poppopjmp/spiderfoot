@@ -7,8 +7,8 @@ from test.unit.utils.test_fixtures import *
 
 try:
     from test.unit.utils.connection_monitor import ConnectionMonitor
-import unittest
-from unittest.mock import MagicMock, patch
+    import unittest
+    from unittest.mock import MagicMock, patch
     HAS_CONNECTION_MONITOR = True
 except ImportError:
     HAS_CONNECTION_MONITOR = False

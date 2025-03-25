@@ -144,7 +144,7 @@ def add_teardown_cleanup(content, test_class_name):
     if 'TestSpiderFootDb' in test_class_name and 'self.sqlite_patcher.stop()' not in content:
         teardown_code = """
     def tearDown(self):
-        """Clean up after each test."""
+        \"\"\"Clean up after each test.\"\"\"
         super().tearDown()
         self.sqlite_patcher.stop()
         """
@@ -156,7 +156,7 @@ def add_teardown_cleanup(content, test_class_name):
     elif 'TestSpiderFootPlugin' in test_class_name or 'TestModule' in test_class_name:
         teardown_code = """
     def tearDown(self):
-        """Clean up after each test."""
+        \"\"\"Clean up after each test.\"\"\"
         super().tearDown()
         patch.stopall()
         """
@@ -238,7 +238,7 @@ def verify_test_base():
         # Add the method if missing
         patch = """
     def register_event_emitter(self, module):
-        """Register an event emitter module with the registry."""
+        \"\"\"Register an event emitter module with the registry.\"\"\"
         if not hasattr(self, '_event_emitters'):
             self._event_emitters = []
         

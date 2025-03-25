@@ -27,15 +27,13 @@ def fix_cli_test_file():
     # Fix imports
     if "from unittest.mock import MagicMock, patch" not in content:
         pattern = r"(import unittest.*?)\n"
-        replacement = r"\1\nfrom unittest.mock import MagicMock, patch\nfrom test.unit.utils.cli_test_helpers import setup_cli_test_environment, mock_cli_arguments\n"
-from test.unit.utils.test_base import SpiderFootTestBase
-from test.unit.utils.test_helpers import safe_recursion
+        replacement = r"\1\nfrom unittest.mock import MagicMock, patch\nfrom test.unit.utils.cli_test_helpers import setup_cli_test_environment, mock_cli_arguments\nfrom test.unit.utils.test_base import SpiderFootTestBase\nfrom test.unit.utils.test_helpers import safe_recursion\n"
         content = re.sub(pattern, replacement, content, flags=re.DOTALL)
 
     # Fix setUp method to properly mock CLI dependencies
     setup_code = """
     def setUp(self):
-        """Set up before each test."""
+        \"\"\"Set up before each test.\"\"\"
         super().setUp()
         
         # Mock CLI environment
@@ -65,7 +63,7 @@ from test.unit.utils.test_helpers import safe_recursion
     # Add proper tearDown method
     teardown_code = """
     def tearDown(self):
-        """Clean up after each test."""
+        \"\"\"Clean up after each test.\"\"\"
         # Restore original arguments
         self.restore_argv()
         super().tearDown()

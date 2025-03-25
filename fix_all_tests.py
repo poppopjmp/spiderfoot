@@ -71,7 +71,7 @@ def add_teardown_cleanup(content, test_class_name):
     if 'TestSpiderFootDb' in test_class_name:
         teardown_code = """
     def tearDown(self):
-        """Clean up after each test."""
+        \"\"\"Clean up after each test.\"\"\"
         super().tearDown()
         self.sqlite_patcher.stop()
         """

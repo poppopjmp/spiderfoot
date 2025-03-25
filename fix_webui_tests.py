@@ -34,7 +34,7 @@ def fix_webui_tests():
     if "def tearDown" not in content:
         teardown_code = """
     def tearDown(self):
-        """Clean up after each test."""
+        \"\"\"Clean up after each test.\"\"\"
         super().tearDown()
 """
         # Add after the class definition
@@ -75,7 +75,7 @@ def fix_cli_tests():
     if "def tearDown" not in content:
         teardown_code = """
     def tearDown(self):
-        """Clean up after each test."""
+        \"\"\"Clean up after each test.\"\"\"
         self.restore_argv()
         super().tearDown()
 """
