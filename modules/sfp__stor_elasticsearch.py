@@ -12,6 +12,7 @@
 
 from elasticsearch import Elasticsearch
 from spiderfoot import SpiderFootPlugin
+import threading
 
 
 class sfp__stor_elasticsearch(SpiderFootPlugin):
@@ -69,6 +70,7 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
         self.es = None
         self.buffer = []  # Buffer for bulk insertion
         self.errorState = False
+        self.lock = threading.Lock()  # Ensure thread-safe operations
 
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
@@ -136,14 +138,18 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
         }
 
         # Add to buffer for bulk insertion
-        self.buffer.append({
-            '_index': self.opts['index'],
-            '_source': event_data
-        })
+        with self.lock:
+            self.buffer.append({
+                '_index': self.opts['index'],
+                '_source': event_data
+            })
 
         # If buffer reaches bulk size, insert documents
         if len(self.buffer) >= self.opts['bulk_size']:
             self._flush_buffer()
+
+        # Store correlation data for interscan correlation
+        self._store_correlation_data(sfEvent)
 
     def _flush_buffer(self):
         """Insert buffered events to ElasticSearch."""
@@ -152,18 +158,48 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
 
         try:
             from elasticsearch.helpers import bulk
-            success, errors = bulk(self.es, self.buffer, refresh=True)
-            self.debug(
-                f"Inserted {success} events to ElasticSearch, {len(errors)} errors")
+            with self.lock:
+                success, errors = bulk(self.es, self.buffer, refresh=True)
+                self.debug(
+                    f"Inserted {success} events to ElasticSearch, {len(errors)} errors")
 
-            if errors:
-                for error in errors:
-                    self.error(f"ElasticSearch insertion error: {error}")
+                if errors:
+                    for error in errors:
+                        self.error(f"ElasticSearch insertion error: {error}")
+
+                # Clear the buffer
+                self.buffer = []
         except Exception as e:
             self.error(f"Failed to bulk insert events to ElasticSearch: {e}")
 
-        # Clear the buffer
-        self.buffer = []
+    def _store_correlation_data(self, sfEvent):
+        """Store correlation data for interscan correlation.
+
+        Args:
+            sfEvent: SpiderFoot event
+        """
+        try:
+            # Ensure thread-safe operations when accessing shared resources
+            with self.lock:
+                # Store correlation data in ElasticSearch
+                correlation_data = {
+                    'scan_id': self.getScanId(),
+                    'event_type': sfEvent.eventType,
+                    'data': sfEvent.data,
+                    'module': sfEvent.module,
+                    'source_event': sfEvent.sourceEvent.data if sfEvent.sourceEvent else None,
+                    'source_event_hash': sfEvent.sourceEventHash if hasattr(sfEvent, 'sourceEventHash') else None,
+                    'generated': sfEvent.generated,
+                    '@timestamp': sfEvent.generated,
+                    'correlation': True
+                }
+                self.buffer.append({
+                    '_index': self.opts['index'],
+                    '_source': correlation_data
+                })
+        except Exception as e:
+            self.error(f"Error storing correlation data: {e}")
+            self.errorState = True
 
     def shutdown(self):
         """Clean up after this module."""

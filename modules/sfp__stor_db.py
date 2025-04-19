@@ -107,6 +107,9 @@ class sfp__stor_db(SpiderFootPlugin):
         else:
             self._store_sqlite(sfEvent)
 
+        # Store correlation data for interscan correlation
+        self._store_correlation_data(sfEvent)
+
     def _store_sqlite(self, sfEvent):
         """Store the event in the SQLite database.
 
@@ -156,6 +159,21 @@ class sfp__stor_db(SpiderFootPlugin):
             self.debug("Stored event in PostgreSQL: " + sfEvent.eventType)
         except Exception as e:
             self.error(f"Error storing event in PostgreSQL: {e}")
+            self.errorState = True
+
+    def _store_correlation_data(self, sfEvent):
+        """Store correlation data for interscan correlation.
+
+        Args:
+            sfEvent: SpiderFoot event
+        """
+        try:
+            # Ensure thread-safe operations when accessing shared resources
+            with self.sf.lock:
+                # Store correlation data in the database
+                self.__sfdb__.storeCorrelationData(self.getScanId(), sfEvent)
+        except Exception as e:
+            self.error(f"Error storing correlation data: {e}")
             self.errorState = True
 
 # End of sfp__stor_db class

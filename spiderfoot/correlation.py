@@ -1129,3 +1129,77 @@ class SpiderFootCorrelator:
         if ok:
             return True
         return False
+
+    def process_interscan_rule(self, rule: dict) -> list:
+        """Process a correlation rule across multiple scans.
+
+        Args:
+            rule (dict): correlation rule
+
+        Returns:
+            list: correlation results
+
+        Raises:
+            TypeError: argument type was invalid
+        """
+        if not isinstance(rule, dict):
+            raise TypeError(f"rule is {type(rule)}; expected dict()")
+
+        events = list()
+        buckets = dict()
+
+        fetchChildren, fetchSources, fetchEntities = self.analyze_rule_scope(
+            rule)
+
+        # Go through collections and collect the data from the DB
+        for collectIndex, c in enumerate(rule.get('collections')):
+            events.extend(self.collect_events(c['collect'],
+                          fetchChildren,
+                          fetchSources,
+                          fetchEntities,
+                          collectIndex))
+
+        if not events:
+            self.log.debug("No events found after going through collections.")
+            return None
+
+        self.log.debug(f"{len(events)} proceeding to next stage: aggregation.")
+        self.log.debug(f"{events} ready to be processed.")
+
+        # Perform aggregations. Aggregating breaks up the events
+        # into buckets with the key being the field to aggregate by.
+        if 'aggregation' in rule:
+            buckets = self.aggregate_events(rule['aggregation'], events)
+            if not buckets:
+                self.log.debug("no buckets found after aggregation")
+                return None
+        else:
+            buckets = {'default': events}
+
+        # Perform analysis across the buckets
+        if 'analysis' in rule:
+            for method in rule['analysis']:
+                # analyze() will operate on the bucket, make changes
+                # and empty it if the analysis doesn't yield results.
+                self.analyze_events(method, buckets)
+
+        return buckets
+
+    def run_interscan_correlations(self) -> None:
+        """Run all interscan correlation rules.
+
+        Raises:
+            ValueError: correlation rules cannot be run on specified scanId
+        """
+        for rule in self.rules:
+            self.log.debug(f"Processing interscan rule: {rule['id']}")
+            results = self.process_interscan_rule(rule)
+            if not results:
+                self.log.debug(f"No results for interscan rule {rule['id']}.")
+                continue
+
+            self.log.info(
+                f"Interscan rule {rule['id']} returned {len(results.keys())} results.")
+
+            for result in results:
+                self.create_correlation(rule, results[result])

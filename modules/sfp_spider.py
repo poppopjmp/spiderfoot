@@ -13,6 +13,7 @@
 
 import json
 import time
+import threading
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
@@ -397,6 +398,7 @@ class sfp_spider(SpiderFootPlugin):
 
             # Fetch content from the new links
             links = dict()
+            threads = []
             for link in nextLinks:
                 if self.checkForStop():
                     return
@@ -409,15 +411,18 @@ class sfp_spider(SpiderFootPlugin):
 
                 time.sleep(self.opts['pausesec'])
 
-                freshLinks = self.processUrl(link)
-                if freshLinks:
-                    links.update(freshLinks)
+                thread = threading.Thread(target=self.processUrlThread, args=(link, links))
+                thread.start()
+                threads.append(thread)
 
                 pagesFetched += 1
                 if pagesFetched >= self.opts['maxpages']:
                     self.info(
                         f"Maximum number of pages ({self.opts['maxpages']}) reached.")
                     return
+
+            for thread in threads:
+                thread.join()
 
             nextLinks = self.cleanLinks(links)
             self.debug(f"Found links: {nextLinks}")
@@ -428,5 +433,11 @@ class sfp_spider(SpiderFootPlugin):
             if levelsTraversed > self.opts['maxlevels']:
                 self.info(
                     f"Maximum number of levels ({self.opts['maxlevels']}) reached.")
+
+    def processUrlThread(self, link, links):
+        freshLinks = self.processUrl(link)
+        if freshLinks:
+            with threading.Lock():
+                links.update(freshLinks)
 
 # End of sfp_spider class
