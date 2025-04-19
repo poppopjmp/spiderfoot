@@ -21,6 +21,8 @@ class SpiderFootEvent():
         moduleDataSource (str): Module data source
         actualSource (str): Source data of parent event
         __id (str): Unique ID of the event, generated using eventType, generated, module, and a random integer
+        correlationId (str): Correlation ID for interscan correlation
+        correlationScore (int): Correlation score for interscan correlation
     """
 
     _generated = None
@@ -34,6 +36,8 @@ class SpiderFootEvent():
     _sourceEventHash = None
     _moduleDataSource = None
     _actualSource = None
+    _correlationId = None
+    _correlationScore = None
     __id = None
 
     def __init__(self, eventType: str, data: str, module: str, sourceEvent: 'SpiderFootEvent') -> None:
@@ -53,6 +57,8 @@ class SpiderFootEvent():
         self.visibility = 100
         self.risk = 0
         self.sourceEvent = sourceEvent
+        self.correlationId = None
+        self.correlationScore = 0
         self.__id = f"{self.eventType}{self.generated}{self.module}{random.SystemRandom().randint(0, 99999999)}"
 
     @property
@@ -153,6 +159,24 @@ class SpiderFootEvent():
             str: module data source
         """
         return self._moduleDataSource
+
+    @property
+    def correlationId(self) -> str:
+        """Correlation ID for interscan correlation.
+
+        Returns:
+            str: correlation ID
+        """
+        return self._correlationId
+
+    @property
+    def correlationScore(self) -> int:
+        """Correlation score for interscan correlation.
+
+        Returns:
+            int: correlation score
+        """
+        return self._correlationScore
 
     @property
     def hash(self) -> str:
@@ -327,6 +351,24 @@ class SpiderFootEvent():
         """
         self._moduleDataSource = moduleDataSource
 
+    @correlationId.setter
+    def correlationId(self, correlationId: str) -> None:
+        """Correlation ID for interscan correlation.
+
+        Args:
+            correlationId (str): correlation ID
+        """
+        self._correlationId = correlationId
+
+    @correlationScore.setter
+    def correlationScore(self, correlationScore: int) -> None:
+        """Correlation score for interscan correlation.
+
+        Args:
+            correlationScore (int): correlation score
+        """
+        self._correlationScore = correlationScore
+
     def asDict(self) -> dict:
         """Event object as dictionary.
 
@@ -338,7 +380,9 @@ class SpiderFootEvent():
             'type': self.eventType,
             'data': self.data,
             'module': self.module,
-            'source': ''
+            'source': '',
+            'correlationId': self.correlationId,
+            'correlationScore': self.correlationScore
         }
 
         if self.sourceEvent is not None and self.sourceEvent.data is not None:

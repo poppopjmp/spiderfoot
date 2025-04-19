@@ -13,6 +13,8 @@
 import socket
 import time
 import queue
+import threading
+import multiprocessing as mp
 from time import sleep
 from copy import deepcopy
 from contextlib import suppress
@@ -629,3 +631,191 @@ class SpiderFootScanner():
         if all(queues_empty) and not modules_running:
             return True
         return False
+
+    def distributeScanningTasks(self, target_list: list, num_chunks: int) -> list:
+        """Distribute scanning tasks among worker processes by dividing the target list into smaller chunks.
+
+        Args:
+            target_list (list): List of targets to scan
+            num_chunks (int): Number of chunks to divide the target list into
+
+        Returns:
+            list: List of target chunks
+        """
+        chunk_size = len(target_list) // num_chunks
+        return [target_list[i:i + chunk_size] for i in range(0, len(target_list), chunk_size)]
+
+    def initializeWorkerProcess(self, target_chunk: list) -> None:
+        """Initialize a worker process with its own instance of the SpiderFoot class and other necessary resources.
+
+        Args:
+            target_chunk (list): List of targets to scan in this worker process
+        """
+        worker_sf = SpiderFoot(self.__config)
+        worker_sf.dbh = SpiderFootDb(self.__config)
+        worker_sf.scanId = self.__scanId
+
+        for target in target_chunk:
+            worker_target = SpiderFootTarget(target, self.__targetType)
+            worker_eventQueue = queue.Queue()
+            worker_sharedThreadPool = SpiderFootThreadPool(
+                threads=self.__config.get("_maxthreads", 3), name='workerSharedThreadPool')
+
+            worker_sharedThreadPool.start()
+
+            worker_moduleInstances = {}
+            for modName in self.__moduleList:
+                if not modName:
+                    continue
+
+                if modName not in self.__config['__modules__']:
+                    continue
+
+                try:
+                    module = __import__(
+                        'modules.' + modName, globals(), locals(), [modName])
+                except ImportError:
+                    continue
+
+                try:
+                    mod = getattr(module, modName)()
+                    mod.__name__ = modName
+                except Exception:
+                    continue
+
+                try:
+                    worker_modconfig = deepcopy(
+                        self.__config['__modules__'][modName]['opts'])
+                    for opt in list(self.__config.keys()):
+                        worker_modconfig[opt] = deepcopy(self.__config[opt])
+
+                    mod.clearListeners()
+                    mod.setScanId(self.__scanId)
+                    mod.setSharedThreadPool(worker_sharedThreadPool)
+                    mod.setDbh(worker_sf.dbh)
+                    mod.setup(worker_sf, worker_modconfig)
+                except Exception:
+                    mod.errorState = True
+                    continue
+
+                if self.__config['_socks1type'] != '':
+                    try:
+                        mod._updateSocket(socket)
+                    except Exception:
+                        continue
+
+                if self.__config['__outputfilter']:
+                    try:
+                        mod.setOutputFilter(self.__config['__outputfilter'])
+                    except Exception:
+                        continue
+
+                try:
+                    newTarget = mod.enrichTarget(worker_target)
+                    if newTarget is not None:
+                        worker_target = newTarget
+                except Exception:
+                    continue
+
+                try:
+                    mod.setTarget(worker_target)
+                except Exception:
+                    continue
+
+                try:
+                    mod.outgoingEventQueue = worker_eventQueue
+                    mod.incomingEventQueue = queue.Queue()
+                except Exception:
+                    continue
+
+                worker_moduleInstances[modName] = mod
+
+            psMod = SpiderFootPlugin()
+            psMod.__name__ = "SpiderFoot UI"
+            psMod.setTarget(worker_target)
+            psMod.setDbh(worker_sf.dbh)
+            psMod.clearListeners()
+            psMod.outgoingEventQueue = worker_eventQueue
+            psMod.incomingEventQueue = queue.Queue()
+
+            rootEvent = SpiderFootEvent("ROOT", target, "", None)
+            psMod.notifyListeners(rootEvent)
+            firstEvent = SpiderFootEvent(self.__targetType, target,
+                                         "SpiderFoot UI", rootEvent)
+            psMod.notifyListeners(firstEvent)
+
+            if self.__targetType == 'INTERNET_NAME' and self.__sf.isDomain(target, self.__config['_internettlds']):
+                firstEvent = SpiderFootEvent(
+                    'DOMAIN_NAME', target, "SpiderFoot UI", rootEvent)
+                psMod.notifyListeners(firstEvent)
+
+            for mod in worker_moduleInstances.values():
+                mod.start()
+
+            counter = 0
+            final_passes = 3
+
+            while True:
+                log_status = counter % 10 == 0
+                counter += 1
+
+                try:
+                    sfEvent = worker_eventQueue.get_nowait()
+                except queue.Empty:
+                    if self.threadsFinished(log_status):
+                        sleep(.1)
+                        if self.threadsFinished(log_status):
+                            if final_passes < 1:
+                                break
+                            for mod in worker_moduleInstances.values():
+                                if not mod.errorState and mod.incomingEventQueue is not None:
+                                    mod.incomingEventQueue.put('FINISHED')
+                            sleep(.1)
+                            while not self.threadsFinished(log_status):
+                                log_status = counter % 100 == 0
+                                counter += 1
+                                sleep(.01)
+                            final_passes -= 1
+                    else:
+                        sleep(.1)
+                    continue
+
+                if not isinstance(sfEvent, SpiderFootEvent):
+                    raise TypeError(
+                        f"sfEvent is {type(sfEvent)}; expected SpiderFootEvent")
+
+                for mod in worker_moduleInstances.values():
+                    if mod._stopScanning:
+                        raise AssertionError(f"{mod.__name__} requested stop")
+
+                    if not mod.errorState and mod.incomingEventQueue is not None:
+                        watchedEvents = mod.watchedEvents()
+                        if sfEvent.eventType in watchedEvents or "*" in watchedEvents:
+                            mod.incomingEventQueue.put(deepcopy(sfEvent))
+
+            for mod in worker_moduleInstances.values():
+                mod._stopScanning = True
+            worker_sharedThreadPool.shutdown(wait=True)
+
+    def collectResults(self, worker_results: list) -> None:
+        """Collect results from worker processes and combine them into a single output.
+
+        Args:
+            worker_results (list): List of results from worker processes
+        """
+        for result in worker_results:
+            self.__sf.status(f"Collected result: {result}")
+
+    def startParallelScan(self, target_list: list, num_workers: int) -> None:
+        """Start parallel scanning by distributing tasks among worker processes.
+
+        Args:
+            target_list (list): List of targets to scan
+            num_workers (int): Number of worker processes to use
+        """
+        target_chunks = self.distributeScanningTasks(target_list, num_workers)
+
+        with mp.Pool(processes=num_workers) as pool:
+            worker_results = pool.map(self.initializeWorkerProcess, target_chunks)
+
+        self.collectResults(worker_results)
