@@ -37,8 +37,8 @@ class sfp_tool_gobuster(SpiderFootPlugin):
 
     # Default options
     opts = {
-        "gobuster_path": "",
-        "wordlist": "",
+        "gobuster_path": "/tools/bin/gobuster",
+        "wordlist": "/tools/bin/wordlists/dirbuster/directory-list-2.3-medium.txt",
         "threads": 10,
         "timeout": 30,
         "status_codes": "200,204,301,302,307,401,403",
@@ -50,7 +50,7 @@ class sfp_tool_gobuster(SpiderFootPlugin):
     # Option descriptions
     optdescs = {
         "gobuster_path": "Path to the gobuster binary. If just 'gobuster' then assume it's in the system path.",
-        "wordlist": "Path to the wordlist used for brute-forcing.",
+        "wordlist": "Path to the wordlist used for brute-forcing. Wordlist are here /tools/bin/wordlists/",
         "threads": "Number of concurrent threads (gobuster -t).",
         "timeout": "Timeout in seconds for gobuster requests (gobuster -to).",
         "status_codes": "Comma-separated list of status codes to consider valid (gobuster -s).",

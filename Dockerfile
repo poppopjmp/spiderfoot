@@ -35,6 +35,12 @@ RUN wget https://github.com/projectdiscovery/nuclei/releases/download/v3.3.9/nuc
     && rm nuclei_3.3.9_linux_amd64.zip \
     && chmod +x nuclei
 
+WORKDIR /tools/bin
+RUN wget https://github.com/OJ/gobuster/releases/download/v3.6.0/gobuster_Linux_x86_64.tar.gz \
+    && tar -xvzf gobuster_Linux_x86_64.tar.gz \
+    && rm gobuster_Linux_x86_64.tar.gz \
+    && chmod +x gobuster
+    && git clone -j`nproc` https://github.com/drtychai/wordlists 
 # Download nuclei-templates
 RUN git clone https://github.com/projectdiscovery/nuclei-templates.git /tools/nuclei-templates
 
@@ -42,10 +48,10 @@ RUN npm config set prefix /tools \
     && npm install -g retire
 
 WORKDIR /tools
-RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tools \
+RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tools/bin \
     && git clone --depth 1 https://github.com/testssl/testssl.sh.git \
     && git clone https://github.com/Tuhinshubhra/CMSeeK \
-    && pip install --no-cache-dir -r CMSeeK/requirements.txt -t /tools \
+    && pip install --no-cache-dir -r CMSeeK/requirements.txt -t /tools/bin \
     && mkdir CMSeeK/Results \
     && echo "Checking installation paths..." \
     && if [ -x /usr/bin/nbtscan ]; then echo "nbtscan: /usr/bin/nbtscan (OK)"; else echo "nbtscan: NOT FOUND"; fi \
@@ -62,8 +68,8 @@ RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tool
     && if [ -f /tools/CMSeeK/cmseek.py ]; then echo "CMSeeK: /tools/CMSeeK/cmseek.py (OK)"; else echo "CMSeeK: NOT FOUND"; fi \
     && if [ -x /tools/bin/retire ]; then echo "retire.js: /tools/bin/retire (OK)"; else echo "retire.js: NOT FOUND"; fi \
     && if [ -x /tools/bin/wappalyzer ]; then echo "wappalyzer: /tools/bin/wappalyzer (OK)"; else echo "wappalyzer: NOT FOUND"; fi \
-    && if [ -x /tools/bin/nuclei ]; then echo "nuclei: /tools/bin/nuclei (OK)"; else echo "nuclei: NOT FOUND"; fi
-    
+    && if [ -x /tools/bin/nuclei ]; then echo "nuclei: /tools/bin/nuclei (OK)"; else echo "nuclei: NOT FOUND"; fi \
+    && if [ -x /tools/bin/gobuster ]; then echo "gobuster: /tools/bin/gobuster (OK)"; else echo "gobuster: NOT FOUND"; fi
 
 ## Enable NMAP into the container to be fully used
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
