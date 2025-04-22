@@ -120,13 +120,14 @@ class SpiderFootSqliteLogHandler(logging.Handler):
             cutoff_time = time.time() - (self.log_retention_days * 86400)  # 86400 seconds = 1 day
             
             # Execute DELETE query to remove old logs
-            result = self.dbh.dbh.execute(
+            cursor = self.dbh.dbh.execute(
                 "DELETE FROM tbl_scan_log WHERE generated < ?", 
                 (cutoff_time,)
             )
-            self.dbh.dbh.commit()
+            # Commit the transaction using the database connection object
+            self.dbh.dbh.connection.commit()
             
-            deleted_count = result.rowcount
+            deleted_count = cursor.rowcount
             if deleted_count > 0:
                 logging.info(f"Purged {deleted_count} log records older than {self.log_retention_days} days")
                 
