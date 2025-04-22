@@ -7,7 +7,6 @@ import time
 from contextlib import suppress
 from logging.handlers import QueueHandler, QueueListener, TimedRotatingFileHandler
 from queue import Queue
-from threading import Thread
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
 
@@ -15,8 +14,8 @@ from spiderfoot import SpiderFootDb, SpiderFootHelpers
 class SpiderFootSqliteLogHandler(logging.Handler):
     """Handler for logging to SQLite database.
 
-    This ensure all sqlite logging is done from a single process and a
-    single database handle.
+    This handler batches log records and writes them to the SpiderFoot
+    SQLite database. It relies on the QueueListener for threading.
     """
 
     def __init__(self, opts: dict) -> None:
@@ -25,109 +24,132 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         Args:
             opts (dict): Configuration options
         """
+        super().__init__()
         self.opts = opts
         self.dbh = None
         self.batch = []
-        if self.opts.get('_debug', False):
-            self.batch_size = 100
-        else:
-            self.batch_size = 5
-        self.shutdown_hook = False
-        self.log_file = os.path.join(
-            SpiderFootHelpers.logPath(), "spiderfoot.sqlite.log")
-        self.backup_count = 30
-        self.rotate_logs()
-        self.log_queue = Queue()
-        self.logging_thread = Thread(target=self.process_log_queue)
-        self.logging_thread.daemon = True
-        self.logging_thread.start()
-        super().__init__()
+        # Make batch size configurable or based on debug status
+        self.batch_size = 100 if self.opts.get('_debug', False) else 50
+        # Log retention period in days (default: 30 days)
+        self.log_retention_days = self.opts.get('__log_retention_days', 30)
+        # Initial database connection
+        self.makeDbh()
+        # Schedule initial log purging
+        self.purge_logs()
 
     def emit(self, record: 'logging.LogRecord') -> None:
-        """Emit a log record.
+        """Format log record and add to batch.
 
         Args:
             record (logging.LogRecord): Log event record
         """
-        if not self.shutdown_hook:
-            atexit.register(self.logBatch)
-            self.shutdown_hook = True
         scanId = getattr(record, "scanId", None)
         component = getattr(record, "module", None)
         if scanId:
             level = ("STATUS" if record.levelname ==
                      "INFO" else record.levelname)
+            # Add formatted log to batch
             self.batch.append(
-                (scanId, level, record.getMessage(), component, time.time()))
+                (scanId, level, self.format(record), component, time.time())
+            )
+            # Check batch size and flush if needed
             if len(self.batch) >= self.batch_size:
-                self.logBatch()
+                self.flush()
 
-    def logBatch(self):
-        """Log a batch of records to the database."""
-        while not self.log_queue.empty():
-            self.batch.append(self.log_queue.get())
-            if len(self.batch) >= self.batch_size:
-                self.process_log_batch()
+    def flush(self) -> None:
+        """Process the current batch of log records."""
+        if not self.batch:
+            return
 
-    def process_log_batch(self):
-        """Process a batch of log records."""
-        batch = self.batch
+        # Store the current batch and reset it
+        current_batch = self.batch
         self.batch = []
-        if self.dbh is None:
-            # Create a new database handle when the first log batch is processed
-            self.makeDbh()
-        logResult = self.dbh.scanLogEvents(batch)
-        if logResult is False:
-            # Try to recreate database handle if insert failed
-            self.makeDbh()
-            self.dbh.scanLogEvents(batch)
-        self.rotate_logs()
+
+        try:
+            if self.dbh is None:
+                # Create database handle if it doesn't exist
+                self.makeDbh()
+
+            if self.dbh:  # Ensure dbh was created successfully
+                logResult = self.dbh.scanLogEvents(current_batch)
+                if logResult is False:
+                    logging.error("Failed to write log batch to database. Attempting to recreate DB handle.")
+                    # Try to recreate database handle if insert failed
+                    self.makeDbh()
+                    if self.dbh:
+                        logResult = self.dbh.scanLogEvents(current_batch)
+                        if logResult is False:
+                            logging.error("Failed to write log batch to database after recreating handle.")
+                    else:
+                        logging.error("Failed to recreate database handle for logging.")
+            else:
+                logging.error("Database handle not available for logging.")
+
+            # Periodically purge old logs (approximately once per 1000 batches)
+            if self.dbh and hash(str(time.time())) % 1000 == 0:
+                self.purge_logs()
+
+        except Exception as e:
+            # Use standard logging for handler errors
+            logging.error(f"Exception writing log batch to database: {e}")
 
     def makeDbh(self) -> None:
-        """Create a new database handle."""
-        self.dbh = SpiderFootDb(self.opts)
+        """Create or recreate the database handle."""
+        try:
+            # Close existing handle first if recreating
+            if self.dbh:
+                with suppress(Exception):
+                    self.dbh.close()
+            self.dbh = SpiderFootDb(self.opts)
+        except Exception as e:
+            logging.error(f"Failed to create/recreate database handle: {e}")
+            self.dbh = None  # Ensure dbh is None if creation failed
 
-    def rotate_logs(self) -> None:
-        """Rotate and archive SQLite logs."""
-        if os.path.exists(self.log_file):
-            if os.path.getsize(self.log_file) > 10 * 1024 * 1024:  # 10 MB
-                for i in range(self.backup_count - 1, 0, -1):
-                    sfn = f"{self.log_file}.{i}"
-                    dfn = f"{self.log_file}.{i + 1}"
-                    if os.path.exists(sfn):
-                        os.rename(sfn, dfn)
-                dfn = self.log_file + ".1"
-                os.rename(self.log_file, dfn)
-                open(self.log_file, 'w').close()
-
-    def filter(self, record: 'logging.LogRecord') -> bool:
-        """Filter log records based on log levels.
-
-        Args:
-            record (logging.LogRecord): Log event record
-
-        Returns:
-            bool: Whether the record should be logged
+    def purge_logs(self) -> None:
+        """Purge old log records from the database.
+        
+        Instead of rotating the log file (which can cause database corruption),
+        this method removes old log records from within the database,
+        keeping the database file intact.
         """
-        return record.levelno >= self.level
+        if not self.dbh:
+            return
+            
+        try:
+            # Calculate cutoff timestamp (current time - retention period)
+            cutoff_time = time.time() - (self.log_retention_days * 86400)  # 86400 seconds = 1 day
+            
+            # Execute DELETE query to remove old logs
+            result = self.dbh.dbh.execute(
+                "DELETE FROM tbl_scan_log WHERE generated < ?", 
+                (cutoff_time,)
+            )
+            self.dbh.dbh.commit()
+            
+            deleted_count = result.rowcount
+            if deleted_count > 0:
+                logging.info(f"Purged {deleted_count} log records older than {self.log_retention_days} days")
+                
+            # Vacuum the database to reclaim space (do this occasionally)
+            if deleted_count > 1000:
+                self.dbh.dbh.execute("VACUUM")
+                logging.info("Database vacuumed after log purge")
+                
+        except Exception as e:
+            logging.error(f"Error purging old logs: {e}")
 
-    def format(self, record: 'logging.LogRecord') -> str:
-        """Format log records.
-
-        Args:
-            record (logging.LogRecord): Log event record
-
-        Returns:
-            str: Formatted log message
-        """
-        formatter = logging.Formatter(
-            "%(asctime)s [%(levelname)s] %(module)s : %(message)s")
-        return formatter.format(record)
-
-    def process_log_queue(self):
-        """Process log records from the queue."""
-        while True:
-            self.logBatch()
+    def close(self) -> None:
+        """Flush any remaining logs and close the database connection."""
+        try:
+            self.flush()  # Write any remaining items in batch
+            if self.dbh:
+                self.dbh.close()
+                self.dbh = None
+        except Exception as e:
+            logging.error(f"Exception closing SQLite log handler: {e}")
+        finally:
+            # Ensure parent close is called
+            super().close()
 
 
 def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.QueueListener':
@@ -194,7 +216,9 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
         sqlite_handler.setLevel(logLevel)
         sqlite_handler.setFormatter(log_format)
         handlers.append(sqlite_handler)
-    spiderFootLogListener = QueueListener(loggingQueue, *handlers)
+    
+    # Use respect_handler_level=True to ensure handlers only receive appropriate log levels
+    spiderFootLogListener = QueueListener(loggingQueue, *handlers, respect_handler_level=True)
     spiderFootLogListener.start()
     atexit.register(stop_listener, spiderFootLogListener)
     return spiderFootLogListener
