@@ -39,7 +39,7 @@ WORKDIR /tools/bin
 RUN wget https://github.com/OJ/gobuster/releases/download/v3.6.0/gobuster_Linux_x86_64.tar.gz \
     && tar -xvzf gobuster_Linux_x86_64.tar.gz \
     && rm gobuster_Linux_x86_64.tar.gz \
-    && chmod +x gobuster
+    && chmod +x gobuster \
     && git clone -j`nproc` https://github.com/drtychai/wordlists 
 # Download nuclei-templates
 RUN git clone https://github.com/projectdiscovery/nuclei-templates.git /tools/nuclei-templates
