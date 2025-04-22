@@ -22,7 +22,7 @@ class sfp_sublist3r(SpiderFootPlugin):
         "name": "Sublist3r",
         "summary": "Passive subdomain enumeration using Sublist3r's API",
         "useCases": ["Investigate", "Footprint", "Passive"],
-        "categories": ["Public Registries"],
+        "categories": ["Passive DNS"],
         "dataSource": {
             "website": "https://api.sublist3r.com",
             "model": "FREE_NOAUTH_UNLIMITED",
