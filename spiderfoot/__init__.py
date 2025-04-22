@@ -38,7 +38,7 @@ class SpiderFootPlugin():
 
     # Will be set to True by the controller if the user aborts the scan
     # Plugins should check this variable during loops to exit if requested
-    checkForStop(self):
+    def checkForStop(self):
         """Check whether the user requested to stop the scan."""
         return self._stopScanning
 
