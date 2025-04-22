@@ -29,6 +29,7 @@ from cherrypy.lib import auth_digest
 from sflib import SpiderFoot
 from sfscan import startSpiderFootScanner
 from sfwebui import SpiderFootWebUi
+from sfapi import SpiderFootApi
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootCorrelator
@@ -46,6 +47,7 @@ sfConfig = {
     '_debug': False,  # Debug
     '_maxthreads': 3,  # Number of modules to run concurrently
     '__logging': True,  # Logging in general
+    '__log_retention_days': 30,  # Number of days to retain logs before purging
     '__outputfilter': None,  # Event types to filter from modules' output
     # User-Agent to use for HTTP requests
     '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
@@ -99,7 +101,7 @@ def main() -> None:
         p.add_argument("-d", "--debug", action='store_true',
                        help="Enable debug output.")
         p.add_argument("-l", "--listen", metavar="IP:port",
-                       help="IP and port to listen on.")
+                       help="IP and port to listen on for the web UI.")
         p.add_argument("-m", metavar="mod1,mod2,...",
                        type=str, help="Modules to enable.")
         p.add_argument("-M", "--modules", action='store_true',
@@ -136,6 +138,8 @@ def main() -> None:
                        help="Display the version of SpiderFoot and exit.")
         p.add_argument("-max-threads", type=int,
                        help="Max number of modules to run concurrently.")
+        p.add_argument("--api-listen", metavar="IP:port", nargs='?', const="127.0.0.1:5001",
+                       help="IP and port to listen on for the REST API. Defaults to 127.0.0.1:5001 if no value provided.")
 
         args = p.parse_args()  # Parse arguments after defining p
 
@@ -214,6 +218,12 @@ def main() -> None:
         sfConfig['__modules__'] = sfModules
         sfConfig['__correlationrules__'] = sfCorrelationRules
 
+        # Start API server if requested
+        if args.api_listen:
+            api_host, api_port = parse_listen_address(args.api_listen, '127.0.0.1', 5001, log)
+            start_api_server(api_host, api_port, sfConfig, loggingQueue)
+            sys.exit(0)
+
         if args.correlate:
             if not correlationRulesRaw:
                 log.error(
@@ -250,6 +260,12 @@ def main() -> None:
 
             for t in sorted(types.keys()):
                 print(f"{t.ljust(45)}  {types[t]}")
+            sys.exit(0)
+
+        # Default action: Start API server if no other action is specified
+        if len(sys.argv) <= 1:
+            log.info("No arguments supplied, starting API server on 127.0.0.1:5001 by default.")
+            start_api_server('127.0.0.1', 5001, sfConfig, loggingQueue)
             sys.exit(0)
 
         if args.listen:
@@ -670,6 +686,79 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
         sys.exit(-1)
 
 
+def start_api_server(host: str, port: int, sfConfig: dict, loggingQueue=None) -> None:
+    """Start the REST API server.
+
+    Args:
+        host (str): IP address to listen on
+        port (int): Port to listen on
+        sfConfig (dict): SpiderFoot config options
+        loggingQueue (Queue): main SpiderFoot logging queue
+    """
+    try:
+        log = logging.getLogger(f"spiderfoot.{__name__}")
+        log.info(f"Starting API server at http://{host}:{port}/api ...")
+        cherrypy.config.update({
+            'server.socket_host': host,
+            'server.socket_port': port,
+            'log.screen': False,
+            'log.access_file': '',
+            'log.error_file': '',
+            'engine.autoreload.on': False,
+            'tools.sessions.on': True,
+            'tools.sessions.storage_type': "ram",
+            'tools.sessions.storage_path': SpiderFootHelpers.dataPath(),
+            'tools.sessions.timeout': 60,
+            'tools.encode.on': True,
+            'tools.encode.encoding': 'utf-8',
+            'tools.gzip.on': True,
+            'tools.response_headers.on': True,
+            'tools.response_headers.headers': [
+                ('X-Frame-Options', 'SAMEORIGIN'),
+                ('X-XSS-Protection', '1; mode=block'),
+                ('X-Content-Type-Options', 'nosniff'),
+                ('Referrer-Policy', 'strict-origin-when-cross-origin'),
+                ('Permissions-Policy', 'geolocation=(), microphone=(), camera=()'),
+                ('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'self';") # Stricter CSP for API
+            ]
+        })
+
+        # Mount the API application
+        cherrypy.tree.mount(SpiderFootApi(sfConfig, loggingQueue), '/api', {
+            '/': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+                'tools.json_in.on': True,
+                'tools.json_out.on': True
+            }
+        })
+
+        # Start the CherryPy engine
+        cherrypy.engine.start()
+        cherrypy.engine.block()
+    except Exception as e:
+        log = logging.getLogger(f"spiderfoot.{__name__}")
+        log.fatal(f"Could not start API server: {e}", exc_info=True)
+        sys.exit(-1)
+
+
+def parse_listen_address(listen_str: str, default_host: str, default_port: int, log) -> tuple[str, int]:
+    """Parse IP:port string."""
+    host = default_host
+    port = default_port
+    if listen_str:
+        try:
+            if ':' in listen_str:
+                host, port_str = listen_str.split(':', 1)
+                port = int(port_str)
+            else:
+                # Allow specifying only the port
+                port = int(listen_str)
+        except ValueError:
+            log.fatal(f"Invalid listen address format: {listen_str}. Use IP:port or just port.")
+            sys.exit(-1)
+    return host, port
+
+
 def handle_abort(signal, frame) -> None:
     """Handle interrupt and abort scan.
 
@@ -726,3 +815,4 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     main()
+``` 

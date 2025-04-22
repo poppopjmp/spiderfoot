@@ -1417,6 +1417,7 @@ class SpiderFootWebUi:
             return self.jsonify_error('400', "Invalid query.")
 
         if not query.lower().startswith("select"):
+            # Use jsonify_error for consistency
             return self.jsonify_error('400', "Non-SELECTs are unpredictable and not recommended.")
 
         try:
@@ -1425,6 +1426,7 @@ class SpiderFootWebUi:
             columnNames = [c[0] for c in dbh.dbh.description]
             return [dict(zip(columnNames, row)) for row in data]
         except Exception as e:
+            # Use jsonify_error for consistency
             return self.jsonify_error('500', str(e))
 
     @cherrypy.expose
@@ -1449,30 +1451,30 @@ class SpiderFootWebUi:
 
         if not scanname:
             if cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'):
-                cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-                return json.dumps(["ERROR", "Incorrect usage: scan name was not specified."]).encode('utf-8')
+                # Use jsonify_error for consistency
+                return self.jsonify_error('400', "Incorrect usage: scan name was not specified.")
 
             return self.error("Invalid request: scan name was not specified.")
 
         if not scantarget:
             if cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'):
-                cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-                return json.dumps(["ERROR", "Incorrect usage: scan target was not specified."]).encode('utf-8')
+                # Use jsonify_error for consistency
+                return self.jsonify_error('400', "Incorrect usage: scan target was not specified.")
 
             return self.error("Invalid request: scan target was not specified.")
 
         if not typelist and not modulelist and not usecase:
             if cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'):
-                cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-                return json.dumps(["ERROR", "Incorrect usage: no modules specified for scan."]).encode('utf-8')
+                # Use jsonify_error for consistency
+                return self.jsonify_error('400', "Incorrect usage: no modules specified for scan.")
 
             return self.error("Invalid request: no modules specified for scan.")
 
         targetType = SpiderFootHelpers.targetTypeFromString(scantarget)
         if targetType is None:
             if cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'):
-                cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-                return json.dumps(["ERROR", "Unrecognised target type."]).encode('utf-8')
+                # Use jsonify_error for consistency
+                return self.jsonify_error('400', "Unrecognised target type.")
 
             return self.error("Invalid target type. Could not recognize it as a target SpiderFoot supports.")
 
@@ -1519,8 +1521,8 @@ class SpiderFootWebUi:
         # If we somehow got all the way through to here and still don't have any modules selected
         if not modlist:
             if cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'):
-                cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-                return json.dumps(["ERROR", "Incorrect usage: no modules specified for scan."]).encode('utf-8')
+                # Use jsonify_error for consistency
+                return self.jsonify_error('400', "Incorrect usage: no modules specified for scan.")
 
             return self.error("Invalid request: no modules specified for scan.")
 
@@ -1548,6 +1550,9 @@ class SpiderFootWebUi:
             p.start()
         except Exception as e:
             self.log.error(f"[-] Scan [{scanId}] failed: {e}", exc_info=True)
+            # Use jsonify_error for consistency if JSON is requested
+            if cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'):
+                return self.jsonify_error('500', f"Scan [{scanId}] failed: {e}")
             return self.error(f"[-] Scan [{scanId}] failed: {e}")
 
         # Wait until the scan has initialized
@@ -1587,12 +1592,15 @@ class SpiderFootWebUi:
             scan_status = res[5]
 
             if scan_status == "FINISHED":
+                # Use jsonify_error for consistency
                 return self.jsonify_error('400', f"Scan {scan_id} has already finished.")
 
             if scan_status == "ABORTED":
+                # Use jsonify_error for consistency
                 return self.jsonify_error('400', f"Scan {scan_id} has already aborted.")
 
             if scan_status != "RUNNING" and scan_status != "STARTING":
+                # Use jsonify_error for consistency
                 return self.jsonify_error('400', f"The running scan is currently in the state '{scan_status}', please try again later or restart SpiderFoot.")
 
         for scan_id in ids:
@@ -1606,10 +1614,13 @@ class SpiderFootWebUi:
         dbh = SpiderFootDb(self.config)
         try:
             if dbh.vacuumDB():
-                return json.dumps(["SUCCESS", ""]).encode('utf-8')
-            return json.dumps(["ERROR", "Vacuuming the database failed"]).encode('utf-8')
+                # Return success as JSON, not encoded bytes
+                return ["SUCCESS", ""]
+            # Use jsonify_error for consistency
+            return self.jsonify_error('500', "Vacuuming the database failed")
         except Exception as e:
-            return json.dumps(["ERROR", f"Vacuuming the database failed: {e}"]).encode('utf-8')
+            # Use jsonify_error for consistency
+            return self.jsonify_error('500', f"Vacuuming the database failed: {e}")
 
     #
     # DATA PROVIDERS
