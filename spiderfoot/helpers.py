@@ -175,8 +175,10 @@ class SpiderFootHelpers():
                 sfModules[modName]['meta'] = {}
 
             if len(sfModules[modName]['cats']) > 1:
-                raise SyntaxError(
-                    f"Module {modName} has multiple categories defined but only one is supported.")
+                print(
+                    f"Warning: Module {modName} has multiple categories defined but only one is supported. Skipping this module.")
+                del sfModules[modName]
+                continue
 
             if sfModules[modName]['cats'] and sfModules[modName]['cats'][0] not in valid_categories:
                 raise SyntaxError(

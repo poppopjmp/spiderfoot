@@ -49,3 +49,19 @@ jobs:
       run: |
         docker run --rm ghcr.io/${{ github.repository }}:${{ github.sha }} sf.py -h
         docker run --rm ghcr.io/${{ github.repository }}:${{ github.sha }} sf.py --version
+
+    - name: Start SpiderFoot container
+      run: |
+        timeout 60 docker run -d -p 5001:5001 -p 8000:8000 ghcr.io/poppopjmp/spiderfoot:${{ github.sha }}
+
+    - name: Wait for SpiderFoot to start
+      run: |
+        timeout 60 bash -c 'until curl --output /dev/null --silent --head --fail http://127.0.0.1:5001; do printf "."; sleep 1; done'
+        echo "SpiderFoot is up!"
+    - name: Wait for SpiderFoot API to start
+      run: |
+        timeout 60 bash -c 'until curl --output /dev/null --silent --head --fail http://127.0.0.1:8000/api/; do printf "."; sleep 1; done'
+        echo "SpiderFoot API is up!"
+
+    - name: Stop SpiderFoot container
+      run: timeout 60 docker stop $(docker ps -q --filter ancestor=ghcr.io/poppopjmp/spiderfoot)
