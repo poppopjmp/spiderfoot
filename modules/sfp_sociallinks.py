@@ -13,7 +13,8 @@
 
 import json
 from telethon import TelegramClient, sync
-from telethon.tl.functions.messages import SearchGlobal
+from telethon.tl.functions.contacts import SearchRequest
+from telethon.tl.functions.messages import SearchRequest as MessagesSearchRequest
 from telethon.tl.types import InputMessagesFilterEmpty
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
@@ -146,19 +147,12 @@ class sfp_sociallinks(SpiderFootPlugin):
 
         return self.query(queryString)
 
-    def searchTelegramChannels(self, query):
-        client = TelegramClient('session_name', self.opts['telegram_api_id'], self.opts['telegram_api_hash'])
-        client.start(phone=self.opts['telegram_phone_number'])
-
-        result = client(SearchGlobal(
-            q=query,
-            filter=InputMessagesFilterEmpty(),
-            limit=10
-        ))
-
-        client.disconnect()
-
-        return result
+    async def searchTelegramChannels(self, client, query):
+        # Try contacts search
+        contacts_result = await client(SearchRequest(q=query, limit=100))
+        # Try messages search
+        messages_result = await client(MessagesSearchRequest(q=query, filter=None, min_date=None, max_date=None, offset_id=0, add_offset=0, limit=100, max_id=0, min_id=0, hash=0))
+        return contacts_result, messages_result
 
     # Handle events sent to this module
     def handleEvent(self, event):
@@ -224,10 +218,14 @@ class sfp_sociallinks(SpiderFootPlugin):
                 self.notifyListeners(evt)
 
             # Search through Telegram channels for matches
-            search_results = self.searchTelegramChannels(eventData)
-            for message in search_results.messages:
-                evt = SpiderFootEvent('RAW_RIR_DATA', message.message, self.__name__, event)
-                self.notifyListeners(evt)
+            client = TelegramClient('session_name', self.opts['telegram_api_id'], self.opts['telegram_api_hash'])
+            client.start(phone=self.opts['telegram_phone_number'])
+            search_results = self.searchTelegramChannels(client, eventData)
+            for contacts_result, messages_result in search_results:
+                for message in messages_result.messages:
+                    evt = SpiderFootEvent('RAW_RIR_DATA', message.message, self.__name__, event)
+                    self.notifyListeners(evt)
+            client.disconnect()
 
         elif eventName == "EMAILADDR":
             failedModules = 0

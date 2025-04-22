@@ -65,7 +65,7 @@ class sfp_webserver(SpiderFootPlugin):
 
         if not self.getTarget().matches(self.sf.urlFQDN(eventSource)):
             self.debug(
-                "Not collecting web server information for external sites.")
+                f"Not collecting web server information for external sites. Source: {srcModuleName}")
             return
 
         try:
@@ -74,7 +74,7 @@ class sfp_webserver(SpiderFootPlugin):
                 return
         except Exception:
             self.error(
-                "Received HTTP headers from another module in an unexpected format.")
+                f"Received HTTP headers from another module in an unexpected format. Source: {srcModuleName}")
             return
 
         # Check location header for linked URLs

@@ -58,11 +58,13 @@ class sfp_pgp(SpiderFootPlugin):
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
+    # What events is this module interested in for input
     def watchedEvents(self):
-        return ['INTERNET_NAME', "EMAILADDR", "DOMAIN_NAME"]
+        return ["DOMAIN_NAME", "EMAILADDR", "HUMAN_NAME"]
 
+    # What events this module produces
     def producedEvents(self):
-        return ["EMAILADDR", "EMAILADDR_GENERIC", "AFFILIATE_EMAILADDR", "PGP_KEY"]
+        return ["EMAILADDR", "HUMAN_NAME", "PGP_KEY"]
 
     def queryDomain(self, keyserver_search_url, qry):
         res = self.sf.fetchUrl(

@@ -115,33 +115,23 @@ class sfp_alienvault(SpiderFootPlugin):
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
-            "INTERNET_NAME",
             "IP_ADDRESS",
-            "IPV6_ADDRESS",
             "AFFILIATE_IPADDR",
-            "AFFILIATE_IPV6_ADDRESS",
-            "NETBLOCK_OWNER",
-            "NETBLOCKV6_OWNER",
-            "NETBLOCK_MEMBER",
-            "NETBLOCKV6_MEMBER",
-            "NETBLOCK_OWNER",
-            "NETBLOCK_MEMBER",
+            "INTERNET_NAME",
+            "AFFILIATE_INTERNET_NAME",
+            "DOMAIN_NAME",
+            "AFFILIATE_DOMAIN_NAME",
         ]
 
     # What events this module produces
     def producedEvents(self):
         return [
-            "IP_ADDRESS",
-            "IPV6_ADDRESS",
-            "AFFILIATE_IPADDR",
-            "AFFILIATE_IPV6_ADDRESS",
-            "CO_HOSTED_SITE",
-            "INTERNET_NAME",
-            "INTERNET_NAME_UNRESOLVED",
             "MALICIOUS_IPADDR",
+            "MALICIOUS_INTERNET_NAME",
             "MALICIOUS_AFFILIATE_IPADDR",
-            "MALICIOUS_NETBLOCK",
-            "LINKED_URL_INTERNAL"
+            "MALICIOUS_AFFILIATE_INTERNET_NAME",
+            "MALICIOUS_DOMAIN_NAME",
+            "MALICIOUS_AFFILIATE_DOMAIN_NAME",
         ]
 
     # Parse API response

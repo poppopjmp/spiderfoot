@@ -121,72 +121,19 @@ class sfp_whatcms(SpiderFootPlugin):
     def parseApiResponse(self, res: dict):
         if not res:
             self.error("No response from WhatCMS.org.")
-            return None
-
-        if res['code'] != '200':
-            self.error('Unexpected reply from WhatCMS.org: ' + res['code'])
             self.errorState = True
-            return None
-
-        if res['content'] is None:
-            self.debug('No response from WhatCMS.org')
             return None
 
         try:
-            data = json.loads(res['content'])
+            content = json.loads(res['content'])
         except Exception as e:
-            self.debug(f"Error processing JSON response: {e}")
-            return None
-
-        result = data.get('result')
-        if result is None:
-            self.error('API error: no results')
-            return None
-
-        code = str(result.get('code'))
-
-        if code == '0':
-            self.error('API error: Server failure')
+            self.error(f"Error processing JSON response from WhatCMS.org: {e}")
             self.errorState = True
             return None
 
-        if code == '101':
-            self.error('API error: Invalid API Key')
-            self.errorState = True
-            return None
-
-        if code == '102':
-            self.error('API error: Unauthenticated request. Invalid API key?')
-            self.errorState = True
-            return None
-
-        if code == '111':
-            self.error('API error: Invalid URL')
-            self.errorState = True
-            return None
-
-        if code == '120':
-            self.error('API error: Too many requests')
-            self.errorState = True
-            return None
-
-        if code == '121':
-            self.error(
-                'API error: You have exceeded your monthly request quota')
-            self.errorState = True
-            return None
-
-        if code == '123':
-            self.error(
-                'API error: Account disabled per violation of Terms and Conditions')
-            self.errorState = True
-            return None
-
-        if code == '201':
-            self.error('API error: CMS or Host not found')
-            self.errorState = True
-            return None
-
+        code = str(content.get('result', {}).get('code'))
+        data = content.get('result')
+            
         if code != '200':
             self.error('Unexpected status code from WhatCMS.org: ' + code)
             self.errorState = True

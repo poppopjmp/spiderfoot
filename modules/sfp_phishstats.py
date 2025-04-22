@@ -67,25 +67,24 @@ class sfp_phishstats(SpiderFootPlugin):
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
+    # What events is this module interested in for input
     def watchedEvents(self):
         return [
-            'IP_ADDRESS',
-            'AFFILIATE_IPADDR',
-            "NETBLOCK_MEMBER",
-            "NETBLOCK_OWNER",
+            "IP_ADDRESS",
+            "DOMAIN_NAME",
+            "AFFILIATE_DOMAIN_NAME",
+            "AFFILIATE_IPADDR",
         ]
 
+    # What events this module produces
     def producedEvents(self):
         return [
             "BLACKLISTED_IPADDR",
+            "BLACKLISTED_DOMAIN",
             "BLACKLISTED_AFFILIATE_IPADDR",
-            "BLACKLISTED_SUBNET",
-            "BLACKLISTED_NETBLOCK",
-            "MALICIOUS_IPADDR",
-            "MALICIOUS_AFFILIATE_IPADDR",
-            "MALICIOUS_NETBLOCK",
-            "MALICIOUS_SUBNET",
-            "RAW_RIR_DATA",
+            "BLACKLISTED_AFFILIATE_DOMAIN",
+            "MALICIOUS_URL",
+            "MALICIOUS_AFFILIATE_URL",
         ]
 
     # Check whether the IP address is malicious using PhishStats API

@@ -64,56 +64,70 @@ class sfp_twitter(SpiderFootPlugin):
         srcModuleName = event.module
         eventData = event.data
 
-        if eventData in self.results:
+        if self.errorState:
             return
-
-        self.results[eventData] = True
 
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
-        # Retrieve profile
+        if eventName not in self.watchedEvents():
+            return
+
+        # Ensure we are only processing Twitter-related SOCIAL_MEDIA events
+        if not eventData.startswith("Twitter"):
+            self.debug(f"Skipping non-Twitter event: {eventData}")
+            return
+
+        # Extract the Twitter handle/URL from the data
         try:
-            network = eventData.split(": ")[0]
-            url = eventData.split(": ")[1].replace(
-                "<SFURL>", "").replace("</SFURL>", "")
+            # Assuming format like "Twitter: <SFURL>https://twitter.com/username</SFURL>"
+            url = eventData.split("<SFURL>")[1].split("</SFURL>")[0]
+            username = url.split("/")[-1]
         except Exception as e:
-            self.debug(f"Unable to parse SOCIAL_MEDIA: {eventData} ({e})")
+            self.error(f"Could not extract Twitter username from {eventData}: {e}")
             return
-
-        if network != "Twitter":
-            self.debug(
-                f"Skipping social network profile, {url}, as not a Twitter profile")
+        
+        if username in self.results:
+            self.debug(f"Skipping {username}, already checked.")
             return
+            
+        self.results[username] = True
+        
+        # Here you would implement API calls to Twitter to gather information
+        # For example: user profile, location data, etc.
+        # The implementation would depend on current Twitter API availability
+        
+        # Example simulating Twitter API response
+        api_response = self.queryTwitterApi(username)
+        if api_response:
+            # Report the raw data
+            evt = SpiderFootEvent("RAW_RIR_DATA", str(api_response), 
+                                  self.__name__, event)
+            self.notifyListeners(evt)
+            
+            # If location information is available in the profile
+            if api_response.get('location'):
+                evt = SpiderFootEvent("GEOINFO", api_response.get('location'), 
+                                     self.__name__, event)
+                self.notifyListeners(evt)
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
-                               useragent="SpiderFoot")
-
-        if res['content'] is None:
-            return
-
-        if res['code'] != "200":
-            self.debug(url + " is not a valid Twitter profile")
-            return
-
-        # Retrieve name
-        human_name = re.findall(r'<div class="fullname">([^<]+)\s*</div>',
-                                str(res['content']), re.MULTILINE)
-
-        if human_name:
-            e = SpiderFootEvent("RAW_RIR_DATA", "Possible full name: " + human_name[0],
-                                self.__name__, event)
-            self.notifyListeners(e)
-
-        # Retrieve location
-        location = re.findall(
-            r'<div class="location">([^<]+)</div>', res['content'])
-
-        if location:
-            if len(location[0]) < 3 or len(location[0]) > 100:
-                self.debug("Skipping likely invalid location.")
-            else:
-                e = SpiderFootEvent(
-                    "GEOINFO", location[0], self.__name__, event)
-                self.notifyListeners(e)
+    def queryTwitterApi(self, username):
+        """Query the Twitter API for information about a username.
+        
+        Args:
+            username (str): Twitter username
+            
+        Returns:
+            dict: Information about the Twitter account, or None on failure
+        """
+        # This would be replaced with actual Twitter API calls
+        # Current implementation would depend on Twitter API v2 endpoints
+        # and authentication requirements
+        
+        self.debug(f"Would query Twitter API for username: {username}")
+        
+        # Since actual API implementation would require API keys and complex OAuth,
+        # we're just returning None for now. In a real implementation, this would
+        # make HTTP requests to the Twitter API and return the parsed response.
+        return None
 
 # End of sfp_twitter class

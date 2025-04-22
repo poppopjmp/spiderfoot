@@ -47,16 +47,12 @@ class sfp_whois(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return ["DOMAIN_NAME", "DOMAIN_NAME_PARENT", "NETBLOCK_OWNER", "NETBLOCKV6_OWNER",
-                "CO_HOSTED_SITE_DOMAIN", "AFFILIATE_DOMAIN_NAME", "SIMILARDOMAIN"]
+        return ["DOMAIN_NAME", "DOMAIN_NAME_PARENT", "INTERNET_NAME"]
 
     # What events this module produces
-    # This is to support the end user in selecting modules based on events
-    # produced.
     def producedEvents(self):
-        return ["DOMAIN_WHOIS", "NETBLOCK_WHOIS", "DOMAIN_REGISTRAR",
-                "CO_HOSTED_SITE_DOMAIN_WHOIS", "AFFILIATE_DOMAIN_WHOIS",
-                "SIMILARDOMAIN_WHOIS"]
+        return ["DOMAIN_WHOIS", "HUMAN_NAME", "EMAILADDR",
+                "DOMAIN_REGISTRAR", "PHYSICAL_ADDRESS", "PHYSICAL_COORDINATES"]
 
     # Handle events sent to this module
     def handleEvent(self, event):

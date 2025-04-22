@@ -72,17 +72,11 @@ class sfp_grayhatwarfare(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
-        return [
-            "DOMAIN_NAME",
-        ]
+        return ["DOMAIN_NAME"]
 
     # What events this module produces
     def producedEvents(self):
-        return [
-            'CLOUD_STORAGE_BUCKET',
-            'CLOUD_STORAGE_BUCKET_OPEN',
-            'RAW_RIR_DATA'
-        ]
+        return ["CLOUD_STORAGE_BUCKET", "LINKED_URL_INTERNAL"]
 
     # Query Grayhat Warfare
     def query(self, keyword, start):

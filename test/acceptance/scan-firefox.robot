@@ -17,7 +17,8 @@ Create Firefox Options
     ${firefox_options}=    Evaluate    selenium.webdriver.firefox.options.Options()    modules=selenium.webdriver.firefox.options
     Call Method    ${firefox_options}    add_argument    --headless
     # Set the Firefox binary path if defined
-    Run Keyword If    '${FIREFOX_BINARY_PATH}' != ''    Call Method    ${firefox_options}    binary_location    ${FIREFOX_BINARY_PATH}
+    # Fix: properly set binary property instead of calling as method
+    Run Keyword If    '${FIREFOX_BINARY_PATH}' != ''    Evaluate    selenium.webdriver.firefox.options.Options.binary = '${FIREFOX_BINARY_PATH}'    modules=selenium.webdriver.firefox.options
     Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
     # Create capabilities dictionary with options
     ${capabilities}=    Create Dictionary    

@@ -76,11 +76,11 @@ class sfp_webframework(SpiderFootPlugin):
         eventData = event.data
         eventSource = event.actualSource
 
+        self.debug(f"Received event, {eventName}, from {srcModuleName}")
+
         # We only want web content
         if srcModuleName != "sfp_spider":
             return
-
-        self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         if eventSource not in self.results:
             self.results[eventSource] = list()
