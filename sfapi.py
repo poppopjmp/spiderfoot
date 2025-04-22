@@ -14,6 +14,7 @@ import logging
 import multiprocessing as mp
 import random
 import time
+import os
 from copy import deepcopy
 from operator import itemgetter
 
@@ -148,6 +149,153 @@ class SpiderFootApi:
                     ret['configdesc'][key] = desc
 
         return ret
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scanstatus(self: 'SpiderFootApi', id: str) -> dict:
+        """Return the status of a scan.
+
+        Args:
+            id (str): scan ID
+
+        Returns:
+            dict: scan status or error JSON
+        """
+        dbh = SpiderFootDb(self.config)
+        
+        status = dbh.scanInstanceGet(id)
+        if not status:
+            return self.jsonify_error(404, "Scan ID not found.")
+            
+        return status
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scanlist(self: 'SpiderFootApi') -> list:
+        """Return a list of all scans.
+
+        Returns:
+            list: list of scans or error JSON
+        """
+        dbh = SpiderFootDb(self.config)
+        
+        try:
+            scanlist = dbh.scanInstanceList()
+            retlist = []
+            for scan in scanlist:
+                created = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(scan[3]))
+                if scan[4]:
+                    finished = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(scan[4]))
+                else:
+                    finished = ""
+                retlist.append([scan[0], scan[1], created, finished, scan[5]])
+            return retlist
+        except Exception as e:
+            self.log.error(f"Error fetching scan list: {e}", exc_info=True)
+            return self.jsonify_error(500, f"Error fetching scan list: {e}")
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scaneventresults(self: 'SpiderFootApi', id: str, eventType: str = None, filterfp: bool = False) -> list:
+        """Return events for a scan.
+
+        Args:
+            id (str): scan ID
+            eventType (str): event type filter
+            filterfp (bool): filter out false positives
+
+        Returns:
+            list: list of scan events or error JSON
+        """
+        dbh = SpiderFootDb(self.config)
+        
+        try:
+            data = dbh.scanResultEvent(id, eventType if eventType else 'ALL', filterfp)
+            retdata = []
+            
+            for row in data:
+                lastseen = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
+                retdata.append([
+                    lastseen,
+                    row[1],  # Data
+                    row[2],  # Module
+                    row[3],  # Source
+                    row[4],  # Event Type
+                    row[5],  # confidence
+                    row[6],  # visibility
+                    row[7],  # risk
+                    row[8],  # hash
+                    row[9],  # source event hash
+                    row[10],  # module instance ID
+                    row[11],  # scan instance ID
+                    row[13],  # false positive
+                    row[14],  # id
+                ])
+                
+            return retdata
+        except Exception as e:
+            self.log.error(f"Error fetching scan results: {e}", exc_info=True)
+            return self.jsonify_error(500, f"Error fetching scan results: {e}")
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scancorrelations(self: 'SpiderFootApi', id: str) -> list:
+        """Return correlations for a scan.
+
+        Args:
+            id (str): scan ID
+
+        Returns:
+            list: list of correlations or error JSON
+        """
+        dbh = SpiderFootDb(self.config)
+        
+        try:
+            retdata = []
+            corrs = dbh.scanCorrelationList(id)
+            
+            if not corrs:
+                return []
+                
+            for row in corrs:
+                # Structure: correlation_id, correlation, rule name, rule risk, rule id, rule description, events, created
+                if len(row) < 6:
+                    continue
+                    
+                retdata.append([
+                    row[0],  # correlation_id
+                    row[1],  # correlation
+                    row[2],  # rule name
+                    row[3],  # rule risk
+                    row[4],  # rule id
+                    row[5],  # rule description
+                    row[6] if len(row) > 6 else "",  # events
+                    row[7] if len(row) > 7 else ""   # created
+                ])
+                
+            return retdata
+        except Exception as e:
+            self.log.error(f"Error fetching correlations: {e}", exc_info=True)
+            return self.jsonify_error(500, f"Error fetching correlations: {e}")
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scanhistory(self: 'SpiderFootApi', id: str) -> list:
+        """Return scan history.
+
+        Args:
+            id (str): scan ID
+
+        Returns:
+            list: scan history data or error JSON
+        """
+        dbh = SpiderFootDb(self.config)
+        
+        try:
+            return dbh.scanResultHistory(id)
+        except Exception as e:
+            self.log.error(f"Error fetching scan history: {e}", exc_info=True)
+            return self.jsonify_error(500, f"Error fetching scan history: {e}")
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -694,3 +842,29 @@ class SpiderFootApi:
         except Exception as e:
             self.log.error(f"Database vacuum failed: {e}", exc_info=True)
             return self.jsonify_error(500, f"Database vacuum failed: {e}")
+
+    @cherrypy.expose
+    def swaggerui(self: 'SpiderFootApi', path: str = None) -> str:
+        """Serve Swagger UI documentation for the API.
+
+        Args:
+            path (str): Path to Swagger resource
+
+        Returns:
+            str: Swagger UI HTML page
+        """
+        static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'swagger')
+        
+        if not path:
+            index_file = os.path.join(static_dir, 'index.html')
+            if os.path.exists(index_file):
+                with open(index_file, 'r') as f:
+                    return f.read()
+            return "Swagger UI not found."
+            
+        resource_path = os.path.join(static_dir, path)
+        if os.path.exists(resource_path):
+            with open(resource_path, 'r') as f:
+                return f.read()
+                
+        return "Resource not found."

@@ -741,7 +741,7 @@ def start_api_server(host: str, port: int, sfConfig: dict, loggingQueue=None) ->
         sys.exit(-1)
 
 
-def parse_listen_address(listen_str: str, default_host: str, default_port: int, log) -> tuple[str, int]:
+def parse_listen_address(listen_str: str, default_host: str, default_port: int, log) -> tuple:
     """Parse IP:port string."""
     host = default_host
     port = default_port

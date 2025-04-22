@@ -13,21 +13,24 @@ ${FIREFOX_BINARY_PATH}    /usr/bin/firefox  # Add path to Firefox binary
 Capture Failure Screenshot
     Capture Page Screenshot    failure-${TEST NAME}.png
 
-Create Firefox Headless Options
-    ${options}=    Evaluate    selenium.webdriver.FirefoxOptions()    modules=selenium.webdriver
-    Call Method    ${options}    add_argument    --headless
-    # Set the Firefox binary path using the binary property instead of set_binary
-    Set To Dictionary    ${options}    binary    ${FIREFOX_BINARY_PATH}
+Create Firefox Options
+    ${firefox_options}=    Evaluate    selenium.webdriver.firefox.options.Options()    modules=selenium.webdriver.firefox.options
+    Call Method    ${firefox_options}    add_argument    --headless
+    # Set the Firefox binary path if defined
+    Run Keyword If    '${FIREFOX_BINARY_PATH}' != ''    Call Method    ${firefox_options}    binary_location    ${FIREFOX_BINARY_PATH}
     Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
-    RETURN    ${options}
+    # Create capabilities dictionary with options
+    ${capabilities}=    Create Dictionary    
+    Set To Dictionary    ${capabilities}    firefox_options    ${firefox_options}
+    RETURN    ${capabilities}
 
 Create a module scan
     [Arguments]    ${scan_name}    ${scan_target}    ${module_name}
-    ${firefox_options}=    Create Firefox Headless Options
+    ${capabilities}=    Create Firefox Options
     Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
-    Open browser    http://localhost:5001/newscan   firefox    options=${firefox_options}    timeout=120s
-    Press Keys    name:scanname    van1shland
-    Press Keys    name:scantarget    van1shland.io
+    Open browser    http://localhost:5001/newscan   firefox    service_log_path=${{os.path.devnull}}    options=${capabilities}    timeout=120s
+    Press Keys    name:scanname    ${scan_name}
+    Press Keys    name:scantarget    ${scan_target}
     Click Element    id:moduletab
     Click Element    id:btn-deselect-all
     Scroll To Element    id:module_${module_name}
@@ -42,11 +45,11 @@ Create a module scan
 
 Create a use case scan
     [Arguments]    ${scan_name}    ${scan_target}    ${use_case}
-    ${firefox_options}=    Create Firefox Headless Options
+    ${capabilities}=    Create Firefox Options
     Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
-    Open browser    http://localhost:5001/newscan    firefox    options=${firefox_options}    timeout=120s
-    Press Keys    name:scanname    van1shland
-    Press Keys    name:scantarget    van1shland.io
+    Open browser    http://localhost:5001/newscan    firefox    service_log_path=${{os.path.devnull}}    options=${capabilities}    timeout=120s
+    Press Keys    name:scanname    ${scan_name}
+    Press Keys    name:scantarget    ${scan_target}
     Click Element    id:usecase_${use_case}
     Scroll To Element    id:btn-run-scan
     Click Element    id:btn-run-scan
@@ -126,8 +129,8 @@ Wait For Scan To Finish
 
 ***Test Cases***
 Main navigation pages should render correctly
-    ${firefox_options}=    Create Firefox Headless Options
-    Open browser    http://localhost:5001    firefox    options=${firefox_options}    timeout=120s
+    ${capabilities}=    Create Firefox Options
+    Open browser    http://localhost:5001    firefox    service_log_path=${{os.path.devnull}}    options=${capabilities}    timeout=120s
     Click Element    id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=120s
     New scan page should render

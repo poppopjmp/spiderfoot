@@ -13,19 +13,23 @@ ${SCROLL_PADDING}       200   # Padding to ensure elements aren't hidden behind 
 Capture Failure Screenshot
     Capture Page Screenshot  failure-${TEST NAME}.png
 
-Create Chrome Headless Options
-    ${options}=    Evaluate    selenium.webdriver.ChromeOptions()    modules=selenium.webdriver
-    Call Method    ${options}    add_argument    --headless
-    Call Method    ${options}    add_argument    --no-sandbox
-    Call Method    ${options}    add_argument    --disable-dev-shm-usage
-    Call Method    ${options}    add_argument    --window-size=1920,1080  # Set a larger window size
-    ${service}=    Evaluate    selenium.webdriver.chrome.service.Service(executable_path='${CHROMEDRIVER_PATH}')    modules=selenium.webdriver.chrome.service
-    RETURN    ${options}    ${service}
+Create Chrome Options
+    ${chrome_options}=    Evaluate    selenium.webdriver.ChromeOptions()    modules=selenium.webdriver
+    Call Method    ${chrome_options}    add_argument    --headless
+    Call Method    ${chrome_options}    add_argument    --no-sandbox
+    Call Method    ${chrome_options}    add_argument    --disable-dev-shm-usage
+    # Fix: properly set window size without using keyword arguments
+    Call Method    ${chrome_options}    add_argument    --window-size=1920,1080
+    # Create capabilities dictionary with options
+    ${capabilities}=    Create Dictionary
+    Set To Dictionary    ${capabilities}    chromeOptions    ${chrome_options}
+    RETURN    ${capabilities}
 
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
-    ${chrome_options}    ${service}=    Create Chrome Headless Options
-    Open browser              http://127.0.0.1:5001/newscan    browser=chrome    options=${chrome_options}    service=${service}    timeout=${WAIT_TIMEOUT}
+    ${capabilities}=    Create Chrome Options
+    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
+    Open browser              http://127.0.0.1:5001/newscan    browser=chrome    options=${capabilities}    service_log_path=${{os.path.devnull}}    timeout=${WAIT_TIMEOUT}
     Wait Until Element Is Visible    name:scanname    timeout=${WAIT_TIMEOUT}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
@@ -45,8 +49,9 @@ Create a module scan
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
-    ${chrome_options}    ${service}=    Create Chrome Headless Options
-    Open browser              http://localhost:5001/newscan    browser=chrome    options=${chrome_options}    service=${service}    timeout=${WAIT_TIMEOUT}
+    ${capabilities}=    Create Chrome Options
+    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
+    Open browser              http://localhost:5001/newscan    browser=chrome    options=${capabilities}    service_log_path=${{os.path.devnull}}    timeout=${WAIT_TIMEOUT}
     Wait Until Element Is Visible    name:scanname    timeout=${WAIT_TIMEOUT}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
@@ -159,8 +164,9 @@ Wait For Scan To Finish
 
 ***Test Cases***
 Main navigation pages should render correctly
-    ${chrome_options}    ${service}=    Create Chrome Headless Options
-    Open browser              http://localhost:5001    browser=chrome    options=${chrome_options}    service=${service}    timeout=${WAIT_TIMEOUT}
+    ${capabilities}=    Create Chrome Options
+    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
+    Open browser              http://localhost:5001    browser=chrome    options=${capabilities}    service_log_path=${{os.path.devnull}}    timeout=${WAIT_TIMEOUT}
     Wait Until Element Is Visible    id:nav-link-newscan    timeout=${WAIT_TIMEOUT}
     Click Element                 id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=${WAIT_TIMEOUT}
