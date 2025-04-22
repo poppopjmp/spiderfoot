@@ -256,6 +256,14 @@ class sfp_intelx(SpiderFootPlugin):
                 e = SpiderFootEvent(evt, val, self.__name__, event)
                 self.notifyListeners(e)
 
+                # Extract matches within files
+                if 'keyvalues' in rec:
+                    for kv in rec['keyvalues']:
+                        if 'value' in kv:
+                            match = kv['value']
+                            e = SpiderFootEvent("RAW_DATA", match, self.__name__, event)
+                            self.notifyListeners(e)
+
         from urllib.parse import urlparse
         parsed_url = urlparse(self.opts['base_url'])
         if parsed_url.hostname == "public.intelx.io" or eventName != "INTERNET_NAME":

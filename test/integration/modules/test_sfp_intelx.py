@@ -9,15 +9,22 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 @pytest.mark.usefixtures
 class TestModuleIntegrationIntelx(unittest.TestCase):
 
-    @unittest.skip("todo")
+    def setUp(self):
+        self.default_options = {
+            '_fetchtimeout': 15,
+            '_useragent': 'SpiderFoot',
+            '_genericusers': 'admin,administrator,webmaster,hostmaster,postmaster,root,abuse',
+            '_internettlds': 'com,net,org'
+        }
+
     def test_handleEvent(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_intelx()
         module.setup(sf, dict())
 
-        target_value = 'example target value'
-        target_type = 'IP_ADDRESS'
+        target_value = 'example.com'
+        target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
