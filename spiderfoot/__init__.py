@@ -45,7 +45,7 @@ class SpiderFootPlugin():
         return {
             'name': self.__name__ if hasattr(self, '__name__') else None,
             'descr': self.__doc__ if self.__doc__ else "",
-            'cats': self.producedEvents() if hasattr(self, 'producedEvents') and callable(self.producedEvents) else [],
+            'cats': self.meta().get('categories', []) if hasattr(self, 'meta') and callable(self.meta) else [],
             'provides': self.producedEvents() if hasattr(self, 'producedEvents') and callable(self.producedEvents) else [],
             'consumes': self.watchedEvents() if hasattr(self, 'watchedEvents') and callable(self.watchedEvents) else [],
             'meta': self.meta() if hasattr(self, 'meta') and callable(self.meta) else {},

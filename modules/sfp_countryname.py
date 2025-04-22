@@ -26,7 +26,7 @@ class sfp_countryname(SpiderFootPlugin):
         'summary': "Identify country names in any obtained data.",
         'flags': [],
         'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        'categories': ["Real World"]
     }
 
     opts = {

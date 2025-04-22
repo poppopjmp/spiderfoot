@@ -138,8 +138,8 @@ def main() -> None:
                        help="Display the version of SpiderFoot and exit.")
         p.add_argument("-max-threads", type=int,
                        help="Max number of modules to run concurrently.")
-        p.add_argument("--api-listen", metavar="IP:port", nargs='?', const="127.0.0.1:5001",
-                       help="IP and port to listen on for the REST API. Defaults to 127.0.0.1:5001 if no value provided.")
+        p.add_argument("--api-listen", metavar="IP:port", nargs='?', const="127.0.0.1:8000",
+                       help="IP and port to listen on for the REST API. Defaults to 127.0.0.1:8000 if no value provided.")
 
         args = p.parse_args()  # Parse arguments after defining p
 

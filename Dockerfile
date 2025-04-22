@@ -69,7 +69,9 @@ RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tool
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
 
 WORKDIR /home/spiderfoot/.spiderfoot/logs
-RUN chown -R spiderfoot:spiderfoot /home/spiderfoot/
+RUN mkdir -p /home/spiderfoot/.spiderfoot/logs \
+    && chmod 755 /home/spiderfoot/.spiderfoot/logs \
+    && chown -R spiderfoot:spiderfoot /home/spiderfoot/
 USER spiderfoot
 
 EXPOSE 5001
