@@ -220,8 +220,8 @@ def main() -> None:
 
         # Start API server if requested
         if args.api_listen:
-            api_host, api_port = parse_listen_address(args.api_listen, '127.0.0.1', 5001, log)
-            start_api_server(api_host, api_port, sfConfig, loggingQueue)
+            api_host, api_port = parse_listen_address(args.api_listen, '127.0.0.1', 8000, log)
+            start_api_server(sfConfig, loggingQueue)
             sys.exit(0)
 
         if args.correlate:
@@ -264,8 +264,8 @@ def main() -> None:
 
         # Default action: Start API server if no other action is specified
         if len(sys.argv) <= 1:
-            log.info("No arguments supplied, starting API server on 127.0.0.1:5001 by default.")
-            start_api_server('127.0.0.1', 8000, sfConfig, loggingQueue)
+            log.info("No arguments supplied, starting API server on 127.0.0.1:8000 by default.")
+            start_api_server(sfConfig, loggingQueue)
             sys.exit(0)
 
         if args.listen:
@@ -571,6 +571,10 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
         })
 
         log.info(f"Starting web server at {web_host}:{web_port} ...")
+        
+        # Also start the API server
+        start_api_server(sfConfig, loggingQueue)
+        log.info("API server started.")
 
         # Enable access to static files via the web directory
         conf = {
@@ -686,55 +690,27 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
         sys.exit(-1)
 
 
-def start_api_server(host: str, port: int, sfConfig: dict, loggingQueue=None) -> None:
-    """Start the REST API server.
+def start_api_server(sfConfig, loggingQueue=None):
+    """Start the HTTP API server thread.
 
     Args:
-        host (str): IP address to listen on
-        port (int): Port to listen on
-        sfConfig (dict): SpiderFoot config options
-        loggingQueue (Queue): main SpiderFoot logging queue
+        sfConfig (dict): SpiderFoot configuration options
+        loggingQueue (Queue): Multiprocessing queue to pass logging messages back to the main process
+
+    Returns:
+        None
     """
     try:
-        log = logging.getLogger(f"spiderfoot.{__name__}")
-        log.info(f"Starting API server at http://{host}:{port}/api ...")
-        cherrypy.config.update({
-            'server.socket_host': host,
-            'server.socket_port': port,
-            'log.screen': False,
-            'log.access_file': '',
-            'log.error_file': '',
-            'engine.autoreload.on': False,
-            'tools.sessions.on': True,
-            'tools.sessions.storage_type': "ram",
-            'tools.sessions.storage_path': SpiderFootHelpers.dataPath(),
-            'tools.sessions.timeout': 60,
-            'tools.encode.on': True,
-            'tools.encode.encoding': 'utf-8',
-            'tools.gzip.on': True,
-            'tools.response_headers.on': True,
-            'tools.response_headers.headers': [
-                ('X-Frame-Options', 'SAMEORIGIN'),
-                ('X-XSS-Protection', '1; mode=block'),
-                ('X-Content-Type-Options', 'nosniff'),
-                ('Referrer-Policy', 'strict-origin-when-cross-origin'),
-                ('Permissions-Policy', 'geolocation=(), microphone=(), camera=()'),
-                ('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'self';") # Stricter CSP for API
-            ]
-        })
-
-        # Mount the API application
+        # Make sure we pass the configuration dictionary, not the queue
         cherrypy.tree.mount(SpiderFootApi(sfConfig, loggingQueue), '/api', {
             '/': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-                'tools.json_in.on': True,
-                'tools.json_out.on': True
+                'tools.sessions.on': True,
+                'tools.sessions.name': 'SpiderFoot',
+                'response.headers.server': 'SpiderFoot API',
+                'tools.gzip.on': True,
+                'tools.gzip.mime_types': ['text/html', 'text/plain', 'application/json']
             }
         })
-
-        # Start the CherryPy engine
-        cherrypy.engine.start()
-        cherrypy.engine.block()
     except Exception as e:
         log = logging.getLogger(f"spiderfoot.{__name__}")
         log.fatal(f"Could not start API server: {e}", exc_info=True)
@@ -815,3 +791,4 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     main()
+``` 

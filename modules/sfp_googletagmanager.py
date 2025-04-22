@@ -4,11 +4,11 @@
 # Purpose:      Spiderfoot plugin to extract Google Tag Manager IDs (GTM-XXXXXX)
 #               from a target website.
 #
-# Author:      <YOUR NAME>
+# Author:      Agostino Panico
 #
-# Created:     DD/MM/YYYY
-# Copyright:   (c) <YEAR> <YOUR NAME>
-# Licence:     GPL
+# Created:     22/04/2025
+# Copyright:   (c) 2025 Agostino Panico @poppopjmp
+# Licence:     MIT
 # -------------------------------------------------------------------------------
 
 import re

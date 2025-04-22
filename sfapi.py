@@ -3,10 +3,10 @@
 # Name:         sfapi
 # Purpose:      REST API interface
 #
-# Author:       Agostino Panico @poppopjmp
+# Author:       Steve Micallef <steve@binarypool.com>
 #
-# Created:      22/04/2025
-# Copyright:    (c) Agostino Panico 2025
+# Created:      03/05/2017
+# Copyright:    (c) Steve Micallef 2017
 # License:      MIT
 # -----------------------------------------------------------------
 import json
@@ -29,53 +29,26 @@ mp.set_start_method("spawn", force=True)
 
 
 class SpiderFootApi:
-    """SpiderFoot REST API."""
+    """SpiderFoot REST API server."""
 
-    defaultConfig = dict()
-    config = dict()
-    token = None  # Used for CSRF protection on settings changes
-
-    def __init__(self: 'SpiderFootApi', web_config: dict, config: dict, loggingQueue: 'logging.handlers.QueueListener' = None) -> None:
-        """Initialize API.
+    def __init__(self, config, loggingQueue=None):
+        """Initialize SpiderFoot REST API server.
 
         Args:
-            web_config (dict): config settings for web interface (interface, port, root path)
-            config (dict): SpiderFoot config
-            loggingQueue: TBD
+            config (dict): SpiderFoot configuration
+            loggingQueue (Queue): Logging queue
 
         Raises:
-            TypeError: arg type is invalid
-            ValueError: arg value is invalid
+            TypeError: config is not a dict
         """
         if not isinstance(config, dict):
             raise TypeError(f"config is {type(config)}; expected dict()")
-        if not config:
-            raise ValueError("config is empty")
 
-        if not isinstance(web_config, dict):
-            raise TypeError(
-                f"web_config is {type(web_config)}; expected dict()")
-        if not config:
-            raise ValueError("web_config is empty")
-
-        # 'config' supplied will be the defaults, let's supplement them
-        # now with any configuration which may have previously been saved.
-        self.defaultConfig = deepcopy(config)
-        dbh = SpiderFootDb(self.defaultConfig, init=True)
-        sf = SpiderFoot(self.defaultConfig)
-        self.config = sf.configUnserialize(dbh.configGet(), self.defaultConfig)
-
-        # Set up logging
-        if loggingQueue is None:
-            self.loggingQueue = mp.Queue()
-            logListenerSetup(self.loggingQueue, self.config)
-        else:
-            self.loggingQueue = loggingQueue
-        logWorkerSetup(self.loggingQueue)
+        self.config = config
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
-
-        # Generate initial token for settings changes
-        self.token = random.SystemRandom().randint(0, 99999999)
+        self.token = random.SystemRandom().randint(0, 9999999999)
+        self.sf = SpiderFoot(self.config)
+        self.dbh = SpiderFootDb(self.config)
 
     def jsonify_error(self: 'SpiderFootApi', status: int, message: str) -> dict:
         """Jsonify error response.
