@@ -265,7 +265,7 @@ def main() -> None:
         # Default action: Start API server if no other action is specified
         if len(sys.argv) <= 1:
             log.info("No arguments supplied, starting API server on 127.0.0.1:5001 by default.")
-            start_api_server('127.0.0.1', 5001, sfConfig, loggingQueue)
+            start_api_server('127.0.0.1', 8000, sfConfig, loggingQueue)
             sys.exit(0)
 
         if args.listen:

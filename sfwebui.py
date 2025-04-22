@@ -45,7 +45,7 @@ mp.set_start_method("spawn", force=True)
 class APIClient:
     """Client for communicating with SpiderFoot API."""
 
-    def __init__(self: 'APIClient', api_url: str = "http://127.0.0.1:5001/api") -> None:
+    def __init__(self: 'APIClient', api_url: str = "http://127.0.0.1:8000/api") -> None:
         """Initialize API client.
 
         Args:
