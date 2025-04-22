@@ -515,6 +515,33 @@ class SpiderFootDb:
                     "SQL error encountered when vacuuming the database") from e
         return False
 
+    def purgeLogsOlderThan(self, days):
+        """Remove scan logs older than 'days' days from DB.
+
+        Args:
+            days (int): number of days
+
+        Returns:
+            bool: success
+        """
+        if not days:
+            return False
+
+        try:
+            with self.dbhLock:
+                if self.db_type == 'sqlite':
+                    qry = "DELETE FROM tbl_scan_log WHERE generated < datetime('now', '-" + str(days) + " day')"
+                    self.dbh.execute(qry)
+                    self.conn.commit()  # Use connection object for commit, not cursor
+                else:
+                    qry = "DELETE FROM tbl_scan_log WHERE generated < NOW() - INTERVAL '" + str(days) + " days'"
+                    self.dbh.execute(qry)
+                    self.conn.commit()  # Use connection object for commit, not cursor
+            return True
+        except Exception as e:
+            print(f"Error purging logs: {e}")
+            return False
+
     def search(self, criteria: dict, filterFp: bool = False) -> list:
         """Search database.
 

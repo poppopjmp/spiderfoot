@@ -35,6 +35,23 @@ class SpiderFootPlugin():
     # Prevent some information from being logged, just to prevent noise
     _debugUnlistedEvents = list(["WEBSERVER_TECHNOLOGY", "URL_JAVASCRIPT_FRAMEWORK",
                                  "HTTP_CODE"])
+                                 
+    def asdict(self):
+        """Return a dictionary of the module's attributes.
+        
+        Returns:
+            dict: Module attributes and their values
+        """
+        return {
+            'name': self.__name__ if hasattr(self, '__name__') else None,
+            'descr': self.__doc__ if self.__doc__ else "",
+            'cats': self.producedEvents() if hasattr(self, 'producedEvents') and callable(self.producedEvents) else [],
+            'provides': self.producedEvents() if hasattr(self, 'producedEvents') and callable(self.producedEvents) else [],
+            'consumes': self.watchedEvents() if hasattr(self, 'watchedEvents') and callable(self.watchedEvents) else [],
+            'meta': self.meta() if hasattr(self, 'meta') and callable(self.meta) else {},
+            'opts': self.opts if hasattr(self, 'opts') else {},
+            'optdescs': self.optdescs if hasattr(self, 'optdescs') else {}
+        }
 
     # Will be set to True by the controller if the user aborts the scan
     # Plugins should check this variable during loops to exit if requested
