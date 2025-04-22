@@ -62,3 +62,32 @@ class TestModuleSociallinks(SpiderFootTestBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+
+    def test_searchTelegramChannels(self):
+        sf = SpiderFoot(self.default_options)
+        module = sfp_sociallinks()
+        module.setup(sf, dict())
+
+        query = "test query"
+        result = module.searchTelegramChannels(query)
+        self.assertIsNotNone(result)
+
+    def test_handleEvent_with_telegram_search(self):
+        sf = SpiderFoot(self.default_options)
+        module = sfp_sociallinks()
+        module.setup(sf, dict())
+
+        target_value = 'example target value'
+        target_type = 'USERNAME'
+        target = SpiderFootTarget(target_value, target_type)
+        module.setTarget(target)
+
+        event_type = 'ROOT'
+        event_data = 'example data'
+        event_module = ''
+        source_event = ''
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
+
+        result = module.handleEvent(evt)
+        self.assertIsNone(result)

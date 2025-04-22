@@ -9,7 +9,14 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 @pytest.mark.usefixtures
 class TestModuleIntegrationsociallinks(unittest.TestCase):
 
-    @unittest.skip("todo")
+    def setUp(self):
+        self.default_options = {
+            '_fetchtimeout': 15,
+            '_useragent': 'SpiderFoot',
+            '_genericusers': 'admin,administrator,webmaster,hostmaster,postmaster,root,abuse',
+            '_internettlds': 'com,net,org'
+        }
+
     def test_handleEvent(self):
         sf = SpiderFoot(self.default_options)
 

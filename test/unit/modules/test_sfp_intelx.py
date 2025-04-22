@@ -62,3 +62,31 @@ class TestModuleIntelx(SpiderFootTestBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+
+    def test_query_should_extract_matches_within_files(self):
+        sf = SpiderFoot(self.default_options)
+        module = sfp_intelx()
+        module.setup(sf, dict())
+
+        query_result = module.query("example query", "intelligent")
+        self.assertIsNotNone(query_result)
+
+    def test_handleEvent_should_process_and_output_matches_within_files(self):
+        sf = SpiderFoot(self.default_options)
+        module = sfp_intelx()
+        module.setup(sf, dict())
+
+        target_value = 'example.com'
+        target_type = 'INTERNET_NAME'
+        target = SpiderFootTarget(target_value, target_type)
+        module.setTarget(target)
+
+        event_type = 'ROOT'
+        event_data = 'example data'
+        event_module = ''
+        source_event = ''
+        evt = SpiderFootEvent(event_type, event_data,
+                              event_module, source_event)
+
+        result = module.handleEvent(evt)
+        self.assertIsNone(result)

@@ -12,6 +12,9 @@
 # -------------------------------------------------------------------------------
 
 import json
+from telethon import TelegramClient, sync
+from telethon.tl.functions.messages import SearchGlobal
+from telethon.tl.types import InputMessagesFilterEmpty
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
@@ -44,11 +47,17 @@ class sfp_sociallinks(SpiderFootPlugin):
     # Default options
     opts = {
         'api_key': '',
+        'telegram_api_id': '',
+        'telegram_api_hash': '',
+        'telegram_phone_number': '',
     }
 
     # Option descriptions
     optdescs = {
         'api_key': "Social Links API Key",
+        'telegram_api_id': "Telegram API ID",
+        'telegram_api_hash': "Telegram API Hash",
+        'telegram_phone_number': "Telegram Phone Number",
     }
 
     results = None
@@ -137,6 +146,20 @@ class sfp_sociallinks(SpiderFootPlugin):
 
         return self.query(queryString)
 
+    def searchTelegramChannels(self, query):
+        client = TelegramClient('session_name', self.opts['telegram_api_id'], self.opts['telegram_api_hash'])
+        client.start(phone=self.opts['telegram_phone_number'])
+
+        result = client(SearchGlobal(
+            q=query,
+            filter=InputMessagesFilterEmpty(),
+            limit=10
+        ))
+
+        client.disconnect()
+
+        return result
+
     # Handle events sent to this module
     def handleEvent(self, event):
         eventName = event.eventType
@@ -198,6 +221,12 @@ class sfp_sociallinks(SpiderFootPlugin):
 
                 evt = SpiderFootEvent('RAW_RIR_DATA', str(
                     resultSet), self.__name__, event)
+                self.notifyListeners(evt)
+
+            # Search through Telegram channels for matches
+            search_results = self.searchTelegramChannels(eventData)
+            for message in search_results.messages:
+                evt = SpiderFootEvent('RAW_RIR_DATA', message.message, self.__name__, event)
                 self.notifyListeners(evt)
 
         elif eventName == "EMAILADDR":
