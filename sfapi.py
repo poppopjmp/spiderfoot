@@ -403,6 +403,14 @@ class SpiderFootApi:
         serialized_config = sf.configSerialize(self.config, filterSystem=False)
         for opt in serialized_config:
             ret[opt] = serialized_config[opt]
+        
+        # Make sure to include modules info in the response
+        if '__modules__' in self.config:
+            ret['__modules__'] = self.config['__modules__']
+        
+        # Include correlation rules if available
+        if '__correlationrules__' in self.config:
+            ret['__correlationrules__'] = self.config['__correlationrules__']
 
         return ['SUCCESS', {'token': self.token, 'data': ret}]
 
