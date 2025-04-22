@@ -19,10 +19,10 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 class sfp_sublist3r(SpiderFootPlugin):
 
     meta = {
-        "name": "Sublist3r PassiveDNS",
+        "name": "Sublist3r",
         "summary": "Passive subdomain enumeration using Sublist3r's API",
         "useCases": ["Investigate", "Footprint", "Passive"],
-        "categories": ["Passive DNS"],
+        "categories": "Passive DNS",
         "dataSource": {
             "website": "https://api.sublist3r.com",
             "model": "FREE_NOAUTH_UNLIMITED",
