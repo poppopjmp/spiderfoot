@@ -20,6 +20,7 @@ import random
 import signal
 import sys
 import time
+import json
 from copy import deepcopy
 
 import cherrypy
@@ -221,7 +222,11 @@ def main() -> None:
         # Start API server if requested
         if args.api_listen:
             api_host, api_port = parse_listen_address(args.api_listen, '127.0.0.1', 8000, log)
-            start_api_server(sfConfig, loggingQueue)
+            if start_api_server(sfConfig, loggingQueue):
+                log.info(f"API server started successfully on {api_host}:{api_port}")
+                cherrypy.engine.block()  # Block until the server is stopped
+            else:
+                log.fatal("Failed to start API server.")
             sys.exit(0)
 
         if args.correlate:
@@ -701,20 +706,103 @@ def start_api_server(sfConfig, loggingQueue=None):
         None
     """
     try:
-        # Make sure we pass the configuration dictionary, not the queue
-        cherrypy.tree.mount(SpiderFootApi(sfConfig, loggingQueue), '/api', {
+        log = logging.getLogger(f"spiderfoot.{__name__}")
+        
+        # Default API server configuration
+        api_host = '127.0.0.1'
+        api_port = 8000  # Default to port 8000 as requested
+        
+        # Check if we have command line args with different host/port
+        for arg in sys.argv:
+            if arg.startswith('--api-listen='):
+                api_address = arg.split('=')[1]
+                if ':' in api_address:
+                    api_host, api_port_str = api_address.split(':', 1)
+                    try:
+                        api_port = int(api_port_str)
+                    except ValueError:
+                        log.error(f"Invalid API port specified: {api_port_str}")
+                        return
+                else:
+                    # If only a port is provided
+                    try:
+                        api_port = int(api_address)
+                    except ValueError:
+                        if api_address:  # If it's not a port, assume it's a hostname/IP
+                            api_host = api_address
+
+        # Configure CherryPy for the API
+        api_conf = {
+            'server.socket_host': api_host,
+            'server.socket_port': int(api_port),
+            'tools.sessions.on': False,
+            'tools.gzip.on': True,
+            'tools.gzip.mime_types': ['text/html', 'text/plain', 'application/json'],
+            'request.show_tracebacks': sfConfig.get('_debug', False),
+            'environment': 'production',
+            'log.screen': False
+        }
+        
+        # Configuration for API endpoints
+        api_endpoints_conf = {
             '/': {
-                'tools.sessions.on': True,
-                'tools.sessions.name': 'SpiderFoot',
-                'response.headers.server': 'SpiderFoot API',
-                'tools.gzip.on': True,
-                'tools.gzip.mime_types': ['text/html', 'text/plain', 'application/json']
+                'tools.response_headers.on': True,
+                'tools.response_headers.headers': [('Content-Type', 'application/json')],
+                'tools.encode.on': True,
+                'tools.encode.encoding': 'utf-8',
+                'response.headers.server': 'SpiderFoot API'
             }
-        })
+        }
+
+        # Make sure the static directory for Swagger UI exists
+        swagger_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'swagger')
+        if not os.path.exists(swagger_dir):
+            os.makedirs(swagger_dir)
+
+        # Create a minimal OpenAPI definition if not exists
+        openapi_file = os.path.join(swagger_dir, 'openapi.json')
+        if not os.path.exists(openapi_file):
+            minimal_openapi = {
+                "openapi": "3.0.0",
+                "info": {
+                    "title": "SpiderFoot API",
+                    "description": "API for SpiderFoot OSINT automation tool",
+                    "version": __version__
+                },
+                "paths": {
+                    "/ping": {
+                        "get": {
+                            "summary": "Test connectivity",
+                            "responses": {
+                                "200": {
+                                    "description": "Successful response"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            with open(openapi_file, 'w') as f:
+                json.dump(minimal_openapi, f, indent=2)
+
+        # Start the API server in a separate server instance
+        log.info(f"Starting SpiderFoot API server on http://{api_host}:{api_port}/api/")
+        
+        # Mount the API application
+        cherrypy.tree.mount(SpiderFootApi(sfConfig, loggingQueue), '/api', api_endpoints_conf)
+        
+        # If this is being called directly (not as part of the web UI), start the server
+        if not cherrypy.engine.state:
+            cherrypy.config.update(api_conf)
+            cherrypy.engine.start()
+            cherrypy.engine.block()
+            
+        # Return so the caller knows the server was started successfully
+        return True
     except Exception as e:
         log = logging.getLogger(f"spiderfoot.{__name__}")
         log.fatal(f"Could not start API server: {e}", exc_info=True)
-        sys.exit(-1)
+        return False
 
 
 def parse_listen_address(listen_str: str, default_host: str, default_port: int, log) -> tuple:

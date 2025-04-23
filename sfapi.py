@@ -49,6 +49,10 @@ class SpiderFootApi:
         self.token = random.SystemRandom().randint(0, 9999999999)
         self.sf = SpiderFoot(self.config)
         self.dbh = SpiderFootDb(self.config)
+        self.loggingQueue = loggingQueue
+        
+        # Store a copy of the default config for reset_settings
+        self.defaultConfig = deepcopy(config)
 
     def jsonify_error(self: 'SpiderFootApi', status: int, message: str) -> dict:
         """Jsonify error response.
