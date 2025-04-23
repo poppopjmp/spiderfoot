@@ -316,10 +316,13 @@ class SpiderFootWebUi:
         sf = SpiderFoot(self.defaultConfig)
         self.config = sf.configUnserialize(dbh.configGet(), self.defaultConfig)
         
-        # Initialize API client
+        # Initialize API client - connecting to the API running on the same host
+        # Use the web_config to get API host/port details if available, otherwise use defaults
         api_host = web_config.get('api_host', '127.0.0.1')
-        api_port = web_config.get('api_port', 5001)
+        api_port = web_config.get('api_port', 8000)  # API server usually runs on port 8000
         api_url = f"http://{api_host}:{api_port}/api"
+        self.log = logging.getLogger(f"spiderfoot.{__name__}")
+        self.log.info(f"Initializing API client with URL: {api_url}")
         self.api_client = APIClient(api_url)
 
         # Set up logging
@@ -329,7 +332,6 @@ class SpiderFootWebUi:
         else:
             self.loggingQueue = loggingQueue
         logWorkerSetup(self.loggingQueue)
-        self.log = logging.getLogger(f"spiderfoot.{__name__}")
 
         cherrypy.config.update({
             'error_page.401': self.error_page_401,
