@@ -59,5 +59,3 @@ jobs:
         timeout 60 bash -c 'until curl --output /dev/null --silent --head --fail http://127.0.0.1:5001; do printf "."; sleep 1; done'
         echo "SpiderFoot is up!"
 
-    - name: Stop SpiderFoot container
-      run: timeout 60 docker stop $(docker ps -q --filter ancestor=ghcr.io/poppopjmp/spiderfoot)
