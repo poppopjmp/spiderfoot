@@ -569,318 +569,308 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
         web_root = sfWebUiConfig.get('root', '/')
         cors_origins = sfWebUiConfig.get('cors_origins', [])
 
-        cherrypy.config.update({irst on port 8000
+        # Start the API server first on port 8000
+        api_host = "127.0.0.1"
+        api_port = 8000
+
+        # Configure API server
+        api_conf = {
+            'server.socket_host': api_host,
+            'server.socket_port': int(api_port)
+        }
+
+        # API endpoints configuration
+        api_endpoints_conf = {
+            '/': {
+                'tools.response_headers.on': True,
+                'tools.response_headers.headers': [('Content-Type', 'application/json')],
+                'tools.encode.on': True,
+                'tools.encode.encoding': 'utf-8',
+                'tools.gzip.on': True
+            }
+        }
+
+        # Create API application instance
+        api_app = SpiderFootApi(sfConfig, loggingQueue)
+        
+        # Mount API as a separate application under /api
+        cherrypy.tree.mount(api_app, '/api', api_endpoints_conf)
+        log.info(f"API mounted at http://{api_host}:{api_port}/api/")
+
+        # Configure Web UI server
+        cherrypy.config.update({
             'log.screen': False,
             'server.socket_host': web_host,
-            'server.socket_port': int(web_port)
-        })Configure API server
-        api_conf = {
+            'server.socket_port': int(web_port),
+            'engine.autoreload.on': False
+        })
+
         log.info(f"Starting web server at {web_host}:{web_port} ...")
-            'server.socket_port': int(api_port)
-        # Also start the API server
-        start_api_server(sfConfig, loggingQueue)
-        log.info("API server started.")ecific configuration
-        api_endpoints_conf = {
+
         # Enable access to static files via the web directory
-        conf = {'tools.response_headers.on': True,
-            '/query': {response_headers.headers': [('Content-Type', 'application/json')],
+        conf = {
+            '/query': {
                 'tools.encode.text_only': False,
                 'tools.encode.add_charset': True,
-            },  'tools.gzip.on': True
+            },
             '/static': {
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': 'static',
                 'tools.staticdir.root': f"{os.path.dirname(os.path.abspath(__file__))}/spiderfoot"
-            }pp = SpiderFootApi(sfConfig, loggingQueue)
+            }
         }
-        # Mount API as a separate application under /api
-        secrets = dict()unt(api_app, '/api', api_endpoints_conf)
-        passwd_file = SpiderFootHelpers.dataPath() + '/passwd'/api/")
+
+        # Rest of existing authentication and SSL code
+        secrets = dict()
+        passwd_file = SpiderFootHelpers.dataPath() + '/passwd'
         if os.path.isfile(passwd_file):
             if not os.access(passwd_file, os.R_OK):
                 log.error("Could not read passwd file. Permission denied.")
-                sys.exit(-1)lse,
-            'server.socket_host': web_host,
-            with open(passwd_file, 'r') as f:t),
+                sys.exit(-1)
+            with open(passwd_file, 'r') as f:
                 passwd_data = f.readlines()
-        })
             for line in passwd_data:
-                if line.strip() == '': at {web_host}:{web_port} ...")
+                if line.strip() == '':
                     continue
-        # Enable access to static files via the web directory
                 if ':' not in line:
                     log.error(
                         "Incorrect format of passwd file, must be username:password on each line.")
-                    sys.exit(-1)d_charset': True,
-            },
+                    sys.exit(-1)
                 u = line.strip().split(":")[0]
                 p = ':'.join(line.strip().split(":")[1:])
-                'tools.staticdir.dir': 'static',
-                if not u or not p:oot': f"{os.path.dirname(os.path.abspath(__file__))}/spiderfoot"
+                if not u or not p:
                     log.error(
                         "Incorrect format of passwd file, must be username:password on each line.")
                     sys.exit(-1)
-        secrets = dict()
-                secrets[u] = potHelpers.dataPath() + '/passwd'
-        if os.path.isfile(passwd_file):
-        if secrets:os.access(passwd_file, os.R_OK):
+                secrets[u] = p
+        if secrets:
             log.info("Enabling authentication based on supplied passwd file.")
-            conf['/'] = {-1)
+            conf['/'] = {
                 'tools.auth_digest.on': True,
                 'tools.auth_digest.realm': web_host,
                 'tools.auth_digest.get_ha1': auth_digest.get_ha1_dict_plain(secrets),
                 'tools.auth_digest.key': random.SystemRandom().randint(0, 99999999)
-            }or line in passwd_data:
-        else:   if line.strip() == '':
+            }
+        else:
             warn_msg = "\n********************************************************************\n"
             warn_msg += "Warning: passwd file contains no passwords. Authentication disabled.\n"
             warn_msg += "Please consider adding authentication to protect this instance!\n"
             warn_msg += "Refer to https://github.com/poppopjmp/spiderfoot/wiki. \n"
-            warn_msg += "********************************************************************\n".")
+            warn_msg += "********************************************************************\n"
             log.warning(warn_msg)
 
-        using_ssl = Falsestrip().split(":")[0]
+        using_ssl = False
         key_path = SpiderFootHelpers.dataPath() + '/spiderfoot.key'
         crt_path = SpiderFootHelpers.dataPath() + '/spiderfoot.crt'
         if os.path.isfile(key_path) and os.path.isfile(crt_path):
             if not os.access(crt_path, os.R_OK):
-                log.critical(rrect format of passwd file, must be username:password on each line.")
+                log.critical(
                     f"Could not read {crt_path} file. Permission denied.")
                 sys.exit(-1)
-                secrets[u] = p
             if not os.access(key_path, os.R_OK):
                 log.critical(
-                    f"Could not read {key_path} file. Permission denied.")e.")
+                    f"Could not read {key_path} file. Permission denied.")
                 sys.exit(-1)
-                'tools.auth_digest.on': True,
             log.info("Enabling SSL based on supplied key and certificate file.")
-            cherrypy.server.ssl_module = 'builtin'digest.get_ha1_dict_plain(secrets),
-            cherrypy.server.ssl_certificate = crt_pathRandom().randint(0, 99999999)
+            cherrypy.server.ssl_module = 'builtin'
+            cherrypy.server.ssl_certificate = crt_path
             cherrypy.server.ssl_private_key = key_path
             using_ssl = True
-            warn_msg = "\n********************************************************************\n"
-        if using_ssl:+= "Warning: passwd file contains no passwords. Authentication disabled.\n"
-            url = "https://"ase consider adding authentication to protect this instance!\n"
-        else:arn_msg += "Refer to https://github.com/poppopjmp/spiderfoot/wiki. \n"
-            url = "http://"******************************************************************\n"
-            log.warning(warn_msg)
+
+        if using_ssl:
+            url = "https://"
+        else:
+            url = "http://"
         if web_host == "0.0.0.0":  # nosec
             url = f"{url}127.0.0.1:{web_port}"
-        else:ath = SpiderFootHelpers.dataPath() + '/spiderfoot.key'
-            url = f"{url}{web_host}:{web_port}{web_root}"rfoot.crt'
-            cors_origins.append(url)and os.path.isfile(crt_path):
-            if not os.access(crt_path, os.R_OK):
+        else:
+            url = f"{url}{web_host}:{web_port}{web_root}"
+            cors_origins.append(url)
+
         cherrypy_cors.install()
-        cherrypy.config.update({read {crt_path} file. Permission denied.")
+        cherrypy.config.update({
             'cors.expose.on': True,
             'cors.expose.origins': cors_origins,
             'cors.preflight.origins': cors_origins
-        })      log.critical(
-                    f"Could not read {key_path} file. Permission denied.")
-        print("")ys.exit(-1)
+        })
+
+        print("")
         print("*************************************************************")
-        print(" Use SpiderFoot by starting your web browser of choice and ")e.")
-        print(f" browse to {url}")dule = 'builtin'
+        print(" Use SpiderFoot by starting your web browser of choice and ")
+        print(f" browse to {url}")
         print("*************************************************************")
-        print("")ypy.server.ssl_private_key = key_path
-            using_ssl = True
+        print("")
+
         # Disable auto-reloading of content
         cherrypy.engine.autoreload.unsubscribe()
-            url = "https://"
+
         cherrypy.quickstart(SpiderFootWebUi(
             sfWebUiConfig, sfConfig, loggingQueue), script_name=web_root, config=conf)
     except Exception as e:
-        log.critical(= "0.0.0.0":  # nosec
+        log.critical(
             f"Unhandled exception in start_web_server: {e}", exc_info=True)
         sys.exit(-1)
-            url = f"{url}{web_host}:{web_port}{web_root}"
-            cors_origins.append(url)
+
+
 def start_api_server(sfConfig, loggingQueue=None):
     """Start the HTTP API server thread.
-        cherrypy.config.update({
-    Args:   'cors.expose.on': True,
+
+    Args:
         sfConfig (dict): SpiderFoot configuration options
         loggingQueue (Queue): Multiprocessing queue to pass logging messages back to the main process
-        })
+
     Returns:
-        bool: True if successful, False otherwiset("")
-    """ print("*************************************************************")
-    try:print(" Use SpiderFoot by starting your web browser of choice and ")
+        bool: True if successful, False otherwise
+    """
+    try:
         log = logging.getLogger(f"spiderfoot.{__name__}")
-        print("*************************************************************")
+
         # Default API server configuration
         api_host = '127.0.0.1'
         api_port = 8000  # Default to port 8000
-        cherrypy.engine.autoreload.unsubscribe()
+
         # Check if we have command line args with different host/port
-        for arg in sys.argv:SpiderFootWebUi(
-            if arg.startswith('--api-listen='):ue), script_name=web_root, config=conf)
+        for arg in sys.argv:
+            if arg.startswith('--api-listen='):
                 api_address = arg.split('=')[1]
                 if ':' in api_address:
-                    api_host, api_port_str = api_address.split(':', 1)True)
+                    api_host, api_port_str = api_address.split(':', 1)
                     try:
                         api_port = int(api_port_str)
                     except ValueError:
                         log.error(f"Invalid API port specified: {api_port_str}")
-                        return Falseer thread.
+                        return False
                 else:
                     # If only a port is provided
-                    try: SpiderFoot configuration options
-                        api_port = int(api_address) to pass logging messages back to the main process
+                    try:
+                        api_port = int(api_address)
                     except ValueError:
                         if api_address:  # If it's not a port, assume it's a hostname/IP
                             api_host = api_address
-    """
+
         # Create a dedicated API server if one isn't already mounted
-        if not cherrypy.tree.apps.get('/api'):g.getLogger(f"spiderfoot.{__name__}")
+        if not cherrypy.tree.apps.get('/api'):
             api_conf = {
                 'server.socket_host': api_host,
                 'server.socket_port': int(api_port),
-                'tools.sessions.on': False, to port 8000 as requested
+                'tools.sessions.on': False,
                 'tools.gzip.on': True,
                 'tools.gzip.mime_types': ['text/html', 'text/plain', 'application/json'],
                 'request.show_tracebacks': sfConfig.get('_debug', False),
-                'environment': 'production',--api-listen='):
-                'log.screen': False       api_address = arg.split('=')[1]
-            }        if ':' in api_address:
-            r = api_address.split(':', 1)
+                'environment': 'production',
+                'log.screen': False
+            }
+
             api_endpoints_conf = {
-                '/': {      api_port = int(api_port_str)
+                '/': {
                     'tools.response_headers.on': True,
                     'tools.response_headers.headers': [('Content-Type', 'application/json')],
                     'tools.encode.on': True,
                     'tools.encode.encoding': 'utf-8',
                     'response.headers.server': 'SpiderFoot API'
-                }       try:
-            }               api_port = int(api_address)
-                    except ValueError:
-            # Create swagger directory if needed assume it's a hostname/IP
+                }
+            }
+
+            # Create swagger directory if needed
             swagger_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'swagger')
             os.makedirs(swagger_dir, exist_ok=True)
- API
-            # Create minimal OpenAPI definition if needed        api_conf = {
+
+            # Create minimal OpenAPI definition if needed
             openapi_file = os.path.join(swagger_dir, 'openapi.json')
             if not os.path.exists(openapi_file):
                 minimal_openapi = {
-                    "openapi": "3.0.0",ue,
-                    "info": {: ['text/html', 'text/plain', 'application/json'],
-                        "title": "SpiderFoot API",_tracebacks': sfConfig.get('_debug', False),
+                    "openapi": "3.0.0",
+                    "info": {
+                        "title": "SpiderFoot API",
                         "description": "API for SpiderFoot OSINT automation tool",
                         "version": __version__
                     },
                     "paths": {
-                        "/ping": {r API endpoints
+                        "/ping": {
                             "get": {
                                 "summary": "Test connectivity",
                                 "responses": {
-                                    "200": {aders': [('Content-Type', 'application/json')],
+                                    "200": {
                                         "description": "Successful response"
                                     }
-                                }.server': 'SpiderFoot API'
+                                }
                             }
                         }
                     }
-                }re the static directory for Swagger UI exists
-                with open(openapi_file, 'w') as f:er_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'swagger')
+                }
+                with open(openapi_file, 'w') as f:
                     json.dump(minimal_openapi, f, indent=2)
 
             # Only start a separate server if this is in standalone mode
             if not cherrypy.engine.state:
                 log.info(f"Starting standalone API server on http://{api_host}:{api_port}/api/")
-                cherrypy.config.update(api_conf)if not os.path.exists(openapi_file):
+                cherrypy.config.update(api_conf)
                 cherrypy.tree.mount(SpiderFootApi(sfConfig, loggingQueue), '/api', api_endpoints_conf)
                 cherrypy.engine.start()
-                return True        "info": {
+                return True
             else:
-                # We're running as part of web UI, just mount the APIPI for SpiderFoot OSINT automation tool",
+                # We're running as part of web UI, just mount the API
                 cherrypy.tree.mount(SpiderFootApi(sfConfig, loggingQueue), '/api', api_endpoints_conf)
                 log.info(f"API mounted on http://{api_host}:{api_port}/api/ (as part of web server)")
                 return True
-        else:        "/ping": {
+        else:
             log.info("API already mounted, skipping initialization")
-            return True         "summary": "Test connectivity",
-              "responses": {
+            return True
     except Exception as e:
-        log = logging.getLogger(f"spiderfoot.{__name__}")nse"
-        log.error(f"Failed to start API server: {e}", exc_info=True)            }
-        return False                            }
-                        }
+        log = logging.getLogger(f"spiderfoot.{__name__}")
+        log.error(f"Failed to start API server: {e}", exc_info=True)
+        return False
+
 
 def parse_listen_address(listen_str: str, default_host: str, default_port: int, log) -> tuple:
     """Parse IP:port string."""
-    host = default_hostpenapi_file, 'w') as f:
-    port = default_porton.dump(minimal_openapi, f, indent=2)
+    host = default_host
+    port = default_port
     if listen_str:
-        try: a separate server instance
-            if ':' in listen_str:://{api_host}:{api_port}/api/")
+        try:
+            if ':' in listen_str:
                 host, port_str = listen_str.split(':', 1)
-                port = int(port_str)he API application
-            else:ig, loggingQueue), '/api', api_endpoints_conf)
+                port = int(port_str)
+            else:
                 # Allow specifying only the port
-                port = int(listen_str) called directly (not as part of the web UI), start the server
+                port = int(listen_str)
         except ValueError:
-            log.fatal(f"Invalid listen address format: {listen_str}. Use IP:port or just port.")fig.update(api_conf)
-            sys.exit(-1)engine.start()
-    return host, port            cherrypy.engine.block()
-            
- server was started successfully
+            log.fatal(f"Invalid listen address format: {listen_str}. Use IP:port or just port.")
+            sys.exit(-1)
+    return host, port
+
+
 def handle_abort(signal, frame) -> None:
-    """Handle interrupt and abort scan.    except Exception as e:
-og = logging.getLogger(f"spiderfoot.{__name__}")
-    Args:"Could not start API server: {e}", exc_info=True)
-        signal: TBDse
+    """Handle interrupt and abort scan.
+
+    Args:
+        signal: TBD
         frame: TBD
     """
-    try:tr, default_port: int, log) -> tuple:
-        log = logging.getLogger(f"spiderfoot.{__name__}")    """Parse IP:port string."""
-_host
-        global dbhrt
-        global scanId    if listen_str:
+    try:
+        log = logging.getLogger(f"spiderfoot.{__name__}")
+
+        global dbh
+        global scanId
 
         if scanId and dbh:
             log.info(f"Aborting scan [{scanId}] ...")
-            dbh.scanInstanceSet(scanId, None, None, "ABORTED") = int(port_str)
+            dbh.scanInstanceSet(scanId, None, None, "ABORTED")
         sys.exit(-1)
-    except Exception as e:ow specifying only the port
+    except Exception as e:
         log.critical(
-            f"Unhandled exception in handle_abort: {e}", exc_info=True)Error:
-        sys.exit(-1)            log.fatal(f"Invalid listen address format: {listen_str}. Use IP:port or just port.")
-            sys.exit(-1)
+            f"Unhandled exception in handle_abort: {e}", exc_info=True)
+        sys.exit(-1)
+
 
 if __name__ == '__main__':
     if sys.version_info < (3, 9):
-        print("SpiderFoot requires Python 3.9 or higher.")nal, frame) -> None:
-        sys.exit(-1)    """Handle interrupt and abort scan.
+        print("SpiderFoot requires Python 3.9 or higher.")
+        sys.exit(-1)
 
     if len(sys.argv) <= 1:
         print("SpiderFoot requires -l <ip>:<port> to start the web server. Try --help for guidance.")
-        sys.exit(-1)        frame: TBD
-
-    # TODO: remove this after a few releases (added in 3.5 pre-release 2021-09-05)
-    from pathlib import Pathrfoot.{__name__}")
-    if os.path.exists('spiderfoot.db'):
-        print(
-            f"ERROR: spiderfoot.db file exists in {os.path.dirname(__file__)}")
-        print("SpiderFoot no longer supports loading the spiderfoot.db database from the application directory.")
-        print(
-            f"The database is now loaded from your home directory: {Path.home()}/.spiderfoot/spiderfoot.db")g.info(f"Aborting scan [{scanId}] ...")
-        print(
-            f"This message will go away once you move or remove spiderfoot.db from {os.path.dirname(__file__)}")
-        sys.exit(-1)    except Exception as e:
-
-    # TODO: remove this after a few releases (added in 3.5 pre-release 2021-09-05)ption in handle_abort: {e}", exc_info=True)
-    from pathlib import Path
-    if os.path.exists('passwd'):
-        print(f"ERROR: passwd file exists in {os.path.dirname(__file__)}")
-        print("SpiderFoot no longer supports loading credentials from the application directory.") '__main__':
-        print(
-            f"The passwd file is now loaded from your home directory: {Path.home()}/.spiderfoot/passwd")"SpiderFoot requires Python 3.9 or higher.")
-        print(
-            f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
-        sys.exit(-1)    if len(sys.argv) <= 1:
-int("SpiderFoot requires -l <ip>:<port> to start the web server. Try --help for guidance.")
-    main()        sys.exit(-1)
-
+        sys.exit(-1)
 
     # TODO: remove this after a few releases (added in 3.5 pre-release 2021-09-05)
     from pathlib import Path
@@ -906,4 +896,3 @@ int("SpiderFoot requires -l <ip>:<port> to start the web server. Try --help for 
         sys.exit(-1)
 
     main()
-``` 
