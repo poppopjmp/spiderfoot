@@ -408,9 +408,20 @@ class SpiderFootApi:
         for opt in serialized_config:
             ret[opt] = serialized_config[opt]
         
-        # Make sure to include modules info in the response
+        # Always ensure modules info is included
         if '__modules__' in self.config:
             ret['__modules__'] = self.config['__modules__']
+        else:
+            self.log.error("No module information found in configuration!")
+            # Try to load module information directly
+            try:
+                mod_dir = os.path.dirname(os.path.abspath(__file__)) + '/modules/'
+                modules = SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_template.py'])
+                if modules:
+                    ret['__modules__'] = modules
+                    self.log.info("Successfully loaded module information directly")
+            except Exception as e:
+                self.log.error(f"Failed to load module information: {e}", exc_info=True)
         
         # Include correlation rules if available
         if '__correlationrules__' in self.config:

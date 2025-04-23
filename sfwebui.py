@@ -14,6 +14,7 @@ import html
 import json
 import logging
 import multiprocessing as mp
+import os
 import random
 import requests
 import string
@@ -570,6 +571,56 @@ class SpiderFootWebUi:
             workbook.save(f)
             f.seek(0)
             return f.read()
+
+    def get_settings_directly(self):
+        """Load settings directly from configuration if API is unavailable"""
+        settings = deepcopy(self.config)
+        
+        # Ensure modules are loaded
+        if '__modules__' not in settings:
+            try:
+                mod_dir = os.path.dirname(os.path.abspath(__file__)) + '/modules/'
+                settings['__modules__'] = SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_template.py'])
+            except Exception as e:
+                self.log.error(f"Failed to load modules directly: {e}", exc_info=True)
+        
+        return settings
+
+    def opts(self: 'SpiderFootWebUi', updated: str = None) -> str:
+        """Settings page.
+
+        Args:
+            updated (str): TBD
+
+        Returns:
+            str: settings page HTML
+        """
+        try:
+            # Try to get settings via API
+            settings = self.api_client.get_system_settings()
+            if not settings or '__modules__' not in settings:
+                # If API failed or didn't return modules, load them directly
+                self.log.warning("Failed to get settings via API, loading modules directly")
+                settings = self.get_settings_directly()
+                
+            # Create the new token
+            self.token = random.SystemRandom().randint(0, 99999999)
+            
+            # Remove any globals that don't make sense to be configured
+            # by the user via the UI
+            for k in settings.copy().keys():
+                if k.startswith("__") or k in ["_debug", "_stdout"]:
+                    del settings[k]
+            
+            templ = Template(
+                filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+            return templ.render(opts=settings, docroot=self.docroot,
+                                token=self.token, updated=updated, version=__version__, 
+                                pageid="SETTINGS")
+                                
+        except Exception as e:
+            self.log.error(f"Error getting settings via API: {e}", exc_info=True)
+            return self.error_page("Error loading options")
 
     #
     # USER INTERFACE PAGES
@@ -2089,59 +2140,6 @@ class SpiderFootWebUi:
         templ = Template(
             filename='spiderfoot/templates/footer.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, version=__version__)
-
-    @cherrypy.expose
-    def opts(self: 'SpiderFootWebUi', updated: str = None) -> str:
-        """Settings page.
-
-        Args:
-            updated (str): TBD
-
-        Returns:
-            str: settings page HTML
-        """
-        # Get current settings from API
-        try:
-            settings = self.api_client.get_system_settings()
-            
-            # Create the new token
-            self.token = random.SystemRandom().randint(0, 99999999)
-            
-            # Remove any globals that don't make sense to be configured
-            # by the user via the UI
-            for k in settings.copy().keys():
-                if k.startswith("__") or k in ["_debug", "_stdout"]:
-                    del settings[k]
-            
-            templ = Template(
-                filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
-            return templ.render(opts=settings, docroot=self.docroot,
-                                token=self.token, updated=updated, version=__version__, 
-                                pageid="SETTINGS")
-                                
-        except Exception as e:
-            self.log.error(f"Error getting settings via API: {e}", exc_info=True)
-            # Fallback to direct DB access in case of API error
-            dbh = SpiderFootDb(self.config)
-            sf = SpiderFoot(self.config)
-            
-            # Create a new token
-            self.token = random.SystemRandom().randint(0, 99999999)
-            
-            # Get the current settings
-            opts = sf.configUnserialize(dbh.configGet(), self.config)
-            
-            # Remove any globals that don't make sense to be configured
-            # by the user via the UI
-            for k in list(opts.keys()):
-                if k.startswith("__") or k in ["_debug", "_stdout"]:
-                    del opts[k]
-                    
-            templ = Template(
-                filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
-            return templ.render(opts=opts, docroot=self.docroot,
-                                token=self.token, updated=updated, version=__version__, 
-                                pageid="SETTINGS")
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
