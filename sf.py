@@ -141,6 +141,8 @@ def main() -> None:
                        help="Max number of modules to run concurrently.")
         p.add_argument("--api-listen", metavar="IP:port", nargs='?', const="127.0.0.1:8000",
                        help="IP and port to listen on for the REST API. Defaults to 127.0.0.1:8000 if no value provided.")
+        p.add_argument("--api-framework", choices=["cherrypy", "fastapi"], default="cherrypy",
+                       help="API framework to use (cherrypy or fastapi). Default is cherrypy.")
 
         args = p.parse_args()  # Parse arguments after defining p
 
@@ -222,11 +224,35 @@ def main() -> None:
         # Start API server if requested
         if args.api_listen:
             api_host, api_port = parse_listen_address(args.api_listen, '127.0.0.1', 8000, log)
-            if start_api_server(sfConfig, loggingQueue):
-                log.info(f"API server started successfully on {api_host}:{api_port}")
-                cherrypy.engine.block()  # Block until the server is stopped
+            
+            # Pass the api_framework argument to start_api_server
+            if start_api_server(sfConfig, loggingQueue, api_host, api_port, args.api_framework):
+                log.info(f"API server ({args.api_framework}) started successfully on {api_host}:{api_port}")
+                if args.api_framework == "fastapi":
+                    # Import the appropriate module dynamically
+                    try:
+                        import uvicorn
+                        uvicorn_config = {
+                            "app": "sfapi_controller:app",
+                            "host": api_host,
+                            "port": api_port,
+                            "log_level": "debug" if args.debug else "info",
+                            "reload": False
+                        }
+                        
+                        if sfConfig['_debug']:
+                            uvicorn_config["reload"] = True
+                        
+                        # Start FastAPI server using uvicorn
+                        uvicorn.run(**uvicorn_config)
+                    except ImportError:
+                        log.fatal("FastAPI framework selected but uvicorn package not installed. Please install with: pip install fastapi uvicorn")
+                        sys.exit(-1)
+                else:
+                    # For CherryPy, we just block until the server is stopped
+                    cherrypy.engine.block()
             else:
-                log.fatal("Failed to start API server.")
+                log.fatal(f"Failed to start API server using {args.api_framework} framework.")
             sys.exit(0)
 
         if args.correlate:
@@ -712,110 +738,117 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
         sys.exit(-1)
 
 
-def start_api_server(sfConfig, loggingQueue=None):
+def start_api_server(sfConfig, loggingQueue=None, host='127.0.0.1', port=8000, framework="cherrypy"):
     """Start the HTTP API server thread.
 
     Args:
         sfConfig (dict): SpiderFoot configuration options
         loggingQueue (Queue): Multiprocessing queue to pass logging messages back to the main process
+        host (str): Host address to listen on
+        port (int): Port to listen on
+        framework (str): API framework to use (cherrypy or fastapi)
 
     Returns:
         bool: True if successful, False otherwise
     """
     try:
         log = logging.getLogger(f"spiderfoot.{__name__}")
-
-        # Default API server configuration
-        api_host = '127.0.0.1'
-        api_port = 8000  # Default to port 8000
-
-        # Check if we have command line args with different host/port
-        for arg in sys.argv:
-            if arg.startswith('--api-listen='):
-                api_address = arg.split('=')[1]
-                if ':' in api_address:
-                    api_host, api_port_str = api_address.split(':', 1)
-                    try:
-                        api_port = int(api_port_str)
-                    except ValueError:
-                        log.error(f"Invalid API port specified: {api_port_str}")
-                        return False
-                else:
-                    # If only a port is provided
-                    try:
-                        api_port = int(api_address)
-                    except ValueError:
-                        if api_address:  # If it's not a port, assume it's a hostname/IP
-                            api_host = api_address
-
-        # Create a dedicated API server if one isn't already mounted
-        if not cherrypy.tree.apps.get('/api'):
-            api_conf = {
-                'server.socket_host': api_host,
-                'server.socket_port': int(api_port),
-                'tools.sessions.on': False,
-                'tools.gzip.on': True,
-                'tools.gzip.mime_types': ['text/html', 'text/plain', 'application/json'],
-                'request.show_tracebacks': sfConfig.get('_debug', False),
-                'environment': 'production',
-                'log.screen': False
-            }
-
-            api_endpoints_conf = {
-                '/': {
-                    'tools.response_headers.on': True,
-                    'tools.response_headers.headers': [('Content-Type', 'application/json')],
-                    'tools.encode.on': True,
-                    'tools.encode.encoding': 'utf-8',
-                    'response.headers.server': 'SpiderFoot API'
+        
+        if framework == "fastapi":
+            try:
+                # Check if required packages are installed
+                import fastapi
+                import uvicorn
+                
+                # Initialize sfapi_controller with proper configuration
+                log.info(f"Starting FastAPI server on http://{host}:{port}/")
+                
+                # Set environment variables for the FastAPI app
+                os.environ["SPIDERFOOT_CONFIG"] = json.dumps(sfConfig)
+                os.environ["SPIDERFOOT_HOST"] = host
+                os.environ["SPIDERFOOT_PORT"] = str(port)
+                os.environ["SPIDERFOOT_DEBUG"] = str(sfConfig.get('_debug', False))
+                
+                # Create controller instance 
+                from sfapi_controller import init_api
+                app = init_api(sfConfig, loggingQueue)
+                
+                # We don't actually start the server here, we return True and let main() handle it
+                return True
+                
+            except ImportError as e:
+                log.error(f"Failed to load FastAPI dependencies: {e}. Please install with: pip install fastapi uvicorn")
+                return False
+                
+        else:  # Default to CherryPy
+            # Create a dedicated API server if one isn't already mounted
+            if not cherrypy.tree.apps.get('/api'):
+                api_conf = {
+                    'server.socket_host': host,
+                    'server.socket_port': int(port),
+                    'tools.sessions.on': False,
+                    'tools.gzip.on': True,
+                    'tools.gzip.mime_types': ['text/html', 'text/plain', 'application/json'],
+                    'request.show_tracebacks': sfConfig.get('_debug', False),
+                    'environment': 'production',
+                    'log.screen': False
                 }
-            }
 
-            # Create swagger directory if needed
-            swagger_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'swagger')
-            os.makedirs(swagger_dir, exist_ok=True)
+                api_endpoints_conf = {
+                    '/': {
+                        'tools.response_headers.on': True,
+                        'tools.response_headers.headers': [('Content-Type', 'application/json')],
+                        'tools.encode.on': True,
+                        'tools.encode.encoding': 'utf-8',
+                        'response.headers.server': 'SpiderFoot API'
+                    }
+                }
 
-            # Create minimal OpenAPI definition if needed
-            openapi_file = os.path.join(swagger_dir, 'openapi.json')
-            if not os.path.exists(openapi_file):
-                minimal_openapi = {
-                    "openapi": "3.0.0",
-                    "info": {
-                        "title": "SpiderFoot API",
-                        "description": "API for SpiderFoot OSINT automation tool",
-                        "version": __version__
-                    },
-                    "paths": {
-                        "/ping": {
-                            "get": {
-                                "summary": "Test connectivity",
-                                "responses": {
-                                    "200": {
-                                        "description": "Successful response"
+                # Create swagger directory if needed
+                swagger_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'swagger')
+                os.makedirs(swagger_dir, exist_ok=True)
+
+                # Create minimal OpenAPI definition if needed
+                openapi_file = os.path.join(swagger_dir, 'openapi.json')
+                if not os.path.exists(openapi_file):
+                    minimal_openapi = {
+                        "openapi": "3.0.0",
+                        "info": {
+                            "title": "SpiderFoot API",
+                            "description": "API for SpiderFoot OSINT automation tool",
+                            "version": __version__
+                        },
+                        "paths": {
+                            "/ping": {
+                                "get": {
+                                    "summary": "Test connectivity",
+                                    "responses": {
+                                        "200": {
+                                            "description": "Successful response"
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                with open(openapi_file, 'w') as f:
-                    json.dump(minimal_openapi, f, indent=2)
+                    with open(openapi_file, 'w') as f:
+                        json.dump(minimal_openapi, f, indent=2)
 
-            # Only start a separate server if this is in standalone mode
-            if not cherrypy.engine.state:
-                log.info(f"Starting standalone API server on http://{api_host}:{api_port}/api/")
-                cherrypy.config.update(api_conf)
-                cherrypy.tree.mount(SpiderFootApi(sfConfig, loggingQueue), '/api', api_endpoints_conf)
-                cherrypy.engine.start()
-                return True
+                # Only start a separate server if this is in standalone mode
+                if not cherrypy.engine.state:
+                    log.info(f"Starting standalone API server on http://{host}:{port}/api/")
+                    cherrypy.config.update(api_conf)
+                    cherrypy.tree.mount(SpiderFootApi(sfConfig, loggingQueue), '/api', api_endpoints_conf)
+                    cherrypy.engine.start()
+                    return True
+                else:
+                    # We're running as part of web UI, just mount the API
+                    cherrypy.tree.mount(SpiderFootApi(sfConfig, loggingQueue), '/api', api_endpoints_conf)
+                    log.info(f"API mounted on http://{host}:{port}/api/ (as part of web server)")
+                    return True
             else:
-                # We're running as part of web UI, just mount the API
-                cherrypy.tree.mount(SpiderFootApi(sfConfig, loggingQueue), '/api', api_endpoints_conf)
-                log.info(f"API mounted on http://{api_host}:{api_port}/api/ (as part of web server)")
+                log.info("API already mounted, skipping initialization")
                 return True
-        else:
-            log.info("API already mounted, skipping initialization")
-            return True
     except Exception as e:
         log = logging.getLogger(f"spiderfoot.{__name__}")
         log.error(f"Failed to start API server: {e}", exc_info=True)
