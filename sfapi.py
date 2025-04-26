@@ -3,10 +3,10 @@
 # Name:         sfapi
 # Purpose:      REST API interface
 #
-# Author:       Steve Micallef <steve@binarypool.com>
+# Author:       Agostino Panico
 #
-# Created:      03/05/2017
-# Copyright:    (c) Steve Micallef 2017
+# Created:      22/04/2025
+# Copyright:    (c) @poppopjmp 2025
 # License:      MIT
 # -----------------------------------------------------------------
 import json
