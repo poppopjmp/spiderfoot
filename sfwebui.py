@@ -1411,7 +1411,7 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     @cherrypy.tools.json_out() # Ensures response is JSON
-    def savesettingsraw(self: 'SpiderFootWebUi', allopts: str, token: str) -> list | dict:
+    def savesettingsraw(self: 'SpiderFootWebUi', allopts: str, token: str) -> Union[list, dict]:
         """Save settings via API, also used to completely reset them to default."""
         if str(token) != str(self.token):
             # Use jsonify_error for consistent API error format
@@ -1641,7 +1641,7 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scancorrelations(self: 'SpiderFootWebUi', id: str) -> list | dict:
+    def scancorrelations(self: 'SpiderFootWebUi', id: str) -> Union[dict, list]:
         """Correlation results from a scan."""
         retdata = []
         dbh = SpiderFootDb(self.config)
