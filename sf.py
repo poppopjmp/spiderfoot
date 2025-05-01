@@ -143,6 +143,10 @@ def main() -> None:
                        help="IP and port to listen on for the REST API. Defaults to 127.0.0.1:8000 if no value provided.")
         p.add_argument("--api-framework", choices=["cherrypy", "fastapi"], default="cherrypy",
                        help="API framework to use (cherrypy or fastapi). Default is cherrypy.")
+        p.add_argument("-p", "--parallel", action='store_true',
+                       help="Execute scans in parallel when multiple targets are specified (comma-separated).")
+        p.add_argument("--max-parallel", type=int, default=3,
+                       help="Maximum number of parallel scans to run when using --parallel. Default is 3.")
 
         args = p.parse_args()  # Parse arguments after defining p
 
@@ -338,6 +342,11 @@ def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
         sf = SpiderFoot(sfConfig)
 
         validate_arguments(args, log)
+        
+        # Check if multiple targets are specified for parallel scanning
+        if args.parallel and "," in args.s:
+            targets = [t.strip() for t in args.s.split(",") if t.strip()]
+            return start_parallel_scans(sfConfig, sfModules, targets, args, loggingQueue)
 
         target, targetType = process_target(args, log)
 
@@ -372,6 +381,120 @@ def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
         return
     except Exception as e:
         log.critical(f"Unhandled exception in start_scan: {e}", exc_info=True)
+        sys.exit(-1)
+
+
+def start_parallel_scans(sfConfig: dict, sfModules: dict, targets: list, args, loggingQueue) -> None:
+    """Start multiple scans in parallel based on the provided configuration and targets.
+
+    Args:
+        sfConfig (dict): SpiderFoot config options
+        sfModules (dict): modules
+        targets (list): list of targets to scan
+        args (argparse.Namespace): command line args
+        loggingQueue (Queue): main SpiderFoot logging queue
+    """
+    try:
+        log = logging.getLogger(f"spiderfoot.{__name__}")
+
+        dbh = SpiderFootDb(sfConfig, init=True)
+        sf = SpiderFoot(sfConfig)
+
+        # Process modules same as a regular scan
+        modlist = prepare_modules(args, sf, sfModules, log, "PARALLEL") # Placeholder, will be determined per target
+        
+        if len(modlist) == 0:
+            log.error("Based on your criteria, no modules were enabled.")
+            sys.exit(-1)
+        
+        # Only add DB storage for CLI mode, not stdout (handled separately)
+        if "sfp__stor_db" not in modlist:
+            modlist.append("sfp__stor_db")
+
+        cfg = sf.configUnserialize(dbh.configGet(), sfConfig)
+
+        # Debug mode is a variable that gets stored to the DB, so re-apply it
+        if args.debug:
+            cfg['_debug'] = True
+        else:
+            cfg['_debug'] = False
+
+        # Create a parallel scanner with the configured maximum
+        max_concurrent = args.max_parallel if hasattr(args, 'max_parallel') else 3
+        parallel_scanner = SpiderFootParallelScanner(cfg, dbh, max_concurrent)
+        
+        # Initialize stdout outputs if needed
+        prepare_scan_output(args)
+        
+        log.info(f"Starting parallel scan for {len(targets)} targets with max {max_concurrent} concurrent scans")
+        
+        # Track scan IDs for monitoring
+        scan_ids = []
+        
+        # Start scans for each target
+        for target in targets:
+            # Process target same as a regular scan
+            if " " in target:
+                target = f"\"{target}\""
+            if "." not in target and not target.startswith("+") and '"' not in target:
+                target = f"\"{target}\""
+            
+            targetType = SpiderFootHelpers.targetTypeFromString(target)
+            if not targetType:
+                log.warning(f"Could not determine target type for '{target}', skipping")
+                continue
+                
+            # Strip quotes if present
+            target = target.strip('"')
+            
+            # Generate scan ID and start the scan
+            scanName = f"CLI Parallel Scan - {target}"
+            scanId = SpiderFootHelpers.genScanInstanceId()
+            
+            if parallel_scanner.start_scan(scanId, scanName, target, targetType, modlist):
+                scan_ids.append(scanId)
+                log.info(f"Started scan {scanId} for target {target}")
+            else:
+                log.error(f"Failed to start scan for target {target}")
+        
+        if not scan_ids:
+            log.error("No scans were started. Exiting.")
+            sys.exit(-1)
+            
+        # Monitor scan progress
+        log.info(f"Monitoring {len(scan_ids)} parallel scans...")
+        
+        try:
+            while True:
+                time.sleep(1)
+                
+                # Check current status of all scans
+                all_finished = True
+                statuses = parallel_scanner.get_scan_status()
+                
+                for scan_id in scan_ids:
+                    if scan_id in statuses:
+                        scan = statuses[scan_id]
+                        status = scan.get('status')
+                        if status not in ["FINISHED", "FAILED", "ABORTED"]:
+                            all_finished = False
+                            break
+                
+                if all_finished:
+                    log.info("All parallel scans have completed")
+                    break
+                    
+        except KeyboardInterrupt:
+            log.info("Received keyboard interrupt. Aborting all running scans...")
+            for scan_id in scan_ids:
+                parallel_scanner.stop_scan(scan_id)
+            
+            # Wait a moment for scans to process abort
+            time.sleep(2)
+            sys.exit(1)
+            
+    except Exception as e:
+        log.critical(f"Unhandled exception in start_parallel_scans: {e}", exc_info=True)
         sys.exit(-1)
 
 

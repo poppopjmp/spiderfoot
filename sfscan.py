@@ -26,19 +26,118 @@ from sflib import SpiderFoot
 from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool, SpiderFootCorrelator, logger
 
 
-def startSpiderFootScanner(loggingQueue, *args, **kwargs):
-    """Initialize and start the SpiderFootScanner.
-
+def runScanInstance(sf, scanName, scanId, target, targetType, moduleList):
+    """Execute a scan with the given parameters.
+    
     Args:
-        loggingQueue (Queue): Queue for logging events
-        *args: Additional arguments for SpiderFootScanner
-        **kwargs: Additional keyword arguments for SpiderFootScanner
-
+        sf (SpiderFoot): SpiderFoot instance configured for this scan
+        scanName (str): Name of the scan
+        scanId (str): Unique ID for the scan
+        target (str): Target for the scan
+        targetType (str): Type of the target
+        moduleList (list): List of modules to use in the scan
+        
     Returns:
-        SpiderFootScanner: Initialized SpiderFootScanner object
+        None
+    """
+    # Create a unique ID for this scan in the back-end database.
+    try:
+        # Start a new scan
+        if sf.dbh:
+            sf.dbh.scanInstanceCreate(scanId, scanName, target)
+            sf.dbh.scanResultEvent(scanId, "ROOT", target, "TARGET", targetType, "ROOT", "Base Target", "", None, "", "")
+    except BaseException as e:
+        sf.error(f"Error encountered during scan initialization: {e}")
+        return
+
+    aborted = False
+    
+    # Main execution loop
+    try:
+        # Core scan loop
+        for moduleName in moduleList:
+            if moduleName == '':
+                continue
+
+            try:
+                module = __import__('modules.' + moduleName, globals(), locals(), [moduleName])
+            except ImportError:
+                sf.error(f"Failed to load module: {moduleName}")
+                continue
+
+            mod = getattr(module, moduleName)()
+            mod.__name__ = moduleName
+
+            # Configuration data
+            modConfig = sf.configUnserialize(sf.configSerialize(sf.config))
+            modConfig['__modules__'] = sf.config['__modules__']
+            modConfig['__globallogging'] = sf.config['__logging']
+
+            # Execute the module
+            try:
+                # Check if scan was aborted or completed
+                if sf.dbh:
+                    status = sf.dbh.scanInstanceGet(scanId)
+                    if not status:
+                        sf.error(f"Scan ID {scanId} not found in database.")
+                        return
+                    
+                    if status[5] in ["ABORTED", "ABORT-REQUESTED", "FINISHED", "ERROR-FAILED"]:
+                        sf.status(f"Scan {scanId} has been aborted: {status[5]}")
+                        aborted = True
+                        break
+                
+                sf.status(f"Executing module {moduleName} for {target} ({targetType})")
+                mod.setup(sf, target, modConfig)
+                mod.start()
+            except Exception as e:
+                sf.error(f"Module {moduleName} failed: {e}")
+                continue
+    
+    except KeyboardInterrupt:
+        sf.status("Scan aborted by user.")
+        aborted = True
+    except Exception as e:
+        sf.error(f"Scan encountered an error: {e}")
+    
+    # Update scan status
+    if sf.dbh:
+        if aborted:
+            sf.dbh.scanInstanceSet(scanId, None, None, "ABORTED")
+        else:
+            sf.dbh.scanInstanceSet(scanId, None, None, "FINISHED")
+    
+    sf.status(f"Scan {scanId} completed.")
+
+
+def startSpiderFootScanner(loggingQueue, scanName, scanId, target, targetType, moduleList, globalOpts):
+    """Start a SpiderFoot scan by initializing the daemon and modules and performing the scan.
+    
+    Args:
+        loggingQueue (multiprocessing.Queue): Queue for logging
+        scanName (str): Name of the scan
+        scanId (str): Unique ID for the scan
+        target (str): Target for the scan
+        targetType (str): Type of the target
+        moduleList (list): List of modules to use in the scan
+        globalOpts (dict): Global configuration options
+        
+    Returns:
+        None
     """
     logger.logWorkerSetup(loggingQueue)
-    return SpiderFootScanner(*args, **kwargs)
+    try:
+        sf = SpiderFoot(globalOpts)
+        dbh = SpiderFootDb(globalOpts)
+        sf.dbh = dbh
+        sf.scanId = scanId
+
+        runScanInstance(sf, scanName, scanId, target, targetType, moduleList)
+        
+    except Exception as e:
+        logger.error(f"Error executing scan {scanId}: {e}")
+        if dbh:
+            dbh.scanInstanceSet(scanId, None, None, "ERROR-FAILED")
 
 
 class SpiderFootScanner():

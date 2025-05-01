@@ -21,6 +21,7 @@ import re
 import socket
 import ssl
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -1734,4 +1735,200 @@ class SpiderFoot:
 
         return None
 
-# end of SpiderFoot class
+
+class SpiderFootParallelScanner:
+    """Manage multiple parallel SpiderFoot scans.
+    
+    Attributes:
+        base_options (dict): Base configuration options shared by all scans
+        db (SpiderFootDb): Shared database handle
+        max_concurrent (int): Maximum number of concurrent scans
+        scans (dict): Dictionary of running scan threads
+    """
+    
+    def __init__(self, options: dict, db_handle=None, max_concurrent: int = 5) -> None:
+        """Initialize SpiderFootParallelScanner.
+        
+        Args:
+            options (dict): Base configuration options for all scans
+            db_handle (SpiderFootDb): Database handle
+            max_concurrent (int): Maximum number of concurrent scans
+        """
+        self.base_options = deepcopy(options)
+        self.db = db_handle
+        self.max_concurrent = max_concurrent
+        self.scans = {}  # scanId -> {'thread': thread, 'sf': SpiderFoot instance, 'status': status}
+        self.lock = threading.Lock()
+        
+    def start_scan(self, scan_id: str, scan_name: str, target: str, target_type: str, 
+                   module_list: list, additional_options: dict = None) -> bool:
+        """Start a new scan in a separate thread.
+        
+        Args:
+            scan_id (str): Unique scan identifier
+            scan_name (str): Name for the scan
+            target (str): Scan target
+            target_type (str): Type of target
+            module_list (list): List of modules to run
+            additional_options (dict): Additional scan-specific options
+            
+        Returns:
+            bool: True if scan was started successfully, False otherwise
+        """
+        with self.lock:
+            # Check if scan already exists
+            if scan_id in self.scans:
+                return False
+            
+            # Check if we've reached the maximum number of concurrent scans
+            running_scans = [s for s in self.scans.values() if s['status'] in ['RUNNING', 'STARTING']]
+            if len(running_scans) >= self.max_concurrent:
+                return False
+            
+            # Create a new scan-specific options dictionary
+            scan_options = deepcopy(self.base_options)
+            if additional_options:
+                for key, value in additional_options.items():
+                    scan_options[key] = value
+            
+            # Import here to avoid circular imports
+            from sfscan import runScanInstance
+                    
+            # Create a new SpiderFoot instance for this scan
+            sf = SpiderFoot(scan_options)
+            sf.dbh = self.db
+            sf.scanId = scan_id
+            
+            # Create and start a thread for this scan
+            scan_thread = threading.Thread(
+                target=self._run_scan,
+                args=(sf, scan_id, scan_name, target, target_type, module_list, runScanInstance),
+                name=f"Scan-{scan_id}"
+            )
+            
+            self.scans[scan_id] = {
+                'thread': scan_thread,
+                'sf': sf,
+                'status': 'STARTING',
+                'start_time': time.time(),
+                'scan_name': scan_name,
+                'target': target,
+                'modules': module_list
+            }
+            
+            scan_thread.daemon = True
+            scan_thread.start()
+            return True
+    
+    def _run_scan(self, sf, scan_id, scan_name, target, target_type, module_list, scan_function):
+        """Execute the scan in a thread.
+        
+        Args:
+            sf (SpiderFoot): SpiderFoot instance for this scan
+            scan_id (str): Scan identifier
+            scan_name (str): Name for the scan
+            target (str): Scan target
+            target_type (str): Type of target
+            module_list (list): List of modules to run
+            scan_function: Function to call for running the scan
+        """
+        try:
+            with self.lock:
+                if scan_id in self.scans:
+                    self.scans[scan_id]['status'] = 'RUNNING'
+            
+            sf.status(f"Scan {scan_id} ({scan_name}) started against {target}")
+            scan_function(sf, scan_name, scan_id, target, target_type, module_list)
+            
+            with self.lock:
+                if scan_id in self.scans:
+                    self.scans[scan_id]['status'] = 'FINISHED'
+                    
+        except Exception as e:
+            sf.error(f"Scan {scan_id} ({scan_name}) failed: {str(e)}")
+            with self.lock:
+                if scan_id in self.scans:
+                    self.scans[scan_id]['status'] = 'FAILED'
+                    self.scans[scan_id]['error'] = str(e)
+    
+    def get_scan_status(self, scan_id=None):
+        """Get the status of a scan or all scans.
+        
+        Args:
+            scan_id (str, optional): Scan identifier. If None, returns all scans.
+            
+        Returns:
+            dict or str: Scan status information
+        """
+        with self.lock:
+            if scan_id is None:
+                # Return status of all scans
+                return {sid: {
+                    'status': scan['status'],
+                    'scan_name': scan['scan_name'],
+                    'target': scan['target'],
+                    'modules': scan['modules'],
+                    'runtime': time.time() - scan['start_time']
+                } for sid, scan in self.scans.items()}
+            
+            if scan_id in self.scans:
+                return self.scans[scan_id]
+            
+            return None
+    
+    def stop_scan(self, scan_id):
+        """Stop a running scan.
+        
+        Args:
+            scan_id (str): Scan identifier
+            
+        Returns:
+            bool: True if scan was stopped, False if scan doesn't exist or already finished
+        """
+        with self.lock:
+            if scan_id not in self.scans:
+                return False
+                
+            if self.scans[scan_id]['status'] in ['RUNNING', 'STARTING']:
+                # Signal database to abort
+                if self.db:
+                    try:
+                        self.db.scanInstanceSet(scan_id, None, None, "ABORT-REQUESTED")
+                    except Exception:
+                        pass
+                
+                self.scans[scan_id]['sf'].status(f"Scan {scan_id} received stop signal")
+                self.scans[scan_id]['status'] = 'ABORT-REQUESTED'
+                return True
+                
+            return False
+    
+    def cleanup_finished_scans(self, age_hours=24.0):
+        """Remove finished scans from memory after a certain time.
+        
+        Args:
+            age_hours (float): Age in hours after which to remove finished scans
+            
+        Returns:
+            int: Number of scans removed
+        """
+        removed = 0
+        current_time = time.time()
+        with self.lock:
+            to_remove = []
+            
+            for scan_id, scan in self.scans.items():
+                if scan['status'] in ['FINISHED', 'FAILED', 'ABORTED']:
+                    scan_age = current_time - scan['start_time']
+                    if scan_age > (age_hours * 3600):
+                        to_remove.append(scan_id)
+            
+            for scan_id in to_remove:
+                thread = self.scans[scan_id].get('thread')
+                if thread and thread.is_alive():
+                    # Skip if thread is still running somehow
+                    continue
+                del self.scans[scan_id]
+                removed += 1
+                
+        return removed
