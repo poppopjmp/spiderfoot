@@ -886,15 +886,27 @@ def start_api_server(sfConfig, loggingQueue=None, host='127.0.0.1', port=8000, f
                 # Initialize sfapi_controller with proper configuration
                 log.info(f"Starting FastAPI server on http://{host}:{port}/")
                 
+                # Create a serializable version of the config by removing non-serializable elements
+                serializable_config = {}
+                for key, value in sfConfig.items():
+                    # Skip module instances and other complex objects that can't be serialized
+                    if key not in ['__modules__', '__correlationrules__']:
+                        try:
+                            # Test if it's serializable
+                            json.dumps({key: value})
+                            serializable_config[key] = value
+                        except (TypeError, OverflowError):
+                            log.debug(f"Skipping non-serializable config item: {key}")
+                
                 # Set environment variables for the FastAPI app
-                os.environ["SPIDERFOOT_CONFIG"] = json.dumps(sfConfig)
+                os.environ["SPIDERFOOT_CONFIG"] = json.dumps(serializable_config)
                 os.environ["SPIDERFOOT_HOST"] = host
                 os.environ["SPIDERFOOT_PORT"] = str(port)
                 os.environ["SPIDERFOOT_DEBUG"] = str(sfConfig.get('_debug', False))
                 
                 # Create controller instance 
                 from sfapi_controller import init_api
-                app = init_api(sfConfig, loggingQueue)
+                app = init_api(sfConfig, loggingQueue)  # Pass the full config directly here
                 
                 # We don't actually start the server here, we return True and let main() handle it
                 return True
