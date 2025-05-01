@@ -21,6 +21,7 @@ import traceback
 from copy import deepcopy
 from io import BytesIO, StringIO
 from operator import itemgetter
+from typing import Union
 
 import cherrypy
 from cherrypy import _cperror
@@ -456,7 +457,7 @@ class SpiderFootWebUi:
             self.log.error(f"Error generating CSV: {e}")
             raise
 
-    def _get_scan_name(self: 'SpiderFootWebUi', dbh: 'SpiderFootDb', scan_id: str) -> str | None:
+    def _get_scan_name(self: 'SpiderFootWebUi', dbh: 'SpiderFootDb', scan_id: str) -> Union[str, None]:
         """Retrieve the name of a scan, returning ID on failure."""
         try:
             scaninfo = dbh.scanInstanceGet(scan_id)
@@ -504,7 +505,7 @@ class SpiderFootWebUi:
              return self.error(f"Failed to generate CSV log export for scan {id}: {e}")
 
     @cherrypy.expose
-    def scancorrelationsexport(self: 'SpiderFootWebUi', id: str, filetype: str = "csv", dialect: str = "excel") -> str | bytes:
+    def scancorrelationsexport(self: 'SpiderFootWebUi', id: str, filetype: str = "csv", dialect: str = "excel") -> Union[str, bytes]:
         """Get scan correlation data in CSV or Excel format."""
         dbh = SpiderFootDb(self.config)
         scan_name = self._get_scan_name(dbh, id)
@@ -547,7 +548,7 @@ class SpiderFootWebUi:
 
 
     @cherrypy.expose
-    def scaneventresultexport(self: 'SpiderFootWebUi', id: str, type: str, filetype: str = "csv", dialect: str = "excel") -> str | bytes:
+    def scaneventresultexport(self: 'SpiderFootWebUi', id: str, type: str, filetype: str = "csv", dialect: str = "excel") -> Union[str, bytes]:
         """Get scan event result data in CSV or Excel format."""
         dbh = SpiderFootDb(self.config)
         scan_name = self._get_scan_name(dbh, id)
@@ -600,7 +601,7 @@ class SpiderFootWebUi:
             return self.error(f"Failed to generate export file for scan {id}.")
 
     @cherrypy.expose
-    def scaneventresultexportmulti(self: 'SpiderFootWebUi', ids: str, filetype: str = "csv", dialect: str = "excel") -> str | bytes | None:
+    def scaneventresultexportmulti(self: 'SpiderFootWebUi', ids: str, filetype: str = "csv", dialect: str = "excel") -> Union[str, bytes, None]:
         """Get scan event result data in CSV or Excel format for multiple scans."""
         dbh = SpiderFootDb(self.config)
         scan_ids = [scan_id.strip() for scan_id in ids.split(',') if scan_id.strip()]
@@ -668,7 +669,7 @@ class SpiderFootWebUi:
             return self.error(f"Failed to generate multi-scan export file.")
 
     @cherrypy.expose
-    def scansearchresultexport(self: 'SpiderFootWebUi', id: str, eventType: str = None, value: str = None, filetype: str = "csv", dialect: str = "excel") -> str | bytes | None:
+    def scansearchresultexport(self: 'SpiderFootWebUi', id: str, eventType: str = None, value: str = None, filetype: str = "csv", dialect: str = "excel") ->  Union[str, bytes, None]:
         """Get search result data in CSV or Excel format."""
         dbh = SpiderFootDb(self.config)
         scan_name = self._get_scan_name(dbh, id)
@@ -813,7 +814,7 @@ class SpiderFootWebUi:
             return self.error(f"Failed to generate multi-scan export file.")
 
     @cherrypy.expose
-    def scansearchresultexport(self: 'SpiderFootWebUi', id: str, eventType: str = None, value: str = None, filetype: str = "csv", dialect: str = "excel") -> str | bytes | None:
+    def scansearchresultexport(self: 'SpiderFootWebUi', id: str, eventType: str = None, value: str = None, filetype: str = "csv", dialect: str = "excel") -> Union[str, bytes, None]:
         """Get search result data in CSV or Excel format."""
         dbh = SpiderFootDb(self.config)
         scan_name = self._get_scan_name(dbh, id)
@@ -949,7 +950,7 @@ class SpiderFootWebUi:
             return self.error(f"Failed to generate multi-scan export file.")
 
     @cherrypy.expose
-    def scansearchresultexport(self: 'SpiderFootWebUi', id: str, eventType: str = None, value: str = None, filetype: str = "csv", dialect: str = "excel") -> str | bytes | None:
+    def scansearchresultexport(self: 'SpiderFootWebUi', id: str, eventType: str = None, value: str = None, filetype: str = "csv", dialect: str = "excel") -> Union[str, bytes, None]:
         """Get search result data in CSV or Excel format."""
         dbh = SpiderFootDb(self.config)
         scan_name = self._get_scan_name(dbh, id)
@@ -1075,7 +1076,7 @@ class SpiderFootWebUi:
         self._set_download_headers(fname, "application/json; charset=utf-8")
         return json_export.encode('utf-8')
 
-    def _start_scan_process(self: 'SpiderFootWebUi', scanname: str, scantarget: str, targetType: str, modlist: list, cfg: dict) -> str | None:
+    def _start_scan_process(self: 'SpiderFootWebUi', scanname: str, scantarget: str, targetType: str, modlist: list, cfg: dict) -> Union[str, None]:
         """Helper function to initiate the scan process and wait for initialization."""
         scanId = SpiderFootHelpers.genScanInstanceId()
         dbh = SpiderFootDb(cfg) # Use the passed config for DB interaction during init check
@@ -1249,7 +1250,7 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scandelete(self: 'SpiderFootWebUi', id: str) -> str | dict:
+    def scandelete(self: 'SpiderFootWebUi', id: str) -> Union[str, dict]:
         """Delete scan(s).
 
         Args:
@@ -1456,7 +1457,7 @@ class SpiderFootWebUi:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def query(self: 'SpiderFootWebUi', query: str) -> str | list | dict:
+    def query(self: 'SpiderFootWebUi', query: str) -> Union[str, list, dict]:
         """For the CLI to run queries against the database.
 
         Args:

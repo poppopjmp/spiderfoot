@@ -3,11 +3,10 @@
 # Name:         fastapi_app
 # Purpose:      FastAPI interface for SpiderFoot
 #
-# Author:       Steve Micallef <steve@binarypool.com>
+# Author:       Agostino Panico <van1sh@van1shland.io>
 #
-# Created:      Original CherryPy API: 03/05/2017
-# FastAPI Port: Current Date
-# Copyright:    (c) Steve Micallef
+# FastAPI Port: '01/05/2025
+# Copyright:    (c) Agostino Panico
 # License:      MIT
 # -----------------------------------------------------------------
 from typing import List, Dict, Optional, Any, Union

@@ -40,6 +40,7 @@ RUN wget https://github.com/OJ/gobuster/releases/download/v3.6.0/gobuster_Linux_
     && tar -xvzf gobuster_Linux_x86_64.tar.gz \
     && rm gobuster_Linux_x86_64.tar.gz \
     && chmod +x gobuster \
+# Comment this out if you don't want to use wordlists from https://github.com/drtychai/wordlists
     && git clone -j`nproc` https://github.com/drtychai/wordlists 
 # Download nuclei-templates
 RUN git clone https://github.com/projectdiscovery/nuclei-templates.git /tools/nuclei-templates

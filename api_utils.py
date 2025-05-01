@@ -3,10 +3,10 @@
 # Name:         api_utils
 # Purpose:      Utilities shared between API implementations
 #
-# Author:       Steve Micallef <steve@binarypool.com>
+# Author:       Agostino Panico <van1sh@van1shland.io>
 #
-# Created:      Current Date
-# Copyright:    (c) Steve Micallef
+# FastAPI Port: '01/05/2025
+# Copyright:    (c) Agostino Panico
 # License:      MIT
 # -----------------------------------------------------------------
 import json

@@ -3,10 +3,10 @@
 # Name:         sfapi
 # Purpose:      REST API interface
 #
-# Author:       Agostino Panico
+# Author:       Agostino Panico <van1sh@van1shland.io>
 #
-# Created:      22/04/2025
-# Copyright:    (c) @poppopjmp 2025
+# FastAPI Port: '01/05/2025
+# Copyright:    (c) Agostino Panico
 # License:      MIT
 # -----------------------------------------------------------------
 import json
