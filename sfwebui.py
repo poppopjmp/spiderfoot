@@ -1634,7 +1634,7 @@ class SpiderFootWebUi:
                 raise cherrypy.HTTPRedirect(f"{self.docroot}/scaninfo?id={scanId}")
         else:
             # Handle scan start failure (logged in helper)
-            msg = f"Failed to start the scan process for '{scanname}'.
+            msg = f"Failed to start the scan process for '{scanname}'."
             if is_api_request: return json.dumps(self.jsonify_error(500, msg)).encode('utf-8')
             return self.error(msg)
 
