@@ -964,11 +964,25 @@ class SpiderFootWebUi:
         """
         dbh = SpiderFootDb(self.config)
         types = dbh.eventTypes()
+        if types is None:
+            types = []
+        modules = self.config.get('__modules__', {})
+        # selectedmods should always be a list
+        selectedmods = []
+        scanname = ""
+        scantarget = ""
         templ = Template(
             filename='spiderfoot/templates/newscan.tmpl', lookup=self.lookup)
-        return templ.render(pageid='NEWSCAN', types=types, docroot=self.docroot,
-                            modules=self.config['__modules__'], scanname="",
-                            selectedmods="", scantarget="", version=__version__)
+        return templ.render(
+            pageid='NEWSCAN',
+            types=types,
+            docroot=self.docroot,
+            modules=modules,
+            scanname=scanname,
+            selectedmods=selectedmods,
+            scantarget=scantarget,
+            version=__version__
+        )
 
     @cherrypy.expose
     def clonescan(self: 'SpiderFootWebUi', id: str) -> str:
