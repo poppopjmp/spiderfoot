@@ -141,7 +141,7 @@ def main() -> None:
                        help="Max number of modules to run concurrently.")
         p.add_argument("--api-listen", metavar="IP:port", nargs='?', const="127.0.0.1:8000",
                        help="IP and port to listen on for the REST API. Defaults to 127.0.0.1:8000 if no value provided.")
-        p.add_argument("--api-framework", choices=["cherrypy", "fastapi"], default="cherrypy",
+        p.add_argument("--api-framework", choices=["cherrypy", "fastapi"], default="fastapi",
                        help="API framework to use (cherrypy or fastapi). Default is cherrypy.")
         p.add_argument("-p", "--parallel", action='store_true',
                        help="Execute scans in parallel when multiple targets are specified (comma-separated).")
@@ -861,7 +861,7 @@ def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> 
         sys.exit(-1)
 
 
-def start_api_server(sfConfig, loggingQueue=None, host='127.0.0.1', port=8000, framework="cherrypy"):
+def start_api_server(sfConfig, loggingQueue=None, host='127.0.0.1', port=8000, framework="fastapi"):
     """Start the HTTP API server thread.
 
     Args:

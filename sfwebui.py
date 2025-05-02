@@ -1563,6 +1563,175 @@ class SpiderFootWebUi:
         raise cherrypy.HTTPRedirect(f"{self.docroot}/scaninfo?id={scanId}")
 
     @cherrypy.expose
+    def startscanmulti(self: 'SpiderFootWebUi', scanname: str, scantargets: str, modulelist: str = "", typelist: str = "", usecase: str = "", max_concurrent: int = 3) -> str:
+        """Initiate multiple scans in parallel.
+
+        Args:
+            scanname (str): base scan name (will be appended with target)
+            scantargets (str): comma separated list of scan targets
+            modulelist (str): comma separated list of modules to use
+            typelist (str): selected modules based on produced event data types
+            usecase (str): selected module group (passive, investigate, footprint, all)
+            max_concurrent (int): maximum number of concurrent scans to run
+
+        Returns:
+            str: start scan status as JSON
+        """
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+        
+        if not scanname:
+            return json.dumps(["ERROR", "Scan name was not specified."]).encode('utf-8')
+            
+        if not scantargets:
+            return json.dumps(["ERROR", "Scan targets were not specified."]).encode('utf-8')
+            
+        if not typelist and not modulelist and not usecase:
+            return json.dumps(["ERROR", "No modules specified for scan."]).encode('utf-8')
+            
+        # Split targets into a list and limit to max_concurrent
+        targets = scantargets.split(',')
+        if not targets:
+            return json.dumps(["ERROR", "No valid targets specified."]).encode('utf-8')
+            
+        # Start scans for each target
+        scan_ids = []
+        
+        # Snapshot the current configuration to be used by the scan
+        cfg = deepcopy(self.config)
+        sf = SpiderFoot(cfg)
+        
+        modlist = list()
+        
+        # User selected modules
+        if modulelist:
+            modlist = modulelist.replace('module_', '').split(',')
+            
+        # User selected types
+        if len(modlist) == 0 and typelist:
+            typesx = typelist.replace('type_', '').split(',')
+            
+            # 1. Find all modules that produce the requested types
+            modlist = sf.modulesProducing(typesx)
+            newmods = deepcopy(modlist)
+            newmodcpy = deepcopy(newmods)
+            
+            # 2. For each type those modules consume, get modules producing
+            while len(newmodcpy) > 0:
+                for etype in sf.eventsToModules(newmodcpy):
+                    xmods = sf.modulesProducing([etype])
+                    for mod in xmods:
+                        if mod not in modlist:
+                            modlist.append(mod)
+                            newmods.append(mod)
+                newmodcpy = deepcopy(newmods)
+                newmods = list()
+                
+        # User selected a use case
+        if len(modlist) == 0 and usecase:
+            for mod in self.config['__modules__']:
+                if usecase == 'all' or ('group' in self.config['__modules__'][mod] and
+                                        usecase in self.config['__modules__'][mod]['group']):
+                    modlist.append(mod)
+                    
+        # If we somehow got all the way through to here and still don't have any modules selected
+        if not modlist:
+            return json.dumps(["ERROR", "No modules specified for scan."]).encode('utf-8')
+            
+        # Add our mandatory storage module
+        if "sfp__stor_db" not in modlist:
+            modlist.append("sfp__stor_db")
+        modlist.sort()
+        
+        # Delete the stdout module in case it crept in
+        if "sfp__stor_stdout" in modlist:
+            modlist.remove("sfp__stor_stdout")
+            
+        dbh = SpiderFootDb(self.config)
+        
+        # Start a scan for each target
+        for target in targets:
+            target = target.strip()
+            if not target:
+                continue
+                
+            # Use target as part of the scan name to differentiate
+            current_scanname = f"{scanname} - {target}"
+            
+            targetType = SpiderFootHelpers.targetTypeFromString(target)
+            if not targetType:
+                self.log.warning(f"Could not determine target type for {target}, skipping")
+                continue
+                
+            # Format target properly based on its type
+            if targetType in ["HUMAN_NAME", "USERNAME", "BITCOIN_ADDRESS"]:
+                target = target.replace("\"", "")
+            else:
+                target = target.lower()
+                
+            # Start the scan
+            scanId = SpiderFootHelpers.genScanInstanceId()
+            try:
+                p = mp.Process(target=startSpiderFootScanner, args=(
+                    self.loggingQueue, current_scanname, scanId, target, targetType, modlist, cfg))
+                p.daemon = True
+                p.start()
+                
+                # Add to our list of scan IDs
+                scan_ids.append(scanId)
+            except Exception as e:
+                self.log.error(f"[-] Scan [{scanId}] failed: {e}", exc_info=True)
+                continue
+                
+            # Wait until the scan has initialized
+            # Check the database for the scan status results
+            while dbh.scanInstanceGet(scanId) is None:
+                self.log.info(f"Waiting for scan {scanId} to initialize...")
+                time.sleep(1)
+                
+        if not scan_ids:
+            return json.dumps(["ERROR", "No scans were successfully started."]).encode('utf-8')
+            
+        return json.dumps(["SUCCESS", scan_ids]).encode('utf-8')
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def getparallelscanstatus(self: 'SpiderFootWebUi', ids: str) -> dict:
+        """Get status information for multiple scans.
+
+        Args:
+            ids (str): comma separated list of scan IDs
+
+        Returns:
+            dict: scan status information
+        """
+        if not ids:
+            return self.jsonify_error('404', "No scan IDs specified")
+            
+        dbh = SpiderFootDb(self.config)
+        scan_statuses = {}
+        
+        for scan_id in ids.split(','):
+            scan_id = scan_id.strip()
+            if not scan_id:
+                continue
+                
+            try:
+                data = dbh.scanInstanceGet(scan_id)
+                if data:
+                    scan_statuses[scan_id] = {
+                        'name': data[0],
+                        'target': data[1],
+                        'status': data[5],
+                        'created': data[2],
+                        'started': data[3],
+                        'completed': data[4]
+                    }
+            except Exception as e:
+                self.log.error(f"Error getting scan status for {scan_id}: {e}", exc_info=True)
+                
+        return scan_statuses
+
+    @cherrypy.expose
     @cherrypy.tools.json_out()
     def stopscan(self: 'SpiderFootWebUi', id: str) -> str:
         """Stop a scan.

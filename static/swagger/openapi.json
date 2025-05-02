@@ -2,8 +2,12 @@
   "openapi": "3.0.0",
   "info": {
     "title": "SpiderFoot API",
-    "description": "API for SpiderFoot OSINT automation tool",
-    "version": "3.5"
+    "description": "API for SpiderFoot OSINT automation tool. This API allows you to control SpiderFoot scans, retrieve results, and manage the SpiderFoot instance.",
+    "version": "3.5",
+    "contact": {
+      "name": "SpiderFoot",
+      "url": "https://www.spiderfoot.net"
+    }
   },
   "servers": [
     {
@@ -11,10 +15,31 @@
       "description": "SpiderFoot API Server"
     }
   ],
+  "tags": [
+    {
+      "name": "Scans",
+      "description": "Scan management operations"
+    },
+    {
+      "name": "Scan Results",
+      "description": "Operations related to scan results"
+    },
+    {
+      "name": "Configuration",
+      "description": "SpiderFoot configuration operations"
+    },
+    {
+      "name": "System",
+      "description": "System operations"
+    }
+  ],
   "paths": {
     "/ping": {
       "get": {
         "summary": "Test connectivity",
+        "tags": ["System"],
+        "description": "Test API connectivity to the SpiderFoot server",
+        "operationId": "ping",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -36,9 +61,552 @@
     "/scanlist": {
       "get": {
         "summary": "Get list of scans",
+        "tags": ["Scans"],
+        "description": "Returns a list of all scans in the database",
+        "operationId": "scanList",
         "responses": {
           "200": {
             "description": "List of scans",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "example": [
+                    [
+                      "e2b8f92e-f5b4-48f5-954b-a2d1b897fd5f",
+                      "Scan Test",
+                      "example.com",
+                      "2023-07-15 12:30:45",
+                      "2023-07-15 12:31:00",
+                      "2023-07-15 12:45:23",
+                      "FINISHED",
+                      "100",
+                      {"HIGH": 3, "MEDIUM": 5, "LOW": 10, "INFO": 25}
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/startscan": {
+      "post": {
+        "summary": "Start a new scan",
+        "tags": ["Scans"],
+        "description": "Initiates a new scan with specified parameters",
+        "operationId": "startScan",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["scanname", "scantarget"],
+                "properties": {
+                  "scanname": {
+                    "type": "string",
+                    "description": "Name for the new scan"
+                  },
+                  "scantarget": {
+                    "type": "string",
+                    "description": "Target for the scan (domain, IP, etc)"
+                  },
+                  "modulelist": {
+                    "type": "string",
+                    "description": "Comma-separated list of modules to use"
+                  },
+                  "typelist": {
+                    "type": "string",
+                    "description": "Comma-separated list of event types to collect"
+                  },
+                  "usecase": {
+                    "type": "string",
+                    "description": "Use case profile to use",
+                    "enum": ["all", "passive", "investigate", "footprint"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scan started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": ["SUCCESS", "e2b8f92e-f5b4-48f5-954b-a2d1b897fd5f"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": ["ERROR", "Missing required parameters"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/startscanmulti": {
+      "post": {
+        "summary": "Start multiple scans in parallel",
+        "tags": ["Scans"],
+        "description": "Initiates multiple scans in parallel with the same configuration but different targets",
+        "operationId": "startScanMulti",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["scanname", "scantargets"],
+                "properties": {
+                  "scanname": {
+                    "type": "string",
+                    "description": "Base name for the new scans (will be appended with target)"
+                  },
+                  "scantargets": {
+                    "type": "string",
+                    "description": "Comma-separated list of scan targets"
+                  },
+                  "modulelist": {
+                    "type": "string",
+                    "description": "Comma-separated list of modules to use"
+                  },
+                  "typelist": {
+                    "type": "string",
+                    "description": "Comma-separated list of event types to collect"
+                  },
+                  "usecase": {
+                    "type": "string",
+                    "description": "Use case profile to use",
+                    "enum": ["all", "passive", "investigate", "footprint"]
+                  },
+                  "max_concurrent": {
+                    "type": "integer",
+                    "description": "Maximum number of concurrent scans to run",
+                    "default": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scans started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": ["SUCCESS", ["e2b8f92e-f5b4-48f5-954b-a2d1b897fd5f", "a1c2e3f4-5678-9abc-def0-123456789abc"]]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": ["ERROR", "Missing required parameters"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getparallelscanstatus": {
+      "get": {
+        "summary": "Get status information for multiple scans",
+        "tags": ["Scans"],
+        "description": "Retrieves status information for multiple scans at once",
+        "operationId": "getParallelScanStatus",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "description": "Comma-separated list of scan IDs",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status information for requested scans",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Scan name"
+                      },
+                      "target": {
+                        "type": "string",
+                        "description": "Scan target"
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "Current scan status"
+                      },
+                      "created": {
+                        "type": "integer",
+                        "description": "Creation timestamp"
+                      },
+                      "started": {
+                        "type": "integer",
+                        "description": "Start timestamp"
+                      },
+                      "completed": {
+                        "type": "integer",
+                        "description": "Completion timestamp"
+                      }
+                    }
+                  },
+                  "example": {
+                    "e2b8f92e-f5b4-48f5-954b-a2d1b897fd5f": {
+                      "name": "Scan 1 - example.com",
+                      "target": "example.com",
+                      "status": "RUNNING",
+                      "created": 1689400000,
+                      "started": 1689400010,
+                      "completed": 0
+                    },
+                    "a1c2e3f4-5678-9abc-def0-123456789abc": {
+                      "name": "Scan 1 - test.com",
+                      "target": "test.com",
+                      "status": "FINISHED",
+                      "created": 1689400000,
+                      "started": 1689400010,
+                      "completed": 1689401200
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "http_status": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "example": {
+                    "error": {
+                      "http_status": "404",
+                      "message": "No scan IDs specified"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scanstatus": {
+      "get": {
+        "summary": "Get scan status",
+        "tags": ["Scans"],
+        "description": "Get detailed status of a specific scan",
+        "operationId": "scanStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Scan ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scan status information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "Scan Test",
+                    "example.com",
+                    "2023-07-15 12:30:45",
+                    "2023-07-15 12:31:00",
+                    "2023-07-15 12:45:23",
+                    "FINISHED",
+                    {"HIGH": 3, "MEDIUM": 5, "LOW": 10, "INFO": 25}
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stopscan": {
+      "post": {
+        "summary": "Stop a running scan",
+        "tags": ["Scans"],
+        "description": "Stop one or more running scans",
+        "operationId": "stopScan",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Scan ID or comma-separated list of scan IDs to stop"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scan stop request successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": ""
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "http_status": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "example": {
+                    "error": {
+                      "http_status": "400",
+                      "message": "Scan has already finished."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "http_status": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "example": {
+                    "error": {
+                      "http_status": "404",
+                      "message": "Scan does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scandelete": {
+      "post": {
+        "summary": "Delete a scan",
+        "tags": ["Scans"],
+        "description": "Delete one or more scans from the database",
+        "operationId": "scanDelete",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Scan ID or comma-separated list of scan IDs to delete"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scan deletion successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": ""
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "http_status": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "example": {
+                    "error": {
+                      "http_status": "400",
+                      "message": "Cannot delete a running scan."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scaneventresults": {
+      "get": {
+        "summary": "Get scan results",
+        "tags": ["Scan Results"],
+        "description": "Get scan result events",
+        "operationId": "scanEventResults",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Scan ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "eventType",
+            "in": "query",
+            "description": "Event type to filter results",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filterfp",
+            "in": "query",
+            "description": "Filter out false positives",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "correlationId",
+            "in": "query",
+            "description": "Filter by correlation ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of scan result events",
             "content": {
               "application/json": {
                 "schema": {
@@ -56,70 +624,145 @@
         }
       }
     },
-    "/startscan": {
+    "/modules": {
       "get": {
-        "summary": "Start a new scan",
-        "parameters": [
-          {
-            "name": "scanname",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "scantarget",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "modulelist",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "typelist",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "usecase",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": ["all", "footprint", "investigate", "passive"]
-            }
-          }
-        ],
+        "summary": "Get modules",
+        "tags": ["Configuration"],
+        "description": "Get list of available SpiderFoot modules",
+        "operationId": "getModules",
         "responses": {
           "200": {
-            "description": "Scan started",
+            "description": "List of modules",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string"
-                    },
-                    "scan_id": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "descr": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eventtypes": {
+      "get": {
+        "summary": "Get event types",
+        "tags": ["Configuration"],
+        "description": "Get list of available event types",
+        "operationId": "getEventTypes",
+        "responses": {
+          "200": {
+            "description": "List of event types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
                       "type": "string"
                     }
                   }
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/correlationrules": {
+      "get": {
+        "summary": "Get correlation rules",
+        "tags": ["Configuration"],
+        "description": "Get list of available correlation rules",
+        "operationId": "getCorrelationRules",
+        "responses": {
+          "200": {
+            "description": "List of correlation rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "descr": {
+                        "type": "string"
+                      },
+                      "risk": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ScanResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the scan"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the scan"
+          },
+          "target": {
+            "type": "string",
+            "description": "Target of the scan"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the scan",
+            "enum": [
+              "STARTING",
+              "STARTED",
+              "RUNNING",
+              "ABORT-REQUESTED",
+              "ABORTED",
+              "FINISHED",
+              "ERROR-FAILED"
+            ]
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the scan was created"
+          },
+          "started": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the scan was started"
+          },
+          "completed": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the scan completed"
           }
         }
       }

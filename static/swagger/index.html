@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SpiderFoot API Documentation</title>
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@3/swagger-ui.css">
   <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@3/favicon-32x32.png" sizes="32x32" />
@@ -23,6 +24,54 @@
       margin: 0;
       background: #fafafa;
     }
+
+    .topbar {
+      background-color: #333;
+    }
+
+    .swagger-ui .topbar .download-url-wrapper .select-label {
+      color: white;
+    }
+
+    .swagger-ui .info .title {
+      color: #333;
+    }
+
+    .swagger-ui .info a {
+      color: #4d99e6;
+    }
+    
+    /* Custom SpiderFoot styling */
+    .swagger-ui .topbar {
+      background-color: #222;
+      border-bottom: 3px solid #5aa700;
+    }
+    
+    .swagger-ui .topbar .download-url-wrapper .select-label {
+      color: white;
+    }
+    
+    .swagger-ui .info .title small.version-stamp {
+      background-color: #5aa700;
+    }
+    
+    .swagger-ui .opblock.opblock-get {
+      border-color: #5aa700;
+      background: rgba(90, 167, 0, 0.05);
+    }
+    
+    .swagger-ui .opblock.opblock-get .opblock-summary-method {
+      background: #5aa700;
+    }
+    
+    .swagger-ui .btn.execute {
+      background-color: #5aa700;
+      color: white;
+    }
+    
+    .swagger-ui a.nostyle {
+      color: #5aa700;
+    }
   </style>
 </head>
 
@@ -33,10 +82,19 @@
   <script src="https://unpkg.com/swagger-ui-dist@3/swagger-ui-standalone-preset.js"></script>
   <script>
     window.onload = function() {
+      // Pre-fill auth token from localStorage if available
+      const token = localStorage.getItem('spiderfoot_api_token') || "";
+      
       const ui = SwaggerUIBundle({
         url: "openapi.json",
         dom_id: '#swagger-ui',
         deepLinking: true,
+        displayOperationId: true,
+        displayRequestDuration: true,
+        defaultModelsExpandDepth: 3,
+        defaultModelExpandDepth: 3,
+        showExtensions: true,
+        showCommonExtensions: true,
         presets: [
           SwaggerUIBundle.presets.apis,
           SwaggerUIStandalonePreset
@@ -44,8 +102,25 @@
         plugins: [
           SwaggerUIBundle.plugins.DownloadUrl
         ],
-        layout: "StandaloneLayout"
+        layout: "StandaloneLayout",
+        tagsSorter: "alpha",
+        operationsSorter: "alpha",
+        persistAuthorization: true,
+        onComplete: function() {
+          // You can add custom functionality here after the UI is loaded
+          console.log("Swagger UI initialized");
+        }
       });
+      
+      // Store auth token when it changes
+      ui.getConfigs().requestInterceptor = function(req) {
+        const authToken = ui.getState().auth.token;
+        if (authToken) {
+          localStorage.setItem('spiderfoot_api_token', authToken);
+        }
+        return req;
+      };
+      
       window.ui = ui;
     };
   </script>
