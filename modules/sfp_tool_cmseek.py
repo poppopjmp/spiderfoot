@@ -139,9 +139,23 @@ class sfp_tool_cmseek(SpiderFootPlugin):
             self.debug(f"Could not detect the CMS for {eventData}")
             return
 
-        log_path = f"{resultpath}/{eventData}/cms.json"
-        if not os.path.isfile(log_path):
-            self.error(f"File does not exist: {log_path}")
+        result_roots = [
+            resultpath,
+            os.path.join(os.path.expanduser('~'), 'Result')
+        ]
+
+        log_path = None
+        for root in result_roots:
+            candidate = os.path.join(root, eventData, 'cms.json')
+            if os.path.isfile(candidate):
+                log_path = candidate
+                break
+
+        if not log_path:
+            self.error(
+                f"CMSeeK report not found for {eventData} in "
+                f"{', '.join(result_roots)}"
+            )
             return
 
         try:
@@ -152,14 +166,8 @@ class sfp_tool_cmseek(SpiderFootPlugin):
                 f"Could not parse CMSeeK output file {log_path} as JSON: {e}")
             return
 
-        cms_name = j.get('cms_name')
-
-        if not cms_name:
-            return
-
-        cms_version = j.get('cms_version')
-
-        software = ' '.join(filter(None, [cms_name, cms_version]))
+        software = json.dumps(j, ensure_ascii=False)
+        self.debug(f"software: {software}")
 
         if not software:
             return
