@@ -3,7 +3,7 @@ adblockparser==0.7
 beautifulsoup4==4.13.4
 cherrypy==18.10.0
 cherrypy-cors==1.7.0
-cryptography==44.0.3
+cryptography==45.0.2
 dnspython==2.6.1; python_version >= '3.8'
 elasticsearch==9.0.1
 exifread==3.3.1
