@@ -31,19 +31,12 @@ class TestModuleBase64(SpiderFootTestBase):
 
     def setUp(self):
         super().setUp()
-        # ... existing setUp code ...
-        
         # Register any event emitters used in the test
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
     
     @safe_recursion(max_depth=5)
-    @safe_recursion(max_depth=5)
-    def test_handleEvent(self, depth=0):
-        # ... existing test code, modified to include depth param ...
-        
-    @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_url_containing_base64_string_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_url_containing_base64_string_should_return_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_base64()
@@ -82,7 +75,7 @@ class TestModuleBase64(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_not_containing_base64_string_should_not_return_event(selfdepth=0):
+    def test_handleEvent_event_data_not_containing_base64_string_should_not_return_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_base64()
@@ -106,6 +99,13 @@ class TestModuleBase64(SpiderFootTestBase):
 
         evt = SpiderFootEvent(event_type, event_data,
                               event_module, source_event)
+        result = module.handleEvent(evt)
+
+        self.assertIsNone(result)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)

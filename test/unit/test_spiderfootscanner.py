@@ -9,7 +9,7 @@ from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestSpiderFootScanner(unittest.TestCase):
+class TestSpiderFootScanner(SpiderFootTestBase):  # Add missing inheritance
     """Test SpiderFootScanStatus."""
 
     def test_init_argument_start_false_should_create_a_scan_without_starting_the_scan(self):
@@ -302,4 +302,10 @@ class TestSpiderFootScanner(unittest.TestCase):
 
     def tearDown(self):
         """Clean up after each test."""
+        # Ensure any scanner instances are properly cleaned up
+        if hasattr(self, 'scanner'):
+            try:
+                self.scanner = None
+            except:
+                pass
         super().tearDown()

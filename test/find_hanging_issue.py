@@ -29,6 +29,23 @@ def find_all_tests():
 def main():
     print("Diagnosing pytest hanging issue...")
     
+    # Try running individual problematic test files
+    print("\n=== Testing individual files that might hang ===")
+    problem_files = [
+        "test/unit/test_spiderfootscanner.py",
+        "test/unit/test_spiderfootcli.py", 
+        "test/unit/test_spiderfoot.py",
+        "test/unit/spiderfoot/test_spiderfootdb.py"
+    ]
+    
+    for test_file in problem_files:
+        print(f"\nTesting {test_file}...")
+        success, stdout, stderr = run_command(["python3", "-m", "pytest", test_file, "-v"], timeout=60)
+        if not success:
+            print(f"❌ {test_file} appears to hang or fail")
+        else:
+            print(f"✅ {test_file} completed successfully")
+    
     # Try running with xvs flag for more verbose output and to run tests in random order
     # This can identify if the issue is order-dependent
     print("\n=== Running with randomized order and verbose output ===")
@@ -56,12 +73,11 @@ def main():
     else:
         print("❌ Tests hung with resource tracking")
     
-    print("\nAdditional tips to fix hanging tests:")
-    print(" 1. Set thread.daemon = True for any threads created in tests")
-    print(" 2. Add timeout to any socket operations or network calls")
-    print(" 3. Ensure proper tearDown and fixture cleanup")
-    print(" 4. Try installing pytest-timeout and run: pytest --timeout=30")
-    print(" 5. Review the pytest-debug.log for clues")
+    print("\nAdditional debugging steps:")
+    print(" 1. Run: python3 -m pytest --collect-only test/unit/modules/ (check test collection)")
+    print(" 2. Run: python3 -m pytest test/unit/modules/ -k 'not handleEvent' (skip handleEvent tests)")
+    print(" 3. Check for circular imports: python3 -c 'import test.unit.modules.test_sfp_base64'")
+    print(" 4. Monitor threads: python3 -c 'import threading; print([t.name for t in threading.enumerate()])'")
 
 if __name__ == "__main__":
     main()

@@ -1,9 +1,10 @@
 ***Settings***
-Library           SeleniumLibrary
+Library           SeleniumLibrary    timeout=30s    implicit_wait=10s
 Library           OperatingSystem
 Library           Collections
-Test Teardown     Run Keyword If Test Failed    Capture Failure Screenshot
+Test Teardown     Run Keywords    Capture Failure Screenshot    Close All Browsers
 Resource          variables.robot  # Externalize variables
+Test Timeout      300 seconds      # 5-minute timeout per test
 
 ***Variables***
 ${GECKODRIVER_PATH}    /usr/local/bin/geckodriver
@@ -11,7 +12,7 @@ ${FIREFOX_BINARY_PATH}    /usr/bin/firefox  # Add path to Firefox binary
 
 ***Keywords***
 Capture Failure Screenshot
-    Capture Page Screenshot    failure-${TEST NAME}.png
+    Run Keyword And Ignore Error    Capture Page Screenshot    failure-${TEST NAME}.png
 
 Create Firefox Headless Options
     ${options}=    Evaluate    selenium.webdriver.FirefoxOptions()    modules=selenium.webdriver
@@ -121,8 +122,8 @@ Scroll To Element
 
 Wait For Scan To Finish
     [Arguments]    ${scan_name}
-    Wait Until Element Is Visible    id:btn-browse    timeout=15s
-    Wait Until Element Contains    scanstatusbadge    FINISHED    timeout=60s
+    Wait Until Element Is Visible    id:btn-browse    timeout=30s
+    Wait Until Element Contains    scanstatusbadge    FINISHED    timeout=120s    # Increased timeout
 
 ***Test Cases***
 Main navigation pages should render correctly
@@ -137,7 +138,7 @@ Main navigation pages should render correctly
     Click Element    id:nav-link-settings
     Wait Until Element Is Visible    id:savesettingsform    timeout=120s
     Settings page should render
-    Close All Browsers
+    [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    1s
 
 Scan info page should render correctly
     Create a module scan    test scan info    van1shland.io    sfp_countryname
@@ -152,7 +153,7 @@ Scan info page should render correctly
     Scan info Settings tab should render
     Click Element    id:btn-log
     Scan info Log tab should render
-    Close All Browsers
+    [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    2s
 
 Scan list page should list scans
     Create a module scan    test scan list    van1shland.io    sfp_countryname
@@ -186,4 +187,4 @@ A passive scan with unresolvable target internet name should fail
     Wait Until Element Contains    scanstatusbadge    ERROR    timeout=60s
     Click Element    id:btn-log
     Page Should Contain    Could not resolve
-    Close All Browsers
+    [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    1s

@@ -85,249 +85,257 @@ sfOptdescs = {
 }
 
 
-def main() -> None:
-    """Main function to start SpiderFoot application."""
-    
-    # Check Python version first
-    if sys.version_info < (3, 9):
-        print("SpiderFoot requires Python 3.9 or higher.")
-        sys.exit(-1)
-
-    # Check for legacy database files
-    if os.path.exists('spiderfoot.db'):
-        print(
-            f"ERROR: spiderfoot.db file exists in {os.path.dirname(__file__)}")
-        print("SpiderFoot no longer supports loading the spiderfoot.db database from the application directory.")
-        print(
-            f"The database is now loaded from your home directory: {Path.home()}/.spiderfoot/spiderfoot.db")
-        print(
-            f"This message will go away once you move or remove spiderfoot.db from {os.path.dirname(__file__)}")
-        sys.exit(-1)
-
-    # Check for legacy passwd files
-    if os.path.exists('passwd'):
-        print(f"ERROR: passwd file exists in {os.path.dirname(__file__)}")
-        print("SpiderFoot no longer supports loading credentials from the application directory.")
-        print(
-            f"The passwd file is now loaded from your home directory: {Path.home()}/.spiderfoot/passwd")
-        print(
-            f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
-        sys.exit(-1)
-
+def main():
+    """Main entry point."""
     try:
-        # web server config
-        sfWebUiConfig = {
-            'host': '127.0.0.1',
-            'port': 5001,
-            'root': '/',
-            'cors_origins': [],
-        }
+        # Ensure we're in the correct directory
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(script_dir)
+        
+        # Add current directory to Python path
+        if script_dir not in sys.path:
+            sys.path.insert(0, script_dir)
+            
+        # Check Python version first
+        if sys.version_info < (3, 9):
+            print("SpiderFoot requires Python 3.9 or higher.")
+            sys.exit(-1)
 
-        # FastAPI server config
-        sfApiConfig = {
-            'host': '127.0.0.1',
-            'port': 8001,
-            'workers': 1,
-            'log_level': 'info',
-            'reload': False
-        }
+        # Check for legacy database files
+        if os.path.exists('spiderfoot.db'):
+            print(
+                f"ERROR: spiderfoot.db file exists in {os.path.dirname(__file__)}")
+            print("SpiderFoot no longer supports loading the spiderfoot.db database from the application directory.")
+            print(
+                f"The database is now loaded from your home directory: {Path.home()}/.spiderfoot/spiderfoot.db")
+            print(
+                f"This message will go away once you move or remove spiderfoot.db from {os.path.dirname(__file__)}")
+            sys.exit(-1)
 
-        p = argparse.ArgumentParser(
-            description=f"SpiderFoot {__version__}: Open Source Intelligence Automation.")
-        p.add_argument("-d", "--debug", action='store_true',
-                       help="Enable debug output.")
-        p.add_argument("-l", "--listen", metavar="IP:port",
-                       help="IP and port to listen on.")
-        p.add_argument("--api", action='store_true',
-                       help="Start FastAPI server instead of web UI.")
-        p.add_argument("--api-listen", metavar="IP:port",
-                       help="IP and port for FastAPI server to listen on.")
-        p.add_argument("--api-workers", type=int, default=1,
-                       help="Number of FastAPI worker processes.")
-        p.add_argument("--both", action='store_true',
-                       help="Start both web UI and FastAPI servers.")
-        p.add_argument("-m", metavar="mod1,mod2,...",
-                       type=str, help="Modules to enable.")
-        p.add_argument("-M", "--modules", action='store_true',
-                       help="List available modules.")
-        p.add_argument("-C", "--correlate", metavar="scanID",
-                       help="Run correlation rules against a scan ID.")
-        p.add_argument("-s", metavar="TARGET", help="Target for the scan.")
-        p.add_argument("-t", metavar="type1,type2,...", type=str,
-                       help="Event types to collect (modules selected automatically).")
-        p.add_argument("-u", choices=["all", "footprint", "investigate", "passive"],
-                       type=str, help="Select modules automatically by use case")
-        p.add_argument("-T", "--types", action='store_true',
-                       help="List available event types.")
-        p.add_argument("-o", choices=["tab", "csv", "json"],
-                       type=str, help="Output format. Tab is default.")
-        p.add_argument("-H", action='store_true',
-                       help="Don't print field headers, just data.")
-        p.add_argument("-n", action='store_true',
-                       help="Strip newlines from data.")
-        p.add_argument("-r", action='store_true',
-                       help="Include the source data field in tab/csv output.")
-        p.add_argument("-S", metavar="LENGTH", type=int,
-                       help="Maximum data length to display. By default, all data is shown.")
-        p.add_argument("-D", metavar='DELIMITER', type=str,
-                       help="Delimiter to use for CSV output. Default is ,.")
-        p.add_argument("-f", action='store_true',
-                       help="Filter out other event types that weren't requested with -t.")
-        p.add_argument("-F", metavar="type1,type2,...", type=str,
-                       help="Show only a set of event types, comma-separated.")
-        p.add_argument("-x", action='store_true', help="STRICT MODE. Will only enable modules that can directly consume your target, and if -t was specified only those events will be consumed by modules. This overrides -t and -m options.")
-        p.add_argument("-q", action='store_true',
-                       help="Disable logging. This will also hide errors!")
-        p.add_argument("-V", "--version", action='store_true',
-                       help="Display the version of SpiderFoot and exit.")
-        p.add_argument("--max-threads", type=int,
-                       help="Max number of modules to run concurrently.")
+        # Check for legacy passwd files
+        if os.path.exists('passwd'):
+            print(f"ERROR: passwd file exists in {os.path.dirname(__file__)}")
+            print("SpiderFoot no longer supports loading credentials from the application directory.")
+            print(
+                f"The passwd file is now loaded from your home directory: {Path.home()}/.spiderfoot/passwd")
+            print(
+                f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
+            sys.exit(-1)
 
-        args = p.parse_args()
-
-        if args.version:
-            print(f"SpiderFoot {__version__}: Open Source Intelligence Automation.")
-            sys.exit(0)
-
-        if args.max_threads:
-            sfConfig['_maxthreads'] = args.max_threads
-
-        if args.debug:
-            sfConfig['_debug'] = True
-        else:
-            sfConfig['_debug'] = False
-
-        if args.q:
-            sfConfig['__logging'] = False
-
-        loggingQueue = mp.Queue()
-        logListenerSetup(loggingQueue, sfConfig)
-        logWorkerSetup(loggingQueue)
-        log = logging.getLogger(f"spiderfoot.{__name__}")
-
-        # Add descriptions of the global config options
-        sfConfig['__globaloptdescs__'] = sfOptdescs
-
-        # Load each module in the modules directory with a .py extension
         try:
-            mod_dir = os.path.dirname(os.path.abspath(__file__)) + '/modules/'
-            sfModules = SpiderFootHelpers.loadModulesAsDict(
-                mod_dir, ['sfp_template.py'])
-        except Exception as e:
-            log.critical(f"Failed to load modules: {e}", exc_info=True)
-            sys.exit(-1)
+            # web server config
+            sfWebUiConfig = {
+                'host': '127.0.0.1',
+                'port': 5001,
+                'root': '/',
+                'cors_origins': [],
+            }
 
-        if not sfModules:
-            log.critical(f"No modules found in modules directory: {mod_dir}")
-            sys.exit(-1)
+            # FastAPI server config
+            sfApiConfig = {
+                'host': '127.0.0.1',
+                'port': 8001,
+                'workers': 1,
+                'log_level': 'info',
+                'reload': False
+            }
 
-        # Load correlation rules
-        try:
-            correlations_dir = os.path.dirname(
-                os.path.abspath(__file__)) + '/correlations/'
-            correlationRulesRaw = SpiderFootHelpers.loadCorrelationRulesRaw(
-                correlations_dir, ['template.yaml'])
-        except Exception as e:
-            log.critical(
-                f"Failed to load correlation rules: {e}", exc_info=True)
-            sys.exit(-1)
+            p = argparse.ArgumentParser(
+                description=f"SpiderFoot {__version__}: Open Source Intelligence Automation.")
+            p.add_argument("-d", "--debug", action='store_true',
+                        help="Enable debug output.")
+            p.add_argument("-l", "--listen", metavar="IP:port",
+                        help="IP and port to listen on.")
+            p.add_argument("--api", action='store_true',
+                        help="Start FastAPI server instead of web UI.")
+            p.add_argument("--api-listen", metavar="IP:port",
+                        help="IP and port for FastAPI server to listen on.")
+            p.add_argument("--api-workers", type=int, default=1,
+                        help="Number of FastAPI worker processes.")
+            p.add_argument("--both", action='store_true',
+                        help="Start both web UI and FastAPI servers.")
+            p.add_argument("-m", metavar="mod1,mod2,...",
+                        type=str, help="Modules to enable.")
+            p.add_argument("-M", "--modules", action='store_true',
+                        help="List available modules.")
+            p.add_argument("-C", "--correlate", metavar="scanID",
+                        help="Run correlation rules against a scan ID.")
+            p.add_argument("-s", metavar="TARGET", help="Target for the scan.")
+            p.add_argument("-t", metavar="type1,type2,...", type=str,
+                        help="Event types to collect (modules selected automatically).")
+            p.add_argument("-u", choices=["all", "footprint", "investigate", "passive"],
+                        type=str, help="Select modules automatically by use case")
+            p.add_argument("-T", "--types", action='store_true',
+                        help="List available event types.")
+            p.add_argument("-o", choices=["tab", "csv", "json"],
+                        type=str, help="Output format. Tab is default.")
+            p.add_argument("-H", action='store_true',
+                        help="Don't print field headers, just data.")
+            p.add_argument("-n", action='store_true',
+                        help="Strip newlines from data.")
+            p.add_argument("-r", action='store_true',
+                        help="Include the source data field in tab/csv output.")
+            p.add_argument("-S", metavar="LENGTH", type=int,
+                        help="Maximum data length to display. By default, all data is shown.")
+            p.add_argument("-D", metavar='DELIMITER', type=str,
+                        help="Delimiter to use for CSV output. Default is ,.")
+            p.add_argument("-f", action='store_true',
+                        help="Filter out other event types that weren't requested with -t.")
+            p.add_argument("-F", metavar="type1,type2,...", type=str,
+                        help="Show only a set of event types, comma-separated.")
+            p.add_argument("-x", action='store_true', help="STRICT MODE. Will only enable modules that can directly consume your target, and if -t was specified only those events will be consumed by modules. This overrides -t and -m options.")
+            p.add_argument("-q", action='store_true',
+                        help="Disable logging. This will also hide errors!")
+            p.add_argument("-V", "--version", action='store_true',
+                        help="Display the version of SpiderFoot and exit.")
+            p.add_argument("--max-threads", type=int,
+                        help="Max number of modules to run concurrently.")
 
-        # Initialize database handle
-        try:
-            dbh = SpiderFootDb(sfConfig)
-        except Exception as e:
-            log.critical(f"Failed to initialize database: {e}", exc_info=True)
-            sys.exit(-1)
+            args = p.parse_args()
 
-        # Process correlation rules
-        sfCorrelationRules = list()
-        if not correlationRulesRaw:
-            log.error(
-                f"No correlation rules found in correlations directory: {correlations_dir}")
-        else:
+            if args.version:
+                print(f"SpiderFoot {__version__}: Open Source Intelligence Automation.")
+                sys.exit(0)
+
+            if args.max_threads:
+                sfConfig['_maxthreads'] = args.max_threads
+
+            if args.debug:
+                sfConfig['_debug'] = True
+            else:
+                sfConfig['_debug'] = False
+
+            if args.q:
+                sfConfig['__logging'] = False
+
+            loggingQueue = mp.Queue()
+            logListenerSetup(loggingQueue, sfConfig)
+            logWorkerSetup(loggingQueue)
+            log = logging.getLogger(f"spiderfoot.{__name__}")
+
+            # Add descriptions of the global config options
+            sfConfig['__globaloptdescs__'] = sfOptdescs
+
+            # Load each module in the modules directory with a .py extension
             try:
-                correlator = SpiderFootCorrelator(dbh, correlationRulesRaw)
-                sfCorrelationRules = correlator.get_ruleset()
+                mod_dir = os.path.dirname(os.path.abspath(__file__)) + '/modules/'
+                sfModules = SpiderFootHelpers.loadModulesAsDict(
+                    mod_dir, ['sfp_template.py'])
             except Exception as e:
-                log.critical(
-                    f"Failure initializing correlation rules: {e}", exc_info=True)
+                log.critical(f"Failed to load modules: {e}", exc_info=True)
                 sys.exit(-1)
 
-        # Add modules and correlation rules to sfConfig
-        sfConfig['__modules__'] = sfModules
-        sfConfig['__correlationrules__'] = sfCorrelationRules
+            if not sfModules:
+                log.critical(f"No modules found in modules directory: {mod_dir}")
+                sys.exit(-1)
 
-        # Handle different execution modes
-        if args.correlate:
+            # Load correlation rules
+            try:
+                correlations_dir = os.path.dirname(
+                    os.path.abspath(__file__)) + '/correlations/'
+                correlationRulesRaw = SpiderFootHelpers.loadCorrelationRulesRaw(
+                    correlations_dir, ['template.yaml'])
+            except Exception as e:
+                log.critical(
+                    f"Failed to load correlation rules: {e}", exc_info=True)
+                sys.exit(-1)
+
+            # Initialize database handle
+            try:
+                dbh = SpiderFootDb(sfConfig)
+            except Exception as e:
+                log.critical(f"Failed to initialize database: {e}", exc_info=True)
+                sys.exit(-1)
+
+            # Process correlation rules
+            sfCorrelationRules = list()
             if not correlationRulesRaw:
                 log.error(
-                    "Unable to perform correlations as no correlation rules were found.")
-                sys.exit(-1)
+                    f"No correlation rules found in correlations directory: {correlations_dir}")
+            else:
+                try:
+                    correlator = SpiderFootCorrelator(dbh, correlationRulesRaw)
+                    sfCorrelationRules = correlator.get_ruleset()
+                except Exception as e:
+                    log.critical(
+                        f"Failure initializing correlation rules: {e}", exc_info=True)
+                    sys.exit(-1)
 
-            try:
-                log.info(
-                    f"Running {len(correlationRulesRaw)} correlation rules against scan, {args.correlate}.")
-                corr = SpiderFootCorrelator(
-                    dbh, correlationRulesRaw, args.correlate)
-                corr.run_correlations()
-            except Exception as e:
-                log.critical(
-                    f"Unable to run correlation rules: {e}", exc_info=True)
-                sys.exit(-1)
-            sys.exit(0)
+            # Add modules and correlation rules to sfConfig
+            sfConfig['__modules__'] = sfModules
+            sfConfig['__correlationrules__'] = sfCorrelationRules
 
-        if args.modules:
-            log.info("Modules available:")
-            for m in sorted(sfModules.keys()):
-                if "__" in m:
-                    continue
-                print(f"{m.ljust(25)}  {sfModules[m]['descr']}")
-            sys.exit(0)
+            # Handle different execution modes
+            if args.correlate:
+                if not correlationRulesRaw:
+                    log.error(
+                        "Unable to perform correlations as no correlation rules were found.")
+                    sys.exit(-1)
 
-        if args.types:
-            dbh = SpiderFootDb(sfConfig, init=True)
-            log.info("Types available:")
-            typedata = dbh.eventTypes()
-            types = dict()
-            for r in typedata:
-                types[r[1]] = r[0]
+                try:
+                    log.info(
+                        f"Running {len(correlationRulesRaw)} correlation rules against scan, {args.correlate}.")
+                    corr = SpiderFootCorrelator(
+                        dbh, correlationRulesRaw, args.correlate)
+                    corr.run_correlations()
+                except Exception as e:
+                    log.critical(
+                        f"Unable to run correlation rules: {e}", exc_info=True)
+                    sys.exit(-1)
+                sys.exit(0)
 
-            for t in sorted(types.keys()):
-                print(f"{t.ljust(45)}  {types[t]}")
-            sys.exit(0)
+            if args.modules:
+                log.info("Modules available:")
+                for m in sorted(sfModules.keys()):
+                    if "__" in m:
+                        continue
+                    print(f"{m.ljust(25)}  {sfModules[m]['descr']}")
+                sys.exit(0)
 
-        if args.listen:
-            try:
-                (host, port) = args.listen.split(":")
-            except Exception:
-                log.critical("Invalid ip:port format.")
-                sys.exit(-1)
+            if args.types:
+                dbh = SpiderFootDb(sfConfig, init=True)
+                log.info("Types available:")
+                typedata = dbh.eventTypes()
+                types = dict()
+                for r in typedata:
+                    types[r[1]] = r[0]
 
-            sfWebUiConfig['host'] = host
-            sfWebUiConfig['port'] = int(port)
+                for t in sorted(types.keys()):
+                    print(f"{t.ljust(45)}  {types[t]}")
+                sys.exit(0)
+
+            if args.listen:
+                try:
+                    (host, port) = args.listen.split(":")
+                except Exception:
+                    log.critical("Invalid ip:port format.")
+                    sys.exit(-1)
+
+                sfWebUiConfig['host'] = host
+                sfWebUiConfig['port'] = int(port)
+
+                if args.both:
+                    start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue)
+                else:
+                    start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
+                sys.exit(0)
+
+            if args.api:
+                start_fastapi_server(sfApiConfig, sfConfig, loggingQueue)
+                sys.exit(0)
 
             if args.both:
                 start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue)
-            else:
-                start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
-            sys.exit(0)
+                sys.exit(0)
 
-        if args.api:
-            start_fastapi_server(sfApiConfig, sfConfig, loggingQueue)
+            start_scan(sfConfig, sfModules, args, loggingQueue)
+            
+        except KeyboardInterrupt:
+            print("\nInterrupted by user")
             sys.exit(0)
-
-        if args.both:
-            start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue)
-            sys.exit(0)
-
-        start_scan(sfConfig, sfModules, args, loggingQueue)
-        
-    except KeyboardInterrupt:
-        print("\nInterrupted by user")
-        sys.exit(0)
-    except Exception as e:
-        print(f"Fatal error: {e}")
-        sys.exit(-1)
+        except Exception as e:
+            print(f"Fatal error: {e}")
+            sys.exit(-1)
 
 
 def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:

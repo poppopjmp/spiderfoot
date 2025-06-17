@@ -2,6 +2,8 @@
 import subprocess
 import sys
 import unittest
+import signal
+import os
 
 
 class TestSf(unittest.TestCase):
@@ -33,14 +35,20 @@ class TestSf(unittest.TestCase):
         "sfp_webanalytics",
     ]
 
-    def execute(self, command):
-        proc = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        out, err = proc.communicate()
-        return out, err, proc.returncode
+    def execute(self, command, timeout=60):
+        """Execute command with timeout to prevent hanging."""
+        try:
+            proc = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            out, err = proc.communicate(timeout=timeout)
+            return out, err, proc.returncode
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+            return b'', b'TIMEOUT', -1
 
     def test_no_args_should_print_arg_l_required(self):
         out, err, code = self.execute([sys.executable, "sf.py"])
@@ -122,7 +130,9 @@ class TestSf(unittest.TestCase):
     def test_run_scan_should_run_scan_and_exit(self):
         target = "spiderfoot.net"
         out, err, code = self.execute(
-            [sys.executable, "sf.py", "-m", ",".join(self.default_modules), "-s", target])
+            [sys.executable, "sf.py", "-m", ",".join(self.default_modules), "-s", target],
+            timeout=120  # Increased timeout for scan tests
+        )
         self.assertIn(b"Scan completed with status FINISHED", err)
         self.assertEqual(0, code)
 
@@ -133,7 +143,9 @@ class TestSf(unittest.TestCase):
     def test_run_scan_should_print_scan_result_and_exit(self):
         target = "spiderfoot.net"
         out, err, code = self.execute(
-            [sys.executable, "sf.py", "-m", ",".join(self.default_modules), "-s", target, "-o", "csv"])
+            [sys.executable, "sf.py", "-m", ",".join(self.default_modules), "-s", target, "-o", "csv"],
+            timeout=120  # Increased timeout for scan tests
+        )
         self.assertIn(b"Scan completed with status FINISHED", err)
         self.assertEqual(0, code)
 

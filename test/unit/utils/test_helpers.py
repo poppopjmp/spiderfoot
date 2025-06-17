@@ -2,6 +2,8 @@
 
 import functools
 import logging
+import threading
+import time
 
 
 
@@ -64,3 +66,55 @@ def restore_monkey_patch(obj, attr_name, orig_value):
         setattr(obj, attr_name, orig_value)
     elif hasattr(obj, attr_name):
         delattr(obj, attr_name)
+
+
+def test_safe_recursion(max_depth=5):
+    """Decorator to prevent infinite recursion in tests."""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # Get or create recursion counter
+            counter_name = f"_recursion_counter_{func.__name__}"
+            if not hasattr(wrapper, counter_name):
+                setattr(wrapper, counter_name, 0)
+            
+            counter = getattr(wrapper, counter_name)
+            if counter >= max_depth:
+                raise RecursionError(f"Max recursion depth ({max_depth}) exceeded in {func.__name__}")
+            
+            try:
+                setattr(wrapper, counter_name, counter + 1)
+                return func(*args, **kwargs)
+            finally:
+                setattr(wrapper, counter_name, counter)
+        return wrapper
+    return decorator
+
+
+def with_timeout(seconds=30):
+    """Decorator to add timeout to test methods."""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            result = [None]
+            exception = [None]
+            
+            def target():
+                try:
+                    result[0] = func(*args, **kwargs)
+                except Exception as e:
+                    exception[0] = e
+            
+            thread = threading.Thread(target=target, daemon=True)
+            thread.start()
+            thread.join(timeout=seconds)
+            
+            if thread.is_alive():
+                raise TimeoutError(f"Test {func.__name__} exceeded {seconds} second timeout")
+            
+            if exception[0]:
+                raise exception[0]
+            
+            return result[0]
+        return wrapper
+    return decorator

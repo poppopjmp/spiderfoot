@@ -3,6 +3,8 @@ from unittest.mock import patch, MagicMock
 from spiderfoot.db import SpiderFootDb
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
+import time
+import os
 
 
 class TestSpiderFootDb(SpiderFootTestBase):
@@ -13,6 +15,8 @@ class TestSpiderFootDb(SpiderFootTestBase):
             '__database': 'test.db',
             '__dbtype': 'sqlite'
         }
+        # Use test database to avoid conflicts
+        self.opts['__database'] = f"{SpiderFootHelpers.dataPath()}/test_{time.time()}.db"
         self.db = SpiderFootDb(self.opts)
         # Register event emitters if they exist
         if hasattr(self, 'module'):
@@ -410,4 +414,15 @@ class TestSpiderFootDb(SpiderFootTestBase):
 
     def tearDown(self):
         """Clean up after each test."""
+        if hasattr(self, 'db'):
+            try:
+                self.db.close()
+            except:
+                pass
+        # Clean up test database file
+        if hasattr(self, 'opts') and '__database' in self.opts:
+            try:
+                os.remove(self.opts['__database'])
+            except:
+                pass
         super().tearDown()

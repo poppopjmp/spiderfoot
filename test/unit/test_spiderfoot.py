@@ -3,10 +3,11 @@ import pytest
 import unittest
 
 from sflib import SpiderFoot
+from test.unit.utils.test_base import SpiderFootTestBase  # Add missing import
 
 
 @pytest.mark.usefixtures
-class TestSpiderFoot(unittest.TestCase):
+class TestSpiderFoot(SpiderFootTestBase):  # Add missing inheritance
 
     default_modules = [
         "sfp_binstring",
@@ -667,122 +668,147 @@ class TestSpiderFoot(unittest.TestCase):
         opts['_socks2addr'] = proxy_host
         opts['_socks3port'] = '8080'
 
-        sf = SpiderFoot(opts)
         self.assertFalse(sf.useProxyForUrl(proxy_host))
-
+        self.assertFalse(sf.useProxyForUrl(proxy_host))
     def test_useProxyForUrl_argument_url_with_public_host_should_return_True(self):
+        opts = self.default_optionst_url_with_public_host_should_return_True(self):
         opts = self.default_options
-
         proxy_host = 'proxy.spiderfoot.net'
-
+        proxy_host = 'proxy.spiderfoot.net'
         opts['_socks1type'] = '5'
         opts['_socks2addr'] = proxy_host
+        opts['_socks3port'] = '8080'host
         opts['_socks3port'] = '8080'
-
         sf = SpiderFoot(opts)
         self.assertTrue(sf.useProxyForUrl('spiderfoot.net'))
+        self.assertTrue(sf.useProxyForUrl('1.1.1.1')).net'))
         self.assertTrue(sf.useProxyForUrl('1.1.1.1'))
-
     def test_fetchUrl_argument_url_should_return_http_response_as_dict(self):
+        sf = SpiderFoot(self.default_options)urn_http_response_as_dict(self):
         sf = SpiderFoot(self.default_options)
-
         res = sf.fetchUrl("https://spiderfoot.net/")
-        self.assertIsInstance(res, dict)
+        self.assertIsInstance(res, dict)rfoot.net/")
         self.assertEqual(res['code'], "200")
         self.assertNotEqual(res['content'], None)
-
+        self.assertNotEqual(res['content'], None)
     def test_fetchUrl_argument_headOnly_should_return_http_response_as_dict(self):
+        sf = SpiderFoot(self.default_options)d_return_http_response_as_dict(self):
         sf = SpiderFoot(self.default_options)
-
         res = sf.fetchUrl("https://spiderfoot.net/", headOnly=True)
-        self.assertIsInstance(res, dict)
+        self.assertIsInstance(res, dict)rfoot.net/", headOnly=True)
         self.assertEqual(res['code'], "301")
         self.assertEqual(res['content'], None)
-
+        self.assertEqual(res['content'], None)
     def test_fetchUrl_argument_url_invalid_type_should_return_none(self):
+        sf = SpiderFoot(self.default_options)pe_should_return_none(self):
         sf = SpiderFoot(self.default_options)
-
         invalid_types = [None, list(), bytes(), dict(), int()]
-        for invalid_type in invalid_types:
+        for invalid_type in invalid_types:es(), dict(), int()]
             with self.subTest(invalid_type=invalid_type):
-                res = sf.fetchUrl(invalid_type)
+                res = sf.fetchUrl(invalid_type)lid_type):
+                self.assertEqual(None, res)ype)
                 self.assertEqual(None, res)
-
     def test_fetchUrl_argument_url_invalid_url_should_return_None(self):
+        sf = SpiderFoot(self.default_options)l_should_return_None(self):
         sf = SpiderFoot(self.default_options)
-
         res = sf.fetchUrl("")
         self.assertEqual(None, res)
-
+        self.assertEqual(None, res)
         res = sf.fetchUrl("://spiderfoot.net/")
+        self.assertEqual(None, res)rfoot.net/")
         self.assertEqual(None, res)
-
         res = sf.fetchUrl("file:///etc/hosts")
+        self.assertEqual(None, res)etc/hosts")
         self.assertEqual(None, res)
-
         res = sf.fetchUrl("irc://spiderfoot.net:6697/")
+        self.assertEqual(None, res)iderfoot.net:6697/")
         self.assertEqual(None, res)
-
     def test_check_dns_wildcard_invalid_target_should_return_none(self):
+        sf = SpiderFoot(self.default_options)t_should_return_none(self):
         sf = SpiderFoot(self.default_options)
-
         invalid_types = [None, "", bytes(), list(), dict()]
-        for invalid_type in invalid_types:
+        for invalid_type in invalid_types:, list(), dict()]
             with self.subTest(invalid_type=invalid_type):
                 check_dns_wildcard = sf.checkDnsWildcard(invalid_type)
+                self.assertIsInstance(check_dns_wildcard, bool)d_type)
                 self.assertIsInstance(check_dns_wildcard, bool)
-
     def test_check_dns_wildcard_should_return_a_boolean(self):
+        sf = SpiderFoot(self.default_options)_a_boolean(self):
         sf = SpiderFoot(self.default_options)
-
         check_dns_wildcard = sf.checkDnsWildcard('local')
+        self.assertIsInstance(check_dns_wildcard, bool)')
         self.assertIsInstance(check_dns_wildcard, bool)
-
     @unittest.skip("todo")
     def test_google_iterate(self):
         sf = SpiderFoot(self.default_options)
-
+        sf = SpiderFoot(self.default_options)
         sf.googleIterate(None, None)
         self.assertEqual('TBD', 'TBD')
-
+        self.assertEqual('TBD', 'TBD')
     @unittest.skip("todo")
     def test_bing_iterate(self):
         sf = SpiderFoot(self.default_options)
-
+        sf = SpiderFoot(self.default_options)
         sf.bingIterate(None, None)
         self.assertEqual('TBD', 'TBD')
-
+        self.assertEqual('TBD', 'TBD')
     def test_main_error_handling(self):
         from sf import main
         with self.assertRaises(SystemExit) as cm:
-            main()
+            # Patch sys.argv to prevent actual execution
+            import sys
+            original_argv = sys.argv
+            try:
+                sys.argv = ['sf.py']  # Simulate no arguments
+                main()
+            finally:
+                sys.argv = original_argv
         self.assertEqual(cm.exception.code, -1)
 
     def test_start_scan_error_handling(self):
         from sf import start_scan
+        import argparse
+        
+        # Create a minimal args object that will trigger validation errors
+        args = argparse.Namespace()
+        args.s = None  # No target specified
+        args.debug = False
+        args.t = None
+        args.m = None
+        args.x = False
+        args.u = None
+        
         with self.assertRaises(SystemExit) as cm:
-            start_scan({}, {}, None, None)
+            start_scan({}, {}, args, None)
         self.assertEqual(cm.exception.code, -1)
 
     def test_start_web_server_error_handling(self):
         from sf import start_web_server
+        
+        # Use invalid configuration to trigger error
+        invalid_config = {'host': 'invalid_host', 'port': -1}
+        
         with self.assertRaises(SystemExit) as cm:
-            start_web_server({}, {})
+            start_web_server(invalid_config, {})
         self.assertEqual(cm.exception.code, -1)
 
     def test_handle_abort_error_handling(self):
         from sf import handle_abort
+        
+        with self.assertRaises(SystemExit) as cm:
+            handle_abort(None, None)
+        self.assertEqual(cm.exception.code, -1)
 
     def setUp(self):
         """Set up before each test."""
-        super().setUp()
+        super().setUp()e each test."""
         # Register event emitters if they exist
-        if hasattr(self, 'module'):
+        if hasattr(self, 'module'):f they exist
             self.register_event_emitter(self.module)
-from test.unit.utils.test_base import SpiderFootTestBase
-from test.unit.utils.test_helpers import safe_recursion
-        with self.assertRaises(SystemExit) as cm:
-            handle_abort(None, None)
+
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()
         self.assertEqual(cm.exception.code, -1)
 
     def tearDown(self):

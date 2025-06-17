@@ -1724,4 +1724,24 @@ class SpiderFoot:
 
         return None
 
-# end of SpiderFoot class
+    def loadModules(self):
+        """Load SpiderFoot modules from the modules directory."""
+        # Get the correct modules path
+        from spiderfoot import get_modules_path
+        modpath = get_modules_path()
+        
+        if not os.path.isdir(modpath):
+            self.error(f"Modules directory does not exist: {modpath}")
+            return {}
+            
+        self.info(f"Loading modules from: {modpath}")
+        
+        # Check if directory contains any module files
+        module_files = [f for f in os.listdir(modpath) if f.startswith('sfp_') and f.endswith('.py')]
+        if not module_files:
+            self.error(f"No modules found in modules directory: {modpath}")
+            return {}
+            
+        self.info(f"Found {len(module_files)} module files")
+        
+        # ...existing code...

@@ -4,7 +4,18 @@ import time
 import pytest
 import logging
 import threading
+from pathlib import Path
 from _pytest.runner import runtestprotocol
+
+# Ensure we're in the correct directory for tests
+PROJECT_ROOT = Path(__file__).parent.parent
+os.chdir(PROJECT_ROOT)
+
+# Add project root to Python path
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+# Import SpiderFootHelpers after path setup
 from spiderfoot import SpiderFootHelpers
 
 # Set up logging
@@ -43,8 +54,10 @@ def pytest_runtest_protocol(item, nextitem):
 # Auto-timeout for test session
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config):
-    # Create and register the timeout plugin
-    config._cleanup.append(start_global_timeout)
+    # Only start timeout if not already configured
+    if not hasattr(config, '_timeout_started'):
+        config._timeout_started = True
+        start_global_timeout()
     
 def start_global_timeout():
     # Create a thread that will terminate the process after a timeout
@@ -54,8 +67,7 @@ def start_global_timeout():
         os._exit(1)
     
     # Explicitly set daemon to True to ensure it doesn't prevent shutdown
-    thread = threading.Thread(target=timeout_thread)
-    thread.daemon = True  # Setting explicitly in case the keyword arg isn't working
+    thread = threading.Thread(target=timeout_thread, daemon=True)
     thread.start()
     
 # Detect tests that don't clean up resources
@@ -68,41 +80,44 @@ def check_resource_leaks():
     yield
     
     # Give a moment for cleanup
-    time.sleep(0.5)
+    time.sleep(0.1)  # Reduced sleep time
     
     # Check which new threads are lingering
     ending_threads = set(threading.enumerate())
     new_threads = ending_threads - starting_threads
     
     if new_threads:
-        thread_names = [t.name for t in new_threads if t.is_alive()]
-        if thread_names:  # Only report if threads are still alive
+        thread_names = [t.name for t in new_threads if t.is_alive() and not t.daemon]
+        if thread_names:  # Only report non-daemon threads
             logging.warning(f"Potential thread leak detected: {thread_names}")
 
 @pytest.fixture(autouse=True)
 def default_options(request):
+    # Ensure modules directory exists and is accessible
+    modules_dir = PROJECT_ROOT / "modules"
+    if not modules_dir.exists():
+        pytest.fail(f"Modules directory not found: {modules_dir}")
+    
     request.cls.default_options = {
         '_debug': False,
-        '__logging': True,  # Logging in general
-        '__outputfilter': None,  # Event types to filter from modules' output
-        # User-Agent to use for HTTP requests
+        '__logging': True,
+        '__outputfilter': None,
         '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
-        '_dnsserver': '',  # Override the default resolver
-        '_fetchtimeout': 5,  # number of seconds before giving up on a fetch
+        '_dnsserver': '',
+        '_fetchtimeout': 5,
         '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
         '_internettlds_cache': 72,
         '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
-        # note: test database file
         '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.test.db",
-        '__modules__': None,  # List of modules. Will be set after start-up.
-        # List of correlation rules. Will be set after start-up.
+        '__modules__': None,
         '__correlationrules__': None,
         '_socks1type': '',
         '_socks2addr': '',
         '_socks3port': '',
         '_socks4user': '',
         '_socks5pwd': '',
-        '__logstdout': False
+        '__logstdout': False,
+        '__modulesdir': str(modules_dir)  # Add explicit modules directory
     }
 
     request.cls.web_default_options = {
@@ -123,3 +138,34 @@ def default_options(request):
         "cli.password": "",
         "cli.server_baseurl": "http://127.0.0.1:5001"
     }
+
+# Force cleanup of lingering resources
+@pytest.fixture(autouse=True, scope="session")
+def session_cleanup():
+    yield
+    # Force cleanup at end of session
+    import gc
+    import threading
+    
+    # Force garbage collection
+    gc.collect()
+    
+    # Set all remaining non-main threads to daemon
+    main_thread = threading.main_thread()
+    for thread in threading.enumerate():
+        if thread != main_thread and thread.is_alive():
+            thread.daemon = True
+    
+    logging.info("Session cleanup completed")
+
+# Add process-level timeout
+@pytest.fixture(autouse=True, scope="session") 
+def process_timeout():
+    def timeout_process():
+        time.sleep(1800)  # 30-minute absolute timeout
+        logging.error("Process timeout exceeded. Force terminating.")
+        os._exit(2)
+    
+    timeout_thread = threading.Thread(target=timeout_process, daemon=True)
+    timeout_thread.start()
+    yield

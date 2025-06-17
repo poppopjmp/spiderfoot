@@ -10,7 +10,7 @@ from test.unit.utils.test_helpers import safe_recursion
 
 
 @pytest.mark.usefixtures
-class TestSpiderFootCli(unittest.TestCase):
+class TestSpiderFootCli(SpiderFootTestBase):  # Add missing inheritance
     """Test TestSpiderFootCli."""
 
     def test_default(self):
@@ -481,4 +481,13 @@ class TestSpiderFootCli(unittest.TestCase):
 
     def tearDown(self):
         """Clean up after each test."""
+        # Clean up any CLI instances and their resources
+        if hasattr(self, 'sfcli'):
+            try:
+                # Close any open files or connections
+                if hasattr(self.sfcli, 'cleanup'):
+                    self.sfcli.cleanup()
+                self.sfcli = None
+            except:
+                pass
         super().tearDown()

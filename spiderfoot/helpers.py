@@ -66,7 +66,23 @@ class SpiderFootHelpers():
         Returns:
             str: Path to data directory
         """
-        return str(Path.home() / '.spiderfoot')
+        # Try to determine the correct data path
+        possible_paths = [
+            Path.home() / '.spiderfoot',
+            Path('/home/spiderfoot/.spiderfoot'),
+            Path.cwd() / 'data',
+            Path(__file__).parent.parent / 'data'
+        ]
+        
+        for path in possible_paths:
+            if path.parent.exists():  # Parent must exist to create the directory
+                path.mkdir(parents=True, exist_ok=True)
+                return str(path)
+        
+        # Fallback to home directory
+        fallback = Path.home() / '.spiderfoot'
+        fallback.mkdir(parents=True, exist_ok=True)
+        return str(fallback)
         
     @staticmethod
     def cachePath() -> str:
@@ -75,7 +91,9 @@ class SpiderFootHelpers():
         Returns:
             str: Path to cache directory
         """
-        return str(Path.home() / '.spiderfoot' / 'cache')
+        cache_dir = Path(SpiderFootHelpers.dataPath()) / 'cache'
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return str(cache_dir)
         
     @staticmethod
     def logPath() -> str:
@@ -84,7 +102,7 @@ class SpiderFootHelpers():
         Returns:
             str: Path to log directory
         """
-        log_dir = Path.home() / '.spiderfoot' / 'logs'
+        log_dir = Path(SpiderFootHelpers.dataPath()) / 'logs'
         log_dir.mkdir(parents=True, exist_ok=True)
         return str(log_dir)
         
