@@ -9,12 +9,15 @@
 # Copyright:    (c) Steve Micallef 2012
 # License:      MIT
 # -----------------------------------------------------------------
+
 import csv
 import html
 import json
 import logging
 import multiprocessing as mp
+import openpyxl
 import random
+import re
 import string
 import time
 from copy import deepcopy
@@ -22,19 +25,13 @@ from io import BytesIO, StringIO
 from operator import itemgetter
 
 import cherrypy
+import secure
 from cherrypy import _cperror
-
 from mako.lookup import TemplateLookup
 from mako.template import Template
 
-import openpyxl
-
-import secure
-
 from sflib import SpiderFoot
-
 from sfscan import startSpiderFootScanner
-
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import __version__
@@ -217,8 +214,9 @@ class SpiderFootWebUi:
 
         for item in inputList:
             if not item:
-                ret.append('')
+                ret.append("")
                 continue
+            
             c = html.escape(item, True)
 
             # Decode '&' and '"' HTML entities
@@ -281,8 +279,7 @@ class SpiderFootWebUi:
         return retdata
 
     def buildExcel(self: 'SpiderFootWebUi', data: list, columnNames: list, sheetNameIndex: int = 0) -> str:
-        """Convert supplied raw data into GEXF (Graph Exchange XML Format)
-        format (e.g. for Gephi).
+        """Convert supplied raw data into Excel format.
 
         Args:
             data (list): Scan result as list
@@ -297,25 +294,23 @@ class SpiderFootWebUi:
         defaultSheet = workbook.active
         columnNames.pop(sheetNameIndex)
         allowed_sheet_chars = string.ascii_uppercase + string.digits + '_'
+        
         for row in data:
             sheetName = "".join(
                 [c for c in str(row.pop(sheetNameIndex)) if c.upper() in allowed_sheet_chars])
             try:
-                sheet = workbook[sheetName]
+                worksheet = workbook[sheetName]
             except KeyError:
-                # Create sheet
-                workbook.create_sheet(sheetName)
-                sheet = workbook[sheetName]
+                worksheet = workbook.create_sheet(sheetName)
+                rowNums[sheetName] = 1
                 # Write headers
-                for col_num, column_title in enumerate(columnNames, 1):
-                    cell = sheet.cell(row=1, column=col_num)
-                    cell.value = column_title
+                for col_num, header in enumerate(columnNames, 1):
+                    worksheet.cell(row=1, column=col_num, value=header)
                 rowNums[sheetName] = 2
 
             # Write row
             for col_num, cell_value in enumerate(row, 1):
-                cell = sheet.cell(row=rowNums[sheetName], column=col_num)
-                cell.value = cell_value
+                worksheet.cell(row=rowNums[sheetName], column=col_num, value=str(cell_value))
 
             rowNums[sheetName] += 1
 
@@ -349,25 +344,18 @@ class SpiderFootWebUi:
         dbh = SpiderFootDb(self.config)
 
         try:
-            data = dbh.scanLogs(id, None, None, True)
+            data = dbh.scanLogs(id)
         except Exception:
-            return self.error("Scan ID not found.")
+            return self.jsonify_error("404", "Scan ID not found")
 
         if not data:
-            return self.error("Scan ID not found.")
+            return self.jsonify_error("404", "No scan logs found")
 
         fileobj = StringIO()
         parser = csv.writer(fileobj, dialect=dialect)
         parser.writerow(["Date", "Component", "Type", "Event", "Event ID"])
         for row in data:
-            parser.writerow([
-                time.strftime("%Y-%m-%d %H:%M:%S",
-                              time.localtime(row[0] / 1000)),
-                str(row[1]),
-                str(row[2]),
-                str(row[3]),
-                row[4]
-            ])
+            parser.writerow([str(x) for x in row])
 
         cherrypy.response.headers[
             'Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.log.csv"
@@ -390,62 +378,34 @@ class SpiderFootWebUi:
         dbh = SpiderFootDb(self.config)
 
         try:
-            scaninfo = dbh.scanInstanceGet(id)
-            scan_name = scaninfo[0]
+            data = dbh.scanCorrelations(id)
         except Exception:
-            return json.dumps(["ERROR", "Could not retrieve info for scan."]).encode('utf-8')
+            return self.error("Scan ID not found")
 
         try:
-            correlations = dbh.scanCorrelationList(id)
+            scan = dbh.scanInstanceGet(id)
         except Exception:
-            return json.dumps(["ERROR", "Could not retrieve correlations for scan."]).encode('utf-8')
+            return self.error("Scan ID not found")
 
         headings = ["Rule Name", "Correlation", "Risk", "Description"]
 
         if filetype.lower() in ["xlsx", "excel"]:
-            rows = []
-            for row in correlations:
-                correlation = row[1]
-                rule_name = row[2]
-                rule_risk = row[3]
-                rule_description = row[5]
-                rows.append([rule_name, correlation,
-                            rule_risk, rule_description])
-
-            if scan_name:
-                fname = f"{scan_name}-SpiderFoot-correlations.xlxs"
-            else:
-                fname = "SpiderFoot-correlations.xlxs"
-
-            cherrypy.response.headers[
-                'Content-Disposition'] = f"attachment; filename={fname}"
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}-correlations.xlsx"
             cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             cherrypy.response.headers['Pragma'] = "no-cache"
-            return self.buildExcel(rows, headings, sheetNameIndex=0)
+            return self.buildExcel(data, headings)
 
         if filetype.lower() == 'csv':
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}-correlations.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            
             fileobj = StringIO()
             parser = csv.writer(fileobj, dialect=dialect)
             parser.writerow(headings)
-
-            for row in correlations:
-                correlation = row[1]
-                rule_name = row[2]
-                rule_risk = row[3]
-                rule_description = row[5]
-                parser.writerow(
-                    [rule_name, correlation, rule_risk, rule_description])
-
-            if scan_name:
-                fname = f"{scan_name}-SpiderFoot-correlations.csv"
-            else:
-                fname = "SpiderFoot-correlations.csv"
-
-            cherrypy.response.headers[
-                'Content-Disposition'] = f"attachment; filename={fname}"
-            cherrypy.response.headers['Content-Type'] = "application/csv"
-            cherrypy.response.headers['Pragma'] = "no-cache"
-            return fileobj.getvalue().encode('utf-8')
+            for row in data:
+                parser.writerow([str(x) for x in row])
+            return fileobj.getvalue()
 
         return self.error("Invalid export filetype.")
 
@@ -635,6 +595,7 @@ class SpiderFootWebUi:
                     "<SFURL>", "").replace("</SFURL>", "")
                 parser.writerow([row[0], str(row[10]), str(
                     row[3]), str(row[2]), row[11], datafield])
+
             cherrypy.response.headers['Content-Disposition'] = "attachment; filename=SpiderFoot.csv"
             cherrypy.response.headers['Content-Type'] = "application/csv"
             cherrypy.response.headers['Pragma'] = "no-cache"
@@ -1341,63 +1302,58 @@ class SpiderFootWebUi:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def modules(self: 'SpiderFootWebUi') -> list:
-        """List all modules.
+        """List all available modules.
 
         Returns:
-            list: list of modules
+            list: list of available modules
         """
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-
-        ret = list()
-
-        modinfo = list(self.config['__modules__'].keys())
-        if not modinfo:
-            return ret
-
-        modinfo.sort()
-
-        for m in modinfo:
-            if "__" in m:
+        
+        modlist = list()
+        for mod in self.config['__modules__']:
+            if "__" in mod:
                 continue
-            ret.append(
-                {'name': m, 'descr': self.config['__modules__'][m]['descr']})
-
-        return ret
+            
+            modlist.append({
+                'name': mod,
+                'descr': self.config['__modules__'][mod].get('descr', ''),
+                'provides': self.config['__modules__'][mod].get('provides', []),
+                'consumes': self.config['__modules__'][mod].get('consumes', []),
+                'group': self.config['__modules__'][mod].get('group', [])
+            })
+            
+        return sorted(modlist, key=lambda x: x['name'])
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def correlationrules(self: 'SpiderFootWebUi') -> list:
-        """List all correlation rules.
+        """List all available correlation rules.
 
         Returns:
-            list: list of correlation rules
+            list: list of available correlation rules
         """
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-
-        ret = list()
-
-        rules = self.config['__correlationrules__']
-        if not rules:
-            return ret
-
-        for r in rules:
-            ret.append({
-                'id': r['id'],
-                'name': r['meta']['name'],
-                'descr': r['meta']['description'],
-                'risk': r['meta']['risk'],
+        
+        rules = list()
+        for rule in self.config.get('__correlationrules__', []):
+            rules.append({
+                'id': rule.get('id', ''),
+                'name': rule.get('name', ''),
+                'risk': rule.get('risk', 'UNKNOWN'),
+                'description': rule.get('description', '')
             })
-
-        return ret
+            
+        return sorted(rules, key=lambda x: x['name'])
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def ping(self: 'SpiderFootWebUi') -> list:
-        """For the CLI to test connectivity to this server.
+        """Ping endpoint for health checks.
 
         Returns:
-            list: SpiderFoot version as JSON
+            list: status response
         """
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         return ["SUCCESS", __version__]
 
     @cherrypy.expose
@@ -1603,6 +1559,7 @@ class SpiderFootWebUi:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def vacuum(self):
+        """Vacuum the database."""
         dbh = SpiderFootDb(self.config)
         try:
             if dbh.vacuumDB():

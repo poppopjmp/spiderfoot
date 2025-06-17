@@ -20,7 +20,9 @@ import random
 import signal
 import sys
 import time
+import threading
 from copy import deepcopy
+from pathlib import Path
 
 import cherrypy
 import cherrypy_cors
@@ -84,6 +86,33 @@ sfOptdescs = {
 
 
 def main() -> None:
+    """Main function to start SpiderFoot application."""
+    
+    # Check Python version first
+    if sys.version_info < (3, 9):
+        print("SpiderFoot requires Python 3.9 or higher.")
+        sys.exit(-1)
+
+    # Check for legacy database files
+    if os.path.exists('spiderfoot.db'):
+        print(
+            f"ERROR: spiderfoot.db file exists in {os.path.dirname(__file__)}")
+        print("SpiderFoot no longer supports loading the spiderfoot.db database from the application directory.")
+        print(
+            f"The database is now loaded from your home directory: {Path.home()}/.spiderfoot/spiderfoot.db")
+        print(
+            f"This message will go away once you move or remove spiderfoot.db from {os.path.dirname(__file__)}")
+        sys.exit(-1)
+
+    # Check for legacy passwd files
+    if os.path.exists('passwd'):
+        print(f"ERROR: passwd file exists in {os.path.dirname(__file__)}")
+        print("SpiderFoot no longer supports loading credentials from the application directory.")
+        print(
+            f"The passwd file is now loaded from your home directory: {Path.home()}/.spiderfoot/passwd")
+        print(
+            f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
+        sys.exit(-1)
 
     try:
         # web server config
@@ -94,12 +123,29 @@ def main() -> None:
             'cors_origins': [],
         }
 
+        # FastAPI server config
+        sfApiConfig = {
+            'host': '127.0.0.1',
+            'port': 8001,
+            'workers': 1,
+            'log_level': 'info',
+            'reload': False
+        }
+
         p = argparse.ArgumentParser(
-            description=f"SpiderFoot {__version__}: Open Source Intelligence Automation.")  # Define p first
+            description=f"SpiderFoot {__version__}: Open Source Intelligence Automation.")
         p.add_argument("-d", "--debug", action='store_true',
                        help="Enable debug output.")
         p.add_argument("-l", "--listen", metavar="IP:port",
                        help="IP and port to listen on.")
+        p.add_argument("--api", action='store_true',
+                       help="Start FastAPI server instead of web UI.")
+        p.add_argument("--api-listen", metavar="IP:port",
+                       help="IP and port for FastAPI server to listen on.")
+        p.add_argument("--api-workers", type=int, default=1,
+                       help="Number of FastAPI worker processes.")
+        p.add_argument("--both", action='store_true',
+                       help="Start both web UI and FastAPI servers.")
         p.add_argument("-m", metavar="mod1,mod2,...",
                        type=str, help="Modules to enable.")
         p.add_argument("-M", "--modules", action='store_true',
@@ -134,15 +180,13 @@ def main() -> None:
                        help="Disable logging. This will also hide errors!")
         p.add_argument("-V", "--version", action='store_true',
                        help="Display the version of SpiderFoot and exit.")
-        p.add_argument("-max-threads", type=int,
+        p.add_argument("--max-threads", type=int,
                        help="Max number of modules to run concurrently.")
 
-        args = p.parse_args()  # Parse arguments after defining p
+        args = p.parse_args()
 
         if args.version:
-            # Removed f-string as no place holders are used.
-            print(
-                f"SpiderFoot {__version__}: Open Source Intelligence Automation.")
+            print(f"SpiderFoot {__version__}: Open Source Intelligence Automation.")
             sys.exit(0)
 
         if args.max_threads:
@@ -177,8 +221,7 @@ def main() -> None:
             log.critical(f"No modules found in modules directory: {mod_dir}")
             sys.exit(-1)
 
-        # Load each correlation rule in the correlations directory with
-        # a .yaml extension
+        # Load correlation rules
         try:
             correlations_dir = os.path.dirname(
                 os.path.abspath(__file__)) + '/correlations/'
@@ -196,7 +239,7 @@ def main() -> None:
             log.critical(f"Failed to initialize database: {e}", exc_info=True)
             sys.exit(-1)
 
-        # Sanity-check the rules and parse them
+        # Process correlation rules
         sfCorrelationRules = list()
         if not correlationRulesRaw:
             log.error(
@@ -210,10 +253,11 @@ def main() -> None:
                     f"Failure initializing correlation rules: {e}", exc_info=True)
                 sys.exit(-1)
 
-        # Add modules and correlation rules to sfConfig so they can be used elsewhere
+        # Add modules and correlation rules to sfConfig
         sfConfig['__modules__'] = sfModules
         sfConfig['__correlationrules__'] = sfCorrelationRules
 
+        # Handle different execution modes
         if args.correlate:
             if not correlationRulesRaw:
                 log.error(
@@ -260,14 +304,29 @@ def main() -> None:
                 sys.exit(-1)
 
             sfWebUiConfig['host'] = host
-            sfWebUiConfig['port'] = port
+            sfWebUiConfig['port'] = int(port)
 
-            start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
+            if args.both:
+                start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue)
+            else:
+                start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
+            sys.exit(0)
+
+        if args.api:
+            start_fastapi_server(sfApiConfig, sfConfig, loggingQueue)
+            sys.exit(0)
+
+        if args.both:
+            start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue)
             sys.exit(0)
 
         start_scan(sfConfig, sfModules, args, loggingQueue)
+        
+    except KeyboardInterrupt:
+        print("\nInterrupted by user")
+        sys.exit(0)
     except Exception as e:
-        log.critical(f"Unhandled exception in main: {e}", exc_info=True)
+        print(f"Fatal error: {e}")
         sys.exit(-1)
 
 
@@ -532,6 +591,137 @@ def execute_scan(loggingQueue, target, targetType, modlist, cfg, log):
             sys.exit(0)
 
 
+def start_fastapi_server(sfApiConfig: dict, sfConfig: dict, loggingQueue=None) -> None:
+    """Start the FastAPI server.
+
+    Args:
+        sfApiConfig (dict): FastAPI server options
+        sfConfig (dict): SpiderFoot config options
+        loggingQueue (Queue): main SpiderFoot logging queue
+    """
+    try:
+        log = logging.getLogger(f"spiderfoot.{__name__}")
+
+        # Check if FastAPI dependencies are available
+        try:
+            import uvicorn
+            import fastapi
+        except ImportError:
+            log.error("FastAPI dependencies not found. Please install with: pip install fastapi uvicorn")
+            sys.exit(-1)
+
+        api_host = sfApiConfig.get('host', '127.0.0.1')
+        api_port = sfApiConfig.get('port', 8001)
+        api_workers = sfApiConfig.get('workers', 1)
+        api_log_level = sfApiConfig.get('log_level', 'info')
+        api_reload = sfApiConfig.get('reload', False)
+
+        log.info(f"Starting FastAPI server at {api_host}:{api_port} ...")
+
+        # Check if sfapi.py exists
+        sfapi_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sfapi.py')
+        if not os.path.exists(sfapi_path):
+            log.error("sfapi.py not found. Please ensure the FastAPI module is available.")
+            sys.exit(-1)
+
+        print("")
+        print("*************************************************************")
+        print(" SpiderFoot FastAPI server is starting...")
+        print(f" API will be available at: http://{api_host}:{api_port}")
+        print(f" API documentation at: http://{api_host}:{api_port}/api/docs")
+        print("*************************************************************")
+        print("")
+
+        # Run FastAPI server
+        uvicorn.run(
+            "sfapi:app",
+            host=api_host,
+            port=api_port,
+            workers=api_workers,
+            log_level=api_log_level,
+            reload=api_reload,
+            access_log=True
+        )
+
+    except Exception as e:
+        log.critical(f"Unhandled exception in start_fastapi_server: {e}", exc_info=True)
+        sys.exit(-1)
+
+
+def start_both_servers(sfWebUiConfig: dict, sfApiConfig: dict, sfConfig: dict, loggingQueue=None) -> None:
+    """Start both the web UI and FastAPI servers concurrently.
+
+    Args:
+        sfWebUiConfig (dict): web server options
+        sfApiConfig (dict): FastAPI server options
+        sfConfig (dict): SpiderFoot config options
+        loggingQueue (Queue): main SpiderFoot logging queue
+    """
+    try:
+        log = logging.getLogger(f"spiderfoot.{__name__}")
+
+        # Check if FastAPI dependencies are available
+        try:
+            import uvicorn
+            import fastapi
+        except ImportError:
+            log.error("FastAPI dependencies not found. Please install with: pip install fastapi uvicorn")
+            log.info("Starting only the web UI server...")
+            start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
+            return
+
+        web_host = sfWebUiConfig.get('host', '127.0.0.1')
+        web_port = sfWebUiConfig.get('port', 5001)
+        api_host = sfApiConfig.get('host', '127.0.0.1')
+        api_port = sfApiConfig.get('port', 8001)
+
+        log.info(f"Starting both servers - Web UI: {web_host}:{web_port}, API: {api_host}:{api_port}")
+
+        print("")
+        print("*************************************************************")
+        print(" SpiderFoot is starting both servers...")
+        print(f" Web UI: http://{web_host}:{web_port}")
+        print(f" FastAPI: http://{api_host}:{api_port}")
+        print(f" API Docs: http://{api_host}:{api_port}/api/docs")
+        print("*************************************************************")
+        print("")
+
+        # Start FastAPI server in a separate thread
+        def run_fastapi():
+            try:
+                # Check if sfapi.py exists
+                sfapi_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sfapi.py')
+                if not os.path.exists(sfapi_path):
+                    log.error("sfapi.py not found. FastAPI server will not start.")
+                    return
+
+                uvicorn.run(
+                    "sfapi:app",
+                    host=api_host,
+                    port=api_port,
+                    workers=1,  # Use single worker when running alongside CherryPy
+                    log_level=sfApiConfig.get('log_level', 'info'),
+                    reload=False,  # Disable reload when running alongside CherryPy
+                    access_log=True
+                )
+            except Exception as e:
+                log.error(f"FastAPI server error: {e}")
+
+        # Start FastAPI in background thread
+        fastapi_thread = threading.Thread(target=run_fastapi, daemon=True)
+        fastapi_thread.start()
+
+        # Give FastAPI a moment to start
+        time.sleep(2)
+
+        # Start CherryPy web server (this will block)
+        start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
+
+    except Exception as e:
+        log.critical(f"Unhandled exception in start_both_servers: {e}", exc_info=True)
+        sys.exit(-1)
+
+
 def start_web_server(sfWebUiConfig: dict, sfConfig: dict, loggingQueue=None) -> None:
     """Start the web server so you can start looking at results.
 
@@ -694,35 +884,13 @@ def handle_abort(signal, frame) -> None:
 
 
 if __name__ == '__main__':
-    if sys.version_info < (3, 9):
-        print("SpiderFoot requires Python 3.9 or higher.")
-        sys.exit(-1)
-
     if len(sys.argv) <= 1:
-        print("SpiderFoot requires -l <ip>:<port> to start the web server. Try --help for guidance.")
-        sys.exit(-1)
-
-    # TODO: remove this after a few releases (added in 3.5 pre-release 2021-09-05)
-    from pathlib import Path
-    if os.path.exists('spiderfoot.db'):
-        print(
-            f"ERROR: spiderfoot.db file exists in {os.path.dirname(__file__)}")
-        print("SpiderFoot no longer supports loading the spiderfoot.db database from the application directory.")
-        print(
-            f"The database is now loaded from your home directory: {Path.home()}/.spiderfoot/spiderfoot.db")
-        print(
-            f"This message will go away once you move or remove spiderfoot.db from {os.path.dirname(__file__)}")
-        sys.exit(-1)
-
-    # TODO: remove this after a few releases (added in 3.5 pre-release 2021-09-05)
-    from pathlib import Path
-    if os.path.exists('passwd'):
-        print(f"ERROR: passwd file exists in {os.path.dirname(__file__)}")
-        print("SpiderFoot no longer supports loading credentials from the application directory.")
-        print(
-            f"The passwd file is now loaded from your home directory: {Path.home()}/.spiderfoot/passwd")
-        print(
-            f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
+        print("SpiderFoot usage:")
+        print("  Web UI:       python sf.py -l <ip>:<port>")
+        print("  FastAPI:      python sf.py --api [--api-listen <ip>:<port>]")
+        print("  Both servers: python sf.py --both [-l <ip>:<port>] [--api-listen <ip>:<port>]")
+        print("  CLI scan:     python sf.py -s <target> [options]")
+        print("Try --help for full guidance.")
         sys.exit(-1)
 
     main()

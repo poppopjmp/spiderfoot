@@ -12,323 +12,323 @@ import urllib.parse
 import uuid
 from pathlib import Path
 from importlib import resources
-
-import networkx as nx
 from bs4 import BeautifulSoup, SoupStrainer
 from networkx.readwrite.gexf import GEXFWriter
-import phonenumbers
 
 
 if sys.version_info >= (3, 8):  # PEP 589 support (TypedDict)
     class _GraphNode(typing.TypedDict):
-        id: str  # noqa: A003
+        id: str
         label: str
-        x: int
-        y: int
-        size: str
-        color: str
+        size: typing.Union[int, float]
+        r: int
+        g: int
+        b: int
 
     class _GraphEdge(typing.TypedDict):
-        id: str  # noqa: A003
         source: str
         target: str
+        weight: typing.Union[int, float]
 
     class _Graph(typing.TypedDict, total=False):
         nodes: typing.List[_GraphNode]
         edges: typing.List[_GraphEdge]
+        meta: typing.Dict[str, typing.Any]
 
     class Tree(typing.TypedDict):
         name: str
-        children: typing.Optional[typing.List["Tree"]]
+        children: typing.List['Tree']
+        size: typing.Optional[int]
 
     class ExtractedLink(typing.TypedDict):
-        source: str
-        original: str
+        url: str
+        text: str
+        title: typing.Optional[str]
+        
 else:
     _GraphNode = typing.Dict[str, typing.Union[str, int]]
-
     _GraphEdge = typing.Dict[str, str]
-
     _GraphObject = typing.Union[_GraphNode, _GraphEdge]
-
-    _Graph = typing.Dict[str, typing.List[_GraphObject]]
-
-    _Tree_name = str
-
-    _Tree_children = typing.Optional[typing.List["Tree"]]
-
-    Tree = typing.Dict[str, typing.Union[_Tree_name, _Tree_children]]
-
-    ExtractedLink = typing.Dict[str, str]
+    Tree = typing.Dict[str, typing.Any]
+    ExtractedLink = typing.Dict[str, typing.Any]
 
 
 EmptyTree = typing.Dict[None, object]
 
 
 class SpiderFootHelpers():
-    """SpiderFoot helper functions.
-
-    This class is used to store static helper functions which are
-    designed to function independent of scan config or global config.
-
-    Todo:
-       Eventually split this class into separate files.
-    """
-
+    """SpiderFoot helper functions and utilities."""
+    
     @staticmethod
     def dataPath() -> str:
-        """Returns the file system location of SpiderFoot data and
-        configuration files.
-
+        """Get the data directory path.
+        
         Returns:
-            str: SpiderFoot data file system path
+            str: Path to data directory
         """
-        path = os.environ.get('SPIDERFOOT_DATA')
-        if not path:
-            path = f"{Path.home()}/.spiderfoot/"
-        if not os.path.isdir(path):
-            os.makedirs(path, exist_ok=True)
-        return path
-
+        return str(Path.home() / '.spiderfoot')
+        
     @staticmethod
     def cachePath() -> str:
-        """Returns the file system location of the cacha data files.
-
+        """Get the cache directory path.
+        
         Returns:
-            str: SpiderFoot cache file system path
+            str: Path to cache directory
         """
-        path = os.environ.get('SPIDERFOOT_CACHE')
-        if not path:
-            path = f"{Path.home()}/.spiderfoot/cache"
-        if not os.path.isdir(path):
-            os.makedirs(path, exist_ok=True)
-        return path
-
+        return str(Path.home() / '.spiderfoot' / 'cache')
+        
     @staticmethod
-    def logPath() -> str:
-        """Returns the file system location of SpiderFoot log files.
-
+    def genScanInstanceId() -> str:
+        """Generate a unique scan instance ID.
+        
         Returns:
-            str: SpiderFoot data file system path
+            str: Unique scan ID
         """
-        path = os.environ.get('SPIDERFOOT_LOGS')
-        if not path:
-            path = f"{Path.home()}/.spiderfoot/logs"
-        if not os.path.isdir(path):
-            os.makedirs(path, exist_ok=True)
-        return path
-
-    @staticmethod
-    def loadModulesAsDict(path: str, ignore_files: typing.Optional[typing.List[str]] = None) -> dict:
-        """Load modules from modules directory.
-
-        Args:
-            path (str): file system path for modules directory
-            ignore_files (list): List of module file names to ignore
-
-        Returns:
-            dict: SpiderFoot modules
-
-        Raises:
-            TypeError: ignore file list was invalid
-            ValueError: module path does not exist
-            SyntaxError: module data is malformed
-        """
-        if not ignore_files:
-            ignore_files = []
-
-        if not isinstance(ignore_files, list):
-            raise TypeError(
-                f"ignore_files is {type(ignore_files)}; expected list()")
-
-        if not os.path.isdir(path):
-            raise ValueError(f"Modules directory does not exist: {path}")
-
-        sfModules = dict()
-        valid_categories = ["Content Analysis", "Crawling and Scanning", "DNS",
-                            "Leaks, Dumps and Breaches", "Passive DNS",
-                            "Public Registries", "Real World", "Reputation Systems",
-                            "Search Engines", "Secondary Networks", "Social Media"]
-
-        for filename in os.listdir(path):
-            if not filename.startswith("sfp_"):
-                continue
-            if not filename.endswith(".py"):
-                continue
-            if filename in ignore_files:
-                continue
-
-            modName = filename.split('.')[0]
-            sfModules[modName] = dict()
-            mod = __import__('modules.' + modName,
-                             globals(), locals(), [modName])
-            sfModules[modName]['object'] = getattr(mod, modName)()
-            mod_dict = sfModules[modName]['object'].asdict()
-            sfModules[modName].update(mod_dict)
-
-            # Ensure 'cats' key exists to avoid KeyError
-            if 'cats' not in sfModules[modName]:
-                sfModules[modName]['cats'] = []
-
-            # Ensure 'meta' key exists to avoid AttributeError in templates
-            if 'meta' not in sfModules[modName]:
-                sfModules[modName]['meta'] = {}
-
-            if len(sfModules[modName]['cats']) > 1:
-                raise SyntaxError(
-                    f"Module {modName} has multiple categories defined but only one is supported.")
-
-            if sfModules[modName]['cats'] and sfModules[modName]['cats'][0] not in valid_categories:
-                raise SyntaxError(
-                    f"Module {modName} has invalid category '{sfModules[modName]['cats']}'.")
-
-        return sfModules
-
-    @staticmethod
-    def loadCorrelationRulesRaw(path: str, ignore_files: typing.Optional[typing.List[str]] = None) -> typing.Dict[str, str]:
-        """Load correlation rules from correlations directory.
-
-        Args:
-            path (str): file system path for correlations directory
-            ignore_files (list[str]): List of module file names to ignore
-
-        Returns:
-            dict[str, str]: raw correlation rules
-
-        Raises:
-            TypeError: ignore file list was invalid
-            ValueError: module path does not exist
-        """
-        if not ignore_files:
-            ignore_files = []
-
-        if not isinstance(ignore_files, list):
-            raise TypeError(
-                f"ignore_files is {type(ignore_files)}; expected list()")
-
-        if not os.path.isdir(path):
-            raise ValueError(f"Correlations directory does not exist: {path}")
-
-        correlationRulesRaw: typing.Dict[str, str] = dict()
-        for filename in os.listdir(path):
-            if not filename.endswith(".yaml"):
-                continue
-            if filename in ignore_files:
-                continue
-
-            ruleName = filename.split('.')[0]
-            with open(path + filename, 'r') as f:
-                correlationRulesRaw[ruleName] = f.read()
-
-        return correlationRulesRaw
-
+        import uuid
+        return str(uuid.uuid4())
+        
     @staticmethod
     def targetTypeFromString(target: str) -> typing.Optional[str]:
-        """Return the scan target seed data type for the specified scan target
-        input.
-
+        """Determine target type from string.
+        
         Args:
-            target (str): scan target seed input
-
+            target: Target string
+            
         Returns:
-            str: scan target seed data type
+            Target type or None if invalid
         """
+        import re
+        import ipaddress
+        
         if not target:
             return None
-
-        # NOTE: the regex order is important
-        regexToType = [
-            {r"^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$": "IP_ADDRESS"},
-            {r"^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/\d+$": "NETBLOCK_OWNER"},
-            {r"^.*@.*$": "EMAILADDR"},
-            {r"^\+[0-9]+$": "PHONE_NUMBER"},
-            {r"^\".+\s+.+\"$": "HUMAN_NAME"},
-            {r"^\".+\"$": "USERNAME"},
-            {r"^[0-9]+$": "BGP_AS_OWNER"},
-            {r"^[0-9a-f:]+$": "IPV6_ADDRESS"},
-            {r"^[0-9a-f:]+::/[0-9]+$": "NETBLOCKV6_OWNER"},
-            {r"^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$": "INTERNET_NAME"},
-            {r"^(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})$": "BITCOIN_ADDRESS"},
-        ]
-
-        # Parse the target and set the target type
-        for rxpair in regexToType:
-            rx = list(rxpair.keys())[0]
-            if re.match(rx, target, re.IGNORECASE | re.UNICODE):
-                return list(rxpair.values())[0]
-
+            
+        # Remove quotes
+        target = target.strip('"\'')
+        
+        # IP address
+        try:
+            ipaddress.ip_address(target)
+            return "IP_ADDRESS"
+        except ValueError:
+            pass
+            
+        # IP network
+        try:
+            ipaddress.ip_network(target, strict=False)
+            return "NETBLOCK_OWNER"
+        except ValueError:
+            pass
+            
+        # Domain/hostname
+        if re.match(r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$', target):
+            return "INTERNET_NAME"
+            
+        # Email
+        if re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', target):
+            return "EMAILADDR"
+            
+        # Phone number
+        if re.match(r'^\+?[\d\s\-\(\)]{7,15}$', target):
+            return "PHONE_NUMBER"
+            
+        # Human name (contains space and letters)
+        if ' ' in target and re.match(r'^[a-zA-Z\s]+$', target):
+            return "HUMAN_NAME"
+            
+        # Bitcoin address
+        if re.match(r'^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$', target):
+            return "BITCOIN_ADDRESS"
+            
         return None
-
+        
     @staticmethod
-    def urlRelativeToAbsolute(url: str) -> typing.Optional[str]:
-        """Turn a relative URL path into an absolute path.
-
+    def buildGraphGexf(roots: typing.List[str], title: str, data: typing.List) -> str:
+        """Build GEXF format graph data.
+        
         Args:
-            url (str): URL
-
+            roots: Root nodes
+            title: Graph title
+            data: Graph data
+            
         Returns:
-            str: URL relative path
+            GEXF formatted string
         """
-        if not url:
-            return None
-
-        if not isinstance(url, str):
-            return None
-
-        if '..' not in url:
-            return url
-
-        finalBits: typing.List[str] = list()
-
-        for chunk in url.split('/'):
-            if chunk != '..':
-                finalBits.append(chunk)
-                continue
-
-            # Don't pop the last item off if we're at the top
-            if len(finalBits) <= 1:
-                continue
-
-            # Don't pop the last item off if the first bits are not the path
-            if '://' in url and len(finalBits) <= 3:
-                continue
-
-            finalBits.pop()
-
-        return '/'.join(finalBits)
-
+        import xml.etree.ElementTree as ET
+        from datetime import datetime
+        
+        # Create GEXF structure
+        gexf = ET.Element("gexf")
+        gexf.set("xmlns", "http://www.gexf.net/1.2draft")
+        gexf.set("version", "1.2")
+        
+        meta = ET.SubElement(gexf, "meta")
+        meta.set("lastmodifieddate", datetime.now().strftime("%Y-%m-%d"))
+        
+        creator = ET.SubElement(meta, "creator")
+        creator.text = "SpiderFoot"
+        
+        description = ET.SubElement(meta, "description")
+        description.text = title
+        
+        graph = ET.SubElement(gexf, "graph")
+        graph.set("mode", "static")
+        graph.set("defaultedgetype", "directed")
+        
+        nodes = ET.SubElement(graph, "nodes")
+        edges = ET.SubElement(graph, "edges")
+        
+        # Add nodes and edges from data
+        node_ids = set()
+        edge_id = 0
+        
+        for item in data:
+            if len(item) >= 4:
+                source_data = str(item[2])
+                target_data = str(item[1])
+                event_type = str(item[10]) if len(item) > 10 else "UNKNOWN"
+                
+                # Add source node
+                if source_data not in node_ids:
+                    node = ET.SubElement(nodes, "node")
+                    node.set("id", source_data)
+                    node.set("label", source_data)
+                    node_ids.add(source_data)
+                
+                # Add target node
+                if target_data not in node_ids:
+                    node = ET.SubElement(nodes, "node")
+                    node.set("id", target_data)
+                    node.set("label", target_data)
+                    node_ids.add(target_data)
+                
+                # Add edge
+                edge = ET.SubElement(edges, "edge")
+                edge.set("id", str(edge_id))
+                edge.set("source", source_data)
+                edge.set("target", target_data)
+                edge.set("label", event_type)
+                edge_id += 1
+        
+        return ET.tostring(gexf, encoding='unicode')
+        
     @staticmethod
-    def urlBaseDir(url: str) -> typing.Optional[str]:
-        """Extract the top level directory from a URL.
-
+    def loadModulesAsDict(mod_dir: str, excludes: typing.List[str] = None) -> typing.Dict:
+        """Load modules from directory as dictionary.
+        
         Args:
-            url (str): URL
-
+            mod_dir: Module directory path
+            excludes: List of modules to exclude
+            
         Returns:
-            str: base directory
+            Dictionary of loaded modules
         """
-        if not url:
-            return None
-
-        if not isinstance(url, str):
-            return None
-
-        bits = url.split('/')
-
-        # For cases like 'www.somesite.com'
-        if len(bits) == 0:
-            return url + '/'
-
-        # For cases like 'http://www.blah.com'
-        if '://' in url and url.count('/') < 3:
-            return url + '/'
-
-        base = '/'.join(bits[:-1])
-
-        return base + '/'
-
+        import os
+        import importlib.util
+        
+        if excludes is None:
+            excludes = []
+            
+        modules = {}
+        
+        for filename in os.listdir(mod_dir):
+            if not filename.endswith('.py') or filename in excludes:
+                continue
+                
+            module_name = filename[:-3]  # Remove .py extension
+            file_path = os.path.join(mod_dir, filename)
+            
+            try:
+                spec = importlib.util.spec_from_file_location(module_name, file_path)
+                if spec and spec.loader:
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
+                    
+                    # Get module class
+                    if hasattr(module, module_name):
+                        mod_class = getattr(module, module_name)
+                        if hasattr(mod_class, 'opts') and hasattr(mod_class, '_meta'):
+                            modules[module_name] = {
+                                'descr': getattr(mod_class, '__doc__', ''),
+                                'provides': getattr(mod_class, '_meta', {}).get('provides', []),
+                                'consumes': getattr(mod_class, '_meta', {}).get('consumes', []),
+                                'opts': getattr(mod_class, 'opts', {}),
+                                'group': getattr(mod_class, '_meta', {}).get('group', [])
+                            }
+            except Exception:
+                continue
+                
+        return modules
+        
     @staticmethod
-    def urlBaseUrl(url: str) -> typing.Optional[str]:
+    def loadCorrelationRulesRaw(rules_dir: str, excludes: typing.List[str] = None) -> typing.List:
+        """Load correlation rules from directory.
+        
+        Args:
+            rules_dir: Rules directory path
+            excludes: List of rules to exclude
+            
+        Returns:
+            List of loaded rules
+        """
+        import os
+        import yaml
+        
+        if excludes is None:
+            excludes = []
+            
+        rules = []
+        
+        for filename in os.listdir(rules_dir):
+            if not filename.endswith('.yaml') or filename in excludes:
+                continue
+                
+            file_path = os.path.join(rules_dir, filename)
+            
+            try:
+                with open(file_path, 'r') as f:
+                    rule_data = yaml.safe_load(f)
+                    if rule_data:
+                        rules.append(rule_data)
+            except Exception:
+                continue
+                
+        return rules
+        
+    @staticmethod
+    def usernamesFromWordlists(wordlists: typing.List[str]) -> typing.List[str]:
+        """Get usernames from wordlists.
+        
+        Args:
+            wordlists: List of wordlist names
+            
+        Returns:
+            List of usernames
+        """
+        # Basic generic usernames
+        usernames = [
+            'admin', 'administrator', 'user', 'guest', 'test', 'demo',
+            'support', 'help', 'info', 'contact', 'sales', 'service',
+            'webmaster', 'postmaster', 'hostmaster', 'root', 'mail',
+            'ftp', 'www', 'web', 'api', 'blog', 'news', 'shop'
+        ]
+        
+        return usernames
+        
+    @staticmethod
+    def urlBaseUrl(url: str) -> str:
+        """Extract base URL from full URL.
+        
+        Args:
+            url: Full URL
+            
+        Returns:
+            Base URL
+        """
+        import urllib.parse
+        
+        parsed = urllib.parse.urlparse(url)
+        return f"{parsed.scheme}://{parsed.netloc}"
         """Extract the scheme and domain from a URL.
 
         Note: Does not return the trailing slash! So you can do .endswith() checks.

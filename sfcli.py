@@ -54,7 +54,7 @@ class bcolors:
 
 
 class SpiderFootCli(cmd.Cmd):
-    version = "5.0.1"
+    version = "5.1.0"  # Update to match VERSION file
     pipecmd = None
     output = None
     modules = []

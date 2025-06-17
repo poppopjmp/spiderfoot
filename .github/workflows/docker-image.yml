@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, "dev-5.1.0"]
   pull_request:
     branches: [master]
 
@@ -37,7 +37,6 @@ jobs:
         file: Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}:v5.0.3
           ghcr.io/${{ github.repository }}:${{ github.sha }}
     - name: Trivy vulnerability scan
       uses: aquasecurity/trivy-action@master

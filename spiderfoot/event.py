@@ -1,9 +1,22 @@
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------------------
+# Name:         event
+# Purpose:      SpiderFoot event class
+#
+# Author:      Steve Micallef <steve@binarypool.com>
+#
+# Created:     26/03/2012
+# Copyright:   (c) Steve Micallef 2012
+# Licence:     MIT
+# -------------------------------------------------------------------------------
+
 import hashlib
 import random
 import time
+from typing import Optional
 
 
-class SpiderFootEvent():
+class SpiderFootEvent:
     """SpiderFootEvent object representing identified data and associated meta
     data.
 
@@ -345,5 +358,124 @@ class SpiderFootEvent():
             evtDict['source'] = self.sourceEvent.data
 
         return evtDict
+
+    def __str__(self) -> str:
+        """String representation of the event.
+
+        Returns:
+            String representation
+        """
+        return f"{self.eventType}: {self.data}"
+
+    def __repr__(self) -> str:
+        """Detailed string representation.
+
+        Returns:
+            Detailed representation
+        """
+        return f"SpiderFootEvent(type='{self.eventType}', data='{self.data}', module='{self.module}')"
+
+    def __eq__(self, other) -> bool:
+        """Check equality with another event.
+
+        Args:
+            other: Other event to compare
+
+        Returns:
+            True if events are equal
+        """
+        if not isinstance(other, SpiderFootEvent):
+            return False
+        return self.hash == other.hash
+
+    def __hash__(self) -> int:
+        """Get hash of the event.
+
+        Returns:
+            Hash value
+        """
+        return hash(self.hash)
+
+    def setSourceEventHash(self, eventHash: str):
+        """Set the source event hash.
+
+        Args:
+            eventHash: Hash of source event
+        """
+        if self.sourceEvent:
+            self.sourceEvent.hash = eventHash
+
+    def setActualSource(self, source: str):
+        """Set the actual source of this event.
+
+        Args:
+            source: Actual source description
+        """
+        self.actualSource = source
+
+    def setFalsePositive(self, fp: bool = True):
+        """Mark this event as a false positive.
+
+        Args:
+            fp: True if false positive
+        """
+        self.falsePositive = fp
+
+    def getCreated(self) -> float:
+        """Get creation timestamp.
+
+        Returns:
+            Creation timestamp
+        """
+        return self.created
+
+    def getHash(self) -> str:
+        """Get event hash.
+
+        Returns:
+            Event hash
+        """
+        return self.hash
+
+    def getData(self) -> str:
+        """Get event data.
+
+        Returns:
+            Event data
+        """
+        return self.eventData
+
+    def getType(self) -> str:
+        """Get event type.
+
+        Returns:
+            Event type
+        """
+        return self.eventType
+
+    def getModule(self) -> str:
+        """Get generating module.
+
+        Returns:
+            Module name
+        """
+        return self.module
+
+    def getSourceEvent(self) -> Optional['SpiderFootEvent']:
+        """Get source event.
+
+        Returns:
+            Source event or None
+        """
+        return self.sourceEvent
+
+    def getConfidence(self) -> int:
+        """Get confidence level.
+
+        Returns:
+            Confidence level (0-100)
+        """
+        return self.confidence
+
 
 # end of SpiderFootEvent class

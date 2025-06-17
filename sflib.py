@@ -370,20 +370,8 @@ class SpiderFoot:
 
     def configUnserialize(self, opts: dict, referencePoint: dict, filterSystem: bool = True):
         """Take strings, etc. from the database or UI and convert them to a
-        dictionary for Python to process.
-
-        Args:
-            opts (dict): SpiderFoot configuration options
-            referencePoint (dict): needed to know the actual types the options are supposed to be.
-            filterSystem (bool): Ignore global "system" configuration options
-
-        Returns:
-            dict: TBD
-
-        Raises:
-            TypeError: arg type was invalid
-        """
-
+        dictionary for Python to process."""
+        
         if not isinstance(opts, dict):
             raise TypeError(f"opts is {type(opts)}; expected dict()")
         if not isinstance(referencePoint, dict):
@@ -431,6 +419,7 @@ class SpiderFoot:
             raise TypeError(
                 f"referencePoint['__modules__'] is {type(referencePoint['__modules__'])}; expected dict()")
 
+        # Initialize modules structure properly
         if '__modules__' in referencePoint:
             if '__modules__' not in returnOpts:
                 returnOpts['__modules__'] = dict()
@@ -441,16 +430,17 @@ class SpiderFoot:
 
                 # Check if 'opts' key exists before trying to access it
                 if 'opts' in referencePoint['__modules__'][modName]:
+                    if 'opts' not in returnOpts['__modules__'][modName]:
+                        returnOpts['__modules__'][modName]['opts'] = dict()
+                    
                     for opt in referencePoint['__modules__'][modName]['opts']:
-                        returnOpts['__modules__'][modName][opt] = referencePoint['__modules__'][modName]['opts'][opt]
+                        returnOpts['__modules__'][modName]['opts'][opt] = referencePoint['__modules__'][modName]['opts'][opt]
                 else:
                     # Initialize an empty 'opts' dictionary if it doesn't exist
                     returnOpts['__modules__'][modName]['opts'] = dict()
 
-        # Module options
-        # A lot of mess to handle typing..
+        # Module options processing
         for modName in referencePoint['__modules__']:
-            # Check if 'opts' exists in the module configuration
             if 'opts' not in referencePoint['__modules__'][modName]:
                 continue
 
