@@ -17,5 +17,27 @@ __url__ = "https://github.com/poppopjmp/spiderfoot"
 from .db import SpiderFootDb
 from .event import SpiderFootEvent
 from .helpers import SpiderFootHelpers
+from .plugin import SpiderFootPlugin
+from .target import SpiderFootTarget
+from .threadpool import SpiderFootThreadPool
+from .correlation import SpiderFootCorrelator
 
-__all__ = ['SpiderFootDb', 'SpiderFootEvent', 'SpiderFootHelpers', '__version__']
+# Logger import - assuming it exists in the package
+try:
+    from .logger import logger
+except ImportError:
+    # Fallback if logger module doesn't exist
+    import logging
+    logger = logging.getLogger(__name__)
+
+__all__ = [
+    'SpiderFootDb', 
+    'SpiderFootEvent', 
+    'SpiderFootHelpers', 
+    'SpiderFootPlugin',
+    'SpiderFootTarget',
+    'SpiderFootThreadPool',
+    'SpiderFootCorrelator',
+    'logger',
+    '__version__'
+]
