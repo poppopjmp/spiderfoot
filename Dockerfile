@@ -83,11 +83,10 @@ RUN pip install --no-cache-dir -U pip==25.0.1 && pip install --no-cache-dir -r r
 COPY . .
 RUN chown -R spiderfoot:spiderfoot /home/spiderfoot \
     && chmod +x /home/spiderfoot/sf.py
-
+COPY modules /home/spiderfoot/modules
 # Create logs directory in SpiderFoot home and set permissions
 RUN mkdir -p /home/spiderfoot/.spiderfoot/logs \
     && mkdir -p /home/spiderfoot/.spiderfoot/cache \
-    && mkdir -p /home/spiderfoot/modules \
     && chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot
 
 # Ensure modules directory exists and has proper permissions
