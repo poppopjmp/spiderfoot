@@ -337,6 +337,11 @@ def main():
             print(f"Fatal error: {e}")
             sys.exit(-1)
 
+    except Exception as e:
+        log.critical(f"No modules found in modules directory: {mod_dir}")
+        print("SpiderFoot requires -l <ip>:<port> to start the web server. Try --help for guidance.")
+        sys.exit(-1)
+
 
 def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
     """Start a scan based on the provided configuration and command-line
