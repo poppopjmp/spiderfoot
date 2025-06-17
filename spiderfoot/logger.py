@@ -57,35 +57,62 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         if scanId:
             level = ("STATUS" if record.levelname ==
                      "INFO" else record.levelname)
-            self.batch.append(
+            # Put directly into queue instead of batch
+            self.log_queue.put(
                 (scanId, level, record.getMessage(), component, time.time()))
-            if len(self.batch) >= self.batch_size:
-                self.logBatch()
 
     def logBatch(self):
         """Log a batch of records to the database."""
+        # Process all items in queue
+        batch_items = []
         while not self.log_queue.empty():
-            self.batch.append(self.log_queue.get())
-            if len(self.batch) >= self.batch_size:
-                self.process_log_batch()
+            try:
+                item = self.log_queue.get_nowait()
+                batch_items.append(item)
+            except:
+                break
+        
+        if batch_items:
+            self.batch.extend(batch_items)
+        
+        if len(self.batch) >= self.batch_size:
+            self.process_log_batch()
 
     def process_log_batch(self):
         """Process a batch of log records."""
-        batch = self.batch
+        if not self.batch:
+            return
+            
+        batch = self.batch[:]
         self.batch = []
+        
         if self.dbh is None:
             # Create a new database handle when the first log batch is processed
             self.makeDbh()
+        
+        if self.dbh is None:
+            # If still no database handle, put items back in batch
+            self.batch = batch
+            return
+            
         logResult = self.dbh.scanLogEvents(batch)
         if logResult is False:
             # Try to recreate database handle if insert failed
             self.makeDbh()
-            self.dbh.scanLogEvents(batch)
-        self.rotate_logs()
+            if self.dbh:
+                self.dbh.scanLogEvents(batch)
 
     def makeDbh(self) -> None:
         """Create a new database handle."""
-        self.dbh = SpiderFootDb(self.opts)
+        try:
+            self.dbh = SpiderFootDb(self.opts)
+            # Test the connection with a simple query
+            if hasattr(self.dbh, 'db_type') and self.dbh.db_type == 'postgresql':
+                # For PostgreSQL, test with a simple query
+                with self.dbh.dbhLock:
+                    self.dbh.dbh.execute("SELECT 1")
+        except Exception as e:
+            self.dbh = None
 
     def rotate_logs(self) -> None:
         """Rotate and archive SQLite logs."""
@@ -127,7 +154,12 @@ class SpiderFootSqliteLogHandler(logging.Handler):
     def process_log_queue(self):
         """Process log records from the queue."""
         while True:
-            self.logBatch()
+            try:
+                time.sleep(1)  # Add sleep to prevent busy waiting
+                self.logBatch()
+            except Exception as e:
+                # Log error but continue processing
+                continue
 
 
 def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.QueueListener':

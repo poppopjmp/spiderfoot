@@ -34,7 +34,7 @@ ASCII_LOGO = r"""
 /_______  /   __/|__\____ |\___  >__|  \___  / \____/ \____/|__|
         \/|__|           \/    \/          \/
                 Open Source Intelligence Automation."""
-COPYRIGHT_INFO = "               by Steve Micallef | @spiderfoot\n"
+COPYRIGHT_INFO = "               by Poppopjmp | @spiderfoot\n"
 
 try:
     import readline

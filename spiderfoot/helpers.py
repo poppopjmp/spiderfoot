@@ -78,6 +78,17 @@ class SpiderFootHelpers():
         return str(Path.home() / '.spiderfoot' / 'cache')
         
     @staticmethod
+    def logPath() -> str:
+        """Get the log directory path.
+        
+        Returns:
+            str: Path to log directory
+        """
+        log_dir = Path.home() / '.spiderfoot' / 'logs'
+        log_dir.mkdir(parents=True, exist_ok=True)
+        return str(log_dir)
+        
+    @staticmethod
     def genScanInstanceId() -> str:
         """Generate a unique scan instance ID.
         

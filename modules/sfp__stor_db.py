@@ -11,7 +11,12 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-import psycopg2
+try:
+    import psycopg2
+    HAS_PSYCOPG2 = True
+except ImportError:
+    HAS_PSYCOPG2 = False
+
 from spiderfoot import SpiderFootPlugin
 
 
@@ -25,7 +30,8 @@ class sfp__stor_db(SpiderFootPlugin):
 
     meta = {
         'name': "Database Storage",
-        'summary': "Stores scan results into the back-end database. You will need this."
+        'summary': "Stores scan results into the back-end database. You will need this.",
+        'flags': ["slow"]
     }
 
     _priority = 0
@@ -40,7 +46,8 @@ class sfp__stor_db(SpiderFootPlugin):
         'postgresql_port': 5432,
         'postgresql_database': 'spiderfoot',
         'postgresql_username': 'spiderfoot',
-        'postgresql_password': ''
+        'postgresql_password': '',
+        'postgresql_timeout': 30
     }
 
     # Option descriptions
@@ -51,7 +58,8 @@ class sfp__stor_db(SpiderFootPlugin):
         'postgresql_port': "PostgreSQL port if using postgresql as db_type",
         'postgresql_database': "PostgreSQL database name if using postgresql as db_type",
         'postgresql_username': "PostgreSQL username if using postgresql as db_type",
-        'postgresql_password': "PostgreSQL password if using postgresql as db_type"
+        'postgresql_password': "PostgreSQL password if using postgresql as db_type",
+        'postgresql_timeout': "Connection timeout in seconds for PostgreSQL"
     }
 
     def setup(self, sfc, userOpts=dict()):
@@ -62,24 +70,88 @@ class sfp__stor_db(SpiderFootPlugin):
             userOpts (dict): User options
         """
         self.sf = sfc
+        self.errorState = False
+        self.pg_conn = None
 
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
+        # Validate configuration
+        if not self._validateConfig():
+            self.errorState = True
+            return
+
         # Initialize the appropriate database connection
         if self.opts['db_type'] == 'postgresql':
-            try:
-                self.pg_conn = psycopg2.connect(
-                    host=self.opts['postgresql_host'],
-                    port=self.opts['postgresql_port'],
-                    database=self.opts['postgresql_database'],
-                    user=self.opts['postgresql_username'],
-                    password=self.opts['postgresql_password']
-                )
-                self.debug("Connected to PostgreSQL database")
-            except Exception as e:
-                self.error(f"Could not connect to PostgreSQL database: {e}")
+            if not HAS_PSYCOPG2:
+                self.error("psycopg2 module is required for PostgreSQL support but not installed")
                 self.errorState = True
+                return
+            
+            self._connect_postgresql()
+
+    def _validateConfig(self):
+        """Validate configuration options.
+        
+        Returns:
+            bool: True if config is valid, False otherwise
+        """
+        if self.opts['db_type'] not in ['sqlite', 'postgresql']:
+            self.error(f"Invalid db_type: {self.opts['db_type']}. Must be 'sqlite' or 'postgresql'")
+            return False
+            
+        if self.opts['db_type'] == 'postgresql':
+            required_opts = ['postgresql_host', 'postgresql_database', 'postgresql_username']
+            for opt in required_opts:
+                if not self.opts.get(opt):
+                    self.error(f"Required PostgreSQL option '{opt}' is not set")
+                    return False
+                    
+            # Validate port
+            try:
+                port = int(self.opts['postgresql_port'])
+                if not (1 <= port <= 65535):
+                    raise ValueError("Port out of range")
+            except (ValueError, TypeError):
+                self.error(f"Invalid PostgreSQL port: {self.opts['postgresql_port']}")
+                return False
+                
+        return True
+
+    def _connect_postgresql(self):
+        """Establish PostgreSQL connection."""
+        try:
+            self.pg_conn = psycopg2.connect(
+                host=self.opts['postgresql_host'],
+                port=int(self.opts['postgresql_port']),
+                database=self.opts['postgresql_database'],
+                user=self.opts['postgresql_username'],
+                password=self.opts['postgresql_password'],
+                connect_timeout=self.opts['postgresql_timeout']
+            )
+            self.debug("Connected to PostgreSQL database")
+        except Exception as e:
+            self.error(f"Could not connect to PostgreSQL database: {e}")
+            self.errorState = True
+
+    def _check_postgresql_connection(self):
+        """Check if PostgreSQL connection is healthy.
+        
+        Returns:
+            bool: True if connection is healthy, False otherwise
+        """
+        if not self.pg_conn:
+            return False
+            
+        try:
+            # Test connection with a simple query
+            cursor = self.pg_conn.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            cursor.close()
+            return True
+        except:
+            return False
 
     def watchedEvents(self):
         """Define the events this module is interested in for input.
@@ -101,25 +173,33 @@ class sfp__stor_db(SpiderFootPlugin):
         if self.errorState:
             return
 
-        # Handle storage based on database type
-        if self.opts['db_type'] == 'postgresql' and hasattr(self, 'pg_conn'):
-            self._store_postgresql(sfEvent)
+        # Choose storage method based on database type
+        if self.opts['db_type'] == 'postgresql' and self.pg_conn:
+            # Check connection health and reconnect if needed
+            if not self._check_postgresql_connection():
+                self.debug("PostgreSQL connection lost, attempting to reconnect...")
+                self._connect_postgresql()
+                
+            if not self.errorState and self.pg_conn:
+                self._store_postgresql(sfEvent)
+            else:
+                self._store_sqlite(sfEvent)
         else:
             self._store_sqlite(sfEvent)
 
     def _store_sqlite(self, sfEvent):
         """Store the event in the SQLite database.
-
+        
         Args:
             sfEvent: SpiderFoot event
         """
         if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
-            self.debug("Storing an event in SQLite: " + sfEvent.eventType)
+            self.debug("Storing an event: " + sfEvent.eventType)
             self.__sfdb__.scanEventStore(
                 self.getScanId(), sfEvent, self.opts['maxstorage'])
             return
 
-        self.debug("Storing an event in SQLite: " + sfEvent.eventType)
+        self.debug("Storing an event: " + sfEvent.eventType)
         self.__sfdb__.scanEventStore(self.getScanId(), sfEvent)
 
     def _store_postgresql(self, sfEvent):
@@ -144,8 +224,7 @@ class sfp__stor_db(SpiderFootPlugin):
                     sfEvent.eventType,
                     data,
                     sfEvent.module,
-                    sfEvent.sourceEventHash if hasattr(
-                        sfEvent, 'sourceEventHash') else None,
+                    getattr(sfEvent, 'sourceEventHash', None),
                     sfEvent.generated
                 )
             )
@@ -156,6 +235,23 @@ class sfp__stor_db(SpiderFootPlugin):
             self.debug("Stored event in PostgreSQL: " + sfEvent.eventType)
         except Exception as e:
             self.error(f"Error storing event in PostgreSQL: {e}")
-            self.errorState = True
+            if self.pg_conn:
+                try:
+                    self.pg_conn.rollback()
+                except:
+                    pass
+            # Fall back to SQLite storage
+            self.debug("Falling back to SQLite storage")
+            self._store_sqlite(sfEvent)
+
+    def __del__(self):
+        """Clean up database connections."""
+        if hasattr(self, 'pg_conn') and self.pg_conn:
+            try:
+                self.pg_conn.close()
+                self.debug("PostgreSQL connection closed")
+            except Exception as e:
+                # Use print since self.debug may not be available during destruction
+                print(f"Error closing PostgreSQL connection: {e}")
 
 # End of sfp__stor_db class
