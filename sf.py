@@ -218,9 +218,30 @@ def main():
 
             # Load each module in the modules directory with a .py extension
             try:
-                mod_dir = os.path.dirname(os.path.abspath(__file__)) + '/modules/'
-                sfModules = SpiderFootHelpers.loadModulesAsDict(
-                    mod_dir, ['sfp_template.py'])
+                # Get the correct modules path for container environment
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                mod_dir = os.path.join(script_dir, 'modules')
+                
+                # In container, check if modules directory exists
+                if not os.path.exists(mod_dir):
+                    # Try alternative paths in container
+                    alternative_paths = [
+                        '/home/spiderfoot/modules',
+                        os.path.join(os.getcwd(), 'modules'),
+                        os.path.join(script_dir, '..', 'modules')
+                    ]
+                    
+                    for alt_path in alternative_paths:
+                        if os.path.exists(alt_path) and os.path.isdir(alt_path):
+                            mod_dir = os.path.abspath(alt_path)
+                            break
+                    else:
+                        log.critical(f"No modules directory found. Searched: {script_dir}/modules, {alternative_paths}")
+                        sys.exit(-1)
+                
+                log.info(f"Loading modules from: {mod_dir}")
+                sfModules = SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_template.py'])
+                
             except Exception as e:
                 log.critical(f"Failed to load modules: {e}", exc_info=True)
                 sys.exit(-1)

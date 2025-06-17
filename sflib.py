@@ -1726,10 +1726,20 @@ class SpiderFoot:
 
     def loadModules(self):
         """Load SpiderFoot modules from the modules directory."""
-        # Get the correct modules path
-        from spiderfoot import get_modules_path
-        modpath = get_modules_path()
+        # Get the modules directory path
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        modpath = os.path.join(script_dir, 'modules')
         
+        # In container environment, check alternative paths
+        if not os.path.isdir(modpath):
+            # Try current working directory
+            modpath = os.path.join(os.getcwd(), 'modules')
+            
+        if not os.path.isdir(modpath):
+            # Try relative to script location
+            modpath = os.path.join(os.path.dirname(__file__), '..', 'modules')
+            modpath = os.path.abspath(modpath)
+            
         if not os.path.isdir(modpath):
             self.error(f"Modules directory does not exist: {modpath}")
             return {}
@@ -1737,11 +1747,23 @@ class SpiderFoot:
         self.info(f"Loading modules from: {modpath}")
         
         # Check if directory contains any module files
-        module_files = [f for f in os.listdir(modpath) if f.startswith('sfp_') and f.endswith('.py')]
+        try:
+            module_files = [f for f in os.listdir(modpath) if f.startswith('sfp_') and f.endswith('.py')]
+        except OSError as e:
+            self.error(f"Cannot read modules directory {modpath}: {e}")
+            return {}
+            
         if not module_files:
             self.error(f"No modules found in modules directory: {modpath}")
             return {}
             
         self.info(f"Found {len(module_files)} module files")
         
-        # ...existing code...
+        # Load modules using SpiderFootHelpers
+        try:
+            modules = SpiderFootHelpers.loadModulesAsDict(modpath, ['sfp_template.py'])
+            self.info(f"Successfully loaded {len(modules)} modules")
+            return modules
+        except Exception as e:
+            self.error(f"Failed to load modules from {modpath}: {e}")
+            return {}

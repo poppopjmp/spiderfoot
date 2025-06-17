@@ -53,19 +53,29 @@ if str(PROJECT_ROOT) not in sys.path:
 
 def get_modules_path():
     """Get the correct path to the modules directory."""
+    # Get script directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
     # Try multiple possible locations
     possible_paths = [
-        PROJECT_ROOT / "modules",
-        Path(__file__).parent.parent / "modules", 
-        Path.cwd() / "modules",
-        Path("/home/spiderfoot/modules") if Path("/home/spiderfoot/modules").exists() else None
+        os.path.join(PROJECT_ROOT, "modules"),
+        os.path.join(script_dir, "..", "modules"),
+        os.path.join(os.getcwd(), "modules"),
+        "/home/spiderfoot/modules",  # Container path
+        os.path.join(os.path.dirname(script_dir), "modules")
     ]
     
     for path in possible_paths:
-        if path and path.exists() and path.is_dir():
+        abs_path = os.path.abspath(path)
+        if os.path.exists(abs_path) and os.path.isdir(abs_path):
             # Check if it actually contains module files
-            if any(f.name.startswith('sfp_') and f.suffix == '.py' for f in path.glob('*.py')):
-                return str(path)
+            try:
+                files = os.listdir(abs_path)
+                module_files = [f for f in files if f.startswith('sfp_') and f.endswith('.py')]
+                if module_files:
+                    return abs_path
+            except OSError:
+                continue
     
     # Default fallback
-    return str(PROJECT_ROOT / "modules")
+    return os.path.join(PROJECT_ROOT, "modules")
