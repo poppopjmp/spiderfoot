@@ -633,6 +633,21 @@ class SpiderFootPlugin:
 
     def start(self) -> None:
         """Start the module thread, no actual use."""
+        # Check if queues are set up before starting thread
+        if not (self.incomingEventQueue and self.outgoingEventQueue):
+            # Use self._log if sf is not available
+            error_msg = f"Module {getattr(self, '__name__', 'unknown')} cannot start: queues not initialized (incoming={self.incomingEventQueue is not None}, outgoing={self.outgoingEventQueue is not None})"
+            if hasattr(self, 'sf') and self.sf:
+                self.sf.error(error_msg)
+            elif hasattr(self, '_log') and self._log:
+                self._log.error(error_msg)
+            else:
+                print(f"ERROR: {error_msg}")
+            return
+            
+        if hasattr(self, 'sf') and self.sf:
+            self.sf.debug(f"Starting module {getattr(self, '__name__', 'unknown')} thread")
+        
         # Replace the undefined 'thread' with a proper thread creation
         import threading
         thread = threading.Thread(target=self.threadWorker)

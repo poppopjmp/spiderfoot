@@ -121,8 +121,6 @@ class SpiderFootScanner():
         if not targetType:
             raise ValueError("targetType value is blank")
 
-        self.__targetType = targetType
-
         if not isinstance(moduleList, list):
             raise TypeError(
                 f"moduleList is {type(moduleList)}; expected list()")
@@ -393,6 +391,14 @@ class SpiderFootScanner():
                 try:
                     mod.outgoingEventQueue = self.eventQueue
                     mod.incomingEventQueue = queue.Queue()
+                    # Debug: Verify queues are set
+                    self.__sf.debug(f"Module {modName} queues initialized: incoming={mod.incomingEventQueue is not None}, outgoing={mod.outgoingEventQueue is not None}")
+                    
+                    # Ensure queues remain set (safety check for any potential reset)
+                    if not mod.incomingEventQueue or not mod.outgoingEventQueue:
+                        self.__sf.error(f"Module {modName} queue validation failed after setup")
+                        continue
+                        
                 except Exception as e:
                     self.__sf.error(
                         f"Module {modName} event queue setup failed: {e}")
@@ -494,6 +500,10 @@ class SpiderFootScanner():
         try:
             # start one thread for each module
             for mod in self.__moduleInstances.values():
+                # Double-check queue setup before starting
+                if not (mod.incomingEventQueue and mod.outgoingEventQueue):
+                    self.__sf.error(f"Module {mod.__name__} has uninitialized queues, skipping")
+                    continue
                 mod.start()
             final_passes = 3
 
