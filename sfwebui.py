@@ -1508,9 +1508,7 @@ class SpiderFootWebUi:
         # Add our mandatory storage module
         if "sfp__stor_db" not in modlist:
             modlist.append("sfp__stor_db")
-        modlist.sort()
-
-        # Delete the stdout module in case it crept in
+        modlist.sort()        # Delete the stdout module in case it crept in
         if "sfp__stor_stdout" in modlist:
             modlist.remove("sfp__stor_stdout")
 
@@ -1522,6 +1520,10 @@ class SpiderFootWebUi:
 
         # Start running a new scan
         scanId = SpiderFootHelpers.genScanInstanceId()
+        
+        # Debug logging to track the arguments being passed
+        self.log.info(f"Starting scan with: scanname={scanname}, scanId={scanId}, scantarget={scantarget}, targetType={targetType}, modlist={modlist}")
+        
         try:
             p = mp.Process(target=startSpiderFootScanner, args=(
                 self.loggingQueue, scanname, scanId, scantarget, targetType, modlist, cfg))

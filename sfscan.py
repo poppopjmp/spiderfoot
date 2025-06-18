@@ -43,6 +43,22 @@ def startSpiderFootScanner(loggingQueue, *args, **kwargs):
     if modules_dir not in sys.path:
         sys.path.insert(0, modules_dir)    
     logWorkerSetup(loggingQueue)
+    
+    # Debug logging to track the multiprocessing arguments
+    import logging
+    log = logging.getLogger(f"spiderfoot.{__name__}")
+    log.info(f"startSpiderFootScanner called with args: {args}")
+    log.info(f"startSpiderFootScanner called with kwargs: {kwargs}")
+    
+    # Validate arguments before passing to SpiderFootScanner
+    if len(args) >= 4:
+        scanName, scanId, targetValue, targetType = args[0], args[1], args[2], args[3]
+        log.info(f"Arguments: scanName={scanName}, scanId={scanId}, targetValue={targetValue}, targetType={targetType}")
+        
+        if targetType is None:
+            log.error(f"ERROR: targetType is None! Full args: {args}")
+            raise ValueError(f"targetType is None when starting scanner. Args received: {args}")
+    
     return SpiderFootScanner(*args, **kwargs)
 
 

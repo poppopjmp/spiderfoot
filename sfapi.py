@@ -61,6 +61,14 @@ class Config:
 # Global config instance
 app_config = Config()
 
+# Set up logging queue for scans
+import multiprocessing as mp
+from spiderfoot.logger import logListenerSetup, logWorkerSetup
+
+# Create global logging queue for scan processes
+api_logging_queue = mp.Queue()
+logListenerSetup(api_logging_queue, app_config.get_config())
+
 # Pydantic models
 class ScanRequest(BaseModel):
     name: str = Field(..., description="Scan name")
@@ -306,17 +314,16 @@ async def create_scan(scan_request: ScanRequest):
         else:
             # Use all available modules
             modules = list(available_modules.keys())
-        
-        # Create scan in database
+          # Create scan in database
         app_config.db.scanInstanceCreate(scan_id, scan_request.name, scan_request.target)
         
         # Start scan using the same method as web UI
         scan_config = config.copy()
         scan_config['_modulesenabled'] = ','.join(modules)
+          # Start scan process with correct signature: (loggingQueue, scanName, scanId, targetValue, targetType, moduleList, globalOpts)
         
-        # Start scan process like the web UI does
         p = mp.Process(target=startSpiderFootScanner, args=(
-            scan_id, scan_request.target, modules, scan_config
+            api_logging_queue, scan_request.name, scan_id, scan_request.target, target_type, modules, scan_config
         ))
         p.daemon = True
         p.start()
