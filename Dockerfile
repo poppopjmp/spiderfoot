@@ -104,16 +104,7 @@ RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
 WORKDIR /home/spiderfoot
 
 # Copy specific directories to ensure they exist
-COPY --chown=spiderfoot:spiderfoot modules/ ./modules/
-COPY --chown=spiderfoot:spiderfoot spiderfoot/ ./spiderfoot/
-COPY --chown=spiderfoot:spiderfoot static/ ./static/
-COPY --chown=spiderfoot:spiderfoot templates/ ./templates/
-COPY --chown=spiderfoot:spiderfoot dyn/ ./dyn/
-COPY --chown=spiderfoot:spiderfoot correlations/ ./correlations/
-
-# Copy main application files
-COPY --chown=spiderfoot:spiderfoot sf.py sfcli.py sfdb.py ./
-COPY --chown=spiderfoot:spiderfoot Dockerfile.version ./
+COPY --chown=spiderfoot:spiderfoot . ./
 
 # Verify critical files and directories exist
 RUN ls -la /home/spiderfoot/ && \
@@ -123,7 +114,7 @@ RUN ls -la /home/spiderfoot/ && \
     python3 -c "import requests; print('Requests found')" && \
     python3 -c "import lxml; print('LXML found')"
 
-USER spiderfoot
+#USER spiderfoot
 
 EXPOSE 5001 8001
 
