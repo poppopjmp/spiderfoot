@@ -151,11 +151,16 @@ def load_modules_custom(mod_dir, log):
                                     # If instantiation fails, use defaults
                                     pass                            
                             module_info = {
-                                'descr': info_dict.get('descr', 'No description'),
+                                'name': getattr(module_class, 'meta', {}).get('name', module_name),
+                                'descr': info_dict.get('descr', getattr(module_class, '__doc__', 'No description')),
+                                'cats': getattr(module_class, 'meta', {}).get('categories', []),
+                                'labels': getattr(module_class, 'meta', {}).get('flags', []),
                                 'provides': info_dict.get('provides', []),
                                 'consumes': info_dict.get('consumes', []),
                                 'opts': getattr(module_class, 'opts', {}),
-                                'group': info_dict.get('group', [])
+                                'optdescs': getattr(module_class, 'optdescs', {}),
+                                'meta': getattr(module_class, 'meta', {}),
+                                'group': getattr(module_class, 'meta', {}).get('useCases', [])
                             }
                             sfModules[module_name] = module_info
                             loaded_count += 1
@@ -163,11 +168,16 @@ def load_modules_custom(mod_dir, log):
                         except Exception as e:
                             log.warning(f"Could not get info for {module_name}: {e}")                            # Still add the module with minimal info
                             sfModules[module_name] = {
+                                'name': getattr(module_class, 'meta', {}).get('name', module_name),
                                 'descr': 'No description available',
+                                'cats': getattr(module_class, 'meta', {}).get('categories', []),
+                                'labels': getattr(module_class, 'meta', {}).get('flags', []),
                                 'provides': [],
                                 'consumes': [],
                                 'opts': getattr(module_class, 'opts', {}),
-                                'group': []
+                                'optdescs': getattr(module_class, 'optdescs', {}),
+                                'meta': getattr(module_class, 'meta', {}),
+                                'group': getattr(module_class, 'meta', {}).get('useCases', [])
                             }
                             loaded_count += 1
                     else:

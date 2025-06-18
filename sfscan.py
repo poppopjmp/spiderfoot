@@ -310,9 +310,7 @@ class SpiderFootScanner():
             self.__sf.debug(f"Loading {len(self.__moduleList)} modules ...")
             for modName in self.__moduleList:
                 if not modName:
-                    continue
-
-                # Module may have been renamed or removed
+                    continue                # Module may have been renamed or removed
                 if modName not in self.__config['__modules__']:
                     self.__sf.error(f"Failed to load module: {modName}")
                     continue
@@ -329,7 +327,7 @@ class SpiderFootScanner():
                     mod.__name__ = modName
                 except Exception:
                     self.__sf.error(
-                        f"Module {modName} initialization failed", exc_info=True)
+                        f"Module {modName} initialization failed")
                     continue
 
                 # Set up the module options, scan ID, database handle and listeners
@@ -349,7 +347,7 @@ class SpiderFootScanner():
                     mod.setup(self.__sf, self.__modconfig[modName])
                 except Exception:
                     self.__sf.error(
-                        f"Module {modName} initialization failed", exc_info=True)
+                        f"Module {modName} initialization failed")
                     mod.errorState = True
                     continue
 

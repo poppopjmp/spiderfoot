@@ -276,13 +276,18 @@ class SpiderFootHelpers():
                     # Get module class
                     if hasattr(module, module_name):
                         mod_class = getattr(module, module_name)
-                        if hasattr(mod_class, 'opts') and hasattr(mod_class, '_meta'):
+                        if hasattr(mod_class, 'opts') and hasattr(mod_class, 'meta'):
                             modules[module_name] = {
+                                'name': getattr(mod_class, 'meta', {}).get('name', module_name),
                                 'descr': getattr(mod_class, '__doc__', ''),
-                                'provides': getattr(mod_class, '_meta', {}).get('provides', []),
-                                'consumes': getattr(mod_class, '_meta', {}).get('consumes', []),
+                                'cats': getattr(mod_class, 'meta', {}).get('categories', []),
+                                'labels': getattr(mod_class, 'meta', {}).get('flags', []),
+                                'provides': getattr(mod_class, 'meta', {}).get('provides', []),
+                                'consumes': getattr(mod_class, 'meta', {}).get('consumes', []),
                                 'opts': getattr(mod_class, 'opts', {}),
-                                'group': getattr(mod_class, '_meta', {}).get('group', [])
+                                'optdescs': getattr(mod_class, 'optdescs', {}),
+                                'meta': getattr(mod_class, 'meta', {}),
+                                'group': getattr(mod_class, 'meta', {}).get('useCases', [])
                             }
             except Exception:
                 continue
