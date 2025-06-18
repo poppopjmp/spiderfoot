@@ -127,20 +127,36 @@ def load_modules_custom(mod_dir, log):
                     module_class = getattr(module, module_name)
                     
                     # Basic validation - check if it looks like a SpiderFoot module
-                    if hasattr(module_class, '__init__') and hasattr(module_class, 'setup'):
-                        # Create module info dict similar to what SpiderFootHelpers.loadModulesAsDict returns
+                    if hasattr(module_class, '__init__') and hasattr(module_class, 'setup'):                        # Create module info dict similar to what SpiderFootHelpers.loadModulesAsDict returns
                         try:
-                            # Try to get module info
-                            temp_instance = module_class()
+                            # Try to get module info without instantiating (avoid attribute errors)
+                            info_dict = {}
+                            
+                            # Try to access _info directly from the class if it exists
+                            if hasattr(module_class, '_info'):
+                                class_info = getattr(module_class, '_info', {})
+                                if isinstance(class_info, dict):
+                                    info_dict = class_info
+                            
+                            # If no _info at class level, try creating a minimal instance with error handling
+                            if not info_dict:
+                                try:
+                                    temp_instance = module_class()
+                                    if hasattr(temp_instance, '_info'):
+                                        info_dict = getattr(temp_instance, '_info', {})
+                                except:
+                                    # If instantiation fails, use defaults
+                                    pass
+                            
                             module_info = {
-                                'name': getattr(temp_instance, '_info', {}).get('name', module_name),
-                                'cats': getattr(temp_instance, '_info', {}).get('cats', []),
-                                'group': getattr(temp_instance, '_info', {}).get('group', 'Unknown'),
-                                'flags': getattr(temp_instance, '_info', {}).get('flags', []),
-                                'descr': getattr(temp_instance, '_info', {}).get('descr', 'No description'),
-                                'provides': getattr(temp_instance, '_info', {}).get('provides', []),
-                                'consumes': getattr(temp_instance, '_info', {}).get('consumes', []),
-                                'meta': getattr(temp_instance, '_info', {}).get('meta', {}),
+                                'name': info_dict.get('name', module_name),
+                                'cats': info_dict.get('cats', []),
+                                'group': info_dict.get('group', 'Unknown'),
+                                'flags': info_dict.get('flags', []),
+                                'descr': info_dict.get('descr', 'No description'),
+                                'provides': info_dict.get('provides', []),
+                                'consumes': info_dict.get('consumes', []),
+                                'meta': info_dict.get('meta', {}),
                                 'object': module_class
                             }
                             sfModules[module_name] = module_info
@@ -461,27 +477,39 @@ def main():
                 sys.exit(-1)
 
             log.info(f"Successfully loaded {len(sfModules)} modules")
-            sfConfig['__modules__'] = sfModules
-
-            # Load correlation rules
+            sfConfig['__modules__'] = sfModules            # Load correlation rules
             try:
-                from spiderfoot import SpiderFootCorrelator
+                import yaml
+                import os
                 correlations_dir = os.path.join(script_dir, 'correlations')
-                sfConfig['__correlationrules__'] = SpiderFootCorrelator.loadRulesAsDict(correlations_dir)
-                log.info(f"Loaded {len(sfConfig['__correlationrules__'])} correlation rules")
+                correlation_rules = []
+                
+                if os.path.exists(correlations_dir):
+                    for filename in os.listdir(correlations_dir):
+                        if filename.endswith('.yaml') and filename != 'template.yaml':
+                            filepath = os.path.join(correlations_dir, filename)
+                            try:
+                                with open(filepath, 'r', encoding='utf-8') as f:
+                                    rule = yaml.safe_load(f)
+                                    if rule and isinstance(rule, dict):
+                                        rule['id'] = filename[:-5]  # Remove .yaml extension
+                                        correlation_rules.append(rule)
+                            except Exception as e:
+                                log.warning(f"Failed to load correlation rule {filename}: {e}")
+                
+                sfConfig['__correlationrules__'] = correlation_rules
+                log.info(f"Loaded {len(correlation_rules)} correlation rules")
             except Exception as e:
                 log.warning(f"Failed to load correlation rules: {e}")
-                sfConfig['__correlationrules__'] = {}
-
-            # Handle different command line options
-            if args.C:
+                sfConfig['__correlationrules__'] = []# Handle different command line options
+            if args.correlate:
                 # Correlate
                 dbh = SpiderFootDb(sfConfig, init=True)
                 correlator = SpiderFootCorrelator(sfConfig, dbh)
-                correlator.correlateAll(args.C)
+                correlator.correlateAll(args.correlate)
                 sys.exit(0)
 
-            if args.M:
+            if args.modules:
                 # List modules
                 modKeys = sorted(sfModules.keys())
                 print(f"Total modules: {len(modKeys)}")
@@ -490,7 +518,7 @@ def main():
                     print(f"{modName}: {info.get('descr', 'No description')}")
                 sys.exit(0)
 
-            if args.T:
+            if args.types:
                 # List event types
                 dbh = SpiderFootDb(sfConfig, init=True)
                 etypes = dbh.eventTypes()
