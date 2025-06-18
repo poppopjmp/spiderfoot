@@ -77,7 +77,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from builder (consolidated to single location)
+# Copy Python packages from builder
 COPY --from=builder /install /usr/local
 
 # Copy tools from builder
@@ -88,7 +88,7 @@ ENV SPIDERFOOT_DATA=/var/lib/spiderfoot \
     SPIDERFOOT_LOGS=/var/lib/spiderfoot/log \
     SPIDERFOOT_CACHE=/var/lib/spiderfoot/cache \
     PATH="/tools/bin:$PATH" \
-    PYTHONPATH="/usr/local/lib/python3.9/site-packages:$PYTHONPATH"
+    PYTHONPATH="/usr/local/lib/python3.9/site-packages"
 
 # Create user and directories
 RUN addgroup --system spiderfoot && \
@@ -100,12 +100,26 @@ RUN addgroup --system spiderfoot && \
 # Enable NMAP capabilities
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
 
-# Copy application files
+# Copy application files BEFORE switching to spiderfoot user
 WORKDIR /home/spiderfoot
-COPY --chown=spiderfoot:spiderfoot . .
 
-# Verify critical dependencies are available
-RUN python3 -c "import cherrypy; print('CherryPy found')" && \
+# Copy specific directories to ensure they exist
+COPY --chown=spiderfoot:spiderfoot modules/ ./modules/
+COPY --chown=spiderfoot:spiderfoot spiderfoot/ ./spiderfoot/
+COPY --chown=spiderfoot:spiderfoot static/ ./static/
+COPY --chown=spiderfoot:spiderfoot templates/ ./templates/
+COPY --chown=spiderfoot:spiderfoot dyn/ ./dyn/
+COPY --chown=spiderfoot:spiderfoot correlations/ ./correlations/
+
+# Copy main application files
+COPY --chown=spiderfoot:spiderfoot sf.py sfcli.py sfdb.py ./
+COPY --chown=spiderfoot:spiderfoot Dockerfile.version ./
+
+# Verify critical files and directories exist
+RUN ls -la /home/spiderfoot/ && \
+    ls -la /home/spiderfoot/modules/ && \
+    echo "Module count: $(find /home/spiderfoot/modules -name '*.py' | wc -l)" && \
+    python3 -c "import cherrypy; print('CherryPy found')" && \
     python3 -c "import requests; print('Requests found')" && \
     python3 -c "import lxml; print('LXML found')"
 
