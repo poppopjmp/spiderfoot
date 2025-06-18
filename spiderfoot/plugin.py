@@ -116,8 +116,7 @@ class SpiderFootPlugin:
     _sharedThreadPool = None
     _thread = None
     running = False
-    
-    # Database and listeners
+      # Database and listeners
     _dbh = None
     _listeners = []
     
@@ -126,7 +125,7 @@ class SpiderFootPlugin:
         self._listeners = []
         self.errorState = False
         self._stopScanning = False
-        self.running = False
+        # self.running = False  # Removed: conflicts with running property
         
     def setup(self, sf, userOpts=dict()):
         """Setup the module with configuration.
