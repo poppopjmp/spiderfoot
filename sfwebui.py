@@ -813,12 +813,16 @@ class SpiderFootWebUi:
         modlist = list()
         dbh = SpiderFootDb(cfg)
         info = dbh.scanInstanceGet(id)
-
+        
         if not info:
             return self.error("Invalid scan ID.")
 
         scanname = info[0]
         scantarget = info[1]
+        
+        # Validate that we have a valid target
+        if not scantarget:
+            return self.error(f"Scan {id} has no target defined.")
 
         scanconfig = dbh.scanConfigGet(id)
         if not scanconfig:
@@ -835,6 +839,11 @@ class SpiderFootWebUi:
             # target type again.
             targetType = SpiderFootHelpers.targetTypeFromString(
                 f'"{scantarget}"')
+
+        # Final validation - ensure we have a valid target type
+        if not targetType:
+            self.log.error(f"Cannot determine target type for scan rerun: '{scantarget}'")
+            return self.error(f"Cannot determine target type for scan rerun. Target '{scantarget}' is not recognized as a valid SpiderFoot target.")
 
         if targetType not in ["HUMAN_NAME", "BITCOIN_ADDRESS"]:
             scantarget = scantarget.lower()
@@ -881,6 +890,11 @@ class SpiderFootWebUi:
             scanconfig = dbh.scanConfigGet(id)
             scanname = info[0]
             scantarget = info[1]
+            
+            # Validate that we have a valid target
+            if not scantarget:
+                return self.error(f"Scan {id} has no target defined.")
+            
             targetType = None
 
             if len(scanconfig) == 0:
@@ -889,11 +903,12 @@ class SpiderFootWebUi:
             modlist = scanconfig['_modulesenabled'].split(',')
             if "sfp__stor_stdout" in modlist:
                 modlist.remove("sfp__stor_stdout")
-
+                
             targetType = SpiderFootHelpers.targetTypeFromString(scantarget)
             if targetType is None:
                 # Should never be triggered for a re-run scan..
-                return self.error("Invalid target type. Could not recognize it as a target SpiderFoot supports.")
+                self.log.error(f"Invalid target type for scan {id}: '{scantarget}' could not be recognized")
+                return self.error(f"Invalid target type for scan {id}. Could not recognize '{scantarget}' as a target SpiderFoot supports.")
 
             # Start running a new scan
             scanId = SpiderFootHelpers.genScanInstanceId()
@@ -944,15 +959,20 @@ class SpiderFootWebUi:
         dbh = SpiderFootDb(self.config)
         types = dbh.eventTypes()
         info = dbh.scanInstanceGet(id)
-
+        
         if not info:
             return self.error("Invalid scan ID.")
 
         scanconfig = dbh.scanConfigGet(id)
         scanname = info[0]
         scantarget = info[1]
+        
+        # Validate that we have a valid target
+        if not scantarget:
+            return self.error(f"Scan {id} has no target defined.")
+        
         targetType = None
-
+        
         if scanname == "" or scantarget == "" or len(scanconfig) == 0:
             return self.error("Something went wrong internally.")
 
@@ -960,6 +980,11 @@ class SpiderFootWebUi:
         if targetType is None:
             # It must be a name, so wrap quotes around it
             scantarget = "&quot;" + scantarget + "&quot;"
+            # Re-check target type after wrapping
+            targetType = SpiderFootHelpers.targetTypeFromString(scantarget)
+            if targetType is None:
+                self.log.error(f"Invalid target type for scan {id}: '{scantarget}' could not be recognized")
+                return self.error(f"Invalid target type for scan {id}. Could not recognize '{scantarget}' as a target SpiderFoot supports.")
 
         modlist = scanconfig['_modulesenabled'].split(',')
 
