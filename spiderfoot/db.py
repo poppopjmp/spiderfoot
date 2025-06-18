@@ -2014,15 +2014,16 @@ class SpiderFootDb:
 
         Raises:
             IOError: database I/O failed
-            TypeError: arg type was invalid
-        """
+            TypeError: arg type was invalid        """
+        import uuid
+        correlation_id = str(uuid.uuid4())
 
         with self.dbhLock:
             qry = "INSERT INTO tbl_scan_correlation_results \
-                (scan_instance_id, title, rule_id, rule_risk, rule_name, \
+                (id, scan_instance_id, title, rule_id, rule_risk, rule_name, \
                 rule_descr, rule_logic) \
-                VALUES (?, ?, ?, ?, ?, ?, ?)"
-            qvars = [instanceId, correlationTitle, ruleId, ruleRisk, ruleName, ruleDescr, ruleYaml]
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            qvars = [correlation_id, instanceId, correlationTitle, ruleId, ruleRisk, ruleName, ruleDescr, ruleYaml]
 
             try:
                 self.dbh.execute(qry, qvars)
@@ -2031,7 +2032,7 @@ class SpiderFootDb:
                 raise IOError(
                     "Unable to create correlation result in database") from e
 
-            correlationId = self.dbh.lastrowid
+            correlationId = correlation_id
 
             if isinstance(eventHashes, str):
                 eventHashes = [eventHashes]

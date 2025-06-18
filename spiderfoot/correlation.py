@@ -989,17 +989,25 @@ class SpiderFootCorrelator:
             return True
 
         eventIds = list()
+        eventHashes = list()
         for e in data:
             eventIds.append(e['id'])
+            eventHashes.append(e.get('hash', ''))
+
+        # Generate a unique hash for this correlation result
+        import hashlib
+        correlation_data = f"{self.scanId}:{rule['id']}:{title}:{''.join(sorted(eventIds))}"
+        event_hash = hashlib.sha256(correlation_data.encode('utf-8')).hexdigest()
 
         corrId = self.dbh.correlationResultCreate(self.scanId,
+                                                  event_hash,
                                                   rule['id'],
                                                   rule['meta']['name'],
                                                   rule['meta']['description'],
                                                   rule['meta']['risk'],
                                                   rule['rawYaml'],
                                                   title,
-                                                  eventIds)
+                                                  eventHashes)
         if not corrId:
             self.log.error(
                 f"Unable to create correlation in DB for {rule['id']}")
