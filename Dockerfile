@@ -26,6 +26,7 @@ RUN addgroup --system spiderfoot \
     && mkdir -p $SPIDERFOOT_DATA || true \
     && mkdir -p $SPIDERFOOT_LOGS || true \
     && mkdir -p $SPIDERFOOT_CACHE || true \
+    && mkdir -p /home/spiderfoot/.spiderfoot/logs \
     && chown -R spiderfoot:spiderfoot /home/spiderfoot \
     && chown spiderfoot:spiderfoot $SPIDERFOOT_DATA \
     && chown spiderfoot:spiderfoot $SPIDERFOOT_LOGS \
@@ -72,8 +73,8 @@ RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tool
 ## Enable NMAP into the container to be fully used
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
 
-WORKDIR /home/spiderfoot/.spiderfoot/logs
 USER spiderfoot
+WORKDIR /home/spiderfoot
 
 EXPOSE 5001
 EXPOSE 8001
