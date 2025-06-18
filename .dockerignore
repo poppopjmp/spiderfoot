@@ -31,3 +31,8 @@ generate-certificate
 .pylintrc
 .ruff_cache
 .pytest_cache
+
+.gitignore
+*.md
+.vscode
+.idea
