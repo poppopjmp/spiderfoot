@@ -22,6 +22,7 @@ import dns.resolver
 
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool, SpiderFootCorrelator, logger
+from spiderfoot.logger import logWorkerSetup
 
 
 def startSpiderFootScanner(loggingQueue, *args, **kwargs):
@@ -35,7 +36,14 @@ def startSpiderFootScanner(loggingQueue, *args, **kwargs):
     Returns:
         SpiderFootScanner: Initialized SpiderFootScanner object
     """
-    logger.logWorkerSetup(loggingQueue)
+    # Ensure modules directory is in Python path for dynamic imports
+    import sys
+    import os
+    modules_dir = os.path.join(os.path.dirname(__file__), 'modules')
+    if modules_dir not in sys.path:
+        sys.path.insert(0, modules_dir)    
+    logWorkerSetup(loggingQueue)
+    
     return SpiderFootScanner(*args, **kwargs)
 
 
@@ -99,6 +107,8 @@ class SpiderFootScanner():
             raise TypeError(f"scanId is {type(scanId)}; expected str()")
         if not scanId:
             raise ValueError("scanId value is blank")
+
+        self.__scanId = scanId
 
         if not isinstance(targetValue, str):
             raise TypeError(
@@ -322,7 +332,7 @@ class SpiderFootScanner():
                     mod.__name__ = modName
                 except Exception:
                     self.__sf.error(
-                        f"Module {modName} initialization failed", exc_info=True)
+                        f"Module {modName} initialization failed")
                     continue
 
                 # Set up the module options, scan ID, database handle and listeners
@@ -342,7 +352,7 @@ class SpiderFootScanner():
                     mod.setup(self.__sf, self.__modconfig[modName])
                 except Exception:
                     self.__sf.error(
-                        f"Module {modName} initialization failed", exc_info=True)
+                        f"Module {modName} setup failed")
                     mod.errorState = True
                     continue
 
@@ -386,6 +396,14 @@ class SpiderFootScanner():
                 try:
                     mod.outgoingEventQueue = self.eventQueue
                     mod.incomingEventQueue = queue.Queue()
+                    # Debug: Verify queues are set
+                    self.__sf.debug(f"Module {modName} queues initialized: incoming={mod.incomingEventQueue is not None}, outgoing={mod.outgoingEventQueue is not None}")
+                    
+                    # Ensure queues remain set (safety check for any potential reset)
+                    if not mod.incomingEventQueue or not mod.outgoingEventQueue:
+                        self.__sf.error(f"Module {modName} queue validation failed after setup")
+                        continue
+                        
                 except Exception as e:
                     self.__sf.error(
                         f"Module {modName} event queue setup failed: {e}")
@@ -487,6 +505,10 @@ class SpiderFootScanner():
         try:
             # start one thread for each module
             for mod in self.__moduleInstances.values():
+                # Double-check queue setup before starting
+                if not (mod.incomingEventQueue and mod.outgoingEventQueue):
+                    self.__sf.error(f"Module {mod.__name__} has uninitialized queues, skipping")
+                    continue
                 mod.start()
             final_passes = 3
 

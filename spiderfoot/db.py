@@ -110,6 +110,79 @@ class SpiderFootDb:
         "CREATE INDEX idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
     ]
 
+    # PostgreSQL-specific schema queries
+    createPostgreSQLSchemaQueries = [
+        "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
+            event       VARCHAR NOT NULL PRIMARY KEY, \
+            event_descr VARCHAR NOT NULL, \
+            event_raw   INT NOT NULL DEFAULT 0, \
+            event_type  VARCHAR NOT NULL \
+        )",
+        "CREATE TABLE IF NOT EXISTS tbl_config ( \
+            scope   VARCHAR NOT NULL, \
+            opt     VARCHAR NOT NULL, \
+            val     VARCHAR NOT NULL, \
+            PRIMARY KEY (scope, opt) \
+        )",
+        "CREATE TABLE IF NOT EXISTS tbl_scan_instance ( \
+            guid        VARCHAR NOT NULL PRIMARY KEY, \
+            name        VARCHAR NOT NULL, \
+            seed_target VARCHAR NOT NULL, \
+            created     BIGINT DEFAULT 0, \
+            started     BIGINT DEFAULT 0, \
+            ended       BIGINT DEFAULT 0, \
+            status      VARCHAR NOT NULL \
+        )",
+        "CREATE TABLE IF NOT EXISTS tbl_scan_log ( \
+            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+            generated           BIGINT NOT NULL, \
+            component           VARCHAR, \
+            type                VARCHAR NOT NULL, \
+            message             VARCHAR \
+        )",
+        "CREATE TABLE IF NOT EXISTS tbl_scan_config ( \
+            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+            component           VARCHAR NOT NULL, \
+            opt                 VARCHAR NOT NULL, \
+            val                 VARCHAR NOT NULL \
+        )",
+        "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
+            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+            hash                VARCHAR NOT NULL, \
+            type                VARCHAR NOT NULL REFERENCES tbl_event_types(event), \
+            generated           BIGINT NOT NULL, \
+            confidence          INT NOT NULL DEFAULT 100, \
+            visibility          INT NOT NULL DEFAULT 100, \
+            risk                INT NOT NULL DEFAULT 0, \
+            module              VARCHAR NOT NULL, \
+            data                TEXT, \
+            false_positive      INT NOT NULL DEFAULT 0, \
+            source_event_hash  VARCHAR DEFAULT 'ROOT' \
+        )",
+        "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results ( \
+            id                  VARCHAR NOT NULL PRIMARY KEY, \
+            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+            title               VARCHAR NOT NULL, \
+            rule_risk           VARCHAR NOT NULL, \
+            rule_id             VARCHAR NOT NULL, \
+            rule_name           VARCHAR NOT NULL, \
+            rule_descr          VARCHAR NOT NULL, \
+            rule_logic          VARCHAR NOT NULL \
+        )",
+        "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
+            correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
+            event_hash          VARCHAR NOT NULL REFERENCES tbl_scan_results(hash) \
+        )",
+        "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
+        "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
+        "CREATE INDEX IF NOT EXISTS idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)",
+        "CREATE INDEX IF NOT EXISTS idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)",
+        "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
+        "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
+        "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
+        "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
+    ]
+
     eventDetails = [
         ['ROOT', 'Internal SpiderFoot Root event', 1, 'INTERNAL'],
         ['ACCOUNT_EXTERNAL_OWNED', 'Account on External Site', 0, 'ENTITY'],
@@ -331,7 +404,7 @@ class SpiderFootDb:
 
         self.db_type = opts.get('__dbtype', 'sqlite')
 
-        if ((self.db_type == 'sqlite') or (self.db_type == 'postgresql')):
+        if self.db_type == 'sqlite':
             database_path = opts['__database']
 
             # create database directory
@@ -398,7 +471,7 @@ class SpiderFootDb:
                         for query in self.createSchemaQueries:
                             if "correlation" in query:
                                 self.dbh.execute(query)
-                            self.conn.commit()
+                        self.conn.commit()
                     except sqlite3.Error:
                         raise IOError("Looks like you are running a pre-4.0 database. Unfortunately "
                                       "SpiderFoot wasn't able to migrate you, so you'll need to delete "
@@ -421,7 +494,7 @@ class SpiderFootDb:
                             continue
                     self.conn.commit()
 
-        elif ((self.db_type == 'sqlite') or (self.db_type == 'postgresql')):
+        elif self.db_type == 'postgresql':
             try:
                 self.conn = psycopg2.connect(opts['__database'])
                 self.dbh = self.conn.cursor(
@@ -457,6 +530,8 @@ class SpiderFootDb:
                         except Exception:
                             continue
                     self.conn.commit()
+        else:
+            raise ValueError(f"Unsupported database type: {self.db_type}")
 
     #
     # Back-end database operations
@@ -471,19 +546,30 @@ class SpiderFootDb:
 
         with self.dbhLock:
             try:
-                for qry in self.createSchemaQueries:
-                    self.dbh.execute(qry)
+                if self.db_type == 'sqlite':
+                    for qry in self.createSchemaQueries:
+                        self.dbh.execute(qry)
+                elif self.db_type == 'postgresql':
+                    for qry in self.createPostgreSQLSchemaQueries:
+                        self.dbh.execute(qry)
+                
                 self.conn.commit()
+                
+                # Insert event types
                 for row in self.eventDetails:
                     event = row[0]
                     event_descr = row[1]
                     event_raw = row[2]
                     event_type = row[3]
-                    qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (?, ?, ?, ?)"
+                    
+                    if self.db_type == 'sqlite':
+                        qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (?, ?, ?, ?)"
+                        params = (event, event_descr, event_raw, event_type)
+                    else:  # postgresql
+                        qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (%s, %s, %s, %s) ON CONFLICT (event) DO NOTHING"
+                        params = (event, event_descr, event_raw, event_type)
 
-                    self.dbh.execute(qry, (
-                        event, event_descr, event_raw, event_type
-                    ))
+                    self.dbh.execute(qry, params)
                 self.conn.commit()
             except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError(
@@ -635,43 +721,71 @@ class SpiderFootDb:
         Returns:
             bool: Whether the logging operation succeeded
         """
+        if not batch:
+            return True
 
         inserts = []
 
-        for instanceId, classification, message, component, logTime in batch:
+        for item in batch:
+            if len(item) != 5:
+                continue
+                
+            instanceId, classification, message, component, logTime = item
+            
             if not isinstance(instanceId, str):
-                raise TypeError(
-                    f"instanceId is {type(instanceId)}; expected str()") from None
+                continue
 
             if not isinstance(classification, str):
-                raise TypeError(
-                    f"classification is {type(classification)}; expected str()") from None
+                continue
 
             if not isinstance(message, str):
-                raise TypeError(
-                    f"message is {type(message)}; expected str()") from None
+                continue
 
             if not component:
                 component = "SpiderFoot"
 
-            inserts.append((instanceId, logTime * 1000,
+            # Convert logTime to proper format if needed
+            if isinstance(logTime, float):
+                logTime = int(logTime * 1000)
+            elif isinstance(logTime, int) and logTime < 1000000000000:  # Assume seconds if too small
+                logTime = logTime * 1000
+
+            inserts.append((instanceId, logTime,
                            component, classification, message))
 
-        if inserts:
+        if not inserts:
+            return True
+
+        if self.db_type == 'sqlite':
             qry = "INSERT INTO tbl_scan_log \
                 (scan_instance_id, generated, component, type, message) \
                 VALUES (?, ?, ?, ?, ?)"
+        else:  # postgresql
+            qry = "INSERT INTO tbl_scan_log \
+                (scan_instance_id, generated, component, type, message) \
+                VALUES (%s, %s, %s, %s, %s)"
 
-            with self.dbhLock:
-                try:
-                    self.dbh.executemany(qry, inserts)
-                    self.conn.commit()
-                except (sqlite3.Error, psycopg2.Error) as e:
-                    if "locked" not in e.args[0] and "thread" not in e.args[0]:
-                        raise IOError(
-                            "Unable to log scan event in database") from e
+        with self.dbhLock:
+            try:
+                # Ensure connection is alive
+                if not self.conn:
                     return False
-        return True
+                    
+                self.dbh.executemany(qry, inserts)
+                self.conn.commit()
+                return True
+            except (sqlite3.Error, psycopg2.Error) as e:
+                # More specific error handling
+                if "locked" in str(e).lower() or "thread" in str(e).lower():
+                    return False
+                # Try to reconnect on other errors
+                try:
+                    self.conn.rollback()
+                except:
+                    pass
+                return False
+            except Exception as e:
+                return False
 
     def scanLogEvent(self, instanceId: str, classification: str, message: str, component: str = None) -> None:
         """Log an event to the database.
@@ -1716,11 +1830,11 @@ class SpiderFootDb:
 
         if not isinstance(instanceId, str):
             raise TypeError(
-                f"instanceId is {type(instanceId)}; expected str()")
+                f"instanceId is {type(instanceId)}; expected str()") from None
 
         if not isinstance(elementIdList, list):
             raise TypeError(
-                f"elementIdList is {type(elementIdList)}; expected list()")
+                f"elementIdList is {type(elementIdList)}; expected list()") from None
 
         hashIds = []
         for hashId in elementIdList:
@@ -1850,6 +1964,7 @@ class SpiderFootDb:
             raise TypeError(f"parentIds is {type(parentIds)}; expected list()")
 
         datamap = list()
+       
         keepGoing = True
         nextIds = list()
 
@@ -1874,94 +1989,63 @@ class SpiderFootDb:
 
         return datamap
 
-    def correlationResultCreate(
-        self,
-        instanceId: str,
-        ruleId: str,
+    def correlationResultCreate(self, instanceId: str, event_hash: str, ruleId: str,
         ruleName: str,
         ruleDescr: str,
         ruleRisk: str,
         ruleYaml: str,
-        correlationTitle: str,
-        eventHashes: list
+        correlationTitle: str, eventHashes: list
     ) -> str:
         """Create a correlation result in the database.
 
         Args:
             instanceId (str): scan instance ID
-            ruleId(str): correlation rule ID
-            ruleName(str): correlation rule name
-            ruleDescr(str): correlation rule description
-            ruleRisk(str): correlation rule risk level
-            ruleYaml(str): correlation rule raw YAML
-            correlationTitle(str): correlation title
-            eventHashes(list): events mapped to the correlation result
-
-        Raises:
-            TypeError: arg type was invalid
-            IOError: database I/O failed
+            event_hash (str): event hash
+            ruleId (str): correlation rule ID
+            ruleName (str): correlation rule name
+            ruleDescr (str): correlation rule description
+            ruleRisk (str): correlation rule risk level
+            ruleYaml (str): correlation rule raw YAML
+            correlationTitle (str): correlation title
+            eventHashes (list): events mapped to the correlation result
 
         Returns:
             str: Correlation ID created
-        """
 
-        if not isinstance(instanceId, str):
-            raise TypeError(
-                f"instanceId is {type(instanceId)}; expected str()")
-
-        if not isinstance(ruleId, str):
-            raise TypeError(f"ruleId is {type(ruleId)}; expected str()")
-
-        if not isinstance(ruleName, str):
-            raise TypeError(f"ruleName is {type(ruleName)}; expected str()")
-
-        if not isinstance(ruleDescr, str):
-            raise TypeError(f"ruleDescr is {type(ruleDescr)}; expected str()")
-
-        if not isinstance(ruleRisk, str):
-            raise TypeError(f"ruleRisk is {type(ruleRisk)}; expected str()")
-
-        if not isinstance(ruleYaml, str):
-            raise TypeError(f"ruleYaml is {type(ruleYaml)}; expected str()")
-
-        if not isinstance(correlationTitle, str):
-            raise TypeError(
-                f"correlationTitle is {type(correlationTitle)}; expected str()")
-
-        if not isinstance(eventHashes, list):
-            raise TypeError(
-                f"eventHashes is {type(eventHashes)}; expected list()")
-
-        uniqueId = str(hashlib.md5(str(time.time() + random.SystemRandom().randint(0, 99999999)).encode('utf-8')).hexdigest())  # noqa: DUO130
-
-        qry = "INSERT INTO tbl_scan_correlation_results \
-            (id, scan_instance_id, title, rule_name, rule_descr, rule_risk, rule_id, rule_logic) \
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        Raises:
+            IOError: database I/O failed
+            TypeError: arg type was invalid        """
+        import uuid
+        correlation_id = str(uuid.uuid4())
 
         with self.dbhLock:
+            qry = "INSERT INTO tbl_scan_correlation_results \
+                (id, scan_instance_id, title, rule_id, rule_risk, rule_name, \
+                rule_descr, rule_logic) \
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            qvars = [correlation_id, instanceId, correlationTitle, ruleId, ruleRisk, ruleName, ruleDescr, ruleYaml]
+
             try:
-                self.dbh.execute(qry, (
-                    uniqueId, instanceId, correlationTitle, ruleName, ruleDescr, ruleRisk, ruleId, ruleYaml
-                ))
+                self.dbh.execute(qry, qvars)
                 self.conn.commit()
             except (sqlite3.Error, psycopg2.Error) as e:
                 raise IOError(
                     "Unable to create correlation result in database") from e
 
-        # Map events to the correlation result
-        qry = "INSERT INTO tbl_scan_correlation_results_events \
-            (correlation_id, event_hash) \
-            VALUES (?, ?)"
+            correlationId = correlation_id
 
-        with self.dbhLock:
+            if isinstance(eventHashes, str):
+                eventHashes = [eventHashes]
+
+            # Insert event hashes for this correlation
             for eventHash in eventHashes:
+                qry = "INSERT INTO tbl_scan_correlation_results_events (correlation_id, event_hash) VALUES (?, ?)"
+                qvars = [correlationId, eventHash]
                 try:
-                    self.dbh.execute(qry, (
-                        uniqueId, eventHash
-                    ))
-                    self.conn.commit()
+                    self.dbh.execute(qry, qvars)
                 except (sqlite3.Error, psycopg2.Error) as e:
-                    raise IOError(
-                        "Unable to create correlation result in database") from e
+                    raise IOError("Unable to create correlation result events in database") from e
 
-        return uniqueId
+            self.conn.commit()
+        
+        return str(correlationId)

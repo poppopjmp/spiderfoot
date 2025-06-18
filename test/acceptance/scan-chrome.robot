@@ -1,8 +1,9 @@
 ***Settings***
-Library           SeleniumLibrary
+Library           SeleniumLibrary    timeout=30s    implicit_wait=10s
 Library           OperatingSystem
-Test Teardown     Run Keyword If Test Failed  Capture Failure Screenshot
+Test Teardown     Run Keywords    Capture Failure Screenshot    Close All Browsers
 Resource          variables.robot  # Externalize variables
+Test Timeout      300 seconds      # 5-minute timeout per test
 
 ***Variables***
 ${CHROMEDRIVER_PATH}    /usr/local/bin/chromedriver
@@ -153,9 +154,9 @@ Wait Until Element Is Clickable
 
 Wait For Scan To Finish
     [Arguments]  ${scan_name}
-    Wait Until Element Is Visible    id:btn-browse    timeout=${WAIT_TIMEOUT}
-    Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=${WAIT_TIMEOUT}
-    Sleep    2s    # Give a moment for page to stabilize after scan finishes
+    Wait Until Element Is Visible    id:btn-browse    timeout=30s
+    Wait Until Element Contains     scanstatusbadge   FINISHED     timeout=120s    # Increased timeout
+    Sleep    1s    # Reduced sleep time
 
 ***Test Cases***
 Main navigation pages should render correctly

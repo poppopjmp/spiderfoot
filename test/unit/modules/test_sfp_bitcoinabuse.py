@@ -55,7 +55,7 @@ class TestModuleBitcoinAbuse(SpiderFootTestBase):
                 self.assertTrue(module.errorState)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_no_api_key_should_set_errorState(selfdepth=0):
+    def test_handleEvent_no_api_key_should_set_errorState(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_bitcoinabuse()

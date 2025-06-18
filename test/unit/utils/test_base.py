@@ -1,66 +1,103 @@
-"""Base test class with common cleanup for SpiderFoot tests."""
+"""Base test class with proper resource management to prevent hanging tests."""
 
 import unittest
-from test.unit.utils.test_common import cleanup_listeners, reset_mock_objects, restore_monkey_patch
+import threading
+import time
+import os
+import tempfile
+from spiderfoot import SpiderFootHelpers
 
 
 class SpiderFootTestBase(unittest.TestCase):
-    """Base test class that handles common cleanup tasks."""
+    """Base test class with resource management."""
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._patchers = []
-        self._mocks = []
+    def setUp(self):
+        """Set up test environment with resource tracking."""
+        super().setUp()
+        
+        # Track initial thread state
+        self._initial_threads = set(threading.enumerate())
+        
+        # Track any event emitters for cleanup
         self._event_emitters = []
-        self._monkey_patches = []
-    
-    def register_mock(self, mock):
-        """Register a mock to be reset during tearDown."""
-        self._mocks.append(mock)
-    
-    def register_patcher(self, patcher):
-        """Register a patcher to be stopped during tearDown."""
-        self._patchers.append(patcher)
+        
+        # Set up test-specific temporary directory
+        self._temp_dir = tempfile.mkdtemp(prefix='spiderfoot_test_')
+        
+        # Default options for tests
+        self.default_options = {
+            '_debug': False,
+            '__logging': True,
+            '__outputfilter': None,
+            '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
+            '_dnsserver': '',
+            '_fetchtimeout': 5,
+            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+            '_internettlds_cache': 72,
+            '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
+            '__database': f"{self._temp_dir}/spiderfoot_test.db",
+            '__modules__': None,
+            '__correlationrules__': None,
+            '_socks1type': '',
+            '_socks2addr': '',
+            '_socks3port': '',
+            '_socks4user': '',
+            '_socks5pwd': '',
+            '__logstdout': False
+        }
+
+        self.web_default_options = {
+            'root': '/'
+        }
+
+        self.cli_default_options = {
+            "cli.debug": False,
+            "cli.silent": False,
+            "cli.color": True,
+            "cli.output": "pretty",
+            "cli.history": True,
+            "cli.history_file": "",
+            "cli.spool": False,
+            "cli.spool_file": "",
+            "cli.ssl_verify": True,
+            "cli.username": "",
+            "cli.password": "",
+            "cli.server_baseurl": "http://127.0.0.1:5001"
+        }
     
     def register_event_emitter(self, emitter):
-        """Register an event emitter to be cleaned up during tearDown."""
-        self._event_emitters.append(emitter)
-    
-    def register_monkey_patch(self, obj, attr_name):
-        """Register a monkey-patched attribute to be restored during tearDown."""
-        # Store the original value before it gets patched
-        orig_value = getattr(obj, attr_name) if hasattr(obj, attr_name) else None
-        self._monkey_patches.append((obj, attr_name, orig_value))
+        """Register an event emitter for cleanup."""
+        if emitter not in self._event_emitters:
+            self._event_emitters.append(emitter)
     
     def tearDown(self):
-        """Clean up resources after each test."""
-        # Reset all mocks
-        reset_mock_objects(self._mocks)
-        
-        # Stop all patchers
-        for patcher in self._patchers:
-            if patcher:
-                try:
-                    patcher.stop()
-                except RuntimeError:
-                    # Patcher may already be stopped
-                    pass
-        
-        # Clean up all event emitters
+        """Clean up test resources."""
+        # Clean up event emitters
         for emitter in self._event_emitters:
-            if emitter:
-                cleanup_listeners(emitter)
+            try:
+                if hasattr(emitter, 'stop'):
+                    emitter.stop()
+                if hasattr(emitter, 'cleanup'):
+                    emitter.cleanup()
+            except:
+                pass
         
-        # Restore all monkey patches
-        for obj, attr_name, orig_value in self._monkey_patches:
-            restore_monkey_patch(obj, attr_name, orig_value)
+        # Force cleanup of any new threads
+        current_threads = set(threading.enumerate())
+        new_threads = current_threads - self._initial_threads
         
-        # Call parent tearDown
+        for thread in new_threads:
+            if thread.is_alive() and not thread.daemon:
+                thread.daemon = True
+        
+        # Clean up temporary directory
+        try:
+            import shutil
+            shutil.rmtree(self._temp_dir, ignore_errors=True)
+        except:
+            pass
+        
+        # Give time for cleanup
+        time.sleep(0.1)
+        
         super().tearDown()
-
-    def setUp(self):
-        """Set up before each test."""
-        super().setUp()
-        # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)

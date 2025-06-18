@@ -4,14 +4,15 @@ import unittest
 from modules.sfp_junkfiles import sfp_junkfiles
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from test.unit.utils.test_base import SpiderFootTestBase  # Add missing import
 
 
 @pytest.mark.usefixtures
-class TestModuleIntegrationJunkfiles(unittest.TestCase):
+class TestModuleIntegrationJunkfiles(SpiderFootTestBase):  # Add inheritance
 
     @unittest.skip("todo")
     def test_handleEvent(self):
-        sf = SpiderFoot(self.default_options)
+        sf = SpiderFoot(self.default_options)  # Use self.default_options
 
         module = sfp_junkfiles()
         module.setup(sf, dict())

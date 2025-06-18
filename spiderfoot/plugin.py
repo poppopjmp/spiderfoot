@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------------------
+# Name:         plugin
+# Purpose:      Base class for SpiderFoot modules/plugins
+#
+# Author:      Steve Micallef <steve@binarypool.com>
+#
+# Created:     26/03/2012
+# Copyright:   (c) Steve Micallef 2012
+# Licence:     MIT
+# -------------------------------------------------------------------------------
+
 from contextlib import suppress
 import io
 import logging
@@ -7,7 +19,9 @@ import sys
 import threading
 from time import sleep
 import traceback
+from typing import List, Dict, Any, Optional
 
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
 from .threadpool import SpiderFootThreadPool
 
 # begin logging overrides
@@ -75,70 +89,196 @@ class SpiderFootPluginLogger(logging.Logger):
 # end of logging overrides
 
 
-class SpiderFootPlugin():
-    """SpiderFootPlugin module object.
-
-    Attributes:
-        _stopScanning (bool): Will be set to True by the controller if the user aborts scanning
-        listenerModules (list): Modules that will be notified when this module produces events
-        _currentEvent (SpiderFootEvent): Current event being processed
-        _currentTarget (str): Target currently being acted against
-        _name_: Name of this module, set at startup time
-        __sfdb__: Direct handle to the database - not to be directly used
-                  by modules except the sfp__stor_db module.
-        __scanId__: ID of the scan the module is running against
-        __datasource__: (Unused) tracking of data sources
-        __outputFilter: If set, events not matching this list are dropped
-        _priority (int): Priority, smaller numbers should run first
-        errorState (bool): error state of the module
-        socksProxy (str): SOCKS proxy
+class SpiderFootPlugin:
+    """Base class for SpiderFoot modules/plugins.
+    
+    All SpiderFoot modules should inherit from this class and implement
+    the required methods.
     """
-
-    # Will be set to True by the controller if the user aborts scanning
-    _stopScanning = False
-    # Modules that will be notified when this module produces events
-    _listenerModules = list()
-    # Current event being processed
-    _currentEvent = None
-    # Target currently being acted against
-    _currentTarget = None
-    # Name of this module, set at startup time
-    __name__ = "module_name_not_set!"
-    # Direct handle to the database - not to be directly used
-    # by modules except the sfp__stor_db module.
-    __sfdb__ = None
-    # ID of the scan the module is running against
-    __scanId__ = None
-    # (only used in SpiderFoot HX) tracking of data sources
-    __dataSource__ = None
-    # If set, events not matching this list are dropped
-    __outputFilter__ = None
-    # Priority, smaller numbers should run first
-    _priority = 1
-    # Plugin meta information
-    meta = None
-    # Error state of the module
+    
+    # Module metadata
+    _name = "module_template"
+    _description = "Base SpiderFoot Plugin"
+    _flags = []
+    _useragent = None
+    _priority = 3
+    
+    # Module state
     errorState = False
-    # SOCKS proxy
-    socksProxy = None
-    # Queue for incoming events
     incomingEventQueue = None
-    # Queue for produced events
     outgoingEventQueue = None
-    # SpiderFoot object, set in each module's setup() function
-    sf = None
-    # Configuration, set in each module's setup() function
-    opts = dict()
-    # Maximum threads
-    maxThreads = 1
-
-    def __init__(self) -> None:
-        # Holds the thread object when module threading is enabled
-        self.thread = None
-        # logging overrides
+      # Threading
+    _stopScanning = False
+    _currentEvent = None
+    _currentTarget = None
+    _scanId = None
+    _sharedThreadPool = None
+    _thread = None
+    running = False
+    maxThreads = 10  # Default maximum threads for this module
+    
+    # Database and listeners
+    _dbh = None
+    _listeners = []
+    
+    def __init__(self):
+        """Initialize the plugin."""
+        self._listeners = []
+        self.errorState = False
+        self._stopScanning = False
+        self.__outputFilter__ = None
         self._log = None
-        # Shared thread pool for all modules
-        self.sharedThreadPool = None
+        self.__scanId__ = None
+        # self.running = False  # Removed: conflicts with running property
+        
+    def setup(self, sf, userOpts=dict()):
+        """Setup the module with configuration.
+        
+        Args:
+            sf: SpiderFoot object
+            userOpts: User configuration options
+        """
+        self.sf = sf
+        self.opts = userOpts
+        
+    def enrichTarget(self, target):
+        """Enrich the target with additional information.
+        
+        Args:
+            target: Target to enrich
+            
+        Returns:
+            Enriched target or None
+        """
+        return None
+        
+    def setTarget(self, target):
+        """Set the target for this module.
+        
+        Args:
+            target: Target object
+        """
+        self._currentTarget = target
+        
+    def setScanId(self, scanId: str):
+        """Set the scan ID.
+        
+        Args:
+            scanId: Scan instance ID
+        """
+        self._scanId = scanId
+        
+    def setDbh(self, dbh):
+        """Set the database handle.
+        
+        Args:
+            dbh: Database handle
+        """
+        self._dbh = dbh
+        
+    def setSharedThreadPool(self, pool):
+        """Set the shared thread pool.
+        
+        Args:
+            pool: Thread pool object
+        """
+        self._sharedThreadPool = pool
+        
+    def clearListeners(self):
+        """Clear all listeners."""
+        self._listeners = []
+        
+    def registerListener(self, listener):
+        """Register an event listener.
+        
+        Args:
+            listener: Listener to register
+        """
+        self._listeners.append(listener)
+        
+    def notifyListeners(self, sfEvent):
+        """Notify all listeners of an event.
+        
+        Args:
+            sfEvent: SpiderFootEvent to send
+        """
+        if self.outgoingEventQueue:
+            self.outgoingEventQueue.put(sfEvent)
+            
+    def watchedEvents(self) -> List[str]:
+        """Return list of events this module watches for.
+        
+        Returns:
+            List of event types
+        """
+        return []
+        
+    def producedEvents(self) -> List[str]:
+        """Return list of events this module produces.
+        
+        Returns:
+            List of event types
+        """
+        return []
+        
+    def handleEvent(self, sfEvent):
+        """Handle an incoming event.
+        
+        Args:
+            sfEvent: SpiderFootEvent to handle
+        """
+        pass
+        
+    def start(self):
+        """Start the module thread."""
+        if self.running:
+            return
+            
+        self.running = True
+        self._thread = threading.Thread(target=self._run)
+        self._thread.daemon = True
+        self._thread.start()
+        
+    def _run(self):
+        """Main module execution loop."""
+        try:
+            while not self._stopScanning and self.incomingEventQueue:
+                try:
+                    sfEvent = self.incomingEventQueue.get(timeout=1)
+                    if sfEvent == 'FINISHED':
+                        self.finished()
+                        break
+                    if isinstance(sfEvent, SpiderFootEvent):
+                        self._currentEvent = sfEvent
+                        self.handleEvent(sfEvent)
+                except queue.Empty:
+                    continue
+                except Exception as e:
+                    self.sf.error(f"Error in module {self._name}: {e}")
+                    self.errorState = True
+                    break
+        finally:
+            self.running = False
+            
+    def finished(self):
+        """Called when the module should finish processing."""
+        pass
+        
+    def sendEvent(self, eventType: str, eventData: str, parentEvent=None, confidenceLevel: int = 100):
+        """Send an event.
+        
+        Args:
+            eventType: Type of event
+            eventData: Event data
+            parentEvent: Parent event
+            confidenceLevel: Confidence level (0-100)
+        """
+        if not parentEvent:
+            parentEvent = self._currentEvent
+            
+        if parentEvent:
+            evt = SpiderFootEvent(eventType, eventData, self._name, parentEvent)
+            self.notifyListeners(evt)
 
     @property
     def log(self):
@@ -146,7 +286,7 @@ class SpiderFootPlugin():
             # temporarily set logger class
             logging.setLoggerClass(SpiderFootPluginLogger)
             # init SpiderFootPluginLogger
-            self._log = logging.getLogger(f"spiderfoot.{self.__name__}")
+            self._log = logging.getLogger(f"spiderfoot.{getattr(self, '__name__', self.__class__.__name__)}")
             # reset logger class to default
             logging.setLoggerClass(logging.Logger)
         return self._log
@@ -493,6 +633,21 @@ class SpiderFootPlugin():
 
     def start(self) -> None:
         """Start the module thread, no actual use."""
+        # Check if queues are set up before starting thread
+        if not (self.incomingEventQueue and self.outgoingEventQueue):
+            # Use self._log if sf is not available
+            error_msg = f"Module {getattr(self, '__name__', 'unknown')} cannot start: queues not initialized (incoming={self.incomingEventQueue is not None}, outgoing={self.outgoingEventQueue is not None})"
+            if hasattr(self, 'sf') and self.sf:
+                self.sf.error(error_msg)
+            elif hasattr(self, '_log') and self._log:
+                self._log.error(error_msg)
+            else:
+                print(f"ERROR: {error_msg}")
+            return
+            
+        if hasattr(self, 'sf') and self.sf:
+            self.sf.debug(f"Starting module {getattr(self, '__name__', 'unknown')} thread")
+        
         # Replace the undefined 'thread' with a proper thread creation
         import threading
         thread = threading.Thread(target=self.threadWorker)
