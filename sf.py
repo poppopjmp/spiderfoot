@@ -85,6 +85,103 @@ sfOptdescs = {
 }
 
 
+def load_modules_custom(mod_dir, log):
+    """Custom module loader as fallback when SpiderFootHelpers.loadModulesAsDict fails."""
+    sfModules = {}
+    
+    try:
+        import importlib.util
+        import os
+        import sys
+        
+        # Add modules directory to Python path
+        if mod_dir not in sys.path:
+            sys.path.insert(0, mod_dir)
+        
+        # Get all SpiderFoot module files
+        module_files = [f for f in os.listdir(mod_dir) 
+                       if f.startswith('sfp_') and f.endswith('.py') and f != 'sfp_template.py']
+        
+        log.info(f"Custom loader: attempting to load {len(module_files)} modules")
+        
+        loaded_count = 0
+        failed_count = 0
+        
+        for module_file in module_files:
+            try:
+                module_name = module_file[:-3]  # Remove .py extension
+                module_path = os.path.join(mod_dir, module_file)
+                
+                # Create module spec and load
+                spec = importlib.util.spec_from_file_location(module_name, module_path)
+                if spec is None:
+                    log.warning(f"Could not create spec for {module_name}")
+                    failed_count += 1
+                    continue
+                
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                
+                # Check if module has the expected class
+                if hasattr(module, module_name):
+                    module_class = getattr(module, module_name)
+                    
+                    # Basic validation - check if it looks like a SpiderFoot module
+                    if hasattr(module_class, '__init__') and hasattr(module_class, 'setup'):
+                        # Create module info dict similar to what SpiderFootHelpers.loadModulesAsDict returns
+                        try:
+                            # Try to get module info
+                            temp_instance = module_class()
+                            module_info = {
+                                'name': getattr(temp_instance, '_info', {}).get('name', module_name),
+                                'cats': getattr(temp_instance, '_info', {}).get('cats', []),
+                                'group': getattr(temp_instance, '_info', {}).get('group', 'Unknown'),
+                                'flags': getattr(temp_instance, '_info', {}).get('flags', []),
+                                'descr': getattr(temp_instance, '_info', {}).get('descr', 'No description'),
+                                'provides': getattr(temp_instance, '_info', {}).get('provides', []),
+                                'consumes': getattr(temp_instance, '_info', {}).get('consumes', []),
+                                'meta': getattr(temp_instance, '_info', {}).get('meta', {}),
+                                'object': module_class
+                            }
+                            sfModules[module_name] = module_info
+                            loaded_count += 1
+                            
+                        except Exception as e:
+                            log.warning(f"Could not get info for {module_name}: {e}")
+                            # Still add the module with minimal info
+                            sfModules[module_name] = {
+                                'name': module_name,
+                                'cats': [],
+                                'group': 'Unknown',
+                                'flags': [],
+                                'descr': 'No description available',
+                                'provides': [],
+                                'consumes': [],
+                                'meta': {},
+                                'object': module_class
+                            }
+                            loaded_count += 1
+                    else:
+                        log.warning(f"Module {module_name} class doesn't have expected SpiderFoot methods")
+                        failed_count += 1
+                else:
+                    log.warning(f"Module {module_name} doesn't have expected class {module_name}")
+                    failed_count += 1
+                    
+            except Exception as e:
+                log.error(f"Failed to load module {module_file}: {e}")
+                failed_count += 1
+        
+        log.info(f"Custom loader results: {loaded_count} loaded, {failed_count} failed")
+        
+    except Exception as e:
+        log.error(f"Custom module loader failed: {e}")
+        import traceback
+        log.error(f"Traceback: {traceback.format_exc()}")
+    
+    return sfModules
+
+
 def main():
     """Main entry point."""
     try:
@@ -369,102 +466,6 @@ def main():
             log.info(f"Successfully loaded {len(sfModules)} modules")
             return sfModules  # Return the loaded modules
 
-
-def load_modules_custom(mod_dir, log):
-    """Custom module loader as fallback when SpiderFootHelpers.loadModulesAsDict fails."""
-    sfModules = {}
-    
-    try:
-        import importlib.util
-        import os
-        import sys
-        
-        # Add modules directory to Python path
-        if mod_dir not in sys.path:
-            sys.path.insert(0, mod_dir)
-        
-        # Get all SpiderFoot module files
-        module_files = [f for f in os.listdir(mod_dir) 
-                       if f.startswith('sfp_') and f.endswith('.py') and f != 'sfp_template.py']
-        
-        log.info(f"Custom loader: attempting to load {len(module_files)} modules")
-        
-        loaded_count = 0
-        failed_count = 0
-        
-        for module_file in module_files:
-            try:
-                module_name = module_file[:-3]  # Remove .py extension
-                module_path = os.path.join(mod_dir, module_file)
-                
-                # Create module spec and load
-                spec = importlib.util.spec_from_file_location(module_name, module_path)
-                if spec is None:
-                    log.warning(f"Could not create spec for {module_name}")
-                    failed_count += 1
-                    continue
-                
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                
-                # Check if module has the expected class
-                if hasattr(module, module_name):
-                    module_class = getattr(module, module_name)
-                    
-                    # Basic validation - check if it looks like a SpiderFoot module
-                    if hasattr(module_class, '__init__') and hasattr(module_class, 'setup'):
-                        # Create module info dict similar to what SpiderFootHelpers.loadModulesAsDict returns
-                        try:
-                            # Try to get module info
-                            temp_instance = module_class()
-                            module_info = {
-                                'name': getattr(temp_instance, '_info', {}).get('name', module_name),
-                                'cats': getattr(temp_instance, '_info', {}).get('cats', []),
-                                'group': getattr(temp_instance, '_info', {}).get('group', 'Unknown'),
-                                'flags': getattr(temp_instance, '_info', {}).get('flags', []),
-                                'descr': getattr(temp_instance, '_info', {}).get('descr', 'No description'),
-                                'provides': getattr(temp_instance, '_info', {}).get('provides', []),
-                                'consumes': getattr(temp_instance, '_info', {}).get('consumes', []),
-                                'meta': getattr(temp_instance, '_info', {}).get('meta', {}),
-                                'object': module_class
-                            }
-                            sfModules[module_name] = module_info
-                            loaded_count += 1
-                            
-                        except Exception as e:
-                            log.warning(f"Could not get info for {module_name}: {e}")
-                            # Still add the module with minimal info
-                            sfModules[module_name] = {
-                                'name': module_name,
-                                'cats': [],
-                                'group': 'Unknown',
-                                'flags': [],
-                                'descr': 'No description available',
-                                'provides': [],
-                                'consumes': [],
-                                'meta': {},
-                                'object': module_class
-                            }
-                            loaded_count += 1
-                    else:
-                        log.warning(f"Module {module_name} class doesn't have expected SpiderFoot methods")
-                        failed_count += 1
-                else:
-                    log.warning(f"Module {module_name} doesn't have expected class {module_name}")
-                    failed_count += 1
-                    
-            except Exception as e:
-                log.error(f"Failed to load module {module_file}: {e}")
-                failed_count += 1
-        
-        log.info(f"Custom loader results: {loaded_count} loaded, {failed_count} failed")
-        
-    except Exception as e:
-        log.error(f"Custom module loader failed: {e}")
-        import traceback
-        log.error(f"Traceback: {traceback.format_exc()}")
-    
-    return sfModules
 
 def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
     """Start a scan based on the provided configuration and command-line
