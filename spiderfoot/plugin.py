@@ -107,8 +107,7 @@ class SpiderFootPlugin:
     errorState = False
     incomingEventQueue = None
     outgoingEventQueue = None
-    
-    # Threading
+      # Threading
     _stopScanning = False
     _currentEvent = None
     _currentTarget = None
@@ -116,7 +115,10 @@ class SpiderFootPlugin:
     _sharedThreadPool = None
     _thread = None
     running = False
-      # Database and listeners    _dbh = None
+    maxThreads = 10  # Default maximum threads for this module
+    
+    # Database and listeners
+    _dbh = None
     _listeners = []
     
     def __init__(self):

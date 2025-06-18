@@ -497,9 +497,11 @@ def main():
                             filepath = os.path.join(correlations_dir, filename)
                             try:
                                 with open(filepath, 'r', encoding='utf-8') as f:
-                                    rule = yaml.safe_load(f)
+                                    raw_yaml = f.read()
+                                    rule = yaml.safe_load(raw_yaml)
                                     if rule and isinstance(rule, dict):
                                         rule['id'] = filename[:-5]  # Remove .yaml extension
+                                        rule['rawYaml'] = raw_yaml  # Store raw YAML content
                                         correlation_rules.append(rule)
                             except Exception as e:
                                 log.warning(f"Failed to load correlation rule {filename}: {e}")
