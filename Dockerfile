@@ -13,6 +13,17 @@ RUN pip install --no-cache-dir -U pip==25.0.1 && pip install --no-cache-dir -r r
 # Copy application files before creating user
 COPY . .
 
+# Debug: Check if modules directory exists and list its contents
+RUN echo "Checking modules directory after COPY:" \
+    && ls -la /home/spiderfoot/ \
+    && if [ -d /home/spiderfoot/modules ]; then \
+        echo "Modules directory exists, listing contents:" \
+        && ls -la /home/spiderfoot/modules/ \
+        && echo "Module count: $(find /home/spiderfoot/modules -name "*.py" | wc -l)"; \
+    else \
+        echo "ERROR: Modules directory not found!"; \
+    fi
+
 # Place database and logs outside installation directory
 ENV SPIDERFOOT_DATA /var/lib/spiderfoot
 ENV SPIDERFOOT_LOGS /var/lib/spiderfoot/log
@@ -30,8 +41,9 @@ RUN addgroup --system spiderfoot \
     && chown -R spiderfoot:spiderfoot /home/spiderfoot \
     && chown spiderfoot:spiderfoot $SPIDERFOOT_DATA \
     && chown spiderfoot:spiderfoot $SPIDERFOOT_LOGS \
-    && chown spiderfoot:spiderfoot $SPIDERFOOT_CACHE
-
+    && chown spiderfoot:spiderfoot $SPIDERFOOT_CACHE \
+    && echo "Final check of modules directory ownership and permissions:" \
+    && ls -la /home/spiderfoot/modules/ || echo "Modules directory still not found"
 
 RUN mkdir -p /tools/bin
 WORKDIR /tools/bin
