@@ -473,16 +473,18 @@ def main():
                 if not sfModules:
                     log.critical(f"Both standard and custom module loaders failed for directory: {mod_dir}")
                     # ... existing debugging code ...
-                    sys.exit(-1)                    
+                    sys.exit(-1)
+                    
             except Exception as e:
                 log.critical(f"Failed to load modules: {e}", exc_info=True)
                 sys.exit(-1)
 
             log.info(f"Successfully loaded {len(sfModules)} modules")
-            sfConfig['__modules__'] = sfModules            # Load correlation rules
+            sfConfig['__modules__'] = sfModules
+
+            # Load correlation rules
             try:
                 import yaml
-                import os
                 correlations_dir = os.path.join(script_dir, 'correlations')
                 correlation_rules = []
                 
