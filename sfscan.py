@@ -35,6 +35,13 @@ def startSpiderFootScanner(loggingQueue, *args, **kwargs):
     Returns:
         SpiderFootScanner: Initialized SpiderFootScanner object
     """
+    # Ensure modules directory is in Python path for dynamic imports
+    import sys
+    import os
+    modules_dir = os.path.join(os.path.dirname(__file__), 'modules')
+    if modules_dir not in sys.path:
+        sys.path.insert(0, modules_dir)
+    
     logger.logWorkerSetup(loggingQueue)
     return SpiderFootScanner(*args, **kwargs)
 

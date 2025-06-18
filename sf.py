@@ -122,6 +122,9 @@ def load_modules_custom(mod_dir, log):
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
                 
+                # Register the module in sys.modules to ensure it can be pickled
+                sys.modules[module_name] = module
+                
                 # Check if module has the expected class
                 if hasattr(module, module_name):
                     module_class = getattr(module, module_name)
@@ -146,35 +149,25 @@ def load_modules_custom(mod_dir, log):
                                         info_dict = getattr(temp_instance, '_info', {})
                                 except:
                                     # If instantiation fails, use defaults
-                                    pass
-                            
+                                    pass                            
                             module_info = {
-                                'name': info_dict.get('name', module_name),
-                                'cats': info_dict.get('cats', []),
-                                'group': info_dict.get('group', 'Unknown'),
-                                'flags': info_dict.get('flags', []),
                                 'descr': info_dict.get('descr', 'No description'),
                                 'provides': info_dict.get('provides', []),
                                 'consumes': info_dict.get('consumes', []),
-                                'meta': info_dict.get('meta', {}),
-                                'object': module_class
+                                'opts': getattr(module_class, 'opts', {}),
+                                'group': info_dict.get('group', [])
                             }
                             sfModules[module_name] = module_info
                             loaded_count += 1
                             
                         except Exception as e:
-                            log.warning(f"Could not get info for {module_name}: {e}")
-                            # Still add the module with minimal info
+                            log.warning(f"Could not get info for {module_name}: {e}")                            # Still add the module with minimal info
                             sfModules[module_name] = {
-                                'name': module_name,
-                                'cats': [],
-                                'group': 'Unknown',
-                                'flags': [],
                                 'descr': 'No description available',
                                 'provides': [],
                                 'consumes': [],
-                                'meta': {},
-                                'object': module_class
+                                'opts': getattr(module_class, 'opts', {}),
+                                'group': []
                             }
                             loaded_count += 1
                     else:
