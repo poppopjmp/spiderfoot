@@ -116,8 +116,7 @@ class SpiderFootPlugin:
     _sharedThreadPool = None
     _thread = None
     running = False
-      # Database and listeners
-    _dbh = None
+      # Database and listeners    _dbh = None
     _listeners = []
     
     def __init__(self):
@@ -125,6 +124,9 @@ class SpiderFootPlugin:
         self._listeners = []
         self.errorState = False
         self._stopScanning = False
+        self.__outputFilter__ = None
+        self._log = None
+        self.__scanId__ = None
         # self.running = False  # Removed: conflicts with running property
         
     def setup(self, sf, userOpts=dict()):
@@ -282,7 +284,7 @@ class SpiderFootPlugin:
             # temporarily set logger class
             logging.setLoggerClass(SpiderFootPluginLogger)
             # init SpiderFootPluginLogger
-            self._log = logging.getLogger(f"spiderfoot.{self.__name__}")
+            self._log = logging.getLogger(f"spiderfoot.{getattr(self, '__name__', self.__class__.__name__)}")
             # reset logger class to default
             logging.setLoggerClass(logging.Logger)
         return self._log
