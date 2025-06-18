@@ -83,12 +83,12 @@ COPY --from=builder /install /usr/local
 # Copy tools from builder
 COPY --from=builder /tools /tools
 
-# Set up environment
+# Set up environment with explicit Python path
 ENV SPIDERFOOT_DATA=/var/lib/spiderfoot \
     SPIDERFOOT_LOGS=/var/lib/spiderfoot/log \
     SPIDERFOOT_CACHE=/var/lib/spiderfoot/cache \
     PATH="/tools/bin:$PATH" \
-    PYTHONPATH="/usr/local/lib/python3.9/site-packages"
+    PYTHONPATH="/usr/local/lib/python3.9/site-packages:/home/spiderfoot:/home/spiderfoot/modules"
 
 # Create user and directories
 RUN addgroup --system spiderfoot && \
@@ -100,25 +100,27 @@ RUN addgroup --system spiderfoot && \
 # Enable NMAP capabilities
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
 
-# Copy application files BEFORE switching to spiderfoot user
+# Copy application files
 WORKDIR /home/spiderfoot
-
-# Copy the entire application directory structure
 COPY --chown=spiderfoot:spiderfoot . .
 
-# Verify the modules directory exists and contains files
-RUN echo "=== Directory structure ===" && \
-    ls -la /home/spiderfoot/ && \
-    echo "=== Modules directory ===" && \
-    ls -la /home/spiderfoot/modules/ | head -20 && \
-    echo "=== Module count ===" && \
-    find /home/spiderfoot/modules -name 'sfp_*.py' | wc -l && \
-    echo "=== Sample modules ===" && \
-    find /home/spiderfoot/modules -name 'sfp_*.py' | head -5 && \
-    echo "=== Python dependencies ===" && \
+# Create __init__.py files if they don't exist
+RUN touch /home/spiderfoot/__init__.py && \
+    touch /home/spiderfoot/modules/__init__.py && \
+    touch /home/spiderfoot/spiderfoot/__init__.py
+
+# Verify critical dependencies and module structure
+RUN echo "=== Python Path Test ===" && \
+    python3 -c "import sys; print('Python path:'); [print(f'  {p}') for p in sys.path]" && \
+    echo "=== Dependency Test ===" && \
     python3 -c "import cherrypy; print('CherryPy found')" && \
     python3 -c "import requests; print('Requests found')" && \
-    python3 -c "import lxml; print('LXML found')"
+    python3 -c "import lxml; print('LXML found')" && \
+    echo "=== SpiderFoot Import Test ===" && \
+    python3 -c "from spiderfoot import SpiderFootHelpers; print('SpiderFootHelpers imported')" && \
+    python3 -c "from sflib import SpiderFoot; print('SpiderFoot imported')" && \
+    echo "=== Module Count ===" && \
+    find /home/spiderfoot/modules -name 'sfp_*.py' | wc -l
 
 USER spiderfoot
 

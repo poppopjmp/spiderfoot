@@ -226,6 +226,9 @@ def main():
                 log.info(f"Script directory: {script_dir}")
                 log.info(f"Current working directory: {os.getcwd()}")
                 log.info(f"Looking for modules in: {mod_dir}")
+            except Exception as e:
+                log.critical(f"Failed to load modules: {e}")
+                sys.exit(-1)
                 
                 # Check if modules directory exists at the expected location
                 if not os.path.exists(mod_dir) or not os.path.isdir(mod_dir):
@@ -287,23 +290,98 @@ def main():
                     sys.exit(-1)
                 
                 # Now try to load the modules
-                sfModules = SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_template.py'])
+                try:
+                    log.info("Attempting to load modules with SpiderFootHelpers.loadModulesAsDict...")
+                    
+                    # First, let's test if we can import SpiderFootHelpers properly
+                    try:
+                        from spiderfoot import SpiderFootHelpers
+                        log.info("SpiderFootHelpers imported successfully")
+                    except Exception as e:
+                        log.critical(f"Failed to import SpiderFootHelpers: {e}")
+                        sys.exit(-1)
+                    
+                    # Test loading a single module manually to diagnose issues
+                    sample_modules = [f for f in os.listdir(mod_dir) if f.startswith('sfp_') and f.endswith('.py')][:3]
+                    log.info(f"Testing manual import of sample modules: {sample_modules}")
+                    
+                    for sample_mod in sample_modules:
+                        try:
+                            mod_name = sample_mod[:-3]  # Remove .py extension
+                            log.info(f"Testing import of {mod_name}")
+                            
+                            # Add modules directory to Python path temporarily
+                            if mod_dir not in sys.path:
+                                sys.path.insert(0, mod_dir)
+                            
+                            # Try to import the module
+                            import importlib.util
+                            spec = importlib.util.spec_from_file_location(mod_name, os.path.join(mod_dir, sample_mod))
+                            if spec is None:
+                                log.error(f"Could not create spec for {mod_name}")
+                                continue
+                                
+                            module = importlib.util.module_from_spec(spec)
+                            spec.loader.exec_module(module)
+                            log.info(f"Successfully imported {mod_name}")
+                            
+                            # Check if the module has the expected SpiderFoot class
+                            if hasattr(module, mod_name):
+                                log.info(f"Module {mod_name} has expected class")
+                            else:
+                                log.warning(f"Module {mod_name} missing expected class")
+                                
+                        except Exception as e:
+                            log.error(f"Failed to import {mod_name}: {e}")
+                            log.error(f"Error type: {type(e).__name__}")
+                            import traceback
+                            log.error(f"Traceback: {traceback.format_exc()}")
+                    
+                    # Now try the actual SpiderFootHelpers.loadModulesAsDict
+                    log.info("Calling SpiderFootHelpers.loadModulesAsDict...")
+                    sfModules = SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_template.py'])
+                    
+                except Exception as e:
+                    log.critical(f"Exception during module loading: {e}")
+                    import traceback
+                    log.critical(f"Full traceback: {traceback.format_exc()}")
+                    sys.exit(-1)
                 
                 if not sfModules:
                     log.critical(f"SpiderFootHelpers.loadModulesAsDict returned empty dict for directory: {mod_dir}")
-                    # Additional debugging
-                    log.critical("This could indicate:")
-                    log.critical("1. Import errors in the modules")
-                    log.critical("2. Missing __init__.py files")
-                    log.critical("3. Python path issues")
-                    log.critical("4. Permission issues")
+                    
+                    # Additional debugging - check Python path
+                    log.critical(f"Current Python path: {sys.path}")
+                    
+                    # Check if spiderfoot package is properly installed/available
+                    try:
+                        import spiderfoot
+                        log.critical(f"spiderfoot package location: {spiderfoot.__file__}")
+                    except Exception as e:
+                        log.critical(f"Cannot import spiderfoot package: {e}")
+                    
+                    # Try alternative loading method
+                    log.critical("Attempting alternative module loading...")
+                    try:
+                        # Add current directory to path
+                        script_dir = os.path.dirname(os.path.abspath(__file__))
+                        if script_dir not in sys.path:
+                            sys.path.insert(0, script_dir)
+                        
+                        # Try importing sflib directly
+                        from sflib import SpiderFoot
+                        log.critical("sflib.SpiderFoot imported successfully")
+                        
+                        # Create a SpiderFoot instance and try to load modules
+                        sf_instance = SpiderFoot(sfConfig)
+                        log.critical("SpiderFoot instance created successfully")
+                        
+                    except Exception as e:
+                        log.critical(f"Alternative loading failed: {e}")
+                        import traceback
+                        log.critical(f"Traceback: {traceback.format_exc()}")
+                    
                     sys.exit(-1)
-                
-                log.info(f"Successfully loaded {len(sfModules)} modules")
-                
-            except Exception as e:
-                log.critical(f"Failed to load modules: {e}", exc_info=True)
-                sys.exit(-1)
 
             if not sfModules:
                 log.critical(f"No modules found in modules directory: {mod_dir}")
