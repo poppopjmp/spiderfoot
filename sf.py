@@ -200,6 +200,9 @@ def load_modules_custom(mod_dir, log):
 
 def main():
     """Main entry point."""
+    # Set up logging first
+    log = logging.getLogger(f"spiderfoot.{__name__}")
+    
     try:
         # Ensure we're in the correct directory
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -324,7 +327,6 @@ def main():
             loggingQueue = mp.Queue()
             logListenerSetup(loggingQueue, sfConfig)
             logWorkerSetup(loggingQueue)
-            log = logging.getLogger(f"spiderfoot.{__name__}")
 
             # Add descriptions of the global config options
             sfConfig['__globaloptdescs__'] = sfOptdescs
