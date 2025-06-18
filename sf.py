@@ -445,8 +445,7 @@ def main():
                     log.critical(f"Exception during module loading: {e}")
                     import traceback
                     log.critical(f"Full traceback: {traceback.format_exc()}")
-                    
-                    # Try custom loader as fallback
+                      # Try custom loader as fallback
                     log.info("Trying custom module loader as fallback...")
                     try:
                         sfModules = load_modules_custom(mod_dir, log)
@@ -454,17 +453,83 @@ def main():
                         log.critical(f"Custom loader also failed: {e2}")
                         return sfModules  # Return empty dict
                 
-            except Exception as e:
-                log.critical(f"Failed to load modules: {e}", exc_info=True)
-                return sfModules  # Return empty dict instead of sys.exit
-
             if not sfModules:
                 log.critical(f"Both standard and custom module loaders failed for directory: {mod_dir}")
                 # ... existing debugging code ...
-                return sfModules  # Return empty dict instead of sys.exit
+                sys.exit(-1)
 
             log.info(f"Successfully loaded {len(sfModules)} modules")
-            return sfModules  # Return the loaded modules
+            sfConfig['__modules__'] = sfModules
+
+            # Load correlation rules
+            try:
+                from spiderfoot import SpiderFootCorrelator
+                correlations_dir = os.path.join(script_dir, 'correlations')
+                sfConfig['__correlationrules__'] = SpiderFootCorrelator.loadRulesAsDict(correlations_dir)
+                log.info(f"Loaded {len(sfConfig['__correlationrules__'])} correlation rules")
+            except Exception as e:
+                log.warning(f"Failed to load correlation rules: {e}")
+                sfConfig['__correlationrules__'] = {}
+
+            # Handle different command line options
+            if args.C:
+                # Correlate
+                dbh = SpiderFootDb(sfConfig, init=True)
+                correlator = SpiderFootCorrelator(sfConfig, dbh)
+                correlator.correlateAll(args.C)
+                sys.exit(0)
+
+            if args.M:
+                # List modules
+                modKeys = sorted(sfModules.keys())
+                print(f"Total modules: {len(modKeys)}")
+                for modName in modKeys:
+                    info = sfModules[modName]
+                    print(f"{modName}: {info.get('descr', 'No description')}")
+                sys.exit(0)
+
+            if args.T:
+                # List event types
+                dbh = SpiderFootDb(sfConfig, init=True)
+                etypes = dbh.eventTypes()
+                if etypes:
+                    print(f"Total event types: {len(etypes)}")
+                    for etype in sorted(etypes, key=lambda x: x[1]):
+                        print(f"{etype[1]}")
+                sys.exit(0)
+
+            # Handle scanning mode
+            if args.s:
+                start_scan(sfConfig, sfModules, args, loggingQueue)
+                return
+
+            # Handle server modes
+            if args.listen:
+                listenhost, listenport = args.listen.split(":")
+                sfWebUiConfig['host'] = listenhost
+                sfWebUiConfig['port'] = int(listenport)
+
+            if args.api_listen:
+                apihost, apiport = args.api_listen.split(":")
+                sfApiConfig['host'] = apihost
+                sfApiConfig['port'] = int(apiport)
+
+            if args.api_workers:
+                sfApiConfig['workers'] = args.api_workers
+
+            if args.api:
+                start_fastapi_server(sfApiConfig, sfConfig, loggingQueue)
+            elif args.both:
+                start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue)
+            else:
+                start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
+
+    except KeyboardInterrupt:
+        log.info("Interrupted.")
+        sys.exit(0)
+    except Exception as e:
+        log.critical(f"Unhandled exception in main: {e}", exc_info=True)
+        sys.exit(-1)
 
 
 def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
