@@ -435,8 +435,7 @@ def main():
                     # Now try the actual SpiderFootHelpers.loadModulesAsDict
                     log.info("Calling SpiderFootHelpers.loadModulesAsDict...")
                     sfModules = SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_template.py'])
-                    
-                    # If the standard method fails, try our custom loader
+                      # If the standard method fails, try our custom loader
                     if not sfModules:
                         log.warning("Standard loadModulesAsDict failed, trying custom loader...")
                         sfModules = load_modules_custom(mod_dir, log)
@@ -453,9 +452,12 @@ def main():
                         log.critical(f"Custom loader also failed: {e2}")
                         return sfModules  # Return empty dict
                 
-            if not sfModules:
-                log.critical(f"Both standard and custom module loaders failed for directory: {mod_dir}")
-                # ... existing debugging code ...
+                if not sfModules:
+                    log.critical(f"Both standard and custom module loaders failed for directory: {mod_dir}")
+                    # ... existing debugging code ...
+                    sys.exit(-1)                    
+            except Exception as e:
+                log.critical(f"Failed to load modules: {e}", exc_info=True)
                 sys.exit(-1)
 
             log.info(f"Successfully loaded {len(sfModules)} modules")
@@ -519,10 +521,13 @@ def main():
 
             if args.api:
                 start_fastapi_server(sfApiConfig, sfConfig, loggingQueue)
-            elif args.both:
-                start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue)
+            elif args.both:                start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue)
             else:
                 start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
+                
+        except Exception as e:
+            log.critical(f"Unhandled exception in main configuration: {e}", exc_info=True)
+            sys.exit(-1)
 
     except KeyboardInterrupt:
         log.info("Interrupted.")
