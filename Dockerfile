@@ -103,18 +103,24 @@ RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
 # Copy application files BEFORE switching to spiderfoot user
 WORKDIR /home/spiderfoot
 
-# Copy specific directories to ensure they exist
-COPY --chown=spiderfoot:spiderfoot . ./
+# Copy the entire application directory structure
+COPY --chown=spiderfoot:spiderfoot . .
 
-# Verify critical files and directories exist
-RUN ls -la /home/spiderfoot/ && \
-    ls -la /home/spiderfoot/modules/ && \
-    echo "Module count: $(find /home/spiderfoot/modules -name '*.py' | wc -l)" && \
+# Verify the modules directory exists and contains files
+RUN echo "=== Directory structure ===" && \
+    ls -la /home/spiderfoot/ && \
+    echo "=== Modules directory ===" && \
+    ls -la /home/spiderfoot/modules/ | head -20 && \
+    echo "=== Module count ===" && \
+    find /home/spiderfoot/modules -name 'sfp_*.py' | wc -l && \
+    echo "=== Sample modules ===" && \
+    find /home/spiderfoot/modules -name 'sfp_*.py' | head -5 && \
+    echo "=== Python dependencies ===" && \
     python3 -c "import cherrypy; print('CherryPy found')" && \
     python3 -c "import requests; print('Requests found')" && \
     python3 -c "import lxml; print('LXML found')"
 
-#USER spiderfoot
+USER spiderfoot
 
 EXPOSE 5001 8001
 

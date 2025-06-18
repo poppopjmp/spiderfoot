@@ -218,29 +218,88 @@ def main():
 
             # Load each module in the modules directory with a .py extension
             try:
-                # Get the correct modules path for container environment
+                # Get the correct modules path - ensure we're looking in the right place
                 script_dir = os.path.dirname(os.path.abspath(__file__))
                 mod_dir = os.path.join(script_dir, 'modules')
                 
-                # In container, check if modules directory exists
-                if not os.path.exists(mod_dir):
-                    # Try alternative paths in container
+                # Debug: Print current working directory and script directory
+                log.info(f"Script directory: {script_dir}")
+                log.info(f"Current working directory: {os.getcwd()}")
+                log.info(f"Looking for modules in: {mod_dir}")
+                
+                # Check if modules directory exists at the expected location
+                if not os.path.exists(mod_dir) or not os.path.isdir(mod_dir):
+                    log.warning(f"Modules directory not found at: {mod_dir}")
+                    
+                    # Try alternative paths
                     alternative_paths = [
-                        '/home/spiderfoot/modules',
-                        os.path.join(os.getcwd(), 'modules'),
-                        os.path.join(script_dir, '..', 'modules')
+                        os.path.join(os.getcwd(), 'modules'),  # Current working directory
+                        '/home/spiderfoot/modules',            # Container absolute path
+                        os.path.join(script_dir, '..', 'modules'),  # Parent directory
+                        './modules'                            # Relative path
                     ]
                     
+                    mod_dir = None
                     for alt_path in alternative_paths:
-                        if os.path.exists(alt_path) and os.path.isdir(alt_path):
-                            mod_dir = os.path.abspath(alt_path)
-                            break
-                    else:
-                        log.critical(f"No modules directory found. Searched: {script_dir}/modules, {alternative_paths}")
+                        abs_path = os.path.abspath(alt_path)
+                        log.info(f"Trying alternative path: {abs_path}")
+                        if os.path.exists(abs_path) and os.path.isdir(abs_path):
+                            # Check if it actually contains Python files
+                            py_files = [f for f in os.listdir(abs_path) if f.endswith('.py') and f.startswith('sfp_')]
+                            if py_files:
+                                mod_dir = abs_path
+                                log.info(f"Found modules directory with {len(py_files)} Python files at: {mod_dir}")
+                                break
+                            else:
+                                log.info(f"Directory exists but contains no SpiderFoot modules: {abs_path}")
+                    
+                    if not mod_dir:
+                        # List contents of script directory for debugging
+                        log.error(f"Contents of script directory {script_dir}:")
+                        try:
+                            for item in os.listdir(script_dir):
+                                item_path = os.path.join(script_dir, item)
+                                if os.path.isdir(item_path):
+                                    log.error(f"  [DIR]  {item}")
+                                else:
+                                    log.error(f"  [FILE] {item}")
+                        except Exception as e:
+                            log.error(f"Cannot list directory contents: {e}")
+                        
+                        log.critical("No modules directory found in any expected location")
                         sys.exit(-1)
                 
                 log.info(f"Loading modules from: {mod_dir}")
+                
+                # Additional validation: check if directory has any Python files
+                try:
+                    py_files = [f for f in os.listdir(mod_dir) if f.endswith('.py')]
+                    sfp_files = [f for f in py_files if f.startswith('sfp_')]
+                    log.info(f"Found {len(py_files)} total Python files, {len(sfp_files)} SpiderFoot modules")
+                    
+                    if len(sfp_files) == 0:
+                        log.critical(f"No SpiderFoot modules (sfp_*.py) found in {mod_dir}")
+                        log.critical(f"Python files found: {py_files[:10]}...")  # Show first 10
+                        sys.exit(-1)
+                        
+                except Exception as e:
+                    log.critical(f"Cannot read modules directory {mod_dir}: {e}")
+                    sys.exit(-1)
+                
+                # Now try to load the modules
                 sfModules = SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_template.py'])
+                
+                if not sfModules:
+                    log.critical(f"SpiderFootHelpers.loadModulesAsDict returned empty dict for directory: {mod_dir}")
+                    # Additional debugging
+                    log.critical("This could indicate:")
+                    log.critical("1. Import errors in the modules")
+                    log.critical("2. Missing __init__.py files")
+                    log.critical("3. Python path issues")
+                    log.critical("4. Permission issues")
+                    sys.exit(-1)
+                
+                log.info(f"Successfully loaded {len(sfModules)} modules")
                 
             except Exception as e:
                 log.critical(f"Failed to load modules: {e}", exc_info=True)
