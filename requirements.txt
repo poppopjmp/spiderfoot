@@ -35,5 +35,5 @@ python-jose>=3.3.0,<4.0.0
 passlib>=1.7.4,<2.0.0
 fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
-python-multipart>=0.0.6
+python-multipart>=0.0.18
 websockets>=12.0
