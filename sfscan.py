@@ -22,6 +22,7 @@ import dns.resolver
 
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool, SpiderFootCorrelator, logger
+from spiderfoot.logger import logWorkerSetup
 
 
 def startSpiderFootScanner(loggingQueue, *args, **kwargs):
@@ -40,9 +41,8 @@ def startSpiderFootScanner(loggingQueue, *args, **kwargs):
     import os
     modules_dir = os.path.join(os.path.dirname(__file__), 'modules')
     if modules_dir not in sys.path:
-        sys.path.insert(0, modules_dir)
-    
-    logger.logWorkerSetup(loggingQueue)
+        sys.path.insert(0, modules_dir)    
+    logWorkerSetup(loggingQueue)
     return SpiderFootScanner(*args, **kwargs)
 
 
