@@ -30,8 +30,12 @@ WORKDIR /build
 # Copy requirements and install Python packages
 ARG REQUIREMENTS=requirements.txt
 COPY $REQUIREMENTS requirements.txt ./
+
+# Install Python packages to a single prefix location
 RUN pip install --no-cache-dir -U pip==25.0.1 && \
-    pip install --no-cache-dir --prefix=/install -r requirements.txt
+    pip install --no-cache-dir --prefix=/install -r requirements.txt && \
+    # Install additional tools to the same prefix
+    pip install --no-cache-dir --prefix=/install dnstwist snallygaster trufflehog wafw00f
 
 # Download and build tools
 RUN mkdir -p /tools/bin && \
@@ -45,12 +49,10 @@ RUN mkdir -p /tools/bin && \
     # Node.js tools
     npm config set prefix /tools && \
     npm install -g retire && \
-    # Python tools
-    pip install --no-cache-dir --prefix=/tools-python dnstwist snallygaster trufflehog wafw00f && \
     # Git tools
     git clone --depth 1 https://github.com/testssl/testssl.sh.git /tools/testssl.sh && \
     git clone --depth 1 https://github.com/Tuhinshubhra/CMSeeK /tools/CMSeeK && \
-    pip install --no-cache-dir --prefix=/tools-python -r /tools/CMSeeK/requirements.txt && \
+    pip install --no-cache-dir --prefix=/install -r /tools/CMSeeK/requirements.txt && \
     mkdir /tools/CMSeeK/Results
 
 # Runtime stage
@@ -72,11 +74,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dnsutils \
     coreutils \
     libcap2-bin \
+    ca-certificates \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from builder
+# Copy Python packages from builder (consolidated to single location)
 COPY --from=builder /install /usr/local
-COPY --from=builder /tools-python /usr/local
 
 # Copy tools from builder
 COPY --from=builder /tools /tools
@@ -85,7 +87,8 @@ COPY --from=builder /tools /tools
 ENV SPIDERFOOT_DATA=/var/lib/spiderfoot \
     SPIDERFOOT_LOGS=/var/lib/spiderfoot/log \
     SPIDERFOOT_CACHE=/var/lib/spiderfoot/cache \
-    PATH="/tools/bin:$PATH"
+    PATH="/tools/bin:$PATH" \
+    PYTHONPATH="/usr/local/lib/python3.9/site-packages:$PYTHONPATH"
 
 # Create user and directories
 RUN addgroup --system spiderfoot && \
@@ -100,6 +103,11 @@ RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
 # Copy application files
 WORKDIR /home/spiderfoot
 COPY --chown=spiderfoot:spiderfoot . .
+
+# Verify critical dependencies are available
+RUN python3 -c "import cherrypy; print('CherryPy found')" && \
+    python3 -c "import requests; print('Requests found')" && \
+    python3 -c "import lxml; print('LXML found')"
 
 USER spiderfoot
 
