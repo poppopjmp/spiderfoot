@@ -44,21 +44,6 @@ def startSpiderFootScanner(loggingQueue, *args, **kwargs):
         sys.path.insert(0, modules_dir)    
     logWorkerSetup(loggingQueue)
     
-    # Debug logging to track the multiprocessing arguments
-    import logging
-    log = logging.getLogger(f"spiderfoot.{__name__}")
-    log.info(f"startSpiderFootScanner called with args: {args}")
-    log.info(f"startSpiderFootScanner called with kwargs: {kwargs}")
-    
-    # Validate arguments before passing to SpiderFootScanner
-    if len(args) >= 4:
-        scanName, scanId, targetValue, targetType = args[0], args[1], args[2], args[3]
-        log.info(f"Arguments: scanName={scanName}, scanId={scanId}, targetValue={targetValue}, targetType={targetType}")
-        
-        if targetType is None:
-            log.error(f"ERROR: targetType is None! Full args: {args}")
-            raise ValueError(f"targetType is None when starting scanner. Args received: {args}")
-    
     return SpiderFootScanner(*args, **kwargs)
 
 
@@ -123,6 +108,8 @@ class SpiderFootScanner():
         if not scanId:
             raise ValueError("scanId value is blank")
 
+        self.__scanId = scanId
+
         if not isinstance(targetValue, str):
             raise TypeError(
                 f"targetValue is {type(targetValue)}; expected str()")
@@ -136,6 +123,8 @@ class SpiderFootScanner():
                 f"targetType is {type(targetType)}; expected str()")
         if not targetType:
             raise ValueError("targetType value is blank")
+
+        self.__targetType = targetType
 
         if not isinstance(moduleList, list):
             raise TypeError(

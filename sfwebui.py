@@ -1516,13 +1516,8 @@ class SpiderFootWebUi:
         if targetType in ["HUMAN_NAME", "USERNAME", "BITCOIN_ADDRESS"]:
             scantarget = scantarget.replace("\"", "")
         else:
-            scantarget = scantarget.lower()
-
-        # Start running a new scan
+            scantarget = scantarget.lower()        # Start running a new scan
         scanId = SpiderFootHelpers.genScanInstanceId()
-        
-        # Debug logging to track the arguments being passed
-        self.log.info(f"Starting scan with: scanname={scanname}, scanId={scanId}, scantarget={scantarget}, targetType={targetType}, modlist={modlist}")
         
         try:
             p = mp.Process(target=startSpiderFootScanner, args=(
