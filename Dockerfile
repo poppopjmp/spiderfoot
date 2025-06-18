@@ -10,6 +10,9 @@ WORKDIR /home/spiderfoot
 COPY $REQUIREMENTS requirements.txt ./
 RUN pip install --no-cache-dir -U pip==25.0.1 && pip install --no-cache-dir -r requirements.txt
 
+# Copy application files before creating user
+COPY . .
+
 # Place database and logs outside installation directory
 ENV SPIDERFOOT_DATA /var/lib/spiderfoot
 ENV SPIDERFOOT_LOGS /var/lib/spiderfoot/log
@@ -23,6 +26,7 @@ RUN addgroup --system spiderfoot \
     && mkdir -p $SPIDERFOOT_DATA || true \
     && mkdir -p $SPIDERFOOT_LOGS || true \
     && mkdir -p $SPIDERFOOT_CACHE || true \
+    && chown -R spiderfoot:spiderfoot /home/spiderfoot \
     && chown spiderfoot:spiderfoot $SPIDERFOOT_DATA \
     && chown spiderfoot:spiderfoot $SPIDERFOOT_LOGS \
     && chown spiderfoot:spiderfoot $SPIDERFOOT_CACHE
@@ -69,14 +73,13 @@ RUN pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f -t /tool
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
 
 WORKDIR /home/spiderfoot/.spiderfoot/logs
-RUN chown -R spiderfoot:spiderfoot /home/spiderfoot/
 USER spiderfoot
 
 EXPOSE 5001
 EXPOSE 8001
 
 WORKDIR /home/spiderfoot
-COPY . .
+# Remove the duplicate COPY . . line
 # Run the application.
 ENTRYPOINT ["python3"]
 CMD ["sf.py", "-l", "0.0.0.0:5001"]
