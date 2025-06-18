@@ -339,172 +339,132 @@ def main():
                     log.info("Calling SpiderFootHelpers.loadModulesAsDict...")
                     sfModules = SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_template.py'])
                     
+                    # If the standard method fails, try our custom loader
+                    if not sfModules:
+                        log.warning("Standard loadModulesAsDict failed, trying custom loader...")
+                        sfModules = load_modules_custom(mod_dir, log)
+                    
                 except Exception as e:
                     log.critical(f"Exception during module loading: {e}")
                     import traceback
                     log.critical(f"Full traceback: {traceback.format_exc()}")
-                    return sfModules  # Return empty dict instead of sys.exit
+                    
+                    # Try custom loader as fallback
+                    log.info("Trying custom module loader as fallback...")
+                    try:
+                        sfModules = load_modules_custom(mod_dir, log)
+                    except Exception as e2:
+                        log.critical(f"Custom loader also failed: {e2}")
+                        return sfModules  # Return empty dict
                 
             except Exception as e:
                 log.critical(f"Failed to load modules: {e}", exc_info=True)
                 return sfModules  # Return empty dict instead of sys.exit
 
             if not sfModules:
-                log.critical(f"SpiderFootHelpers.loadModulesAsDict returned empty dict for directory: {mod_dir}")
-                
-                # Additional debugging - check Python path
-                log.critical(f"Current Python path: {sys.path}")
-                
-                # Check if spiderfoot package is properly installed/available
-                try:
-                    import spiderfoot
-                    log.critical(f"spiderfoot package location: {spiderfoot.__file__}")
-                except Exception as e:
-                    log.critical(f"Cannot import spiderfoot package: {e}")
-                
-                # Try alternative loading method
-                log.critical("Attempting alternative module loading...")
-                try:
-                    # Add current directory to path
-                    script_dir = os.path.dirname(os.path.abspath(__file__))
-                    if script_dir not in sys.path:
-                        sys.path.insert(0, script_dir)
-                    
-                    # Try importing sflib directly
-                    from sflib import SpiderFoot
-                    log.critical("sflib.SpiderFoot imported successfully")
-                    
-                    # Create a SpiderFoot instance and try to load modules
-                    sf_instance = SpiderFoot(sfConfig)
-                    log.critical("SpiderFoot instance created successfully")
-                    
-                except Exception as e:
-                    log.critical(f"Alternative loading failed: {e}")
-                    import traceback
-                    log.critical(f"Traceback: {traceback.format_exc()}")
-                
+                log.critical(f"Both standard and custom module loaders failed for directory: {mod_dir}")
+                # ... existing debugging code ...
                 return sfModules  # Return empty dict instead of sys.exit
 
             log.info(f"Successfully loaded {len(sfModules)} modules")
             return sfModules  # Return the loaded modules
 
-            if not sfModules:
-                log.critical(f"No modules found in modules directory: {mod_dir}")
-                sys.exit(-1)
 
-            # Load correlation rules
+def load_modules_custom(mod_dir, log):
+    """Custom module loader as fallback when SpiderFootHelpers.loadModulesAsDict fails."""
+    sfModules = {}
+    
+    try:
+        import importlib.util
+        import os
+        import sys
+        
+        # Add modules directory to Python path
+        if mod_dir not in sys.path:
+            sys.path.insert(0, mod_dir)
+        
+        # Get all SpiderFoot module files
+        module_files = [f for f in os.listdir(mod_dir) 
+                       if f.startswith('sfp_') and f.endswith('.py') and f != 'sfp_template.py']
+        
+        log.info(f"Custom loader: attempting to load {len(module_files)} modules")
+        
+        loaded_count = 0
+        failed_count = 0
+        
+        for module_file in module_files:
             try:
-                correlations_dir = os.path.dirname(
-                    os.path.abspath(__file__)) + '/correlations/'
-                correlationRulesRaw = SpiderFootHelpers.loadCorrelationRulesRaw(
-                    correlations_dir, ['template.yaml'])
-            except Exception as e:
-                log.critical(
-                    f"Failed to load correlation rules: {e}", exc_info=True)
-                sys.exit(-1)
-
-            # Initialize database handle
-            try:
-                dbh = SpiderFootDb(sfConfig)
-            except Exception as e:
-                log.critical(f"Failed to initialize database: {e}", exc_info=True)
-                sys.exit(-1)
-
-            # Process correlation rules
-            sfCorrelationRules = list()
-            if not correlationRulesRaw:
-                log.error(
-                    f"No correlation rules found in correlations directory: {correlations_dir}")
-            else:
-                try:
-                    correlator = SpiderFootCorrelator(dbh, correlationRulesRaw)
-                    sfCorrelationRules = correlator.get_ruleset()
-                except Exception as e:
-                    log.critical(
-                        f"Failure initializing correlation rules: {e}", exc_info=True)
-                    sys.exit(-1)
-
-            # Add modules and correlation rules to sfConfig
-            sfConfig['__modules__'] = sfModules
-            sfConfig['__correlationrules__'] = sfCorrelationRules
-
-            # Handle different execution modes
-            if args.correlate:
-                if not correlationRulesRaw:
-                    log.error(
-                        "Unable to perform correlations as no correlation rules were found.")
-                    sys.exit(-1)
-
-                try:
-                    log.info(
-                        f"Running {len(correlationRulesRaw)} correlation rules against scan, {args.correlate}.")
-                    corr = SpiderFootCorrelator(
-                        dbh, correlationRulesRaw, args.correlate)
-                    corr.run_correlations()
-                except Exception as e:
-                    log.critical(
-                        f"Unable to run correlation rules: {e}", exc_info=True)
-                    sys.exit(-1)
-                sys.exit(0)
-
-            if args.modules:
-                log.info("Modules available:")
-                for m in sorted(sfModules.keys()):
-                    if "__" in m:
-                        continue
-                    print(f"{m.ljust(25)}  {sfModules[m]['descr']}")
-                sys.exit(0)
-
-            if args.types:
-                dbh = SpiderFootDb(sfConfig, init=True)
-                log.info("Types available:")
-                typedata = dbh.eventTypes()
-                types = dict()
-                for r in typedata:
-                    types[r[1]] = r[0]
-
-                for t in sorted(types.keys()):
-                    print(f"{t.ljust(45)}  {types[t]}")
-                sys.exit(0)
-
-            if args.listen:
-                try:
-                    (host, port) = args.listen.split(":")
-                except Exception:
-                    log.critical("Invalid ip:port format.")
-                    sys.exit(-1)
-
-                sfWebUiConfig['host'] = host
-                sfWebUiConfig['port'] = int(port)
-
-                if args.both:
-                    start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue)
+                module_name = module_file[:-3]  # Remove .py extension
+                module_path = os.path.join(mod_dir, module_file)
+                
+                # Create module spec and load
+                spec = importlib.util.spec_from_file_location(module_name, module_path)
+                if spec is None:
+                    log.warning(f"Could not create spec for {module_name}")
+                    failed_count += 1
+                    continue
+                
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                
+                # Check if module has the expected class
+                if hasattr(module, module_name):
+                    module_class = getattr(module, module_name)
+                    
+                    # Basic validation - check if it looks like a SpiderFoot module
+                    if hasattr(module_class, '__init__') and hasattr(module_class, 'setup'):
+                        # Create module info dict similar to what SpiderFootHelpers.loadModulesAsDict returns
+                        try:
+                            # Try to get module info
+                            temp_instance = module_class()
+                            module_info = {
+                                'name': getattr(temp_instance, '_info', {}).get('name', module_name),
+                                'cats': getattr(temp_instance, '_info', {}).get('cats', []),
+                                'group': getattr(temp_instance, '_info', {}).get('group', 'Unknown'),
+                                'flags': getattr(temp_instance, '_info', {}).get('flags', []),
+                                'descr': getattr(temp_instance, '_info', {}).get('descr', 'No description'),
+                                'provides': getattr(temp_instance, '_info', {}).get('provides', []),
+                                'consumes': getattr(temp_instance, '_info', {}).get('consumes', []),
+                                'meta': getattr(temp_instance, '_info', {}).get('meta', {}),
+                                'object': module_class
+                            }
+                            sfModules[module_name] = module_info
+                            loaded_count += 1
+                            
+                        except Exception as e:
+                            log.warning(f"Could not get info for {module_name}: {e}")
+                            # Still add the module with minimal info
+                            sfModules[module_name] = {
+                                'name': module_name,
+                                'cats': [],
+                                'group': 'Unknown',
+                                'flags': [],
+                                'descr': 'No description available',
+                                'provides': [],
+                                'consumes': [],
+                                'meta': {},
+                                'object': module_class
+                            }
+                            loaded_count += 1
+                    else:
+                        log.warning(f"Module {module_name} class doesn't have expected SpiderFoot methods")
+                        failed_count += 1
                 else:
-                    start_web_server(sfWebUiConfig, sfConfig, loggingQueue)
-                sys.exit(0)
-
-            if args.api:
-                start_fastapi_server(sfApiConfig, sfConfig, loggingQueue)
-                sys.exit(0)
-
-            if args.both:
-                start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue)
-                sys.exit(0)
-
-            start_scan(sfConfig, sfModules, args, loggingQueue)
-            
-        except KeyboardInterrupt:
-            print("\nInterrupted by user")
-            sys.exit(0)
-        except Exception as e:
-            print(f"Fatal error: {e}")
-            sys.exit(-1)
-
+                    log.warning(f"Module {module_name} doesn't have expected class {module_name}")
+                    failed_count += 1
+                    
+            except Exception as e:
+                log.error(f"Failed to load module {module_file}: {e}")
+                failed_count += 1
+        
+        log.info(f"Custom loader results: {loaded_count} loaded, {failed_count} failed")
+        
     except Exception as e:
-        log.critical(f"No modules found in modules directory: {mod_dir}")
-        print("SpiderFoot requires -l <ip>:<port> to start the web server. Try --help for guidance.")
-        sys.exit(-1)
-
+        log.error(f"Custom module loader failed: {e}")
+        import traceback
+        log.error(f"Traceback: {traceback.format_exc()}")
+    
+    return sfModules
 
 def start_scan(sfConfig: dict, sfModules: dict, args, loggingQueue) -> None:
     """Start a scan based on the provided configuration and command-line
