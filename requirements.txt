@@ -4,7 +4,7 @@ beautifulsoup4==4.13.4
 cherrypy==18.10.0
 cherrypy-cors==1.7.0
 cryptography==45.0.3
-dnspython==2.6.1; python_version >= '3.8'
+dnspython==2.7.0; python_version >= '3.8'
 elasticsearch==9.0.2
 exifread==3.3.1
 fastapi[all]
