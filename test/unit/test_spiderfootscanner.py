@@ -44,6 +44,10 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         self.assertIsInstance(sfscan, SpiderFootScanner)
         self.assertEqual(sfscan.status, "ERROR-FAILED")
 
+        # Ensure thread is not active before setting daemon status
+        if hasattr(sfscan, '_thread') and sfscan._thread and sfscan._thread.is_alive():
+            sfscan._thread.join(timeout=1.0)
+
     def test_init_argument_scanName_of_invalid_type_should_raise_TypeError(self):
         """Test __init__(self, scanName, scanId, scanTarget, targetType,
         moduleList, globalOpts, start=True)"""

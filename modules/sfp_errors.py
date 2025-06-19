@@ -28,6 +28,7 @@ regexps = dict({
 
 
 class sfp_errors(SpiderFootPlugin):
+    __name__ = "sfp_errors"
 
     meta = {
         'name': "Error String Extractor",

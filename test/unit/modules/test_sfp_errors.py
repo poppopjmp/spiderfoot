@@ -28,7 +28,7 @@ class TestModuleErrors(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_should_only_handle_events_from_sfp_spider(selfdepth=0):
+    def test_handleEvent_should_only_handle_events_from_sfp_spider(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_errors()
@@ -65,7 +65,7 @@ class TestModuleErrors(SpiderFootTestBase):
         self.assertIsNone(result)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_should_only_handle_events_within_target_scope(selfdepth=0):
+    def test_handleEvent_should_only_handle_events_within_target_scope(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_errors()

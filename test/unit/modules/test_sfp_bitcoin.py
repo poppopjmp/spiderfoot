@@ -28,7 +28,7 @@ class TestModuleBitcoin(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_containing_bitcoin_string_in_legacy_base58_format_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_containing_bitcoin_string_in_legacy_base58_format_should_return_event(self, selfdepth=0):
         """
         Test handleEvent(self, event) with event data containing bitcoin string in legacy base58 format should return event
         """
@@ -70,7 +70,7 @@ class TestModuleBitcoin(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_containing_bitcoin_string_in_bech32_format_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_containing_bitcoin_string_in_bech32_format_should_return_event(self, selfdepth=0):
         """
         Test handleEvent(self, event) with event data containing bitcoin string in bech32 format should return event
         """
@@ -112,7 +112,7 @@ class TestModuleBitcoin(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_not_containing_bitcoin_string_should_not_return_event(selfdepth=0):
+    def test_handleEvent_event_data_not_containing_bitcoin_string_should_not_return_event(self, selfdepth=0):
         """
         Test handleEvent(self, event) with event data not containing bitcoin string should not return event
         """

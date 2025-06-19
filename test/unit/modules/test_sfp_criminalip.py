@@ -180,6 +180,7 @@ class TestModuleCriminalip(SpiderFootTestBase):
         # Register event emitters if they exist
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
+        self.scanner = sfp_criminalip.sfp_criminalip()
 
     def tearDown(self):
         """Clean up after each test."""

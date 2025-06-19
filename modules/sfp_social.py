@@ -34,6 +34,7 @@ regexps = dict({
 
 
 class sfp_social(SpiderFootPlugin):
+    __name__ = "sfp_social"
 
     meta = {
         'name': "Social Network Identifier",

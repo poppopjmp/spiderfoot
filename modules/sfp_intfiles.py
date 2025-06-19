@@ -14,6 +14,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_intfiles(SpiderFootPlugin):
+    __name__ = "sfp_intfiles"
 
     meta = {
         'name': "Interesting File Finder",
