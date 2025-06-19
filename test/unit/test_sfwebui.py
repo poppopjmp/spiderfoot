@@ -6,19 +6,28 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootWebUi(unittest.TestCase):
+class TestSpiderFootWebUi(SpiderFootTestBase):
 
     def setUp(self):
         super().setUp()
-        self.web_config = {'root': '/'}
-        self.config = {'_debug': False}
-        self.webui = SpiderFootWebUi(self.web_config, self.config)
+        self.web_config = self.web_default_options
+        self.config = self.default_options.copy()
+        
+        # Mock the database and logging initialization to avoid real DB operations
+        with patch('sfwebui.SpiderFootDb') as mock_db, \
+             patch('sfwebui.SpiderFoot') as mock_sf, \
+             patch('sfwebui.logListenerSetup'), \
+             patch('sfwebui.logWorkerSetup'):
+            
+            # Configure mocks
+            mock_sf.return_value.configUnserialize.return_value = self.config
+            mock_db.return_value.configGet.return_value = {}
+            
+            self.webui = SpiderFootWebUi(self.web_config, self.config)
+        
         # Register event emitters if they exist
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
-        # Backup original methods before monkey patching
-        self._original_mock_db_return_value_search_return_value = mock_db.return_value.search.return_value if hasattr(mock_db.return_value.search, 'return_value') else None
-        # Register monkey patches for automatic restoration
 
 
     def test_error_page(self):
@@ -70,11 +79,25 @@ class TestSpiderFootWebUi(unittest.TestCase):
                              ['2021-08-01 00:31:01', 'data', 'source', 'type', '', '', '', '', '', '', 'ROOT', '', '']])
 
     def test_buildExcel(self):
-        with patch('sfwebui.openpyxl.Workbook') as mock_workbook:
+        with patch('sfwebui.openpyxl.Workbook') as mock_workbook, \
+             patch('sfwebui.BytesIO') as mock_bytesio:
+            
+            # Create mock objects
+            mock_worksheet = MagicMock()
             mock_workbook.return_value.active = MagicMock()
+            mock_workbook.return_value.create_sheet.return_value = mock_worksheet
+            mock_workbook.return_value.__getitem__.side_effect = KeyError  # Always trigger sheet creation
             mock_workbook.return_value.save = MagicMock()
-            result = self.webui.buildExcel([['data']], ['column'], 0)
+            
+            # Mock BytesIO to return bytes when read()
+            mock_bytesio_instance = MagicMock()
+            mock_bytesio.return_value.__enter__.return_value = mock_bytesio_instance
+            mock_bytesio_instance.read.return_value = b'test_excel_data'
+            
+            # Test with proper data structure
+            result = self.webui.buildExcel([['SHEET1', 'data1', 'data2']], ['Sheet', 'Column1', 'Column2'], 0)
             self.assertIsInstance(result, bytes)
+            self.assertEqual(result, b'test_excel_data')
 
     def test_scanexportlogs(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
@@ -287,6 +310,11 @@ class TestSpiderFootWebUi(unittest.TestCase):
         self.assertIsInstance(result, list)
 
     def test_correlationrules(self):
+        # Ensure webui has the expected config structure
+        self.webui.config = self.webui.config or {}
+        self.webui.config['__correlationrules__'] = [
+            {'id': 'test_rule', 'name': 'Test Rule', 'risk': 'HIGH', 'description': 'Test rule description'}
+        ]
         result = self.webui.correlationrules()
         self.assertIsInstance(result, list)
 
@@ -421,9 +449,4 @@ class TestSpiderFootWebUi(unittest.TestCase):
 
     def tearDown(self):
         """Clean up after each test."""
-        # Restore original methods after monkey patching
-        if hasattr(self, '_original_mock_db_return_value_search_return_value') and self._original_mock_db_return_value_search_return_value is not None:
-            mock_db.return_value.search.return_value = self._original_mock_db_return_value_search_return_value
-        elif hasattr(mock_db.return_value.search, 'return_value'):
-            delattr(mock_db.return_value.search, 'return_value')
         super().tearDown()

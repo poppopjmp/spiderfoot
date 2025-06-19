@@ -37,19 +37,26 @@ class TestSpiderFootDb(SpiderFootTestBase):
 
     def test_create(self):
         # Test that create can be called without errors in a fresh database
+        test_db = None
         try:
             # Use a fresh instance to avoid "already exists" errors
             test_opts = self.opts.copy()
             test_opts['__database'] = f"{SpiderFootHelpers.dataPath()}/test_create_{time.time()}.db"
-            test_db = SpiderFootDb(test_opts)
+            test_db = SpiderFootDb(test_opts, init=True)
+            # For SQLite, create() will succeed even if tables exist, just test it doesn't crash
             test_db.create()
             result = True
-        except Exception:
+        except Exception as e:
+            # Print the error for debugging
+            print(f"Database creation failed: {e}")
             result = False
         finally:
             # Clean up test database
-            if 'test_db' in locals():
-                test_db.close()
+            if test_db is not None:
+                try:
+                    test_db.close()
+                except:
+                    pass
                 try:
                     os.remove(test_opts['__database'])
                 except:
