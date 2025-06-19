@@ -55,8 +55,8 @@ sfConfig = {
     '_fetchtimeout': 5,  # number of seconds before giving up on a fetch
     '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
     '_internettlds_cache': 72,
-    '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
-    '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
+    '_genericusers': '',  # Will be set after SpiderFootHelpers is available
+    '__database': '',  # Will be set after SpiderFootHelpers is available
     '__modules__': None,  # List of modules. Will be set after start-up.
     # List of correlation rules. Will be set after start-up.
     '__correlationrules__': None,
@@ -219,6 +219,21 @@ def main():
         if sys.version_info < (3, 9):
             print("SpiderFoot requires Python 3.9 or higher.")
             sys.exit(-1)
+
+        # Initialize SpiderFootHelpers dependent configuration after imports are available
+        try:
+            from spiderfoot import SpiderFootHelpers
+            sfConfig['_genericusers'] = ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames']))
+            sfConfig['__database'] = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
+        except Exception as e:
+            log.error(f"Failed to initialize SpiderFootHelpers configuration: {e}")
+            # Use fallback values
+            sfConfig['_genericusers'] = ""
+            # Use a default database path as fallback
+            from pathlib import Path
+            default_data_path = Path.home() / '.spiderfoot'
+            default_data_path.mkdir(exist_ok=True)
+            sfConfig['__database'] = str(default_data_path / 'spiderfoot.db')
 
         # Check for legacy database files
         if os.path.exists('spiderfoot.db'):
