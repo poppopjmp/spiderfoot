@@ -10,21 +10,28 @@ from test.unit.utils.test_helpers import safe_recursion
 
 class TestModulePhone(SpiderFootTestBase):
 
+    def setUp(self):
+        super().setUp()
+
     def test_opts(self):
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
     def test_watchedEvents_should_return_list(self):
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
@@ -32,6 +39,7 @@ class TestModulePhone(SpiderFootTestBase):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
         target_value = 'spiderfoot.net'
@@ -76,6 +84,7 @@ class TestModulePhone(SpiderFootTestBase):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
         target_value = 'spiderfoot.net'
@@ -111,6 +120,7 @@ class TestModulePhone(SpiderFootTestBase):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
         target_value = 'spiderfoot.net'
@@ -150,18 +160,6 @@ class TestModulePhone(SpiderFootTestBase):
 
         self.assertEqual("OK", str(cm.exception))
 
-    def setUp(self):
-        super().setUp()
-        # Mock the __name__ attribute
-        sfp_phone.__name__ = "sfp_phone"
-        # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.module.registerEventEmitter(self.module.__name__, self.module) # type: ignore[union-attr]
-        else:
-            self.module = sfp_phone()
-            self.module.registerEventEmitter(self.module.__name__, self.module)
-        self.module.setOptions(self.default_options)
-        self.module.setTarget(SpiderFootTarget("example.com", "INTERNET_NAME")) # type: ignore[union-attr] 
-        self.module.setup(SpiderFoot(self.default_options), dict())
+
 if __name__ == '__main__':
     unittest.main()
