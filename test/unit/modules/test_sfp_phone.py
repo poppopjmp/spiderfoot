@@ -8,7 +8,6 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModulePhone(SpiderFootTestBase):
 
     def test_opts(self):
@@ -29,7 +28,7 @@ class TestModulePhone(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_domain_whois_event_data_containing_phone_string_should_create_phone_number_event(selfdepth=0):
+    def test_handleEvent_domain_whois_event_data_containing_phone_string_should_create_phone_number_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
@@ -73,7 +72,7 @@ class TestModulePhone(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_domain_whois_event_data_not_containing_phone_string_should_not_create_event(selfdepth=0):
+    def test_handleEvent_domain_whois_event_data_not_containing_phone_string_should_not_create_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
@@ -108,7 +107,7 @@ class TestModulePhone(SpiderFootTestBase):
         self.assertIsNone(result)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_phone_number_event_data_containing_phone_string_should_return_provider_telco_event(selfdepth=0):
+    def test_handleEvent_phone_number_event_data_containing_phone_string_should_return_provider_telco_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()

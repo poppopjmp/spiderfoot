@@ -16,11 +16,19 @@ def safe_recursion(max_depth=10):
     """
     def decorator(func):
         @functools.wraps(func)
-        def wrapper(*args, depth=0, **kwargs):
-            if depth >= max_depth:
-                logging.debug(f"Maximum recursion depth {max_depth} reached in {func.__name__}")
-                return None
-            return func(*args, depth=depth+1, **kwargs)
+        def wrapper(*args, **kwargs):
+            # Only pass depth to functions that explicitly accept it
+            import inspect
+            sig = inspect.signature(func)
+            if 'depth' in sig.parameters:
+                depth = kwargs.pop('depth', 0)
+                if depth >= max_depth:
+                    logging.debug(f"Maximum recursion depth {max_depth} reached in {func.__name__}")
+                    return None
+                return func(*args, depth=depth+1, **kwargs)
+            else:
+                # For regular test methods, don't pass depth
+                return func(*args, **kwargs)
         return wrapper
     return decorator
 
@@ -68,7 +76,7 @@ def restore_monkey_patch(obj, attr_name, orig_value):
         delattr(obj, attr_name)
 
 
-def test_safe_recursion(max_depth=5):
+def safe_recursion_deprecated(max_depth=5):
     """Decorator to prevent infinite recursion in tests."""
     def decorator(func):
         @functools.wraps(func)

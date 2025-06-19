@@ -70,6 +70,31 @@ class SpiderFootTestBase(unittest.TestCase):
         if emitter not in self._event_emitters:
             self._event_emitters.append(emitter)
     
+    def create_module_wrapper(self, module_class, module_attributes=None):
+        """Create a module wrapper for testing purposes."""
+        if module_attributes is None:
+            module_attributes = {}
+        
+        # Create a wrapped version of the module class with test attributes
+        class WrappedModule(module_class):
+            def __init__(self):
+                super().__init__()
+                # Apply any additional attributes
+                for key, value in module_attributes.items():
+                    setattr(self, key, value)
+        
+        return WrappedModule
+    
+    def register_mock(self, mock):
+        """Register a mock for cleanup."""
+        # For compatibility - could be used to track mocks if needed
+        pass
+    
+    def register_patcher(self, patcher):
+        """Register a patcher for cleanup.""" 
+        # For compatibility - could be used to track patchers if needed
+        pass
+    
     def tearDown(self):
         """Clean up test resources."""
         # Clean up event emitters

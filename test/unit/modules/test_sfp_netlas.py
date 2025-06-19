@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import patch
 from modules.sfp_netlas import sfp_netlas
-from sflib import SpiderFoot, SpiderFootEvent, SpiderFootTarget
+from sflib import SpiderFoot
+from spiderfoot.event import SpiderFootEvent
+from spiderfoot.target import SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
@@ -46,7 +48,7 @@ class TestModuleNetlas(SpiderFootTestBase):
         module.setup(self.sf, dict())
 
         target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 

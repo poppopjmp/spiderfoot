@@ -8,7 +8,6 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleAbstractapi(SpiderFootTestBase):
 
     def test_opts(self):
@@ -43,7 +42,6 @@ class TestModuleAbstractapi(SpiderFootTestBase):
 
     def test_parseApiResponse_fatal_http_response_error_code_should_set_errorState(self):
         sf = SpiderFoot(self.default_options)
-
         http_codes = ["401", "422", "500", "502", "503"]
         for code in http_codes:
             with self.subTest(code=code):
@@ -55,7 +53,7 @@ class TestModuleAbstractapi(SpiderFootTestBase):
                 self.assertTrue(module.errorState)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_no_api_key_should_set_errorState(selfdepth=0):
+    def test_handleEvent_no_api_key_should_set_errorState(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_abstractapi()

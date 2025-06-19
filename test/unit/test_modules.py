@@ -10,7 +10,6 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestSpiderFootModuleLoading(unittest.TestCase):
     """Test SpiderFoot module loading."""
 

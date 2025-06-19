@@ -29,7 +29,7 @@ jobs:
 
       - name: Start SpiderFoot container
         run: |
-          timeout 60 docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.0.3
+          timeout 60 docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.1.0
 
       - name: Wait for SpiderFoot to start
         run: |
@@ -93,7 +93,7 @@ jobs:
 
       - name: Start SpiderFoot container
         run: |
-          timeout 60 docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.0.3
+          timeout 60 docker run -d -p 5001:5001 ghcr.io/poppopjmp/spiderfoot:v5.1.0
 
       - name: Wait for SpiderFoot to start
         run: |

@@ -9,7 +9,6 @@ from test.unit.utils.test_helpers import safe_recursion
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleBase64(SpiderFootTestBase):
 
     def test_opts(self):

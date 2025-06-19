@@ -8,7 +8,6 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleToolCmseek(SpiderFootTestBase):
 
     def test_opts(self):
@@ -30,7 +29,7 @@ class TestModuleToolCmseek(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_no_tool_path_configured_should_set_errorState(selfdepth=0):
+    def test_handleEvent_no_tool_path_configured_should_set_errorState(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_tool_cmseek()

@@ -8,8 +8,7 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
-class TestSpiderFootScanner(SpiderFootTestBase):  # Add missing inheritance
+class TestSpiderFootScanner(SpiderFootTestBase):
     """Test SpiderFootScanStatus."""
 
     def test_init_argument_start_false_should_create_a_scan_without_starting_the_scan(self):

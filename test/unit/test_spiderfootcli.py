@@ -9,8 +9,7 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
-class TestSpiderFootCli(SpiderFootTestBase):  # Add missing inheritance
+class TestSpiderFootCli(SpiderFootTestBase):
     """Test TestSpiderFootCli."""
 
     def test_default(self):
@@ -99,7 +98,10 @@ class TestSpiderFootCli(SpiderFootTestBase):  # Add missing inheritance
         """Test do_spool(self, line)"""
         sfcli = SpiderFootCli()
 
-        sfcli.ownopts['cli.spool_file'] = '/dev/null'
+        # Use cross-platform null device
+        import os
+        null_device = os.devnull
+        sfcli.ownopts['cli.spool_file'] = null_device
 
         sfcli.do_spool(None)
         initial_spool_state = sfcli.ownopts['cli.spool']
@@ -152,7 +154,10 @@ class TestSpiderFootCli(SpiderFootTestBase):  # Add missing inheritance
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.history'] = False
         sfcli.ownopts['cli.spool'] = True
-        sfcli.ownopts['cli.spool_file'] = '/dev/null'
+        # Use cross-platform null device
+        import os
+        null_device = os.devnull
+        sfcli.ownopts['cli.spool_file'] = null_device
 
         line = "example line"
 
@@ -308,22 +313,66 @@ class TestSpiderFootCli(SpiderFootTestBase):  # Add missing inheritance
 
     def test_do_ping(self):
         """Test do_ping(self, line)"""
+        from unittest.mock import patch
+        
         sfcli = SpiderFootCli()
-        sfcli.do_ping(None)
+        
+        # Mock the request method to avoid actual HTTP requests
+        with patch.object(sfcli, 'request') as mock_request:
+            # Return different responses for different calls
+            # First call: ping response
+            # Second call: modules response 
+            # Third call: types response
+            mock_request.side_effect = [
+                '["SUCCESS", "5.1.0"]',
+                '[{"name": "test_module", "descr": "Test module"}]',
+                '[["test_type", "Test type description"]]'
+            ]
+            sfcli.do_ping(None)
+            
+            # Verify that request was called multiple times
+            self.assertEqual(mock_request.call_count, 3)
+            # Check that ping URL was called first
+            first_call_args = mock_request.call_args_list[0][0]
+            self.assertIn("/ping", first_call_args[0])
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_modules(self):
         """Test do_modules(self, line, cacheonly=False)"""
+        from unittest.mock import patch, MagicMock
+        
         sfcli = SpiderFootCli()
-        sfcli.do_modules(None, None)
+        
+        # Mock the request method to avoid actual HTTP requests
+        with patch.object(sfcli, 'request') as mock_request:
+            # Return non-empty JSON array to avoid "pretty" format issue
+            mock_request.return_value = '[{"name": "test_module", "descr": "Test module description"}]'
+            sfcli.do_modules(None, None)
+            
+            # Verify that request was called with the expected URL
+            mock_request.assert_called_once()
+            call_args = mock_request.call_args[0]
+            self.assertIn("/modules", call_args[0])
 
         self.assertEqual('TBD', 'TBD')
 
     def test_do_types(self):
         """Test do_types(self, line, cacheonly=False)"""
+        from unittest.mock import patch
+        
         sfcli = SpiderFootCli()
-        sfcli.do_types(None, None)
+        
+        # Mock the request method to avoid actual HTTP requests
+        with patch.object(sfcli, 'request') as mock_request:
+            # Return non-empty JSON array to avoid "pretty" format issue
+            mock_request.return_value = '[["test_type", "Test type description"]]'
+            sfcli.do_types(None, None)
+            
+            # Verify that request was called with the expected URL
+            mock_request.assert_called_once()
+            call_args = mock_request.call_args[0]
+            self.assertIn("/eventtypes", call_args[0])
 
         self.assertEqual('TBD', 'TBD')
 
@@ -343,8 +392,20 @@ class TestSpiderFootCli(SpiderFootTestBase):  # Add missing inheritance
 
     def test_do_scans(self):
         """Test do_scans(self, line)"""
+        from unittest.mock import patch
+        
         sfcli = SpiderFootCli()
-        sfcli.do_scans(None)
+        
+        # Mock the request method to avoid actual HTTP requests
+        with patch.object(sfcli, 'request') as mock_request:
+            # Return non-empty JSON array to avoid "pretty" format issue
+            mock_request.return_value = '[{"id": "test_scan", "name": "Test Scan", "status": "FINISHED"}]'
+            sfcli.do_scans(None)
+            
+            # Verify that request was called with the expected URL
+            mock_request.assert_called_once()
+            call_args = mock_request.call_args[0]
+            self.assertIn("/scanlist", call_args[0])
 
         self.assertEqual('TBD', 'TBD')
 

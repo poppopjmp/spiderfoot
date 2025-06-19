@@ -85,15 +85,12 @@ class SpiderFootCorrelator:
                 self.rules[len(self.rules) - 1]['rawYaml'] = ruleset[rule_id]
             except Exception as e:
                 raise SyntaxError(
-                    f"Unable to process a YAML correlation rule [{rule_id}]") from e
-
-        # Strip any trailing newlines that may have creeped into meta name/description
+                    f"Unable to process a YAML correlation rule [{rule_id}]") from e        # Strip any trailing newlines that may have creeped into meta name/description
         for rule in self.rules:
             for k in rule['meta'].keys():
                 if isinstance(rule['meta'][k], str):
                     rule['meta'][k] = rule['meta'][k].strip()
-                else:
-                    rule['meta'][k] = rule[k]
+                # Note: removed the else clause that was incorrectly copying from rule[k]
 
         if not self.check_ruleset_validity(self.rules):
             raise SyntaxError("Sanity check of correlation rules failed.")
