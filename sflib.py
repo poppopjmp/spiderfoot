@@ -1203,11 +1203,9 @@ class SpiderFoot:
 
         # Never proxy requests to the proxy host
         if host == proxy_host.lower():
-            return False
-
-        # Never proxy RFC1918 addresses on the LAN or the local network interface
+            return False        # Never proxy RFC1918 addresses on the LAN or the local network interface
         if self.validIP(host):
-            if netaddr.IPAddress(host).is_private():
+            if netaddr.IPAddress(host).is_ipv4_private_use():
                 return False
             if netaddr.IPAddress(host).is_loopback():
                 return False

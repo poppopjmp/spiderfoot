@@ -91,87 +91,98 @@ class TestModuleCriminalip(SpiderFootTestBase):
             # Verify the method was called
             mock_query.assert_called_with('example.com', 'domain')
 
-    @patch.object(sfp_criminalip, 'queryCriminalIP')
-    def test_handleEvent_phone(self, mock_query):
-        module = self.create_module_with_mocks()
+    def test_handleEvent_phone(self):
+        with patch.object(sfp_criminalip, 'queryCriminalIP') as mock_query:
+            module = self.create_module_with_mocks()
+            # Mock the notifyListeners method to avoid plugin framework issues
+            module.notifyListeners = MagicMock()
 
-        target_value = '+1234567890'
-        target_type = 'PHONE_NUMBER'
-        event_type = 'PHONE_NUMBER'
-        event_data = '+1234567890'
-        target, evt = self.create_test_event(
-            target_value, target_type, event_type, event_data)
+            target_value = '+1234567890'
+            target_type = 'PHONE_NUMBER'
+            event_type = 'PHONE_NUMBER'
+            event_data = '+1234567890'
+            target, evt = self.create_test_event(
+                target_value, target_type, event_type, event_data)
 
-        mock_response = {
-            "valid": True,
-            "carrier": "Example Carrier",
-            "location": "Example Location",
-            "country": {"name": "Example Country"}
-        }
-        mock_query.return_value = mock_response
+            mock_response = {
+                "valid": True,
+                "carrier": "Example Carrier",
+                "location": "Example Location",
+                "country": {"name": "Example Country"}
+            }
+            mock_query.return_value = mock_response
 
-        module.setTarget(target)
-        module.handleEvent(evt)
+            module.setTarget(target)
+            module.handleEvent(evt)
 
-        # Verify the method was called
-        mock_query.assert_called()
+            # Verify the method was called
+            mock_query.assert_called_with('+1234567890', 'phone')
 
-    @patch.object(sfp_criminalip, 'queryCriminalIP')
-    def test_handleEvent_ip(self, mock_query):
-        module = self.create_module_with_mocks()
+    def test_handleEvent_ip(self):
+        with patch.object(sfp_criminalip, 'queryCriminalIP') as mock_query:
+            module = self.create_module_with_mocks()
+            # Mock the notifyListeners method to avoid plugin framework issues
+            module.notifyListeners = MagicMock()
 
-        target_value = '1.2.3.4'
-        target_type = 'IP_ADDRESS'
-        event_type = 'IP_ADDRESS'
-        event_data = '1.2.3.4'
-        target, evt = self.create_test_event(
-            target_value, target_type, event_type, event_data)
+            target_value = '1.2.3.4'
+            target_type = 'IP_ADDRESS'
+            event_type = 'IP_ADDRESS'
+            event_data = '1.2.3.4'
+            target, evt = self.create_test_event(
+                target_value, target_type, event_type, event_data)
 
-        mock_response = {
-            "city": "Example City",
-            "region": "Example Region",
-            "postal_code": "12345",
-            "country": "Example Country",
-            "continent": "Example Continent",
-            "latitude": "12.3456",
-            "longitude": "78.9012"
-        }
-        mock_query.return_value = mock_response
+            mock_response = {
+                "city": "Example City",
+                "region": "Example Region",
+                "postal_code": "12345",
+                "country": "Example Country",
+                "continent": "Example Continent",
+                "latitude": "12.3456",
+                "longitude": "78.9012"
+            }
+            mock_query.return_value = mock_response
 
-        module.setTarget(target)
-        module.handleEvent(evt)
+            module.setTarget(target)
+            module.handleEvent(evt)
 
-        # Verify the method was called
-        mock_query.assert_called()
+            # Verify the method was called
+            mock_query.assert_called_with('1.2.3.4', 'ip')
 
-    @patch.object(sfp_criminalip, 'queryCriminalIP')
-    def test_queryCriminalIP(self, mock_query):
-        module = self.create_module_with_mocks()
+    def test_queryCriminalIP(self):
+        with patch.object(self.scanner, 'fetchUrl') as mock_fetch:
+            module = self.create_module_with_mocks()
 
-        mock_response = {
-            "name": "Example Company"
-        }
-        mock_query.return_value = mock_response
+            # Mock API response
+            mock_response = {
+                'code': '200',
+                'content': '{"name": "Example Company"}'
+            }
+            mock_fetch.return_value = mock_response
 
-        result = module.queryCriminalIP('example.com', 'domain')
-        self.assertEqual(result, mock_response)
-        mock_query.assert_called()    @patch.object(sfp_criminalip, 'queryCriminalIP')
-    def test_handleEvent_api_error(self, mock_query):
-        module = self.create_module_with_mocks()
+            result = module.queryCriminalIP('example.com', 'domain')
+            expected = {"name": "Example Company"}
+            self.assertEqual(result, expected)
 
-        target_value = 'example.com'
-        target_type = 'INTERNET_NAME'
-        event_type = 'DOMAIN_NAME'  # Changed from INTERNET_NAME to DOMAIN_NAME
-        event_data = 'example.com'
-        target, evt = self.create_test_event(
-            target_value, target_type, event_type, event_data)
+    def test_handleEvent_api_error(self):
+        with patch.object(sfp_criminalip, 'queryCriminalIP') as mock_query:
+            module = self.create_module_with_mocks()
+            # Mock the notifyListeners method to avoid plugin framework issues
+            module.notifyListeners = MagicMock()
 
-        # Mock API returning None (error case)
-        mock_query.return_value = None
+            target_value = 'example.com'
+            target_type = 'INTERNET_NAME'
+            event_type = 'DOMAIN_NAME'  # Changed from INTERNET_NAME to DOMAIN_NAME
+            event_data = 'example.com'
+            target, evt = self.create_test_event(
+                target_value, target_type, event_type, event_data)
 
-        module.setTarget(target)
-        module.handleEvent(evt)        # Verify the method was called
-        mock_query.assert_called()
+            # Mock API returning None (error case)
+            mock_query.return_value = None
+
+            module.setTarget(target)
+            module.handleEvent(evt)
+            # Verify the method was called
+            mock_query.assert_called_with('example.com', 'domain')
 
     def test_handleEvent_no_api_key(self):
         module = self.create_module_with_mocks()
