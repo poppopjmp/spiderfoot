@@ -15,9 +15,9 @@ class TestModuleNameapi(SpiderFootTestBase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        sf = SpiderFoot(self.default_options)
-        module = sfp_nameapi()
-        module.setup(sf, dict())
+        module = self.create_module_wrapper()
+        module.setup("example.com", self.default_options)
+        self.assertTrue(hasattr(module, 'opts'))
 
     def test_watchedEvents_should_return_list(self):
         module = sfp_nameapi()
@@ -25,10 +25,8 @@ class TestModuleNameapi(SpiderFootTestBase):
 
     def test_producedEvents_should_return_list(self):
         module = sfp_nameapi()
-        self.assertIsInstance(module.producedEvents(), list)
-
-    @safe_recursion(max_depth=5)
-    def test_handleEvent_no_api_key_should_set_errorState(selfdepth=0):
+        self.assertIsInstance(module.producedEvents(), list)    @safe_recursion(max_depth=5)
+    def test_handleEvent_no_api_key_should_set_errorState(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_nameapi()

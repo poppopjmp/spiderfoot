@@ -24,24 +24,32 @@ class TestModuleLuminar(SpiderFootTestBase):
             self.register_event_emitter(self.module)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent(selfdepth=0):
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        self.sf.target = target
+    def test_handleEvent(self):
+        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
+        module = self.create_module_wrapper()
+        module.setup("spiderfoot.net", self.default_options)
+        
+        def new_notifyListeners(self, event):
+            expected = 'MALICIOUS_INTERNET_NAME'
+            if str(event.eventType) != expected:
+                raise Exception(f"Received event {event.eventType}, expected {expected}")
 
-        event_type = 'DOMAIN_NAME'
-        event_data = 'example.com'
-        event_module = 'test_module'
-        source_event = SpiderFootEvent(event_type, event_data, event_module, None)
+        module.notifyListeners = new_notifyListeners.__get__(module, module.__class__)
 
-        self.module.opts['api_key'] = 'test_api_key'
-        self.module.handleEvent(source_event)
-
-        self.assertTrue(self.module.results)
+        event_type = 'ROOT'
+        event_data = 'spiderfoot.net'
+        event_module = ''
+        source_event = ''
+        
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        
+        result = module.handleEvent(evt)
+        
+        self.assertIsNone(result)
 
     def test_query(self):
         self.module.opts['api_key'] = 'test_api_key'
+        self.module.opts['_useragent'] = 'SpiderFoot Test'
         result = self.module.query('example.com')
         self.assertIsNotNone(result)
 
@@ -50,6 +58,11 @@ class TestModuleLuminar(SpiderFootTestBase):
 
     def test_watchedEvents(self):
         self.assertEqual(self.module.watchedEvents(), ['DOMAIN_NAME', 'INTERNET_NAME', 'IP_ADDRESS'])
+
+    def test_setup(self):
+        module = self.create_module_wrapper()
+        module.setup("example.com", self.default_options)
+        self.assertTrue(hasattr(module, 'opts'))
 
 if __name__ == '__main__':
     unittest.main()

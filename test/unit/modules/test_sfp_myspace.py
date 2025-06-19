@@ -15,9 +15,9 @@ class TestModuleMyspace(SpiderFootTestBase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        sf = SpiderFoot(self.default_options)
-        module = sfp_myspace()
-        module.setup(sf, dict())
+        module = self.create_module_wrapper()
+        module.setup("example.com", self.default_options)
+        self.assertTrue(hasattr(module, 'opts'))
 
     def test_watchedEvents_should_return_list(self):
         module = sfp_myspace()
@@ -25,10 +25,8 @@ class TestModuleMyspace(SpiderFootTestBase):
 
     def test_producedEvents_should_return_list(self):
         module = sfp_myspace()
-        self.assertIsInstance(module.producedEvents(), list)
-
-    @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_social_media_not_myspace_profile_should_not_return_event(selfdepth=0):
+        self.assertIsInstance(module.producedEvents(), list)    @safe_recursion(max_depth=5)
+    def test_handleEvent_event_data_social_media_not_myspace_profile_should_not_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_myspace()

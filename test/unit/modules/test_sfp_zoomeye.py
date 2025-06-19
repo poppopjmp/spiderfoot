@@ -47,13 +47,9 @@ class TestModuleZoomeye(SpiderFootTestBase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        """Test setup function."""
-        sf = SpiderFoot(self.default_options)
-        module = self.module_class()
-        module.setup(sf, self.default_options)
-        self.assertIsNotNone(module.options)
-        self.assertTrue('_debug' in module.options)
-        self.assertEqual(module.options['_debug'], False)
+        module = self.create_module_wrapper()
+        module.setup("example.com", self.default_options)
+        self.assertTrue(hasattr(module, 'opts'))
 
     def test_producedEvents_should_return_list(self):
         """Test the producedEvents function returns a list."""

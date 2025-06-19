@@ -73,3 +73,26 @@ class TestModuleNetlas(SpiderFootTestBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+
+    def test_handleEvent(self):
+        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
+        module = self.create_module_wrapper()
+        module.setup("spiderfoot.net", self.default_options)
+
+        def new_notifyListeners(self, event):
+            expected = 'MALICIOUS_INTERNET_NAME'
+            if str(event.eventType) != expected:
+                raise Exception(f"Received event {event.eventType}, expected {expected}")
+
+        module.notifyListeners = new_notifyListeners.__get__(module, module.__class__)
+
+        event_type = 'ROOT'
+        event_data = 'spiderfoot.net'
+        event_module = ''
+        source_event = ''
+
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+
+        result = module.handleEvent(evt)
+
+        self.assertIsNone(result)

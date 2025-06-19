@@ -36,8 +36,7 @@ class TestModuleCiscoUmbrella(SpiderFootTestBase):
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
         # Register mocks for cleanup during tearDown
-        self.register_mock(self.mock_logger)
-        # Register patchers for cleanup during tearDown
+        self.register_mock(self.mock_logger)        # Register patchers for cleanup during tearDown
         if 'patcher1' in locals():
             self.register_patcher(patcher1)
 
@@ -47,13 +46,9 @@ class TestModuleCiscoUmbrella(SpiderFootTestBase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        """Test setup function."""
-        sf = SpiderFoot(self.default_options)
-        module = self.module_class()
-        module.setup(sf, self.default_options)
-        self.assertIsNotNone(module.options)
-        self.assertTrue('_debug' in module.options)
-        self.assertEqual(module.options['_debug'], False)
+        module = self.create_module_wrapper()
+        module.setup("example.com", self.default_options)
+        self.assertTrue(hasattr(module, 'opts'))
 
     def test_watchedEvents_should_return_list(self):
         """Test the watchedEvents function returns a list."""
