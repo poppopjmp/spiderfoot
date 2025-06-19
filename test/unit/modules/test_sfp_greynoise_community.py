@@ -40,11 +40,11 @@ class TestModuleGreynoiseCommunity(SpiderFootTestBase):
         # Register patchers for cleanup during tearDown
         if 'patcher1' in locals():
             self.register_patcher(patcher1)
-        self.scanner = sfp_greynoise_community.sfp_greynoise_community()
+        self.scanner = sfp_greynoise_community()
 
     def test_opts(self):
         """Test the module options."""
-        module = sfp_greynoise_community.sfp_greynoise_community()
+        module = sfp_greynoise_community()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
@@ -52,20 +52,22 @@ class TestModuleGreynoiseCommunity(SpiderFootTestBase):
         Test setup(self, sfc, userOpts=dict())
         """
         sf = SpiderFoot(self.default_options)
-        module = sfp_greynoise_community.sfp_greynoise_community()
+        module = sfp_greynoise_community()
         module.setup(sf, dict())
-        self.assertIsNotNone(module.options)
-        self.assertTrue('_debug' in module.options)
-        self.assertEqual(module.options['_debug'], False)
+        self.assertIsNotNone(module.opts)
+        self.assertTrue('api_key' in module.opts)
+        self.assertTrue('age_limit_days' in module.opts)
+        self.assertEqual(module.opts['api_key'], "")
+        self.assertEqual(module.opts['age_limit_days'], 30)
 
     def test_watchedEvents_should_return_list(self):
         """Test the watchedEvents function returns a list."""
-        module = sfp_greynoise_community.sfp_greynoise_community()
+        module = sfp_greynoise_community()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
         """Test the producedEvents function returns a list."""
-        module = sfp_greynoise_community.sfp_greynoise_community()
+        module = sfp_greynoise_community()
         self.assertIsInstance(module.producedEvents(), list)
 
     def tearDown(self):
