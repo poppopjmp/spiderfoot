@@ -200,22 +200,41 @@ class SpiderFootHelpers():
                     module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(module)
                     
-                    # Get module class
+                    # Try to find the main class - look for various naming patterns
+                    mod_class = None
+                    
+                    # First try: exact module name match
                     if hasattr(module, module_name):
                         mod_class = getattr(module, module_name)
-                        if hasattr(mod_class, 'opts') and hasattr(mod_class, 'meta'):
-                            modules[module_name] = {
-                                'name': getattr(mod_class, 'meta', {}).get('name', module_name),
-                                'descr': getattr(mod_class, '__doc__', ''),
-                                'cats': getattr(mod_class, 'meta', {}).get('categories', []),
-                                'labels': getattr(mod_class, 'meta', {}).get('flags', []),
-                                'provides': getattr(mod_class, 'meta', {}).get('provides', []),
-                                'consumes': getattr(mod_class, 'meta', {}).get('consumes', []),
-                                'opts': getattr(mod_class, 'opts', {}),
-                                'optdescs': getattr(mod_class, 'optdescs', {}),
-                                'meta': getattr(mod_class, 'meta', {}),
-                                'group': getattr(mod_class, 'meta', {}).get('useCases', [])
-                            }
+                    else:
+                        # Second try: look for any class that inherits from SpiderFootPlugin
+                        for attr_name in dir(module):
+                            attr = getattr(module, attr_name)
+                            if (isinstance(attr, type) and 
+                                hasattr(attr, '__bases__') and
+                                any('SpiderFootPlugin' in str(base) for base in attr.__bases__)):
+                                mod_class = attr
+                                # Set the expected attribute name for tests
+                                setattr(module, module_name, mod_class)
+                                break
+                    
+                    if mod_class and hasattr(mod_class, 'opts') and hasattr(mod_class, 'meta'):
+                        # Ensure the class has __name__ attribute
+                        if not hasattr(mod_class, '__name__'):
+                            setattr(mod_class, '__name__', module_name)
+                            
+                        modules[module_name] = {
+                            'name': getattr(mod_class, 'meta', {}).get('name', module_name),
+                            'descr': getattr(mod_class, '__doc__', ''),
+                            'cats': getattr(mod_class, 'meta', {}).get('categories', []),
+                            'labels': getattr(mod_class, 'meta', {}).get('flags', []),
+                            'provides': getattr(mod_class, 'meta', {}).get('provides', []),
+                            'consumes': getattr(mod_class, 'meta', {}).get('consumes', []),
+                            'opts': getattr(mod_class, 'opts', {}),
+                            'optdescs': getattr(mod_class, 'optdescs', {}),
+                            'meta': getattr(mod_class, 'meta', {}),
+                            'group': getattr(mod_class, 'meta', {}).get('useCases', [])
+                        }
             except Exception:
                 continue
                 
