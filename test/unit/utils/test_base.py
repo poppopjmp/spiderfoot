@@ -31,13 +31,28 @@ class SpiderFootTestBase(unittest.TestCase):
             '__outputfilter': None,
             '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
             '_dnsserver': '',
-            '_fetchtimeout': 5,
-            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+            '_fetchtimeout': 5,            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
             '_internettlds_cache': 72,
             '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
-            '__database': f"{self._temp_dir}/spiderfoot_test.db",
-            '__modules__': None,
+            '__database': f"{self._temp_dir}/spiderfoot_test.db",            '__modules__': {
+                'sfp_example': {
+                    'descr': 'Example module for testing',
+                    'provides': ['EXAMPLE_EVENT'],
+                    'consumes': ['ROOT'],
+                    'group': 'passive',
+                    'optdescs': {
+                        'example_option': 'Example option description'
+                    },
+                    'opts': {
+                        'example_option': 'default_value'
+                    }
+                }
+            },
             '__correlationrules__': None,
+            '__globaloptdescs__': {
+                'global_option1': 'Description for global option 1',
+                'global_option2': 'Description for global option 2'
+            },
             '_socks1type': '',
             '_socks2addr': '',
             '_socks3port': '',

@@ -236,7 +236,8 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
             self.assertEqual(pool, mock_SpiderFootThreadPool.return_value)
 
     def test_setSharedThreadPool(self):
-        sharedThreadPool = MagicMock()        self.plugin.setSharedThreadPool(sharedThreadPool)
+        sharedThreadPool = MagicMock()
+        self.plugin.setSharedThreadPool(sharedThreadPool)
         self.assertEqual(self.plugin.sharedThreadPool, sharedThreadPool)
 
     def test_notifyListeners_with_output_filter(self):
