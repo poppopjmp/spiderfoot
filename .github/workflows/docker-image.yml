@@ -38,6 +38,7 @@ jobs:
         push: true
         tags: |
           ghcr.io/${{ github.repository }}:${{ github.sha }}
+          ghcr.io/${{ github.repository }}:v5.1.2
     - name: Trivy vulnerability scan
       uses: aquasecurity/trivy-action@master
       with:

@@ -1,5 +1,5 @@
 #
-# Spiderfoot Dockerfile - v5.1.0
+# Spiderfoot Dockerfile - v5.1.2
 #
 
 # Build stage
