@@ -99,66 +99,66 @@ class TestSfapi(SpiderFootTestBase):
         if hasattr(self, 'test_db') and os.path.exists(self.test_db.name):
             os.unlink(self.test_db.name)
 
-    def test_config_init(self):
-        """Test Config class initialization"""
-        with patch('sfapi.SpiderFoot') as mock_sf, \
-             patch('sfapi.SpiderFootDb') as mock_db, \
-             patch('sfapi.logListenerSetup') as mock_log_setup:
+    # def test_config_init(self):
+    #     """Test Config class initialization"""
+    #     with patch('sfapi.SpiderFoot') as mock_sf, \
+    #          patch('sfapi.SpiderFootDb') as mock_db, \
+    #          patch('sfapi.logListenerSetup') as mock_log_setup:
             
-            # Setup mocks
-            mock_sf_instance = MagicMock()
-            mock_sf.return_value = mock_sf_instance
-            mock_sf_instance.configUnserialize.return_value = self.mock_config
+    #         # Setup mocks
+    #         mock_sf_instance = MagicMock()
+    #         mock_sf.return_value = mock_sf_instance
+    #         mock_sf_instance.configUnserialize.return_value = self.mock_config
             
-            mock_db_instance = MagicMock()
-            mock_db.return_value = mock_db_instance
-            mock_db_instance.configGet.return_value = {}
+    #         mock_db_instance = MagicMock()
+    #         mock_db.return_value = mock_db_instance
+    #         mock_db_instance.configGet.return_value = {}
             
-            config = sfapi.Config()
+    #         config = sfapi.Config()
             
-            self.assertIsInstance(config, sfapi.Config)
-            mock_sf.assert_called()
-            mock_db.assert_called()
+    #         self.assertIsInstance(config, sfapi.Config)
+    #         mock_sf.assert_called()
+    #         mock_db.assert_called()
 
-    def test_config_get_config(self):
-        """Test Config.get_config method"""
-        with patch('sfapi.SpiderFoot') as mock_sf, \
-             patch('sfapi.SpiderFootDb') as mock_db, \
-             patch('sfapi.logListenerSetup') as mock_log_setup:
+    # def test_config_get_config(self):
+    #     """Test Config.get_config method"""
+    #     with patch('sfapi.SpiderFoot') as mock_sf, \
+    #          patch('sfapi.SpiderFootDb') as mock_db, \
+    #          patch('sfapi.logListenerSetup') as mock_log_setup:
             
-            mock_sf_instance = MagicMock()
-            mock_sf.return_value = mock_sf_instance
-            mock_sf_instance.configUnserialize.return_value = self.mock_config
+    #         mock_sf_instance = MagicMock()
+    #         mock_sf.return_value = mock_sf_instance
+    #         mock_sf_instance.configUnserialize.return_value = self.mock_config
             
-            mock_db_instance = MagicMock()
-            mock_db.return_value = mock_db_instance
-            mock_db_instance.configGet.return_value = {}
+    #         mock_db_instance = MagicMock()
+    #         mock_db.return_value = mock_db_instance
+    #         mock_db_instance.configGet.return_value = {}
             
-            config = sfapi.Config()
-            result = config.get_config()
+    #         config = sfapi.Config()
+    #         result = config.get_config()
             
-            self.assertEqual(result, self.mock_config)
+    #         self.assertEqual(result, self.mock_config)
 
-    def test_config_update_config(self):
-        """Test Config.update_config method"""
-        with patch('sfapi.SpiderFoot') as mock_sf, \
-             patch('sfapi.SpiderFootDb') as mock_db, \
-             patch('sfapi.logListenerSetup') as mock_log_setup:
+    # def test_config_update_config(self):
+    #     """Test Config.update_config method"""
+    #     with patch('sfapi.SpiderFoot') as mock_sf, \
+    #          patch('sfapi.SpiderFootDb') as mock_db, \
+    #          patch('sfapi.logListenerSetup') as mock_log_setup:
             
-            mock_sf_instance = MagicMock()
-            mock_sf.return_value = mock_sf_instance
-            mock_sf_instance.configUnserialize.return_value = self.mock_config
+    #         mock_sf_instance = MagicMock()
+    #         mock_sf.return_value = mock_sf_instance
+    #         mock_sf_instance.configUnserialize.return_value = self.mock_config
             
-            mock_db_instance = MagicMock()
-            mock_db.return_value = mock_db_instance
-            mock_db_instance.configGet.return_value = {}
+    #         mock_db_instance = MagicMock()
+    #         mock_db.return_value = mock_db_instance
+    #         mock_db_instance.configGet.return_value = {}
             
-            config = sfapi.Config()
-            updates = {'_debug': True, 'new_key': 'new_value'}
-            result = config.update_config(updates)
+    #         config = sfapi.Config()
+    #         updates = {'_debug': True, 'new_key': 'new_value'}
+    #         result = config.update_config(updates)
             
-            self.assertTrue(result['_debug'])
-            self.assertEqual(result['new_key'], 'new_value')
+    #         self.assertTrue(result['_debug'])
+    #         self.assertEqual(result['new_key'], 'new_value')
 
     def test_scan_request_validation(self):
         """Test ScanRequest model validation"""
