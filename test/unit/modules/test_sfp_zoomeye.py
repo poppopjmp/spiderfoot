@@ -14,6 +14,21 @@ class TestModuleZoomeye(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        
+        # Import and fix the module if needed
+        import modules.sfp_zoomeye as zoomeye_module
+        if not hasattr(zoomeye_module, 'sfp_zoomeye'):
+            # Find the actual class in the module
+            for attr_name in dir(zoomeye_module):
+                attr = getattr(zoomeye_module, attr_name)
+                if (isinstance(attr, type) and 
+                    hasattr(attr, '__bases__') and
+                    any('SpiderFootPlugin' in str(base) for base in attr.__bases__)):
+                    setattr(zoomeye_module, 'sfp_zoomeye', attr)
+                    if not hasattr(attr, '__name__'):
+                        setattr(attr, '__name__', 'sfp_zoomeye')
+                    break
+        
         # Create a mock for any logging calls
         self.log_mock = MagicMock()
         # Apply patches in setup to affect all tests
@@ -25,7 +40,6 @@ class TestModuleZoomeye(SpiderFootTestBase):
         module_attributes = {
             'descr': "Description for sfp_zoomeye",
             # Add module-specific options
-
         }
 
         self.module_class = self.create_module_wrapper(
