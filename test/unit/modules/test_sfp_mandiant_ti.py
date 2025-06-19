@@ -25,12 +25,14 @@ class TestModuleMandiantTI(SpiderFootTestBase):
 
     @safe_recursion(max_depth=5)
     def test_handleEvent(self):
+        sf = SpiderFoot(self.default_options)
+        module = sfp_mandiant_ti.sfp_mandiant_ti()
+        module.setup(sf, dict())
+        
         """
         Test handleEvent(self, event)
         """
         target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
-        module = self.create_module_wrapper(sfp_mandiant_ti)
-        module.setup("spiderfoot.net", self.default_options)
         
         def new_notifyListeners(self, event):
             expected = 'MALICIOUS_INTERNET_NAME'
@@ -51,10 +53,13 @@ class TestModuleMandiantTI(SpiderFootTestBase):
         self.assertIsNone(result)
 
     def test_query(self):
+        sf = SpiderFoot(self.default_options)
+        module = sfp_mandiant_ti.sfp_mandiant_ti()
+        module.setup(sf, dict())
+        
         """
         Test query(self, qry)
         """
-        module = self.create_module_wrapper(sfp_mandiant_ti)
         opts = self.default_options.copy()
         opts['_useragent'] = 'test-agent'
         module.setup("spiderfoot.net", opts)
@@ -72,8 +77,9 @@ class TestModuleMandiantTI(SpiderFootTestBase):
         """
         Test setup(self, sfc, userOpts=dict())
         """
-        module = self.create_module_wrapper(sfp_mandiant_ti)
-        module.setup("example.com", self.default_options)
+        sf = SpiderFoot(self.default_options)
+        module = sfp_mandiant_ti()
+        module.setup(sf, dict())
         self.assertTrue(hasattr(module, 'opts'))
 
 if __name__ == '__main__':

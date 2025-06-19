@@ -5,6 +5,7 @@ import threading
 import time
 import os
 import tempfile
+from unittest.mock import MagicMock
 from spiderfoot import SpiderFootHelpers
 
 
@@ -23,6 +24,9 @@ class SpiderFootTestBase(unittest.TestCase):
         
         # Set up test-specific temporary directory
         self._temp_dir = tempfile.mkdtemp(prefix='spiderfoot_test_')
+        
+        # Create a mock scanner for module testing
+        self.scanner = MagicMock()
         
         # Default options for tests
         self.default_options = {

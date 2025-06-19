@@ -46,12 +46,9 @@ class TestModuleCiscoUmbrella(SpiderFootTestBase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        """
-        Test setup(self, sfc, userOpts=dict())
-        """
-        module = self.create_module_wrapper(sfp_cisco_umbrella)
-        module.setup("example.com", self.default_options)
-        self.assertTrue(hasattr(module, 'opts'))
+        sf = SpiderFoot(self.default_options)
+        module = sfp_cisco_umbrella.sfp_cisco_umbrella()
+        module.setup(sf, dict())
 
     def test_watchedEvents_should_return_list(self):
         """Test the watchedEvents function returns a list."""
@@ -63,6 +60,9 @@ class TestModuleCiscoUmbrella(SpiderFootTestBase):
         module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
 
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()

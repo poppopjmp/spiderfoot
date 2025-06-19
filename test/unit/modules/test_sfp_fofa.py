@@ -50,8 +50,9 @@ class TestModuleFofa(SpiderFootTestBase):
         """
         Test setup(self, sfc, userOpts=dict())
         """
-        module = self.create_module_wrapper(sfp_fofa)
-        module.setup("example.com", self.default_options)
+        sf = SpiderFoot(self.default_options)
+        module = sfp_fofa.sfp_fofa()
+        module.setup(sf, dict())
         self.assertTrue(hasattr(module, 'opts'))
 
     def test_watchedEvents_should_return_list(self):

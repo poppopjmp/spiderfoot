@@ -12,13 +12,15 @@ class TestModuleLuminar(SpiderFootTestBase):
         self.default_options.update({
             '_fetchtimeout': 15
         })
+        self.module = sfp_luminar.sfp_luminar()
 
     def test_setup(self):
         """
         Test setup(self, sfc, userOpts=dict())
         """
-        module = self.create_module_wrapper(sfp_luminar)
-        module.setup("example.com", self.default_options)
+        sf = SpiderFoot(self.default_options)
+        module = sfp_luminar.sfp_luminar()
+        module.setup(sf, dict())
         self.assertTrue(hasattr(module, 'opts'))
 
     @safe_recursion(max_depth=5)
@@ -26,9 +28,9 @@ class TestModuleLuminar(SpiderFootTestBase):
         """
         Test handleEvent(self, event)
         """
-        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
-        module = self.create_module_wrapper(sfp_luminar)
-        module.setup("spiderfoot.net", self.default_options)
+        sf = SpiderFoot(self.default_options)
+        module = sfp_luminar.sfp_luminar()
+        module.setup(sf, dict())
         
         def new_notifyListeners(self, event):
             expected = 'MALICIOUS_INTERNET_NAME'
@@ -52,10 +54,10 @@ class TestModuleLuminar(SpiderFootTestBase):
         """
         Test query(self, qry)
         """
-        module = self.create_module_wrapper(sfp_luminar)
-        module.opts['api_key'] = 'test_api_key'
-        module.opts['_useragent'] = 'SpiderFoot Test'
-        result = module.query('example.com')
+        sf = SpiderFoot(self.default_options)
+        module = sfp_luminar.sfp_luminar()
+        module.setup(sf, dict())
+        result = module.query("test_query")
         self.assertIsNotNone(result)
 
     def test_producedEvents(self):

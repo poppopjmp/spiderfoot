@@ -15,11 +15,9 @@ class TestModuleMyspace(SpiderFootTestBase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        """
-        Test setup(self, sfc, userOpts=dict())
-        """
-        module = self.create_module_wrapper(sfp_myspace)
-        module.setup("example.com", self.default_options)
+        sf = SpiderFoot(self.default_options)
+        module = sfp_myspace.sfp_myspace()
+        module.setup(sf, dict())
         self.assertTrue(hasattr(module, 'opts'))
 
     def test_watchedEvents_should_return_list(self):
@@ -79,5 +77,7 @@ class TestModuleMyspace(SpiderFootTestBase):
             self.register_event_emitter(self.module)
 
     def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()
         """Clean up after each test."""
         super().tearDown()

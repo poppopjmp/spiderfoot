@@ -40,6 +40,7 @@ class TestModuleCloudfront(SpiderFootTestBase):
         # Register patchers for cleanup during tearDown
         if 'patcher1' in locals():
             self.register_patcher(patcher1)
+        self.scanner = sfp_cloudfront.sfp_cloudfront()
 
     def test_opts(self):
         """Test the module options."""

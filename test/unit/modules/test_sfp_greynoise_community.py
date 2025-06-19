@@ -40,6 +40,7 @@ class TestModuleGreynoiseCommunity(SpiderFootTestBase):
         # Register patchers for cleanup during tearDown
         if 'patcher1' in locals():
             self.register_patcher(patcher1)
+        self.scanner = sfp_greynoise_community.sfp_greynoise_community()
 
     def test_opts(self):
         """Test the module options."""
