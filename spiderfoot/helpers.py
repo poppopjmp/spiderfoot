@@ -63,26 +63,47 @@ class SpiderFootHelpers():
     @staticmethod
     def dataPath() -> str:
         """Return data path and validate it exists"""
-        data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
-        if not os.path.exists(data_dir):
-            os.makedirs(data_dir, exist_ok=True)
-        return data_dir
+        try:
+            data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+            if not os.path.exists(data_dir):
+                os.makedirs(data_dir, exist_ok=True)
+            return data_dir
+        except Exception:
+            # Fallback to current directory
+            fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'data'))
+            if not os.path.exists(fallback_dir):
+                os.makedirs(fallback_dir, exist_ok=True)
+            return fallback_dir
 
     @staticmethod
     def cachePath() -> str:
         """Return cache path and validate it exists"""
-        cache_dir = os.path.join(os.path.dirname(__file__), '..', 'cache')
-        if not os.path.exists(cache_dir):
-            os.makedirs(cache_dir, exist_ok=True)
-        return cache_dir
+        try:
+            cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'cache'))
+            if not os.path.exists(cache_dir):
+                os.makedirs(cache_dir, exist_ok=True)
+            return cache_dir
+        except Exception:
+            # Fallback to current directory
+            fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'cache'))
+            if not os.path.exists(fallback_dir):
+                os.makedirs(fallback_dir, exist_ok=True)
+            return fallback_dir
 
     @staticmethod
     def logPath() -> str:
         """Return log path and validate it exists"""
-        log_dir = os.path.join(os.path.dirname(__file__), '..', 'logs')
-        if not os.path.exists(log_dir):
-            os.makedirs(log_dir, exist_ok=True)
-        return log_dir
+        try:
+            log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir, exist_ok=True)
+            return log_dir
+        except Exception:
+            # Fallback to current directory
+            fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'logs'))
+            if not os.path.exists(fallback_dir):
+                os.makedirs(fallback_dir, exist_ok=True)
+            return fallback_dir
         
     @staticmethod
     def genScanInstanceId() -> str:
@@ -455,7 +476,7 @@ class SpiderFootHelpers():
 
         Args:
             root (str): TBD
-            data (list[str]): Scan result as list
+            data (list[str): Scan result as list
             flt (list[str]): List of event types to include. If not set everything is included.
 
         Returns:
