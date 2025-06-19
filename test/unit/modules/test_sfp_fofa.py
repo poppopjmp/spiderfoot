@@ -51,7 +51,7 @@ class TestModuleFofa(SpiderFootTestBase):
         Test setup(self, sfc, userOpts=dict())
         """
         sf = SpiderFoot(self.default_options)
-        module = sfp_fofa.sfp_fofa()
+        module = sfp_fofa()
         module.setup(sf, dict())
         self.assertTrue(hasattr(module, 'opts'))
 

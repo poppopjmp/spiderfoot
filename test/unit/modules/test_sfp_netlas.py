@@ -79,7 +79,7 @@ class TestModuleNetlas(SpiderFootTestBase):
         Test handleEvent(self, event)
         """
         sf = SpiderFoot(self.default_options)
-        module = sfp_netlas.sfp_netlas()
+        module = sfp_netlas()
         module.setup(sf, dict())
 
         def new_notifyListeners(self, event):

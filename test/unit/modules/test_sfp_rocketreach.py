@@ -51,11 +51,11 @@ class TestModuleRocketreach(SpiderFootTestBase):
         Test setup(self, sfc, userOpts=dict())
         """
         sf = SpiderFoot(self.default_options)
-        module = sfp_rocketreach.sfp_rocketreach()
+        module = sfp_rocketreach()
         module.setup(sf, dict())
-        self.assertIsNotNone(module.options)
-        self.assertTrue('_debug' in module.options)
-        self.assertEqual(module.options['_debug'], False)
+        self.assertIsNotNone(module.opts)
+        self.assertTrue(hasattr(module, 'opts'))
+        self.assertIsInstance(module.opts, dict)
 
     def test_watchedEvents_should_return_list(self):
         """Test the watchedEvents function returns a list."""

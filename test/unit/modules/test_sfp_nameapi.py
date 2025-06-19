@@ -13,7 +13,7 @@ class TestModuleNameapi(SpiderFootTestBase):
         """
         Test producedEvents(self)
         """
-        module = sfp_nameapi.sfp_nameapi()
+        module = sfp_nameapi()
         produced_events = module.producedEvents()
         self.assertIsInstance(produced_events, list)
 

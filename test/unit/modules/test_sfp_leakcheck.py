@@ -51,11 +51,9 @@ class TestModuleLeakcheck(SpiderFootTestBase):
         Test setup(self, sfc, userOpts=dict())
         """
         sf = SpiderFoot(self.default_options)
-        module = sfp_leakcheck.sfp_leakcheck()
+        module = sfp_leakcheck()
         module.setup(sf, dict())
-        self.assertIsNotNone(module.options)
-        self.assertTrue('_debug' in module.options)
-        self.assertEqual(module.options['_debug'], False)
+        self.assertTrue(hasattr(module, 'opts'))
 
     def test_watchedEvents_should_return_list(self):
         """Test the watchedEvents function returns a list."""

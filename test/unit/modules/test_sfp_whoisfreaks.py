@@ -51,7 +51,7 @@ class TestModuleWhoisfreaks(SpiderFootTestBase):
         Test setup(self, sfc, userOpts=dict())
         """
         sf = SpiderFoot(self.default_options)
-        module = sfp_whoisfreaks.sfp_whoisfreaks()
+        module = sfp_whoisfreaks()
         module.setup(sf, dict())
         self.assertTrue(hasattr(module, 'opts'))
 

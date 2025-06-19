@@ -16,7 +16,7 @@ class TestModuleMyspace(SpiderFootTestBase):
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
-        module = sfp_myspace.sfp_myspace()
+        module = sfp_myspace()
         module.setup(sf, dict())
         self.assertTrue(hasattr(module, 'opts'))
 
@@ -28,7 +28,7 @@ class TestModuleMyspace(SpiderFootTestBase):
         """
         Test producedEvents(self)
         """
-        module = sfp_myspace.sfp_myspace()
+        module = sfp_myspace()
         produced_events = module.producedEvents()
         self.assertIsInstance(produced_events, list)
         self.assertGreater(len(produced_events), 0)

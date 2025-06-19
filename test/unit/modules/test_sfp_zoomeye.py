@@ -65,7 +65,7 @@ class TestModuleZoomeye(SpiderFootTestBase):
         Test setup(self, sfc, userOpts=dict())
         """
         sf = SpiderFoot(self.default_options)
-        module = sfp_zoomeye.sfp_zoomeye()
+        module = sfp_zoomeye()
         module.setup(sf, dict())
 
     def test_producedEvents_should_return_list(self):

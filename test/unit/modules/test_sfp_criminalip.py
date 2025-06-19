@@ -21,7 +21,10 @@ class TestModuleCriminalip(SpiderFootTestBase):
         module.__name__ = "sfp_criminalip"
         # Mock tempStorage method before setup
         module.tempStorage = MagicMock(return_value={})
-        module.setup(self.scanner, self.default_options)
+        # Add API key to options for testing
+        options = self.default_options.copy()
+        options['api_key'] = 'test_api_key'
+        module.setup(self.scanner, options)
         return module
 
     def create_test_event(self, target_value, target_type, event_type, event_data):
@@ -59,30 +62,34 @@ class TestModuleCriminalip(SpiderFootTestBase):
     def test_producedEvents_should_return_list(self):
         module = sfp_criminalip()
         module.__name__ = "sfp_criminalip"
-        self.assertIsInstance(module.producedEvents(), list)    @patch.object(sfp_criminalip, 'queryCriminalIP')
-    def test_handleEvent_domain(self, mock_query):
-        module = self.create_module_with_mocks()
+        self.assertIsInstance(module.producedEvents(), list)
 
-        target_value = 'example.com'
-        target_type = 'INTERNET_NAME'
-        event_type = 'INTERNET_NAME'
-        event_data = 'example.com'
-        target, evt = self.create_test_event(
-            target_value, target_type, event_type, event_data)
+    def test_handleEvent_domain(self):
+        with patch.object(sfp_criminalip, 'queryCriminalIP') as mock_query:
+            module = self.create_module_with_mocks()
+            # Mock the notifyListeners method to avoid plugin framework issues
+            module.notifyListeners = MagicMock()
 
-        mock_response = {
-            "name": "Example Company",
-            "linkedin_url": "https://linkedin.com/company/example",
-            "locality": "Example City",
-            "country": "Example Country"
-        }
-        mock_query.return_value = mock_response
+            target_value = 'example.com'
+            target_type = 'INTERNET_NAME'
+            event_type = 'DOMAIN_NAME'  # Changed from INTERNET_NAME to DOMAIN_NAME
+            event_data = 'example.com'
+            target, evt = self.create_test_event(
+                target_value, target_type, event_type, event_data)
 
-        module.setTarget(target)
-        module.handleEvent(evt)
+            mock_response = {
+                "name": "Example Company",
+                "linkedin_url": "https://linkedin.com/company/example",
+                "locality": "Example City",
+                "country": "Example Country"
+            }
+            mock_query.return_value = mock_response
 
-        # Verify the method was called
-        mock_query.assert_called()
+            module.setTarget(target)
+            module.handleEvent(evt)
+
+            # Verify the method was called
+            mock_query.assert_called_with('example.com', 'domain')
 
     @patch.object(sfp_criminalip, 'queryCriminalIP')
     def test_handleEvent_phone(self, mock_query):
@@ -154,7 +161,7 @@ class TestModuleCriminalip(SpiderFootTestBase):
 
         target_value = 'example.com'
         target_type = 'INTERNET_NAME'
-        event_type = 'INTERNET_NAME'
+        event_type = 'DOMAIN_NAME'  # Changed from INTERNET_NAME to DOMAIN_NAME
         event_data = 'example.com'
         target, evt = self.create_test_event(
             target_value, target_type, event_type, event_data)

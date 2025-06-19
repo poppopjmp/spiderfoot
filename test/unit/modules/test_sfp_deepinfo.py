@@ -51,7 +51,7 @@ class TestModuleDeepinfo(SpiderFootTestBase):
         Test setup(self, sfc, userOpts=dict())
         """
         sf = SpiderFoot(self.default_options)
-        module = sfp_deepinfo.sfp_deepinfo()
+        module = sfp_deepinfo()
         module.setup(sf, dict())
         self.assertTrue(hasattr(module, 'opts'))
 
