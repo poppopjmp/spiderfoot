@@ -29,6 +29,9 @@ class TestModuleBitcoin(SpiderFootTestBase):
 
     @safe_recursion(max_depth=5)
     def test_handleEvent_event_data_containing_bitcoin_string_in_legacy_base58_format_should_return_event(selfdepth=0):
+        """
+        Test handleEvent(self, event) with event data containing bitcoin string in legacy base58 format should return event
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_bitcoin()
@@ -68,6 +71,9 @@ class TestModuleBitcoin(SpiderFootTestBase):
 
     @safe_recursion(max_depth=5)
     def test_handleEvent_event_data_containing_bitcoin_string_in_bech32_format_should_return_event(selfdepth=0):
+        """
+        Test handleEvent(self, event) with event data containing bitcoin string in bech32 format should return event
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_bitcoin()
@@ -107,6 +113,9 @@ class TestModuleBitcoin(SpiderFootTestBase):
 
     @safe_recursion(max_depth=5)
     def test_handleEvent_event_data_not_containing_bitcoin_string_should_not_return_event(selfdepth=0):
+        """
+        Test handleEvent(self, event) with event data not containing bitcoin string should not return event
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_bitcoin()

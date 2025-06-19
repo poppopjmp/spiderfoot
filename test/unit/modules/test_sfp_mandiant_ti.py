@@ -25,8 +25,11 @@ class TestModuleMandiantTI(SpiderFootTestBase):
 
     @safe_recursion(max_depth=5)
     def test_handleEvent(self):
+        """
+        Test handleEvent(self, event)
+        """
         target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
-        module = self.create_module_wrapper()
+        module = self.create_module_wrapper(sfp_mandiant_ti)
         module.setup("spiderfoot.net", self.default_options)
         
         def new_notifyListeners(self, event):
@@ -48,7 +51,10 @@ class TestModuleMandiantTI(SpiderFootTestBase):
         self.assertIsNone(result)
 
     def test_query(self):
-        module = self.create_module_wrapper()
+        """
+        Test query(self, qry)
+        """
+        module = self.create_module_wrapper(sfp_mandiant_ti)
         opts = self.default_options.copy()
         opts['_useragent'] = 'test-agent'
         module.setup("spiderfoot.net", opts)
@@ -63,7 +69,10 @@ class TestModuleMandiantTI(SpiderFootTestBase):
         self.assertEqual(self.module.watchedEvents(), ['DOMAIN_NAME', 'INTERNET_NAME', 'IP_ADDRESS'])
 
     def test_setup(self):
-        module = self.create_module_wrapper()
+        """
+        Test setup(self, sfc, userOpts=dict())
+        """
+        module = self.create_module_wrapper(sfp_mandiant_ti)
         module.setup("example.com", self.default_options)
         self.assertTrue(hasattr(module, 'opts'))
 

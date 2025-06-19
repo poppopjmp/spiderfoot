@@ -75,8 +75,10 @@ class TestModuleNetlas(SpiderFootTestBase):
         super().tearDown()
 
     def test_handleEvent(self):
-        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
-        module = self.create_module_wrapper()
+        """
+        Test handleEvent(self, event)
+        """
+        module = self.create_module_wrapper(sfp_netlas)
         module.setup("spiderfoot.net", self.default_options)
 
         def new_notifyListeners(self, event):

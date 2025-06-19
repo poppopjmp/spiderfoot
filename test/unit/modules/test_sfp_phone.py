@@ -151,12 +151,17 @@ class TestModulePhone(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     def setUp(self):
-        """Set up before each test."""
         super().setUp()
+        # Mock the __name__ attribute
+        sfp_phone.__name__ = "sfp_phone"
         # Register event emitters if they exist
         if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
-
-    def tearDown(self):
-        """Clean up after each test."""
-        super().tearDown()
+            self.module.registerEventEmitter(self.module.__name__, self.module) # type: ignore[union-attr]
+        else:
+            self.module = sfp_phone()
+            self.module.registerEventEmitter(self.module.__name__, self.module)
+        self.module.setOptions(self.default_options)
+        self.module.setTarget(SpiderFootTarget("example.com", "INTERNET_NAME")) # type: ignore[union-attr] 
+        self.module.setup(SpiderFoot(self.default_options), dict())
+if __name__ == '__main__':
+    unittest.main()

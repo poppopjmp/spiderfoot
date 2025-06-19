@@ -47,10 +47,11 @@ class TestModuleCloudfront(SpiderFootTestBase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        """Test setup function."""
-        sf = SpiderFoot(self.default_options)
-        module = self.module_class()
-        module.setup(sf, self.default_options)
+        """
+        Test setup(self, sfc, userOpts=dict())
+        """
+        module = self.create_module_wrapper(sfp_cloudfront)
+        module.setup(self.scanner, self.default_options)
         self.assertIsNotNone(module.options)
         self.assertTrue('_debug' in module.options)
         self.assertEqual(module.options['_debug'], False)

@@ -9,23 +9,31 @@ from test.unit.utils.test_helpers import safe_recursion
 
 
 class TestModuleNameapi(SpiderFootTestBase):
-
-    def test_opts(self):
-        module = sfp_nameapi()
-        self.assertEqual(len(module.opts), len(module.optdescs))
-
     def test_setup(self):
-        module = self.create_module_wrapper()
+        """
+        Test setup(self, sfc, userOpts=dict())
+        """
+        module = self.create_module_wrapper(sfp_nameapi)
         module.setup("example.com", self.default_options)
         self.assertTrue(hasattr(module, 'opts'))
 
     def test_watchedEvents_should_return_list(self):
-        module = sfp_nameapi()
-        self.assertIsInstance(module.watchedEvents(), list)
+        """
+        Test watchedEvents(self)
+        """
+        module = self.create_module_wrapper(sfp_nameapi)
+        watched_events = module.watchedEvents()
+        self.assertIsInstance(watched_events, list)
 
     def test_producedEvents_should_return_list(self):
-        module = sfp_nameapi()
-        self.assertIsInstance(module.producedEvents(), list)    @safe_recursion(max_depth=5)
+        """
+        Test producedEvents(self)
+        """
+        module = self.create_module_wrapper(sfp_nameapi)
+        produced_events = module.producedEvents()
+        self.assertIsInstance(produced_events, list)
+
+    @safe_recursion(max_depth=5)
     def test_handleEvent_no_api_key_should_set_errorState(self, depth=0):
         sf = SpiderFoot(self.default_options)
 

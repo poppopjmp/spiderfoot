@@ -102,7 +102,10 @@ class TestModuleErrors(SpiderFootTestBase):
         self.assertIsNone(result)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_containing_error_string_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_containing_error_string_should_return_event(self):
+        """
+        Test handleEvent(self, event) with event data containing error string should return event
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_errors()
@@ -152,7 +155,10 @@ class TestModuleErrors(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_not_containing_error_string_should_not_return_event(selfdepth=0):
+    def test_handleEvent_event_data_not_containing_error_string_should_not_return_event(self):
+        """
+        Test handleEvent(self, event) with event data not containing error string should not return event
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_errors()

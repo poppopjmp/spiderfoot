@@ -9,24 +9,25 @@ class TestModuleLuminar(SpiderFootTestBase):
 
     def setUp(self):
         super().setUp()
-        self.default_options = {
-            '_fetchtimeout': 5,
-            '_useragent': 'SpiderFoot',
-            '_dnsserver': '8.8.8.8',
-            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
-            '_internettlds_cache': 72
-        }
-        self.sf = SpiderFoot(self.default_options)
-        self.module = sfp_luminar()
-        self.module.setup(self.sf, dict())
-        # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
+        self.default_options.update({
+            '_fetchtimeout': 15
+        })
+
+    def test_setup(self):
+        """
+        Test setup(self, sfc, userOpts=dict())
+        """
+        module = self.create_module_wrapper(sfp_luminar)
+        module.setup("example.com", self.default_options)
+        self.assertTrue(hasattr(module, 'opts'))
 
     @safe_recursion(max_depth=5)
     def test_handleEvent(self):
+        """
+        Test handleEvent(self, event)
+        """
         target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
-        module = self.create_module_wrapper()
+        module = self.create_module_wrapper(sfp_luminar)
         module.setup("spiderfoot.net", self.default_options)
         
         def new_notifyListeners(self, event):
@@ -48,9 +49,13 @@ class TestModuleLuminar(SpiderFootTestBase):
         self.assertIsNone(result)
 
     def test_query(self):
-        self.module.opts['api_key'] = 'test_api_key'
-        self.module.opts['_useragent'] = 'SpiderFoot Test'
-        result = self.module.query('example.com')
+        """
+        Test query(self, qry)
+        """
+        module = self.create_module_wrapper(sfp_luminar)
+        module.opts['api_key'] = 'test_api_key'
+        module.opts['_useragent'] = 'SpiderFoot Test'
+        result = module.query('example.com')
         self.assertIsNotNone(result)
 
     def test_producedEvents(self):
@@ -58,11 +63,6 @@ class TestModuleLuminar(SpiderFootTestBase):
 
     def test_watchedEvents(self):
         self.assertEqual(self.module.watchedEvents(), ['DOMAIN_NAME', 'INTERNET_NAME', 'IP_ADDRESS'])
-
-    def test_setup(self):
-        module = self.create_module_wrapper()
-        module.setup("example.com", self.default_options)
-        self.assertTrue(hasattr(module, 'opts'))
 
 if __name__ == '__main__':
     unittest.main()

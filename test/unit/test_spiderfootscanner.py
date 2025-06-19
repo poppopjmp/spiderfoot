@@ -25,6 +25,15 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         self.assertEqual(sfscan.status, "INITIALIZING")
 
     def test_init_argument_start_true_with_no_valid_modules_should_set_scanstatus_to_failed(self):
+        """
+        Test __init__(self, scanName, scanId, targetValue, targetType, moduleList, globalOpts, start=True)
+        """
+        # Ensure any existing threads are stopped before starting new ones
+        import threading
+        for thread in threading.enumerate():
+            if hasattr(thread, 'stop'):
+                thread.stop()
+        
         opts = self.default_options
         opts['__modules__'] = dict()
         scan_id = str(uuid.uuid4())

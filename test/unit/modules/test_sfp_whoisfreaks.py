@@ -47,7 +47,10 @@ class TestModuleWhoisfreaks(SpiderFootTestBase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        module = self.create_module_wrapper()
+        """
+        Test setup(self, sfc, userOpts=dict())
+        """
+        module = self.create_module_wrapper(sfp_whoisfreaks)
         module.setup("example.com", self.default_options)
         self.assertTrue(hasattr(module, 'opts'))
 

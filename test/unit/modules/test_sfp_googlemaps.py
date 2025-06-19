@@ -9,6 +9,9 @@ from test.unit.utils.test_helpers import safe_recursion
 
 
 class TestModuleGoogleMaps(SpiderFootTestBase):
+    """
+    Test the sfp_googlemaps module
+    """
 
     def test_opts(self):
         module = sfp_googlemaps()
@@ -28,7 +31,10 @@ class TestModuleGoogleMaps(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_no_api_key_should_set_errorState(selfdepth=0):
+    def test_handleEvent_no_api_key_should_set_errorState(self):
+        """
+        Test handleEvent(self, event) with no API key should set errorState
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_googlemaps()

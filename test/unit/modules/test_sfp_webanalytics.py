@@ -191,11 +191,9 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
         self.assertIsNone(result)
 
     def setUp(self):
-        """Set up before each test."""
         super().setUp()
-        # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
+        # Mock the __name__ attribute
+        sfp_webanalytics.__name__ = 'sfp_webanalytics'
 
     def tearDown(self):
         """Clean up after each test."""

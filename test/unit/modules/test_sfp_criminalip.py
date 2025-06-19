@@ -10,6 +10,12 @@ from test.unit.utils.test_helpers import safe_recursion
 
 
 class TestModuleCriminalip(SpiderFootTestBase):
+    def setup_module(self):
+        """
+        Setup module for testing
+        """
+        self.module = self.create_module_wrapper(sfp_criminalip)
+        self.module.setup(self.scanner, self.default_options)
 
     def test_opts(self):
         module = sfp_criminalip()
@@ -30,7 +36,7 @@ class TestModuleCriminalip(SpiderFootTestBase):
 
     @patch('modules.sfp_criminalip.sfp_criminalip.queryCriminalIP')
     def test_handleEvent_domain(self, mock_query):
-        module = self.setup_module(sfp_criminalip)
+        self.setup_module()
 
         target_value = 'example.com'
         target_type = 'DOMAIN_NAME'
@@ -47,17 +53,17 @@ class TestModuleCriminalip(SpiderFootTestBase):
         }
         mock_query.return_value = mock_response
 
-        module.setTarget(target)
-        module.handleEvent(evt)
+        self.module.setTarget(target)
+        self.module.handleEvent(evt)
 
-        events = module.sf.getEvents()
+        events = self.module.sf.getEvents()
         self.assertTrue(any(e.eventType == 'COMPANY_NAME' for e in events))
         self.assertTrue(any(e.eventType == 'SOCIAL_MEDIA' for e in events))
         self.assertTrue(any(e.eventType == 'GEOINFO' for e in events))
 
     @patch('modules.sfp_criminalip.sfp_criminalip.queryCriminalIP')
     def test_handleEvent_phone(self, mock_query):
-        module = self.setup_module(sfp_criminalip)
+        self.setup_module()
 
         target_value = '+1234567890'
         target_type = 'PHONE_NUMBER'
@@ -74,16 +80,16 @@ class TestModuleCriminalip(SpiderFootTestBase):
         }
         mock_query.return_value = mock_response
 
-        module.setTarget(target)
-        module.handleEvent(evt)
+        self.module.setTarget(target)
+        self.module.handleEvent(evt)
 
-        events = module.sf.getEvents()
+        events = self.module.sf.getEvents()
         self.assertTrue(any(e.eventType == 'PROVIDER_TELCO' for e in events))
         self.assertTrue(any(e.eventType == 'GEOINFO' for e in events))
 
     @patch('modules.sfp_criminalip.sfp_criminalip.queryCriminalIP')
     def test_handleEvent_ip(self, mock_query):
-        module = self.setup_module(sfp_criminalip)
+        self.setup_module()
 
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
@@ -103,16 +109,16 @@ class TestModuleCriminalip(SpiderFootTestBase):
         }
         mock_query.return_value = mock_response
 
-        module.setTarget(target)
-        module.handleEvent(evt)
+        self.module.setTarget(target)
+        self.module.handleEvent(evt)
 
-        events = module.sf.getEvents()
+        events = self.module.sf.getEvents()
         self.assertTrue(any(e.eventType == 'GEOINFO' for e in events))
         self.assertTrue(any(e.eventType == 'PHYSICAL_COORDINATES' for e in events))
 
     @patch('modules.sfp_criminalip.sfp_criminalip.queryCriminalIP')
     def test_queryCriminalIP(self, mock_query):
-        module = self.setup_module(sfp_criminalip)
+        self.setup_module()
 
         mock_response = {
             "code": "200",
@@ -120,13 +126,13 @@ class TestModuleCriminalip(SpiderFootTestBase):
         }
         mock_query.return_value = mock_response
 
-        result = module.queryCriminalIP('example.com', 'domain')
+        result = self.module.queryCriminalIP('example.com', 'domain')
         self.assertIsNotNone(result)
         self.assertEqual(result['name'], 'Example Company')
 
     @patch('modules.sfp_criminalip.sfp_criminalip.queryCriminalIP')
     def test_handleEvent_api_error(self, mock_query):
-        module = self.setup_module(sfp_criminalip)
+        self.setup_module()
 
         target_value = 'example.com'
         target_type = 'DOMAIN_NAME'
@@ -141,14 +147,14 @@ class TestModuleCriminalip(SpiderFootTestBase):
         }
         mock_query.return_value = mock_response
 
-        module.setTarget(target)
-        module.handleEvent(evt)
+        self.module.setTarget(target)
+        self.module.handleEvent(evt)
 
-        self.assertTrue(module.errorState)
+        self.assertTrue(self.module.errorState)
 
     @patch('modules.sfp_criminalip.sfp_criminalip.queryCriminalIP')
     def test_handleEvent_rate_limit(self, mock_query):
-        module = self.setup_module(sfp_criminalip)
+        self.setup_module()
 
         target_value = 'example.com'
         target_type = 'DOMAIN_NAME'
@@ -163,10 +169,10 @@ class TestModuleCriminalip(SpiderFootTestBase):
         }
         mock_query.return_value = mock_response
 
-        module.setTarget(target)
-        module.handleEvent(evt)
+        self.module.setTarget(target)
+        self.module.handleEvent(evt)
 
-        self.assertFalse(module.errorState)
+        self.assertFalse(self.module.errorState)
 
     def setUp(self):
         """Set up before each test."""
