@@ -154,7 +154,9 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
         self.assertEqual(self.plugin.watchedEvents(), ["*"])
 
     def test_producedEvents(self):
-        self.assertEqual(self.plugin.producedEvents(), [])    @safe_recursion(max_depth=5)
+        self.assertEqual(self.plugin.producedEvents(), [])
+    
+    @safe_recursion(max_depth=5)
     def test_handleEvent(self, depth=0):
         sfEvent = SpiderFootEvent("ROOT", "data", "module", None)
         self.plugin.handleEvent(sfEvent)

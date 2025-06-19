@@ -19,7 +19,7 @@ class sfp_whoisfreaks(SpiderFootPlugin):
     meta = {
         'name': "WhoisFreaks",
         'summary': "Reverse Whois Lookup by owner email or name or company name",
-        'flags': ["slow", "apiKey"],
+        'flags': ["slow", "apikey"],
         'useCases': ["Investigate", "Passive", "Footprint"],
         'categories': ["Search Engines"],
         'dataSource': {
