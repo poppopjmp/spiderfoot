@@ -61,6 +61,7 @@ class SpiderFootHelpers():
     """SpiderFoot helper functions and utilities."""
     
     @staticmethod
+    @staticmethod
     def dataPath() -> str:
         """Return data path and validate it exists"""
         try:
@@ -75,6 +76,7 @@ class SpiderFootHelpers():
                 os.makedirs(fallback_dir, exist_ok=True)
             return fallback_dir
 
+    @staticmethod
     @staticmethod
     def cachePath() -> str:
         """Return cache path and validate it exists"""
@@ -186,8 +188,7 @@ class SpiderFootHelpers():
         # BGP AS number
         if re.match(r'^\d+$', stripped_target) and len(stripped_target) <= 10:
             return "BGP_AS_OWNER"
-            
-        # Check if it's a username pattern
+              # Check if it's a username pattern
         if stripped_target.startswith('@') or stripped_target.lower().startswith('username:'):
             return 'USERNAME'
             
@@ -195,7 +196,9 @@ class SpiderFootHelpers():
         if re.match(r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$', stripped_target):
             return "INTERNET_NAME"
         
-        return None@staticmethod
+        return None
+
+    @staticmethod
     def loadModulesAsDict(path, ignore_files=None):
         """Load modules as dictionary"""
         if ignore_files is not None and not isinstance(ignore_files, list):
@@ -263,6 +266,7 @@ class SpiderFootHelpers():
                 
         return modules
 
+    @staticmethod
     @staticmethod
     def loadCorrelationRulesRaw(path, ignore_files=None):
         """Load correlation rules"""
@@ -522,7 +526,9 @@ class SpiderFootHelpers():
             gexf = GEXFWriter(graph=graph)
             return str(gexf).encode('utf-8')
         except Exception:
-            return b""    @staticmethod
+            return b""
+
+    @staticmethod
     def buildGraphJson(root: str, data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> str:
         """Convert supplied raw data into JSON format for SigmaJS.
 
@@ -1205,11 +1211,12 @@ class SpiderFootHelpers():
             "US": "United States", "UM": "United States Minor Outlying Islands",
             "UY": "Uruguay", "UZ": "Uzbekistan", "VU": "Vanuatu",
             "VA": "Vatican", "VE": "Venezuela", "VN": "Vietnam",
-            "WF": "Wallis and Futuna", "EH": "Western Sahara", "YE": "Yemen",
-            "ZM": "Zambia", "ZW": "Zimbabwe",
+            "WF": "Wallis and Futuna", "EH": "Western Sahara", "YE": "Yemen",            "ZM": "Zambia", "ZW": "Zimbabwe",
             "AC": "Ascension Island", "EU": "European Union", "SU": "Soviet Union",
             "UK": "United Kingdom"
-        }    @staticmethod
+        }
+
+    @staticmethod
     def fixModuleImport(module, module_name=None):
         """Fix module imports to ensure proper class attributes for tests.
         

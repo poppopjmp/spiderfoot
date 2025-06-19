@@ -177,28 +177,39 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
             'consumes': ["*"],
             'meta': self.plugin.meta,
             'opts': self.plugin.opts,
-            'optdescs': self.plugin.optdescs,
-        }
+            'optdescs': self.plugin.optdescs,        }
         self.assertEqual(self.plugin.asdict(), expected_dict)
 
     def test_start(self):
-        with patch('threading.Thread') as mock_thread:
-            self.plugin.start()
-            mock_thread.assert_called_once_with(
-                target=self.plugin.threadWorker)
-            mock_thread.return_value.start.assert_called_once()
-            # Verify thread is set as daemon
-            mock_thread.return_value.daemon = True
-
-    def test_start_thread_daemon(self):
-        """Test that threads created by the plugin are set as daemon threads."""
+        # Set up required queues for the start method to work
+        self.plugin.incomingEventQueue = MagicMock()
+        self.plugin.outgoingEventQueue = MagicMock()
+        
         with patch('threading.Thread') as mock_thread:
             mock_thread_instance = MagicMock()
             mock_thread.return_value = mock_thread_instance
             
             self.plugin.start()
             
-            mock_thread_instance.daemon = True
+            mock_thread.assert_called_once_with(target=self.plugin.threadWorker)
+            self.assertTrue(mock_thread_instance.daemon)
+            mock_thread_instance.start.assert_called_once()
+
+    def test_start_thread_daemon(self):
+        """Test that threads created by the plugin are set as daemon threads."""
+        # Set up required queues for the start method to work
+        self.plugin.incomingEventQueue = MagicMock()
+        self.plugin.outgoingEventQueue = MagicMock()
+        
+        with patch('threading.Thread') as mock_thread:
+            mock_thread_instance = MagicMock()
+            mock_thread.return_value = mock_thread_instance
+            
+            self.plugin.start()
+            
+            # Verify thread is created and set as daemon
+            mock_thread.assert_called_once_with(target=self.plugin.threadWorker)
+            self.assertTrue(mock_thread_instance.daemon)
             mock_thread_instance.start.assert_called_once()
 
     def test_thread_cleanup_on_finish(self):
@@ -247,8 +258,7 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
         target = MagicMock()
         target.targetType = "IP_ADDRESS"
         self.plugin._currentTarget = target
-        
-        # Test that ROOT events are always allowed
+          # Test that ROOT events are always allowed
         source_event = SpiderFootEvent("ROOT", "root_data", "module", None)
         listener = MagicMock()
         listener.watchedEvents.return_value = ["ROOT"]
@@ -258,13 +268,23 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
         listener.handleEvent.assert_called_once_with(source_event)
 
     def test_notifyListeners_with_storeOnly(self):
-        source_event = SpiderFootEvent("ROOT", "data", "module", None)
-        sfEvent = SpiderFootEvent(
-            "FILTERED_EVENT", "data", "module", source_event)
-        source_event.sourceEvent = sfEvent
+        # Create a chain of events that should trigger storeOnly condition
+        # The storeOnly condition is triggered when:
+        # prevEvent.sourceEvent.eventType == sfEvent.eventType AND
+        # prevEvent.sourceEvent.data.lower() == eventData.lower()
+        
+        root_event = SpiderFootEvent("ROOT", "root_data", "module", None)
+        source_event = SpiderFootEvent("FILTERED_EVENT", "data", "module", root_event)  # Same type and data
+        duplicate_event = SpiderFootEvent("INTERMEDIATE_EVENT", "other_data", "module", source_event)
+        sfEvent = SpiderFootEvent("FILTERED_EVENT", "data", "module", duplicate_event)  # Same type and data as source_event
+        
+        # Mock listener that watches for FILTERED_EVENT
         listener = MagicMock()
         listener.watchedEvents.return_value = ["FILTERED_EVENT"]
+        listener.__module__ = "test_module"  # Not a storage module
         self.plugin._listenerModules = [listener]
+        
+        # This should trigger storeOnly=True condition and not call handleEvent
         self.plugin.notifyListeners(sfEvent)
         listener.handleEvent.assert_not_called()
 
