@@ -50,8 +50,9 @@ class TestModuleLeakcheck(SpiderFootTestBase):
         """
         Test setup(self, sfc, userOpts=dict())
         """
-        module = self.create_module_wrapper(sfp_leakcheck)
-        module.setup(self.scanner, self.default_options)
+        sf = SpiderFoot(self.default_options)
+        module = sfp_leakcheck.sfp_leakcheck()
+        module.setup(sf, dict())
         self.assertIsNotNone(module.options)
         self.assertTrue('_debug' in module.options)
         self.assertEqual(module.options['_debug'], False)

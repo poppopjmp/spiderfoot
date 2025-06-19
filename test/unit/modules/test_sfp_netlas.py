@@ -78,8 +78,9 @@ class TestModuleNetlas(SpiderFootTestBase):
         """
         Test handleEvent(self, event)
         """
-        module = self.create_module_wrapper(sfp_netlas)
-        module.setup("spiderfoot.net", self.default_options)
+        sf = SpiderFoot(self.default_options)
+        module = sfp_netlas.sfp_netlas()
+        module.setup(sf, dict())
 
         def new_notifyListeners(self, event):
             expected = 'MALICIOUS_INTERNET_NAME'

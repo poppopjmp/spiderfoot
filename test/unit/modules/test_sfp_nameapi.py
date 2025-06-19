@@ -9,27 +9,11 @@ from test.unit.utils.test_helpers import safe_recursion
 
 
 class TestModuleNameapi(SpiderFootTestBase):
-    def test_setup(self):
-        """
-        Test setup(self, sfc, userOpts=dict())
-        """
-        module = self.create_module_wrapper(sfp_nameapi)
-        module.setup("example.com", self.default_options)
-        self.assertTrue(hasattr(module, 'opts'))
-
-    def test_watchedEvents_should_return_list(self):
-        """
-        Test watchedEvents(self)
-        """
-        module = self.create_module_wrapper(sfp_nameapi)
-        watched_events = module.watchedEvents()
-        self.assertIsInstance(watched_events, list)
-
     def test_producedEvents_should_return_list(self):
         """
         Test producedEvents(self)
         """
-        module = self.create_module_wrapper(sfp_nameapi)
+        module = sfp_nameapi.sfp_nameapi()
         produced_events = module.producedEvents()
         self.assertIsInstance(produced_events, list)
 

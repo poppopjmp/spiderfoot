@@ -28,7 +28,7 @@ class TestModuleMyspace(SpiderFootTestBase):
         """
         Test producedEvents(self)
         """
-        module = self.create_module_wrapper(sfp_myspace)
+        module = sfp_myspace.sfp_myspace()
         produced_events = module.producedEvents()
         self.assertIsInstance(produced_events, list)
         self.assertGreater(len(produced_events), 0)

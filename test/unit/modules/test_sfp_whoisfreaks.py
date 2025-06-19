@@ -50,8 +50,9 @@ class TestModuleWhoisfreaks(SpiderFootTestBase):
         """
         Test setup(self, sfc, userOpts=dict())
         """
-        module = self.create_module_wrapper(sfp_whoisfreaks)
-        module.setup("example.com", self.default_options)
+        sf = SpiderFoot(self.default_options)
+        module = sfp_whoisfreaks.sfp_whoisfreaks()
+        module.setup(sf, dict())
         self.assertTrue(hasattr(module, 'opts'))
 
     def test_watchedEvents_should_return_list(self):

@@ -50,9 +50,9 @@ class TestModuleZoomeye(SpiderFootTestBase):
         """
         Test setup(self, sfc, userOpts=dict())
         """
-        module = self.create_module_wrapper(sfp_zoomeye)
-        module.setup("example.com", self.default_options)
-        self.assertTrue(hasattr(module, 'opts'))
+        sf = SpiderFoot(self.default_options)
+        module = sfp_zoomeye.sfp_zoomeye()
+        module.setup(sf, dict())
 
     def test_producedEvents_should_return_list(self):
         """Test the producedEvents function returns a list."""

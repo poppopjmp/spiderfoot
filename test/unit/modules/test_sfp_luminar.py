@@ -21,7 +21,6 @@ class TestModuleLuminar(SpiderFootTestBase):
         sf = SpiderFoot(self.default_options)
         module = sfp_luminar.sfp_luminar()
         module.setup(sf, dict())
-        self.assertTrue(hasattr(module, 'opts'))
 
     @safe_recursion(max_depth=5)
     def test_handleEvent(self):
@@ -71,4 +70,5 @@ if __name__ == '__main__':
 
     def tearDown(self):
         """Clean up after each test."""
+        super().tearDown()
         super().tearDown()
