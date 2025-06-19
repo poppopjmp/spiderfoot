@@ -2,7 +2,7 @@ name: SpiderFoot Acceptance Tests
 
 on:
   push:
-    branches: [master]
+    branches: [master, "dev-5.1.2"]
   pull_request:
     branches: [master]
 

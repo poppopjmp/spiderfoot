@@ -15,10 +15,10 @@ Capture Failure Screenshot
     Run Keyword And Ignore Error    Capture Page Screenshot    failure-${TEST NAME}.png
 
 Create Firefox Headless Options
-    ${options}=    Evaluate    selenium.webdriver.FirefoxOptions()    modules=selenium.webdriver
-    Call Method    ${options}    add_argument    --headless
-    # Set the Firefox binary path using the binary property instead of set_binary
-    Set To Dictionary    ${options}    binary    ${FIREFOX_BINARY_PATH}
+    ${options}=    Create Dictionary
+    ${arguments}=    Create List    --headless
+    Set To Dictionary    ${options}    add_argument    ${arguments}
+    Set To Dictionary    ${options}    binary_location    ${FIREFOX_BINARY_PATH}
     Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
     RETURN    ${options}
 
