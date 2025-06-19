@@ -124,27 +124,29 @@ class TestSpiderFootWebUi(SpiderFootTestBase):
 
     def test_scaneventresultexport(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
-            # Mock data with all required 14 elements (indices 0-13)
+            # Mock data with all required 15 elements (indices 0-14)
             mock_db.return_value.scanResultEvent.return_value = [
                 [1627846261, 'data', 'source', 'type', 'ROOT',
-                 '', '', '', '', '', '', '', '', '']
+                '', '', '', '', '', '', '', '', '', '']
             ]
             with patch('sfwebui.StringIO') as mock_stringio:
                 mock_stringio.return_value.getvalue.return_value = 'csv_data'
                 result = self.webui.scaneventresultexport('id', 'type')
+                # Method returns string, not bytes
                 self.assertEqual(result, 'csv_data')
 
     def test_scaneventresultexportmulti(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanInstanceGet.return_value = ['scan_name']
-            # Mock data with all required 14 elements (indices 0-13)
+            # Mock data with all required 15 elements (indices 0-14)
             mock_db.return_value.scanResultEvent.return_value = [
                 [1627846261, 'data', 'source', 'type', 'ROOT',
-                 '', '', '', '', '', '', '', 'scan_id', '']
+                '', '', '', '', '', '', '', 'scan_id', '', '']
             ]
             with patch('sfwebui.StringIO') as mock_stringio:
                 mock_stringio.return_value.getvalue.return_value = 'csv_data'
                 result = self.webui.scaneventresultexportmulti('id')
+                # Method returns string, not bytes
                 self.assertEqual(result, 'csv_data')
 
     def test_scansearchresultexport(self):
@@ -160,6 +162,22 @@ class TestSpiderFootWebUi(SpiderFootTestBase):
                 # Method returns string, not bytes
                 self.assertEqual(result, 'csv_data')
 
+    def test_scanelementtypediscovery(self):
+        with patch('sfwebui.SpiderFootDb') as mock_db:
+            # Mock data with all required elements
+            mock_db.return_value.scanResultEvent.return_value = [
+                [1627846261, 'data', 'source', 'type', 'ROOT',
+                '', '', '', '', '', '', '', '', '', '']
+            ]
+            # Mock scanElementSourcesAll to return data structure with ROOT key
+            mock_db.return_value.scanElementSourcesAll.return_value = {
+                'ROOT': {'children': [], 'data': 'root_data'}
+            }
+            with patch('sfwebui.SpiderFootHelpers.dataParentChildToTree') as mock_tree:
+                mock_tree.return_value = {'ROOT': {'children': []}}
+                result = self.webui.scanelementtypediscovery('id', 'type')
+                self.assertIsInstance(result, dict)
+                self.assertIn('ROOT', result)
     def test_scanexportjsonmulti(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'target']
@@ -485,18 +503,6 @@ class TestSpiderFootWebUi(SpiderFootTestBase):
             ]
             result = self.webui.scanhistory('id')
             self.assertIsInstance(result, list)
-
-    def test_scanelementtypediscovery(self):
-        with patch('sfwebui.SpiderFootDb') as mock_db:
-            # Mock data with all required elements
-            mock_db.return_value.scanResultEvent.return_value = [
-                [1627846261, 'data', 'source', 'type', 'ROOT',
-                 '', '', '', '', '', '', '', '', '']
-            ]
-            mock_db.return_value.scanElementSourcesAll.return_value = [{}, {}]
-            with patch('sfwebui.SpiderFootHelpers.dataParentChildToTree', return_value={}):
-                result = self.webui.scanelementtypediscovery('id', 'type')
-                self.assertIsInstance(result, dict)
 
     def test_active_maintenance_status(self):
         with patch('sfwebui.Template') as mock_template:
