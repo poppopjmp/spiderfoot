@@ -64,7 +64,7 @@ class sfp_hashes(SpiderFootPlugin):
             hashalgo, hashval = hashtup
 
             evt = SpiderFootEvent(
-                "HASH", f"[{hashalgo}] {hashval}", self.__name__, event)
+                "HASH", f"[{hashalgo}] {hashval}", getattr(self, '__name__', self.__class__.__name__), event)
             if event.moduleDataSource:
                 evt.moduleDataSource = event.moduleDataSource
             else:

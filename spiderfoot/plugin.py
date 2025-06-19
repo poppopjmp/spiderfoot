@@ -580,7 +580,7 @@ class SpiderFootPlugin:
         Returns:
             bool: True if the module is currently processing data.
         """
-        return self.sharedThreadPool.countQueuedTasks(f"{self.__name__}_threadWorker") > 0
+        return self.sharedThreadPool.countQueuedTasks(f"{getattr(self, '__name__', self.__class__.__name__)}_threadWorker") > 0
 
     def watchedEvents(self) -> list:
         """What events is this module interested in for input. The format is a
@@ -681,26 +681,26 @@ class SpiderFootPlugin:
                     continue
                 if sfEvent == 'FINISHED':
                     self.sf.debug(
-                        f"{self.__name__}.threadWorker() got \"FINISHED\" from incomingEventQueue.")
+                        f"{getattr(self, '__name__', self.__class__.__name__)}.threadWorker() got \"FINISHED\" from incomingEventQueue.")
                     self.poolExecute(self.finish)
                 else:
                     self.sf.debug(
-                        f"{self.__name__}.threadWorker() got event, {sfEvent.eventType}, from incomingEventQueue.")
+                        f"{getattr(self, '__name__', self.__class__.__name__)}.threadWorker() got event, {sfEvent.eventType}, from incomingEventQueue.")
                     self.poolExecute(self.handleEvent, sfEvent)
         except KeyboardInterrupt:
-            self.sf.debug(f"Interrupted module {self.__name__}.")
+            self.sf.debug(f"Interrupted module {getattr(self, '__name__', self.__class__.__name__)}.")
             self._stopScanning = True
         except Exception as e:
             import traceback
-            self.sf.error(f"Exception ({e.__class__.__name__}) in module {self.__name__}." +
+            self.sf.error(f"Exception ({e.__class__.__name__}) in module {getattr(self, '__name__', self.__class__.__name__)}." +
                           traceback.format_exc())
             # set errorState
-            self.sf.debug(f"Setting errorState for module {self.__name__}.")
+            self.sf.debug(f"Setting errorState for module {getattr(self, '__name__', self.__class__.__name__)}.")
             self.errorState = True
             # clear incoming queue
             if self.incomingEventQueue:
                 self.sf.debug(
-                    f"Emptying incomingEventQueue for module {self.__name__}.")
+                    f"Emptying incomingEventQueue for module {getattr(self, '__name__', self.__class__.__name__)}.")
                 with suppress(queue.Empty):
                     while 1:
                         self.incomingEventQueue.get_nowait()
@@ -717,11 +717,11 @@ class SpiderFootPlugin:
             args: args (passed through to callback)
             kwargs: kwargs (passed through to callback)
         """
-        if self.__name__.startswith('sfp__stor_'):
+        if getattr(self, '__name__', self.__class__.__name__).startswith('sfp__stor_'):
             callback(*args, **kwargs)
         else:
             self.sharedThreadPool.submit(
-                callback, *args, taskName=f"{self.__name__}_threadWorker", maxThreads=self.maxThreads, **kwargs)
+                callback, *args, taskName=f"{getattr(self, '__name__', self.__class__.__name__)}_threadWorker", maxThreads=self.maxThreads, **kwargs)
 
     def threadPool(self, *args, **kwargs):
         return SpiderFootThreadPool(*args, **kwargs)

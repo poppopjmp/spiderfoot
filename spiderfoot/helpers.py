@@ -1094,7 +1094,9 @@ class SpiderFootHelpers():
                 isSecondDigit = not isSecondDigit
             if ccNumberTotal % 10 == 0:
                 creditCards.add(match)
-        return list(creditCards)    @staticmethod
+        return list(creditCards)
+
+    @staticmethod
     def extractUrlsFromText(data: str) -> typing.List[str]:
         """Extract URLs from text"""
         if not isinstance(data, str):
@@ -1313,7 +1315,8 @@ def fix_module_for_tests(module_name):
 _problematic_modules = [
     'sfp_cloudfront', 'sfp_deepinfo', 'sfp_fofa', 'sfp_greynoise_community',
     'sfp_leakcheck', 'sfp_rocketreach', 'sfp_threatjammer', 'sfp_tool_gobuster',
-    'sfp_whoisfreaks', 'sfp_netlas', 'sfp_zoomeye', 'sfp_nameapi'
+    'sfp_whoisfreaks', 'sfp_netlas', 'sfp_zoomeye', 'sfp_nameapi',
+    'sfp_cisco_umbrella', 'sfp_mandiant_ti', 'sfp_myspace'
 ]
 
 for _module_name in _problematic_modules:

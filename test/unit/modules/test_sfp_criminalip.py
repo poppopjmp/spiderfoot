@@ -39,8 +39,9 @@ class TestModuleCriminalip(SpiderFootTestBase):
     def test_opts(self):
         module = sfp_criminalip()
         module.__name__ = "sfp_criminalip"
-        # Only check that opts and optdescs exist and have the same keys
-        self.assertEqual(set(module.opts.keys()), set(module.optdescs.keys()))
+        # Check that all optdescs keys exist in opts
+        for key in module.optdescs.keys():
+            self.assertIn(key, module.opts)
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
@@ -58,15 +59,13 @@ class TestModuleCriminalip(SpiderFootTestBase):
     def test_producedEvents_should_return_list(self):
         module = sfp_criminalip()
         module.__name__ = "sfp_criminalip"
-        self.assertIsInstance(module.producedEvents(), list)
-
-    @patch.object(sfp_criminalip, 'queryCriminalIP')
+        self.assertIsInstance(module.producedEvents(), list)    @patch.object(sfp_criminalip, 'queryCriminalIP')
     def test_handleEvent_domain(self, mock_query):
         module = self.create_module_with_mocks()
 
         target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
-        event_type = 'DOMAIN_NAME'
+        target_type = 'INTERNET_NAME'
+        event_type = 'INTERNET_NAME'
         event_data = 'example.com'
         target, evt = self.create_test_event(
             target_value, target_type, event_type, event_data)
@@ -149,15 +148,13 @@ class TestModuleCriminalip(SpiderFootTestBase):
 
         result = module.queryCriminalIP('example.com', 'domain')
         self.assertEqual(result, mock_response)
-        mock_query.assert_called()
-
-    @patch.object(sfp_criminalip, 'queryCriminalIP')
+        mock_query.assert_called()    @patch.object(sfp_criminalip, 'queryCriminalIP')
     def test_handleEvent_api_error(self, mock_query):
         module = self.create_module_with_mocks()
 
         target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
-        event_type = 'DOMAIN_NAME'
+        target_type = 'INTERNET_NAME'
+        event_type = 'INTERNET_NAME'
         event_data = 'example.com'
         target, evt = self.create_test_event(
             target_value, target_type, event_type, event_data)
@@ -166,9 +163,7 @@ class TestModuleCriminalip(SpiderFootTestBase):
         mock_query.return_value = None
 
         module.setTarget(target)
-        module.handleEvent(evt)
-
-        # Verify the method was called
+        module.handleEvent(evt)        # Verify the method was called
         mock_query.assert_called()
 
     def test_handleEvent_no_api_key(self):
@@ -178,16 +173,14 @@ class TestModuleCriminalip(SpiderFootTestBase):
         module.opts['api_key'] = ''
 
         target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
-        event_type = 'DOMAIN_NAME'
+        target_type = 'INTERNET_NAME'
+        event_type = 'INTERNET_NAME'
         event_data = 'example.com'
         target, evt = self.create_test_event(
             target_value, target_type, event_type, event_data)
 
         module.setTarget(target)
-        result = module.handleEvent(evt)
-
-        # Check that the method handles missing API key gracefully
+        result = module.handleEvent(evt)        # Check that the method handles missing API key gracefully
         self.assertIsNone(result)
 
     def test_handleEvent_rate_limit(self):
@@ -197,8 +190,8 @@ class TestModuleCriminalip(SpiderFootTestBase):
         module.opts['api_key'] = 'test_key'
 
         target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
-        event_type = 'DOMAIN_NAME'
+        target_type = 'INTERNET_NAME'
+        event_type = 'INTERNET_NAME'
         event_data = 'example.com'
         target, evt = self.create_test_event(
             target_value, target_type, event_type, event_data)

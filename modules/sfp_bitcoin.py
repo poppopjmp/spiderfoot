@@ -92,7 +92,7 @@ class sfp_bitcoin(SpiderFootPlugin):
 
         for address in set(addrs):
             evt = SpiderFootEvent(
-                "BITCOIN_ADDRESS", address, self.__name__, event)
+                "BITCOIN_ADDRESS", address, getattr(self, '__name__', self.__class__.__name__), event)
             self.notifyListeners(evt)
 
 # End of sfp_bitcoin class

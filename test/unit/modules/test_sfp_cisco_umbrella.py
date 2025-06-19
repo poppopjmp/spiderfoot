@@ -2,10 +2,15 @@
 from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
-from modules.sfp_cisco_umbrella import sfp_cisco_umbrella
 import unittest
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
+
+# Import fix before importing the module
+from spiderfoot.helpers import fix_module_for_tests
+fix_module_for_tests('sfp_cisco_umbrella')
+
+from modules.sfp_cisco_umbrella import sfp_cisco_umbrella
 
 
 class TestModuleCiscoUmbrella(SpiderFootTestBase):
@@ -47,7 +52,8 @@ class TestModuleCiscoUmbrella(SpiderFootTestBase):
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
-        module = sfp_cisco_umbrella.sfp_cisco_umbrella()
+        module = sfp_cisco_umbrella()
+        module.__name__ = "sfp_cisco_umbrella"
         module.setup(sf, dict())
 
     def test_watchedEvents_should_return_list(self):

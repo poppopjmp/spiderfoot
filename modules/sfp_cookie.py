@@ -76,7 +76,7 @@ class sfp_cookie(SpiderFootPlugin):
         cookie = data.get('cookie')
         if cookie:
             evt = SpiderFootEvent("TARGET_WEB_COOKIE",
-                                  cookie, self.__name__, event)
+                                  cookie, getattr(self, '__name__', self.__class__.__name__), event)
             self.notifyListeners(evt)
 
 # End of sfp_cookie class

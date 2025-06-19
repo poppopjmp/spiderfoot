@@ -9,13 +9,19 @@ class TestModuleMandiantTI(SpiderFootTestBase):
 
     def setUp(self):
         super().setUp()
-        self.default_options = {
+        # Add required proxy settings to the base options
+        self.default_options.update({
             '_fetchtimeout': 5,
             '_useragent': 'SpiderFoot',
             '_dnsserver': '8.8.8.8',
             '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
-            '_internettlds_cache': 72
-        }
+            '_internettlds_cache': 72,
+            '_socks1type': '',
+            '_socks2addr': '',
+            '_socks3port': '',
+            '_socks4user': '',
+            '_socks5pwd': ''
+        })
         self.sf = SpiderFoot(self.default_options)
         self.module = sfp_mandiant_ti()
         self.module.setup(self.sf, dict())
@@ -23,10 +29,15 @@ class TestModuleMandiantTI(SpiderFootTestBase):
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
 
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()
+
     @safe_recursion(max_depth=5)
     def test_handleEvent(self):
         sf = SpiderFoot(self.default_options)
-        module = sfp_mandiant_ti.sfp_mandiant_ti()
+        module = sfp_mandiant_ti()
+        module.__name__ = "sfp_mandiant_ti"
         module.setup(sf, dict())
         
         """
@@ -54,16 +65,18 @@ class TestModuleMandiantTI(SpiderFootTestBase):
 
     def test_query(self):
         sf = SpiderFoot(self.default_options)
-        module = sfp_mandiant_ti.sfp_mandiant_ti()
-        module.setup(sf, dict())
+        module = sfp_mandiant_ti()
+        module.__name__ = "sfp_mandiant_ti"
+        # Pass the required options to the module setup
+        module_opts = {
+            '_useragent': 'SpiderFoot',
+            '_fetchtimeout': 5
+        }
+        module.setup(sf, module_opts)
         
         """
         Test query(self, qry)
         """
-        opts = self.default_options.copy()
-        opts['_useragent'] = 'test-agent'
-        module.setup("spiderfoot.net", opts)
-        
         result = module.query("test.com")
         self.assertEqual(None, result)
 
@@ -84,7 +97,3 @@ class TestModuleMandiantTI(SpiderFootTestBase):
 
 if __name__ == '__main__':
     unittest.main()
-
-    def tearDown(self):
-        """Clean up after each test."""
-        super().tearDown()

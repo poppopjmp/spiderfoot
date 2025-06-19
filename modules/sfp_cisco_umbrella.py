@@ -206,3 +206,6 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
 
 
 # End of sfp_cisco_umbrella class
+
+# For tests compatibility - add module.sfp_modulename attribute
+sfp_cisco_umbrella = sfp_cisco_umbrella
