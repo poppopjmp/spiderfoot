@@ -8,9 +8,7 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleC99(SpiderFootTestBase):
-
     def test_opts(self):
         module = sfp_c99()
         self.assertEqual(len(module.opts), len(module.optdescs))
@@ -29,7 +27,10 @@ class TestModuleC99(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_no_api_key_should_set_errorState(selfdepth=0):
+    def test_handleEvent_no_api_key_should_set_errorState(self):
+        """
+        Test handleEvent(self, event) with no API key should set errorState
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_c99()

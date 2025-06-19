@@ -40,7 +40,7 @@ def timeout_test(seconds=30):
     return decorator
 
 
-class TestTimeoutManager:
+class TimeoutManager:
     """Manages test timeouts globally."""
     
     def __init__(self, default_timeout=60):

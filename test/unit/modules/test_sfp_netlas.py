@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import patch
 from modules.sfp_netlas import sfp_netlas
-from sflib import SpiderFoot, SpiderFootEvent, SpiderFootTarget
+from sflib import SpiderFoot
+from spiderfoot.event import SpiderFootEvent
+from spiderfoot.target import SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
@@ -46,7 +48,7 @@ class TestModuleNetlas(SpiderFootTestBase):
         module.setup(self.sf, dict())
 
         target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
@@ -71,3 +73,29 @@ class TestModuleNetlas(SpiderFootTestBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+
+    def test_handleEvent(self):
+        """
+        Test handleEvent(self, event)
+        """
+        sf = SpiderFoot(self.default_options)
+        module = sfp_netlas()
+        module.setup(sf, dict())
+
+        def new_notifyListeners(self, event):
+            expected = 'MALICIOUS_INTERNET_NAME'
+            if str(event.eventType) != expected:
+                raise Exception(f"Received event {event.eventType}, expected {expected}")
+
+        module.notifyListeners = new_notifyListeners.__get__(module, module.__class__)
+
+        event_type = 'ROOT'
+        event_data = 'spiderfoot.net'
+        event_module = ''
+        source_event = ''
+
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+
+        result = module.handleEvent(evt)
+
+        self.assertIsNone(result)

@@ -146,15 +146,20 @@ def session_cleanup():
     # Force cleanup at end of session
     import gc
     import threading
-    
-    # Force garbage collection
+      # Force garbage collection
     gc.collect()
     
-    # Set all remaining non-main threads to daemon
+    # Clean up threads more safely
     main_thread = threading.main_thread()
     for thread in threading.enumerate():
         if thread != main_thread and thread.is_alive():
-            thread.daemon = True
+            # Only try to set daemon on threads that allow it
+            try:
+                if not thread.daemon:
+                    thread.daemon = True
+            except RuntimeError:
+                # Thread is already started, cannot change daemon status
+                pass
     
     logging.info("Session cleanup completed")
 

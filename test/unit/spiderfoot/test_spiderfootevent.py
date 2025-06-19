@@ -11,7 +11,8 @@ class TestSpiderFootEvent(SpiderFootTestBase):
         self.eventType = "URL_FORM"
         self.data = "http://example.com"
         self.module = "example_module"
-        self.sourceEvent = None
+        # Create a proper ROOT event as the source for testing
+        self.sourceEvent = SpiderFootEvent("ROOT", "target", "example_module", None)
         self.event = SpiderFootEvent(
             self.eventType, self.data, self.module, self.sourceEvent)
         # Register event emitters if they exist
@@ -40,7 +41,8 @@ class TestSpiderFootEvent(SpiderFootTestBase):
         self.assertEqual(self.event.data, self.data)
 
     def test_sourceEvent(self):
-        self.assertIsNone(self.event.sourceEvent)
+        self.assertIsNotNone(self.event.sourceEvent)
+        self.assertEqual(self.event.sourceEvent.eventType, "ROOT")
 
     def test_sourceEventHash(self):
         self.assertEqual(self.event.sourceEventHash, "ROOT")
@@ -159,7 +161,7 @@ class TestSpiderFootEvent(SpiderFootTestBase):
         self.assertEqual(event_dict['type'], self.event.eventType)
         self.assertEqual(event_dict['data'], self.event.data)
         self.assertEqual(event_dict['module'], self.event.module)
-        self.assertEqual(event_dict['source'], '')
+        self.assertEqual(event_dict['source'], 'target')
 
     def tearDown(self):
         """Clean up after each test."""

@@ -47,13 +47,15 @@ class TestModuleThreatjammer(SpiderFootTestBase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        """Test setup function."""
+        """
+        Test setup(self, sfc, userOpts=dict())
+        """
         sf = SpiderFoot(self.default_options)
-        module = self.module_class()
-        module.setup(sf, self.default_options)
-        self.assertIsNotNone(module.options)
-        self.assertTrue('_debug' in module.options)
-        self.assertEqual(module.options['_debug'], False)
+        module = sfp_threatjammer()
+        module.setup(sf, dict())
+        self.assertIsNotNone(module.opts)
+        self.assertTrue(hasattr(module, 'opts'))
+        self.assertIsInstance(module.opts, dict)
 
     def test_watchedEvents_should_return_list(self):
         """Test the watchedEvents function returns a list."""

@@ -8,7 +8,6 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleMyspace(SpiderFootTestBase):
 
     def test_opts(self):
@@ -19,17 +18,23 @@ class TestModuleMyspace(SpiderFootTestBase):
         sf = SpiderFoot(self.default_options)
         module = sfp_myspace()
         module.setup(sf, dict())
+        self.assertTrue(hasattr(module, 'opts'))
 
     def test_watchedEvents_should_return_list(self):
         module = sfp_myspace()
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
+        """
+        Test producedEvents(self)
+        """
         module = sfp_myspace()
-        self.assertIsInstance(module.producedEvents(), list)
+        produced_events = module.producedEvents()
+        self.assertIsInstance(produced_events, list)
+        self.assertGreater(len(produced_events), 0)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_social_media_not_myspace_profile_should_not_return_event(selfdepth=0):
+    def test_handleEvent_event_data_social_media_not_myspace_profile_should_not_return_event(self, depth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_myspace()
@@ -72,5 +77,7 @@ class TestModuleMyspace(SpiderFootTestBase):
             self.register_event_emitter(self.module)
 
     def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()
         """Clean up after each test."""
         super().tearDown()

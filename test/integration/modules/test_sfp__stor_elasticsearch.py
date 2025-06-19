@@ -1,7 +1,27 @@
 import pytest
 import unittest
 import time
-from elasticsearch import Elasticsearch, ElasticsearchException
+import sys
+import os
+
+# Add the project root to the path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+
+try:
+    from elasticsearch import Elasticsearch
+    from elasticsearch.exceptions import ConnectionError as ElasticsearchConnectionError
+    # Use the more general exception class for newer versions
+    ElasticsearchException = ElasticsearchConnectionError
+except ImportError:
+    # If elasticsearch is not available, create mock classes
+    class Elasticsearch:
+        def __init__(self, *args, **kwargs):
+            pass
+        def info(self):
+            raise Exception("Elasticsearch not available")
+    
+    class ElasticsearchException(Exception):
+        pass
 
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
 from sflib import SpiderFoot
@@ -9,6 +29,14 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 class BaseTestModuleIntegration(unittest.TestCase):
+    
+    @property
+    def default_options(self):
+        return {
+            '__database': ':memory:',
+            '__modules__': {},
+            '_debug': False,
+        }
 
     def setup_module(self, module_class):
         sf = SpiderFoot(self.default_options)

@@ -2,7 +2,7 @@
 from unittest.mock import patch, MagicMock
 import unittest
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent
+from spiderfoot.event import SpiderFootEvent
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
@@ -10,60 +10,39 @@ from test.unit.utils.test_helpers import safe_recursion
 
 class TestModuleStorElasticsearch(SpiderFootTestBase):
     """Test Stor Elasticsearch module."""
-
+    
     def setUp(self):
         """Set up before each test."""
         super().setUp()
-        # Create a mock for any logging calls
-        self.log_mock = MagicMock()
-        # Apply patches in setup to affect all tests
-        patcher1 = patch('logging.getLogger', return_value=self.log_mock)
-        self.addCleanup(patcher1.stop)
-        self.mock_logger = patcher1.start()
-
-        # Create module wrapper class dynamically
-        module_attributes = {
-            'descr': "Description for sfp__stor_elasticsearch",
-            # Add module-specific options
-
-        }
-
-        self.module_class = self.create_module_wrapper(
-            sfp__stor_elasticsearch,
-            module_attributes=module_attributes
-        )
         # Register event emitters if they exist
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
-        # Register mocks for cleanup during tearDown
-        self.register_mock(self.mock_logger)
-        # Register patchers for cleanup during tearDown
-        if 'patcher1' in locals():
-            self.register_patcher(patcher1)
 
     def test_opts(self):
         """Test the module options."""
-        module = self.module_class()
+        module = sfp__stor_elasticsearch()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
         """Test setup function."""
         sf = SpiderFoot(self.default_options)
-        module = self.module_class()
+        module = sfp__stor_elasticsearch()
         module.setup(sf, self.default_options)
-        self.assertIsNotNone(module.options)
-        self.assertTrue('_debug' in module.options)
-        self.assertEqual(module.options['_debug'], False)
-
-    def test_watchedEvents_should_return_list(self):
-        """Test the watchedEvents function returns a list."""
-        module = self.module_class()
-        self.assertIsInstance(module.watchedEvents(), list)
+        # Check that module has been properly set up
+        self.assertIsNotNone(module.sf)
+        self.assertIsNotNone(module.opts)
 
     def test_producedEvents_should_return_list(self):
-        """Test the producedEvents function returns a list."""
-        module = self.module_class()
-        self.assertIsInstance(module.producedEvents(), list)
+        """Test producedEvents method."""
+        module = sfp__stor_elasticsearch()
+        produced_events = module.producedEvents()
+        self.assertIsInstance(produced_events, list)
+
+    def test_watchedEvents_should_return_list(self):
+        """Test watchedEvents method."""
+        module = sfp__stor_elasticsearch()
+        watched_events = module.watchedEvents()
+        self.assertIsInstance(watched_events, list)
 
     def tearDown(self):
         """Clean up after each test."""

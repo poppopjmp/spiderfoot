@@ -9,7 +9,7 @@ import os
 from contextlib import contextmanager
 
 
-class TestResourceManager:
+class ResourceManager:
     """Manages test resources to prevent hangs."""
     
     def __init__(self):
@@ -44,7 +44,7 @@ class TestResourceManager:
 
 
 @contextmanager
-def test_timeout(seconds=30):
+def timeout_decorator(seconds=30):
     """Context manager that enforces a timeout on test execution."""
     def timeout_handler(signum, frame):
         raise TimeoutError(f"Test exceeded {seconds} second timeout")

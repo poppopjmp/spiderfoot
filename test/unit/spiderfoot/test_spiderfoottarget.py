@@ -105,14 +105,14 @@ class TestSpiderFootTarget(SpiderFootTestBase):
         self.target.targetValue = "192.168.1.0/24"
         self.assertTrue(self.target.matches("192.168.1.1"))
         self.assertFalse(self.target.matches("10.0.0.1"))
-
+        
     def test_matches_parent_domain(self):
-        alias_value = "sub.example.com"
-        alias_type = "INTERNET_NAME"
-        self.target.setAlias(alias_value, alias_type)
-        self.assertTrue(self.target.matches(
+        # Use a different target that doesn't match the parent domain directly
+        target = SpiderFootTarget("sub.example.com", "INTERNET_NAME")
+        target.setAlias("www.sub.example.com", "INTERNET_NAME")
+        self.assertTrue(target.matches(
             "example.com", includeParents=True))
-        self.assertFalse(self.target.matches(
+        self.assertFalse(target.matches(
             "example.com", includeParents=False))
 
     def test_matches_child_domain(self):

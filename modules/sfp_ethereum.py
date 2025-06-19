@@ -67,7 +67,7 @@ class sfp_ethereum(SpiderFootPlugin):
         matches = re.findall(r"[\s:=\>](0x[a-fA-F0-9]{40})", eventData)
         for m in matches:
             self.debug("Ethereum address match: " + m)
-            evt = SpiderFootEvent("ETHEREUM_ADDRESS", m, self.__name__, event)
+            evt = SpiderFootEvent("ETHEREUM_ADDRESS", m, getattr(self, '__name__', self.__class__.__name__), event)
             self.notifyListeners(evt)
 
 # End of sfp_ethereum class

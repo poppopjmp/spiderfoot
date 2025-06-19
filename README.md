@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.1.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.0.3)
+[![Stable Release](https://img.shields.io/badge/version-5.1.2-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.1.2)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
 [![Docker CI Build](https://github.com/poppopjmp/spiderfoot/workflows/Docker%20Image%20CI/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Docker%20Image%20CI")
 [![Browser Acceptance status](https://github.com/poppopjmp/spiderfoot/workflows/SpiderFoot%20Acceptance%20Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"SpiderFoot%20Acceptance%20Tests")

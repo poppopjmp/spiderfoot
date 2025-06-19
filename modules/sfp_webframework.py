@@ -28,6 +28,7 @@ regexps = dict({
 
 
 class sfp_webframework(SpiderFootPlugin):
+    __name__ = "sfp_webframework"
 
     meta = {
         'name': "Web Framework Identifier",

@@ -8,7 +8,6 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleSlideshare(SpiderFootTestBase):
 
     def test_opts(self):
@@ -29,7 +28,7 @@ class TestModuleSlideshare(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_social_media_not_slideshare_profile_should_not_return_event(selfdepth=0):
+    def test_handleEvent_event_data_social_media_not_slideshare_profile_should_not_return_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_slideshare()

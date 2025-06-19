@@ -17,6 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_webanalytics(SpiderFootPlugin):
+    __name__ = "sfp_webanalytics"
 
     meta = {
         'name': "Web Analytics Extractor",

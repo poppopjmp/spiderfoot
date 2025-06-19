@@ -17,6 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_base64(SpiderFootPlugin):
+    __name__ = "sfp_base64"
 
     meta = {
         'name': "Base64 Decoder",

@@ -8,9 +8,7 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleGithub(SpiderFootTestBase):
-
     def test_opts(self):
         module = sfp_github()
         self.assertEqual(len(module.opts), len(module.optdescs))
@@ -29,7 +27,10 @@ class TestModuleGithub(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_social_media_not_github_profile_should_not_return_event(selfdepth=0):
+    def test_handleEvent_event_data_social_media_not_github_profile_should_not_return_event(self):
+        """
+        Test handleEvent(self, event) with event data that is not a GitHub profile should not return event
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_github()

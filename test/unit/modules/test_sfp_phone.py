@@ -8,31 +8,38 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModulePhone(SpiderFootTestBase):
+
+    def setUp(self):
+        super().setUp()
 
     def test_opts(self):
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
     def test_watchedEvents_should_return_list(self):
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         self.assertIsInstance(module.watchedEvents(), list)
 
     def test_producedEvents_should_return_list(self):
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_domain_whois_event_data_containing_phone_string_should_create_phone_number_event(selfdepth=0):
+    def test_handleEvent_domain_whois_event_data_containing_phone_string_should_create_phone_number_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
         target_value = 'spiderfoot.net'
@@ -73,10 +80,11 @@ class TestModulePhone(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_domain_whois_event_data_not_containing_phone_string_should_not_create_event(selfdepth=0):
+    def test_handleEvent_domain_whois_event_data_not_containing_phone_string_should_not_create_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
         target_value = 'spiderfoot.net'
@@ -108,10 +116,11 @@ class TestModulePhone(SpiderFootTestBase):
         self.assertIsNone(result)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_phone_number_event_data_containing_phone_string_should_return_provider_telco_event(selfdepth=0):
+    def test_handleEvent_phone_number_event_data_containing_phone_string_should_return_provider_telco_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_phone()
+        module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
         target_value = 'spiderfoot.net'
@@ -151,13 +160,6 @@ class TestModulePhone(SpiderFootTestBase):
 
         self.assertEqual("OK", str(cm.exception))
 
-    def setUp(self):
-        """Set up before each test."""
-        super().setUp()
-        # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
 
-    def tearDown(self):
-        """Clean up after each test."""
-        super().tearDown()
+if __name__ == '__main__':
+    unittest.main()

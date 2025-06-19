@@ -7,7 +7,7 @@ This package contains the core SpiderFoot functionality including:
 - Web interface components
 """
 
-__version__ = "5.1.0"
+__version__ = "5.1.2"
 __author__ = "Steve Micallef, Agostino Panico"
 __license__ = "MIT"
 __email__ = "steve@binarypool.com, van1sh@van1shland.io"
@@ -79,3 +79,40 @@ def get_modules_path():
     
     # Default fallback
     return os.path.join(PROJECT_ROOT, "modules")
+
+import sys
+import importlib.util
+from .helpers import SpiderFootHelpers
+
+class SpiderFootModuleFinder:
+    """Custom module finder to fix SpiderFoot module imports."""
+    
+    def find_spec(self, name, path, target=None):
+        # Only intercept sfp_ module imports
+        if name.startswith('modules.sfp_') or name.startswith('sfp_'):
+            return None  # Let default finder handle it, we'll fix in exec_module
+        return None
+
+class SpiderFootModuleLoader:
+    """Custom module loader to fix SpiderFoot module imports."""
+    
+    def __init__(self, spec):
+        self.spec = spec
+    
+    def create_module(self, spec):
+        return None  # Use default module creation
+    
+    def exec_module(self, module):
+        # Execute the module normally first
+        spec = importlib.util.find_spec(module.__name__)
+        if spec and spec.loader:
+            spec.loader.exec_module(module)
+        
+        # Then fix the module
+        module_name = module.__name__.split('.')[-1]
+        if module_name.startswith('sfp_'):
+            SpiderFootHelpers.fixModuleImport(module, module_name)
+
+# Install the import hook
+if not any(isinstance(finder, SpiderFootModuleFinder) for finder in sys.meta_path):
+    sys.meta_path.insert(0, SpiderFootModuleFinder())

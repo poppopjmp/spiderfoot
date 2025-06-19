@@ -16,6 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_names(SpiderFootPlugin):
+    __name__ = "sfp_names"
 
     meta = {
         'name': "Human Name Extractor",

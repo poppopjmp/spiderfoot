@@ -23,7 +23,7 @@ class sfp_tool_gobuster(SpiderFootPlugin):
         "name": "Tools - Gobuster",
         "summary": "Identify web paths on target websites using the Gobuster tool.",
         "flags": ["tool", "slow", "invasive"],
-        "useCases": ["Footprint", "Investigation"],
+        "useCases": ["Footprint", "Investigate"],
         "categories": ["Crawling and Scanning"],
         "toolDetails": {
             "name": "Gobuster",

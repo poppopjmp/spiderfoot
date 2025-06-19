@@ -235,7 +235,7 @@ class sfp_countryname(SpiderFootPlugin):
             self.debug(f"Found country name: {countryName}")
 
             evt = SpiderFootEvent(
-                "COUNTRY_NAME", countryName, self.__name__, event)
+                "COUNTRY_NAME", countryName, getattr(self, '__name__', self.__class__.__name__), event)
             evt.moduleDataSource = moduleDataSource
             self.notifyListeners(evt)
 

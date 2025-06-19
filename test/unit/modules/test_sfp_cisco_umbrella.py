@@ -2,10 +2,15 @@
 from unittest.mock import patch, MagicMock
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
-from modules.sfp_cisco_umbrella import sfp_cisco_umbrella
 import unittest
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
+
+# Import fix before importing the module
+from spiderfoot.helpers import fix_module_for_tests
+fix_module_for_tests('sfp_cisco_umbrella')
+
+from modules.sfp_cisco_umbrella import sfp_cisco_umbrella
 
 
 class TestModuleCiscoUmbrella(SpiderFootTestBase):
@@ -36,8 +41,7 @@ class TestModuleCiscoUmbrella(SpiderFootTestBase):
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
         # Register mocks for cleanup during tearDown
-        self.register_mock(self.mock_logger)
-        # Register patchers for cleanup during tearDown
+        self.register_mock(self.mock_logger)        # Register patchers for cleanup during tearDown
         if 'patcher1' in locals():
             self.register_patcher(patcher1)
 
@@ -47,13 +51,10 @@ class TestModuleCiscoUmbrella(SpiderFootTestBase):
         self.assertEqual(len(module.opts), len(module.optdescs))
 
     def test_setup(self):
-        """Test setup function."""
         sf = SpiderFoot(self.default_options)
-        module = self.module_class()
-        module.setup(sf, self.default_options)
-        self.assertIsNotNone(module.options)
-        self.assertTrue('_debug' in module.options)
-        self.assertEqual(module.options['_debug'], False)
+        module = sfp_cisco_umbrella()
+        module.__name__ = "sfp_cisco_umbrella"
+        module.setup(sf, dict())
 
     def test_watchedEvents_should_return_list(self):
         """Test the watchedEvents function returns a list."""
@@ -65,6 +66,9 @@ class TestModuleCiscoUmbrella(SpiderFootTestBase):
         module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
 
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()

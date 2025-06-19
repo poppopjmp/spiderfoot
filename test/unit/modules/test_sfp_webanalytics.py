@@ -3,12 +3,12 @@ import unittest
 
 from modules.sfp_webanalytics import sfp_webanalytics
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from spiderfoot.event import SpiderFootEvent
+from spiderfoot.target import SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleWebAnalytics(SpiderFootTestBase):
 
     def test_opts(self):
@@ -29,7 +29,7 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_target_web_content_containing_web_analytics_string_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_target_web_content_containing_web_analytics_string_should_return_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webanalytics()
@@ -74,7 +74,7 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_target_web_content_not_containing_web_analytics_string_should_not_create_event(selfdepth=0):
+    def test_handleEvent_event_data_target_web_content_not_containing_web_analytics_string_should_not_create_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webanalytics()
@@ -110,7 +110,7 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
         self.assertIsNone(result)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_dns_text_containing_web_analytics_string_should_return_event(selfdepth=0):
+    def test_handleEvent_event_dns_text_containing_web_analytics_string_should_return_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webanalytics()
@@ -155,7 +155,7 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_dns_text_not_containing_web_analytics_string_should_not_create_event(selfdepth=0):
+    def test_handleEvent_event_data_dns_text_not_containing_web_analytics_string_should_not_create_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webanalytics()
@@ -191,11 +191,9 @@ class TestModuleWebAnalytics(SpiderFootTestBase):
         self.assertIsNone(result)
 
     def setUp(self):
-        """Set up before each test."""
         super().setUp()
-        # Register event emitters if they exist
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
+        # Mock the __name__ attribute
+        sfp_webanalytics.__name__ = 'sfp_webanalytics'
 
     def tearDown(self):
         """Clean up after each test."""

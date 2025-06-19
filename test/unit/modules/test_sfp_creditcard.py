@@ -8,7 +8,6 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleCreditCard(SpiderFootTestBase):
 
     def test_opts(self):
@@ -29,7 +28,7 @@ class TestModuleCreditCard(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_containing_creditcard_should_return_event(selfdepth=0):
+    def test_handleEvent_event_data_containing_creditcard_should_return_event(self, selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_creditcard()
@@ -68,7 +67,7 @@ class TestModuleCreditCard(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_not_containing_creditcard_string_should_not_return_event(selfdepth=0):
+    def test_handleEvent_event_data_not_containing_creditcard_string_should_not_return_event(self, selfdepth=0):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_creditcard()

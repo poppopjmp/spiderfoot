@@ -151,7 +151,7 @@ class SpiderFootTarget():
         if self.targetType == "IP_ADDRESS":
             e.append(self.targetValue)
 
-        e = self._getEquivalents("IPV6_ADDRESS")
+        e.extend(self._getEquivalents("IPV6_ADDRESS"))
         if self.targetType == "IPV6_ADDRESS":
             e.append(self.targetValue)
 

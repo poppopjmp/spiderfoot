@@ -8,7 +8,6 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleAlienvault(SpiderFootTestBase):
 
     def test_opts(self):
@@ -56,7 +55,10 @@ class TestModuleAlienvault(SpiderFootTestBase):
                 self.assertTrue(module.errorState)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_no_api_key_should_set_errorState(selfdepth=0):
+    def test_handleEvent_no_api_key_should_set_errorState(self):
+        """
+        Test handleEvent(self, event) with no API key should set errorState
+        """
         sf = SpiderFoot(self.default_options)
 
         module = sfp_alienvault()

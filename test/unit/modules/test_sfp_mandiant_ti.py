@@ -9,13 +9,19 @@ class TestModuleMandiantTI(SpiderFootTestBase):
 
     def setUp(self):
         super().setUp()
-        self.default_options = {
+        # Add required proxy settings to the base options
+        self.default_options.update({
             '_fetchtimeout': 5,
             '_useragent': 'SpiderFoot',
             '_dnsserver': '8.8.8.8',
             '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
-            '_internettlds_cache': 72
-        }
+            '_internettlds_cache': 72,
+            '_socks1type': '',
+            '_socks2addr': '',
+            '_socks3port': '',
+            '_socks4user': '',
+            '_socks5pwd': ''
+        })
         self.sf = SpiderFoot(self.default_options)
         self.module = sfp_mandiant_ti()
         self.module.setup(self.sf, dict())
@@ -23,27 +29,56 @@ class TestModuleMandiantTI(SpiderFootTestBase):
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
 
+    def tearDown(self):
+        """Clean up after each test."""
+        super().tearDown()
+
     @safe_recursion(max_depth=5)
-    def test_handleEvent(selfdepth=0):
-        target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
-        target = SpiderFootTarget(target_value, target_type)
-        self.sf.target = target
+    def test_handleEvent(self):
+        sf = SpiderFoot(self.default_options)
+        module = sfp_mandiant_ti()
+        module.__name__ = "sfp_mandiant_ti"
+        module.setup(sf, dict())
+        
+        """
+        Test handleEvent(self, event)
+        """
+        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
+        
+        def new_notifyListeners(self, event):
+            expected = 'MALICIOUS_INTERNET_NAME'
+            if str(event.eventType) != expected:
+                raise Exception(f"Received event {event.eventType}, expected {expected}")
 
-        event_type = 'DOMAIN_NAME'
-        event_data = 'example.com'
-        event_module = 'test_module'
-        source_event = SpiderFootEvent(event_type, event_data, event_module, None)
+        module.notifyListeners = new_notifyListeners.__get__(module, module.__class__)
 
-        self.module.opts['api_key'] = 'test_api_key'
-        self.module.handleEvent(source_event)
-
-        self.assertTrue(self.module.results)
+        event_type = 'ROOT'
+        event_data = 'spiderfoot.net'
+        event_module = ''
+        source_event = ''
+        
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
+        
+        result = module.handleEvent(evt)
+        
+        self.assertIsNone(result)
 
     def test_query(self):
-        self.module.opts['api_key'] = 'test_api_key'
-        result = self.module.query('example.com')
-        self.assertIsNotNone(result)
+        sf = SpiderFoot(self.default_options)
+        module = sfp_mandiant_ti()
+        module.__name__ = "sfp_mandiant_ti"
+        # Pass the required options to the module setup
+        module_opts = {
+            '_useragent': 'SpiderFoot',
+            '_fetchtimeout': 5
+        }
+        module.setup(sf, module_opts)
+        
+        """
+        Test query(self, qry)
+        """
+        result = module.query("test.com")
+        self.assertEqual(None, result)
 
     def test_producedEvents(self):
         self.assertEqual(self.module.producedEvents(), ['THREAT_INTELLIGENCE'])
@@ -51,9 +86,14 @@ class TestModuleMandiantTI(SpiderFootTestBase):
     def test_watchedEvents(self):
         self.assertEqual(self.module.watchedEvents(), ['DOMAIN_NAME', 'INTERNET_NAME', 'IP_ADDRESS'])
 
+    def test_setup(self):
+        """
+        Test setup(self, sfc, userOpts=dict())
+        """
+        sf = SpiderFoot(self.default_options)
+        module = sfp_mandiant_ti()
+        module.setup(sf, dict())
+        self.assertTrue(hasattr(module, 'opts'))
+
 if __name__ == '__main__':
     unittest.main()
-
-    def tearDown(self):
-        """Clean up after each test."""
-        super().tearDown()

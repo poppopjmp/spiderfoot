@@ -3,12 +3,12 @@ import unittest
 
 from modules.sfp_whoisology import sfp_whoisology
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from spiderfoot.event import SpiderFootEvent
+from spiderfoot.target import SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleWhoisology(SpiderFootTestBase):
 
     def test_opts(self):
@@ -29,7 +29,7 @@ class TestModuleWhoisology(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_no_api_key_should_set_errorState(selfdepth=0):
+    def test_handleEvent_no_api_key_should_set_errorState(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_whoisology()

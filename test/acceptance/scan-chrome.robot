@@ -1,6 +1,7 @@
 ***Settings***
 Library           SeleniumLibrary    timeout=30s    implicit_wait=10s
 Library           OperatingSystem
+Library           Collections
 Test Teardown     Run Keywords    Capture Failure Screenshot    Close All Browsers
 Resource          variables.robot  # Externalize variables
 Test Timeout      300 seconds      # 5-minute timeout per test
@@ -14,19 +15,14 @@ ${SCROLL_PADDING}       200   # Padding to ensure elements aren't hidden behind 
 Capture Failure Screenshot
     Capture Page Screenshot  failure-${TEST NAME}.png
 
-Create Chrome Headless Options
-    ${options}=    Evaluate    selenium.webdriver.ChromeOptions()    modules=selenium.webdriver
-    Call Method    ${options}    add_argument    --headless
-    Call Method    ${options}    add_argument    --no-sandbox
-    Call Method    ${options}    add_argument    --disable-dev-shm-usage
-    Call Method    ${options}    add_argument    --window-size=1920,1080  # Set a larger window size
-    ${service}=    Evaluate    selenium.webdriver.chrome.service.Service(executable_path='${CHROMEDRIVER_PATH}')    modules=selenium.webdriver.chrome.service
-    RETURN    ${options}    ${service}
+Setup Chrome Environment
+    Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
+    Set Environment Variable    MOZ_HEADLESS    1
 
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
-    ${chrome_options}    ${service}=    Create Chrome Headless Options
-    Open browser              http://127.0.0.1:5001/newscan    browser=chrome    options=${chrome_options}    service=${service}    timeout=${WAIT_TIMEOUT}
+    Setup Chrome Environment
+    Open browser              http://127.0.0.1:5001/newscan    browser=headlesschrome
     Wait Until Element Is Visible    name:scanname    timeout=${WAIT_TIMEOUT}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
@@ -46,8 +42,8 @@ Create a module scan
 
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
-    ${chrome_options}    ${service}=    Create Chrome Headless Options
-    Open browser              http://localhost:5001/newscan    browser=chrome    options=${chrome_options}    service=${service}    timeout=${WAIT_TIMEOUT}
+    Setup Chrome Environment
+    Open browser              http://localhost:5001/newscan    browser=headlesschrome
     Wait Until Element Is Visible    name:scanname    timeout=${WAIT_TIMEOUT}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
@@ -160,8 +156,8 @@ Wait For Scan To Finish
 
 ***Test Cases***
 Main navigation pages should render correctly
-    ${chrome_options}    ${service}=    Create Chrome Headless Options
-    Open browser              http://localhost:5001    browser=chrome    options=${chrome_options}    service=${service}    timeout=${WAIT_TIMEOUT}
+    Setup Chrome Environment
+    Open browser              http://localhost:5001    browser=headlesschrome
     Wait Until Element Is Visible    id:nav-link-newscan    timeout=${WAIT_TIMEOUT}
     Click Element                 id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=${WAIT_TIMEOUT}
@@ -223,4 +219,8 @@ A passive scan with unresolvable target internet name should fail
     Wait Until Element Contains     scanstatusbadge   ERROR     timeout=${WAIT_TIMEOUT}
     Safe Click Element              id:btn-log
     Wait Until Page Contains     Could not resolve    timeout=${WAIT_TIMEOUT}
+    Close All Browsers
+    Close All Browsers
+    Wait Until Page Contains     Could not resolve    timeout=${WAIT_TIMEOUT}
+    Close All Browsers
     Close All Browsers

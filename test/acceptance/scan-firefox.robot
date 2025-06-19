@@ -14,21 +14,16 @@ ${FIREFOX_BINARY_PATH}    /usr/bin/firefox  # Add path to Firefox binary
 Capture Failure Screenshot
     Run Keyword And Ignore Error    Capture Page Screenshot    failure-${TEST NAME}.png
 
-Create Firefox Headless Options
-    ${options}=    Evaluate    selenium.webdriver.FirefoxOptions()    modules=selenium.webdriver
-    Call Method    ${options}    add_argument    --headless
-    # Set the Firefox binary path using the binary property instead of set_binary
-    Set To Dictionary    ${options}    binary    ${FIREFOX_BINARY_PATH}
+Setup Firefox Environment
     Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
-    RETURN    ${options}
+    Set Environment Variable    MOZ_HEADLESS    1
 
 Create a module scan
     [Arguments]    ${scan_name}    ${scan_target}    ${module_name}
-    ${firefox_options}=    Create Firefox Headless Options
-    Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
-    Open browser    http://localhost:5001/newscan   firefox    options=${firefox_options}    timeout=120s
-    Press Keys    name:scanname    van1shland
-    Press Keys    name:scantarget    van1shland.io
+    Setup Firefox Environment
+    Open browser    http://localhost:5001/newscan   headlessfirefox
+    Press Keys    name:scanname    ${scan_name}
+    Press Keys    name:scantarget    ${scan_target}
     Click Element    id:moduletab
     Click Element    id:btn-deselect-all
     Scroll To Element    id:module_${module_name}
@@ -43,11 +38,10 @@ Create a module scan
 
 Create a use case scan
     [Arguments]    ${scan_name}    ${scan_target}    ${use_case}
-    ${firefox_options}=    Create Firefox Headless Options
-    Set Environment Variable    webdriver.gecko.driver    ${GECKODRIVER_PATH}
-    Open browser    http://localhost:5001/newscan    firefox    options=${firefox_options}    timeout=120s
-    Press Keys    name:scanname    van1shland
-    Press Keys    name:scantarget    van1shland.io
+    Setup Firefox Environment
+    Open browser    http://localhost:5001/newscan    headlessfirefox
+    Press Keys    name:scanname    ${scan_name}
+    Press Keys    name:scantarget    ${scan_target}
     Click Element    id:usecase_${use_case}
     Scroll To Element    id:btn-run-scan
     Click Element    id:btn-run-scan
@@ -127,8 +121,8 @@ Wait For Scan To Finish
 
 ***Test Cases***
 Main navigation pages should render correctly
-    ${firefox_options}=    Create Firefox Headless Options
-    Open browser    http://localhost:5001    firefox    options=${firefox_options}    timeout=120s
+    Setup Firefox Environment
+    Open browser    http://localhost:5001    headlessfirefox
     Click Element    id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=120s
     New scan page should render
@@ -185,6 +179,12 @@ A passive scan with unresolvable target internet name should fail
     Create a use case scan    shouldnotresolve    shouldnotresolve.doesnotexist.local    Passive
     Wait Until Element Is Visible    id:btn-browse    timeout=15s
     Wait Until Element Contains    scanstatusbadge    ERROR    timeout=60s
+    Click Element    id:btn-log
+    Page Should Contain    Could not resolve
+    [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    1s
+    Click Element    id:btn-log
+    Page Should Contain    Could not resolve
+    [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    1s
     Click Element    id:btn-log
     Page Should Contain    Could not resolve
     [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    1s

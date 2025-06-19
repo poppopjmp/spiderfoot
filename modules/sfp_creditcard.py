@@ -63,7 +63,7 @@ class sfp_creditcard(SpiderFootPlugin):
         for creditCard in set(creditCards):
             self.info(f"Found credit card number: {creditCard}")
             evt = SpiderFootEvent("CREDIT_CARD_NUMBER",
-                                  creditCard, self.__name__, event)
+                                  creditCard, getattr(self, '__name__', self.__class__.__name__), event)
             if event.moduleDataSource:
                 evt.moduleDataSource = event.moduleDataSource
             else:

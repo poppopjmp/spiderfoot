@@ -23,9 +23,7 @@ class sfp__stor_stdout(SpiderFootPlugin):
     }
 
     _priority = 0
-    firstEvent = True
-
-    # Default options
+    firstEvent = True    # Default options
     opts = {
         "_format": "tab",  # tab, csv, json
         "_requested": [],
@@ -34,7 +32,7 @@ class sfp__stor_stdout(SpiderFootPlugin):
         "_showsource": False,
         "_csvdelim": ",",
         "_maxlength": 0,
-        "_eventtypes": dict()
+        "_eventtypes": []
     }
 
     # Option descriptions

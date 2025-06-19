@@ -8,7 +8,6 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-@pytest.mark.usefixtures
 class TestModuleWebFramework(SpiderFootTestBase):
 
     def test_opts(self):
@@ -29,7 +28,7 @@ class TestModuleWebFramework(SpiderFootTestBase):
         self.assertIsInstance(module.producedEvents(), list)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_web_content_containing_webframework_string_should_create_url_web_framework_event(selfdepth=0):
+    def test_handleEvent_event_data_web_content_containing_webframework_string_should_create_url_web_framework_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webframework()
@@ -75,7 +74,7 @@ class TestModuleWebFramework(SpiderFootTestBase):
         self.assertEqual("OK", str(cm.exception))
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_web_content_not_containing_webframework_string_should_not_create_event(selfdepth=0):
+    def test_handleEvent_event_data_web_content_not_containing_webframework_string_should_not_create_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webframework()
@@ -112,7 +111,7 @@ class TestModuleWebFramework(SpiderFootTestBase):
         self.assertIsNone(result)
 
     @safe_recursion(max_depth=5)
-    def test_handleEvent_event_data_web_content_from_external_url_containing_webframework_string_should_not_create_event(selfdepth=0):
+    def test_handleEvent_event_data_web_content_from_external_url_containing_webframework_string_should_not_create_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_webframework()
