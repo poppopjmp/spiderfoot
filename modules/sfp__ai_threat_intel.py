@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_ai_threat_intel
-# Purpose:      Phase 3 AI-Powered Threat Intelligence Engine
+# Purpose:      AI-Powered Threat Intelligence Engine
 #
-# Author:       Phase 3 Enhancement Team
+# Author:       Enhancement Team
 # Created:      2025-06-20
 # Copyright:    (c) SpiderFoot Enterprise 2025
 # License:      MIT
 # -------------------------------------------------------------------------------
 
 """
-Phase 3 AI-Powered Threat Intelligence Engine
+AI-Powered Threat Intelligence Engine
 
 This module implements advanced AI/ML capabilities:
 - Smart pattern recognition for sophisticated attack detection
@@ -1037,12 +1037,12 @@ class NLPThreatAnalyzer:
 
 
 class sfp__ai_threat_intel(SpiderFootPlugin):
-    """Phase 3 AI-Powered Threat Intelligence Engine."""
+    """AI-Powered Threat Intelligence Engine."""
 
     meta = {
-        'name': "AI Threat Intelligence Engine (Phase 3)",
+        'name': "AI Threat Intelligence Engine",
         'summary': "Advanced AI/ML-powered threat intelligence with pattern recognition, predictive analytics, and automated IOC correlation.",
-        'flags': ["enterprise", "ai", "ml", "phase3"]
+        'flags': ["enterprise", "ai", "ml"]
     }
 
     _priority = 1  # High priority for threat intelligence
@@ -1270,4 +1270,4 @@ class sfp__ai_threat_intel(SpiderFootPlugin):
             except Exception as e:
                 self.error(f"NLP analysis failed: {e}")
 
-# End of Phase 3 AI Threat Intelligence Engine
+# End of AI Threat Intelligence Engine

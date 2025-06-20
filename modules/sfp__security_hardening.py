@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_security_hardening
-# Purpose:      Phase 3 Advanced Security Hardening Module
+# Purpose:      Advanced Security Hardening Module
 #
-# Author:       Phase 3 Security Team
+# Author:       Security Team
 # Created:      2025-06-20
 # Copyright:    (c) SpiderFoot Enterprise 2025
 # License:      MIT
 # -------------------------------------------------------------------------------
 
 """
-Phase 3 Advanced Security Hardening Module
+Advanced Security Hardening Module
 
 This module implements enterprise-grade security features:
 - Zero-Trust Architecture implementation
@@ -734,12 +734,12 @@ class ZeroTrustController:
 
 
 class sfp__security_hardening(SpiderFootPlugin):
-    """Phase 3 Advanced Security Hardening Module."""
+    """Advanced Security Hardening Module."""
 
     meta = {
-        'name': "Security Hardening Engine (Phase 3)",
+        'name': "Security Hardening Engine",
         'summary': "Advanced security hardening with zero-trust, encryption, MFA, RBAC, and comprehensive audit logging.",
-        'flags': ["enterprise", "security", "phase3"]
+        'flags': ["enterprise", "security"]
     }
 
     _priority = 0  # High priority for security
@@ -1014,4 +1014,4 @@ class sfp__security_hardening(SpiderFootPlugin):
         
         return status
 
-# End of Phase 3 Security Hardening Module
+# End of Security Hardening Module
