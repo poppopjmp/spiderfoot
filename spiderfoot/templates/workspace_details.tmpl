@@ -14,8 +14,7 @@
             <div class="col-md-12">
                 <div class="page-header">
                     <h1>${workspace.name} 
-                        <small>${workspace.description}</small>
-                        <span class="pull-right">
+                        <small>${workspace.description}</small>                        <span class="pull-right">
                             <button class="btn btn-primary" onclick="editWorkspace('${workspace.workspace_id}')">
                                 <i class="fa fa-edit"></i> Edit
                             </button>
@@ -25,14 +24,12 @@
                             <button class="btn btn-info" onclick="importScans('${workspace.workspace_id}')">
                                 <i class="fa fa-download"></i> Import Scans
                             </button>
-                            % if scan_details:
-                                <button class="btn btn-warning" onclick="generateReport('${workspace.workspace_id}')">
-                                    <i class="fa fa-file-text"></i> Generate Report
-                                </button>
-                                <button class="btn btn-primary" onclick="multiTargetScan('${workspace.workspace_id}')">
-                                    <i class="fa fa-play"></i> Multi-Target Scan
-                                </button>
-                            % endif
+                            <button class="btn btn-primary" onclick="multiTargetScan('${workspace.workspace_id}')">
+                                <i class="fa fa-play"></i> Multi-Target Scan
+                            </button>
+                            <button class="btn btn-warning" onclick="generateReport('${workspace.workspace_id}')">
+                                <i class="fa fa-file-text"></i> Generate Report
+                            </button>
                         </span>
                     </h1>
                 </div>
@@ -719,7 +716,17 @@ function multiTargetScan(workspaceId) {
             loadAvailableModules();
             $('#multiTargetScanModal').modal('show');
         } else {
-            alertify.error('No targets available in this workspace. Add targets first.');
+            alertify.confirm(
+                'No Targets Available',
+                'This workspace doesn\'t have any targets yet. Would you like to add targets first?',
+                function() {
+                    // User clicked OK - open add target modal
+                    addTarget(workspaceId);
+                },
+                function() {
+                    // User clicked Cancel - do nothing
+                }
+            ).set('labels', {ok:'Add Targets', cancel:'Cancel'});
         }
     }).fail(function() {
         alertify.error('Failed to load workspace targets');
@@ -836,8 +843,7 @@ $(document).ready(function() {
             alertify.error('Failed to import scans: Server error (' + status + ')');
         });
     });
-    
-    // Generate report
+      // Generate report
     $('#generateReportBtn').click(function() {
         var workspaceId = $('#reportWorkspaceId').val();
         var format = $('#reportFormat').val();
@@ -864,7 +870,18 @@ $(document).ready(function() {
                 alertify.success('Report generation started');
                 $('#generateReportModal').modal('hide');
             } else {
-                alertify.error('No scans available for report generation');
+                $('#generateReportModal').modal('hide');
+                alertify.confirm(
+                    'No Scans Available',
+                    'This workspace doesn\'t have any completed scans yet. Would you like to start a multi-target scan first?',
+                    function() {
+                        // User clicked OK - start multi-target scan
+                        multiTargetScan(workspaceId);
+                    },
+                    function() {
+                        // User clicked Cancel - do nothing
+                    }
+                ).set('labels', {ok:'Start Scan', cancel:'Cancel'});
             }
         }).fail(function() {
             alertify.error('Failed to get workspace details for report generation');
