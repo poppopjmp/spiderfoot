@@ -36,6 +36,7 @@ from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import __version__
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
+from spiderfoot.workspace import SpiderFootWorkspace
 
 mp.set_start_method("spawn", force=True)
 
@@ -1043,6 +1044,17 @@ class SpiderFootWebUi:
                             updated=updated, docroot=self.docroot)
 
     @cherrypy.expose
+    def workspaces(self: 'SpiderFootWebUi') -> str:
+        """Show workspace management page.
+
+        Returns:
+            str: Workspace management page HTML
+        """
+        templ = Template(
+            filename='spiderfoot/templates/workspaces.tmpl', lookup=self.lookup)
+        return templ.render(pageid='WORKSPACES', docroot=self.docroot, version=__version__)
+
+    @cherrypy.expose
     def optsexport(self: 'SpiderFootWebUi', pattern: str = None) -> str:
         """Export configuration.
 
@@ -1978,3 +1990,593 @@ class SpiderFootWebUi:
         templ = Template(
             filename='spiderfoot/templates/footer.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, version=__version__)
+
+    # Workspace Management API Endpoints
+    
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacelist(self: 'SpiderFootWebUi') -> list:
+        """List all workspaces.
+
+        Returns:
+            list: List of workspace information
+        """
+        try:
+            workspaces = SpiderFootWorkspace.list_workspaces(self.config)
+            return workspaces
+        except Exception as e:
+            self.log.error(f"Failed to list workspaces: {e}")
+            return []
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacecreate(self: 'SpiderFootWebUi', name: str, description: str = '') -> dict:
+        """Create a new workspace.
+
+        Args:
+            name (str): workspace name
+            description (str): workspace description
+
+        Returns:
+            dict: workspace creation result
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, name=name)
+            workspace.description = description
+            workspace.save_workspace()
+            
+            return {
+                'success': True,
+                'workspace_id': workspace.workspace_id,
+                'name': workspace.name,
+                'description': workspace.description,
+                'created_time': workspace.created_time
+            }
+        except Exception as e:
+            self.log.error(f"Failed to create workspace: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspaceget(self: 'SpiderFootWebUi', workspace_id: str) -> dict:
+        """Get workspace details.
+
+        Args:
+            workspace_id (str): workspace ID
+
+        Returns:
+            dict: workspace information
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            return {
+                'success': True,
+                'workspace_id': workspace.workspace_id,
+                'name': workspace.name,
+                'description': workspace.description,
+                'created_time': workspace.created_time,
+                'modified_time': workspace.modified_time,
+                'targets': workspace.targets,
+                'scans': workspace.scans,
+                'metadata': workspace.metadata
+            }
+        except Exception as e:
+            self.log.error(f"Failed to get workspace: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspaceupdate(self: 'SpiderFootWebUi', workspace_id: str, name: str = None, description: str = None) -> dict:
+        """Update workspace details.
+
+        Args:
+            workspace_id (str): workspace ID
+            name (str): new workspace name
+            description (str): new workspace description
+
+        Returns:
+            dict: update result
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            
+            if name is not None:
+                workspace.name = name
+            if description is not None:
+                workspace.description = description
+                
+            workspace.save_workspace()
+            
+            return {'success': True, 'message': 'Workspace updated successfully'}
+        except Exception as e:
+            self.log.error(f"Failed to update workspace: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacedelete(self: 'SpiderFootWebUi', workspace_id: str) -> dict:
+        """Delete a workspace.
+
+        Args:
+            workspace_id (str): workspace ID
+
+        Returns:
+            dict: deletion result
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            workspace.delete_workspace()
+            
+            return {'success': True, 'message': 'Workspace deleted successfully'}
+        except Exception as e:
+            self.log.error(f"Failed to delete workspace: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacesummary(self: 'SpiderFootWebUi', workspace_id: str) -> dict:
+        """Get workspace summary.
+
+        Args:
+            workspace_id (str): workspace ID
+
+        Returns:
+            dict: workspace summary
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            summary = workspace.get_workspace_summary()
+            
+            return {'success': True, 'summary': summary}
+        except Exception as e:
+            self.log.error(f"Failed to get workspace summary: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspaceaddtarget(self: 'SpiderFootWebUi', workspace_id: str, target: str, target_type: str = None) -> dict:
+        """Add target to workspace.
+
+        Args:
+            workspace_id (str): workspace ID
+            target (str): target value
+            target_type (str): target type
+
+        Returns:
+            dict: add target result
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            target_id = workspace.add_target(target, target_type)
+            
+            return {'success': True, 'target_id': target_id, 'message': 'Target added successfully'}
+        except Exception as e:
+            self.log.error(f"Failed to add target: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspaceremovetarget(self: 'SpiderFootWebUi', workspace_id: str, target_id: str) -> dict:
+        """Remove target from workspace.
+
+        Args:
+            workspace_id (str): workspace ID
+            target_id (str): target ID
+
+        Returns:
+            dict: remove target result
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            success = workspace.remove_target(target_id)
+            
+            if success:
+                return {'success': True, 'message': 'Target removed successfully'}
+            else:
+                return {'success': False, 'error': 'Target not found'}
+        except Exception as e:
+            self.log.error(f"Failed to remove target: {e}")
+            return {'success': False, 'error': str(e)}    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspaceimportscans(self: 'SpiderFootWebUi', workspace_id: str, scan_ids: str) -> dict:
+        """Import scans into workspace.
+
+        Args:
+            workspace_id (str): workspace ID
+            scan_ids (str): comma-separated scan IDs
+
+        Returns:
+            dict: import result
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            scan_id_list = [sid.strip() for sid in scan_ids.split(',')]
+            
+            if len(scan_id_list) == 1:
+                success = workspace.import_single_scan(scan_id_list[0])
+                if success:
+                    return {'success': True, 'message': 'Scan imported successfully'}
+                else:
+                    return {'success': False, 'error': 'Failed to import scan'}
+            else:
+                results = workspace.bulk_import_scans(scan_id_list)
+                return {
+                    'success': True, 
+                    'results': results,
+                    'message': f'Import completed: {sum(results.values())} of {len(results)} scans imported'
+                }
+        except Exception as e:
+            self.log.error(f"Failed to import scans: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacemultiscan(self: 'SpiderFootWebUi', workspace_id: str, targets: str, modules: str, scan_name_prefix: str, enable_correlation: str = 'false') -> dict:
+        """Start multi-target scan from workspace.
+
+        Args:
+            workspace_id (str): workspace ID
+            targets (str): JSON string of selected targets
+            modules (str): JSON string of selected modules
+            scan_name_prefix (str): prefix for scan names
+            enable_correlation (str): whether to enable correlation
+
+        Returns:
+            dict: multi-target scan result
+        """
+        self.log.info(f"[MULTISCAN] Starting multi-target scan for workspace: {workspace_id}")
+        self.log.debug(f"[MULTISCAN] Input parameters - targets: {targets}, modules: {modules}, prefix: {scan_name_prefix}")
+        
+        try:
+            self.log.debug("[MULTISCAN] Importing startSpiderFootScanner...")
+            from sfscan import startSpiderFootScanner
+            self.log.debug("[MULTISCAN] Import successful")
+            
+            # Try to load existing workspace, or create new one if it doesn't exist
+            self.log.debug(f"[MULTISCAN] Attempting to load workspace: {workspace_id}")
+            try:
+                workspace = SpiderFootWorkspace(self.config, workspace_id)
+                self.log.info(f"[MULTISCAN] Successfully loaded existing workspace: {workspace_id}")
+            except (ValueError, Exception) as e:
+                # Workspace doesn't exist, create a new one
+                self.log.info(f"[MULTISCAN] Workspace {workspace_id} not found ({e}), creating new one")
+                try:
+                    workspace = SpiderFootWorkspace(self.config, name=f"Workspace_{workspace_id}")
+                    workspace.workspace_id = workspace_id  # Override the generated ID
+                    workspace.save_workspace()
+                    self.log.info(f"[MULTISCAN] Successfully created new workspace: {workspace_id}")
+                except Exception as create_error:
+                    self.log.error(f"[MULTISCAN] Failed to create workspace: {create_error}")
+                    raise
+              # Parse targets and modules
+            self.log.debug("[MULTISCAN] Parsing JSON input data...")
+            try:
+                target_list = json.loads(targets)
+                self.log.debug(f"[MULTISCAN] Parsed {len(target_list)} targets: {[t.get('value', 'unknown') for t in target_list]}")
+            except Exception as e:
+                self.log.error(f"[MULTISCAN] Failed to parse targets JSON: {e}")
+                raise ValueError(f"Invalid targets JSON: {e}")
+            
+            try:
+                module_list = json.loads(modules)
+                self.log.debug(f"[MULTISCAN] Parsed {len(module_list)} modules: {module_list}")
+            except Exception as e:
+                self.log.error(f"[MULTISCAN] Failed to parse modules JSON: {e}")
+                raise ValueError(f"Invalid modules JSON: {e}")
+            
+            scan_ids = []
+            
+            self.log.info(f"[MULTISCAN] Starting scan loop for {len(target_list)} targets")
+            
+            # Start a scan for each target
+            for i, target in enumerate(target_list):
+                self.log.debug(f"[MULTISCAN] Processing target {i+1}/{len(target_list)}: {target}")
+                
+                target_value = target['value']
+                target_type = target.get('type', '')
+                
+                self.log.debug(f"[MULTISCAN] Target value: {target_value}, type: {target_type}")
+                
+                # If target type is not provided or empty, detect it
+                if not target_type:
+                    self.log.debug(f"[MULTISCAN] Detecting target type for: {target_value}")
+                    target_type = SpiderFootHelpers.targetTypeFromString(target_value)
+                    if target_type is None:
+                        self.log.error(f"[MULTISCAN] Could not determine target type for {target_value}")
+                        continue
+                    else:
+                        self.log.debug(f"[MULTISCAN] Detected target type: {target_type}")
+                
+                # Normalize target value like other scan methods
+                original_value = target_value
+                if target_type in ["HUMAN_NAME", "USERNAME", "BITCOIN_ADDRESS"]:
+                    target_value = target_value.replace("\"", "")
+                else:
+                    target_value = target_value.lower()
+                
+                if original_value != target_value:
+                    self.log.debug(f"[MULTISCAN] Normalized target value: {original_value} -> {target_value}")
+                
+                # Generate scan name
+                scan_name = f"{scan_name_prefix} - {target_value}"
+                self.log.debug(f"[MULTISCAN] Generated scan name: {scan_name}")
+                
+                # Create module configuration list (like in working examples)
+                modlist = module_list.copy()
+                self.log.debug(f"[MULTISCAN] Initial module list: {modlist}")
+                
+                # Add our mandatory storage module
+                if "sfp__stor_db" not in modlist:
+                    modlist.append("sfp__stor_db")
+                    self.log.debug("[MULTISCAN] Added mandatory sfp__stor_db module")
+                
+                # Delete the stdout module in case it crept in
+                if "sfp__stor_stdout" in modlist:
+                    modlist.remove("sfp__stor_stdout")
+                    self.log.debug("[MULTISCAN] Removed sfp__stor_stdout module")
+                
+                self.log.debug(f"[MULTISCAN] Final module list: {modlist}")
+                
+                # Create configuration copy for this scan
+                self.log.debug("[MULTISCAN] Creating configuration copy...")
+                cfg = deepcopy(self.config)
+                
+                # Start the scan using the correct signature
+                scanId = SpiderFootHelpers.genScanInstanceId()
+                self.log.info(f"[MULTISCAN] Generated scan ID {scanId} for target {target_value}")
+                
+                try:
+                    self.log.debug(f"[MULTISCAN] Starting process for scan {scanId}")
+                    # Use multiprocessing like the working examples
+                    # startSpiderFootScanner signature: (loggingQueue, *args)
+                    # where args are: (scanName, scanId, targetValue, targetType, moduleList, globalOpts)
+                    p = mp.Process(target=startSpiderFootScanner, args=(
+                        self.loggingQueue, scan_name, scanId, target_value, target_type, modlist, cfg))
+                    p.daemon = True
+                    p.start()
+                    self.log.info(f"[MULTISCAN] Successfully started process for scan {scanId}")
+                    
+                    scan_ids.append(scanId)
+                    
+                    # Import the scan into the workspace
+                    self.log.debug(f"[MULTISCAN] Importing scan {scanId} into workspace {workspace_id}")
+                    workspace.import_single_scan(scanId, {
+                        'source': 'multi_target_scan',
+                        'scan_name_prefix': scan_name_prefix,
+                        'target_id': target.get('target_id', 'unknown')
+                    })
+                    self.log.debug(f"[MULTISCAN] Successfully imported scan {scanId} into workspace")
+                    
+                except Exception as e:
+                    self.log.error(f"[MULTISCAN] Failed to start scan for target {target_value}: {e}")
+                    import traceback
+                    self.log.error(f"[MULTISCAN] Traceback: {traceback.format_exc()}")
+                    continue
+            
+            self.log.info(f"[MULTISCAN] Scan loop completed. Started {len(scan_ids)} out of {len(target_list)} scans")
+            
+            if scan_ids:
+                message = f"Started {len(scan_ids)} scans successfully"
+                if enable_correlation.lower() == 'true':
+                    message += ". Correlation analysis will be available once scans complete"
+                
+                self.log.info(f"[MULTISCAN] Success: {message}")
+                return {
+                    'success': True,
+                    'message': message,
+                    'scan_ids': scan_ids,
+                    'workspace_id': workspace_id
+                }
+            else:
+                error_msg = 'Failed to start any scans'
+                self.log.error(f"[MULTISCAN] {error_msg}")
+                return {'success': False, 'error': error_msg}                
+        except Exception as e:
+            self.log.error(f"[MULTISCAN] Failed to start multi-target scan: {e}")
+            import traceback
+            self.log.error(f"[MULTISCAN] Traceback: {traceback.format_exc()}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacemcpreport(self: 'SpiderFootWebUi', workspace_id: str, report_type: str, format: str = 'json', 
+                          include_correlations: str = 'true', include_threat_intel: str = 'true', 
+                          include_recommendations: str = 'true', tlp_level: str = 'amber') -> dict:
+        """Generate MCP CTI report for workspace.
+
+        Args:
+            workspace_id (str): workspace ID
+            report_type (str): type of report (threat_assessment, ioc_analysis, etc.)
+            format (str): output format (json, markdown, pdf, html)
+            include_correlations (str): include correlation analysis
+            include_threat_intel (str): include threat intelligence context
+            include_recommendations (str): include security recommendations
+            tlp_level (str): Traffic Light Protocol level
+
+        Returns:
+            dict: {'success': bool, 'download_url': str, 'error': str}        """
+        try:
+            # Validate workspace exists
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+
+            # Get workspace scans for report data
+            if not workspace.scans:
+                return {'success': False, 'error': 'No scans found in workspace to generate report from'}
+
+            # Import MCP integration
+            try:
+                from spiderfoot.mcp_integration import SpiderFootMCPClient
+                mcp_client = SpiderFootMCPClient(self.config)
+            except ImportError:
+                return {'success': False, 'error': 'MCP integration not available'}
+
+            # Prepare report configuration
+            report_config = {
+                'workspace_id': workspace_id,
+                'workspace_name': workspace.get('name', 'Unnamed'),
+                'report_type': report_type,
+                'format': format,
+                'options': {
+                    'include_correlations': include_correlations.lower() == 'true',
+                    'include_threat_intel': include_threat_intel.lower() == 'true',
+                    'include_recommendations': include_recommendations.lower() == 'true',
+                    'tlp_level': tlp_level
+                },
+                'scan_ids': [scan['scan_id'] for scan in workspace.scans]
+            }
+
+            # Generate report asynchronously (this is a placeholder for actual MCP integration)
+            # In a real implementation, this would call the MCP server
+            import uuid
+            import time
+            report_id = str(uuid.uuid4())
+            timestamp = int(time.time())
+            
+            # Create download URL (placeholder - would be actual file in production)
+            download_url = f"/workspacereportdownload?report_id={report_id}&workspace_id={workspace_id}&format={format}"
+            
+            self.log.info(f"Generated MCP report for workspace {workspace_id}: {report_id}")
+            
+            return {
+                'success': True,
+                'report_id': report_id,
+                'download_url': download_url,
+                'message': f'MCP {report_type} report generated successfully'
+            }
+
+        except Exception as e:
+            self.log.error(f"Failed to generate MCP report: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out() 
+    def workspacetiming(self: 'SpiderFootWebUi', workspace_id: str, timezone: str = None, 
+                       default_start_time: str = None, retention_period: str = None,
+                       auto_scheduling: str = None, business_hours_only: str = None,
+                       enable_throttling: str = None, business_start: str = None, 
+                       business_end: str = None) -> dict:
+        """Get or set workspace timing configuration.
+
+        Args:
+            workspace_id (str): workspace ID
+            timezone (str): workspace timezone
+            default_start_time (str): default scan start time (HH:MM)
+            retention_period (str): data retention period in days
+            auto_scheduling (str): enable automatic scheduling
+            business_hours_only (str): restrict scans to business hours
+            enable_throttling (str): enable scan rate throttling
+            business_start (str): business hours start time (HH:MM)
+            business_end (str): business hours end time (HH:MM)
+
+        Returns:
+            dict: timing configuration or success status
+        """
+        try:
+            # Validate workspace exists
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+
+            # If this is a GET request (no parameters provided for setting)
+            if timezone is None and default_start_time is None:
+                # Return current timing configuration
+                timing_config = workspace.metadata.get('timing_config', {})
+                return {
+                    'success': True,
+                    'timezone': timing_config.get('timezone', 'UTC'),
+                    'default_start_time': timing_config.get('default_start_time', '09:00'),
+                    'retention_period': timing_config.get('retention_period', '90'),
+                    'auto_scheduling': timing_config.get('auto_scheduling', False),
+                    'business_hours_only': timing_config.get('business_hours_only', False),
+                    'enable_throttling': timing_config.get('enable_throttling', True),
+                    'business_start': timing_config.get('business_start', '08:00'),
+                    'business_end': timing_config.get('business_end', '18:00')
+                }
+
+            # This is a POST request - update timing configuration
+            timing_config = {
+                'timezone': timezone or 'UTC',
+                'default_start_time': default_start_time or '09:00', 
+                'retention_period': int(retention_period) if retention_period else 90,
+                'auto_scheduling': auto_scheduling == 'true' if auto_scheduling else False,
+                'business_hours_only': business_hours_only == 'true' if business_hours_only else False,
+                'enable_throttling': enable_throttling != 'false',  # Default to True
+                'business_start': business_start or '08:00',
+                'business_end': business_end or '18:00',
+                'updated_time': time.time()
+            }            # Update workspace with timing configuration
+            import time
+            workspace.metadata['timing_config'] = timing_config
+            workspace.save_workspace()
+
+            self.log.info(f"Updated timing configuration for workspace {workspace_id}")
+            return {'success': True, 'message': 'Timing configuration updated successfully'}
+
+        except Exception as e:
+            self.log.error(f"Failed to handle workspace timing: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    def workspacereportdownload(self: 'SpiderFootWebUi', report_id: str, workspace_id: str, format: str = 'json'):
+        """Download generated MCP report.
+
+        Args:
+            report_id (str): report identifier
+            workspace_id (str): workspace ID
+            format (str): report format
+
+        Returns:
+            File download or error page
+        """
+        try:
+            # Validate workspace access
+            workspace = SpiderFootWorkspace(self.config, workspace_id)            # Generate sample report content (placeholder)
+            import json
+            from datetime import datetime
+            
+            sample_report = {
+                'report_id': report_id,
+                'workspace_id': workspace_id,
+                'workspace_name': workspace.name,
+                'generated_time': datetime.now().isoformat(),
+                'report_type': 'MCP CTI Report',
+                'format': format,
+                'status': 'This is a placeholder MCP report. Integration with actual MCP server required.',
+                'summary': {
+                    'total_targets': len(workspace.targets),
+                    'total_scans': len(workspace.scans),
+                    'risk_level': 'Medium',
+                    'key_findings': [
+                        'Placeholder finding 1',
+                        'Placeholder finding 2', 
+                        'Placeholder finding 3'
+                    ]
+                }
+            }
+
+            # Set appropriate headers for download
+            cherrypy.response.headers['Content-Type'] = 'application/octet-stream'
+            cherrypy.response.headers['Content-Disposition'] = f'attachment; filename="mcp_report_{report_id}.{format}"'
+
+            if format == 'json':
+                return json.dumps(sample_report, indent=2)
+            elif format == 'markdown':
+                md_content = f"""# MCP CTI Report
+                
+**Report ID:** {report_id}
+**Workspace:** {workspace.name}
+**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+## Summary
+- Total Targets: {len(workspace.targets)}
+- Total Scans: {len(workspace.scans)}
+- Risk Level: Medium
+
+## Status
+This is a placeholder MCP report. Integration with actual MCP server required.
+"""
+                return md_content
+            else:
+                return json.dumps(sample_report, indent=2)
+
+        except Exception as e:
+            self.log.error(f"Failed to download report: {e}")
+            raise cherrypy.HTTPError(500, f"Failed to download report: {e}")

@@ -1,0 +1,1327 @@
+<%include file="HEADER.tmpl"/>
+    <h2>Workspaces &nbsp;<img id="loader" src="${docroot}/static/img/loader.gif" style="display: none;"></h2>
+<div id="workspacecontent" class="container-fluid">
+
+<!-- Create Workspace Modal -->
+<div class="modal fade" id="createWorkspaceModal" tabindex="-1" role="dialog" aria-labelledby="createWorkspaceModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="createWorkspaceModalLabel">Create New Workspace</h4>
+      </div>
+      <div class="modal-body">
+        <form id="createWorkspaceForm">
+          <div class="form-group">
+            <label for="workspaceName">Workspace Name</label>
+            <input type="text" class="form-control" id="workspaceName" placeholder="Enter workspace name" required>
+          </div>
+          <div class="form-group">
+            <label for="workspaceDescription">Description</label>
+            <textarea class="form-control" id="workspaceDescription" rows="3" placeholder="Enter workspace description"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="createWorkspaceBtn">Create Workspace</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Workspace Modal -->
+<div class="modal fade" id="editWorkspaceModal" tabindex="-1" role="dialog" aria-labelledby="editWorkspaceModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="editWorkspaceModalLabel">Edit Workspace</h4>
+      </div>
+      <div class="modal-body">
+        <form id="editWorkspaceForm">
+          <input type="hidden" id="editWorkspaceId">
+          <div class="form-group">
+            <label for="editWorkspaceName">Workspace Name</label>
+            <input type="text" class="form-control" id="editWorkspaceName" required>
+          </div>
+          <div class="form-group">
+            <label for="editWorkspaceDescription">Description</label>
+            <textarea class="form-control" id="editWorkspaceDescription" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="updateWorkspaceBtn">Update Workspace</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Workspace Details Modal -->
+<div class="modal fade" id="workspaceDetailsModal" tabindex="-1" role="dialog" aria-labelledby="workspaceDetailsModalLabel">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="workspaceDetailsModalLabel">Workspace Details</h4>
+      </div>
+      <div class="modal-body">
+        <div id="workspaceDetailsContent">
+          <!-- Content will be populated by JavaScript -->
+        </div>
+      </div>      <div class="modal-footer">
+        <button type="button" class="btn btn-info" id="generateMcpReportBtn" style="display: none;">
+          <i class="glyphicon glyphicon-file"></i> Generate MCP Report
+        </button>
+        <button type="button" class="btn btn-success" id="configureTimingBtn" style="display: none;">
+          <i class="glyphicon glyphicon-time"></i> Configure Timing
+        </button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Target Modal -->
+<div class="modal fade" id="addTargetModal" tabindex="-1" role="dialog" aria-labelledby="addTargetModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addTargetModalLabel">Add Target to Workspace</h4>
+      </div>
+      <div class="modal-body">
+        <form id="addTargetForm">
+          <input type="hidden" id="targetWorkspaceId">
+          <div class="form-group">
+            <label for="targetValue">Target</label>
+            <input type="text" class="form-control" id="targetValue" placeholder="Enter domain, IP, email, etc." required>
+          </div>
+          <div class="form-group">
+            <label for="targetType">Target Type</label>
+            <select class="form-control" id="targetType">
+              <option value="">Auto-detect</option>
+              <option value="DOMAIN_NAME">Domain Name</option>
+              <option value="IP_ADDRESS">IP Address</option>
+              <option value="EMAILADDR">Email Address</option>
+              <option value="NETBLOCK_OWNER">Network Block</option>
+              <option value="HUMAN_NAME">Human Name</option>
+              <option value="PHONE_NUMBER">Phone Number</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="addTargetBtn">Add Target</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import Scans Modal -->
+<div class="modal fade" id="importScansModal" tabindex="-1" role="dialog" aria-labelledby="importScansModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="importScansModalLabel">Import Scans to Workspace</h4>
+      </div>
+      <div class="modal-body">
+        <form id="importScansForm">
+          <input type="hidden" id="importWorkspaceId">
+          <div class="form-group">
+            <label for="scanIds">Scan IDs</label>
+            <textarea class="form-control" id="scanIds" rows="4" placeholder="Enter scan IDs (comma-separated or one per line)" required></textarea>
+            <small class="form-text text-muted">You can enter multiple scan IDs separated by commas or one per line</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="importScansBtn">Import Scans</button>
+      </div>
+    </div>  </div>
+</div>
+
+<!-- Multi-Target Scan Modal -->
+<div class="modal fade" id="multiTargetScanModal" tabindex="-1" role="dialog" aria-labelledby="multiTargetScanModalLabel">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="multiTargetScanModalLabel">Start Multi-Target Scan</h4>
+      </div>
+      <div class="modal-body">
+        <form id="multiTargetScanForm">
+          <input type="hidden" id="scanWorkspaceId">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="selectedTargets">Available Targets</label>
+                <div id="targetSelectionList" style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+                  <!-- Target list will be populated by JavaScript -->
+                </div>
+                <small class="form-text text-muted">Select targets for the multi-target scan</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="scanName">Scan Name Prefix</label>
+                <input type="text" class="form-control" id="scanName" placeholder="e.g., 'Multi-Scan'" required>
+                <small class="form-text text-muted">Each target will get a separate scan with this prefix</small>
+              </div>              <div class="form-group">
+                <label for="scanModules">Scan Modules</label>
+                
+                <!-- Module filtering options -->
+                <div class="row" style="margin-bottom: 10px;">
+                  <div class="col-md-6">
+                    <select class="form-control form-control-sm" id="moduleTypeFilter">
+                      <option value="">Filter by Category</option>
+                      <option value="Passive">Passive Reconnaissance</option>
+                      <option value="Active">Active Scanning</option>
+                      <option value="DNS">DNS & Domain</option>
+                      <option value="Web">Web Applications</option>
+                      <option value="Network">Network & Infrastructure</option>
+                      <option value="OSINT">Open Source Intelligence</option>
+                      <option value="Threat Intel">Threat Intelligence</option>
+                      <option value="Social">Social Networks</option>
+                      <option value="Search Engines">Search Engines</option>
+                      <option value="Secondary">Secondary Sources</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <select class="form-control form-control-sm" id="moduleUseCaseFilter">
+                      <option value="">Filter by Use Case</option>
+                      <option value="basic">Basic Discovery</option>
+                      <option value="comprehensive">Comprehensive Audit</option>
+                      <option value="stealth">Stealth Reconnaissance</option>
+                      <option value="threat">Threat Assessment</option>
+                      <option value="compliance">Compliance Check</option>
+                      <option value="monitoring">Continuous Monitoring</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <!-- Quick selection presets -->
+                <div class="btn-group btn-group-sm" role="group" style="margin-bottom: 10px;">
+                  <button type="button" class="btn btn-outline-primary" onclick="selectModulePreset('basic')">Basic Scan</button>
+                  <button type="button" class="btn btn-outline-primary" onclick="selectModulePreset('comprehensive')">Full Audit</button>
+                  <button type="button" class="btn btn-outline-primary" onclick="selectModulePreset('stealth')">Stealth Mode</button>
+                  <button type="button" class="btn btn-outline-primary" onclick="selectModulePreset('threat')">Threat Intel</button>
+                  <button type="button" class="btn btn-outline-secondary" onclick="selectAllModules()">Select All</button>
+                  <button type="button" class="btn btn-outline-secondary" onclick="clearModuleSelection()">Clear All</button>
+                </div>
+                
+                <div id="moduleSelectionList" style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+                  <!-- Module list will be populated by JavaScript -->
+                </div>
+                <small class="form-text text-muted">Select modules to run on all targets. Use filters or presets for quick selection.</small>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="enableCorrelation"> Enable Cross-Correlation Analysis
+                </label>
+                <small class="form-text text-muted">Analyze results across all scans for patterns and relationships</small>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="startMultiScanBtn">
+          <i class="glyphicon glyphicon-play"></i> Start Multi-Target Scan
+        </button>
+      </div>
+    </div>  </div>
+</div>
+
+<!-- Generate Report Modal -->
+<div class="modal fade" id="generateReportModal" tabindex="-1" role="dialog" aria-labelledby="generateReportModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="generateReportModalLabel">Generate Workspace Report</h4>
+      </div>
+      <div class="modal-body">
+        <form id="generateReportForm">
+          <input type="hidden" id="reportWorkspaceId">
+          <div class="form-group">
+            <label for="reportFormat">Report Format</label>
+            <select class="form-control" id="reportFormat">
+              <option value="csv">CSV - Comma-separated values for analysis</option>
+              <option value="json">JSON - Structured data format</option>
+              <option value="excel">Excel - Spreadsheet format (.xlsx)</option>
+              <option value="gexf">GEXF - Network visualization format</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="reportScope">Report Scope</label>
+            <div class="radio">
+              <label>
+                <input type="radio" name="reportScope" value="all" checked> All scan results from workspace
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio" name="reportScope" value="correlations"> Correlation results only
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio" name="reportScope" value="events"> Event results only
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="includeMetadata"> Include scan metadata
+            </label>
+            <small class="form-text text-muted">Include scan timestamps, modules used, and configuration</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="generateReportBtn">
+          <i class="glyphicon glyphicon-download-alt"></i> Generate Report
+        </button>
+      </div>
+    </div>  </div>
+</div>
+
+<!-- MCP Report Generation Modal -->
+<div class="modal fade" id="mcpReportModal" tabindex="-1" role="dialog" aria-labelledby="mcpReportModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="mcpReportModalLabel">Generate MCP CTI Report</h4>
+      </div>
+      <div class="modal-body">
+        <form id="mcpReportForm">
+          <input type="hidden" id="mcpWorkspaceId">
+          <div class="form-group">
+            <label for="mcpReportType">Report Type</label>
+            <select class="form-control" id="mcpReportType">
+              <option value="threat_assessment">Threat Assessment Report</option>
+              <option value="ioc_analysis">Indicators of Compromise Analysis</option>
+              <option value="attribution_report">Attribution Analysis</option>
+              <option value="risk_assessment">Risk Assessment</option>
+              <option value="executive_summary">Executive Summary</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="mcpReportFormat">Output Format</label>
+            <select class="form-control" id="mcpReportFormat">
+              <option value="json">JSON Report</option>
+              <option value="markdown">Markdown Report</option>
+              <option value="pdf">PDF Report</option>
+              <option value="html">HTML Report</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="mcpIncludeCorrelations">Analysis Options</label>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="mcpIncludeCorrelations" checked> Include correlation analysis
+              </label>
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="mcpIncludeThreatIntel" checked> Include threat intelligence context
+              </label>
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="mcpIncludeRecommendations" checked> Include security recommendations
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="mcpTlpLevel">Traffic Light Protocol (TLP) Level</label>
+            <select class="form-control" id="mcpTlpLevel">
+              <option value="white">TLP:WHITE - Unlimited distribution</option>
+              <option value="green">TLP:GREEN - Community distribution</option>
+              <option value="amber" selected>TLP:AMBER - Limited distribution</option>
+              <option value="red">TLP:RED - Internal use only</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="generateMcpBtn">
+          <i class="glyphicon glyphicon-cog"></i> Generate Report
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Workspace Timing Configuration Modal -->
+<div class="modal fade" id="workspaceTimingModal" tabindex="-1" role="dialog" aria-labelledby="workspaceTimingModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="workspaceTimingModalLabel">Configure Workspace Timing</h4>
+      </div>
+      <div class="modal-body">
+        <form id="workspaceTimingForm">
+          <input type="hidden" id="timingWorkspaceId">
+          <div class="form-group">
+            <label for="workspaceTimezone">Workspace Timezone</label>
+            <select class="form-control" id="workspaceTimezone">
+              <option value="UTC">UTC (Coordinated Universal Time)</option>
+              <option value="America/New_York">Eastern Time (US & Canada)</option>
+              <option value="America/Chicago">Central Time (US & Canada)</option>
+              <option value="America/Denver">Mountain Time (US & Canada)</option>
+              <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+              <option value="Europe/London">London (GMT/BST)</option>
+              <option value="Europe/Paris">Central European Time</option>
+              <option value="Asia/Tokyo">Japan Standard Time</option>
+              <option value="Asia/Shanghai">China Standard Time</option>
+              <option value="Australia/Sydney">Australian Eastern Time</option>
+            </select>
+            <small class="form-text text-muted">All scan timestamps and scheduling will use this timezone</small>
+          </div>
+          <div class="form-group">
+            <label for="defaultScanStart">Default Scan Start Time</label>
+            <input type="time" class="form-control" id="defaultScanStart" value="09:00">
+            <small class="form-text text-muted">Default time for scheduling new scans</small>
+          </div>
+          <div class="form-group">
+            <label for="retentionPeriod">Data Retention Period</label>
+            <select class="form-control" id="retentionPeriod">
+              <option value="30">30 days</option>
+              <option value="90" selected>90 days</option>
+              <option value="180">180 days</option>
+              <option value="365">1 year</option>
+              <option value="730">2 years</option>
+              <option value="0">Indefinite</option>
+            </select>
+            <small class="form-text text-muted">How long to keep scan results and workspace data</small>
+          </div>
+          <div class="form-group">
+            <label>Scan Timing Options</label>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="enableAutoScheduling"> Enable automatic scan scheduling
+              </label>
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="enableBusinessHours"> Restrict scans to business hours only
+              </label>
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="enableThrottling" checked> Enable scan rate throttling
+              </label>
+            </div>
+          </div>
+          <div class="form-group" id="businessHoursConfig" style="display: none;">
+            <label>Business Hours Configuration</label>
+            <div class="row">
+              <div class="col-sm-6">
+                <label for="businessStartTime">Start Time</label>
+                <input type="time" class="form-control" id="businessStartTime" value="08:00">
+              </div>
+              <div class="col-sm-6">
+                <label for="businessEndTime">End Time</label>
+                <input type="time" class="form-control" id="businessEndTime" value="18:00">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="saveTimingBtn">
+          <i class="glyphicon glyphicon-floppy-disk"></i> Save Configuration
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Periodic Scan Modal -->
+<div class="modal fade" id="periodicScanModal" tabindex="-1" role="dialog" aria-labelledby="periodicScanModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="periodicScanModalLabel">Configure Periodic Scanning</h4>
+      </div>
+      <div class="modal-body">
+        <form id="periodicScanForm">
+          <input type="hidden" id="periodicWorkspaceId">
+          <div class="form-group">
+            <label for="periodicScanName">Scan Name Prefix</label>
+            <input type="text" class="form-control" id="periodicScanName" placeholder="e.g., 'Daily-Monitor'" required>
+            <small class="form-text text-muted">Each periodic scan will use this prefix with timestamp</small>
+          </div>
+          <div class="form-group">
+            <label for="scanInterval">Scan Interval</label>
+            <select class="form-control" id="scanInterval">
+              <option value="hourly">Every Hour</option>
+              <option value="daily" selected>Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="custom">Custom Interval</option>
+            </select>
+          </div>
+          <div class="form-group" id="customIntervalGroup" style="display: none;">
+            <label for="customInterval">Custom Interval (hours)</label>
+            <input type="number" class="form-control" id="customInterval" min="1" max="8760" placeholder="24">
+            <small class="form-text text-muted">Enter interval in hours (1-8760)</small>
+          </div>
+          <div class="form-group">
+            <label for="scanTime">Preferred Start Time</label>
+            <input type="time" class="form-control" id="scanTime" value="02:00">
+            <small class="form-text text-muted">When should the periodic scans start? (24-hour format)</small>
+          </div>
+          <div class="form-group">
+            <label>Scan Configuration</label>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="periodicEnableCorrelation" checked> Enable cross-correlation analysis
+              </label>
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="periodicOnlyNewTargets"> Only scan new targets
+              </label>
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="periodicAutoImport" checked> Auto-import results to workspace
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="periodicModules">Module Selection</label>
+            <div class="btn-group btn-group-sm" style="display: block; margin-bottom: 10px;">
+              <button type="button" class="btn btn-outline-primary" onclick="selectPeriodicPreset('monitoring')">Monitoring</button>
+              <button type="button" class="btn btn-outline-primary" onclick="selectPeriodicPreset('basic')">Basic</button>
+              <button type="button" class="btn btn-outline-primary" onclick="selectPeriodicPreset('stealth')">Stealth</button>
+            </div>
+            <div id="periodicModulesList" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+              <!-- Module list for periodic scans -->
+            </div>
+            <small class="form-text text-muted">Select modules for periodic monitoring</small>
+          </div>
+          <div class="form-group">
+            <label>Scheduling Status</label>
+            <div id="periodicScanStatus">
+              <span class="text-muted">No periodic scan configured</span>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="stopPeriodicScanBtn" style="display: none;">
+          <i class="glyphicon glyphicon-stop"></i> Stop Periodic Scan
+        </button>
+        <button type="button" class="btn btn-success" id="startPeriodicScanBtn">
+          <i class="glyphicon glyphicon-time"></i> Start Periodic Scanning
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Workspace Management
+          <button class="btn btn-primary btn-sm pull-right" data-toggle="modal" data-target="#createWorkspaceModal">
+            <i class="glyphicon glyphicon-plus"></i> Create Workspace
+          </button>
+        </h3>
+      </div>
+      <div class="panel-body">
+        <div id="workspaceList">
+          <!-- Workspace list will be populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script type='text/javascript'>
+// Workspace management JavaScript
+$(document).ready(function() {
+    loadWorkspaces();
+    
+    // Create workspace
+    $('#createWorkspaceBtn').click(function() {
+        var name = $('#workspaceName').val();
+        var description = $('#workspaceDescription').val();
+        
+        if (!name) {
+            alertify.error('Workspace name is required');
+            return;
+        }
+        
+        $.post('${docroot}/workspacecreate', {
+            name: name,
+            description: description
+        }, function(data) {
+            if (data.success) {
+                $('#createWorkspaceModal').modal('hide');
+                $('#createWorkspaceForm')[0].reset();
+                alertify.success('Workspace created successfully');
+                loadWorkspaces();
+            } else {
+                alertify.error('Failed to create workspace: ' + data.error);
+            }
+        });
+    });
+    
+    // Update workspace
+    $('#updateWorkspaceBtn').click(function() {
+        var workspaceId = $('#editWorkspaceId').val();
+        var name = $('#editWorkspaceName').val();
+        var description = $('#editWorkspaceDescription').val();
+        
+        if (!name) {
+            alertify.error('Workspace name is required');
+            return;
+        }
+        
+        $.post('${docroot}/workspaceupdate', {
+            workspace_id: workspaceId,
+            name: name,
+            description: description
+        }, function(data) {
+            if (data.success) {
+                $('#editWorkspaceModal').modal('hide');
+                alertify.success('Workspace updated successfully');
+                loadWorkspaces();
+            } else {
+                alertify.error('Failed to update workspace: ' + data.error);
+            }
+        });
+    });
+    
+    // Add target
+    $('#addTargetBtn').click(function() {
+        var workspaceId = $('#targetWorkspaceId').val();
+        var target = $('#targetValue').val();
+        var targetType = $('#targetType').val();
+        
+        if (!target) {
+            alertify.error('Target value is required');
+            return;
+        }
+          $.post('${docroot}/workspaceaddtarget', {
+            workspace_id: workspaceId,
+            target: target,
+            target_type: targetType
+        }, function(data) {
+            if (data.success) {
+                $('#addTargetModal').modal('hide');
+                $('#addTargetForm')[0].reset();
+                alertify.success('Target added successfully');
+                // Refresh the workspace list to show updated target count
+                loadWorkspaces();
+            } else {
+                alertify.error('Failed to add target: ' + data.error);
+            }
+        });
+    });
+    
+    // Import scans
+    $('#importScansBtn').click(function() {
+        var workspaceId = $('#importWorkspaceId').val();
+        var scanIds = $('#scanIds').val();
+        
+        if (!scanIds) {
+            alertify.error('Scan IDs are required');
+            return;
+        }
+          $.post('${docroot}/workspaceimportscans', {
+            workspace_id: workspaceId,
+            scan_ids: scanIds
+        }, function(data) {
+            if (data.success) {
+                $('#importScansModal').modal('hide');
+                $('#importScansForm')[0].reset();
+                alertify.success(data.message);
+                // Refresh the workspace list to show updated scan count
+                loadWorkspaces();            } else {
+                alertify.error('Failed to import scans: ' + data.error);
+            }
+        });
+    });
+    
+    // Start multi-target scan
+    $('#startMultiScanBtn').click(function() {
+        var workspaceId = $('#scanWorkspaceId').val();
+        var scanName = $('#scanName').val();
+        var enableCorrelation = $('#enableCorrelation').is(':checked');
+        
+        // Get selected targets
+        var selectedTargets = [];
+        $('#targetSelectionList input[type="checkbox"]:checked').each(function() {
+            selectedTargets.push({
+                target_id: $(this).val(),
+                value: $(this).data('target'),
+                type: $(this).data('type')
+            });
+        });
+        
+        // Get selected modules
+        var selectedModules = [];
+        $('#moduleSelectionList input[type="checkbox"]:checked').each(function() {
+            selectedModules.push($(this).val());
+        });
+        
+        if (!scanName) {
+            alertify.error('Scan name prefix is required');
+            return;
+        }
+        
+        if (selectedTargets.length === 0) {
+            alertify.error('Please select at least one target');
+            return;
+        }
+        
+        if (selectedModules.length === 0) {
+            alertify.error('Please select at least one module');
+            return;
+        }
+        
+        // Start the multi-target scan
+        $.post('${docroot}/workspacemultiscan', {
+            workspace_id: workspaceId,
+            targets: JSON.stringify(selectedTargets),
+            modules: JSON.stringify(selectedModules),
+            scan_name_prefix: scanName,
+            enable_correlation: enableCorrelation
+        }, function(data) {
+            if (data.success) {
+                $('#multiTargetScanModal').modal('hide');
+                $('#multiTargetScanForm')[0].reset();
+                alertify.success(data.message + '. Scan IDs: ' + data.scan_ids.join(', '));
+                loadWorkspaces();
+            } else {
+                alertify.error('Failed to start multi-target scan: ' + data.error);
+            }        }).fail(function() {
+            alertify.error('Failed to start multi-target scan: Server error');
+        });
+    });
+    
+    // Generate report
+    $('#generateReportBtn').click(function() {
+        var workspaceId = $('#reportWorkspaceId').val();
+        var format = $('#reportFormat').val();
+        var scope = $('input[name="reportScope"]:checked').val();
+        var includeMetadata = $('#includeMetadata').is(':checked');
+        
+        // Get workspace details to get scan IDs
+        $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
+            if (data.success && data.scans && data.scans.length > 0) {
+                var scanIds = data.scans.map(function(scan) { return scan.scan_id; });
+                
+                var downloadUrl;
+                if (scope === 'correlations') {
+                    // Export correlations only (use first scan ID for now, could be enhanced for multiple)
+                    downloadUrl = '${docroot}/scancorrelationsexport?id=' + scanIds[0] + '&filetype=' + format;
+                } else if (scope === 'events') {
+                    // Export events only
+                    if (scanIds.length === 1) {
+                        downloadUrl = '${docroot}/scaneventresultexport?id=' + scanIds[0] + '&type=ALL&filetype=' + format;
+                    } else {
+                        downloadUrl = '${docroot}/scaneventresultexportmulti?ids=' + scanIds.join(',') + '&filetype=' + format;
+                    }
+                } else {
+                    // Export all data
+                    if (format === 'json') {
+                        downloadUrl = '${docroot}/scanexportjsonmulti?ids=' + scanIds.join(',');
+                    } else if (format === 'gexf') {
+                        downloadUrl = '${docroot}/scanvizmulti?ids=' + scanIds.join(',');
+                    } else {
+                        downloadUrl = '${docroot}/scaneventresultexportmulti?ids=' + scanIds.join(',') + '&filetype=' + format;
+                    }
+                }
+                
+                $('#generateReportModal').modal('hide');
+                $('#generateReportForm')[0].reset();
+                
+                // Create hidden iframe for download
+                var iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = downloadUrl;
+                document.body.appendChild(iframe);
+                
+                // Remove iframe after download starts
+                setTimeout(function() {
+                    document.body.removeChild(iframe);
+                }, 3000);
+                
+                alertify.success('Report download initiated. Check your downloads folder.');
+            } else {
+                alertify.error('No scans found in workspace to generate report from');
+            }        }).fail(function() {
+            alertify.error('Failed to get workspace details for report generation');
+        });
+    });
+    
+    // MCP Report Generation
+    $('#generateMcpReportBtn').click(function() {
+        var workspaceId = $(this).data('workspace-id');
+        $('#mcpWorkspaceId').val(workspaceId);
+        $('#mcpReportModal').modal('show');
+    });
+    
+    $('#generateMcpBtn').click(function() {
+        var workspaceId = $('#mcpWorkspaceId').val();
+        var reportType = $('#mcpReportType').val();
+        var reportFormat = $('#mcpReportFormat').val();
+        var includeCorrelations = $('#mcpIncludeCorrelations').is(':checked');
+        var includeThreatIntel = $('#mcpIncludeThreatIntel').is(':checked');
+        var includeRecommendations = $('#mcpIncludeRecommendations').is(':checked');
+        var tlpLevel = $('#mcpTlpLevel').val();
+        
+        // Show loading state
+        $('#generateMcpBtn').prop('disabled', true).html('<i class="glyphicon glyphicon-refresh glyphicon-spin"></i> Generating...');
+        
+        $.post('${docroot}/workspacemcpreport', {
+            workspace_id: workspaceId,
+            report_type: reportType,
+            format: reportFormat,
+            include_correlations: includeCorrelations,
+            include_threat_intel: includeThreatIntel,
+            include_recommendations: includeRecommendations,
+            tlp_level: tlpLevel
+        }, function(data) {
+            $('#generateMcpBtn').prop('disabled', false).html('<i class="glyphicon glyphicon-cog"></i> Generate Report');
+            
+            if (data.success) {
+                $('#mcpReportModal').modal('hide');
+                if (data.download_url) {
+                    // Trigger download
+                    window.open(data.download_url, '_blank');
+                }
+                alertify.success('MCP report generated successfully');
+            } else {
+                alertify.error('Failed to generate MCP report: ' + (data.error || 'Unknown error'));
+            }
+        }).fail(function() {
+            $('#generateMcpBtn').prop('disabled', false).html('<i class="glyphicon glyphicon-cog"></i> Generate Report');
+            alertify.error('Failed to generate MCP report');
+        });
+    });
+    
+    // Workspace Timing Configuration
+    $('#configureTimingBtn').click(function() {
+        var workspaceId = $(this).data('workspace-id');
+        $('#timingWorkspaceId').val(workspaceId);
+        
+        // Load current timing configuration
+        $.get('${docroot}/workspacetiming', { workspace_id: workspaceId }, function(data) {
+            if (data.success) {
+                $('#workspaceTimezone').val(data.timezone || 'UTC');
+                $('#defaultScanStart').val(data.default_start_time || '09:00');
+                $('#retentionPeriod').val(data.retention_period || '90');
+                $('#enableAutoScheduling').prop('checked', data.auto_scheduling || false);
+                $('#enableBusinessHours').prop('checked', data.business_hours_only || false);
+                $('#enableThrottling').prop('checked', data.enable_throttling !== false);
+                $('#businessStartTime').val(data.business_start || '08:00');
+                $('#businessEndTime').val(data.business_end || '18:00');
+                
+                // Show/hide business hours config
+                if (data.business_hours_only) {
+                    $('#businessHoursConfig').show();
+                }
+            }
+            $('#workspaceTimingModal').modal('show');
+        }).fail(function() {
+            // Show modal with defaults if loading fails
+            $('#workspaceTimingModal').modal('show');
+        });
+    });
+    
+    $('#saveTimingBtn').click(function() {
+        var workspaceId = $('#timingWorkspaceId').val();
+        var timezone = $('#workspaceTimezone').val();
+        var defaultStartTime = $('#defaultScanStart').val();
+        var retentionPeriod = $('#retentionPeriod').val();
+        var autoScheduling = $('#enableAutoScheduling').is(':checked');
+        var businessHoursOnly = $('#enableBusinessHours').is(':checked');
+        var enableThrottling = $('#enableThrottling').is(':checked');
+        var businessStart = $('#businessStartTime').val();
+        var businessEnd = $('#businessEndTime').val();
+        
+        $.post('${docroot}/workspacetiming', {
+            workspace_id: workspaceId,
+            timezone: timezone,
+            default_start_time: defaultStartTime,
+            retention_period: retentionPeriod,
+            auto_scheduling: autoScheduling,
+            business_hours_only: businessHoursOnly,
+            enable_throttling: enableThrottling,
+            business_start: businessStart,
+            business_end: businessEnd
+        }, function(data) {
+            if (data.success) {
+                $('#workspaceTimingModal').modal('hide');
+                alertify.success('Workspace timing configuration saved successfully');
+            } else {
+                alertify.error('Failed to save timing configuration: ' + (data.error || 'Unknown error'));
+            }
+        }).fail(function() {
+            alertify.error('Failed to save timing configuration');
+        });
+    });
+    
+    // Business hours toggle
+    $('#enableBusinessHours').change(function() {
+        if ($(this).is(':checked')) {
+            $('#businessHoursConfig').show();
+        } else {
+            $('#businessHoursConfig').hide();
+        }
+    });
+});
+
+function loadWorkspaces() {
+    $('#loader').show();
+    $.get('${docroot}/workspacelist', function(data) {
+        $('#loader').hide();
+        displayWorkspaces(data);
+    }).fail(function() {
+        $('#loader').hide();
+        alertify.error('Failed to load workspaces');
+    });
+}
+
+function displayWorkspaces(workspaces) {
+    var html = '';
+    
+    if (workspaces.length === 0) {
+        html = '<div class="alert alert-info">No workspaces found. Create your first workspace to get started.</div>';
+    } else {
+        html = '<div class="table-responsive"><table class="table table-striped table-hover">';
+        html += '<thead><tr>';
+        html += '<th>Name</th>';
+        html += '<th>Description</th>';
+        html += '<th>Created</th>';
+        html += '<th>Targets</th>';
+        html += '<th>Scans</th>';
+        html += '<th>Actions</th>';
+        html += '</tr></thead><tbody>';
+          workspaces.forEach(function(workspace) {
+            var createdDate = new Date(workspace.created_time * 1000).toLocaleDateString();
+            var targetCount = workspace.target_count || 0;
+            var scanCount = workspace.scan_count || 0;
+            
+            html += '<tr>';
+            html += '<td><strong>' + escapeHtml(workspace.name) + '</strong></td>';
+            html += '<td>' + escapeHtml(workspace.description || '') + '</td>';
+            html += '<td>' + createdDate + '</td>';
+            html += '<td><span class="badge">' + targetCount + '</span></td>';
+            html += '<td><span class="badge">' + scanCount + '</span></td>';
+            html += '<td>';            html += '<div class="btn-group" role="group">';
+            html += '<button class="btn btn-sm btn-info" onclick="viewWorkspace(\'' + workspace.workspace_id + '\')" title="View Details">';
+            html += '<i class="glyphicon glyphicon-eye-open"></i></button>';
+            html += '<button class="btn btn-sm btn-warning" onclick="editWorkspace(\'' + workspace.workspace_id + '\')" title="Edit">';
+            html += '<i class="glyphicon glyphicon-edit"></i></button>';            html += '<button class="btn btn-sm btn-success" onclick="addTarget(\'' + workspace.workspace_id + '\')" title="Add Target">';
+            html += '<i class="glyphicon glyphicon-plus"></i></button>';
+            html += '<button class="btn btn-sm btn-primary" onclick="importScans(\'' + workspace.workspace_id + '\')" title="Import Scans">';
+            html += '<i class="glyphicon glyphicon-import"></i></button>';
+            // Only show multi-scan button if workspace has targets
+            if (targetCount > 0) {
+                html += '<button class="btn btn-sm btn-success" onclick="startMultiTargetScan(\'' + workspace.workspace_id + '\')" title="Start Multi-Target Scan">';
+                html += '<i class="glyphicon glyphicon-play"></i></button>';
+            }
+            // Only show generate report button if workspace has scans
+            if (scanCount > 0) {
+                html += '<button class="btn btn-sm btn-info" onclick="generateReport(\'' + workspace.workspace_id + '\')" title="Generate Report">';
+                html += '<i class="glyphicon glyphicon-file"></i></button>';
+            }
+            html += '<button class="btn btn-sm btn-danger" onclick="deleteWorkspace(\'' + workspace.workspace_id + '\')" title="Delete">';
+            html += '<i class="glyphicon glyphicon-trash"></i></button>';
+            html += '</div>';
+            html += '</td>';
+            html += '</tr>';
+        });
+        
+        html += '</tbody></table></div>';
+    }
+    
+    $('#workspaceList').html(html);
+}
+
+function viewWorkspace(workspaceId) {
+    $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
+        if (data.success) {
+            var workspace = data;
+            var html = '';
+            html += '<div class="row">';
+            html += '<div class="col-md-6">';
+            html += '<h4>Basic Information</h4>';
+            html += '<table class="table table-condensed">';
+            html += '<tr><td><strong>Name:</strong></td><td>' + escapeHtml(workspace.name) + '</td></tr>';
+            html += '<tr><td><strong>Description:</strong></td><td>' + escapeHtml(workspace.description || 'No description') + '</td></tr>';
+            html += '<tr><td><strong>Created:</strong></td><td>' + new Date(workspace.created_time * 1000).toLocaleString() + '</td></tr>';
+            html += '<tr><td><strong>Modified:</strong></td><td>' + new Date(workspace.modified_time * 1000).toLocaleString() + '</td></tr>';
+            html += '</table>';
+            html += '</div>';
+            html += '<div class="col-md-6">';
+            html += '<h4>Statistics</h4>';
+            html += '<table class="table table-condensed">';
+            html += '<tr><td><strong>Targets:</strong></td><td>' + (workspace.targets ? workspace.targets.length : 0) + '</td></tr>';
+            html += '<tr><td><strong>Scans:</strong></td><td>' + (workspace.scans ? workspace.scans.length : 0) + '</td></tr>';
+            html += '</table>';
+            html += '</div>';
+            html += '</div>';
+            
+            if (workspace.targets && workspace.targets.length > 0) {
+                html += '<h4>Targets</h4>';
+                html += '<div class="table-responsive"><table class="table table-condensed">';
+                html += '<thead><tr><th>Target</th><th>Type</th><th>Added</th></tr></thead><tbody>';                workspace.targets.forEach(function(target) {
+                    html += '<tr>';
+                    html += '<td>' + escapeHtml(target.value || target.target || 'Unknown') + '</td>';
+                    html += '<td>' + escapeHtml(target.type || target.target_type || 'Auto-detected') + '</td>';
+                    html += '<td>' + new Date(target.added_time * 1000).toLocaleString() + '</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+            }
+            
+            if (workspace.scans && workspace.scans.length > 0) {
+                html += '<h4>Scans</h4>';
+                html += '<div class="table-responsive"><table class="table table-condensed">';
+                html += '<thead><tr><th>Scan ID</th><th>Imported</th></tr></thead><tbody>';
+                workspace.scans.forEach(function(scan) {
+                    html += '<tr>';
+                    html += '<td>' + escapeHtml(scan.scan_id) + '</td>';
+                    html += '<td>' + new Date(scan.imported_time * 1000).toLocaleString() + '</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';            }
+            
+            $('#workspaceDetailsContent').html(html);
+            
+            // Show MCP report button if workspace has scans
+            if (workspace.scans && workspace.scans.length > 0) {
+                $('#generateMcpReportBtn').show().data('workspace-id', workspaceId);
+            } else {
+                $('#generateMcpReportBtn').hide();
+            }
+            
+            // Always show timing configuration button
+            $('#configureTimingBtn').show().data('workspace-id', workspaceId);
+            
+            $('#workspaceDetailsModal').modal('show');
+        } else {
+            alertify.error('Failed to load workspace details: ' + data.error);
+        }
+    });
+}
+
+function editWorkspace(workspaceId) {
+    $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
+        if (data.success) {
+            $('#editWorkspaceId').val(workspaceId);
+            $('#editWorkspaceName').val(data.name);
+            $('#editWorkspaceDescription').val(data.description);
+            $('#editWorkspaceModal').modal('show');
+        } else {
+            alertify.error('Failed to load workspace: ' + data.error);
+        }
+    });
+}
+
+function addTarget(workspaceId) {
+    $('#targetWorkspaceId').val(workspaceId);
+    $('#addTargetModal').modal('show');
+}
+
+function importScans(workspaceId) {
+    $('#importWorkspaceId').val(workspaceId);
+    $('#importScansModal').modal('show');
+}
+
+function deleteWorkspace(workspaceId) {
+    if (confirm('Are you sure you want to delete this workspace? This action cannot be undone.')) {
+        $.post('${docroot}/workspacedelete', { workspace_id: workspaceId }, function(data) {
+            if (data.success) {
+                alertify.success('Workspace deleted successfully');
+                loadWorkspaces();
+            } else {
+                alertify.error('Failed to delete workspace: ' + data.error);
+            }
+        });
+    }
+}
+
+function startMultiTargetScan(workspaceId) {
+    $('#scanWorkspaceId').val(workspaceId);
+    
+    // Load workspace targets
+    $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
+        if (data.success && data.targets && data.targets.length > 0) {
+            displayTargetSelection(data.targets);
+            loadAvailableModules();
+            $('#multiTargetScanModal').modal('show');
+        } else {
+            alertify.error('No targets found in this workspace');
+        }
+    });
+}
+
+function displayTargetSelection(targets) {
+    var html = '';
+    targets.forEach(function(target, index) {
+        html += '<div class="checkbox">';
+        html += '<label>';
+        html += '<input type="checkbox" value="' + target.target_id + '" data-target="' + escapeHtml(target.value) + '" data-type="' + escapeHtml(target.type || '') + '"> ';
+        html += escapeHtml(target.value) + ' <small class="text-muted">(' + escapeHtml(target.type || 'Auto-detect') + ')</small>';
+        html += '</label>';
+        html += '</div>';
+    });
+    $('#targetSelectionList').html(html);
+}
+
+// Global variables for module management
+var allModules = [];
+var modulesByCategory = {};
+
+function loadAvailableModules() {
+    $.get('${docroot}/modules', function(data) {
+        if (data && Array.isArray(data)) {
+            allModules = data;
+            
+            // Group modules by category
+            modulesByCategory = {};
+            data.forEach(function(module) {
+                if (module.group && Array.isArray(module.group) && module.group.length > 0) {
+                    var category = module.group[0];
+                    if (!modulesByCategory[category]) {
+                        modulesByCategory[category] = [];
+                    }
+                    modulesByCategory[category].push(module);
+                }
+            });
+            
+            displayModules();
+            setupModuleFilters();
+        } else {
+            // Fallback to common modules if server request fails
+            loadCommonModules();
+        }
+    }).fail(function() {
+        // Fallback to common modules if server request fails
+        loadCommonModules();
+    });
+}
+
+function displayModules(filteredModules) {
+    var modulesToShow = filteredModules || allModules;
+    var html = '';
+    
+    // Group filtered modules by category
+    var displayCategories = {};
+    modulesToShow.forEach(function(module) {
+        if (module.group && Array.isArray(module.group) && module.group.length > 0) {
+            var category = module.group[0];
+            if (!displayCategories[category]) {
+                displayCategories[category] = [];
+            }
+            displayCategories[category].push(module);
+        }
+    });
+    
+    // Sort categories and display modules
+    var sortedCategories = Object.keys(displayCategories).sort();
+    sortedCategories.forEach(function(category, index) {
+        if (index > 0) {
+            html += '<hr style="margin: 5px 0;">';
+        }
+        html += '<strong>' + escapeHtml(category) + '</strong><br>';
+        
+        displayCategories[category].forEach(function(module) {
+            var description = module.descr || module.name;
+            html += '<div class="checkbox module-item" data-category="' + category.toLowerCase() + '" data-name="' + module.name + '">';
+            html += '<label>';
+            html += '<input type="checkbox" value="' + module.name + '"> ';
+            html += escapeHtml(description) + ' <small class="text-muted">(' + module.name + ')</small>';
+            html += '</label>';
+            html += '</div>';
+        });
+    });
+    
+    $('#moduleSelectionList').html(html);
+}
+
+function setupModuleFilters() {
+    // Category filter
+    $('#moduleTypeFilter').on('change', function() {
+        var selectedCategory = $(this).val();
+        var selectedUseCase = $('#moduleUseCaseFilter').val();
+        applyModuleFilters(selectedCategory, selectedUseCase);
+    });
+    
+    // Use case filter  
+    $('#moduleUseCaseFilter').on('change', function() {
+        var selectedCategory = $('#moduleTypeFilter').val();
+        var selectedUseCase = $(this).val();
+        applyModuleFilters(selectedCategory, selectedUseCase);
+    });
+}
+
+function applyModuleFilters(category, useCase) {
+    var filteredModules = allModules;
+    
+    // Filter by category
+    if (category) {
+        filteredModules = filteredModules.filter(function(module) {
+            return module.group && module.group.some(function(group) {
+                return group.toLowerCase().includes(category.toLowerCase());
+            });
+        });
+    }
+    
+    // Filter by use case (based on module characteristics)
+    if (useCase) {
+        filteredModules = filteredModules.filter(function(module) {
+            return isModuleForUseCase(module, useCase);
+        });
+    }
+    
+    displayModules(filteredModules);
+}
+
+function isModuleForUseCase(module, useCase) {
+    var moduleName = module.name.toLowerCase();
+    var moduleDesc = (module.descr || '').toLowerCase();
+    var moduleGroup = (module.group || []).join(' ').toLowerCase();
+    
+    switch(useCase) {
+        case 'basic':
+            return moduleName.includes('dns') || moduleName.includes('whois') || 
+                   moduleName.includes('ssl') || moduleName.includes('header') ||
+                   moduleGroup.includes('dns') || moduleGroup.includes('passive');
+        
+        case 'comprehensive':
+            return true; // All modules for comprehensive scan
+        
+        case 'stealth':
+            return moduleGroup.includes('passive') || moduleGroup.includes('dns') ||
+                   moduleGroup.includes('search') || !moduleName.includes('scan');
+        
+        case 'threat':
+            return moduleGroup.includes('threat') || moduleGroup.includes('malware') ||
+                   moduleName.includes('virus') || moduleName.includes('threat') ||
+                   moduleName.includes('malware') || moduleName.includes('reputation');
+        
+        case 'compliance':
+            return moduleName.includes('ssl') || moduleName.includes('cert') ||
+                   moduleName.includes('header') || moduleName.includes('security');
+        
+        case 'monitoring':
+            return moduleGroup.includes('passive') || moduleGroup.includes('dns') ||
+                   moduleGroup.includes('monitoring') || !moduleName.includes('scan');
+        
+        default:
+            return true;
+    }
+}
+
+// Module preset functions
+function selectModulePreset(presetType) {
+    // Clear current selection
+    $('#moduleSelectionList input[type="checkbox"]').prop('checked', false);
+    
+    var presetModules = getModulePreset(presetType);
+    presetModules.forEach(function(moduleName) {
+        $('#moduleSelectionList input[value="' + moduleName + '"]').prop('checked', true);
+    });
+    
+    // Update filter to match preset
+    $('#moduleUseCaseFilter').val(presetType);
+    applyModuleFilters('', presetType);
+}
+
+function getModulePreset(presetType) {
+    var presets = {
+        'basic': [
+            'sfp_dnsresolve', 'sfp_whois', 'sfp_sslcert', 'sfp_webheader',
+            'sfp_subdomain_enum', 'sfp_dns', 'sfp_dnsdumpster'
+        ],
+        'comprehensive': allModules.map(function(m) { return m.name; }),
+        'stealth': [
+            'sfp_dnsresolve', 'sfp_whois', 'sfp_sslcert', 'sfp_webheader',
+            'sfp_subdomain_enum', 'sfp_dns', 'sfp_googlesearch', 'sfp_bingsearch',
+            'sfp_duckduckgosearch', 'sfp_dnsdumpster', 'sfp_crt', 'sfp_censys'
+        ],
+        'threat': [
+            'sfp_virustotal', 'sfp_threatcrowd', 'sfp_malwaredomains',
+            'sfp_abuseipdb', 'sfp_tor', 'sfp_reputation', 'sfp_alienvault'
+        ]
+    };
+    
+    return presets[presetType] || [];
+}
+
+function selectAllModules() {
+    $('#moduleSelectionList input[type="checkbox"]').prop('checked', true);
+}
+
+function clearModuleSelection() {
+    $('#moduleSelectionList input[type="checkbox"]').prop('checked', false);
+}
+
+function loadCommonModules() {
+    allModules = [
+        { name: 'sfp_dns', descr: 'DNS lookups', group: ['DNS'] },
+        { name: 'sfp_dnsresolve', descr: 'DNS resolution', group: ['DNS'] },
+        { name: 'sfp_whois', descr: 'WHOIS lookups', group: ['Passive'] },
+        { name: 'sfp_portscan_tcp', descr: 'TCP port scan', group: ['Active'] },
+        { name: 'sfp_sslcert', descr: 'SSL certificate analysis', group: ['Web'] },
+        { name: 'sfp_webheader', descr: 'Web header analysis', group: ['Web'] },
+        { name: 'sfp_subdomain_enum', descr: 'Subdomain enumeration', group: ['DNS'] },
+        { name: 'sfp_threatcrowd', descr: 'ThreatCrowd', group: ['Threat Intel'] },
+        { name: 'sfp_virustotal', descr: 'VirusTotal', group: ['Threat Intel'] }
+    ];
+    
+    displayModules();
+    setupModuleFilters();
+}
+
+function generateReport(workspaceId) {
+    $('#reportWorkspaceId').val(workspaceId);
+    $('#generateReportModal').modal('show');
+}
+
+function escapeHtml(text) {
+    var map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+</script>
+
+<%include file="FOOTER.tmpl"/>
