@@ -61,7 +61,6 @@ class SpiderFootHelpers():
     """SpiderFoot helper functions and utilities."""
     
     @staticmethod
-    @staticmethod
     def dataPath() -> str:
         """Return data path and validate it exists"""
         try:
@@ -76,7 +75,6 @@ class SpiderFootHelpers():
                 os.makedirs(fallback_dir, exist_ok=True)
             return fallback_dir
 
-    @staticmethod
     @staticmethod
     def cachePath() -> str:
         """Return cache path and validate it exists"""
@@ -259,14 +257,12 @@ class SpiderFootHelpers():
                             'opts': getattr(mod_class, 'opts', {}),
                             'optdescs': getattr(mod_class, 'optdescs', {}),
                             'meta': getattr(mod_class, 'meta', {}),
-                            'group': getattr(mod_class, 'meta', {}).get('useCases', [])
-                        }            
+                            'group': getattr(mod_class, 'meta', {}).get('useCases', [])                        }
             except Exception:
                 continue
-                
+        
         return modules
 
-    @staticmethod
     @staticmethod
     def loadCorrelationRulesRaw(path, ignore_files=None):
         """Load correlation rules"""

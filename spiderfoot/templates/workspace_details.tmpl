@@ -1,0 +1,1063 @@
+<%include file="HEADER.tmpl"/>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <ol class="breadcrumb">
+                    <li><a href="${docroot}/">Home</a></li>
+                    <li><a href="${docroot}/workspaces">Workspaces</a></li>
+                    <li class="active">${workspace.name}</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="page-header">
+                    <h1>${workspace.name} 
+                        <small>${workspace.description}</small>                        <span class="pull-right">
+                            <button class="btn btn-primary" onclick="editWorkspace('${workspace.workspace_id}')">
+                                <i class="fa fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-success" onclick="addTarget('${workspace.workspace_id}')">
+                                <i class="fa fa-plus"></i> Add Target
+                            </button>
+                            <button class="btn btn-info" onclick="importScans('${workspace.workspace_id}')">
+                                <i class="fa fa-download"></i> Import Scans
+                            </button>
+                            <button class="btn btn-primary" onclick="multiTargetScan('${workspace.workspace_id}')">
+                                <i class="fa fa-play"></i> Multi-Target Scan
+                            </button>
+                            <button class="btn btn-warning" onclick="generateReport('${workspace.workspace_id}')">
+                                <i class="fa fa-file-text"></i> Generate Report
+                            </button>
+                        </span>
+                    </h1>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workspace Stats -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-bullseye"></i> Targets</h3>
+                    </div>
+                    <div class="panel-body text-center">
+                        <h2>${len(workspace.targets) if workspace.targets else 0}</h2>
+                        <p>Total Targets</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel panel-success">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-search"></i> Scans</h3>
+                    </div>
+                    <div class="panel-body text-center">
+                        <h2>${len(scan_details)}</h2>
+                        <p>Total Scans</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel panel-warning">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-exclamation-triangle"></i> Correlations</h3>
+                    </div>
+                    <div class="panel-body text-center">
+                        <h2 id="correlationCount">-</h2>
+                        <p>Cross-Scan Patterns</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-calendar"></i> Created</h3>
+                    </div>                    <div class="panel-body text-center">
+                        <h4>
+                            <script>
+                                document.write(new Date(${workspace.created_time} * 1000).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                }));
+                            </script>
+                        </h4>
+                        <p>Workspace Created</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="row">
+            <div class="col-md-12">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#targets-tab" aria-controls="targets-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-bullseye"></i> Targets
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#scans-tab" aria-controls="scans-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-search"></i> Scans
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#correlations-tab" aria-controls="correlations-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-sitemap"></i> Correlations
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#results-tab" aria-controls="results-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-table"></i> Recent Results
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" style="margin-top: 20px;">
+                    
+                    <!-- Targets Tab -->
+                    <div role="tabpanel" class="tab-pane active" id="targets-tab">
+                        % if workspace.targets:
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Target</th>
+                                            <th>Type</th>
+                                            <th>Added</th>
+                                            <th>Actions</th>                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        % for target in workspace.targets:
+                                            <tr>
+                                                <td><strong>${target['value']}</strong></td>
+                                                <td><span class="label label-info">${target['type']}</span></td>
+                                                <td>
+                                                    <script>
+                                                        // Handle both epoch timestamp and date string formats for target added time
+                                                        var addedValue = '${target.get('added_time', '')}';
+                                                        var addedDate;
+                                                        
+                                                        if (addedValue && addedValue !== 'Unknown' && addedValue !== '') {
+                                                            // Check if it's a numeric timestamp (epoch)
+                                                            if (!isNaN(addedValue) && addedValue.length > 0) {
+                                                                // Convert epoch timestamp to milliseconds if needed
+                                                                var timestamp = parseInt(addedValue);
+                                                                if (timestamp < 10000000000) {
+                                                                    timestamp *= 1000; // Convert to milliseconds
+                                                                }
+                                                                addedDate = new Date(timestamp);
+                                                            } else {
+                                                                // Try to parse as date string
+                                                                addedDate = new Date(addedValue);
+                                                            }
+                                                            
+                                                            // Display formatted date
+                                                            if (addedDate && !isNaN(addedDate.getTime())) {
+                                                                document.write(addedDate.toLocaleDateString('en-US', {
+                                                                    year: 'numeric',
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit'
+                                                                }));
+                                                            } else {
+                                                                document.write('Invalid Date');
+                                                            }
+                                                        } else {
+                                                            document.write('Unknown');
+                                                        }
+                                                    </script>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-xs btn-danger" onclick="removeTarget('${workspace.workspace_id}', '${target['target_id']}')">
+                                                        <i class="fa fa-trash"></i> Remove
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        % endfor
+                                    </tbody>
+                                </table>
+                            </div>
+                        % else:
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i> No targets added yet. 
+                                <button class="btn btn-success btn-sm" onclick="addTarget('${workspace.workspace_id}')">
+                                    Add your first target
+                                </button>
+                            </div>
+                        % endif
+                    </div>                    <!-- Scans Tab -->
+                    <div role="tabpanel" class="tab-pane" id="scans-tab">
+                        <div class="pull-right" style="margin-bottom: 10px;">
+                            <button class="btn btn-sm btn-default" onclick="location.reload()">
+                                <i class="fa fa-refresh"></i> Refresh Scans
+                            </button>
+                        </div>
+                        <div class="clearfix"></div>
+                        % if scan_details:
+                            <div class="table-responsive">
+                                <table class="table table-striped">                                    <thead>
+                                        <tr>
+                                            <th>Scan ID</th>
+                                            <th>Scan Name</th>
+                                            <th>Target</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>                                    </thead>
+                                    <tbody>
+                                        % for scan in scan_details:
+                                            <tr>                                                <td>
+                                                    <code style="font-size: 11px; background: #f5f5f5; padding: 2px 4px; cursor: pointer; border: 1px solid #ddd; border-radius: 3px;" 
+                                                          onclick="copyWorkspaceScanId('${scan['scan_id']}')" 
+                                                          title="Click to copy scan ID">${scan['scan_id']} <i class="fa fa-copy" style="font-size: 10px; margin-left: 2px;"></i></code>
+                                                </td>
+                                                <td>
+                                                    <strong>${scan['name']}</strong>
+                                                </td>
+                                                <td>${scan['target']}</td>
+                                                <td>
+                                                    % if scan['status'] == 'FINISHED':
+                                                        <span class="label label-success">${scan['status']}</span>
+                                                    % elif scan['status'] == 'RUNNING':
+                                                        <span class="label label-primary">${scan['status']}</span>
+                                                    % elif scan['status'] == 'STARTING':
+                                                        <span class="label label-info">${scan['status']}</span>
+                                                    % else:
+                                                        <span class="label label-warning">${scan['status']}</span>
+                                                    % endif
+                                                </td>                                                <td>
+                                                    <script>
+                                                        // Handle both epoch timestamp and date string formats
+                                                        var dateValue = '${scan['created']}';
+                                                        var scanDate;
+                                                        
+                                                        // Check if it's a numeric timestamp (epoch)
+                                                        if (!isNaN(dateValue) && dateValue.length > 0) {
+                                                            // Convert epoch timestamp to milliseconds if needed
+                                                            var timestamp = parseInt(dateValue);
+                                                            if (timestamp < 10000000000) {
+                                                                timestamp *= 1000; // Convert to milliseconds
+                                                            }
+                                                            scanDate = new Date(timestamp);
+                                                        } else {
+                                                            // Try to parse as date string
+                                                            scanDate = new Date(dateValue);
+                                                        }
+                                                        
+                                                        // Display formatted date
+                                                        if (scanDate && !isNaN(scanDate.getTime())) {
+                                                            document.write(scanDate.toLocaleDateString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            }));
+                                                        } else {
+                                                            document.write('Invalid Date');
+                                                        }
+                                                    </script>
+                                                </td>
+                                                <td>
+                                                    <a href="${docroot}/scaninfo?id=${scan['scan_id']}" class="btn btn-xs btn-primary">
+                                                        <i class="fa fa-eye"></i> View
+                                                    </a>
+                                                    <button class="btn btn-xs btn-info" onclick="viewScanResults('${scan['scan_id']}')">
+                                                        <i class="fa fa-table"></i> Results
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        % endfor
+                                    </tbody>
+                                </table>
+                            </div>
+                        % else:
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i> No scans in this workspace yet. 
+                                <button class="btn btn-info btn-sm" onclick="importScans('${workspace.workspace_id}')">
+                                    Import existing scans
+                                </button>
+                                or
+                                <button class="btn btn-success btn-sm" onclick="multiTargetScan('${workspace.workspace_id}')">
+                                    Start new scans
+                                </button>
+                            </div>
+                        % endif
+                    </div>
+
+                    <!-- Correlations Tab -->
+                    <div role="tabpanel" class="tab-pane" id="correlations-tab">
+                        <div id="correlations-content">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                <p>Loading correlations...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Tab -->
+                    <div role="tabpanel" class="tab-pane" id="results-tab">
+                        <div id="results-content">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                <p>Loading recent results...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>    </div>
+
+<!-- Modals from workspaces.tmpl for workspace actions -->
+
+<!-- Edit Workspace Modal -->
+<div class="modal fade" id="editWorkspaceModal" tabindex="-1" role="dialog" aria-labelledby="editWorkspaceModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="editWorkspaceModalLabel">Edit Workspace</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+          <input type="hidden" id="editWorkspaceId">
+          <div class="form-group">
+            <label for="editWorkspaceName">Workspace Name</label>
+            <input type="text" class="form-control" id="editWorkspaceName" placeholder="Enter workspace name">
+          </div>
+          <div class="form-group">
+            <label for="editWorkspaceDescription">Description</label>
+            <textarea class="form-control" id="editWorkspaceDescription" rows="3" placeholder="Enter workspace description"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="updateWorkspaceBtn">Update Workspace</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Target Modal -->
+<div class="modal fade" id="addTargetModal" tabindex="-1" role="dialog" aria-labelledby="addTargetModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addTargetModalLabel">Add Target</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+          <input type="hidden" id="targetWorkspaceId">
+          <div class="form-group">
+            <label for="targetValue">Target</label>
+            <input type="text" class="form-control" id="targetValue" placeholder="Enter target (domain, IP, etc.)">
+          </div>
+          <div class="form-group">
+            <label for="targetType">Target Type</label>
+            <select class="form-control" id="targetType">
+              <option value="">Auto-detect</option>
+              <option value="DOMAIN_NAME">Domain Name</option>
+              <option value="IP_ADDRESS">IP Address</option>
+              <option value="NETBLOCK">Network Block</option>
+              <option value="EMAILADDR">Email Address</option>
+              <option value="HUMAN_NAME">Human Name</option>
+              <option value="PHONE_NUMBER">Phone Number</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="addTargetBtn">Add Target</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import Scans Modal -->
+<div class="modal fade" id="importScansModal" tabindex="-1" role="dialog" aria-labelledby="importScansModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="importScansModalLabel">Import Scans</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+          <input type="hidden" id="importWorkspaceId">
+          <div class="form-group">
+            <label for="scanIds">Scan IDs</label>
+            <textarea class="form-control" id="scanIds" rows="4" placeholder="Enter scan IDs (one per line or comma-separated)"></textarea>
+            <small class="form-text text-muted">Enter existing scan IDs to import into this workspace</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-info" id="importScansBtn">Import Scans</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Generate Report Modal -->
+<div class="modal fade" id="generateReportModal" tabindex="-1" role="dialog" aria-labelledby="generateReportModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="generateReportModalLabel">Generate Report</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+          <input type="hidden" id="reportWorkspaceId">
+          <div class="form-group">
+            <label for="reportFormat">Report Format</label>
+            <select class="form-control" id="reportFormat">
+              <option value="html">HTML</option>
+              <option value="json">JSON</option>
+              <option value="csv">CSV</option>
+              <option value="gexf">GEXF (Graph)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Report Scope</label>
+            <div class="radio">
+              <label><input type="radio" name="reportScope" value="all" checked> All Data</label>
+            </div>
+            <div class="radio">
+              <label><input type="radio" name="reportScope" value="correlations"> Correlations Only</label>
+            </div>
+            <div class="radio">
+              <label><input type="radio" name="reportScope" value="summary"> Summary</label>
+            </div>
+          </div>
+          <div class="checkbox">
+            <label><input type="checkbox" id="includeMetadata" checked> Include Metadata</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="generateReportBtn">Generate Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Multi-Target Scan Modal -->
+<div class="modal fade" id="multiTargetScanModal" tabindex="-1" role="dialog" aria-labelledby="multiTargetScanModalLabel">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="multiTargetScanModalLabel">Multi-Target Scan</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+          <input type="hidden" id="scanWorkspaceId">
+          <div class="form-group">
+            <label for="scanName">Scan Name</label>
+            <input type="text" class="form-control" id="scanName" placeholder="Enter scan name">
+          </div>
+          <div class="form-group">
+            <label>Select Targets</label>
+            <div id="targetSelectionList" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+              <!-- Target checkboxes will be populated here -->
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Select Modules</label>
+            <div class="row">
+              <div class="col-md-6">
+                <button type="button" class="btn btn-sm btn-info" onclick="selectModulePreset('passive')">Passive Scan</button>
+                <button type="button" class="btn btn-sm btn-warning" onclick="selectModulePreset('active')">Active Scan</button>
+                <button type="button" class="btn btn-sm btn-success" onclick="selectAllModules()">Select All</button>
+                <button type="button" class="btn btn-sm btn-default" onclick="clearModuleSelection()">Clear All</button>
+              </div>
+            </div>
+            <div id="moduleSelectionList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-top: 10px;">
+              <!-- Module checkboxes will be populated here -->
+            </div>
+          </div>
+          <div class="checkbox">
+            <label><input type="checkbox" id="enableCorrelation" checked> Enable Cross-Scan Correlation</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="startMultiScanBtn">Start Multi-Target Scan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Load correlations when tab is clicked
+$('a[href="#correlations-tab"]').on('shown.bs.tab', function() {
+    loadCorrelations();
+});
+
+// Load results when tab is clicked
+$('a[href="#results-tab"]').on('shown.bs.tab', function() {
+    loadResults();
+});
+
+// Load correlations on page load
+$(document).ready(function() {
+    loadCorrelationCount();
+    
+    // Auto-refresh every 30 seconds to pick up new scans and status changes
+    setInterval(function() {
+        if ($('#scans-tab').hasClass('active')) {
+            location.reload(); // Reload page to get updated scan list
+        } else if ($('#correlations-tab').hasClass('active')) {
+            loadCorrelations(); // Refresh correlations
+        }
+    }, 30000);
+});
+
+function loadCorrelationCount() {
+    $.get('${docroot}/workspacescancorrelations', {workspace_id: '${workspace.workspace_id}'})
+        .done(function(data) {
+            if (data.success) {
+                $('#correlationCount').text(data.cross_scan_patterns);
+            }
+        })
+        .fail(function() {
+            $('#correlationCount').text('0');
+        });
+}
+
+function loadCorrelations() {
+    $.get('${docroot}/workspacescancorrelations', {workspace_id: '${workspace.workspace_id}'})
+        .done(function(data) {
+            if (data.success) {
+                var html = '';
+                if (data.correlations.length > 0) {
+                    html += '<div class="alert alert-success">';
+                    html += '<strong>Found ' + data.total_correlations + ' correlations across ' + data.cross_scan_patterns + ' pattern types</strong>';
+                    html += ' (from ' + data.finished_scans + ' finished scans)';
+                    html += '</div>';
+                    
+                    Object.keys(data.correlation_groups).forEach(function(ruleName) {
+                        var group = data.correlation_groups[ruleName];
+                        html += '<div class="panel panel-default">';
+                        html += '<div class="panel-heading">';
+                        html += '<h4 class="panel-title">' + ruleName + ' <span class="badge">' + group.length + '</span></h4>';
+                        html += '</div>';
+                        html += '<div class="panel-body">';
+                        html += '<div class="table-responsive">';
+                        html += '<table class="table table-condensed">';
+                        html += '<thead><tr><th>Scan</th><th>Risk</th><th>Description</th></tr></thead>';
+                        html += '<tbody>';
+                        group.forEach(function(corr) {
+                            var riskClass = corr.rule_risk === 'HIGH' ? 'danger' : 
+                                          corr.rule_risk === 'MEDIUM' ? 'warning' : 'info';
+                            html += '<tr>';
+                            html += '<td><small>' + corr.scan_id + '</small></td>';
+                            html += '<td><span class="label label-' + riskClass + '">' + corr.rule_risk + '</span></td>';
+                            html += '<td>' + corr.rule_description + '</td>';
+                            html += '</tr>';
+                        });
+                        html += '</tbody></table></div></div></div>';
+                    });
+                } else {
+                    if (data.message) {
+                        html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> ' + data.message + '</div>';
+                        if (data.total_scans > 0 && data.finished_scans < data.total_scans) {
+                            html += '<div class="alert alert-warning">';
+                            html += '<i class="fa fa-clock-o"></i> Some scans are still running. Correlations will be available as scans complete.';
+                            html += '<br><button class="btn btn-sm btn-primary" onclick="loadCorrelations()" style="margin-top: 10px;">';
+                            html += '<i class="fa fa-refresh"></i> Refresh</button>';
+                            html += '</div>';
+                        }
+                    } else {
+                        html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> No correlations found. Need at least 2 completed scans for cross-correlation analysis.</div>';
+                    }
+                }
+                $('#correlations-content').html(html);
+            } else {
+                $('#correlations-content').html('<div class="alert alert-danger">Error loading correlations: ' + data.error + '</div>');
+            }
+        })
+        .fail(function() {
+            $('#correlations-content').html('<div class="alert alert-danger">Failed to load correlations</div>');
+        });
+}
+
+function loadResults() {
+    $.get('${docroot}/workspacescanresults', {workspace_id: '${workspace.workspace_id}', limit: 50})
+        .done(function(data) {
+            if (data.success) {
+                var html = '';
+                if (data.results.length > 0) {
+                    html += '<div class="table-responsive">';
+                    html += '<table class="table table-striped">';
+                    html += '<thead><tr><th>Timestamp</th><th>Event Type</th><th>Data</th><th>Source</th><th>Scan</th></tr></thead>';
+                    html += '<tbody>';
+                    data.results.forEach(function(result) {
+                        html += '<tr>';
+                        html += '<td><small>' + new Date(result.timestamp * 1000).toLocaleString() + '</small></td>';
+                        html += '<td><span class="label label-primary">' + result.event_type + '</span></td>';
+                        html += '<td>' + result.event_data.substring(0, 100) + (result.event_data.length > 100 ? '...' : '') + '</td>';
+                        html += '<td><small>' + result.source_module + '</small></td>';
+                        html += '<td><small>' + result.scan_id + '</small></td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table></div>';
+                    html += '<p class="text-muted">Showing ' + data.results.length + ' of ' + data.total_results + ' results</p>';
+                } else {
+                    html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> No scan results available yet.</div>';
+                }
+                $('#results-content').html(html);
+            } else {
+                $('#results-content').html('<div class="alert alert-danger">Error loading results: ' + data.error + '</div>');
+            }
+        })
+        .fail(function() {
+            $('#results-content').html('<div class="alert alert-danger">Failed to load results</div>');        });
+}
+
+// Copy scan ID to clipboard
+function copyWorkspaceScanId(scanId) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(scanId).then(function() {
+            alertify.success('Scan ID copied to clipboard: ' + scanId);
+        }).catch(function(err) {
+            console.error('Failed to copy text: ', err);
+            fallbackCopyTextToClipboard(scanId);
+        });
+    } else {
+        fallbackCopyTextToClipboard(scanId);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        var successful = document.execCommand('copy');
+        if (successful) {
+            alertify.success('Scan ID copied to clipboard: ' + text);
+        } else {
+            alertify.error('Failed to copy scan ID');
+        }
+    } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+        alertify.error('Failed to copy scan ID');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+// Placeholder functions - these would be implemented in the main workspaces.tmpl
+function editWorkspace(workspaceId) {
+    $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
+        if (data.success) {
+            $('#editWorkspaceId').val(workspaceId);
+            $('#editWorkspaceName').val(data.name);
+            $('#editWorkspaceDescription').val(data.description);
+            $('#editWorkspaceModal').modal('show');
+        } else {
+            alertify.error('Failed to load workspace details');
+        }
+    }).fail(function() {
+        alertify.error('Failed to load workspace details');
+    });
+}
+
+function addTarget(workspaceId) {
+    $('#targetWorkspaceId').val(workspaceId);
+    $('#targetValue').val('');
+    $('#targetType').val('');
+    $('#addTargetModal').modal('show');
+}
+
+function importScans(workspaceId) {
+    $('#importWorkspaceId').val(workspaceId);
+    $('#scanIds').val('');
+    $('#importScansModal').modal('show');
+}
+
+function generateReport(workspaceId) {
+    $('#reportWorkspaceId').val(workspaceId);
+    $('#generateReportModal').modal('show');
+}
+
+function multiTargetScan(workspaceId) {
+    $('#scanWorkspaceId').val(workspaceId);
+    
+    // Load workspace targets
+    $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
+        if (data.success && data.targets && data.targets.length > 0) {
+            displayTargetSelection(data.targets);
+            loadAvailableModules();
+            $('#multiTargetScanModal').modal('show');
+        } else {
+            alertify.confirm(
+                'No Targets Available',
+                'This workspace doesn\'t have any targets yet. Would you like to add targets first?',
+                function() {
+                    // User clicked OK - open add target modal
+                    addTarget(workspaceId);
+                },
+                function() {
+                    // User clicked Cancel - do nothing
+                }
+            ).set('labels', {ok:'Add Targets', cancel:'Cancel'});
+        }
+    }).fail(function() {
+        alertify.error('Failed to load workspace targets');
+    });
+}
+
+function removeTarget(workspaceId, targetId) {
+    if (confirm('Are you sure you want to remove this target?')) {
+        $.post('${docroot}/workspaceremovetarget', {
+            workspace_id: workspaceId,
+            target_id: targetId
+        }, function(data) {
+            if (data.success) {
+                alertify.success('Target removed successfully');
+                location.reload(); // Refresh the page to show updated target list
+            } else {
+                alertify.error('Failed to remove target: ' + data.error);
+            }
+        }).fail(function() {
+            alertify.error('Failed to remove target: Server error');
+        });
+    }
+}
+
+function viewScanResults(scanId) {
+    window.location.href = '${docroot}/scaninfo?id=' + scanId;
+}
+
+// Add the modal event handlers
+$(document).ready(function() {
+    // Update workspace
+    $('#updateWorkspaceBtn').click(function() {
+        var workspaceId = $('#editWorkspaceId').val();
+        var name = $('#editWorkspaceName').val();
+        var description = $('#editWorkspaceDescription').val();
+        
+        if (!name) {
+            alertify.error('Workspace name is required');
+            return;
+        }
+        
+        $.post('${docroot}/workspaceupdate', {
+            workspace_id: workspaceId,
+            name: name,
+            description: description
+        }, function(data) {
+            if (data.success) {
+                alertify.success('Workspace updated successfully');
+                $('#editWorkspaceModal').modal('hide');
+                location.reload(); // Refresh to show updated information
+            } else {
+                alertify.error('Failed to update workspace: ' + data.error);
+            }
+        }).fail(function() {
+            alertify.error('Failed to update workspace: Server error');
+        });
+    });
+    
+    // Add target
+    $('#addTargetBtn').click(function() {
+        var workspaceId = $('#targetWorkspaceId').val();
+        var target = $('#targetValue').val();
+        var targetType = $('#targetType').val();
+        
+        if (!target) {
+            alertify.error('Target is required');
+            return;
+        }
+        
+        $.post('${docroot}/workspaceaddtarget', {
+            workspace_id: workspaceId,
+            target: target,
+            target_type: targetType
+        }, function(data) {
+            if (data.success) {
+                alertify.success('Target added successfully');
+                $('#addTargetModal').modal('hide');
+                location.reload(); // Refresh to show new target
+            } else {
+                alertify.error('Failed to add target: ' + data.error);
+            }
+        }).fail(function() {
+            alertify.error('Failed to add target: Server error');
+        });
+    });
+    
+    // Import scans
+    $('#importScansBtn').click(function() {
+        var workspaceId = $('#importWorkspaceId').val();
+        var scanIds = $('#scanIds').val();
+        
+        if (!scanIds) {
+            alertify.error('Scan IDs are required');
+            return;
+        }
+        
+        // Show loading state
+        $('#importScansBtn').prop('disabled', true).text('Importing...');
+        
+        $.post('${docroot}/workspaceimportscans', {
+            workspace_id: workspaceId,
+            scan_ids: scanIds
+        }, function(data) {
+            $('#importScansBtn').prop('disabled', false).text('Import Scans');
+            if (data.success) {
+                alertify.success('Scans imported successfully');
+                $('#importScansModal').modal('hide');
+                location.reload(); // Refresh to show imported scans
+            } else {
+                alertify.error('Failed to import scans: ' + data.error);
+            }
+        }).fail(function(xhr, status, error) {
+            $('#importScansBtn').prop('disabled', false).text('Import Scans');
+            alertify.error('Failed to import scans: Server error (' + status + ')');
+        });
+    });
+      // Generate report
+    $('#generateReportBtn').click(function() {
+        var workspaceId = $('#reportWorkspaceId').val();
+        var format = $('#reportFormat').val();
+        var scope = $('input[name="reportScope"]:checked').val();
+        var includeMetadata = $('#includeMetadata').is(':checked');
+        
+        // Get workspace details to get scan IDs
+        $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
+            if (data.success && data.scans && data.scans.length > 0) {
+                var scanIds = data.scans.map(function(scan) { return scan.scan_id; }).join(',');
+                
+                // Generate report
+                var reportParams = {
+                    scan_ids: scanIds,
+                    format: format,
+                    scope: scope,
+                    include_metadata: includeMetadata
+                };
+                
+                // Create download link
+                var downloadUrl = '${docroot}/scanexport?' + $.param(reportParams);
+                window.open(downloadUrl, '_blank');
+                
+                alertify.success('Report generation started');
+                $('#generateReportModal').modal('hide');
+            } else {
+                $('#generateReportModal').modal('hide');
+                alertify.confirm(
+                    'No Scans Available',
+                    'This workspace doesn\'t have any completed scans yet. Would you like to start a multi-target scan first?',
+                    function() {
+                        // User clicked OK - start multi-target scan
+                        multiTargetScan(workspaceId);
+                    },
+                    function() {
+                        // User clicked Cancel - do nothing
+                    }
+                ).set('labels', {ok:'Start Scan', cancel:'Cancel'});
+            }
+        }).fail(function() {
+            alertify.error('Failed to get workspace details for report generation');
+        });
+    });
+    
+    // Start multi-target scan
+    $('#startMultiScanBtn').click(function() {
+        var workspaceId = $('#scanWorkspaceId').val();
+        var scanName = $('#scanName').val();
+        var enableCorrelation = $('#enableCorrelation').is(':checked');
+        
+        // Get selected targets
+        var selectedTargets = [];
+        $('#targetSelectionList input[type="checkbox"]:checked').each(function() {
+            selectedTargets.push({
+                target_id: $(this).val(),
+                target: $(this).data('target'),
+                target_type: $(this).data('type')
+            });
+        });
+        
+        // Get selected modules
+        var selectedModules = [];
+        $('#moduleSelectionList input[type="checkbox"]:checked').each(function() {
+            selectedModules.push($(this).val());
+        });
+        
+        if (!scanName) {
+            alertify.error('Scan name is required');
+            return;
+        }
+        
+        if (selectedTargets.length === 0) {
+            alertify.error('At least one target must be selected');
+            return;
+        }
+        
+        if (selectedModules.length === 0) {
+            alertify.error('At least one module must be selected');
+            return;
+        }
+        
+        // Start the multi-target scan
+        $.post('${docroot}/workspacemultiscan', {
+            workspace_id: workspaceId,
+            scan_name: scanName,
+            targets: JSON.stringify(selectedTargets),
+            modules: JSON.stringify(selectedModules),
+            enable_correlation: enableCorrelation
+        }, function(data) {
+            if (data.success) {
+                alertify.success('Multi-target scan started successfully');
+                $('#multiTargetScanModal').modal('hide');
+                location.reload(); // Refresh to show new scans
+            } else {
+                alertify.error('Failed to start multi-target scan: ' + data.error);
+            }
+        }).fail(function() {
+            alertify.error('Failed to start multi-target scan: Server error');
+        });
+    });
+});
+
+// Helper functions for target and module selection
+function displayTargetSelection(targets) {
+    var html = '';
+    targets.forEach(function(target, index) {
+        html += '<div class="checkbox">';
+        html += '<label>';
+        html += '<input type="checkbox" value="' + target.target_id + '" data-target="' + escapeHtml(target.value) + '" data-type="' + escapeHtml(target.type || '') + '"> ';
+        html += escapeHtml(target.value) + ' <small class="text-muted">(' + escapeHtml(target.type || 'Auto-detect') + ')</small>';
+        html += '</label>';
+        html += '</div>';
+    });
+    $('#targetSelectionList').html(html);
+}
+
+function loadAvailableModules() {
+    $.get('${docroot}/modules', function(data) {
+        if (data && Array.isArray(data)) {
+            displayModules(data);
+        } else {
+            loadCommonModules();
+        }
+    }).fail(function() {
+        loadCommonModules();
+    });
+}
+
+function displayModules(modules) {
+    var html = '';
+    var modulesByCategory = {};
+    
+    // Group modules by category
+    modules.forEach(function(module) {
+        var category = 'Other';
+        if (module.group && Array.isArray(module.group) && module.group.length > 0) {
+            category = module.group[0];
+        }
+        
+        if (!modulesByCategory[category]) {
+            modulesByCategory[category] = [];
+        }
+        modulesByCategory[category].push(module);
+    });
+    
+    // Display modules by category
+    Object.keys(modulesByCategory).sort().forEach(function(category) {
+        html += '<div class="panel-group" style="margin-bottom: 10px;">';
+        html += '<div class="panel panel-default">';
+        html += '<div class="panel-heading" style="padding: 5px 10px;">';
+        html += '<strong>' + category + '</strong>';
+        html += '</div>';
+        html += '<div class="panel-body" style="padding: 10px;">';
+        
+        modulesByCategory[category].forEach(function(module) {
+            html += '<div class="checkbox" style="margin: 2px 0;">';
+            html += '<label style="font-weight: normal;">';
+            html += '<input type="checkbox" value="' + module.name + '"> ';
+            html += module.name + ' <small class="text-muted">- ' + (module.descr || 'No description') + '</small>';
+            html += '</label>';
+            html += '</div>';
+        });
+        
+        html += '</div></div></div>';
+    });
+    
+    $('#moduleSelectionList').html(html);
+}
+
+function loadCommonModules() {
+    var commonModules = [
+        {name: 'sfp_dnsresolve', descr: 'DNS resolution', group: ['Passive']},
+        {name: 'sfp_whois', descr: 'WHOIS lookups', group: ['Passive']},
+        {name: 'sfp_sslcert', descr: 'SSL certificate analysis', group: ['Passive']},
+        {name: 'sfp_portscan_tcp', descr: 'TCP port scanning', group: ['Active']},
+        {name: 'sfp_webheader', descr: 'HTTP header analysis', group: ['Active']},
+        {name: 'sfp_threatcrowd', descr: 'ThreatCrowd queries', group: ['Threat Intelligence']}
+    ];
+    displayModules(commonModules);
+}
+
+function selectModulePreset(presetType) {
+    $('#moduleSelectionList input[type="checkbox"]').prop('checked', false);
+    
+    var presetModules = [];
+    if (presetType === 'passive') {
+        presetModules = ['sfp_dnsresolve', 'sfp_whois', 'sfp_sslcert', 'sfp_threatcrowd'];
+    } else if (presetType === 'active') {
+        presetModules = ['sfp_dnsresolve', 'sfp_portscan_tcp', 'sfp_webheader', 'sfp_sslcert'];
+    }
+    
+    presetModules.forEach(function(moduleName) {
+        $('#moduleSelectionList input[value="' + moduleName + '"]').prop('checked', true);
+    });
+}
+
+function selectAllModules() {
+    $('#moduleSelectionList input[type="checkbox"]').prop('checked', true);
+}
+
+function clearModuleSelection() {
+    $('#moduleSelectionList input[type="checkbox"]').prop('checked', false);
+}
+
+function escapeHtml(text) {
+    var map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+</script>
+
+<%include file="FOOTER.tmpl"/>

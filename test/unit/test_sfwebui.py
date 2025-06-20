@@ -527,3 +527,36 @@ class TestSpiderFootWebUi(SpiderFootTestBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
+
+    def test_workspacescanresults_limit_string_conversion(self):
+        """Test that workspacescanresults properly converts string limit to int."""
+        with patch('sfwebui.SpiderFootWorkspace') as mock_workspace, \
+             patch('sfwebui.SpiderFootDb') as mock_db:
+            
+            # Mock workspace and database
+            mock_workspace_instance = MagicMock()
+            mock_workspace_instance.scans = [{'scan_id': 'test_scan_1'}]
+            mock_workspace.return_value = mock_workspace_instance
+            
+            mock_db_instance = MagicMock()
+            mock_db_instance.scanResultSummary.return_value = {}
+            mock_db_instance.scanResultEvent.return_value = [
+                ('2025-06-20 12:00:00', 'TEST_EVENT', 'test_data', 'test_module', 'test_source', '', '', '', False)
+            ]
+            mock_db.return_value = mock_db_instance
+            
+            # Test with string limit (simulating HTTP GET parameter)
+            result = self.webui.workspacescanresults('test_workspace', limit='50')
+            
+            # Verify it succeeds and doesn't raise the slice error
+            self.assertTrue(result['success'])
+            self.assertEqual(result['workspace_id'], 'test_workspace')
+            self.assertIsInstance(result['results'], list)
+            
+            # Test with invalid string limit
+            result = self.webui.workspacescanresults('test_workspace', limit='invalid')
+            self.assertTrue(result['success'])  # Should fall back to default
+            
+            # Test with negative limit
+            result = self.webui.workspacescanresults('test_workspace', limit='-5')
+            self.assertTrue(result['success'])  # Should fall back to default

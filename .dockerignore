@@ -15,7 +15,7 @@ spiderfoot.test.db
 
 __pycache__
 htmlcov/
-docs/
+# docs/ - commented out to include documentation in container
 
 .github/
 react-web-interface
@@ -26,14 +26,14 @@ Dockerfile.full
 .pre-commit-config.yml
 docker-compose-production-files/
 THANKYOU
-README.md
+# README.md - commented out to include README in container
 generate-certificate
 .pylintrc
 .ruff_cache
 .pytest_cache
 
 .gitignore
-*.md
+# *.md - commented out to include markdown documentation
 .vscode
 .idea
 __pycache__
