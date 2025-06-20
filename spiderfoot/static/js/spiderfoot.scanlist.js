@@ -155,9 +155,9 @@ function showlist(types, filter) {
             type: 'GET',
             dataType: 'json',
             timeout: 30000, // 30 second timeout
-            success: function(data) {
-                if (data.length == 0) {
+            success: function(data) {                if (data.length == 0) {
                     $("#loader").fadeOut(500);
+                    $("#scanIdHelp").hide(); // Hide tip when no scans
                     welcome = "<div class='alert alert-info'>";
                     welcome += "<h4>No scan history</h4><br>";
                     welcome += "There is currently no history of previously run scans. Please click 'New Scan' to initiate a new scan."
@@ -166,6 +166,8 @@ function showlist(types, filter) {
                     return;
                 }
 
+                // Show the scan ID help tip when scans are available
+                $("#scanIdHelp").show();
                 showlisttable(types, filter, data);
             },
             error: function(xhr, status, error) {
@@ -246,8 +248,52 @@ function retryRequest() {
     alertify.message("Retrying request...");
     // Wait a second before retrying to ensure any transient issues have cleared
     setTimeout(function() {
-        reload();
-    }, 1000);
+        reload();    }, 1000);
+}
+
+// Copy text to clipboard
+function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        // Use modern clipboard API
+        navigator.clipboard.writeText(text).then(function() {
+            alertify.success('Scan ID copied to clipboard: ' + text);
+        }).catch(function(err) {
+            console.error('Failed to copy text: ', err);
+            // Fallback to old method
+            fallbackCopyTextToClipboard(text);
+        });
+    } else {
+        // Fallback for older browsers
+        fallbackCopyTextToClipboard(text);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        var successful = document.execCommand('copy');
+        if (successful) {
+            alertify.success('Scan ID copied to clipboard: ' + text);
+        } else {
+            alertify.error('Failed to copy scan ID');
+        }
+    } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+        alertify.error('Failed to copy scan ID');
+    }
+    
+    document.body.removeChild(textArea);
 }
 
 function showlisttable(types, filter, data) {
@@ -287,16 +333,15 @@ function showlisttable(types, filter, data) {
         buttons += "<i class='glyphicon glyphicon-stop glyphicon-white'></i></button>";
         buttons += "</div>";
 
-        buttons += "</div>";
-        var table = "<table id='scanlist' class='table table-bordered table-striped'>";
-        table += "<thead><tr><th class='sorter-false text-center'><input id='checkall' type='checkbox'></th> <th>Name</th> <th>Target</th> <th>Started</th> <th >Finished</th> <th class='text-center'>Status</th> <th class='text-center'>Elements</th><th class='text-center'>Correlations</th><th class='sorter-false text-center'>Action</th> </tr></thead><tbody>";
+        buttons += "</div>";        var table = "<table id='scanlist' class='table table-bordered table-striped'>";
+        table += "<thead><tr><th class='sorter-false text-center'><input id='checkall' type='checkbox'></th> <th>Scan ID</th> <th>Name</th> <th>Target</th> <th>Started</th> <th >Finished</th> <th class='text-center'>Status</th> <th class='text-center'>Elements</th><th class='text-center'>Correlations</th><th class='sorter-false text-center'>Action</th> </tr></thead><tbody>";
         filtered = 0;
         for (var i = 0; i < data.length; i++) {
             if (types != null && $.inArray(data[i][6], types) === -1) {
                 filtered++;
                 continue;
-            }
-            table += "<tr><td class='text-center'><input type='checkbox' id='cb_" + data[i][0] + "'></td>"
+            }            table += "<tr><td class='text-center'><input type='checkbox' id='cb_" + data[i][0] + "'></td>"
+            table += "<td><code style='font-size: 11px; background: #f5f5f5; padding: 2px 4px; cursor: pointer; border: 1px solid #ddd; border-radius: 3px;' onclick='copyToClipboard(\"" + data[i][0] + "\")' title='Click to copy scan ID'>" + data[i][0] + " <i class='glyphicon glyphicon-copy' style='font-size: 10px; margin-left: 2px;'></i></code></td>";
             table += "<td><a href=" + docroot + "/scaninfo?id=" + data[i][0] + ">" + data[i][1] + "</a></td>";
             table += "<td>" + data[i][2] + "</td>";
             table += "<td>" + data[i][3] + "</td>";
@@ -334,7 +379,7 @@ function showlisttable(types, filter, data) {
             table += "</td></tr>";
         }
 
-        table += '</tbody><tfoot><tr><th colspan="8" class="ts-pager form-inline">';
+        table += '</tbody><tfoot><tr><th colspan="10" class="ts-pager form-inline">';
         table += '<div class="btn-group btn-group-sm" role="group">';
         table += '<button type="button" class="btn btn-default first"><span class="glyphicon glyphicon-step-backward"></span></button>';
         table += '<button type="button" class="btn btn-default prev"><span class="glyphicon glyphicon-backward"></span></button>';

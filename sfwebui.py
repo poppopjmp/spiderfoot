@@ -2176,7 +2176,9 @@ class SpiderFootWebUi:
                 return {'success': False, 'error': 'Target not found'}
         except Exception as e:
             self.log.error(f"Failed to remove target: {e}")
-            return {'success': False, 'error': str(e)}    @cherrypy.expose
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspaceimportscans(self: 'SpiderFootWebUi', workspace_id: str, scan_ids: str) -> dict:
         """Import scans into workspace.
@@ -2189,24 +2191,72 @@ class SpiderFootWebUi:
             dict: import result
         """
         try:
-            workspace = SpiderFootWorkspace(self.config, workspace_id)
-            scan_id_list = [sid.strip() for sid in scan_ids.split(',')]
+            self.log.info(f"[IMPORT] Starting scan import for workspace: {workspace_id}")
+            self.log.debug(f"[IMPORT] Raw scan IDs input: {scan_ids}")
             
-            if len(scan_id_list) == 1:
-                success = workspace.import_single_scan(scan_id_list[0])
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            self.log.info(f"[IMPORT] Loaded workspace: {workspace.name}")
+            
+            # Clean and split scan IDs (handle both comma-separated and line-separated)
+            scan_ids_cleaned = scan_ids.replace('\n', ',').replace('\r', '')
+            scan_id_list = [sid.strip() for sid in scan_ids_cleaned.split(',') if sid.strip()]
+            
+            self.log.info(f"[IMPORT] Processed {len(scan_id_list)} scan IDs: {scan_id_list}")
+            
+            if not scan_id_list:
+                return {'success': False, 'error': 'No valid scan IDs provided'}
+            
+            # Verify scans exist before importing
+            dbh = SpiderFootDb(self.config)
+            valid_scans = []
+            invalid_scans = []
+            
+            for scan_id in scan_id_list:
+                scan_info = dbh.scanInstanceGet(scan_id)
+                if scan_info:
+                    valid_scans.append(scan_id)
+                    self.log.debug(f"[IMPORT] Verified scan {scan_id}: {scan_info[0]}")
+                else:
+                    invalid_scans.append(scan_id)
+                    self.log.warning(f"[IMPORT] Scan {scan_id} not found in database")
+            
+            if invalid_scans:
+                self.log.warning(f"[IMPORT] Invalid scan IDs: {invalid_scans}")
+            
+            if not valid_scans:
+                return {'success': False, 'error': f'No valid scans found. Invalid IDs: {invalid_scans}'}
+            
+            # Import valid scans
+            if len(valid_scans) == 1:
+                success = workspace.import_single_scan(valid_scans[0])
                 if success:
+                    self.log.info(f"[IMPORT] Successfully imported scan {valid_scans[0]}")
                     return {'success': True, 'message': 'Scan imported successfully'}
                 else:
+                    self.log.error(f"[IMPORT] Failed to import scan {valid_scans[0]}")
                     return {'success': False, 'error': 'Failed to import scan'}
             else:
-                results = workspace.bulk_import_scans(scan_id_list)
+                results = workspace.bulk_import_scans(valid_scans)
+                successful_imports = sum(1 for success in results.values() if success)
+                
+                self.log.info(f"[IMPORT] Bulk import completed: {successful_imports}/{len(valid_scans)} successful")
+                
+                message = f'Import completed: {successful_imports} of {len(valid_scans)} scans imported'
+                if invalid_scans:
+                    message += f'. Invalid scan IDs: {invalid_scans}'
+                
                 return {
                     'success': True, 
                     'results': results,
-                    'message': f'Import completed: {sum(results.values())} of {len(results)} scans imported'
+                    'message': message,
+                    'successful_imports': successful_imports,
+                    'total_attempts': len(scan_id_list),
+                    'invalid_scans': invalid_scans
                 }
         except Exception as e:
-            self.log.error(f"Failed to import scans: {e}")
+            self.log.error(f"[IMPORT] Failed to import scans: {e}")
+            import traceback
+            self.log.error(f"[IMPORT] Traceback: {traceback.format_exc()}")
             return {'success': False, 'error': str(e)}
 
     @cherrypy.expose
@@ -2232,7 +2282,7 @@ class SpiderFootWebUi:
             from sfscan import startSpiderFootScanner
             self.log.debug("[MULTISCAN] Import successful")
             
-            # Try to load existing workspace, or create new one if it doesn't exist
+            # Try to load existing workspace, or create a new one if it doesn't exist
             self.log.debug(f"[MULTISCAN] Attempting to load workspace: {workspace_id}")
             try:
                 workspace = SpiderFootWorkspace(self.config, workspace_id)
@@ -2242,13 +2292,13 @@ class SpiderFootWebUi:
                 self.log.info(f"[MULTISCAN] Workspace {workspace_id} not found ({e}), creating new one")
                 try:
                     workspace = SpiderFootWorkspace(self.config, name=f"Workspace_{workspace_id}")
-                    workspace.workspace_id = workspace_id  # Override the generated ID
-                    workspace.save_workspace()
+                    workspace.workspace_id = workspace_id  # Override the generated ID                    workspace.save_workspace()
                     self.log.info(f"[MULTISCAN] Successfully created new workspace: {workspace_id}")
                 except Exception as create_error:
                     self.log.error(f"[MULTISCAN] Failed to create workspace: {create_error}")
                     raise
-              # Parse targets and modules
+            
+            # Parse targets and modules
             self.log.debug("[MULTISCAN] Parsing JSON input data...")
             try:
                 target_list = json.loads(targets)
@@ -2550,9 +2600,7 @@ class SpiderFootWebUi:
                         'Placeholder finding 3'
                     ]
                 }
-            }
-
-            # Set appropriate headers for download
+            }            # Set appropriate headers for download
             cherrypy.response.headers['Content-Type'] = 'application/octet-stream'
             cherrypy.response.headers['Content-Disposition'] = f'attachment; filename="mcp_report_{report_id}.{format}"'
 
@@ -2576,7 +2624,273 @@ This is a placeholder MCP report. Integration with actual MCP server required.
                 return md_content
             else:
                 return json.dumps(sample_report, indent=2)
-
+                
         except Exception as e:
             self.log.error(f"Failed to download report: {e}")
             raise cherrypy.HTTPError(500, f"Failed to download report: {e}")
+
+    @cherrypy.expose
+    def docs(self: 'SpiderFootWebUi', path: str = 'index.md') -> str:
+        """Serve local documentation files.
+
+        Args:
+            path (str): documentation file path
+
+        Returns:
+            str: rendered documentation HTML or file content
+        """
+        import os
+        
+        try:
+            # Security: prevent directory traversal
+            if '..' in path or path.startswith('/'):
+                return self.error("Invalid documentation path")
+            
+            # Look for documentation in docs/ folder
+            doc_root = os.path.join(os.path.dirname(__file__), 'docs')
+            doc_file = os.path.join(doc_root, path)
+            
+            if not os.path.exists(doc_file):
+                return self.error(f"Documentation file not found: {path}")
+            
+            # Read file content
+            with open(doc_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # If it's a markdown file, try to render it, otherwise show as plain text
+            if path.endswith('.md'):
+                try:
+                    import markdown
+                    html_content = markdown.markdown(content, extensions=['extra', 'codehilite'])
+                    templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
+                    return templ.render(
+                        docroot=self.docroot, 
+                        version=__version__,
+                        content=html_content,
+                        raw_content=None,
+                        title=path.replace('.md', '').replace('_', ' ').title(),
+                        pageid="DOCS"
+                    )
+                except ImportError:
+                    # Fallback: convert simple markdown manually
+                    html_content = self._simple_markdown_to_html(content)
+                    templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
+                    return templ.render(
+                        docroot=self.docroot, 
+                        version=__version__,
+                        content=html_content,
+                        raw_content=None,
+                        title=path.replace('.md', '').replace('_', ' ').title(),
+                        pageid="DOCS"
+                    )
+            else:
+                # Serve other files as plain text
+                templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
+                return templ.render(
+                    docroot=self.docroot, 
+                    version=__version__,
+                    content=None,
+                    raw_content=content,
+                    title=path.replace('_', ' ').title(),
+                    pageid="DOCS"
+                )
+                
+        except Exception as e:
+            self.log.error(f"Error serving documentation: {e}")
+            return self.error(f"Error loading documentation: {e}")
+
+    def _simple_markdown_to_html(self, content: str) -> str:
+        """Simple markdown to HTML converter for fallback when markdown library not available."""
+        import re
+        
+        # Replace headers
+        content = re.sub(r'^# (.*)', r'<h1>\1</h1>', content, flags=re.MULTILINE)
+        content = re.sub(r'^## (.*)', r'<h2>\1</h2>', content, flags=re.MULTILINE)
+        content = re.sub(r'^### (.*)', r'<h3>\1</h3>', content, flags=re.MULTILINE)
+        content = re.sub(r'^#### (.*)', r'<h4>\1</h4>', content, flags=re.MULTILINE)
+        
+        # Replace bold
+        content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content)
+        
+        # Replace italic
+        content = re.sub(r'\*(.*?)\*', r'<em>\1</em>', content)
+        
+        # Replace code blocks
+        content = re.sub(r'```(.*?)```', r'<pre><code>\1</code></pre>', content, flags=re.DOTALL)
+        content = re.sub(r'`(.*?)`', r'<code>\1</code>', content)
+        
+        # Replace links
+        content = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', content)
+        
+        # Replace line breaks
+        content = content.replace('\n\n', '</p><p>')
+        content = '<p>' + content + '</p>'
+        
+        # Fix empty paragraphs
+        content = content.replace('<p></p>', '')
+        
+        return content
+
+    @cherrypy.expose
+    def workspacedetails(self: 'SpiderFootWebUi', workspace_id: str) -> str:
+        """Enhanced workspace details page.
+
+        Args:
+            workspace_id (str): workspace ID
+
+        Returns:
+            str: workspace details page HTML
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            
+            # Get workspace summary and scan details
+            dbh = SpiderFootDb(self.config)
+            scan_details = []
+            
+            for scan in workspace.scans:
+                scan_info = dbh.scanInstanceGet(scan['scan_id'])
+                if scan_info:
+                    scan_details.append({
+                        'scan_id': scan['scan_id'],
+                        'name': scan_info[0],
+                        'target': scan_info[1],
+                        'status': scan_info[5],
+                        'created': scan_info[2],
+                        'started': scan_info[3],
+                        'ended': scan_info[4],
+                        'imported_time': scan.get('imported_time', 0)
+                    })
+            
+            templ = Template(filename='spiderfoot/templates/workspace_details.tmpl', lookup=self.lookup)
+            return templ.render(
+                workspace=workspace,
+                scan_details=scan_details,
+                docroot=self.docroot,
+                version=__version__,
+                pageid="WORKSPACE_DETAILS"
+            )
+            
+        except Exception as e:
+            self.log.error(f"Error loading workspace details: {e}")
+            return self.error(f"Error loading workspace details: {e}")
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacescancorrelations(self: 'SpiderFootWebUi', workspace_id: str) -> dict:
+        """Get cross-scan correlations for a workspace.
+
+        Args:
+            workspace_id (str): workspace ID
+
+        Returns:
+            dict: correlation analysis results
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            
+            if not workspace.scans or len(workspace.scans) < 2:
+                return {'success': True, 'correlations': [], 'message': 'Need at least 2 scans for cross-correlation analysis'}
+            
+            dbh = SpiderFootDb(self.config)
+            correlations = []
+            
+            # Get correlations for each scan
+            for scan in workspace.scans:
+                scan_correlations = dbh.scanCorrelationList(scan['scan_id'])
+                for corr in scan_correlations:
+                    correlations.append({
+                        'scan_id': scan['scan_id'],
+                        'correlation_id': corr[0],
+                        'correlation': corr[1],
+                        'rule_name': corr[2],
+                        'rule_risk': corr[3],
+                        'rule_id': corr[4],
+                        'rule_description': corr[5],
+                        'created': corr[7] if len(corr) > 7 else ''
+                    })
+            
+            # Group correlations by rule type
+            correlation_groups = {}
+            for corr in correlations:
+                rule_name = corr['rule_name']
+                if rule_name not in correlation_groups:
+                    correlation_groups[rule_name] = []
+                correlation_groups[rule_name].append(corr)
+            
+            return {
+                'success': True,
+                'correlations': correlations,
+                'correlation_groups': correlation_groups,
+                'total_correlations': len(correlations),
+                'cross_scan_patterns': len(correlation_groups)
+            }
+            
+        except Exception as e:
+            self.log.error(f"Error getting workspace correlations: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacescanresults(self: 'SpiderFootWebUi', workspace_id: str, scan_id: str = None, event_type: str = None, limit: int = 100) -> dict:
+        """Get scan results for workspace scans.
+
+        Args:
+            workspace_id (str): workspace ID
+            scan_id (str): specific scan ID (optional)
+            event_type (str): filter by event type (optional)
+            limit (int): maximum results to return
+
+        Returns:
+            dict: scan results data
+        """
+        try:
+            workspace = SpiderFootWorkspace(self.config, workspace_id)
+            dbh = SpiderFootDb(self.config)
+            
+            if scan_id:
+                # Get results for specific scan
+                scan_ids = [scan_id]
+            else:
+                # Get results for all workspace scans
+                scan_ids = [scan['scan_id'] for scan in workspace.scans]
+            
+            all_results = []
+            scan_summaries = {}
+            
+            for sid in scan_ids:
+                # Get scan summary
+                summary = dbh.scanResultSummary(sid, 'type')
+                scan_summaries[sid] = summary
+                
+                # Get recent events
+                if event_type:
+                    events = dbh.scanResultEvent(sid, event_type, False)
+                else:
+                    events = dbh.scanResultEvent(sid, 'ALL', False)
+                
+                # Limit results per scan
+                events = events[:limit] if events else []
+                
+                for event in events:
+                    all_results.append({
+                        'scan_id': sid,
+                        'timestamp': event[0],
+                        'event_type': event[1],
+                        'event_data': event[2],
+                        'source_module': event[3],
+                        'source_event': event[4] if len(event) > 4 else '',
+                        'false_positive': event[8] if len(event) > 8 else False
+                    })
+            
+            return {
+                'success': True,
+                'results': all_results[:limit],  # Apply overall limit
+                'scan_summaries': scan_summaries,
+                'total_results': len(all_results),
+                'workspace_id': workspace_id
+            }
+            
+        except Exception as e:
+            self.log.error(f"Error getting workspace scan results: {e}")
+            return {'success': False, 'error': str(e)}

@@ -131,9 +131,12 @@
       </div>
       <div class="modal-body">
         <form id="importScansForm">
-          <input type="hidden" id="importWorkspaceId">
-          <div class="form-group">
+          <input type="hidden" id="importWorkspaceId">          <div class="form-group">
             <label for="scanIds">Scan IDs</label>
+            <div class="alert alert-info" style="margin-bottom: 10px;">
+              <i class="glyphicon glyphicon-info-sign"></i> 
+              <strong>Tip:</strong> Go to the <a href="${docroot}/" target="_blank">Scans page</a> and click on any scan ID to copy it to your clipboard!
+            </div>
             <textarea class="form-control" id="scanIds" rows="4" placeholder="Enter scan IDs (comma-separated or one per line)" required></textarea>
             <small class="form-text text-muted">You can enter multiple scan IDs separated by commas or one per line</small>
           </div>
@@ -469,21 +472,34 @@
             <label for="periodicScanName">Scan Name Prefix</label>
             <input type="text" class="form-control" id="periodicScanName" placeholder="e.g., 'Daily-Monitor'" required>
             <small class="form-text text-muted">Each periodic scan will use this prefix with timestamp</small>
-          </div>
-          <div class="form-group">
+          </div>          <div class="form-group">
             <label for="scanInterval">Scan Interval</label>
             <select class="form-control" id="scanInterval">
               <option value="hourly">Every Hour</option>
-              <option value="daily" selected>Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
+              <option value="daily" selected>Daily (1 day)</option>
+              <option value="2days">Every 2 Days</option>
+              <option value="3days">Every 3 Days</option>
+              <option value="weekly">Weekly (7 days)</option>
+              <option value="biweekly">Bi-weekly (14 days)</option>
+              <option value="monthly">Monthly (30 days)</option>
+              <option value="quarterly">Quarterly (90 days)</option>
               <option value="custom">Custom Interval</option>
             </select>
+            <small class="form-text text-muted">Choose how often the scan should repeat</small>
           </div>
           <div class="form-group" id="customIntervalGroup" style="display: none;">
-            <label for="customInterval">Custom Interval (hours)</label>
-            <input type="number" class="form-control" id="customInterval" min="1" max="8760" placeholder="24">
-            <small class="form-text text-muted">Enter interval in hours (1-8760)</small>
+            <label for="customInterval">Custom Interval</label>
+            <div class="row">
+              <div class="col-md-6">
+                <input type="number" class="form-control" id="customIntervalDays" min="1" max="365" placeholder="7">
+                <small class="form-text text-muted">Days between scans</small>
+              </div>
+              <div class="col-md-6">
+                <input type="number" class="form-control" id="customIntervalHours" min="0" max="23" placeholder="0">
+                <small class="form-text text-muted">Additional hours</small>
+              </div>
+            </div>
+            <small class="form-text text-muted">Set custom time window between scans</small>
           </div>
           <div class="form-group">
             <label for="scanTime">Preferred Start Time</label>
@@ -519,11 +535,28 @@
               <!-- Module list for periodic scans -->
             </div>
             <small class="form-text text-muted">Select modules for periodic monitoring</small>
-          </div>
-          <div class="form-group">
-            <label>Scheduling Status</label>
-            <div id="periodicScanStatus">
-              <span class="text-muted">No periodic scan configured</span>
+          </div>          <div class="form-group">
+            <label>Scheduling Status & Time Windows</label>
+            <div id="periodicScanStatus" class="well well-sm">
+              <div class="row">
+                <div class="col-md-6">
+                  <h5>Current Status</h5>
+                  <span class="text-muted">No periodic scan configured</span>
+                </div>
+                <div class="col-md-6">
+                  <h5>Time Window</h5>
+                  <div id="timeWindowDisplay">
+                    <span class="text-muted">Configure interval to see time window</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row" id="nextScanInfo" style="display: none; margin-top: 10px;">
+                <div class="col-md-12">
+                  <h5>Next Scheduled Scan</h5>
+                  <span id="nextScanTime" class="text-info"></span>
+                  <small class="text-muted" id="timeUntilNext"></small>
+                </div>
+              </div>
             </div>
           </div>
         </form>
@@ -645,8 +678,7 @@ $(document).ready(function() {
             }
         });
     });
-    
-    // Import scans
+      // Import scans
     $('#importScansBtn').click(function() {
         var workspaceId = $('#importWorkspaceId').val();
         var scanIds = $('#scanIds').val();
@@ -655,18 +687,40 @@ $(document).ready(function() {
             alertify.error('Scan IDs are required');
             return;
         }
-          $.post('${docroot}/workspaceimportscans', {
+        
+        // Show loading state
+        $('#importScansBtn').prop('disabled', true).text('Importing...');
+        
+        $.post('${docroot}/workspaceimportscans', {
             workspace_id: workspaceId,
             scan_ids: scanIds
         }, function(data) {
+            $('#importScansBtn').prop('disabled', false).text('Import Scans');
+            
             if (data.success) {
                 $('#importScansModal').modal('hide');
                 $('#importScansForm')[0].reset();
-                alertify.success(data.message);
+                
+                // Enhanced success message with details
+                var message = data.message;
+                if (data.successful_imports && data.total_attempts) {
+                    message += ' (Successfully imported: ' + data.successful_imports + ')';
+                }
+                if (data.invalid_scans && data.invalid_scans.length > 0) {
+                    message += ' Warning: Some scan IDs were invalid: ' + data.invalid_scans.join(', ');
+                }
+                
+                alertify.success(message);
+                
                 // Refresh the workspace list to show updated scan count
-                loadWorkspaces();            } else {
+                loadWorkspaces();
+            } else {
                 alertify.error('Failed to import scans: ' + data.error);
             }
+        }).fail(function(xhr, status, error) {
+            $('#importScansBtn').prop('disabled', false).text('Import Scans');
+            console.error('Import scans failed:', status, error);
+            alertify.error('Failed to import scans: Server error (' + status + ')');
         });
     });
     
@@ -890,8 +944,7 @@ $(document).ready(function() {
             alertify.error('Failed to save timing configuration');
         });
     });
-    
-    // Business hours toggle
+      // Business hours toggle
     $('#enableBusinessHours').change(function() {
         if ($(this).is(':checked')) {
             $('#businessHoursConfig').show();
@@ -899,6 +952,28 @@ $(document).ready(function() {
             $('#businessHoursConfig').hide();
         }
     });
+    
+    // Periodic scan interval change handler
+    $('#scanInterval').change(function() {
+        var interval = $(this).val();
+        if (interval === 'custom') {
+            $('#customIntervalGroup').show();
+        } else {
+            $('#customIntervalGroup').hide();
+        }
+        updateTimeWindowDisplay();
+        updateNextScanTime();
+    });
+    
+    // Custom interval change handlers
+    $('#customIntervalDays, #customIntervalHours, #scanTime').on('input change', function() {
+        updateTimeWindowDisplay();
+        updateNextScanTime();
+    });
+    
+    // Initialize time window display
+    updateTimeWindowDisplay();
+    updateNextScanTime();
 });
 
 function loadWorkspaces() {
@@ -970,71 +1045,8 @@ function displayWorkspaces(workspaces) {
 }
 
 function viewWorkspace(workspaceId) {
-    $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
-        if (data.success) {
-            var workspace = data;
-            var html = '';
-            html += '<div class="row">';
-            html += '<div class="col-md-6">';
-            html += '<h4>Basic Information</h4>';
-            html += '<table class="table table-condensed">';
-            html += '<tr><td><strong>Name:</strong></td><td>' + escapeHtml(workspace.name) + '</td></tr>';
-            html += '<tr><td><strong>Description:</strong></td><td>' + escapeHtml(workspace.description || 'No description') + '</td></tr>';
-            html += '<tr><td><strong>Created:</strong></td><td>' + new Date(workspace.created_time * 1000).toLocaleString() + '</td></tr>';
-            html += '<tr><td><strong>Modified:</strong></td><td>' + new Date(workspace.modified_time * 1000).toLocaleString() + '</td></tr>';
-            html += '</table>';
-            html += '</div>';
-            html += '<div class="col-md-6">';
-            html += '<h4>Statistics</h4>';
-            html += '<table class="table table-condensed">';
-            html += '<tr><td><strong>Targets:</strong></td><td>' + (workspace.targets ? workspace.targets.length : 0) + '</td></tr>';
-            html += '<tr><td><strong>Scans:</strong></td><td>' + (workspace.scans ? workspace.scans.length : 0) + '</td></tr>';
-            html += '</table>';
-            html += '</div>';
-            html += '</div>';
-            
-            if (workspace.targets && workspace.targets.length > 0) {
-                html += '<h4>Targets</h4>';
-                html += '<div class="table-responsive"><table class="table table-condensed">';
-                html += '<thead><tr><th>Target</th><th>Type</th><th>Added</th></tr></thead><tbody>';                workspace.targets.forEach(function(target) {
-                    html += '<tr>';
-                    html += '<td>' + escapeHtml(target.value || target.target || 'Unknown') + '</td>';
-                    html += '<td>' + escapeHtml(target.type || target.target_type || 'Auto-detected') + '</td>';
-                    html += '<td>' + new Date(target.added_time * 1000).toLocaleString() + '</td>';
-                    html += '</tr>';
-                });
-                html += '</tbody></table></div>';
-            }
-            
-            if (workspace.scans && workspace.scans.length > 0) {
-                html += '<h4>Scans</h4>';
-                html += '<div class="table-responsive"><table class="table table-condensed">';
-                html += '<thead><tr><th>Scan ID</th><th>Imported</th></tr></thead><tbody>';
-                workspace.scans.forEach(function(scan) {
-                    html += '<tr>';
-                    html += '<td>' + escapeHtml(scan.scan_id) + '</td>';
-                    html += '<td>' + new Date(scan.imported_time * 1000).toLocaleString() + '</td>';
-                    html += '</tr>';
-                });
-                html += '</tbody></table></div>';            }
-            
-            $('#workspaceDetailsContent').html(html);
-            
-            // Show MCP report button if workspace has scans
-            if (workspace.scans && workspace.scans.length > 0) {
-                $('#generateMcpReportBtn').show().data('workspace-id', workspaceId);
-            } else {
-                $('#generateMcpReportBtn').hide();
-            }
-            
-            // Always show timing configuration button
-            $('#configureTimingBtn').show().data('workspace-id', workspaceId);
-            
-            $('#workspaceDetailsModal').modal('show');
-        } else {
-            alertify.error('Failed to load workspace details: ' + data.error);
-        }
-    });
+    // Redirect to the enhanced workspace details page
+    window.location.href = '${docroot}/workspacedetails?workspace_id=' + workspaceId;
 }
 
 function editWorkspace(workspaceId) {
@@ -1321,6 +1333,129 @@ function escapeHtml(text) {
         "'": '&#039;'
     };
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// Function to calculate interval in hours
+function getIntervalInHours() {
+    var interval = $('#scanInterval').val();
+    var hours = 0;
+    
+    switch(interval) {
+        case 'hourly':
+            hours = 1;
+            break;
+        case 'daily':
+            hours = 24;
+            break;
+        case '2days':
+            hours = 48;
+            break;
+        case '3days':
+            hours = 72;
+            break;
+        case 'weekly':
+            hours = 168; // 7 * 24
+            break;
+        case 'biweekly':
+            hours = 336; // 14 * 24
+            break;
+        case 'monthly':
+            hours = 720; // 30 * 24
+            break;
+        case 'quarterly':
+            hours = 2160; // 90 * 24
+            break;
+        case 'custom':
+            var days = parseInt($('#customIntervalDays').val()) || 0;
+            var additionalHours = parseInt($('#customIntervalHours').val()) || 0;
+            hours = (days * 24) + additionalHours;
+            break;
+    }
+    
+    return hours;
+}
+
+// Function to format time window display
+function formatTimeWindow(hours) {
+    if (hours === 0) return 'Not configured';
+    
+    if (hours < 24) {
+        return hours + ' hour' + (hours !== 1 ? 's' : '');
+    } else if (hours % 24 === 0) {
+        var days = hours / 24;
+        return days + ' day' + (days !== 1 ? 's' : '');
+    } else {
+        var days = Math.floor(hours / 24);
+        var remainingHours = hours % 24;
+        return days + ' day' + (days !== 1 ? 's' : '') + ', ' + 
+               remainingHours + ' hour' + (remainingHours !== 1 ? 's' : '');
+    }
+}
+
+// Function to update time window display
+function updateTimeWindowDisplay() {
+    var hours = getIntervalInHours();
+    var timeWindowText = formatTimeWindow(hours);
+    $('#timeWindowDisplay').html('<span class="text-info"><strong>' + timeWindowText + '</strong></span>');
+}
+
+// Function to calculate and display next scan time
+function updateNextScanTime() {
+    var hours = getIntervalInHours();
+    var startTime = $('#scanTime').val();
+    
+    if (hours === 0 || !startTime) {
+        $('#nextScanInfo').hide();
+        return;
+    }
+    
+    // Calculate next scan time
+    var now = new Date();
+    var nextScan = new Date();
+    
+    // Set time to today at the preferred start time
+    var timeParts = startTime.split(':');
+    nextScan.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), 0, 0);
+    
+    // If the time has already passed today, add the interval to get the next occurrence
+    if (nextScan <= now) {
+        nextScan.setTime(nextScan.getTime() + (hours * 60 * 60 * 1000));
+    }
+    
+    // Format the date
+    var nextScanFormatted = nextScan.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+    });
+    
+    // Calculate time until next scan
+    var timeDiff = nextScan.getTime() - now.getTime();
+    var timeUntil = '';
+    
+    if (timeDiff > 0) {
+        var daysUntil = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        var hoursUntil = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var minutesUntil = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (daysUntil > 0) {
+            timeUntil = '(' + daysUntil + ' day' + (daysUntil !== 1 ? 's' : '') + ', ' + 
+                       hoursUntil + ' hour' + (hoursUntil !== 1 ? 's' : '') + ' from now)';
+        } else if (hoursUntil > 0) {
+            timeUntil = '(' + hoursUntil + ' hour' + (hoursUntil !== 1 ? 's' : '') + ', ' + 
+                       minutesUntil + ' minute' + (minutesUntil !== 1 ? 's' : '') + ' from now)';
+        } else {
+            timeUntil = '(' + minutesUntil + ' minute' + (minutesUntil !== 1 ? 's' : '') + ' from now)';
+        }
+    }
+    
+    $('#nextScanTime').text(nextScanFormatted);
+    $('#timeUntilNext').text(timeUntil);
+    $('#nextScanInfo').show();
 }
 </script>
 

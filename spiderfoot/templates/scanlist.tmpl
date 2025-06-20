@@ -1,5 +1,11 @@
 <%include file="HEADER.tmpl"/>
     <h2>Scans &nbsp;<img id="loader" src="${docroot}/static/img/loader.gif"></h2>
+    <div class="alert alert-info alert-dismissible" id="scanIdHelp" style="display: none;">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        <strong>Tip:</strong> Click on any scan ID to copy it to your clipboard for easy import into workspaces!
+    </div>
 <div id="scancontent" class="container-fluid">
 % if newscan:
 <div class="alert alert-success">

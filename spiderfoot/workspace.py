@@ -284,11 +284,21 @@ class SpiderFootWorkspace:
             existing_scan = next((s for s in self.scans if s['scan_id'] == scan_id), None)
             if existing_scan:
                 self.log.warning(f"Scan {scan_id} already exists in workspace")
-                return False
-            
-            # Extract target information from scan
-            target_value = scan_info[2]  # scan target
+                return False            # Extract target information from scan
+            # scanInstanceGet returns: [name, seed_target, created, started, ended, status]
+            if len(scan_info) < 6:
+                raise ValueError(f"Scan info for {scan_id} is incomplete: {scan_info}")
+                
+            target_value = scan_info[1]  # seed_target is at index 1
             target_type = None
+            
+            # Ensure target_value is a string and not None
+            if target_value is None:
+                raise ValueError(f"Scan {scan_id} has no target value")
+            target_value = str(target_value).strip()
+            
+            if not target_value:
+                raise ValueError(f"Scan {scan_id} has empty target value")
             
             # Try to determine target type
             from spiderfoot import SpiderFootHelpers

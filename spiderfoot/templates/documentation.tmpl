@@ -1,0 +1,32 @@
+<%include file="HEADER.tmpl"/>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2">
+                <h4>Documentation</h4>
+                <ul class="nav nav-pills nav-stacked">
+                    <li><a href="${docroot}/docs/README.md">User Guide</a></li>
+                    <li><a href="${docroot}/docs/WORKSPACE_INTEGRATION_COMPLETE.md">Workspace Management</a></li>
+                    <li><a href="${docroot}/docs/MULTISCAN_FIX.md">Multi-Target Scanning</a></li>
+                    <li class="divider"></li>
+                    <li><a href="${docroot}/docs/WORKSPACE_WEBUI_INTEGRATION.md">WebUI Integration</a></li>
+                    <li><a href="${docroot}/docs/WORKSPACE_API.md">API Reference</a></li>
+                </ul>
+            </div>
+            <div class="col-md-10">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">${title}</h3>
+                    </div>                    <div class="panel-body">
+                        % if content:
+                            ${content | n}
+                        % elif raw_content:
+                            <pre style="white-space: pre-wrap; word-wrap: break-word;">${raw_content}</pre>
+                        % else:
+                            <p>No content available.</p>
+                        % endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<%include file="FOOTER.tmpl"/>

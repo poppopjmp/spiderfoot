@@ -1,0 +1,465 @@
+<%include file="HEADER.tmpl"/>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <ol class="breadcrumb">
+                    <li><a href="${docroot}/">Home</a></li>
+                    <li><a href="${docroot}/workspaces">Workspaces</a></li>
+                    <li class="active">${workspace.name}</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="page-header">
+                    <h1>${workspace.name} 
+                        <small>${workspace.description}</small>
+                        <span class="pull-right">
+                            <button class="btn btn-primary" onclick="editWorkspace('${workspace.workspace_id}')">
+                                <i class="fa fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-success" onclick="addTarget('${workspace.workspace_id}')">
+                                <i class="fa fa-plus"></i> Add Target
+                            </button>
+                            <button class="btn btn-info" onclick="importScans('${workspace.workspace_id}')">
+                                <i class="fa fa-download"></i> Import Scans
+                            </button>
+                            % if scan_details:
+                                <button class="btn btn-warning" onclick="generateReport('${workspace.workspace_id}')">
+                                    <i class="fa fa-file-text"></i> Generate Report
+                                </button>
+                                <button class="btn btn-primary" onclick="multiTargetScan('${workspace.workspace_id}')">
+                                    <i class="fa fa-play"></i> Multi-Target Scan
+                                </button>
+                            % endif
+                        </span>
+                    </h1>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workspace Stats -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-bullseye"></i> Targets</h3>
+                    </div>
+                    <div class="panel-body text-center">
+                        <h2>${len(workspace.targets) if workspace.targets else 0}</h2>
+                        <p>Total Targets</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel panel-success">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-search"></i> Scans</h3>
+                    </div>
+                    <div class="panel-body text-center">
+                        <h2>${len(scan_details)}</h2>
+                        <p>Total Scans</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel panel-warning">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-exclamation-triangle"></i> Correlations</h3>
+                    </div>
+                    <div class="panel-body text-center">
+                        <h2 id="correlationCount">-</h2>
+                        <p>Cross-Scan Patterns</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-calendar"></i> Created</h3>
+                    </div>                    <div class="panel-body text-center">
+                        <h4>
+                            <script>
+                                document.write(new Date(${workspace.created_time} * 1000).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                }));
+                            </script>
+                        </h4>
+                        <p>Workspace Created</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="row">
+            <div class="col-md-12">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#targets-tab" aria-controls="targets-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-bullseye"></i> Targets
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#scans-tab" aria-controls="scans-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-search"></i> Scans
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#correlations-tab" aria-controls="correlations-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-sitemap"></i> Correlations
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#results-tab" aria-controls="results-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-table"></i> Recent Results
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" style="margin-top: 20px;">
+                    
+                    <!-- Targets Tab -->
+                    <div role="tabpanel" class="tab-pane active" id="targets-tab">
+                        % if workspace.targets:
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Target</th>
+                                            <th>Type</th>
+                                            <th>Added</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        % for target in workspace.targets:
+                                            <tr>
+                                                <td><strong>${target['value']}</strong></td>
+                                                <td><span class="label label-info">${target['type']}</span></td>
+                                                <td>${target.get('added_time', 'Unknown')}</td>
+                                                <td>
+                                                    <button class="btn btn-xs btn-danger" onclick="removeTarget('${workspace.workspace_id}', '${target['target_id']}')">
+                                                        <i class="fa fa-trash"></i> Remove
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        % endfor
+                                    </tbody>
+                                </table>
+                            </div>
+                        % else:
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i> No targets added yet. 
+                                <button class="btn btn-success btn-sm" onclick="addTarget('${workspace.workspace_id}')">
+                                    Add your first target
+                                </button>
+                            </div>
+                        % endif
+                    </div>
+
+                    <!-- Scans Tab -->
+                    <div role="tabpanel" class="tab-pane" id="scans-tab">
+                        % if scan_details:
+                            <div class="table-responsive">
+                                <table class="table table-striped">                                    <thead>
+                                        <tr>
+                                            <th>Scan ID</th>
+                                            <th>Scan Name</th>
+                                            <th>Target</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>                                    </thead>
+                                    <tbody>
+                                        % for scan in scan_details:
+                                            <tr>                                                <td>
+                                                    <code style="font-size: 11px; background: #f5f5f5; padding: 2px 4px; cursor: pointer; border: 1px solid #ddd; border-radius: 3px;" 
+                                                          onclick="copyWorkspaceScanId('${scan['scan_id']}')" 
+                                                          title="Click to copy scan ID">${scan['scan_id']} <i class="fa fa-copy" style="font-size: 10px; margin-left: 2px;"></i></code>
+                                                </td>
+                                                <td>
+                                                    <strong>${scan['name']}</strong>
+                                                </td>
+                                                <td>${scan['target']}</td>
+                                                <td>
+                                                    % if scan['status'] == 'FINISHED':
+                                                        <span class="label label-success">${scan['status']}</span>
+                                                    % elif scan['status'] == 'RUNNING':
+                                                        <span class="label label-primary">${scan['status']}</span>
+                                                    % elif scan['status'] == 'STARTING':
+                                                        <span class="label label-info">${scan['status']}</span>
+                                                    % else:
+                                                        <span class="label label-warning">${scan['status']}</span>
+                                                    % endif
+                                                </td>                                                <td>
+                                                    <script>
+                                                        // Handle both epoch timestamp and date string formats
+                                                        var dateValue = '${scan['created']}';
+                                                        var scanDate;
+                                                        
+                                                        // Check if it's a numeric timestamp (epoch)
+                                                        if (!isNaN(dateValue) && dateValue.length > 0) {
+                                                            // Convert epoch timestamp to milliseconds if needed
+                                                            var timestamp = parseInt(dateValue);
+                                                            if (timestamp < 10000000000) {
+                                                                timestamp *= 1000; // Convert to milliseconds
+                                                            }
+                                                            scanDate = new Date(timestamp);
+                                                        } else {
+                                                            // Try to parse as date string
+                                                            scanDate = new Date(dateValue);
+                                                        }
+                                                        
+                                                        // Display formatted date
+                                                        if (scanDate && !isNaN(scanDate.getTime())) {
+                                                            document.write(scanDate.toLocaleDateString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            }));
+                                                        } else {
+                                                            document.write('Invalid Date');
+                                                        }
+                                                    </script>
+                                                </td>
+                                                <td>
+                                                    <a href="${docroot}/scaninfo?id=${scan['scan_id']}" class="btn btn-xs btn-primary">
+                                                        <i class="fa fa-eye"></i> View
+                                                    </a>
+                                                    <button class="btn btn-xs btn-info" onclick="viewScanResults('${scan['scan_id']}')">
+                                                        <i class="fa fa-table"></i> Results
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        % endfor
+                                    </tbody>
+                                </table>
+                            </div>
+                        % else:
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i> No scans in this workspace yet. 
+                                <button class="btn btn-info btn-sm" onclick="importScans('${workspace.workspace_id}')">
+                                    Import existing scans
+                                </button>
+                                or
+                                <button class="btn btn-success btn-sm" onclick="multiTargetScan('${workspace.workspace_id}')">
+                                    Start new scans
+                                </button>
+                            </div>
+                        % endif
+                    </div>
+
+                    <!-- Correlations Tab -->
+                    <div role="tabpanel" class="tab-pane" id="correlations-tab">
+                        <div id="correlations-content">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                <p>Loading correlations...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Tab -->
+                    <div role="tabpanel" class="tab-pane" id="results-tab">
+                        <div id="results-content">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                <p>Loading recent results...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// Load correlations when tab is clicked
+$('a[href="#correlations-tab"]').on('shown.bs.tab', function() {
+    loadCorrelations();
+});
+
+// Load results when tab is clicked
+$('a[href="#results-tab"]').on('shown.bs.tab', function() {
+    loadResults();
+});
+
+// Load correlations on page load
+$(document).ready(function() {
+    loadCorrelationCount();
+});
+
+function loadCorrelationCount() {
+    $.get('${docroot}/workspacescancorrelations', {workspace_id: '${workspace.workspace_id}'})
+        .done(function(data) {
+            if (data.success) {
+                $('#correlationCount').text(data.cross_scan_patterns);
+            }
+        })
+        .fail(function() {
+            $('#correlationCount').text('0');
+        });
+}
+
+function loadCorrelations() {
+    $.get('${docroot}/workspacescancorrelations', {workspace_id: '${workspace.workspace_id}'})
+        .done(function(data) {
+            if (data.success) {
+                var html = '';
+                if (data.correlations.length > 0) {
+                    html += '<div class="alert alert-success">';
+                    html += '<strong>Found ' + data.total_correlations + ' correlations across ' + data.cross_scan_patterns + ' pattern types</strong>';
+                    html += '</div>';
+                    
+                    Object.keys(data.correlation_groups).forEach(function(ruleName) {
+                        var group = data.correlation_groups[ruleName];
+                        html += '<div class="panel panel-default">';
+                        html += '<div class="panel-heading">';
+                        html += '<h4 class="panel-title">' + ruleName + ' <span class="badge">' + group.length + '</span></h4>';
+                        html += '</div>';
+                        html += '<div class="panel-body">';
+                        html += '<div class="table-responsive">';
+                        html += '<table class="table table-condensed">';
+                        html += '<thead><tr><th>Scan</th><th>Risk</th><th>Description</th></tr></thead>';
+                        html += '<tbody>';
+                        group.forEach(function(corr) {
+                            var riskClass = corr.rule_risk === 'HIGH' ? 'danger' : 
+                                          corr.rule_risk === 'MEDIUM' ? 'warning' : 'info';
+                            html += '<tr>';
+                            html += '<td><small>' + corr.scan_id + '</small></td>';
+                            html += '<td><span class="label label-' + riskClass + '">' + corr.rule_risk + '</span></td>';
+                            html += '<td>' + corr.rule_description + '</td>';
+                            html += '</tr>';
+                        });
+                        html += '</tbody></table></div></div></div>';
+                    });
+                } else {
+                    html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> No correlations found. Need at least 2 completed scans for cross-correlation analysis.</div>';
+                }
+                $('#correlations-content').html(html);
+            } else {
+                $('#correlations-content').html('<div class="alert alert-danger">Error loading correlations: ' + data.error + '</div>');
+            }
+        })
+        .fail(function() {
+            $('#correlations-content').html('<div class="alert alert-danger">Failed to load correlations</div>');
+        });
+}
+
+function loadResults() {
+    $.get('${docroot}/workspacescanresults', {workspace_id: '${workspace.workspace_id}', limit: 50})
+        .done(function(data) {
+            if (data.success) {
+                var html = '';
+                if (data.results.length > 0) {
+                    html += '<div class="table-responsive">';
+                    html += '<table class="table table-striped">';
+                    html += '<thead><tr><th>Timestamp</th><th>Event Type</th><th>Data</th><th>Source</th><th>Scan</th></tr></thead>';
+                    html += '<tbody>';
+                    data.results.forEach(function(result) {
+                        html += '<tr>';
+                        html += '<td><small>' + new Date(result.timestamp * 1000).toLocaleString() + '</small></td>';
+                        html += '<td><span class="label label-primary">' + result.event_type + '</span></td>';
+                        html += '<td>' + result.event_data.substring(0, 100) + (result.event_data.length > 100 ? '...' : '') + '</td>';
+                        html += '<td><small>' + result.source_module + '</small></td>';
+                        html += '<td><small>' + result.scan_id + '</small></td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table></div>';
+                    html += '<p class="text-muted">Showing ' + data.results.length + ' of ' + data.total_results + ' results</p>';
+                } else {
+                    html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> No scan results available yet.</div>';
+                }
+                $('#results-content').html(html);
+            } else {
+                $('#results-content').html('<div class="alert alert-danger">Error loading results: ' + data.error + '</div>');
+            }
+        })
+        .fail(function() {
+            $('#results-content').html('<div class="alert alert-danger">Failed to load results</div>');        });
+}
+
+// Copy scan ID to clipboard
+function copyWorkspaceScanId(scanId) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(scanId).then(function() {
+            alertify.success('Scan ID copied to clipboard: ' + scanId);
+        }).catch(function(err) {
+            console.error('Failed to copy text: ', err);
+            fallbackCopyTextToClipboard(scanId);
+        });
+    } else {
+        fallbackCopyTextToClipboard(scanId);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        var successful = document.execCommand('copy');
+        if (successful) {
+            alertify.success('Scan ID copied to clipboard: ' + text);
+        } else {
+            alertify.error('Failed to copy scan ID');
+        }
+    } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+        alertify.error('Failed to copy scan ID');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+// Placeholder functions - these would be implemented in the main workspaces.tmpl
+function editWorkspace(workspaceId) {
+    window.location.href = '${docroot}/workspaces#edit-' + workspaceId;
+}
+
+function addTarget(workspaceId) {
+    window.location.href = '${docroot}/workspaces#add-target-' + workspaceId;
+}
+
+function importScans(workspaceId) {
+    window.location.href = '${docroot}/workspaces#import-scans-' + workspaceId;
+}
+
+function generateReport(workspaceId) {
+    window.location.href = '${docroot}/workspaces#generate-report-' + workspaceId;
+}
+
+function multiTargetScan(workspaceId) {
+    window.location.href = '${docroot}/workspaces#multi-scan-' + workspaceId;
+}
+
+function removeTarget(workspaceId, targetId) {
+    if (confirm('Are you sure you want to remove this target?')) {
+        // Implementation would go here
+        window.location.href = '${docroot}/workspaces#remove-target-' + targetId;
+    }
+}
+
+function viewScanResults(scanId) {
+    window.location.href = '${docroot}/scaninfo?id=' + scanId;
+}
+</script>
+
+<%include file="FOOTER.tmpl"/>
