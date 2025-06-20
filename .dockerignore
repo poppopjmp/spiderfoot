@@ -10,6 +10,7 @@ dist
 venv/
 cache/
 log/
+data/
 spiderfoot.db*
 spiderfoot.test.db
 
@@ -23,6 +24,7 @@ test/
 docker-compose*
 Dockerfile
 Dockerfile.full
+!docker-entrypoint.sh
 .pre-commit-config.yml
 docker-compose-production-files/
 THANKYOU

@@ -103,9 +103,23 @@ RUN addgroup --system spiderfoot && \
 # Enable NMAP capabilities
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
 
-# Copy application files
+# Copy application files (excluding database)
 WORKDIR /home/spiderfoot
+
+# Copy the rest of the application files
 COPY --chown=spiderfoot:spiderfoot . .
+
+# Copy and set up the startup script
+COPY --chown=root:root docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Remove any database files from application directory to prevent conflicts
+RUN rm -f /home/spiderfoot/spiderfoot.db && \
+    rm -f /home/spiderfoot/data/spiderfoot.db
+
+# Ensure the correct database directory structure exists
+RUN mkdir -p /home/spiderfoot/.spiderfoot && \
+    chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot
 
 # Create __init__.py files if they don't exist
 RUN touch /home/spiderfoot/__init__.py && \
@@ -139,5 +153,5 @@ USER spiderfoot
 EXPOSE 5001 8001
 
 # Default command with support for both web UI and API
-ENTRYPOINT ["python"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh", "python"]
 CMD ["python", "sf.py", "--both", "-l", "0.0.0.0:5001", "--api-listen", "0.0.0.0:8001"]
