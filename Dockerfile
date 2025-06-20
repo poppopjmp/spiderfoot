@@ -117,13 +117,15 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 RUN rm -f /home/spiderfoot/spiderfoot.db && \
     rm -f /home/spiderfoot/data/spiderfoot.db
 
+# Remove any existing logs that might have been copied and recreate logs directory
+RUN rm -rf /home/spiderfoot/logs && \
+    mkdir -p /home/spiderfoot/logs && \
+    chown -R spiderfoot:spiderfoot /home/spiderfoot/logs && \
+    chmod -R 755 /home/spiderfoot/logs
+
 # Ensure the correct database directory structure exists
 RUN mkdir -p /home/spiderfoot/.spiderfoot && \
     chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot
-
-# Create and set permissions for logs directory
-RUN mkdir -p /home/spiderfoot/logs && \
-    chown -R spiderfoot:spiderfoot /home/spiderfoot/logs
 
 # Create __init__.py files if they don't exist
 RUN touch /home/spiderfoot/__init__.py && \

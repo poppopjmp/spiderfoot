@@ -19,9 +19,16 @@ if [ -f "/home/spiderfoot/data/spiderfoot.db" ]; then
 fi
 
 # Ensure proper permissions
+# Clean up any existing log files that might have wrong ownership
+if [ -d "/home/spiderfoot/logs" ]; then
+    echo "Cleaning up existing log files..."
+    rm -rf /home/spiderfoot/logs/*
+fi
+
 chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot
 chown -R spiderfoot:spiderfoot /home/spiderfoot/logs
 chown -R spiderfoot:spiderfoot /var/lib/spiderfoot
+chmod -R 755 /home/spiderfoot/logs
 
 echo "Database will be created at: /home/spiderfoot/.spiderfoot/spiderfoot.db"
 echo "Starting SpiderFoot..."

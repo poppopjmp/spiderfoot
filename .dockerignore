@@ -10,6 +10,7 @@ dist
 venv/
 cache/
 log/
+logs/
 data/
 spiderfoot.db*
 spiderfoot.test.db
