@@ -7,7 +7,7 @@ This package contains the core SpiderFoot functionality including:
 - Web interface components
 """
 
-__version__ = "5.2.1"
+from .__version__ import __version__
 __author__ = "Steve Micallef, Agostino Panico"
 __license__ = "MIT"
 __email__ = "steve@binarypool.com, van1sh@van1shland.io"

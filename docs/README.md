@@ -1,33 +1,36 @@
-# SpiderFoot Documentation
+# SpiderFoot Enterprise Documentation
 
-SpiderFoot is an open source intelligence (OSINT) automation tool that integrates with just about every data source available and utilizes a range of methods for data analysis, making that data easy to navigate.
+SpiderFoot Enterprise is a production-ready, enterprise-grade open source intelligence (OSINT) automation platform. Enhanced with advanced storage capabilities, AI-powered threat intelligence, and comprehensive security hardening, it integrates with hundreds of data sources and utilizes advanced methods for data analysis, making intelligence data easily navigable and actionable.
 
-## What is SpiderFoot?
+## What is SpiderFoot Enterprise?
 
-SpiderFoot automates the process of gathering intelligence about a given target, which may be an:
-- IP address
-- Domain/sub-domain name  
-- Hostname
-- Network subnet (CIDR)
-- ASN
-- E-mail address
-- Phone number
-- Username
-- Person's name
-- Bitcoin address
+SpiderFoot Enterprise automates the process of gathering intelligence about targets in enterprise environments, supporting:
+- IP addresses and network ranges
+- Domain/sub-domain names  
+- Hostnames and infrastructure
+- Network subnets (CIDR)
+- ASN and BGP information
+- E-mail addresses and personnel
+- Phone numbers and contact data
+- Usernames and social media
+- Person names and OSINT
+- Bitcoin addresses and crypto intelligence
 
-## Key Features
+## Enterprise Features
 
-### Intelligence Gathering
-- **240+ Modules**: Comprehensive data collection from various sources including passive and active reconnaissance
-- **Multiple Target Types**: Support for domains, IPs, emails, Bitcoin addresses, and more
-- **Automated Discovery**: Intelligent enumeration and reconnaissance with correlation
-- **Threat Intelligence**: Integration with major TI platforms (VirusTotal, Shodan, etc.)
+### Advanced Intelligence Gathering
+- **250+ Modules**: Comprehensive data collection with enterprise enhancements
+- **AI-Powered Analysis**: Machine learning threat intelligence and pattern recognition
+- **Multiple Target Types**: Support for complex enterprise target types
+- **Automated Discovery**: Intelligent enumeration with enterprise-grade correlation
+- **Threat Intelligence**: Integration with major TI platforms and custom feeds
 
-### Workflow Management  
-- **Workspaces**: Organize multi-target assessments with persistent storage
-- **Multi-Target Scanning**: Concurrent assessment across multiple targets with progress tracking
-- **Cross-Correlation**: Identify patterns and relationships between scan results
+### Enterprise Architecture  
+- **Advanced Storage**: High-performance data storage with compression and indexing
+- **Scalable Processing**: Distributed scanning and load balancing capabilities
+- **Security Hardening**: Enhanced security controls and enterprise configurations
+- **Performance Optimization**: Optimized for high-volume enterprise workloads
+- **Monitoring & Analytics**: Comprehensive performance monitoring and reporting
 - **CTI Reports**: Generate comprehensive threat intelligence reports with MCP integration
 
 ### Integration & Automation

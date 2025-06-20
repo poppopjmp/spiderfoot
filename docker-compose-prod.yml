@@ -11,7 +11,7 @@ services:
       - spiderfoot-data:/var/lib/spiderfoot
       - spiderfoot-logs:/home/spiderfoot/.spiderfoot/logs
       - spiderfoot-cache:/var/lib/spiderfoot/cache
-    image: ghcr.io/poppopjmp/spiderfoot:v5.0.0
+    image: ghcr.io/poppopjmp/spiderfoot:v5.2.2
     container_name: spiderfoot
     restart: unless-stopped
     environment:

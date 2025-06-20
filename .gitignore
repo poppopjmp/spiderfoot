@@ -2,6 +2,7 @@
 #######################
 /cache/
 /log/
+/logs
 /spiderfoot.db*
 passwd
 spiderfoot.crt
@@ -176,3 +177,13 @@ cover/
 docs/_build/
 .ruff_cache
 .pytest_cache
+
+# Python virtualenv files #
+###########################
+bin
+lib64
+lib
+include
+.venv
+# Python virtual environment config file #
+pyvenv.cfg
