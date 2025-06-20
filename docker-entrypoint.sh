@@ -1,8 +1,9 @@
 #!/bin/bash
 # SpiderFoot Docker startup script
 
-# Ensure the correct database directory structure
+# Ensure the correct database and logs directory structure
 mkdir -p /home/spiderfoot/.spiderfoot/logs
+mkdir -p /home/spiderfoot/logs
 mkdir -p /var/lib/spiderfoot/log
 mkdir -p /var/lib/spiderfoot/cache
 
@@ -19,6 +20,7 @@ fi
 
 # Ensure proper permissions
 chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot
+chown -R spiderfoot:spiderfoot /home/spiderfoot/logs
 chown -R spiderfoot:spiderfoot /var/lib/spiderfoot
 
 echo "Database will be created at: /home/spiderfoot/.spiderfoot/spiderfoot.db"

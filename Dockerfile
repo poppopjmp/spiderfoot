@@ -121,10 +121,17 @@ RUN rm -f /home/spiderfoot/spiderfoot.db && \
 RUN mkdir -p /home/spiderfoot/.spiderfoot && \
     chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot
 
+# Create and set permissions for logs directory
+RUN mkdir -p /home/spiderfoot/logs && \
+    chown -R spiderfoot:spiderfoot /home/spiderfoot/logs
+
 # Create __init__.py files if they don't exist
 RUN touch /home/spiderfoot/__init__.py && \
     touch /home/spiderfoot/modules/__init__.py && \
     touch /home/spiderfoot/spiderfoot/__init__.py
+
+# Ensure proper ownership of all application files and directories (final step)
+RUN chown -R spiderfoot:spiderfoot /home/spiderfoot
 
 # Verify critical dependencies and module structure
 RUN echo "=== Virtual Environment Test ===" && \
