@@ -135,15 +135,50 @@
                                             <th>Target</th>
                                             <th>Type</th>
                                             <th>Added</th>
-                                            <th>Actions</th>
-                                        </tr>
+                                            <th>Actions</th>                                        </tr>
                                     </thead>
                                     <tbody>
                                         % for target in workspace.targets:
                                             <tr>
                                                 <td><strong>${target['value']}</strong></td>
                                                 <td><span class="label label-info">${target['type']}</span></td>
-                                                <td>${target.get('added_time', 'Unknown')}</td>
+                                                <td>
+                                                    <script>
+                                                        // Handle both epoch timestamp and date string formats for target added time
+                                                        var addedValue = '${target.get('added_time', '')}';
+                                                        var addedDate;
+                                                        
+                                                        if (addedValue && addedValue !== 'Unknown' && addedValue !== '') {
+                                                            // Check if it's a numeric timestamp (epoch)
+                                                            if (!isNaN(addedValue) && addedValue.length > 0) {
+                                                                // Convert epoch timestamp to milliseconds if needed
+                                                                var timestamp = parseInt(addedValue);
+                                                                if (timestamp < 10000000000) {
+                                                                    timestamp *= 1000; // Convert to milliseconds
+                                                                }
+                                                                addedDate = new Date(timestamp);
+                                                            } else {
+                                                                // Try to parse as date string
+                                                                addedDate = new Date(addedValue);
+                                                            }
+                                                            
+                                                            // Display formatted date
+                                                            if (addedDate && !isNaN(addedDate.getTime())) {
+                                                                document.write(addedDate.toLocaleDateString('en-US', {
+                                                                    year: 'numeric',
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit'
+                                                                }));
+                                                            } else {
+                                                                document.write('Invalid Date');
+                                                            }
+                                                        } else {
+                                                            document.write('Unknown');
+                                                        }
+                                                    </script>
+                                                </td>
                                                 <td>
                                                     <button class="btn btn-xs btn-danger" onclick="removeTarget('${workspace.workspace_id}', '${target['target_id']}')">
                                                         <i class="fa fa-trash"></i> Remove
@@ -162,10 +197,14 @@
                                 </button>
                             </div>
                         % endif
-                    </div>
-
-                    <!-- Scans Tab -->
+                    </div>                    <!-- Scans Tab -->
                     <div role="tabpanel" class="tab-pane" id="scans-tab">
+                        <div class="pull-right" style="margin-bottom: 10px;">
+                            <button class="btn btn-sm btn-default" onclick="location.reload()">
+                                <i class="fa fa-refresh"></i> Refresh Scans
+                            </button>
+                        </div>
+                        <div class="clearfix"></div>
                         % if scan_details:
                             <div class="table-responsive">
                                 <table class="table table-striped">                                    <thead>
@@ -297,6 +336,15 @@ $('a[href="#results-tab"]').on('shown.bs.tab', function() {
 // Load correlations on page load
 $(document).ready(function() {
     loadCorrelationCount();
+    
+    // Auto-refresh every 30 seconds to pick up new scans and status changes
+    setInterval(function() {
+        if ($('#scans-tab').hasClass('active')) {
+            location.reload(); // Reload page to get updated scan list
+        } else if ($('#correlations-tab').hasClass('active')) {
+            loadCorrelations(); // Refresh correlations
+        }
+    }, 30000);
 });
 
 function loadCorrelationCount() {
@@ -319,6 +367,7 @@ function loadCorrelations() {
                 if (data.correlations.length > 0) {
                     html += '<div class="alert alert-success">';
                     html += '<strong>Found ' + data.total_correlations + ' correlations across ' + data.cross_scan_patterns + ' pattern types</strong>';
+                    html += ' (from ' + data.finished_scans + ' finished scans)';
                     html += '</div>';
                     
                     Object.keys(data.correlation_groups).forEach(function(ruleName) {
@@ -344,7 +393,18 @@ function loadCorrelations() {
                         html += '</tbody></table></div></div></div>';
                     });
                 } else {
-                    html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> No correlations found. Need at least 2 completed scans for cross-correlation analysis.</div>';
+                    if (data.message) {
+                        html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> ' + data.message + '</div>';
+                        if (data.total_scans > 0 && data.finished_scans < data.total_scans) {
+                            html += '<div class="alert alert-warning">';
+                            html += '<i class="fa fa-clock-o"></i> Some scans are still running. Correlations will be available as scans complete.';
+                            html += '<br><button class="btn btn-sm btn-primary" onclick="loadCorrelations()" style="margin-top: 10px;">';
+                            html += '<i class="fa fa-refresh"></i> Refresh</button>';
+                            html += '</div>';
+                        }
+                    } else {
+                        html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> No correlations found. Need at least 2 completed scans for cross-correlation analysis.</div>';
+                    }
                 }
                 $('#correlations-content').html(html);
             } else {

@@ -596,6 +596,54 @@
 
 </div>
 
+<style>
+/* Custom styling for workspace delete confirmation dialog */
+.alertify .ajs-dialog .ajs-content .alert {
+    margin: 10px 0 !important;
+    border-radius: 4px;
+    padding: 10px 15px;
+}
+
+.alertify .ajs-dialog .ajs-content .alert-warning {
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    color: #8a6d3b;
+}
+
+.alertify .ajs-dialog .ajs-content ul {
+    text-align: left;
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.alertify .ajs-dialog .ajs-content ul li {
+    margin: 5px 0;
+    color: #555;
+}
+
+.alertify .ajs-dialog .ajs-footer .ajs-buttons .ajs-button.ajs-ok {
+    background-color: #d9534f;
+    border-color: #d43f3a;
+    color: white;
+}
+
+.alertify .ajs-dialog .ajs-footer .ajs-buttons .ajs-button.ajs-ok:hover {
+    background-color: #c9302c;
+    border-color: #ac2925;
+}
+
+.alertify .ajs-dialog .ajs-footer .ajs-buttons .ajs-button.ajs-cancel {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+.alertify .ajs-dialog .ajs-footer .ajs-buttons .ajs-button.ajs-cancel:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+</style>
+
 <script type='text/javascript'>
 // Workspace management JavaScript
 $(document).ready(function() {
@@ -1073,16 +1121,70 @@ function importScans(workspaceId) {
 }
 
 function deleteWorkspace(workspaceId) {
-    if (confirm('Are you sure you want to delete this workspace? This action cannot be undone.')) {
-        $.post('${docroot}/workspacedelete', { workspace_id: workspaceId }, function(data) {
-            if (data.success) {
-                alertify.success('Workspace deleted successfully');
-                loadWorkspaces();
-            } else {
-                alertify.error('Failed to delete workspace: ' + data.error);
+    // Get workspace name for the confirmation dialog
+    $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
+        var workspaceName = data.success ? data.name : 'this workspace';
+        
+        alertify.confirm(
+            'Delete Workspace',
+            '<div class="alert alert-warning" style="margin: 10px 0;">' +
+            '<i class="fa fa-exclamation-triangle"></i> <strong>Warning:</strong> This action cannot be undone!' +
+            '</div>' +
+            'Are you sure you want to delete the workspace <strong>"' + escapeHtml(workspaceName) + '"</strong>?<br><br>' +
+            'This will permanently remove:' +
+            '<ul style="margin: 10px 0; text-align: left;">' +
+            '<li>All workspace configuration</li>' +
+            '<li>Target definitions</li>' +
+            '<li>Scan associations (scans themselves will remain)</li>' +
+            '<li>All workspace metadata</li>' +
+            '</ul>',
+            function() {
+                // User confirmed deletion
+                $.post('${docroot}/workspacedelete', { workspace_id: workspaceId }, function(data) {
+                    if (data.success) {
+                        alertify.success('Workspace deleted successfully');
+                        loadWorkspaces();
+                    } else {
+                        alertify.error('Failed to delete workspace: ' + data.error);
+                    }
+                }).fail(function() {
+                    alertify.error('Failed to delete workspace: Server error');
+                });
+            },
+            function() {
+                // User cancelled deletion
+                alertify.message('Workspace deletion cancelled');
             }
-        });
-    }
+        ).set('labels', {ok:'Delete Workspace', cancel:'Cancel'})
+         .set('closable', false)
+         .set('defaultFocus', 'cancel');
+    }).fail(function() {
+        // Fallback if we can't get workspace name
+        alertify.confirm(
+            'Delete Workspace',
+            '<div class="alert alert-warning" style="margin: 10px 0;">' +
+            '<i class="fa fa-exclamation-triangle"></i> <strong>Warning:</strong> This action cannot be undone!' +
+            '</div>' +
+            'Are you sure you want to delete this workspace?',
+            function() {
+                $.post('${docroot}/workspacedelete', { workspace_id: workspaceId }, function(data) {
+                    if (data.success) {
+                        alertify.success('Workspace deleted successfully');
+                        loadWorkspaces();
+                    } else {
+                        alertify.error('Failed to delete workspace: ' + data.error);
+                    }
+                }).fail(function() {
+                    alertify.error('Failed to delete workspace: Server error');
+                });
+            },
+            function() {
+                alertify.message('Workspace deletion cancelled');
+            }
+        ).set('labels', {ok:'Delete Workspace', cancel:'Cancel'})
+         .set('closable', false)
+         .set('defaultFocus', 'cancel');
+    });
 }
 
 function startMultiTargetScan(workspaceId) {

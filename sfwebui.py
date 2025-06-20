@@ -2373,8 +2373,7 @@ class SpiderFootWebUi:
                 
                 # Start the scan using the correct signature
                 scanId = SpiderFootHelpers.genScanInstanceId()
-                self.log.info(f"[MULTISCAN] Generated scan ID {scanId} for target {target_value}")
-                
+                self.log.info(f"[MULTISCAN] Generated scan ID {scanId} for target {target_value}")                
                 try:
                     self.log.debug(f"[MULTISCAN] Starting process for scan {scanId}")
                     # Use multiprocessing like the working examples
@@ -2388,12 +2387,17 @@ class SpiderFootWebUi:
                     
                     scan_ids.append(scanId)
                     
+                    # Wait a moment for the scan to initialize in the database
+                    import time
+                    time.sleep(0.5)
+                    
                     # Import the scan into the workspace
                     self.log.debug(f"[MULTISCAN] Importing scan {scanId} into workspace {workspace_id}")
                     workspace.import_single_scan(scanId, {
                         'source': 'multi_target_scan',
                         'scan_name_prefix': scan_name_prefix,
-                        'target_id': target.get('target_id', 'unknown')
+                        'target_id': target.get('target_id', 'unknown'),
+                        'imported_time': time.time()
                     })
                     self.log.debug(f"[MULTISCAN] Successfully imported scan {scanId} into workspace")
                     
@@ -2796,6 +2800,9 @@ This is a placeholder MCP report. Integration with actual MCP server required.
         try:
             workspace = SpiderFootWorkspace(self.config, workspace_id)
             
+            # Refresh workspace to get latest scan data
+            workspace.load_workspace()
+            
             # Get workspace summary and scan details
             dbh = SpiderFootDb(self.config)
             scan_details = []
@@ -2846,23 +2853,39 @@ This is a placeholder MCP report. Integration with actual MCP server required.
             
             dbh = SpiderFootDb(self.config)
             correlations = []
-            
-            # Get correlations for each scan
+              # Get correlations for each scan
+            finished_scans = 0
             for scan in workspace.scans:
-                scan_correlations = dbh.scanCorrelationList(scan['scan_id'])
-                for corr in scan_correlations:
-                    correlations.append({
-                        'scan_id': scan['scan_id'],
-                        'correlation_id': corr[0],
-                        'correlation': corr[1],
-                        'rule_name': corr[2],
-                        'rule_risk': corr[3],
-                        'rule_id': corr[4],
-                        'rule_description': corr[5],
-                        'created': corr[7] if len(corr) > 7 else ''
-                    })
+                # Check if scan is finished before looking for correlations
+                scan_info = dbh.scanInstanceGet(scan['scan_id'])
+                if scan_info and scan_info[5] == 'FINISHED':
+                    finished_scans += 1
+                    scan_correlations = dbh.scanCorrelationList(scan['scan_id'])
+                    for corr in scan_correlations:
+                        correlations.append({
+                            'scan_id': scan['scan_id'],
+                            'correlation_id': corr[0],
+                            'correlation': corr[1],
+                            'rule_name': corr[2],
+                            'rule_risk': corr[3],
+                            'rule_id': corr[4],
+                            'rule_description': corr[5],
+                            'created': corr[7] if len(corr) > 7 else ''
+                        })
             
-            # Group correlations by rule type
+            # Check if we have enough finished scans for correlation analysis
+            if finished_scans < 2:
+                return {
+                    'success': True, 
+                    'correlations': [], 
+                    'correlation_groups': {},
+                    'total_correlations': 0,
+                    'cross_scan_patterns': 0,
+                    'finished_scans': finished_scans,
+                    'total_scans': len(workspace.scans),
+                    'message': f'Need at least 2 finished scans for correlation analysis. Currently have {finished_scans} finished out of {len(workspace.scans)} total scans.'
+                }
+              # Group correlations by rule type
             correlation_groups = {}
             for corr in correlations:
                 rule_name = corr['rule_name']
@@ -2875,7 +2898,9 @@ This is a placeholder MCP report. Integration with actual MCP server required.
                 'correlations': correlations,
                 'correlation_groups': correlation_groups,
                 'total_correlations': len(correlations),
-                'cross_scan_patterns': len(correlation_groups)
+                'cross_scan_patterns': len(correlation_groups),
+                'finished_scans': finished_scans,
+                'total_scans': len(workspace.scans)
             }
             
         except Exception as e:
@@ -2897,6 +2922,19 @@ This is a placeholder MCP report. Integration with actual MCP server required.
             dict: scan results data
         """
         try:
+            # Convert limit to integer if it's passed as string from HTTP request
+            if isinstance(limit, str):
+                try:
+                    limit = int(limit)
+                except (ValueError, TypeError):
+                    limit = 100  # fallback to default
+            
+            # Ensure limit is positive and reasonable
+            if not isinstance(limit, int) or limit <= 0:
+                limit = 100
+            elif limit > 10000:  # Cap at reasonable maximum
+                limit = 10000
+            
             workspace = SpiderFootWorkspace(self.config, workspace_id)
             dbh = SpiderFootDb(self.config)
             
