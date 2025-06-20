@@ -2278,9 +2278,9 @@ class SpiderFootWebUi:
         self.log.debug(f"[MULTISCAN] Input parameters - targets: {targets}, modules: {modules}, prefix: {scan_name_prefix}")
         
         try:
-            self.log.debug("[MULTISCAN] Importing startSpiderFootScanner...")
+            self.log.debug(f"[MULTISCAN] Importing startSpiderFootScanner...")
             from sfscan import startSpiderFootScanner
-            self.log.debug("[MULTISCAN] Import successful")
+            self.log.debug(f"[MULTISCAN] Import successful")
             
             # Try to load existing workspace, or create a new one if it doesn't exist
             self.log.debug(f"[MULTISCAN] Attempting to load workspace: {workspace_id}")
@@ -2451,8 +2451,8 @@ class SpiderFootWebUi:
 
             # Get workspace scans for report data
             if not workspace.scans:
-                return {'success': False, 'error': 'No scans found in workspace to generate report from'}
-
+                return {'success': True, 'correlations': [], 'message': 'Need at least 2 scans for cross-correlation analysis'}
+            
             # Import MCP integration
             try:
                 from spiderfoot.mcp_integration import SpiderFootMCPClient
@@ -2630,6 +2630,27 @@ This is a placeholder MCP report. Integration with actual MCP server required.
             raise cherrypy.HTTPError(500, f"Failed to download report: {e}")
 
     @cherrypy.expose
+    def documentation(self: 'SpiderFootWebUi') -> str:
+        """Serve the main documentation page.
+
+        Returns:
+            str: rendered documentation page HTML
+        """
+        try:
+            templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
+            return templ.render(
+                docroot=self.docroot, 
+                version=__version__,
+                content=None,
+                raw_content=None,
+                title='Documentation',
+                pageid="DOCS"
+            )
+        except Exception as e:
+            self.log.error(f"Error serving documentation page: {e}")
+            return self.error(f"Error loading documentation page: {e}")
+
+    @cherrypy.expose
     def docs(self: 'SpiderFootWebUi', path: str = 'index.md') -> str:
         """Serve local documentation files.
 
@@ -2650,8 +2671,15 @@ This is a placeholder MCP report. Integration with actual MCP server required.
             doc_root = os.path.join(os.path.dirname(__file__), 'docs')
             doc_file = os.path.join(doc_root, path)
             
+            # Check if this is an AJAX request
+            is_ajax = cherrypy.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            
             if not os.path.exists(doc_file):
-                return self.error(f"Documentation file not found: {path}")
+                if is_ajax:
+                    # Return just the error content for AJAX
+                    return f'<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> Documentation file not found: {path}</div>'
+                else:
+                    return self.error(f"Documentation file not found: {path}")
             
             # Read file content
             with open(doc_file, 'r', encoding='utf-8') as f:
@@ -2662,42 +2690,66 @@ This is a placeholder MCP report. Integration with actual MCP server required.
                 try:
                     import markdown
                     html_content = markdown.markdown(content, extensions=['extra', 'codehilite'])
-                    templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
-                    return templ.render(
-                        docroot=self.docroot, 
-                        version=__version__,
-                        content=html_content,
-                        raw_content=None,
-                        title=path.replace('.md', '').replace('_', ' ').title(),
-                        pageid="DOCS"
-                    )
+                    
+                    if is_ajax:
+                        # Return just the content for AJAX requests
+                        return f'<div class="markdown-content">{html_content}</div>'
+                    else:
+                        # Return full page for direct access
+                        templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
+                        return templ.render(
+                            docroot=self.docroot, 
+                            version=__version__,
+                            content=html_content,
+                            raw_content=None,
+                            title=path.replace('.md', '').replace('_', ' ').title(),
+                            pageid="DOCS"
+                        )
                 except ImportError:
                     # Fallback: convert simple markdown manually
                     html_content = self._simple_markdown_to_html(content)
+                    
+                    if is_ajax:
+                        # Return just the content for AJAX requests
+                        return f'<div class="markdown-content">{html_content}</div>'
+                    else:
+                        # Return full page for direct access
+                        templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
+                        return templ.render(
+                            docroot=self.docroot, 
+                            version=__version__,
+                            content=html_content,
+                            raw_content=None,
+                            title=path.replace('.md', '').replace('_', ' ').title(),
+                            pageid="DOCS"
+                        )
+            else:
+                # Serve other files as plain text
+                if is_ajax:
+                    # Return just the content for AJAX requests
+                    return f'<div class="raw-content"><pre>{content}</pre></div>'
+                else:
+                    # Return full page for direct access
                     templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
                     return templ.render(
                         docroot=self.docroot, 
                         version=__version__,
-                        content=html_content,
-                        raw_content=None,
-                        title=path.replace('.md', '').replace('_', ' ').title(),
+                        content=None,
+                        raw_content=content,
+                        title=path.replace('_', ' ').title(),
                         pageid="DOCS"
-                    )
-            else:
-                # Serve other files as plain text
-                templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
-                return templ.render(
-                    docroot=self.docroot, 
-                    version=__version__,
-                    content=None,
-                    raw_content=content,
-                    title=path.replace('_', ' ').title(),
-                    pageid="DOCS"
-                )
-                
+                    )                
         except Exception as e:
             self.log.error(f"Error serving documentation: {e}")
-            return self.error(f"Error loading documentation: {e}")
+            # Check if this is an AJAX request for error handling
+            try:
+                is_ajax = cherrypy.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                if is_ajax:
+                    return f'<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Error loading documentation: {e}</div>'
+                else:
+                    return self.error(f"Error loading documentation: {e}")
+            except:
+                return self.error(f"Error loading documentation: {e}")
 
     def _simple_markdown_to_html(self, content: str) -> str:
         """Simple markdown to HTML converter for fallback when markdown library not available."""
