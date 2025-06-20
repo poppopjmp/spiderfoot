@@ -120,7 +120,11 @@ RUN echo "=== Python Path Test ===" && \
     python3 -c "from spiderfoot import SpiderFootHelpers; print('SpiderFootHelpers imported')" && \
     python3 -c "from sflib import SpiderFoot; print('SpiderFoot imported')" && \
     echo "=== Module Count ===" && \
-    find /home/spiderfoot/modules -name 'sfp_*.py' | wc -l
+    find /home/spiderfoot/modules -name 'sfp_*.py' | wc -l && \
+    echo "=== Documentation Check ===" && \
+    ls -la /home/spiderfoot/docs/ | head -10 && \
+    echo "=== README Check ===" && \
+    ls -la /home/spiderfoot/README.md
 
 USER spiderfoot
 
