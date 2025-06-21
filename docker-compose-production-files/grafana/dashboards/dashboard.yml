@@ -1,0 +1,15 @@
+# Grafana Dashboard Provisioning Configuration
+# This file tells Grafana where to find dashboard definitions
+
+apiVersion: 1
+
+providers:
+  - name: 'SpiderFoot Dashboards'
+    orgId: 1
+    folder: 'SpiderFoot'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/
