@@ -39,7 +39,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
-    'recommonmark',
+    'myst_parser',
+    'sphinx_copybutton',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -164,5 +165,20 @@ napoleon_use_rtype = True
 # Markdown support
 source_suffix = {
     '.rst': None,
-    '.md': 'recommonmark',
+    '.md': 'myst_parser',
 }
+
+# MyST parser configuration
+myst_enable_extensions = [
+    "deflist",
+    "tasklist",
+    "html_admonition",
+    "html_image",
+    "colon_fence",
+    "smartquotes",
+    "replacements",
+    "linkify",
+    "substitution",
+]
+
+myst_heading_anchors = 3

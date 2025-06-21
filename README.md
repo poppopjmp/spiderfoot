@@ -13,7 +13,7 @@
 [![Docker CI Build](https://github.com/poppopjmp/spiderfoot/workflows/Docker%20Image%20CI/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Docker%20Image%20CI")
 [![Enterprise Ready](https://img.shields.io/badge/Enterprise-Ready-brightgreen.svg)](https://github.com/poppopjmp/spiderfoot)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
-[![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)(https://github.com/poppopjmp/spiderfoot)
+[![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![Discord](https://img.shields.io/discord/770524432464216074)](https://discord.gg/vyvztrG)
 ![Active Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)
 
@@ -96,6 +96,47 @@ SpiderFoot Enterprise includes advanced features for production environments:
 - **Webhook Support**: Real-time notifications and event-driven integrations
 - **SIEM Integration**: Direct integration with popular SIEM platforms
 - **CI/CD Pipeline Support**: Automated scanning integration for DevSecOps workflows
+
+## 📚 **Documentation**
+
+Comprehensive documentation is available for all aspects of SpiderFoot Enterprise:
+
+### Quick Links
+- **[Installation Guide](docs/installation.md)** - Complete setup instructions
+- **[Quick Start Guide](docs/quickstart.md)** - Get scanning quickly  
+- **[User Guide](docs/basic_usage.md)** - Fundamental concepts and usage
+- **[CLI Reference](docs/cli_usage.md)** - Command-line interface guide
+- **[API Documentation](docs/api/rest_api.md)** - REST API reference
+- **[Module Guide](docs/modules_guide.md)** - Understanding modules
+
+### Enterprise Features
+- **[Enterprise Deployment](docs/enterprise_deployment.md)** - Production deployment guide
+- **[Advanced Storage](docs/advanced/enterprise_storage.md)** - High-performance storage setup
+- **[AI Threat Intelligence](docs/advanced/ai_threat_intelligence.md)** - AI-powered analysis
+- **[Security Hardening](docs/advanced/security_hardening.md)** - Security best practices
+- **[Performance Optimization](docs/advanced/performance_optimization.md)** - Optimization guide
+
+### Advanced Workflows
+- **[Workflow Engine](docs/workflow/getting_started.md)** - Multi-target workflows
+- **[Correlation Analysis](docs/workflow/correlation_analysis.md)** - Pattern identification
+- **[CTI Reports](docs/workflow/cti_reports.md)** - Intelligence report generation
+
+### Building Documentation
+
+To build the documentation locally:
+
+```bash
+# Install documentation dependencies
+pip install -r requirements-docs.txt
+
+# Build documentation
+python build_docs.py --all
+
+# Serve documentation locally  
+python build_docs.py --serve
+```
+
+Visit http://localhost:8000 to view the built documentation.
 
 ### USES
 

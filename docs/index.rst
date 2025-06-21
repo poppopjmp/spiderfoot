@@ -12,6 +12,7 @@ SpiderFoot is a production-ready, enterprise-grade open source intelligence (OSI
    :maxdepth: 2
    :caption: Getting Started:
 
+   overview
    PRODUCTION_READY
    README
    installation
@@ -67,6 +68,8 @@ SpiderFoot is a production-ready, enterprise-grade open source intelligence (OSI
 
    docker_deployment
    advanced/performance_optimization
+   advanced/performance_tuning
+   advanced/security_hardening
    security_considerations
    troubleshooting
 
@@ -74,10 +77,12 @@ SpiderFoot is a production-ready, enterprise-grade open source intelligence (OSI
    :maxdepth: 2
    :caption: Developer Guide:
 
-   developer/contributing
+   contributing
    developer/module_development
    developer/api_development
    VERSION_MANAGEMENT
+   DOCUMENTATION_BUILD
+   DOCUMENTATION_FIXES
    spiderfoot
 
 Version 5.2.2
