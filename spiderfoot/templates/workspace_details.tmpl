@@ -23,9 +23,11 @@
                             </button>
                             <button class="btn btn-info" onclick="importScans('${workspace.workspace_id}')">
                                 <i class="fa fa-download"></i> Import Scans
-                            </button>
-                            <button class="btn btn-primary" onclick="multiTargetScan('${workspace.workspace_id}')">
+                            </button>                            <button class="btn btn-primary" onclick="multiTargetScan('${workspace.workspace_id}')">
                                 <i class="fa fa-play"></i> Multi-Target Scan
+                            </button>
+                            <button class="btn btn-info" onclick="schedulePeriodicScan('${workspace.workspace_id}')">
+                                <i class="fa fa-clock-o"></i> Schedule Periodic Scan
                             </button>
                             <button class="btn btn-warning" onclick="generateReport('${workspace.workspace_id}')">
                                 <i class="fa fa-file-text"></i> Generate Report
@@ -111,10 +113,14 @@
                         <a href="#correlations-tab" aria-controls="correlations-tab" role="tab" data-toggle="tab">
                             <i class="fa fa-sitemap"></i> Correlations
                         </a>
-                    </li>
-                    <li role="presentation">
+                    </li>                    <li role="presentation">
                         <a href="#results-tab" aria-controls="results-tab" role="tab" data-toggle="tab">
                             <i class="fa fa-table"></i> Recent Results
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#schedules-tab" aria-controls="schedules-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-clock-o"></i> Periodic Scans
                         </a>
                     </li>
                 </ul>
@@ -302,14 +308,31 @@
                                 <p>Loading correlations...</p>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Results Tab -->
+                    </div>                    <!-- Results Tab -->
                     <div role="tabpanel" class="tab-pane" id="results-tab">
                         <div id="results-content">
                             <div class="text-center">
                                 <i class="fa fa-spinner fa-spin fa-2x"></i>
                                 <p>Loading recent results...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Periodic Scans Tab -->
+                    <div role="tabpanel" class="tab-pane" id="schedules-tab">
+                        <div class="pull-right" style="margin-bottom: 10px;">
+                            <button class="btn btn-sm btn-primary" onclick="schedulePeriodicScan('${workspace.workspace_id}')">
+                                <i class="fa fa-plus"></i> Schedule New Periodic Scan
+                            </button>
+                            <button class="btn btn-sm btn-default" onclick="loadPeriodicScans()">
+                                <i class="fa fa-refresh"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div id="periodic-scans-content">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                <p>Loading periodic scans...</p>
                             </div>
                         </div>
                     </div>
@@ -556,6 +579,202 @@
   </div>
 </div>
 
+<!-- Periodic Scan Modal -->
+<div class="modal fade" id="periodicScanModal" tabindex="-1" role="dialog" aria-labelledby="periodicScanModalLabel">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="periodicScanModalLabel">Schedule Periodic Scan</h4>
+      </div>
+      <div class="modal-body">        <form id="periodicScanForm">
+          <input type="hidden" id="periodicWorkspaceId">
+          <input type="hidden" id="periodicScheduleId">
+          <input type="hidden" id="periodicScheduleId"> <!-- Hidden field for schedule ID -->
+          
+          <!-- Scan Configuration -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="periodicScanName">Scan Name</label>
+                <input type="text" class="form-control" id="periodicScanName" placeholder="e.g., 'Weekly Security Scan'" required>
+                <small class="form-text text-muted">Name for this periodic scan series</small>
+              </div>
+              
+              <div class="form-group">
+                <label for="periodicTargets">Select Targets</label>
+                <div id="periodicTargetSelectionList" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+                  <!-- Target list will be populated by JavaScript -->
+                </div>
+                <small class="form-text text-muted">Select targets for periodic scanning</small>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <!-- Schedule Configuration -->
+              <div class="form-group">
+                <label for="scanInterval">Scan Frequency</label>
+                <select class="form-control" id="scanInterval" required>
+                  <option value="">Select frequency...</option>
+                  <option value="hourly">Every Hour</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="biweekly">Bi-weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="custom">Custom Interval</option>
+                </select>
+              </div>
+              
+              <div class="form-group" id="customIntervalGroup" style="display: none;">
+                <label>Custom Interval</label>
+                <div class="row">
+                  <div class="col-md-6">
+                    <input type="number" class="form-control" id="customIntervalDays" placeholder="Days" min="0" max="365">
+                  </div>
+                  <div class="col-md-6">
+                    <input type="number" class="form-control" id="customIntervalHours" placeholder="Hours" min="0" max="23">
+                  </div>
+                </div>
+                <small class="form-text text-muted">Specify custom interval in days and hours</small>
+              </div>
+              
+              <div class="form-group">
+                <label for="scanTime">Preferred Start Time</label>
+                <input type="time" class="form-control" id="scanTime" value="02:00">
+                <small class="form-text text-muted">Time when scans should start (server timezone)</small>
+              </div>
+              
+              <div class="form-group">
+                <label>Business Hours Only</label>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="enableBusinessHours"> Run only during business hours
+                  </label>
+                </div>
+                <div id="businessHoursConfig" style="display: none; margin-top: 10px;">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <input type="time" class="form-control" id="businessStartTime" value="09:00">
+                      <small>Start time</small>
+                    </div>
+                    <div class="col-md-6">
+                      <input type="time" class="form-control" id="businessEndTime" value="17:00">
+                      <small>End time</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Module Selection -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label>Scan Modules</label>
+                <div class="btn-group btn-group-sm" role="group" style="margin-bottom: 10px;">
+                  <button type="button" class="btn btn-outline-primary" onclick="selectPeriodicModulePreset('monitoring')">Monitoring</button>
+                  <button type="button" class="btn btn-outline-primary" onclick="selectPeriodicModulePreset('security')">Security Check</button>
+                  <button type="button" class="btn btn-outline-primary" onclick="selectPeriodicModulePreset('comprehensive')">Comprehensive</button>
+                  <button type="button" class="btn btn-outline-secondary" onclick="selectAllPeriodicModules()">Select All</button>
+                  <button type="button" class="btn btn-outline-secondary" onclick="clearPeriodicModuleSelection()">Clear All</button>
+                </div>
+                <div id="periodicModuleSelectionList" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+                  <!-- Module list will be populated by JavaScript -->
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Advanced Options -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h4 class="panel-title">
+                    <a data-toggle="collapse" href="#advancedOptions" aria-expanded="false">
+                      Advanced Options <i class="fa fa-chevron-down"></i>
+                    </a>
+                  </h4>
+                </div>
+                <div id="advancedOptions" class="panel-collapse collapse">
+                  <div class="panel-body">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label>
+                            <input type="checkbox" id="enableChangeTracking" checked> Enable Change Tracking
+                          </label>
+                          <small class="form-text text-muted">Track changes between scan runs</small>
+                        </div>
+                        
+                        <div class="form-group">
+                          <label>
+                            <input type="checkbox" id="enableAutoCorrelation" checked> Auto-run Correlation Analysis
+                          </label>
+                          <small class="form-text text-muted">Automatically analyze correlations after each scan</small>
+                        </div>
+                        
+                        <div class="form-group">
+                          <label>
+                            <input type="checkbox" id="enableAlerts"> Send Alert Notifications
+                          </label>
+                          <small class="form-text text-muted">Send alerts when significant changes are detected</small>
+                        </div>
+                      </div>
+                      
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="retentionPeriod">Data Retention (days)</label>
+                          <input type="number" class="form-control" id="retentionPeriod" value="90" min="7" max="365">
+                          <small class="form-text text-muted">How long to keep historical scan data</small>
+                        </div>
+                        
+                        <div class="form-group">
+                          <label for="maxConcurrentScans">Max Concurrent Scans</label>
+                          <input type="number" class="form-control" id="maxConcurrentScans" value="2" min="1" max="10">
+                          <small class="form-text text-muted">Maximum number of scans running simultaneously</small>
+                        </div>
+                        
+                        <div class="form-group">
+                          <label>
+                            <input type="checkbox" id="enableThrottling" checked> Enable Scan Throttling
+                          </label>
+                          <small class="form-text text-muted">Reduce scan intensity during business hours</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Schedule Summary -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="alert alert-info">
+                <h5><i class="fa fa-info-circle"></i> Schedule Summary</h5>
+                <div id="schedulePreview">
+                  <p><strong>Frequency:</strong> <span id="scheduleFrequency">-</span></p>
+                  <p><strong>Next Scan:</strong> <span id="nextScanTime">-</span></p>
+                  <p><strong>Time Until Next:</strong> <span id="timeUntilNext">-</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="schedulePeriodicScanBtn">
+          <i class="fa fa-clock-o"></i> Schedule Periodic Scan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // Load correlations when tab is clicked
 $('a[href="#correlations-tab"]').on('shown.bs.tab', function() {
@@ -565,6 +784,11 @@ $('a[href="#correlations-tab"]').on('shown.bs.tab', function() {
 // Load results when tab is clicked
 $('a[href="#results-tab"]').on('shown.bs.tab', function() {
     loadResults();
+});
+
+// Load periodic scans when tab is clicked
+$('a[href="#schedules-tab"]').on('shown.bs.tab', function() {
+    loadPeriodicScans();
 });
 
 // Load correlations on page load
@@ -995,6 +1219,162 @@ $(document).ready(function() {
             alertify.error('Failed to start multi-target scan: Server error');
         });
     });
+      // Schedule periodic scan
+    $('#schedulePeriodicScanBtn').click(function() {
+        var workspaceId = $('#periodicWorkspaceId').val();
+        var scheduleId = $('#periodicScheduleId').val(); // For editing existing schedules
+        var scanName = $('#periodicScanName').val();
+        var interval = $('#scanInterval').val();
+        var startTime = $('#scanTime').val();
+        var businessHours = $('#enableBusinessHours').is(':checked');
+        var businessStart = $('#businessStartTime').val();
+        var businessEnd = $('#businessEndTime').val();
+        var changeTracking = $('#enableChangeTracking').is(':checked');
+        var autoCorrelation = $('#enableAutoCorrelation').is(':checked');
+        var alertsEnabled = $('#enableAlerts').is(':checked');
+        var retentionDays = parseInt($('#retentionPeriod').val()) || 90;
+        var maxConcurrent = parseInt($('#maxConcurrentScans').val()) || 2;
+        var throttlingEnabled = $('#enableThrottling').is(':checked');
+        
+        // Handle custom interval
+        var customDays = 0, customHours = 0;
+        if (interval === 'custom') {
+            customDays = parseInt($('#customIntervalDays').val()) || 0;
+            customHours = parseInt($('#customIntervalHours').val()) || 0;
+            
+            if (customDays === 0 && customHours === 0) {
+                alertify.error('Please specify a custom interval');
+                return;
+            }
+        }
+        
+        // Get selected targets
+        var selectedTargets = [];
+        $('#periodicTargetSelectionList input[type="checkbox"]:checked').each(function() {
+            selectedTargets.push({
+                target_id: $(this).val(),
+                value: $(this).data('target'),
+                type: $(this).data('type')
+            });
+        });
+        
+        // Get selected modules
+        var selectedModules = [];
+        $('#periodicModuleSelectionList input[type="checkbox"]:checked').each(function() {
+            selectedModules.push($(this).val());
+        });
+        
+        // Validation
+        if (!scanName) {
+            alertify.error('Scan name is required');
+            return;
+        }
+        
+        if (!interval) {
+            alertify.error('Please select a scan frequency');
+            return;
+        }
+        
+        if (selectedTargets.length === 0) {
+            alertify.error('Please select at least one target');
+            return;
+        }
+        
+        if (selectedModules.length === 0) {
+            alertify.error('Please select at least one module');
+            return;
+        }
+        
+        // Determine if we're creating or updating
+        var isEditing = scheduleId && scheduleId.length > 0;
+        var endpoint = isEditing ? '${docroot}/workspaceupdateperiodicscan' : '${docroot}/workspacescheduleperiodicscan';
+        var buttonText = isEditing ? 'Update Periodic Scan' : 'Schedule Periodic Scan';
+        var successMessage = isEditing ? 'Periodic scan updated successfully!' : 'Periodic scan scheduled successfully!';
+        
+        // Show loading state
+        $('#schedulePeriodicScanBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> ' + (isEditing ? 'Updating...' : 'Scheduling...'));
+        
+        // Prepare request data
+        var requestData = {
+            workspace_id: workspaceId,
+            scan_name: scanName,
+            targets: JSON.stringify(selectedTargets),
+            modules: JSON.stringify(selectedModules),
+            interval: interval,
+            custom_days: customDays,
+            custom_hours: customHours,
+            start_time: startTime,
+            business_hours_only: businessHours,
+            business_start: businessStart,
+            business_end: businessEnd,
+            change_tracking: changeTracking,
+            auto_correlation: autoCorrelation,
+            alerts_enabled: alertsEnabled,
+            retention_days: retentionDays,
+            max_concurrent: maxConcurrent,
+            throttling_enabled: throttlingEnabled
+        };
+        
+        if (isEditing) {
+            requestData.schedule_id = scheduleId;
+        }
+        
+        // Submit the request
+        $.post(endpoint, requestData, function(data) {
+            $('#schedulePeriodicScanBtn').prop('disabled', false).html('<i class="fa fa-clock-o"></i> ' + buttonText);
+            
+            if (data.success) {
+                $('#periodicScanModal').modal('hide');
+                $('#periodicScanForm')[0].reset();
+                $('#periodicScheduleId').val(''); // Clear the schedule ID
+                
+                alertify.success(successMessage + (data.next_scan_time ? ' Next scan: ' + data.next_scan_time : ''));
+                
+                // Refresh the periodic scans list if we're on that tab
+                if ($('#schedules-tab').hasClass('active')) {
+                    loadPeriodicScans();
+                } else {
+                    // Optionally switch to the schedules tab
+                    setTimeout(function() {
+                        $('a[href="#schedules-tab"]').tab('show');
+                    }, 1000);
+                }
+            } else {
+                alertify.error('Failed to ' + (isEditing ? 'update' : 'schedule') + ' periodic scan: ' + (data.error || 'Unknown error'));
+            }
+        }).fail(function(xhr, status, error) {
+            $('#schedulePeriodicScanBtn').prop('disabled', false).html('<i class="fa fa-clock-o"></i> ' + buttonText);
+            alertify.error('Failed to ' + (isEditing ? 'update' : 'schedule') + ' periodic scan: Server error (' + status + ')');
+        });
+    });
+    
+    // Periodic scan modal event handlers
+    $('#scanInterval').change(function() {
+        var interval = $(this).val();
+        if (interval === 'custom') {
+            $('#customIntervalGroup').show();
+        } else {
+            $('#customIntervalGroup').hide();
+        }
+        updateSchedulePreview();
+    });
+    
+    $('#customIntervalDays, #customIntervalHours, #scanTime').on('input change', function() {
+        updateSchedulePreview();
+    });
+    
+    $('#enableBusinessHours').change(function() {
+        if ($(this).is(':checked')) {
+            $('#businessHoursConfig').show();
+        } else {
+            $('#businessHoursConfig').hide();
+        }
+    });
+    
+    // Initialize schedule preview when modal is shown
+    $('#periodicScanModal').on('shown.bs.modal', function() {
+        updateSchedulePreview();
+    });
 });
 
 // Helper functions for target and module selection
@@ -1009,6 +1389,19 @@ function displayTargetSelection(targets) {
         html += '</div>';
     });
     $('#targetSelectionList').html(html);
+}
+
+function displayPeriodicTargetSelection(targets) {
+    var html = '';
+    targets.forEach(function(target, index) {
+        html += '<div class="checkbox">';
+        html += '<label>';
+        html += '<input type="checkbox" value="' + target.target_id + '" data-target="' + escapeHtml(target.value) + '" data-type="' + escapeHtml(target.type || '') + '"> ';
+        html += escapeHtml(target.value) + ' <small class="text-muted">(' + escapeHtml(target.type || 'Auto-detect') + ')</small>';
+        html += '</label>';
+        html += '</div>';
+    });
+    $('#periodicTargetSelectionList').html(html);
 }
 
 // Global variables for module management
@@ -1082,6 +1475,45 @@ function displayModules(filteredModules) {
     });
     
     $('#moduleSelectionList').html(html);
+}
+
+function displayPeriodicModules(modules) {
+    var html = '';
+    var modulesByCategory = {};
+    
+    // Group modules by category
+    modules.forEach(function(module) {
+        var category = 'Other';
+        if (module.group && Array.isArray(module.group) && module.group.length > 0) {
+            category = module.group[0];
+        }
+        
+        if (!modulesByCategory[category]) {
+            modulesByCategory[category] = [];
+        }
+        modulesByCategory[category].push(module);
+    });
+    
+    // Display modules by category (compact format for periodic scans)
+    var sortedCategories = Object.keys(modulesByCategory).sort();
+    sortedCategories.forEach(function(category, index) {
+        if (index > 0) {
+            html += '<hr style="margin: 5px 0;">';
+        }
+        
+        html += '<div style="margin-bottom: 5px;"><strong style="color: #337ab7; font-size: 11px;">' + category + '</strong></div>';
+        
+        modulesByCategory[category].forEach(function(module) {
+            html += '<div class="checkbox" style="margin: 1px 0 1px 10px;">';
+            html += '<label style="font-weight: normal; font-size: 11px;">';
+            html += '<input type="checkbox" value="' + module.name + '"> ';
+            html += module.name + ' <small class="text-muted">- ' + (module.descr || 'No description').substring(0, 50) + '</small>';
+            html += '</label>';
+            html += '</div>';
+        });
+    });
+    
+    $('#periodicModuleSelectionList').html(html);
 }
 
 function setupModuleFilters() {
@@ -1162,6 +1594,16 @@ function selectModulePreset(presetType) {
     applyModuleFilters('', presetType);
 }
 
+function selectPeriodicModulePreset(presetType) {
+    // Clear current selection
+    $('#periodicModuleSelectionList input[type="checkbox"]').prop('checked', false);
+    
+    var presetModules = getPeriodicModulePreset(presetType);
+    presetModules.forEach(function(moduleName) {
+        $('#periodicModuleSelectionList input[value="' + moduleName + '"]').prop('checked', true);
+    });
+}
+
 function getModulePreset(presetType) {
     var presets = {
         'basic': ['sfp_dnsresolve', 'sfp_whois', 'sfp_sslcert', 'sfp_subdomain'],
@@ -1175,12 +1617,37 @@ function getModulePreset(presetType) {
     return presets[presetType] || [];
 }
 
+function getPeriodicModulePreset(presetType) {
+    var presets = {
+        'monitoring': ['sfp_dnsresolve', 'sfp_sslcert', 'sfp_webheader', 'sfp_portscan_tcp'],
+        'security': ['sfp_sslcert', 'sfp_headers', 'sfp_threatcrowd', 'sfp_virustotal', 'sfp_errors'],
+        'comprehensive': [], // Will be populated with all available modules
+        'basic': ['sfp_dnsresolve', 'sfp_whois', 'sfp_sslcert']
+    };
+    
+    if (presetType === 'comprehensive') {
+        // Select all available modules
+        $('#periodicModuleSelectionList input[type="checkbox"]').prop('checked', true);
+        return [];
+    }
+    
+    return presets[presetType] || [];
+}
+
 function selectAllModules() {
     $('#moduleSelectionList input[type="checkbox"]').prop('checked', true);
 }
 
+function selectAllPeriodicModules() {
+    $('#periodicModuleSelectionList input[type="checkbox"]').prop('checked', true);
+}
+
 function clearModuleSelection() {
     $('#moduleSelectionList input[type="checkbox"]').prop('checked', false);
+}
+
+function clearPeriodicModuleSelection() {
+    $('#periodicModuleSelectionList input[type="checkbox"]').prop('checked', false);
 }
 
 function loadCommonModules() {
@@ -1206,6 +1673,408 @@ function escapeHtml(text) {
         "'": '&#039;'
     };
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// Schedule preview update
+function updateSchedulePreview() {
+    var interval = $('#scanInterval').val();
+    var startTime = $('#scanTime').val();
+    var customDays = parseInt($('#customIntervalDays').val()) || 0;
+    var customHours = parseInt($('#customIntervalHours').val()) || 0;
+    
+    // Update frequency display
+    var frequencyText = '';
+    switch(interval) {
+        case 'hourly': frequencyText = 'Every hour'; break;
+        case 'daily': frequencyText = 'Daily'; break;
+        case 'weekly': frequencyText = 'Weekly'; break;
+        case 'biweekly': frequencyText = 'Every 2 weeks'; break;
+        case 'monthly': frequencyText = 'Monthly'; break;
+        case 'custom': 
+            if (customDays > 0 || customHours > 0) {
+                frequencyText = 'Every ';
+                if (customDays > 0) frequencyText += customDays + ' day' + (customDays > 1 ? 's' : '');
+                if (customDays > 0 && customHours > 0) frequencyText += ' and ';
+                if (customHours > 0) frequencyText += customHours + ' hour' + (customHours > 1 ? 's' : '');
+            } else {
+                frequencyText = 'Custom interval not configured';
+            }
+            break;
+        default: frequencyText = 'Not configured';
+    }
+    $('#scheduleFrequency').text(frequencyText);
+    
+    // Calculate next scan time
+    if (interval && interval !== 'custom' || (interval === 'custom' && (customDays > 0 || customHours > 0))) {
+        var now = new Date();
+        var nextScan = new Date();
+        
+        // Set time to today at the preferred start time
+        if (startTime) {
+            var timeParts = startTime.split(':');
+            nextScan.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), 0, 0);
+        }
+        
+        // Calculate next occurrence based on interval
+        if (nextScan <= now) {
+            switch(interval) {
+                case 'hourly': nextScan.setTime(now.getTime() + 60 * 60 * 1000); break;
+                case 'daily': nextScan.setTime(nextScan.getTime() + 24 * 60 * 60 * 1000); break;
+                case 'weekly': nextScan.setTime(nextScan.getTime() + 7 * 24 * 60 * 60 * 1000); break;
+                case 'biweekly': nextScan.setTime(nextScan.getTime() + 14 * 24 * 60 * 60 * 1000); break;
+                case 'monthly': 
+                    nextScan.setMonth(nextScan.getMonth() + 1);
+                    break;
+                case 'custom':
+                    var totalHours = (customDays * 24) + customHours;
+                    nextScan.setTime(nextScan.getTime() + totalHours * 60 * 60 * 1000);
+                    break;
+            }
+        }
+        
+        var nextScanFormatted = nextScan.toLocaleDateString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZoneName: 'short'
+        });
+        
+        // Calculate time until next scan
+        var timeDiff = nextScan.getTime() - now.getTime();
+        var timeUntil = '';
+        
+        if (timeDiff > 0) {
+            var days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (days > 0) timeUntil += days + 'd ';
+            if (hours > 0) timeUntil += hours + 'h ';
+            if (minutes > 0) timeUntil += minutes + 'm';
+            
+            if (!timeUntil) timeUntil = 'Less than 1 minute';
+        }
+        
+        $('#nextScanTime').text(nextScanFormatted);
+        $('#timeUntilNext').text(timeUntil);
+    } else {
+        $('#nextScanTime').text('Not configured');
+        $('#timeUntilNext').text('-');
+    }
+}
+
+// Load periodic scan configuration
+function loadExistingPeriodicConfig(workspaceId) {
+    $.get('${docroot}/workspaceperiodicconfig', { workspace_id: workspaceId }, function(data) {
+        if (data.success && data.config) {
+            // Populate form with existing configuration
+            $('#periodicScanName').val(data.config.scan_name || '');
+            $('#scanInterval').val(data.config.interval || '');
+            $('#scanTime').val(data.config.start_time || '02:00');
+            $('#enableBusinessHours').prop('checked', data.config.business_hours_only || false);
+            $('#businessStartTime').val(data.config.business_start || '09:00');
+            $('#businessEndTime').val(data.config.business_end || '17:00');
+            $('#enableChangeTracking').prop('checked', data.config.change_tracking || true);
+            $('#enableAutoCorrelation').prop('checked', data.config.auto_correlation || true);
+            $('#enableAlerts').prop('checked', data.config.alerts_enabled || false);
+            $('#retentionPeriod').val(data.config.retention_days || 90);
+            $('#maxConcurrentScans').val(data.config.max_concurrent || 2);
+            $('#enableThrottling').prop('checked', data.config.throttling_enabled || true);
+            
+            // Handle custom interval
+            if (data.config.interval === 'custom') {
+                $('#customIntervalDays').val(data.config.custom_days || 0);
+                $('#customIntervalHours').val(data.config.custom_hours || 0);
+                $('#customIntervalGroup').show();
+            }
+            
+            // Show business hours config if enabled
+            if (data.config.business_hours_only) {
+                $('#businessHoursConfig').show();
+            }
+            
+            // Pre-select targets and modules
+            if (data.config.targets) {
+                data.config.targets.forEach(function(targetId) {
+                    $('#periodicTargetSelectionList input[value="' + targetId + '"]').prop('checked', true);
+                });
+            }
+            
+            if (data.config.modules) {
+                data.config.modules.forEach(function(moduleName) {
+                    $('#periodicModuleSelectionList input[value="' + moduleName + '"]').prop('checked', true);
+                });
+            }
+            
+            updateSchedulePreview();
+        }
+    }).fail(function() {
+        // No existing config, use defaults
+        updateSchedulePreview();
+    });
+}
+
+function loadPeriodicAvailableModules() {
+    $.get('${docroot}/modules', function(data) {
+        if (data && Array.isArray(data)) {
+            displayPeriodicModules(data);
+        } else {
+            loadPeriodicCommonModules();
+        }
+    }).fail(function() {
+        loadPeriodicCommonModules();
+    });
+}
+
+function loadPeriodicCommonModules() {
+    var commonModules = [
+        {name: 'sfp_dnsresolve', descr: 'DNS resolution', group: ['Passive']},
+        {name: 'sfp_whois', descr: 'WHOIS lookups', group: ['Passive']},
+        {name: 'sfp_sslcert', descr: 'SSL certificate analysis', group: ['Passive']},
+        {name: 'sfp_portscan_tcp', descr: 'TCP port scanning', group: ['Active']},
+        {name: 'sfp_webheader', descr: 'HTTP header analysis', group: ['Active']},
+        {name: 'sfp_threatcrowd', descr: 'ThreatCrowd queries', group: ['Threat Intelligence']}
+    ];
+    displayPeriodicModules(commonModules);
+}
+
+// Helper functions for periodic scan functionality
+function displayPeriodicTargetSelection(targets) {
+    var html = '';
+    targets.forEach(function(target, index) {
+        html += '<div class="checkbox">';
+        html += '<label>';
+        html += '<input type="checkbox" value="' + target.target_id + '" data-target="' + escapeHtml(target.value) + '" data-type="' + escapeHtml(target.type || '') + '"> ';
+        html += escapeHtml(target.value) + ' <small class="text-muted">(' + escapeHtml(target.type || 'Auto-detect') + ')</small>';
+        html += '</label>';
+        html += '</div>';
+    });
+    $('#periodicTargetSelectionList').html(html);
+}
+
+function displayPeriodicModules(modules) {
+    var html = '';
+    var modulesByCategory = {};
+    
+    // Group modules by category
+    modules.forEach(function(module) {
+        var category = 'Other';
+        if (module.group && Array.isArray(module.group) && module.group.length > 0) {
+            category = module.group[0];
+        }
+        
+        if (!modulesByCategory[category]) {
+            modulesByCategory[category] = [];
+        }
+        modulesByCategory[category].push(module);
+    });
+    
+    // Display modules by category (compact format for periodic scans)
+    var sortedCategories = Object.keys(modulesByCategory).sort();
+    sortedCategories.forEach(function(category, index) {
+        if (index > 0) {
+            html += '<hr style="margin: 5px 0;">';
+        }
+        
+        html += '<div style="margin-bottom: 5px;"><strong style="color: #337ab7; font-size: 11px;">' + category + '</strong></div>';
+        
+        modulesByCategory[category].forEach(function(module) {
+            html += '<div class="checkbox" style="margin: 1px 0 1px 10px;">';
+            html += '<label style="font-weight: normal; font-size: 11px;">';
+            html += '<input type="checkbox" value="' + module.name + '"> ';
+            html += module.name + ' <small class="text-muted">- ' + (module.descr || 'No description').substring(0, 50) + '</small>';
+            html += '</label>';
+            html += '</div>';
+        });
+    });
+    
+    $('#periodicModuleSelectionList').html(html);
+}
+
+function setupPeriodicModuleFilters() {
+    // Category filter
+    $('#moduleTypeFilter').on('change', function() {
+        var selectedCategory = $(this).val();
+        var selectedUseCase = $('#moduleUseCaseFilter').val();
+        applyPeriodicModuleFilters(selectedCategory, selectedUseCase);
+    });
+    
+    // Use case filter  
+    $('#moduleUseCaseFilter').on('change', function() {
+        var selectedCategory = $('#moduleTypeFilter').val();
+        var selectedUseCase = $(this).val();
+        applyPeriodicModuleFilters(selectedCategory, selectedUseCase);
+    });
+}
+
+function applyPeriodicModuleFilters(category, useCase) {
+    var filteredModules = allModules;
+    
+    // Filter by category
+    if (category) {
+        filteredModules = filteredModules.filter(function(module) {
+            return module.group && module.group.indexOf(category) !== -1;
+        });
+    }
+    
+    // Filter by use case (based on module characteristics)
+    if (useCase) {
+        filteredModules = filteredModules.filter(function(module) {
+            return isModuleForUseCase(module, useCase);
+        });
+    }
+    
+    displayPeriodicModules(filteredModules);
+}
+
+function schedulePeriodicScan(workspaceId) {
+    $('#periodicWorkspaceId').val(workspaceId);
+    
+    // Load workspace targets
+    $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
+        if (data.success && data.targets && data.targets.length > 0) {
+            displayPeriodicTargetSelection(data.targets);
+            loadPeriodicAvailableModules();
+            
+            // Load any existing periodic scan configuration
+            loadExistingPeriodicConfig(workspaceId);
+            
+            $('#periodicScanModal').modal('show');
+        } else {
+            alertify.confirm(
+                'No Targets Available',
+                'This workspace doesn\'t have any targets yet. Would you like to add targets first?',
+                function() {
+                    addTarget(workspaceId);
+                },
+                function() {
+                    // User clicked Cancel - do nothing
+                }
+            ).set('labels', {ok:'Add Targets', cancel:'Cancel'});
+        }
+    }).fail(function() {
+        alertify.error('Failed to load workspace targets');
+    });
+}
+
+function pausePeriodicScan(scheduleId) {
+    $.post('${docroot}/workspaceperiodicscantoggle', {
+        schedule_id: scheduleId,
+        action: 'pause'
+    }, function(data) {
+        if (data.success) {
+            alertify.success('Periodic scan paused');
+            loadPeriodicScans();
+        } else {
+            alertify.error('Failed to pause periodic scan: ' + (data.error || 'Unknown error'));
+        }
+    }).fail(function() {
+        alertify.error('Failed to pause periodic scan: Server error');
+    });
+}
+
+function resumePeriodicScan(scheduleId) {
+    $.post('${docroot}/workspaceperiodicscantoggle', {
+        schedule_id: scheduleId,
+        action: 'resume'
+    }, function(data) {
+        if (data.success) {
+            alertify.success('Periodic scan resumed');
+            loadPeriodicScans();
+        } else {
+            alertify.error('Failed to resume periodic scan: ' + (data.error || 'Unknown error'));
+        }
+    }).fail(function() {
+        alertify.error('Failed to resume periodic scan: Server error');
+    });
+}
+
+function editPeriodicScan(scheduleId) {
+    // Load the schedule configuration and open the modal with existing data
+    $.get('${docroot}/workspaceperiodicconfig', { schedule_id: scheduleId }, function(data) {
+        if (data.success && data.config) {
+            // Set the schedule ID for editing
+            $('#periodicWorkspaceId').val(data.config.workspace_id);
+            $('#periodicScheduleId').val(scheduleId); // We need to add this hidden field
+            
+            // Open the periodic scan modal with existing data
+            schedulePeriodicScan(data.config.workspace_id);
+            
+            // The loadExistingPeriodicConfig function will populate the form
+        } else {
+            alertify.error('Failed to load periodic scan configuration');
+        }
+    }).fail(function() {
+        alertify.error('Failed to load periodic scan configuration');
+    });
+}
+
+function runPeriodicScanNow(scheduleId) {
+    alertify.confirm(
+        'Run Periodic Scan Now',
+        'This will start a scan immediately using the configured targets and modules. Continue?',
+        function() {
+            $.post('${docroot}/workspaceperiodicscannow', {
+                schedule_id: scheduleId
+            }, function(data) {
+                if (data.success) {
+                    alertify.success('Periodic scan started! Scan ID: ' + data.scan_id);
+                    // Optionally redirect to scan info
+                    setTimeout(function() {
+                        window.location.href = '${docroot}/scaninfo?id=' + data.scan_id;
+                    }, 2000);
+                } else {
+                    alertify.error('Failed to start periodic scan: ' + (data.error || 'Unknown error'));
+                }
+            }).fail(function() {
+                alertify.error('Failed to start periodic scan: Server error');
+            });
+        },
+        function() {
+            // User cancelled
+        }
+    ).set('labels', {ok:'Start Scan', cancel:'Cancel'});
+}
+
+function viewPeriodicScanHistory(scheduleId) {
+    // Open a modal or redirect to show the scan history for this schedule
+    window.open('${docroot}/workspaceperiodichistory?schedule_id=' + scheduleId, '_blank');
+}
+
+function deletePeriodicScan(scheduleId) {
+    alertify.confirm(
+        'Delete Periodic Scan',
+        'Are you sure you want to delete this periodic scan schedule? This action cannot be undone.<br><br>' +
+        '<div class="alert alert-warning" style="margin: 10px 0;">' +
+        '<strong>This will:</strong>' +
+        '<ul>' +
+        '<li>Stop all future scheduled scans</li>' +
+        '<li>Remove the schedule configuration</li>' +
+        '<li>Keep existing scan results (they will not be deleted)</li>' +
+        '</ul>' +
+        '</div>',
+        function() {
+            $.post('${docroot}/workspaceperiodicscandelte', {
+                schedule_id: scheduleId
+            }, function(data) {
+                if (data.success) {
+                    alertify.success('Periodic scan schedule deleted');
+                    loadPeriodicScans();
+                } else {
+                    alertify.error('Failed to delete periodic scan: ' + (data.error || 'Unknown error'));
+                }
+            }).fail(function() {
+                alertify.error('Failed to delete periodic scan: Server error');
+            });
+        },
+        function() {
+            // User cancelled
+        }
+    ).set('labels', {ok:'Delete Schedule', cancel:'Cancel'})
+     .set('defaultFocus', 'cancel');
 }
 </script>
 
