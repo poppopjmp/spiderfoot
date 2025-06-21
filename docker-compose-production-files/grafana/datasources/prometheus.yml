@@ -1,0 +1,35 @@
+# Grafana Datasource Provisioning Configuration
+# This file automatically configures Prometheus and PostgreSQL as data sources
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      queryTimeout: "60s"
+      httpMethod: "POST"
+    version: 1
+
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: spiderfoot_prod
+    user: spiderfoot_monitor
+    secureJsonData:
+      password: monitor_password
+    jsonData:
+      sslmode: disable
+      maxOpenConns: 0
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+      postgresVersion: 1500
+      timescaledb: false
+    version: 1
+    editable: true

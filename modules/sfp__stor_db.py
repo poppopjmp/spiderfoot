@@ -51,8 +51,7 @@ class sfp__stor_db(SpiderFootPlugin):
     }
 
     # Option descriptions
-    optdescs = {
-        'maxstorage': "Maximum bytes to store for any piece of information retrieved (0 = unlimited.)",
+    optdescs = {        'maxstorage': "Maximum bytes to store for any piece of information retrieved (0 = unlimited.)",
         'db_type': "Database type to use (sqlite or postgresql)",
         'postgresql_host': "PostgreSQL host if using postgresql as db_type",
         'postgresql_port': "PostgreSQL port if using postgresql as db_type",
@@ -72,6 +71,14 @@ class sfp__stor_db(SpiderFootPlugin):
         self.sf = sfc
         self.errorState = False
         self.pg_conn = None
+        
+        # CRITICAL FIX: Properly initialize the database handle from SpiderFoot
+        if not hasattr(sfc, 'dbh') or sfc.dbh is None:
+            self.error("SpiderFoot database handle not initialized - cannot store events")
+            self.errorState = True
+            return
+            
+        self.__sfdb__ = self.sf.dbh
 
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
@@ -182,8 +189,7 @@ class sfp__stor_db(SpiderFootPlugin):
                 
             if not self.errorState and self.pg_conn:
                 self._store_postgresql(sfEvent)
-            else:
-                self._store_sqlite(sfEvent)
+            else:            self._store_sqlite(sfEvent)
         else:
             self._store_sqlite(sfEvent)
 
@@ -193,6 +199,11 @@ class sfp__stor_db(SpiderFootPlugin):
         Args:
             sfEvent: SpiderFoot event
         """
+        # CRITICAL FIX: Check database handle before using
+        if not self.__sfdb__:
+            self.error("Database handle not available for SQLite storage")
+            return
+            
         if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
             self.debug("Storing an event: " + sfEvent.eventType)
             self.__sfdb__.scanEventStore(
@@ -216,16 +227,23 @@ class sfp__stor_db(SpiderFootPlugin):
             if self.opts['maxstorage'] != 0 and len(data) > self.opts['maxstorage']:
                 data = data[:self.opts['maxstorage']]
 
-            # Store event in PostgreSQL
+            # CORRECTED: Use proper table and column names matching the schema
             cursor.execute(
-                "INSERT INTO tbl_scan_events (scan_id, type, data, module, source_event_hash, generated) VALUES (%s, %s, %s, %s, %s, %s)",
+                """INSERT INTO tbl_scan_results 
+                   (scan_instance_id, hash, type, generated, confidence, 
+                    visibility, risk, module, data, source_event_hash) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                 (
                     self.getScanId(),
+                    sfEvent.hash,
                     sfEvent.eventType,
-                    data,
+                    sfEvent.generated,
+                    sfEvent.confidence,
+                    sfEvent.visibility,
+                    sfEvent.risk,
                     sfEvent.module,
-                    getattr(sfEvent, 'sourceEventHash', None),
-                    sfEvent.generated
+                    data,
+                    getattr(sfEvent, 'sourceEventHash', 'ROOT')
                 )
             )
 

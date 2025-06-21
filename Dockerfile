@@ -1,9 +1,10 @@
 #
-# Spiderfoot Dockerfile - v5.1.2
+# Spiderfoot Dockerfile - Enterprise Edition
+# Improved version with virtual environment support and FastAPI
 #
 
 # Build stage
-FROM debian:bullseye-slim as builder
+FROM python:3.11-slim-bullseye as builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -16,7 +17,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     libssl-dev \
     python3-dev \
-    python3-pip \
     git \
     curl \
     wget \
@@ -27,15 +27,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 # Copy requirements and install Python packages
 ARG REQUIREMENTS=requirements.txt
 COPY $REQUIREMENTS requirements.txt ./
 
-# Install Python packages to a single prefix location
+# Install Python packages in virtual environment
 RUN pip install --no-cache-dir -U pip==25.0.1 && \
-    pip install --no-cache-dir --prefix=/install -r requirements.txt && \
-    # Install additional tools to the same prefix
-    pip install --no-cache-dir --prefix=/install dnstwist snallygaster trufflehog wafw00f
+    pip install --no-cache-dir -r requirements.txt && \
+    # Install additional security tools
+    pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f
 
 # Download and build tools
 RUN mkdir -p /tools/bin && \
@@ -52,11 +56,11 @@ RUN mkdir -p /tools/bin && \
     # Git tools
     git clone --depth 1 https://github.com/testssl/testssl.sh.git /tools/testssl.sh && \
     git clone --depth 1 https://github.com/Tuhinshubhra/CMSeeK /tools/CMSeeK && \
-    pip install --no-cache-dir --prefix=/install -r /tools/CMSeeK/requirements.txt && \
+    pip install --no-cache-dir -r /tools/CMSeeK/requirements.txt && \
     mkdir /tools/CMSeeK/Results
 
 # Runtime stage
-FROM debian:bullseye-slim
+FROM python:3.11-slim-bullseye
 
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -64,8 +68,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxslt1.1 \
     libjpeg62-turbo \
     zlib1g \
-    python3 \
-    python3-pip \
     nbtscan \
     onesixtyone \
     nmap \
@@ -77,18 +79,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from builder
-COPY --from=builder /install /usr/local
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
 
 # Copy tools from builder
 COPY --from=builder /tools /tools
 
-# Set up environment with explicit Python path
+# Set up environment with virtual environment
 ENV SPIDERFOOT_DATA=/var/lib/spiderfoot \
     SPIDERFOOT_LOGS=/var/lib/spiderfoot/log \
     SPIDERFOOT_CACHE=/var/lib/spiderfoot/cache \
-    PATH="/tools/bin:$PATH" \
-    PYTHONPATH="/usr/local/lib/python3.9/site-packages:/home/spiderfoot:/home/spiderfoot/modules"
+    PATH="/opt/venv/bin:/tools/bin:$PATH" \
+    PYTHONPATH="/home/spiderfoot:/home/spiderfoot/modules" \
+    VIRTUAL_ENV="/opt/venv"
 
 # Create user and directories
 RUN addgroup --system spiderfoot && \
@@ -100,35 +103,64 @@ RUN addgroup --system spiderfoot && \
 # Enable NMAP capabilities
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
 
-# Copy application files
+# Copy application files (excluding database)
 WORKDIR /home/spiderfoot
+
+# Copy the rest of the application files
 COPY --chown=spiderfoot:spiderfoot . .
+
+# Copy and set up the startup script
+COPY --chown=root:root docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Remove any database files from application directory to prevent conflicts
+RUN rm -f /home/spiderfoot/spiderfoot.db && \
+    rm -f /home/spiderfoot/data/spiderfoot.db
+
+# Remove any existing logs that might have been copied and recreate logs directory
+RUN rm -rf /home/spiderfoot/logs && \
+    mkdir -p /home/spiderfoot/logs && \
+    chown -R spiderfoot:spiderfoot /home/spiderfoot/logs && \
+    chmod -R 755 /home/spiderfoot/logs
+
+# Ensure the correct database directory structure exists
+RUN mkdir -p /home/spiderfoot/.spiderfoot && \
+    chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot
 
 # Create __init__.py files if they don't exist
 RUN touch /home/spiderfoot/__init__.py && \
     touch /home/spiderfoot/modules/__init__.py && \
     touch /home/spiderfoot/spiderfoot/__init__.py
 
+# Ensure proper ownership of all application files and directories (final step)
+RUN chown -R spiderfoot:spiderfoot /home/spiderfoot
+
 # Verify critical dependencies and module structure
-RUN echo "=== Python Path Test ===" && \
-    python3 -c "import sys; print('Python path:'); [print(f'  {p}') for p in sys.path]" && \
+RUN echo "=== Virtual Environment Test ===" && \
+    which python && python --version && \
+    echo "=== Python Path Test ===" && \
+    python -c "import sys; print('Python path:'); [print(f'  {p}') for p in sys.path]" && \
     echo "=== Dependency Test ===" && \
-    python3 -c "import cherrypy; print('CherryPy found')" && \
-    python3 -c "import requests; print('Requests found')" && \
-    python3 -c "import lxml; print('LXML found')" && \
+    python -c "import cherrypy; print('CherryPy found')" && \
+    python -c "import fastapi; print('FastAPI found')" && \
+    python -c "import uvicorn; print('Uvicorn found')" && \
+    python -c "import requests; print('Requests found')" && \
+    python -c "import lxml; print('LXML found')" && \
     echo "=== SpiderFoot Import Test ===" && \
-    python3 -c "from spiderfoot import SpiderFootHelpers; print('SpiderFootHelpers imported')" && \
-    python3 -c "from sflib import SpiderFoot; print('SpiderFoot imported')" && \
+    python -c "from spiderfoot import SpiderFootHelpers; print('SpiderFootHelpers imported')" && \
+    python -c "from sflib import SpiderFoot; print('SpiderFoot imported')" && \
     echo "=== Module Count ===" && \
     find /home/spiderfoot/modules -name 'sfp_*.py' | wc -l && \
-    echo "=== Documentation Check ===" && \
-    ls -la /home/spiderfoot/docs/ | head -10 && \
-    echo "=== README Check ===" && \
-    ls -la /home/spiderfoot/README.md
+    echo "=== FastAPI Test ===" && \
+    python -c "import sfapi; print('FastAPI module imported successfully')" && \
+    echo "=== Virtual Environment Info ===" && \
+    python -c "import sys; print(f'Executable: {sys.executable}'); print(f'Virtual env: {getattr(sys, \"base_prefix\", sys.prefix) != sys.prefix}')"
 
 USER spiderfoot
 
+# Expose ports for both web UI and API
 EXPOSE 5001 8001
 
-ENTRYPOINT ["python3"]
-CMD ["sf.py", "-l", "0.0.0.0:5001"]
+# Default command with support for both web UI and API
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh", "python"]
+CMD ["python", "sf.py", "--both", "-l", "0.0.0.0:5001", "--api-listen", "0.0.0.0:8001"]

@@ -3,19 +3,31 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to SpiderFoot's Documentation!
-=====================================
+Welcome to SpiderFoot Enterprise Documentation!
+===============================================
 
-SpiderFoot is an open source intelligence (OSINT) automation tool that integrates with just about every data source available and utilizes a range of methods for data analysis, making that data easy to navigate.
+SpiderFoot is a production-ready, enterprise-grade open source intelligence (OSINT) automation platform. Enhanced with advanced storage capabilities, AI-powered threat intelligence, and comprehensive security hardening, it integrates with hundreds of data sources and utilizes advanced methods for data analysis, making intelligence data easily navigable and actionable.
 
 .. toctree::
    :maxdepth: 2
    :caption: Getting Started:
 
+   overview
+   PRODUCTION_READY
    README
    installation
    quickstart
    configuration
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Enterprise Features:
+
+   enterprise_deployment
+   advanced/enterprise_storage
+   advanced/ai_threat_intelligence
+   advanced/security_hardening
+   advanced/performance_optimization
 
 .. toctree::
    :maxdepth: 2
@@ -24,15 +36,12 @@ SpiderFoot is an open source intelligence (OSINT) automation tool that integrate
    user_guide/basic_usage
    user_guide/web_interface
    user_guide/cli_usage
-   user_guide/modules
-   user_guide/targets
+   user_guide/modules_guide
 
 .. toctree::
    :maxdepth: 2
-   :caption: Workflow & Workspaces:
+   :caption: Workflow & Advanced Features:
 
-   WORKFLOW_DOCUMENTATION
-   WORKSPACE_INTEGRATION_COMPLETE
    workflow/getting_started
    workflow/multi_target_scanning
    workflow/correlation_analysis
@@ -42,40 +51,44 @@ SpiderFoot is an open source intelligence (OSINT) automation tool that integrate
    :maxdepth: 2
    :caption: Module Documentation:
 
-   modules/index
-   modules/sfp_recordedfuture
-   modules/custom_modules
+   modules_guide
+   modules/
 
 .. toctree::
    :maxdepth: 2
    :caption: API Reference:
 
    api/rest_api
-   api/python_api
-   api/webhook_integration
+   python_api
+   webhook_integration
 
 .. toctree::
    :maxdepth: 2
    :caption: Advanced Topics:
 
-   advanced/docker_deployment
+   docker_deployment
+   advanced/performance_optimization
    advanced/performance_tuning
-   advanced/security_considerations
-   advanced/troubleshooting
+   advanced/security_hardening
+   security_considerations
+   troubleshooting
 
 .. toctree::
    :maxdepth: 2
    :caption: Developer Guide:
 
-   developer/contributing
+   contributing
    developer/module_development
    developer/api_development
+   VERSION_MANAGEMENT
+   DOCUMENTATION_BUILD
+   DOCUMENTATION_FIXES
    spiderfoot
 
-Version 5.2.1
+Version 5.2.2
 =============
 
-SpiderFoot 5.2.1 introduces powerful new workflow capabilities including multi-target scanning, workspace management, cross-correlation analysis, and CTI report generation with MCP integration.
+SpiderFoot 5.2.2 introduces powerful new workflow capabilities including multi-target scanning, workspace management, cross-correlation analysis, and CTI report generation with MCP integration.
 
 Key Features
 -----------

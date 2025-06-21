@@ -218,9 +218,7 @@ def main():
         # Check Python version first
         if sys.version_info < (3, 9):
             print("SpiderFoot requires Python 3.9 or higher.")
-            sys.exit(-1)
-
-        # Initialize SpiderFootHelpers dependent configuration after imports are available
+            sys.exit(-1)        # Initialize SpiderFootHelpers dependent configuration after imports are available
         try:
             from spiderfoot import SpiderFootHelpers
             sfConfig['_genericusers'] = ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames']))
@@ -230,7 +228,6 @@ def main():
             # Use fallback values
             sfConfig['_genericusers'] = ""
             # Use a default database path as fallback
-            from pathlib import Path
             default_data_path = Path.home() / '.spiderfoot'
             default_data_path.mkdir(exist_ok=True)
             sfConfig['__database'] = str(default_data_path / 'spiderfoot.db')

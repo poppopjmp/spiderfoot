@@ -1,0 +1,61 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # SpiderFoot Application Metrics
+  - job_name: 'spiderfoot'
+    static_configs:
+      - targets: ['spiderfoot:5001']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+  # PostgreSQL Metrics (with postgres_exporter)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+
+  # Elasticsearch Metrics (with elasticsearch_exporter)
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch-exporter:9114']
+    scrape_interval: 30s
+
+  # Redis Metrics (with redis_exporter)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+  # Nginx Metrics (with nginx-prometheus-exporter)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 30s
+
+  # Node metrics for system monitoring
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+# Remote write configuration for long-term storage (optional)
+# remote_write:
+#   - url: "https://your-remote-storage/api/v1/write"
+#     basic_auth:
+#       username: "user"
+#       password: "password"

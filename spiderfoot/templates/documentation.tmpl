@@ -17,13 +17,15 @@ raw_content = raw_content if 'raw_content' in locals() else None
                     <h4><i class="fa fa-book"></i> Documentation</h4>
                 </div>
                 <div class="panel-body" style="padding: 0;">
-                    <div class="list-group" style="margin-bottom: 0;">
-                        <!-- Getting Started -->
+                    <div class="list-group" style="margin-bottom: 0;">                        <!-- Getting Started -->
                         <div class="list-group-item list-group-item-info">
                             <strong><i class="fa fa-rocket"></i> Getting Started</strong>
                         </div>
+                        <a href="/docs/overview.md" class="list-group-item">
+                            <i class="fa fa-info-circle"></i> Overview
+                        </a>
                         <a href="/docs/README.md" class="list-group-item">
-                            <i class="fa fa-home"></i> Overview
+                            <i class="fa fa-home"></i> Documentation Home
                         </a>
                         <a href="/docs/installation.md" class="list-group-item">
                             <i class="fa fa-download"></i> Installation Guide
@@ -33,17 +35,35 @@ raw_content = raw_content if 'raw_content' in locals() else None
                         </a>
                         <a href="/docs/configuration.md" class="list-group-item">
                             <i class="fa fa-cogs"></i> Configuration
+                        </a>                        <!-- Enterprise Features -->
+                        <div class="list-group-item list-group-item-info">
+                            <strong><i class="fa fa-building"></i> Enterprise Features</strong>
+                        </div>
+                        <a href="/docs/PRODUCTION_READY.md" class="list-group-item">
+                            <i class="fa fa-check-circle"></i> Production Ready
+                        </a>
+                        <a href="/docs/enterprise_deployment.md" class="list-group-item">
+                            <i class="fa fa-server"></i> Enterprise Deployment
+                        </a>
+                        <a href="/docs/advanced/enterprise_storage.md" class="list-group-item">
+                            <i class="fa fa-database"></i> Advanced Storage
+                        </a>
+                        <a href="/docs/advanced/ai_threat_intelligence.md" class="list-group-item">
+                            <i class="fa fa-brain"></i> AI Threat Intelligence
+                        </a>
+                        <a href="/docs/advanced/security_hardening.md" class="list-group-item">
+                            <i class="fa fa-shield"></i> Security Hardening
+                        </a>
+                        <a href="/docs/advanced/performance_optimization.md" class="list-group-item">
+                            <i class="fa fa-tachometer"></i> Performance Optimization
                         </a>
                         
                         <!-- Workflow & Workspaces -->
                         <div class="list-group-item list-group-item-info">
                             <strong><i class="fa fa-sitemap"></i> Workflow & Workspaces</strong>
                         </div>
-                        <a href="/docs/WORKFLOW_DOCUMENTATION.md" class="list-group-item">
-                            <i class="fa fa-flow-chart"></i> Workflow Engine
-                        </a>
-                        <a href="/docs/WORKSPACE_INTEGRATION_COMPLETE.md" class="list-group-item">
-                            <i class="fa fa-folder-open"></i> Workspace Management
+                        <a href="/docs/workflow/getting_started.md" class="list-group-item">
+                            <i class="fa fa-play"></i> Getting Started
                         </a>
                         <a href="/docs/workflow/multi_target_scanning.md" class="list-group-item">
                             <i class="fa fa-crosshairs"></i> Multi-Target Scanning
@@ -54,21 +74,20 @@ raw_content = raw_content if 'raw_content' in locals() else None
                         <a href="/docs/workflow/cti_reports.md" class="list-group-item">
                             <i class="fa fa-file-text-o"></i> CTI Reports
                         </a>
-                        
-                        <!-- User Guide -->
+                          <!-- User Guide -->
                         <div class="list-group-item list-group-item-info">
                             <strong><i class="fa fa-user"></i> User Guide</strong>
                         </div>
-                        <a href="/docs/basic_usage.md" class="list-group-item">
+                        <a href="/docs/user_guide/basic_usage.md" class="list-group-item">
                             <i class="fa fa-play"></i> Basic Usage
                         </a>
-                        <a href="/docs/web_interface.md" class="list-group-item">
+                        <a href="/docs/user_guide/web_interface.md" class="list-group-item">
                             <i class="fa fa-desktop"></i> Web Interface
                         </a>
-                        <a href="/docs/cli_usage.md" class="list-group-item">
+                        <a href="/docs/user_guide/cli_usage.md" class="list-group-item">
                             <i class="fa fa-terminal"></i> CLI Usage
                         </a>
-                        <a href="/docs/modules_guide.md" class="list-group-item">
+                        <a href="/docs/user_guide/modules_guide.md" class="list-group-item">
                             <i class="fa fa-puzzle-piece"></i> Modules Guide
                         </a>
                         
@@ -98,16 +117,17 @@ raw_content = raw_content if 'raw_content' in locals() else None
                         </a>
                         <a href="/docs/webhook_integration.md" class="list-group-item">
                             <i class="fa fa-link"></i> Webhook Integration
-                        </a>
-                        
-                        <!-- Advanced Topics -->
+                        </a>                        <!-- Advanced Topics -->
                         <div class="list-group-item list-group-item-info">
                             <strong><i class="fa fa-graduation-cap"></i> Advanced</strong>
                         </div>
                         <a href="/docs/docker_deployment.md" class="list-group-item">
                             <i class="fa fa-docker"></i> Docker Deployment
                         </a>
-                        <a href="/docs/performance_tuning.md" class="list-group-item">
+                        <a href="/docs/advanced/performance_optimization.md" class="list-group-item">
+                            <i class="fa fa-rocket"></i> Performance Optimization
+                        </a>
+                        <a href="/docs/advanced/performance_tuning.md" class="list-group-item">
                             <i class="fa fa-tachometer"></i> Performance Tuning
                         </a>
                         <a href="/docs/security_considerations.md" class="list-group-item">
@@ -115,9 +135,7 @@ raw_content = raw_content if 'raw_content' in locals() else None
                         </a>
                         <a href="/docs/troubleshooting.md" class="list-group-item">
                             <i class="fa fa-wrench"></i> Troubleshooting
-                        </a>
-                        
-                        <!-- Developer Guide -->
+                        </a>                        <!-- Developer Guide -->
                         <div class="list-group-item list-group-item-info">
                             <strong><i class="fa fa-code-fork"></i> Developers</strong>
                         </div>
@@ -129,6 +147,12 @@ raw_content = raw_content if 'raw_content' in locals() else None
                         </a>
                         <a href="/docs/developer/api_development.md" class="list-group-item">
                             <i class="fa fa-server"></i> API Development
+                        </a>
+                        <a href="/docs/VERSION_MANAGEMENT.md" class="list-group-item">
+                            <i class="fa fa-tag"></i> Version Management
+                        </a>
+                        <a href="/docs/DOCUMENTATION_BUILD.md" class="list-group-item">
+                            <i class="fa fa-book"></i> Documentation Build
                         </a>
                     </div>
                 </div>

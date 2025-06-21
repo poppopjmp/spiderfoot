@@ -21,8 +21,8 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'SpiderFoot'
 copyright = '2012-2024, Steve Micallef'
 author = 'Steve Micallef'
-version = '5.0.3'
-release = '5.0.3'
+version = '5.2.2'
+release = '5.2.2'
 
 
 # -- General configuration ---------------------------------------------------
@@ -39,7 +39,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
-    'recommonmark',
+    'myst_parser',
+    'sphinx_copybutton',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -164,5 +165,20 @@ napoleon_use_rtype = True
 # Markdown support
 source_suffix = {
     '.rst': None,
-    '.md': 'recommonmark',
+    '.md': 'myst_parser',
 }
+
+# MyST parser configuration
+myst_enable_extensions = [
+    "deflist",
+    "tasklist",
+    "html_admonition",
+    "html_image",
+    "colon_fence",
+    "smartquotes",
+    "replacements",
+    "linkify",
+    "substitution",
+]
+
+myst_heading_anchors = 3

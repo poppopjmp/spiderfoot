@@ -4,82 +4,139 @@
   </a>
 </div>
 
-### **This fork aim to keep the project mantained and try to add more functionality to the project**
+### **Enterprise-Ready OSINT Automation Platform**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.2.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.2.1)
+[![Stable Release](https://img.shields.io/badge/version-5.2.2--Enterprise-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.2.2)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
 [![Docker CI Build](https://github.com/poppopjmp/spiderfoot/workflows/Docker%20Image%20CI/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Docker%20Image%20CI")
-[![Browser Acceptance status](https://github.com/poppopjmp/spiderfoot/workflows/SpiderFoot%20Acceptance%20Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"SpiderFoot%20Acceptance%20Tests")
-[![Code QL](https://github.com/poppopjmp/spiderfoot/workflows/CodeQL/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"CodeQL")
-[![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
-[![codecov](https://codecov.io/github/poppopjmp/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/poppopjmp/spiderfoot)
-[![Codacy Security Scan](https://github.com/poppopjmp/spiderfoot/actions/workflows/codacy.yml/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions/workflows/codacy.yml)
+[![Enterprise Ready](https://img.shields.io/badge/Enterprise-Ready-brightgreen.svg)](https://github.com/poppopjmp/spiderfoot)
+[![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
+[![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![Discord](https://img.shields.io/discord/770524432464216074)](https://discord.gg/vyvztrG)
 ![Active Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)
 
 
-**SpiderFoot** is an open source intelligence (OSINT) automation tool. It integrates with just about every data source available and utilises a range of methods for data analysis, making that data easy to navigate. 
+**SpiderFoot** is a production-ready, enterprise-grade open source intelligence (OSINT) automation platform. Enhanced with advanced storage capabilities, AI-powered threat intelligence, and comprehensive security hardening, it integrates with hundreds of data sources and utilizes advanced methods for data analysis, making intelligence data easily navigable and actionable.
 
-SpiderFoot has an embedded web-server for providing a clean and intuitive web-based interface but can also be used completely via the command-line.  It's written in **Python 3** and **MIT-licensed**.
+SpiderFoot features an embedded web-server for providing a clean and intuitive web-based interface but can also be used completely via the command-line. It's written in **Python 3** and **MIT-licensed**.
+
+## 🚀 **Enterprise Enhancements**
+
+This version includes production-ready enterprise features:
+
+- **🎯 Advanced Storage Engine**: High-performance data storage with optimized querying and reporting
+- **🤖 AI-Powered Threat Intelligence**: Automated threat analysis and intelligent pattern recognition  
+- **🔒 Security Hardening**: Enhanced security controls, input validation, and secure configurations
+- **📊 Comprehensive Reporting**: Advanced analytics and customizable report generation
+- **⚡ Performance Optimization**: Scalable architecture for enterprise workloads
+- **🔧 Production Configuration**: Ready-to-deploy configurations for enterprise environments
 
 <img src="./docs/images/v5.png" />
 
 ### FEATURES
 
+#### Core Platform
 - Web based UI or CLI
-- Over 200 modules (see below)
+- Over 200 modules with enterprise enhancements
 - Python 3.9+
-- YAML-configurable [correlation engine](/correlations/README.md) with [37 pre-defined rules](/correlations)
-- CSV/JSON/GEXF export
+- YAML-configurable [correlation engine](/correlations/README.md) with 37+ pre-defined rules
+- CSV/JSON/GEXF export with advanced formatting options
 - API key export/import
-- SQLite back-end for custom querying
-- Highly configurable
-- Fully documented
-- Visualisations
+- SQLite and PostgreSQL back-end for enterprise scalability
+- Highly configurable with production-ready defaults
+- Fully documented with enterprise deployment guides
+- Advanced visualizations and analytics
 - TOR integration for dark web searching
-- Dockerfile for Docker-based deployments
+- Docker and Kubernetes deployment support
 - Can call other tools like DNSTwist, Whatweb, Nmap and CMSeeK
 - Actively developed since 2012!
-- REST API for programmatic access to all functionalities
+- Comprehensive REST API for enterprise integration
 
-### WANT MORE?
-**This extra feature are in roadmap integrating them in the opensource project**
-Need more from SpiderFoot?
-- Attack Surface Monitoring with change notifications by email, REST and Slack
-- Multiple targets per scan
-- Multi-user collaboration
-- Authenticated and 2FA
-- Investigations
-- Customer support
-- Third party tools pre-installed & configured
-- Drive it with a fully RESTful API
-- TOR integration built-in
-- Screenshotting
-- Bring your own Python SpiderFoot modules
-- Feed scan data to Splunk, ElasticSearch and REST endpoints
+#### Enterprise Features ✨
+- **Advanced Storage Engine**: High-performance data storage with optimized indexing and compression
+- **AI Threat Intelligence**: Machine learning-powered threat analysis and automated pattern recognition
+- **Security Hardening**: Enhanced input validation, secure configurations, and audit logging
+- **Scalable Architecture**: Support for high-volume scanning and enterprise workloads
+- **Advanced Analytics**: Comprehensive reporting with customizable dashboards and metrics
+- **Production Monitoring**: Health checks, performance metrics, and operational monitoring
+- **Enterprise Integration**: Advanced API capabilities for seamless integration with security tools
 
-### Roadmap
+### ENTERPRISE CAPABILITIES
 
-The following features are in the roadmap for SpiderFoot:
+SpiderFoot Enterprise includes advanced features for production environments:
 
-- Attack Surface Monitoring with change notifications by email, REST, and Slack
-- Multiple targets per scan
-- Multi-user collaboration
-  - Implement shared scan projects
-  - Allow users to create and share scan projects with other users
-  - Store project information, including scan configurations and results, in a shared database
-  - Provide an interface for users to manage project members and their permissions
-  - Enable notifications for project updates and scan results
-- Authenticated and 2FA
-- Investigations
-- Third party tools pre-installed & configured
-- Drive it with a fully RESTful API
-- TOR integration built-in
-- Screenshotting
-- Bring your own Python SpiderFoot modules
-- Feed scan data to Splunk, ElasticSearch, and REST endpoints
+#### 🤖 AI-Powered Intelligence
+- **Automated Threat Analysis**: Machine learning algorithms analyze patterns and identify threats
+- **Intelligent Pattern Recognition**: AI-powered correlation of indicators across data sources
+- **Predictive Analytics**: Threat trend analysis and risk prediction capabilities
+- **Natural Language Processing**: Automated analysis of text-based intelligence sources
+
+#### 🔒 Security & Compliance  
+- **Enhanced Input Validation**: Comprehensive sanitization and validation of all inputs
+- **Security Configuration**: Hardened default configurations and security best practices
+- **Audit Logging**: Comprehensive audit trails for compliance and forensic analysis
+- **Access Controls**: Role-based access control and authentication mechanisms
+
+#### ⚡ Performance & Scalability
+- **High-Performance Storage**: Optimized database operations with compression and indexing
+- **Concurrent Processing**: Advanced threading and asynchronous processing capabilities
+- **Resource Management**: Intelligent resource allocation and memory optimization
+- **Load Balancing**: Support for distributed scanning across multiple instances
+
+#### 📊 Advanced Analytics
+- **Custom Dashboards**: Configurable dashboards with real-time metrics and KPIs
+- **Comprehensive Reporting**: Advanced report generation with customizable templates
+- **Data Visualization**: Interactive charts, graphs, and network topology views
+- **Export Capabilities**: Multiple export formats with enterprise-grade data handling
+
+#### 🔧 Enterprise Integration
+- **REST API**: Comprehensive API for seamless integration with security tools
+- **Webhook Support**: Real-time notifications and event-driven integrations
+- **SIEM Integration**: Direct integration with popular SIEM platforms
+- **CI/CD Pipeline Support**: Automated scanning integration for DevSecOps workflows
+
+## 📚 **Documentation**
+
+Comprehensive documentation is available for all aspects of SpiderFoot Enterprise:
+
+### Quick Links
+- **[Installation Guide](docs/installation.md)** - Complete setup instructions
+- **[Quick Start Guide](docs/quickstart.md)** - Get scanning quickly  
+- **[User Guide](docs/basic_usage.md)** - Fundamental concepts and usage
+- **[CLI Reference](docs/cli_usage.md)** - Command-line interface guide
+- **[API Documentation](docs/api/rest_api.md)** - REST API reference
+- **[Module Guide](docs/modules_guide.md)** - Understanding modules
+
+### Enterprise Features
+- **[Enterprise Deployment](docs/enterprise_deployment.md)** - Production deployment guide
+- **[Advanced Storage](docs/advanced/enterprise_storage.md)** - High-performance storage setup
+- **[AI Threat Intelligence](docs/advanced/ai_threat_intelligence.md)** - AI-powered analysis
+- **[Security Hardening](docs/advanced/security_hardening.md)** - Security best practices
+- **[Performance Optimization](docs/advanced/performance_optimization.md)** - Optimization guide
+
+### Advanced Workflows
+- **[Workflow Engine](docs/workflow/getting_started.md)** - Multi-target workflows
+- **[Correlation Analysis](docs/workflow/correlation_analysis.md)** - Pattern identification
+- **[CTI Reports](docs/workflow/cti_reports.md)** - Intelligence report generation
+
+### Building Documentation
+
+To build the documentation locally:
+
+```bash
+# Install documentation dependencies
+pip install -r requirements-docs.txt
+
+# Build documentation
+python build_docs.py --all
+
+# Serve documentation locally  
+python build_docs.py --serve
+```
+
+Visit http://localhost:8000 to view the built documentation.
 
 ### USES
 
@@ -117,75 +174,80 @@ SpiderFoot's 200+ modules feed each other in a publisher/subscriber model to ens
 - [Data breach searches](https://asciinema.org/a/296145)
 - So much more...
 
-### INSTALLING & RUNNING
+### ENTERPRISE DEPLOYMENT
 
-To install and run SpiderFoot, you need at least Python 3.7 and a number of Python libraries which you can install with `pip`. We recommend you install a packaged release since master will often have bleeding edge features and modules that aren't fully tested.
+SpiderFoot Enterprise is production-ready and designed for enterprise environments:
 
-#### Stable build (packaged release):
+#### Quick Production Deployment
 
-```
- wget https://github.com/poppopjmp/spiderfoot/archive/v5.0.3.tar.gz
- tar zxvf v5.0.3.tar.gz
- cd spiderfoot-5.0.2
- pip3 install -r requirements.txt
- python3 ./sf.py -l 127.0.0.1:5001
-```
-
-#### Development build (cloning git master branch):
-
-```
- git clone https://github.com/poppopjmp/spiderfoot.git
- cd spiderfoot
- pip3 install -r requirements.txt
- python3 ./sf.py -l 127.0.0.1:5001
+**Standard Installation:**
+```bash
+git clone https://github.com/poppopjmp/spiderfoot.git
+cd spiderfoot
+pip3 install -r requirements.txt
+python3 ./sf.py -l 127.0.0.1:5001
 ```
 
-#### Docker build:
+**Docker Production Deployment:**
+```bash
+# Production deployment with optimized configuration
+docker-compose -f docker-compose-prod.yml up -d
 
-```
- docker-compose up
-```
-
-#### Running the REST API server: 
-##### Refactoring Feature, not available in the 5.0.3 version
-To run the REST API server, use the following command:
-
-```
-python3 ./sf.py --rest-api
+# Development environment
+docker-compose up -d
 ```
 
-Check out the [documentation](https://github.com/poppopjmp/spiderfoot/wiki) and our [asciinema videos](https://asciinema.org/~spiderfoot) for more tutorials.
+**Enterprise Configuration:**
+```bash
+# Initialize with production settings
+python3 ./sf.py --init-prod
 
-### CONFIGURING POSTGRESQL
+# Run with enterprise modules enabled
+python3 ./sf.py -l 0.0.0.0:5001 --enterprise
+```
 
-To use PostgreSQL as the database backend, follow these steps:
+#### Enterprise Features Configuration
 
-1. Install PostgreSQL and psycopg2:
-   ```
-   sudo apt-get install postgresql postgresql-contrib
-   pip3 install psycopg2
-   ```
+The enterprise modules are automatically loaded and configured:
 
-2. Create a PostgreSQL database and user:
-   ```
-   sudo -u postgres psql
-   CREATE DATABASE spiderfoot;
-   CREATE USER spiderfootuser WITH PASSWORD 'yourpassword';
-   GRANT ALL PRIVILEGES ON DATABASE spiderfoot TO spiderfootuser;
-   \q
-   ```
+- **Advanced Storage** (`sfp__stor_db_advanced`): High-performance data storage with compression and indexing
+- **AI Threat Intelligence** (`sfp__ai_threat_intel`): ML-powered threat analysis and pattern recognition  
+- **Security Hardening** (`sfp__security_hardening`): Enhanced security controls and validation
 
-3. Update the `spiderfoot` configuration to use PostgreSQL:
-   Edit the `sf.py` file and set the following configuration options:
-   ```python
-   __database = "dbname=spiderfoot user=spiderfootuser password=yourpassword host=localhost"
-   __dbtype = "postgresql"
-   ```
+See the [Enterprise Deployment Guide](docs/enterprise_deployment.md) for detailed configuration options.
 
-4. Run SpiderFoot with the updated configuration:
-   ```
-   python3 ./sf.py -l 127.0.0.1:5001
-   ```
+### ENTERPRISE DATABASE CONFIGURATION
+
+SpiderFoot Enterprise supports both SQLite (default) and PostgreSQL for enterprise scalability:
+
+#### PostgreSQL Enterprise Setup
+
+For high-volume enterprise deployments, configure PostgreSQL:
+
+```bash
+# Install PostgreSQL and dependencies
+sudo apt-get install postgresql postgresql-contrib
+pip3 install psycopg2-binary
+
+# Create database and user
+sudo -u postgres psql
+CREATE DATABASE spiderfoot_enterprise;
+CREATE USER spiderfootuser WITH PASSWORD 'secure_enterprise_password';
+GRANT ALL PRIVILEGES ON DATABASE spiderfoot_enterprise TO spiderfootuser;
+\q
+
+# Configure SpiderFoot for PostgreSQL
+python3 ./sf.py --init-db postgresql://spiderfootuser:secure_enterprise_password@localhost/spiderfoot_enterprise
+```
+
+#### Advanced Storage Features
+
+The enterprise storage engine provides:
+- **Compression**: Automatic data compression for efficient storage
+- **Indexing**: Optimized database indexes for fast query performance  
+- **Partitioning**: Automatic data partitioning for large datasets
+- **Backup**: Automated backup and recovery capabilities
+- **Monitoring**: Real-time storage performance metrics
 
 ### COMMUNITY
 
@@ -463,6 +525,17 @@ Maintainers: Steve Micallef <steve@binarypool.com>, Poppopjmp <van1sh@van1shland
 - Container Autocreation
 - Testing Integration
 - Codecoverage and quality
+
+### VERSION MANAGEMENT
+
+SpiderFoot uses a centralized version management system to ensure consistency across all components:
+
+- **Single Source of Truth**: All versions controlled from the `VERSION` file
+- **Automated Updates**: Use `python update_version.py` to update all version references
+- **Consistency Checking**: Validate version consistency with `python update_version.py --check`
+- **Release Management**: Streamlined version bumping with `python update_version.py --set X.Y.Z`
+
+For detailed information, see the [Version Management Guide](docs/VERSION_MANAGEMENT.md).
 
 ### TRIGGERING A RELEASE BUILD
 

@@ -1,52 +1,470 @@
-# Initial Configuration for docker compose in production env with Postgresql support
-# WiP 
+# Production Docker Compose Configuration for SpiderFoot Enterprise
+# Includes: PostgreSQL, Elasticsearch, Nginx, Redis, and monitoring
 # Written by poppopjmp
-
 
 version: "3.9"
 
+# Production networks for service isolation
+networks:
+  spiderfoot-frontend:
+    driver: bridge
+  spiderfoot-backend:
+    driver: bridge
+    internal: true
+  monitoring:
+    driver: bridge
+
 services:
+  # Main SpiderFoot Application
   spiderfoot:
+    image: ghcr.io/poppopjmp/spiderfoot:v5.2.2
+    container_name: spiderfoot-app
+    restart: unless-stopped
+    networks:
+      - spiderfoot-frontend
+      - spiderfoot-backend
     volumes:
       - spiderfoot-data:/var/lib/spiderfoot
       - spiderfoot-logs:/home/spiderfoot/.spiderfoot/logs
       - spiderfoot-cache:/var/lib/spiderfoot/cache
-    image: ghcr.io/poppopjmp/spiderfoot:v5.0.0
-    container_name: spiderfoot
-    restart: unless-stopped
+      - spiderfoot-config:/etc/spiderfoot
     environment:
+      # Database Configuration
       - POSTGRES_HOST=postgres
-      - POSTGRES_DB=spiderfoot
+      - POSTGRES_DB=spiderfoot_prod
       - POSTGRES_USER=spiderfoot
-      - POSTGRES_PASSWORD=your_password
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change_this_password}
+      - POSTGRES_PORT=5432
+      
+      # Elasticsearch Configuration
+      - ELASTICSEARCH_ENABLED=true
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - ELASTICSEARCH_INDEX=spiderfoot-prod
+      
+      # Redis Configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      
+      # Application Configuration
+      - SF_PRODUCTION=true
+      - SF_DEBUG=false
+      - SF_LOG_LEVEL=INFO
+      - SF_WEB_HOST=0.0.0.0
+      - SF_WEB_PORT=5001
+      - SF_MAX_THREADS=10
+      - SF_CORRELATION_ENABLED=true
+      
+      # Security Configuration
+      - SF_API_KEY=${SF_API_KEY:-}
+      - SF_SECRET_KEY=${SF_SECRET_KEY:-}
+      - SF_SECURE_HEADERS=true
+      
+    depends_on:
+      postgres:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
+  # PostgreSQL Database
   postgres:
-    image: postgres:latest
-    container_name: postgres
+    image: postgres:15-alpine
+    container_name: spiderfoot-postgres
+    restart: unless-stopped
+    networks:
+      - spiderfoot-backend
     environment:
-      - POSTGRES_DB=spiderfoot
+      - POSTGRES_DB=spiderfoot_prod
       - POSTGRES_USER=spiderfoot
-      - POSTGRES_PASSWORD=your_password
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change_this_password}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+      - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - postgres-data:/var/lib/postgresql/data
-### Generate Certificate with generate-certificate script that will populate certs folder with the key
-### If you have you own CA generate from there and populate accordingly
+      - postgres-backups:/backups
+      - ./docker-compose-production-files/postgres-init:/docker-entrypoint-initdb.d:ro
+    command: |
+      postgres
+        -c max_connections=200
+        -c shared_buffers=256MB
+        -c effective_cache_size=1GB
+        -c maintenance_work_mem=64MB
+        -c checkpoint_completion_target=0.9
+        -c wal_buffers=16MB
+        -c default_statistics_target=100
+        -c random_page_cost=1.1
+        -c effective_io_concurrency=200
+        -c work_mem=4MB
+        -c min_wal_size=1GB
+        -c max_wal_size=4GB
+        -c max_worker_processes=8
+        -c max_parallel_workers_per_gather=4
+        -c max_parallel_workers=8
+        -c max_parallel_maintenance_workers=4
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spiderfoot -d spiderfoot_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  nginx:  # Add Nginx service
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - "443:443"  # Expose port 80 on the host
-      - "80:80"
+  # Elasticsearch for Advanced Search and Analytics
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: spiderfoot-elasticsearch
+    restart: unless-stopped
+    networks:
+      - spiderfoot-backend
+      - monitoring
+    environment:
+      - node.name=spiderfoot-es
+      - cluster.name=spiderfoot-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - xpack.security.enabled=true
+      - xpack.security.authc.api_key.enabled=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-changeme}
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - action.auto_create_index=true
+      - indices.query.bool.max_clause_count=10000
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
-      -./docker-compose-production-files/nginx.conf:/etc/nginx/nginx.conf:ro 
-      -./docker-compose-production-files/certs:/etc/nginx/certs:ro 
-    depends_on:  # Ensure Nginx starts after SpiderFoot
-      - spiderfoot
+      - elasticsearch-data:/usr/share/elasticsearch/data
+      - elasticsearch-config:/usr/share/elasticsearch/config
+      - elasticsearch-logs:/usr/share/elasticsearch/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
+  # Redis for Caching and Session Management
+  redis:
+    image: redis:7-alpine
+    container_name: spiderfoot-redis
+    restart: unless-stopped
+    networks:
+      - spiderfoot-backend
+    command: |
+      redis-server
+        --appendonly yes
+        --appendfsync everysec
+        --maxmemory 1gb
+        --maxmemory-policy allkeys-lru
+        --tcp-keepalive 60
+        --timeout 300
+        --databases 16
+        --save 900 1
+        --save 300 10
+        --save 60 10000
+    volumes:
+      - redis-data:/data
+      - redis-config:/usr/local/etc/redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nginx Reverse Proxy with SSL Termination
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: spiderfoot-nginx
+    restart: unless-stopped
+    networks:
+      - spiderfoot-frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker-compose-production-files/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker-compose-production-files/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./docker-compose-production-files/certs:/etc/nginx/certs:ro
+      - nginx-logs:/var/log/nginx
+      - nginx-cache:/var/cache/nginx
+    depends_on:
+      spiderfoot:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Kibana for Elasticsearch Visualization (Optional)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: spiderfoot-kibana
+    restart: unless-stopped
+    networks:
+      - spiderfoot-backend
+      - monitoring
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD:-changeme}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_PASSWORD:-changeme}
+      - xpack.security.enabled=true
+      - xpack.encryptedSavedObjects.encryptionKey=${KIBANA_ENCRYPTION_KEY:-changeme32characterslongkey}
+      - SERVER_HOST=0.0.0.0
+      - SERVER_NAME=spiderfoot-kibana
+    volumes:
+      - kibana-data:/usr/share/kibana/data
+      - kibana-config:/usr/share/kibana/config
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    profiles:
+      - monitoring
+
+  # Prometheus for Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: spiderfoot-prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring
+    volumes:
+      - ./docker-compose-production-files/prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - monitoring
+
+  # Grafana for Monitoring Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: spiderfoot-grafana
+    restart: unless-stopped
+    networks:
+      - monitoring
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_SERVER_ROOT_URL=https://your-domain.com/grafana/
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker-compose-production-files/grafana:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - monitoring
+  # Database Backup Service
+  postgres-backup:
+    image: postgres:15-alpine
+    container_name: spiderfoot-backup
+    restart: "no"
+    networks:
+      - spiderfoot-backend
+    environment:
+      - POSTGRES_DB=spiderfoot_prod
+      - POSTGRES_USER=spiderfoot
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change_this_password}
+      - POSTGRES_HOST=postgres
+    volumes:
+      - postgres-backups:/backups
+      - ./docker-compose-production-files/backup-scripts:/scripts:ro
+    command: ["/scripts/backup.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - backup
+
+  # PostgreSQL Exporter for Prometheus
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: spiderfoot-postgres-exporter
+    restart: unless-stopped
+    networks:
+      - spiderfoot-backend
+      - monitoring
+    environment:
+      - DATA_SOURCE_NAME=postgresql://spiderfoot:${POSTGRES_PASSWORD:-change_this_password}@postgres:5432/spiderfoot_prod?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - monitoring
+
+  # Redis Exporter for Prometheus
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: spiderfoot-redis-exporter
+    restart: unless-stopped
+    networks:
+      - spiderfoot-backend
+      - monitoring
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    profiles:
+      - monitoring
+
+  # Nginx Exporter for Prometheus
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: spiderfoot-nginx-exporter
+    restart: unless-stopped
+    networks:
+      - spiderfoot-frontend
+      - monitoring
+    command:
+      - -nginx.scrape-uri=http://nginx:80/nginx_status
+    depends_on:
+      nginx:
+        condition: service_healthy
+    profiles:
+      - monitoring
+
+  # Node Exporter for System Metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: spiderfoot-node-exporter
+    restart: unless-stopped
+    networks:
+      - monitoring
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    profiles:
+      - monitoring
+
+  # Elasticsearch Exporter for Prometheus
+  elasticsearch-exporter:
+    image: prometheuscommunity/elasticsearch-exporter:latest
+    container_name: spiderfoot-elasticsearch-exporter
+    restart: unless-stopped
+    networks:
+      - spiderfoot-backend
+      - monitoring
+    environment:
+      - ES_URI=http://elasticsearch:9200
+      - ES_ALL=true
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    profiles:
+      - monitoring
+
+# Production Volume Configuration
 volumes:
+  # Application Data
   spiderfoot-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH:-./data}/spiderfoot
   spiderfoot-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${LOGS_PATH:-./logs}/spiderfoot
   spiderfoot-cache:
+    driver: local
+  spiderfoot-config:
+    driver: local
+
+  # Database Volumes
   postgres-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH:-./data}/postgres
+  postgres-backups:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${BACKUP_PATH:-./backups}/postgres
+
+  # Elasticsearch Volumes
+  elasticsearch-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH:-./data}/elasticsearch
+  elasticsearch-config:
+    driver: local
+  elasticsearch-logs:
+    driver: local
+
+  # Redis Volumes
+  redis-data:
+    driver: local
+  redis-config:
+    driver: local
+
+  # Nginx Volumes
+  nginx-logs:
+    driver: local
+  nginx-cache:
+    driver: local
+
+  # Monitoring Volumes
+  kibana-data:
+    driver: local
+  kibana-config:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+  # Certificate Volume
   certs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${CERTS_PATH:-./docker-compose-production-files/certs}

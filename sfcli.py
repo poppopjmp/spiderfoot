@@ -12,6 +12,10 @@
 # -------------------------------------------------------------------------------
 
 import argparse
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+
 import cmd
 import codecs
 import io
@@ -24,6 +28,8 @@ import time
 from os.path import expanduser
 
 import requests
+
+from spiderfoot import __version__
 
 
 ASCII_LOGO = r"""
@@ -54,7 +60,7 @@ class bcolors:
 
 
 class SpiderFootCli(cmd.Cmd):
-    version = "5.1.0"  # Update to match VERSION file
+    version = __version__  # Dynamically get version from central location
     pipecmd = None
     output = None
     modules = []

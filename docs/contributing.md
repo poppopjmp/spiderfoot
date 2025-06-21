@@ -60,6 +60,17 @@ python sf.py -l 127.0.0.1:5001
 
 ## Development Guidelines
 
+### Version Management
+
+SpiderFoot uses a centralized version management system:
+
+- **Never manually edit version numbers** in individual files
+- **Use the version utility**: `python update_version.py` for all version changes  
+- **Check consistency**: Run `python update_version.py --check` before submitting PRs
+- **Version format**: Follow semantic versioning (X.Y.Z)
+
+For detailed information, see the [Version Management Guide](VERSION_MANAGEMENT.md).
+
 ### Code Style
 - Follow PEP 8 for Python code
 - Use meaningful variable names
