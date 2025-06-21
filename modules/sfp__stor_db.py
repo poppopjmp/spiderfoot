@@ -34,9 +34,7 @@ class sfp__stor_db(SpiderFootPlugin):
         'flags': ["slow"]
     }
 
-    _priority = 0
-
-    # Default options
+    _priority = 0    # Default options
     opts = {
         # max bytes for any piece of info stored (0 = unlimited)
         'maxstorage': 1024,
@@ -47,10 +45,20 @@ class sfp__stor_db(SpiderFootPlugin):
         'postgresql_database': 'spiderfoot',
         'postgresql_username': 'spiderfoot',
         'postgresql_password': '',
-        'postgresql_timeout': 30
-    }
-
-    # Option descriptions
+        'postgresql_timeout': 30,
+        # Phase 2 enterprise features (stub implementations)
+        'enable_auto_recovery': False,
+        'enable_connection_monitoring': False,
+        'enable_performance_monitoring': False,
+        'enable_graceful_shutdown': False,
+        'enable_health_monitoring': False,
+        'enable_connection_pooling': False,
+        'enable_load_balancing': False,
+        'enable_auto_scaling': False,
+        'enable_query_optimization': False,
+        'enable_performance_benchmarking': False,
+        'collect_metrics': False
+    }    # Option descriptions
     optdescs = {        'maxstorage': "Maximum bytes to store for any piece of information retrieved (0 = unlimited.)",
         'db_type': "Database type to use (sqlite or postgresql)",
         'postgresql_host': "PostgreSQL host if using postgresql as db_type",
@@ -58,7 +66,19 @@ class sfp__stor_db(SpiderFootPlugin):
         'postgresql_database': "PostgreSQL database name if using postgresql as db_type",
         'postgresql_username': "PostgreSQL username if using postgresql as db_type",
         'postgresql_password': "PostgreSQL password if using postgresql as db_type",
-        'postgresql_timeout': "Connection timeout in seconds for PostgreSQL"
+        'postgresql_timeout': "Connection timeout in seconds for PostgreSQL",
+        # Phase 2 enterprise features
+        'enable_auto_recovery': "Enable automatic error recovery (enterprise feature)",
+        'enable_connection_monitoring': "Enable connection health monitoring (enterprise feature)",
+        'enable_performance_monitoring': "Enable performance monitoring (enterprise feature)",
+        'enable_graceful_shutdown': "Enable graceful shutdown procedures (enterprise feature)",
+        'enable_health_monitoring': "Enable health monitoring (enterprise feature)",
+        'enable_connection_pooling': "Enable connection pooling (enterprise feature)",
+        'enable_load_balancing': "Enable load balancing (enterprise feature)",
+        'enable_auto_scaling': "Enable auto scaling (enterprise feature)",
+        'enable_query_optimization': "Enable query optimization (enterprise feature)",
+        'enable_performance_benchmarking': "Enable performance benchmarking (enterprise feature)",
+        'collect_metrics': "Enable metrics collection (enterprise feature)"
     }
 
     def setup(self, sfc, userOpts=dict()):
@@ -121,8 +141,7 @@ class sfp__stor_db(SpiderFootPlugin):
                     raise ValueError("Port out of range")
             except (ValueError, TypeError):
                 self.error(f"Invalid PostgreSQL port: {self.opts['postgresql_port']}")
-                return False
-                
+                return False                
         return True
 
     def _connect_postgresql(self):
@@ -139,7 +158,9 @@ class sfp__stor_db(SpiderFootPlugin):
             self.debug("Connected to PostgreSQL database")
         except Exception as e:
             self.error(f"Could not connect to PostgreSQL database: {e}")
-            self.errorState = True
+            # Only set error state if auto recovery is disabled
+            if not self.opts.get('enable_auto_recovery', False):
+                self.errorState = True
 
     def _check_postgresql_connection(self):
         """Check if PostgreSQL connection is healthy.

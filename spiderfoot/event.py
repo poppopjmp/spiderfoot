@@ -49,14 +49,14 @@ class SpiderFootEvent:
     _actualSource = None
     __id = None
 
-    def __init__(self, eventType: str, data: str, module: str, sourceEvent: 'SpiderFootEvent') -> None:
+    def __init__(self, eventType: str, data: str, module: str, sourceEvent: Optional['SpiderFootEvent'] = None) -> None:
         """Initialize SpiderFoot event object.
 
         Args:
             eventType (str): Event type, e.g. URL_FORM, RAW_DATA, etc.
             data (str): Event data, e.g. a URL, port number, webpage content, etc.
             module (str): Module from which the event originated
-            sourceEvent (SpiderFootEvent): SpiderFootEvent event that triggered this event
+            sourceEvent (SpiderFootEvent): SpiderFootEvent event that triggered this event (optional for ROOT events)
         """
         self._generated = time.time()
         self.data = data
@@ -281,9 +281,7 @@ class SpiderFootEvent:
 
     @data.setter
     def data(self, data: str) -> None:
-        """Event data.
-
-        Args:
+        """Event data.        Args:
             data (str): data
 
         Raises:
@@ -299,11 +297,11 @@ class SpiderFootEvent:
         self._data = data
 
     @sourceEvent.setter
-    def sourceEvent(self, sourceEvent: 'SpiderFootEvent') -> None:
+    def sourceEvent(self, sourceEvent: Optional['SpiderFootEvent']) -> None:
         """Source event which lead to this event.
 
         Args:
-            sourceEvent (SpiderFootEvent): source event
+            sourceEvent (SpiderFootEvent or None): source event
 
         Raises:
             TypeError: sourceEvent type was invalid
@@ -313,6 +311,12 @@ class SpiderFootEvent:
         if self.eventType == "ROOT":
             self._sourceEvent = None
             self._sourceEventHash = "ROOT"
+            return
+
+        # Allow None for any event type (for testing or special cases)
+        if sourceEvent is None:
+            self._sourceEvent = None
+            self._sourceEventHash = "ROOT"  # Use ROOT as default hash
             return
 
         if not isinstance(sourceEvent, SpiderFootEvent):

@@ -18,6 +18,12 @@ if str(PROJECT_ROOT) not in sys.path:
 # Import SpiderFootHelpers after path setup
 from spiderfoot import SpiderFootHelpers
 
+# Import our test fixtures and utilities
+from test.fixtures.database_fixtures import *
+from test.fixtures.network_fixtures import *
+from test.fixtures.event_fixtures import *
+from test.utils.test_helpers import *
+
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,

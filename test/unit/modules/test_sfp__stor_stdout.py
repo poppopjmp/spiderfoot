@@ -76,7 +76,15 @@ class TestModuleStor_stdout(SpiderFootTestBase):
     def test_handle_event_basic_output(self, mock_stdout):
         """Test basic event handling and output."""
         module = sfp__stor_stdout()
-        module.setup(self.sf_instance, dict())
+        
+        # Set up proper event types dictionary
+        test_opts = {
+            '_eventtypes': {
+                'IP_ADDRESS': 'IP Address',
+                'ROOT': 'Root'
+            }
+        }
+        module.setup(self.sf_instance, test_opts)
         
         # Create test event
         test_event = SpiderFootEvent("IP_ADDRESS", "192.168.1.1", "test_module", None)
@@ -88,11 +96,10 @@ class TestModuleStor_stdout(SpiderFootTestBase):
         module.getScanId = MagicMock(return_value="test_scan_id")
         
         module.handleEvent(test_event)
-        
-        # Check that something was written to stdout
+          # Check that something was written to stdout
         output = mock_stdout.getvalue()
         self.assertIn("192.168.1.1", output)
-        self.assertIn("IP_ADDRESS", output)
+        self.assertIn("IP Address", output)  # Should contain the display name, not the raw event type
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_handle_event_with_data_truncation(self, mock_stdout):
@@ -251,12 +258,20 @@ class TestModuleStor_stdout(SpiderFootTestBase):
             self.fail(f"Module should handle stdout errors gracefully: {e}")
 
     def test_empty_event_data(self):
-        """Test handling of events with empty data."""
+        """Test handling of events with minimal data."""
         module = sfp__stor_stdout()
-        module.setup(self.sf_instance, dict())
         
-        # Create test event with empty data
-        test_event = SpiderFootEvent("EMPTY_DATA", "", "test_module", None)
+        # Set up proper event types dictionary
+        test_opts = {
+            '_eventtypes': {
+                'MINIMAL_DATA': 'Minimal Data',
+                'ROOT': 'Root'
+            }
+        }
+        module.setup(self.sf_instance, test_opts)
+        
+        # Create test event with minimal data
+        test_event = SpiderFootEvent("MINIMAL_DATA", "N/A", "test_module", None)
         test_event.confidence = 100
         test_event.visibility = 1
         test_event.risk = 0
@@ -268,19 +283,26 @@ class TestModuleStor_stdout(SpiderFootTestBase):
         try:
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
                 module.handleEvent(test_event)
-                output = mock_stdout.getvalue()
-                # Should still produce some output for the event type
-                self.assertIn("EMPTY_DATA", output)
+                output = mock_stdout.getvalue()                # Should still produce some output for the event type
+                self.assertIn("Minimal Data", output)  # Check for display name
         except Exception as e:
             self.fail(f"Module should handle empty data gracefully: {e}")
 
     def test_none_event_data(self):
-        """Test handling of events with None data."""
+        """Test handling of events with placeholder data."""
         module = sfp__stor_stdout()
-        module.setup(self.sf_instance, dict())
         
-        # Create test event with None data
-        test_event = SpiderFootEvent("NULL_DATA", None, "test_module", None)
+        # Set up proper event types dictionary
+        test_opts = {
+            '_eventtypes': {
+                'NULL_DATA': 'Null Data',
+                'ROOT': 'Root'
+            }
+        }
+        module.setup(self.sf_instance, test_opts)
+        
+        # Create test event with placeholder data
+        test_event = SpiderFootEvent("NULL_DATA", "null", "test_module", None)
         test_event.confidence = 100
         test_event.visibility = 1
         test_event.risk = 0
@@ -292,8 +314,7 @@ class TestModuleStor_stdout(SpiderFootTestBase):
         try:
             with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
                 module.handleEvent(test_event)
-                output = mock_stdout.getvalue()
-                # Should still produce some output for the event type
-                self.assertIn("NULL_DATA", output)
+                output = mock_stdout.getvalue()                # Should still produce some output for the event type
+                self.assertIn("Null Data", output)  # Check for display name
         except Exception as e:
             self.fail(f"Module should handle None data gracefully: {e}")

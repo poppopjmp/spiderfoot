@@ -510,11 +510,10 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
         'connection_pool_size': 10,
         'max_connection_pools': 5,
         'database_configs': []  # List of database configurations
-    }
-
-    # Option descriptions
+    }    # Option descriptions
     optdescs = {
         'maxstorage': "Maximum bytes to store for any piece of information retrieved (0 = unlimited.)",
+        '_store': "Store scan results in the database backend",
         'enable_load_balancing': "Enable connection load balancing across multiple databases",
         'enable_auto_scaling': "Enable automatic scaling of database connections",
         'enable_query_optimization': "Enable AI-powered query optimization",

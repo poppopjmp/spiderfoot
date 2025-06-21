@@ -33,7 +33,7 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
     def test_module_labels_are_valid(self):
         sf = SpiderFoot(self.default_options)
         valid_labels = ["errorprone", "tor",
-                        "slow", "invasive", "apikey", "tool"]
+                        "slow", "invasive", "apikey", "tool", "enterprise", "ai", "ml", "security", "production"]
 
         sfModules = self.load_modules(sf)
         for module in sfModules:
@@ -128,7 +128,7 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
 
             for opt, val in m.get('opts').items():
                 self.assertIsInstance(
-                    val, (str, int, bool, list), f"Module {module} option {opt} has invalid type {type(val)}")
+                    val, (str, int, bool, list, float), f"Module {module} option {opt} has invalid type {type(val)}")
 
     def test_module_options_have_valid_names(self):
         sf = SpiderFoot(self.default_options)

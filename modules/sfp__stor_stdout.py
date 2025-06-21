@@ -47,8 +47,7 @@ class sfp__stor_stdout(SpiderFootPlugin):
 
     # What events is this module interested in for input
     # Because this is a storage plugin, we are interested in everything so we
-    # can store all events for later analysis.
-    def watchedEvents(self):
+    # can store all events for later analysis.    def watchedEvents(self):
         return ["*"]
 
     def output(self, event):
@@ -61,13 +60,17 @@ class sfp__stor_stdout(SpiderFootPlugin):
         if type(data) != str:
             data = str(event.data)
 
-        if type(event.sourceEvent.data) in [list, dict]:
-            srcdata = str(event.sourceEvent.data)
-        else:
-            srcdata = event.sourceEvent.data
+        # Handle case where sourceEvent might be None
+        if event.sourceEvent is not None:
+            if type(event.sourceEvent.data) in [list, dict]:
+                srcdata = str(event.sourceEvent.data)
+            else:
+                srcdata = event.sourceEvent.data
 
-        if type(srcdata) != str:
-            srcdata = str(event.sourceEvent.data)
+            if type(srcdata) != str:
+                srcdata = str(event.sourceEvent.data)
+        else:
+            srcdata = ""
 
         if self.opts['_stripnewline']:
             data = data.replace("\n", " ").replace("\r", "")

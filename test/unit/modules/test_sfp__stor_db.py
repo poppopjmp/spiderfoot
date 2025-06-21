@@ -39,8 +39,7 @@ class TestModuleStor_db(SpiderFootTestBase):
 
     def tearDown(self):
         """Clean up after each test."""
-        super().tearDown()
-        # Clean up any open connections
+        super().tearDown()        # Clean up any open connections
         if hasattr(self, 'module') and hasattr(self.module, 'pg_conn'):
             if self.module.pg_conn:
                 try:
@@ -49,20 +48,16 @@ class TestModuleStor_db(SpiderFootTestBase):
                     pass
 
     def create_test_event(self, event_type="IP_ADDRESS", data="192.168.1.1", module="test_module"):
-        """Create a test SpiderFoot event."""
-        # Create ROOT event first for other events to reference
+        """Create a test SpiderFoot event."""        # Create ROOT event first for other events to reference
         if event_type == "ROOT":
             event = SpiderFootEvent("ROOT", data, module)
-        else:
-            # Create a root event to serve as source
+        else:            # Create a root event to serve as source
             root_event = SpiderFootEvent("ROOT", "root", module)
             event = SpiderFootEvent(event_type, data, module, root_event)
         
         event.confidence = 100
         event.visibility = 1
         event.risk = 0
-        event.hash = f"test_hash_{time.time()}"
-        event.generated = time.time()
         return event
 
     @unittest.skip("This module contains an extra private option")
