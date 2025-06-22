@@ -74,7 +74,7 @@ class sfp_abusech(SpiderFootPlugin):
         'checkcohosts': "Apply checks to sites found to be co-hosted on the target's IP?",
         'cacheperiod': "Hours to cache list data before re-fetching.",
         'checknetblocks': "Report if any malicious IPs are found within owned netblocks?",
-        'checksubnets': "Check if any malicious IPs are found within the same subnet of the target?"
+        'checksubnets': "Check if any malicious IPs are found within the same subnet of the target?",
     }
 
     results = None
