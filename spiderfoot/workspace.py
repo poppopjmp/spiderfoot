@@ -28,7 +28,7 @@ class SpiderFootWorkspace:
             name: Name for new workspace
         """
         self.config = config
-        self.db = SpiderFootDb(config)
+        self.db = SpiderFootDb(config, init=True)
         self.log = logging.getLogger(f"spiderfoot.workspace")
         
         # Ensure workspace table exists before any operations

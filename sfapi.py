@@ -433,28 +433,26 @@ async def create_scan(scan_request: ScanRequest, background_tasks: BackgroundTas
     try:
         config = get_app_config()
         db = SpiderFootDb(config.get_config())
-        
-        # Generate scan ID
         scan_id = SpiderFootHelpers.genScanInstanceId()
-        
-        # Validate target
         target_type = SpiderFootHelpers.targetTypeFromString(scan_request.target)
         if not target_type:
-            raise HTTPException(status_code=400, detail="Invalid target format")
-        
-        # Get modules list
+            raise HTTPException(status_code=422, detail="Invalid target")
         sf = SpiderFoot(config.get_config())
         all_modules = sf.modulesProducing(['*'])
-        
-        if scan_request.modules:
-            modules = scan_request.modules
+        # Use all modules if modules is None or empty
+        if not scan_request.modules:
+            modules = all_modules
         else:
-            modules = list(all_modules.keys())
-        
-        # Create scan record
-        db.scanInstanceCreate(scan_id, scan_request.name, scan_request.target)
-        
-        # Start scan in background
+            modules = scan_request.modules
+        # Ensure at least one module (storage) is present
+        if not modules:
+            modules = ['sfp__stor_db']
+        # Create scan instance in DB here, not in background
+        try:
+            db.scanInstanceCreate(scan_id, scan_request.name, scan_request.target)
+        except Exception as e:
+            logger.error("Failed to create scan instance: %s", e)
+            raise HTTPException(status_code=500, detail="Unable to create scan instance in database") from e
         background_tasks.add_task(
             start_scan_background,
             scan_id,
@@ -465,7 +463,6 @@ async def create_scan(scan_request: ScanRequest, background_tasks: BackgroundTas
             scan_request.type_filter,
             config.get_config()
         )
-        
         return {
             "id": scan_id,
             "name": scan_request.name,
@@ -476,25 +473,25 @@ async def create_scan(scan_request: ScanRequest, background_tasks: BackgroundTas
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to create scan: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create scan")
+        logger.error("Failed to create scan: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to create scan") from e
 
 async def start_scan_background(scan_id: str, scan_name: str, target: str, 
-                              target_type: str, modules: List[str], 
-                              type_filter: Optional[List[str]], config: dict):
-    """Start scan in background process"""
+                              target_type: str, modules: list, 
+                              type_filter: list, config: dict):
     try:
-        # Use the same scan starting logic as sfwebui.py
+        # Only start the scan, do not create scan instance here
         startSpiderFootScanner(
-            config=config,
-            loggingQueue=api_logging_queue,
-            scanId=scan_id,
-            targetData=[target],
-            modules=modules,
-            scanName=scan_name
+            api_logging_queue,
+            scan_name,
+            scan_id,
+            target,
+            target_type,
+            modules,
+            config
         )
     except Exception as e:
-        logger.error(f"Failed to start scan {scan_id}: {e}")
+        logger.error("Failed to start scan %s: %s", scan_id, e)
 
 @scan_router.get("/scans/{scan_id}")
 async def get_scan(scan_id: str, api_key: str = Depends(optional_auth)):
@@ -765,21 +762,24 @@ async def delete_workspace(workspace_id: str, api_key: str = Depends(get_api_key
 
 @workspace_router.post("/workspaces/{workspace_id}/targets", status_code=201)
 async def add_target(workspace_id: str, target_request: TargetRequest, api_key: str = Depends(get_api_key)):
-    """Add target to workspace"""
     try:
         config = get_app_config()
         workspace = SpiderFootWorkspace(config.get_config(), workspace_id)
-        
+        # Validate target_type
+        valid_type = SpiderFootHelpers.targetTypeFromString(target_request.target)
+        if not valid_type or valid_type != target_request.target_type:
+            raise HTTPException(status_code=422, detail="Invalid target type")
         target_id = workspace.add_target(
             target_request.target,
             target_request.target_type,
             target_request.metadata
         )
-        
         return {
             "target_id": target_id,
             "message": "Target added successfully"
         }
+    except HTTPException:
+        raise
     except ValueError:
         raise HTTPException(status_code=404, detail="Workspace not found")
     except Exception as e:
