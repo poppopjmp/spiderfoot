@@ -4,34 +4,38 @@
   </a>
 </div>
 
-### **Enterprise-Ready OSINT Automation Platform**
+### **Spiderfoot OSINT Automation Platform**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
 [![Stable Release](https://img.shields.io/badge/version-5.2.2--Enterprise-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.2.2)
-[![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
-[![Docker CI Build](https://github.com/poppopjmp/spiderfoot/workflows/Docker%20Image%20CI/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Docker%20Image%20CI")
-[![Enterprise Ready](https://img.shields.io/badge/Enterprise-Ready-brightgreen.svg)](https://github.com/poppopjmp/spiderfoot)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
+[![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
+[![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
+[![Docker CI Build](https://github.com/poppopjmp/spiderfoot/workflows/Docker%20Image%20CI/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Docker%20Image%20CI")
+[![Browser Acceptance status](https://github.com/poppopjmp/spiderfoot/workflows/SpiderFoot%20Acceptance%20Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"SpiderFoot%20Acceptance%20Tests")
+[![Code QL](https://github.com/poppopjmp/spiderfoot/workflows/CodeQL/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"CodeQL")
+[![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
+[![codecov](https://codecov.io/github/poppopjmp/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/poppopjmp/spiderfoot)
+[![Codacy Security Scan](https://github.com/poppopjmp/spiderfoot/actions/workflows/codacy.yml/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions/workflows/codacy.yml)
 [![Discord](https://img.shields.io/discord/770524432464216074)](https://discord.gg/vyvztrG)
 ![Active Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)
-
 
 **SpiderFoot** is a production-ready, enterprise-grade open source intelligence (OSINT) automation platform. Enhanced with advanced storage capabilities, AI-powered threat intelligence, and comprehensive security hardening, it integrates with hundreds of data sources and utilizes advanced methods for data analysis, making intelligence data easily navigable and actionable.
 
 SpiderFoot features an embedded web-server for providing a clean and intuitive web-based interface but can also be used completely via the command-line. It's written in **Python 3** and **MIT-licensed**.
 
-## 🚀 **Enterprise Enhancements**
+##  **Spiderfoot Enhancements**
 
 This version includes production-ready enterprise features:
 
-- **🎯 Advanced Storage Engine**: High-performance data storage with optimized querying and reporting
-- **🤖 AI-Powered Threat Intelligence**: Automated threat analysis and intelligent pattern recognition  
-- **🔒 Security Hardening**: Enhanced security controls, input validation, and secure configurations
-- **📊 Comprehensive Reporting**: Advanced analytics and customizable report generation
-- **⚡ Performance Optimization**: Scalable architecture for enterprise workloads
-- **🔧 Production Configuration**: Ready-to-deploy configurations for enterprise environments
+- **Advanced Storage Engine**: High-performance data storage with optimized querying and reporting
+- **AI-Powered Threat Intelligence**: Automated threat analysis and intelligent pattern recognition  
+- **Security Hardening**: Enhanced security controls, input validation, and secure configurations
+- **Comprehensive Reporting**: Advanced analytics and customizable report generation
+- **Performance Optimization**: Scalable architecture for enterprise workloads
+- **Production Configuration**: Ready-to-deploy configurations for enterprise environments
 
 <img src="./docs/images/v5.png" />
 
@@ -54,7 +58,7 @@ This version includes production-ready enterprise features:
 - Actively developed since 2012!
 - Comprehensive REST API for enterprise integration
 
-#### Enterprise Features ✨
+#### Enterprise Features 
 - **Advanced Storage Engine**: High-performance data storage with optimized indexing and compression
 - **AI Threat Intelligence**: Machine learning-powered threat analysis and automated pattern recognition
 - **Security Hardening**: Enhanced input validation, secure configurations, and audit logging
@@ -67,37 +71,37 @@ This version includes production-ready enterprise features:
 
 SpiderFoot Enterprise includes advanced features for production environments:
 
-#### 🤖 AI-Powered Intelligence
+#### AI-Powered Intelligence
 - **Automated Threat Analysis**: Machine learning algorithms analyze patterns and identify threats
 - **Intelligent Pattern Recognition**: AI-powered correlation of indicators across data sources
 - **Predictive Analytics**: Threat trend analysis and risk prediction capabilities
 - **Natural Language Processing**: Automated analysis of text-based intelligence sources
 
-#### 🔒 Security & Compliance  
+#### Security & Compliance  
 - **Enhanced Input Validation**: Comprehensive sanitization and validation of all inputs
 - **Security Configuration**: Hardened default configurations and security best practices
 - **Audit Logging**: Comprehensive audit trails for compliance and forensic analysis
 - **Access Controls**: Role-based access control and authentication mechanisms
 
-#### ⚡ Performance & Scalability
+#### Performance & Scalability
 - **High-Performance Storage**: Optimized database operations with compression and indexing
 - **Concurrent Processing**: Advanced threading and asynchronous processing capabilities
 - **Resource Management**: Intelligent resource allocation and memory optimization
 - **Load Balancing**: Support for distributed scanning across multiple instances
 
-#### 📊 Advanced Analytics
+#### Advanced Analytics
 - **Custom Dashboards**: Configurable dashboards with real-time metrics and KPIs
 - **Comprehensive Reporting**: Advanced report generation with customizable templates
 - **Data Visualization**: Interactive charts, graphs, and network topology views
 - **Export Capabilities**: Multiple export formats with enterprise-grade data handling
 
-#### 🔧 Enterprise Integration
+### Enterprise Integration
 - **REST API**: Comprehensive API for seamless integration with security tools
 - **Webhook Support**: Real-time notifications and event-driven integrations
 - **SIEM Integration**: Direct integration with popular SIEM platforms
 - **CI/CD Pipeline Support**: Automated scanning integration for DevSecOps workflows
 
-## 📚 **Documentation**
+## **Documentation**
 
 Comprehensive documentation is available for all aspects of SpiderFoot Enterprise:
 
@@ -512,7 +516,7 @@ Read more at the [project website](https://github.com/poppopjmp/spiderfoot/wiki)
 
 SpiderFoot is actively maintained with regular updates and contributions. The project is under active development, with recent commits and ongoing improvements. Issues and pull requests are actively managed and addressed. The community is engaged through discussions and contributions. We encourage users to report issues and contribute to the project.
 
-Maintainers: Steve Micallef <steve@binarypool.com>, Poppopjmp <van1sh@van1shland.io>
+Maintainer: Poppopjmp <van1sh@van1shland.io>
 
 ### RECENT UPDATES
 
@@ -588,203 +592,3 @@ curl -X GET "http://127.0.0.1:8000/api/scan/results?scan_id=12345"
 ```
 
 For more detailed instructions and examples, refer to the API documentation.
-
-### BUILD PROCESS OF REACT WEB INTERFACE
-
-The React web interface for SpiderFoot provides an alternative web interface with a completely new design. Follow the steps below to set up and run the React web interface.
-
-#### Prerequisites
-
-- Node.js (v14 or higher)
-- npm (v6 or higher)
-
-#### Installation
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/poppopjmp/spiderfoot.git
-cd spiderfoot/react-web-interface
-```
-
-2. Install the dependencies:
-
-```bash
-npm install
-```
-
-3. Start the development server:
-
-```bash
-npm run dev
-```
-
-This will start both the Express.js server and the React development server concurrently.
-
-#### Available Scripts
-
-In the project directory, you can run the following scripts:
-
-- `npm start`: Runs the Express.js server.
-- `npm run client`: Runs the React development server.
-- `npm run server`: Runs the Express.js server with nodemon for automatic restarts.
-- `npm run dev`: Runs both the Express.js server and the React development server concurrently.
-
-#### Project Structure
-
-The project structure is as follows:
-
-```
-react-web-interface/
-├── client/
-│   ├── public/
-│   ├── src/
-│   │   ├── App.js
-│   │   ├── index.js
-│   │   └── ...
-│   └── package.json
-├── server.js
-├── package.json
-└── README.md
-```
-
-- `client/`: Contains the React front-end code.
-- `server.js`: Contains the Express.js server code.
-- `package.json`: Contains the project dependencies and scripts.
-- `README.md`: This file.
-
-#### Usage
-
-The React web interface provides the following functionalities:
-
-- Start a scan
-- Stop a scan
-- Retrieve scan results
-- List available modules
-- List active scans
-- Get scan status
-- List scan history
-- Export scan results
-- Import API keys
-- Export API keys
-
-##### Start a Scan
-
-To start a new scan, enter the target and select the modules you want to use, then click the "Start Scan" button.
-
-##### Stop a Scan
-
-To stop an ongoing scan, enter the scan ID and click the "Stop Scan" button.
-
-##### Retrieve Scan Results
-
-To retrieve the results of a completed scan, enter the scan ID and click the "Get Scan Results" button.
-
-##### List Available Modules
-
-The available modules are listed in the "Start Scan" section. You can select multiple modules to use in a scan.
-
-##### List Active Scans
-
-The active scans are listed in the "Active Scans" section.
-
-##### Get Scan Status
-
-To get the status of a specific scan, enter the scan ID and click the "Get Scan Status" button.
-
-##### List Scan History
-
-The scan history is listed in the "Scan History" section.
-
-##### Export Scan Results
-
-To export the results of a completed scan, enter the scan ID and click the "Export as CSV" or "Export as JSON" button.
-
-##### Import API Keys
-
-To import an API key for a module, enter the API key and click the "Import API Key" button.
-
-##### Export API Keys
-
-The exported API keys are listed in the "API Keys" section.
-
-#### Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request with your changes.
-
-#### License
-
-This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.
-
-### REST API Documentation
-
-The SpiderFoot REST API allows you to interact with SpiderFoot programmatically. The API provides endpoints for starting scans, stopping scans, retrieving scan results, listing available modules, listing active scans, getting scan status, listing scan history, exporting scan results, importing API keys, and exporting API keys.
-
-#### Available Endpoints
-
-- `POST /start_scan`: Start a new scan
-- `POST /stop_scan/{scan_id}`: Stop an ongoing scan
-- `GET /scan_results/{scan_id}`: Retrieve scan results
-- `GET /modules`: List available modules
-- `GET /active_scans`: List active scans
-- `GET /scan_status/{scan_id}`: Get the status of a specific scan
-- `GET /scan_history`: List the history of all scans performed
-- `GET /export_scan_results/{scan_id}`: Export scan results in various formats (e.g., CSV, JSON)
-- `POST /import_api_key`: Import API keys for various modules
-- `GET /export_api_keys`: Export API keys for various modules
-- `GET /scan_correlations/{scan_id}`: Get scan correlations
-- `GET /scan_logs/{scan_id}`: Get scan logs
-- `GET /scan_summary/{scan_id}`: Get scan summary
-
-#### Example Usage
-
-To start a new scan, send a `POST` request to the `/start_scan` endpoint with the required parameters:
-
-```bash
-curl -X POST "http://127.0.0.1:8000/start_scan" -H "Content-Type: application/json" -d '{"target": "example.com", "modules": ["module1", "module2"]}'
-```
-
-To stop an ongoing scan, send a `POST` request to the `/stop_scan/{scan_id}` endpoint with the scan ID:
-
-```bash
-curl -X POST "http://127.0.0.1:8000/stop_scan/12345"
-```
-
-To retrieve scan results, send a `GET` request to the `/scan_results/{scan_id}` endpoint with the scan ID:
-
-```bash
-curl -X GET "http://127.0.0.1:8000/scan_results/12345"
-```
-
-For more detailed instructions and examples, refer to the API documentation.
-
-#### Accessing the Swagger UI
-
-The SpiderFoot REST API includes a Swagger UI for testing and exploring the API endpoints. To access the Swagger UI, follow these steps:
-
-1. Start the REST API server using the following command:
-
-```bash
-python3 ./sf.py --rest-api
-```
-
-2. Open your web browser and navigate to `http://127.0.0.1:8000/docs`.
-
-The Swagger UI provides an interactive interface for testing the API endpoints, viewing request and response details, and exploring the available API documentation.
-
-## MISP Integration
-
-SpiderFoot supports integration with [MISP](https://www.misp-project.org/) (Malware Information Sharing Platform), allowing you to:
-
-- Export scan results to MISP-compatible format
-- Publish results directly to a MISP instance
-- Use MISP taxonomies for data classification
-- Create structured MISP objects from SpiderFoot data
-
-To use the MISP integration with direct publishing capabilities:
-
-```bash
-pip install -r requirements-misp.txt
-```
-
-Learn more in the [MISP integration documentation](docs/MISP_INTEGRATION.md).
