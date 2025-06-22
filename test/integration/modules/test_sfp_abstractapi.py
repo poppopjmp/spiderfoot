@@ -10,6 +10,26 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 class BaseTestModuleIntegration(unittest.TestCase):
 
     default_options = {
+        '_socks1type': '',
+        '_socks2addr': '',
+        '_socks3port': '',
+        '_socks4user': '',
+        '_socks5pwd': '',
+        '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+        '_internettlds_cache': 72,
+        '_fetchtimeout': 5,
+        '_useragent': 'SpiderFootTest',
+        '_dnsserver': '',
+        '_outputfilter': None,
+        '_debug': False,
+        '__logging': True,
+        '__outputfilter': None,
+        '__database': 'data/spiderfoot.test.db',
+        '__modules__': None,
+        '__correlationrules__': None,
+        '__logstdout': False,
+        '__modulesdir': 'modules',
+        # Add any other options required by your modules/tests here
         'companyenrichment_api_key': 'dummy',
         'phonevalidation_api_key': 'dummy',
         'ipgeolocation_api_key': 'dummy',
