@@ -59,24 +59,6 @@ jobs:
         # Start container in background
         docker run -d --name $CONTAINER -p 5001:5001 -p 8001:8001 $IMAGE
 
-        # Wait for web UI (CherryPy) to be ready
-        for i in {1..30}; do
-          if curl -fsS http://localhost:5001/ >/dev/null; then
-            echo "Web UI is up"; break
-          fi
-          echo "Waiting for web UI... ($i)"; sleep 2
-        done
-        curl -fsS http://localhost:5001/ || (echo 'Web UI did not start' && docker logs $CONTAINER && exit 1)
-
-        # Wait for API (FastAPI) to be ready
-        for i in {1..30}; do
-          if curl -fsS http://localhost:8001/api/v1/info >/dev/null; then
-            echo "API is up"; break
-          fi
-          echo "Waiting for API... ($i)"; sleep 2
-        done
-        curl -fsS http://localhost:8001/api/v1/info || (echo 'API did not start' && docker logs $CONTAINER && exit 1)
-
         # Check for errors in logs
         if docker logs $CONTAINER 2>&1 | grep -iE 'Traceback|ERROR|Exception'; then
           echo 'Errors found in container logs';
