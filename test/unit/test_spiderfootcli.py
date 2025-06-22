@@ -167,7 +167,7 @@ class TestSpiderFootCli(SpiderFootTestBase):
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = True
         sfcli.ownopts['cli.spool'] = False
-
+        sfcli.ownopts['cli.silent'] = False
         from unittest.mock import patch
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             sfcli.dprint("example output")
@@ -191,7 +191,7 @@ class TestSpiderFootCli(SpiderFootTestBase):
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = True
         sfcli.ownopts['cli.spool'] = False
-
+        sfcli.ownopts['cli.silent'] = False
         from unittest.mock import patch
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             sfcli.ddprint("example debug output")
@@ -274,7 +274,7 @@ class TestSpiderFootCli(SpiderFootTestBase):
         """Test send_output(self, data, cmd, titles=None, total=True,
         raw=False)"""
         sfcli = SpiderFootCli()
-
+        sfcli.ownopts['cli.silent'] = False
         from unittest.mock import patch
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             sfcli.send_output("{}", "", raw=True)
@@ -452,7 +452,7 @@ class TestSpiderFootCli(SpiderFootTestBase):
     def test_print_topic(self):
         """Test print_topics(self, header, cmds, cmdlen, maxcol)"""
         sfcli = SpiderFootCli()
-
+        sfcli.ownopts['cli.silent'] = False
         from unittest.mock import patch
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             sfcli.print_topics(None, "help", None, None)
@@ -473,7 +473,7 @@ class TestSpiderFootCli(SpiderFootTestBase):
     def test_do_shell(self):
         """Test do_shell(self, line)"""
         sfcli = SpiderFootCli()
-
+        sfcli.ownopts['cli.silent'] = False
         from unittest.mock import patch
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             sfcli.do_shell("")
