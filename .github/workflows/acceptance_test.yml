@@ -44,7 +44,7 @@ jobs:
       - name: Start SpiderFoot container
         run: |
           set -e
-          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v5.2.2
+          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v5.0.3
 
       - name: Wait for SpiderFoot to start
         run: |
@@ -127,7 +127,7 @@ jobs:
       - name: Start SpiderFoot container
         run: |
           set -e
-          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v5.2.2
+          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v5.0.3
 
       - name: Wait for SpiderFoot to start
         run: |
