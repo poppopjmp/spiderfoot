@@ -256,7 +256,16 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
             # But limit buffer size to prevent memory issues
             if len(self.buffer) > self.opts['bulk_size'] * 10:
                 self.error("ElasticSearch buffer too large, discarding oldest events")
-                self.buffer = self.buffer[-self.opts['bulk_size']:]
+                self.buffer = self.buffer[-self.opts['bulk_size']]
+
+    def _check_elasticsearch_health(self):
+        """Check the health of the Elasticsearch connection."""
+        if not self.es:
+            return False
+        try:
+            return self.es.ping()
+        except Exception:
+            return False
 
     def shutdown(self):
         """Clean up after this module."""

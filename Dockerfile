@@ -163,4 +163,4 @@ EXPOSE 5001 8001
 
 # Default command with support for both web UI and API
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh", "python"]
-CMD ["python", "sf.py", "--both", "-l", "0.0.0.0:5001", "--api-listen", "0.0.0.0:8001"]
+CMD ["sf.py", "--both", "-l", "0.0.0.0:5001", "--api-listen", "0.0.0.0:8001"]

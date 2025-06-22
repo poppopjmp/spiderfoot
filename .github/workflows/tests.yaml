@@ -43,7 +43,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-            python -m pytest -n auto --dist loadfile --verbose  --ignore=test/integration/ --durations=5 --cov-report term --cov=. .
+            python -m pytest -n auto --dist loadfile --verbose --durations=5 --cov-report term --cov=. .
       - uses: codecov/codecov-action@v1
         with:
             fail_ci_if_error: false
@@ -51,7 +51,7 @@ jobs:
 
       - name: Measure test coverage
         run: |
-          coverage run -m pytest --ignore=test/integration/
+          coverage run -m pytest
           coverage report -m
           coverage xml
       - name: Upload test results to Codecov

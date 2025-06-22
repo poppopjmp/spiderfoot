@@ -347,17 +347,16 @@ class SpiderFootWebUi:
         try:
             data = dbh.scanLogs(id)
         except Exception:
-            return self.jsonify_error("404", "Scan ID not found")
+            return json.dumps(self.jsonify_error("404", "Scan ID not found")).encode("utf-8")
 
         if not data:
-            return self.jsonify_error("404", "No scan logs found")
+            return json.dumps(self.jsonify_error("404", "No scan logs found")).encode("utf-8")
 
         fileobj = StringIO()
         parser = csv.writer(fileobj, dialect=dialect)
         parser.writerow(["Date", "Component", "Type", "Event", "Event ID"])
         for row in data:
             parser.writerow([str(x) for x in row])
-
         cherrypy.response.headers[
             'Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.log.csv"
         cherrypy.response.headers['Content-Type'] = "application/csv"
@@ -1463,10 +1462,6 @@ class SpiderFootWebUi:
 
         targetType = SpiderFootHelpers.targetTypeFromString(scantarget)
         if targetType is None:
-            if cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'):
-                cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-                return json.dumps(["ERROR", "Unrecognised target type."]).encode('utf-8')
-
             return self.error("Invalid target type. Could not recognize it as a target SpiderFoot supports.")
 
         # Swap the globalscantable for the database handler
@@ -2928,40 +2923,40 @@ This is a placeholder MCP report. Integration with actual MCP server required.
                     limit = int(limit)
                 except (ValueError, TypeError):
                     limit = 100  # fallback to default
-            
+
             # Ensure limit is positive and reasonable
             if not isinstance(limit, int) or limit <= 0:
                 limit = 100
             elif limit > 10000:  # Cap at reasonable maximum
                 limit = 10000
-            
+
             workspace = SpiderFootWorkspace(self.config, workspace_id)
             dbh = SpiderFootDb(self.config)
-            
+
             if scan_id:
                 # Get results for specific scan
                 scan_ids = [scan_id]
             else:
                 # Get results for all workspace scans
                 scan_ids = [scan['scan_id'] for scan in workspace.scans]
-            
+
             all_results = []
             scan_summaries = {}
-            
+
             for sid in scan_ids:
                 # Get scan summary
                 summary = dbh.scanResultSummary(sid, 'type')
                 scan_summaries[sid] = summary
-                
+
                 # Get recent events
                 if event_type:
                     events = dbh.scanResultEvent(sid, event_type, False)
                 else:
                     events = dbh.scanResultEvent(sid, 'ALL', False)
-                
+
                 # Limit results per scan
                 events = events[:limit] if events else []
-                
+
                 for event in events:
                     all_results.append({
                         'scan_id': sid,
@@ -2972,7 +2967,7 @@ This is a placeholder MCP report. Integration with actual MCP server required.
                         'source_event': event[4] if len(event) > 4 else '',
                         'false_positive': event[8] if len(event) > 8 else False
                     })
-            
+
             return {
                 'success': True,
                 'results': all_results[:limit],  # Apply overall limit

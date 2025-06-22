@@ -50,7 +50,7 @@ jobs:
         run: |
           set -e
           for i in {1..60}; do
-            if curl -sSf http://127.0.0.1:5001 > /dev/null; then
+            if curl -sSf http://127.0.0.1:5001/ping > /dev/null; then
               echo "SpiderFoot is up!"
               exit 0
             fi
@@ -133,7 +133,7 @@ jobs:
         run: |
           set -e
           for i in {1..60}; do
-            if curl -sSf http://127.0.0.1:5001 > /dev/null; then
+            if curl -sSf http://127.0.0.1:5001/ping > /dev/null; then
               echo "SpiderFoot is up!"
               exit 0
             fi
