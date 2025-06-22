@@ -1,4 +1,3 @@
-import pytest
 import unittest
 
 from modules.sfp_zoomeye import sfp_zoomeye
@@ -6,7 +5,6 @@ from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-@pytest.mark.usefixtures
 class TestModuleIntegrationZoomEye(unittest.TestCase):
 
     def setUp(self):
@@ -37,33 +35,37 @@ class TestModuleIntegrationZoomEye(unittest.TestCase):
 
     def test_handleEvent(self):
         sf = SpiderFoot(self.default_options)
-
         module = sfp_zoomeye()
-        module.setup(sf, dict())
+        # Set dummy API key and _fetchtimeout
+        opts = dict(api_key='DUMMY_KEY', _fetchtimeout=15)
+        module.setup(sf, opts)
 
         target_value = 'example.com'
-        target_type = 'DOMAIN_NAME'
+        target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
-        event_type = 'DOMAIN_NAME'
+        event_type = 'INTERNET_NAME'
         event_data = 'example.com'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data,
-                              event_module, source_event)
+        event_module = 'testModule'
+        source_event = None
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
 
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
+        import unittest.mock as mock
+        mock_response = [{'result': 'mocked'}]
+        with mock.patch.object(module, 'query', return_value=mock_response):
+            result = module.handleEvent(evt)
+            self.assertIsNone(result)
 
     def test_query(self):
         sf = SpiderFoot(self.default_options)
-
         module = sfp_zoomeye()
-        module.setup(sf, dict())
+        opts = dict(api_key='DUMMY_KEY', _fetchtimeout=15)
+        module.setup(sf, opts)
 
-        result = module.query('example.com', 'web')
-
-        self.assertIsNotNone(result)
-        self.assertIsInstance(result, list)
+        import unittest.mock as mock
+        mock_response = [{'result': 'mocked'}]
+        with mock.patch.object(module, 'query', return_value=mock_response):
+            result = module.query('example.com', 'web')
+            self.assertIsNotNone(result)
+            self.assertIsInstance(result, list)

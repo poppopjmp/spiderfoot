@@ -58,9 +58,13 @@ class TestSFPRrocketreach(unittest.TestCase):
     def test_events(self):
         """Test the produced and watched event types."""
         module = sfp_rocketreach()
+        # Ensure opts are set up as expected
+        module.setup(self.sf, {'_fetchtimeout': 30, 'api_key': 'API_KEY', 'max_results': 10})
         self.assertIsInstance(module, sfp_rocketreach)
         self.assertEqual(module.opts['_fetchtimeout'], 30)
-        self.assertEqual(len(module.opts.keys()), 3)
+        self.assertEqual(module.opts['api_key'], 'API_KEY')
+        self.assertEqual(module.opts['max_results'], 10)
+        self.assertIn('delay', module.opts)
 
         # These are the events that the module produces
         expected = ["EMAILADDR", "PERSON_NAME", "PHONE_NUMBER",
@@ -82,56 +86,85 @@ class TestSFPRrocketreach(unittest.TestCase):
     def test_query_domain_not_found(self):
         """Test the query method for a domain not found."""
         module = sfp_rocketreach()
-        # Note: Replace with your actual API key
         module.opts['api_key'] = 'API_KEY'
-        result = module.query('thisdomaindoesnotexist.com', 'domain')
-        self.assertEqual(
-            result, [{'matches': [], 'total': 0, 'page': 1, 'size': 10}])
+        module.opts['_fetchtimeout'] = 30
+        module.opts['max_results'] = 10
+        import unittest.mock as mock
+        import requests
+        with mock.patch('modules.sfp_rocketreach.requests.get') as mock_get:
+            mock_response = mock.Mock()
+            mock_response.status_code = 404
+            mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError('404 Client Error')
+            mock_get.return_value = mock_response
+            result = module.query('thisdomaindoesnotexist.com', 'domain')
+            self.assertIsNone(result)
 
     def test_query_domain_found(self):
         """Test the query method for a domain that is found."""
         module = sfp_rocketreach()
-        # Note: Replace with your actual API key
         module.opts['api_key'] = 'API_KEY'
-        result = module.query('google.com', 'domain')
-        self.assertIsInstance(result, list)
-        # Adjust assertion since we're using mock data
-        self.assertTrue(len(result) > 0)
+        module.opts['_fetchtimeout'] = 30
+        module.opts['max_results'] = 10
+        # Patch requests.get to return a mock 200 response with JSON data
+        import unittest.mock as mock
+        with mock.patch('modules.sfp_rocketreach.requests.get') as mock_get:
+            mock_response = mock.Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = [{'matches': [], 'total': 0, 'page': 1, 'size': 10}]
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+            result = module.query('google.com', 'domain')
+            self.assertIsInstance(result, list)
+            self.assertTrue(len(result) > 0)
 
     def test_query_email_not_found(self):
         """Test the query method for an email not found."""
         module = sfp_rocketreach()
-        # Note: Replace with your actual API key
         module.opts['api_key'] = 'API_KEY'
-        result = module.query('thisdoesnotexist@example.com', 'email')
-        self.assertEqual(
-            result, [{'matches': [], 'total': 0, 'page': 1, 'size': 10}])
+        module.opts['_fetchtimeout'] = 30
+        module.opts['max_results'] = 10
+        import unittest.mock as mock
+        import requests
+        with mock.patch('modules.sfp_rocketreach.requests.get') as mock_get:
+            mock_response = mock.Mock()
+            mock_response.status_code = 404
+            mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError('404 Client Error')
+            mock_get.return_value = mock_response
+            result = module.query('thisdoesnotexist@example.com', 'email')
+            self.assertIsNone(result)
 
     def test_query_email_found(self):
         """Test the query method for an email that is found."""
         module = sfp_rocketreach()
-        # Note: Replace with your actual API key, and use a known valid email
         module.opts['api_key'] = 'API_KEY'
-        result = module.query('test@example.com', 'email')
-        self.assertIsInstance(result, list)
-        # Adjust assertion since we're using mock data
-        self.assertTrue(len(result) > 0)
+        module.opts['_fetchtimeout'] = 30
+        module.opts['max_results'] = 10
+        import unittest.mock as mock
+        with mock.patch('modules.sfp_rocketreach.requests.get') as mock_get:
+            mock_response = mock.Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = [{'matches': [], 'total': 0, 'page': 1, 'size': 10}]
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+            result = module.query('test@example.com', 'email')
+            self.assertIsInstance(result, list)
+            self.assertTrue(len(result) > 0)
 
     def test_handleEvent_no_api_key(self):
         """Test the handleEvent method with no API key."""
         module = sfp_rocketreach()
-        module.setup(self.sf, dict())
+        module.setup(self.sf, dict(_fetchtimeout=30))
         evt = SpiderFootEvent("DOMAIN_NAME", "example.com",
-                              self.__class__.__name__, dict())
+                              self.__class__.__name__, None)
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
     def test_handleEvent_api_key_invalid(self):
         """Test the handleEvent method with an invalid API key."""
         module = sfp_rocketreach()
-        module.setup(self.sf, dict(api_key='ABCDEFG'))
+        module.setup(self.sf, dict(api_key='ABCDEFG', _fetchtimeout=30))
         evt = SpiderFootEvent("DOMAIN_NAME", "example.com",
-                              self.__class__.__name__, dict())
+                              self.__class__.__name__, None)
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
@@ -139,9 +172,9 @@ class TestSFPRrocketreach(unittest.TestCase):
         """Test the handleEvent method for a domain not found."""
         module = sfp_rocketreach()
         # Note: Replace with your actual API key
-        module.setup(self.sf, dict(api_key='API_KEY'))
+        module.setup(self.sf, dict(api_key='API_KEY', _fetchtimeout=30))
         evt = SpiderFootEvent(
-            "DOMAIN_NAME", "thisdomaindoesnotexist.com", self.__class__.__name__, dict())
+            "DOMAIN_NAME", "thisdomaindoesnotexist.com", self.__class__.__name__, None)
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
@@ -149,9 +182,9 @@ class TestSFPRrocketreach(unittest.TestCase):
         """Test the handleEvent method for a domain that is found."""
         module = sfp_rocketreach()
         # Note: Replace with your actual API key
-        module.setup(self.sf, dict(api_key='API_KEY'))
+        module.setup(self.sf, dict(api_key='API_KEY', _fetchtimeout=30))
         evt = SpiderFootEvent("DOMAIN_NAME", "google.com",
-                              self.__class__.__name__, dict())
+                              self.__class__.__name__, None)
         result = module.handleEvent(evt)
         self.assertIsNone(result)  # handleEvent() does not return any value
 

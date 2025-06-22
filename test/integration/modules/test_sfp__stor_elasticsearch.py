@@ -50,7 +50,7 @@ class BaseTestModuleIntegration(unittest.TestCase):
         return target, evt
 
 
-@pytest.mark.usefixtures
+
 class TestModuleIntegration_stor_elasticsearch(BaseTestModuleIntegration):
 
     def setup_elasticsearch_with_retries(self, timeout, retries=3, backoff_factor=0.3):

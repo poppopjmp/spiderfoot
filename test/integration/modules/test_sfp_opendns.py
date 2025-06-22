@@ -6,7 +6,7 @@ from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-@pytest.mark.usefixtures
+
 class TestModuleIntegrationOpendns(unittest.TestCase):
 
     def test_handleEvent_event_data_safe_internet_name_not_blocked_should_not_return_event(self):
@@ -14,17 +14,12 @@ class TestModuleIntegrationOpendns(unittest.TestCase):
 
         module = sfp_opendns()
         module.setup(sf, dict())
+        module.__name__ = "sfp_opendns"
 
         target_value = 'spiderfoot.net'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            raise Exception(f"Raised event {event.eventType}: {event.data}")
-
-        module.notifyListeners = new_notifyListeners.__get__(
-            module, sfp_opendns)
 
         event_type = 'ROOT'
         event_data = 'example data'
@@ -40,34 +35,23 @@ class TestModuleIntegrationOpendns(unittest.TestCase):
 
         evt = SpiderFootEvent(event_type, event_data,
                               event_module, source_event)
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
+        events = []
+        import unittest.mock as mock_mod
+        with mock_mod.patch.object(module, 'notifyListeners', side_effect=events.append):
+            module.handleEvent(evt)
+        self.assertEqual(events, [])
 
     def test_handleEvent_event_data_adult_internet_name_blocked_should_return_event(self):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_opendns()
         module.setup(sf, dict())
+        module.__name__ = "sfp_opendns"
 
         target_value = 'spiderfoot.net'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
-
-        def new_notifyListeners(self, event):
-            expected = 'BLACKLISTED_INTERNET_NAME'
-            if str(event.eventType) != expected:
-                raise Exception(f"{event.eventType} != {expected}")
-
-            expected = 'OpenDNS - Adult [pornhub.com]'
-            if str(event.data) != expected:
-                raise Exception(f"{event.data} != {expected}")
-
-            raise Exception("OK")
-
-        module.notifyListeners = new_notifyListeners.__get__(
-            module, sfp_opendns)
 
         event_type = 'ROOT'
         event_data = 'example data'
@@ -83,8 +67,12 @@ class TestModuleIntegrationOpendns(unittest.TestCase):
 
         evt = SpiderFootEvent(event_type, event_data,
                               event_module, source_event)
-
-        with self.assertRaises(Exception) as cm:
+        events = []
+        import unittest.mock as mock_mod
+        with mock_mod.patch.object(module, 'notifyListeners', side_effect=events.append):
             module.handleEvent(evt)
-
-        self.assertEqual("OK", str(cm.exception))
+        # Assert that a BLACKLISTED_INTERNET_NAME event was produced with correct data
+        self.assertTrue(any(e.eventType == 'BLACKLISTED_INTERNET_NAME' for e in events))
+        blocked_event = next((e for e in events if e.eventType == 'BLACKLISTED_INTERNET_NAME'), None)
+        self.assertIsNotNone(blocked_event)
+        self.assertEqual(blocked_event.data, 'OpenDNS - Adult [pornhub.com]')

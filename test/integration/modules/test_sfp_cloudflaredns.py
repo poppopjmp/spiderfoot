@@ -9,9 +9,11 @@ from sflib import SpiderFoot
 class TestModuleIntegrationCloudflaredns(unittest.TestCase):
 
     def setUp(self):
+        self.default_options = {"_useragent": "SpiderFootTestAgent"}
         self.sf = SpiderFoot(self.default_options)
         self.module = sfp_cloudflaredns()
-        self.module.setup(self.sf, dict())
+        self.module.setup(self.sf, self.default_options)
+        self.module.__name__ = self.module.__class__.__name__
 
     @patch('modules.sfp_cloudflaredns.socket.getaddrinfo')
     def test_handleEvent_safe_domain(self, mock_getaddrinfo):
@@ -30,11 +32,13 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
         self.module.setTarget(target)
 
         evt = SpiderFootEvent(
-            'INTERNET_NAME', 'cloudflare.com', 'example module', None)
-        self.module.handleEvent(evt)
+            'INTERNET_NAME', 'cloudflare.com', self.module.__name__, None)
+        events = []
+        import unittest.mock as mock_mod
+        with mock_mod.patch.object(self.module, 'notifyListeners', side_effect=events.append):
+            self.module.handleEvent(evt)
 
         # Check that no BLACKLISTED_INTERNET_NAME event was produced
-        events = self.sf.getEvents()
         self.assertFalse(
             any(e.eventType == 'BLACKLISTED_INTERNET_NAME' for e in events))
 
@@ -55,11 +59,13 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
         self.module.setTarget(target)
 
         evt = SpiderFootEvent(
-            'INTERNET_NAME', 'pornhub.com', 'example module', None)
-        self.module.handleEvent(evt)
+            'INTERNET_NAME', 'pornhub.com', self.module.__name__, None)
+        events = []
+        import unittest.mock as mock_mod
+        with mock_mod.patch.object(self.module, 'notifyListeners', side_effect=events.append):
+            self.module.handleEvent(evt)
 
         # Check that a BLACKLISTED_INTERNET_NAME event was produced
-        events = self.sf.getEvents()
         self.assertTrue(
             any(e.eventType == 'BLACKLISTED_INTERNET_NAME' for e in events))
 

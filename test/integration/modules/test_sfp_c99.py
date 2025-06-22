@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch
+import json
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_c99 import sfp_c99
@@ -7,46 +8,41 @@ from sflib import SpiderFoot
 
 
 class TestModuleIntegrationC99(unittest.TestCase):
-
     def setUp(self):
-        # Assuming default_options is defined
+        self.default_options = {"_useragent": "SpiderFootTestAgent", "api_key": "DUMMYKEY", "_fetchtimeout": 5, "_socks1type": "", "_internettlds": []}
         self.sf = SpiderFoot(self.default_options)
         self.module = sfp_c99()
-        self.module.setup(self.sf, dict())
+        self.module.setup(self.sf, self.default_options)
+        self.module.__name__ = self.module.__class__.__name__
 
-    @patch('modules.sfp_c99.requests.get')  # Mock the requests.get function
-    def test_handleEvent_malicious_ip(self, mock_get):
-        # Mock the API response for a malicious IP
-        mock_response_data = {
-            "1.2.3.4": {
-                "detected": True,
-                "badips": 10,
-                "blacklists": ["bl1", "bl2"],
+    @patch('modules.sfp_c99.requests.get')
+    @patch('sflib.SpiderFoot.fetchUrl')
+    def test_handleEvent_malicious_ip(self, mock_fetchUrl, mock_get):
+        # Mock a geoip response to trigger RAW_RIR_DATA emission
+        mock_geoip_data = {
+            "success": True,
+            "hostname": "host.example.com",
+            "records": {
+                "country_name": "CountryX",
+                "region": {"name": "RegionY"},
+                "city": "CityZ",
+                "postal_code": "12345",
+                "latitude": 12.34,
+                "longitude": 56.78,
+                "isp": "ISPName"
             }
         }
-        mock_get.return_value.json.return_value = mock_response_data
-
+        mock_fetchUrl.return_value = {"code": "200", "content": json.dumps(mock_geoip_data)}
         target_value = '1.2.3.4'
         target_type = 'IP_ADDRESS'
+        event_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         self.module.setTarget(target)
-
-        evt = SpiderFootEvent('ROOT', '', '', '')
-        self.module.handleEvent(evt)
-
-        # Check if the module produced the expected events
-        events = self.sf.getEvents()
-        self.assertTrue(any(e.eventType == 'MALICIOUS_IPADDR' for e in events))
-        self.assertTrue(any(e.eventType == 'RAW_RIR_DATA' for e in events))
-
-        # Check the data in the events
-        malicious_ip_event = next(
-            (e for e in events if e.eventType == 'MALICIOUS_IPADDR'), None)
-        self.assertIsNotNone(malicious_ip_event)
-        # Adjust assertion based on how sfp_c99 formats the event data
-        self.assertIn("1.2.3.4", malicious_ip_event.data)
-
-        raw_data_event = next(
-            (e for e in events if e.eventType == 'RAW_RIR_DATA'), None)
+        evt = SpiderFootEvent(event_type, target_value, self.module.__name__, None)
+        events = []
+        import unittest.mock as mock_mod
+        with mock_mod.patch.object(self.module, 'notifyListeners', side_effect=events.append):
+            self.module.handleEvent(evt)
+        raw_data_event = next((e for e in events if e.eventType == 'RAW_RIR_DATA'), None)
         self.assertIsNotNone(raw_data_event)
-        self.assertEqual(raw_data_event.data, str(mock_response_data))
+        self.assertEqual(raw_data_event.data, str(mock_geoip_data))

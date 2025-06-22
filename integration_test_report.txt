@@ -339,3 +339,221 @@ test/integration/test_sf.py::TestSf::test_run_scan_should_print_scan_result_and_
 test/integration/test_sf.py::TestSf::test_run_scan_should_run_scan_and_exit FAILED [ 13%]
 test/integration/test_sf.py::TestSf::test_run_scan_with_invalid_module_should_run_scan_and_exit FAILED [ 13%]
 test/integration/test_sf.py::TestSf::test_run_scan_with_invalid_type_should_exit FAILED [ 13%]
+test/integration/test_sf.py::TestSf::test_run_scan_with_modules_no_target_should_exit FAILED [ 13%]
+test/integration/test_sf.py::TestSf::test_run_scan_with_types_no_target_should_exit FAILED [ 13%]
+test/integration/test_sf.py::TestSf::test_types_arg_should_print_types_and_exit FAILED [ 13%]
+test/integration/test_sfcli.py::TestSfcli::test_help_arg_should_print_help_and_exit PASSED [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_clonescan 
+------------------------------- live log setup --------------------------------
+15:15:28 [INFO] [22/Jun/2025:15:15:28] ENGINE Listening for SIGTERM.
+15:15:28 [INFO] Python version used to run this test script: 3.11.9
+15:15:28 [INFO] CherryPy version: 18.10.0
+15:15:28 [INFO] HTTP server version: HTTP/1.1
+15:15:28 [INFO] PID: 32864
+15:15:28 [INFO] [22/Jun/2025:15:15:28] ENGINE Bus STARTING
+15:15:29 [INFO] [22/Jun/2025:15:15:29] ENGINE Serving on http://127.0.0.1:54583
+15:15:29 [INFO] [22/Jun/2025:15:15:29] ENGINE Bus STARTED
+-------------------------------- live log call --------------------------------
+15:15:29 [INFO] 127.0.0.1 - - [22/Jun/2025:15:15:29] "GET /clonescan?id=doesnotexist HTTP/1.1" 200 6744 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_eventtypes 
+-------------------------------- live log call --------------------------------
+15:15:29 [INFO] 127.0.0.1 - - [22/Jun/2025:15:15:29] "GET /eventtypes HTTP/1.1" 200 8415 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_index_returns_200 
+-------------------------------- live log call --------------------------------
+15:15:29 [INFO] 127.0.0.1 - - [22/Jun/2025:15:15:29] "GET / HTTP/1.1" 200 7276 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_invalid_page_returns_404 
+-------------------------------- live log call --------------------------------
+15:15:29 [INFO] 127.0.0.1 - - [22/Jun/2025:15:15:29] "GET /doesnotexist HTTP/1.1" 404 6675 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_modules 
+-------------------------------- live log call --------------------------------
+15:15:29 [INFO] 127.0.0.1 - - [22/Jun/2025:15:15:29] "GET /modules HTTP/1.1" 200 28996 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_newscan_returns_200 
+-------------------------------- live log call --------------------------------
+15:15:29 [INFO] 127.0.0.1 - - [22/Jun/2025:15:15:29] "GET /newscan HTTP/1.1" 200 103608 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_opts_returns_200 
+-------------------------------- live log call --------------------------------
+15:15:29 [ERROR] [22/Jun/2025:15:15:29] HTTP 
+Traceback (most recent call last):
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\cherrypy\_cprequest.py", line 659, in respond
+    self._do_respond(path_info)
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\cherrypy\_cprequest.py", line 718, in _do_respond
+    response.body = self.handler()
+                    ^^^^^^^^^^^^^^
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\cherrypy\lib\encoding.py", line 223, in __call__
+    self.body = self.oldhandler(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\cherrypy\_cpdispatch.py", line 54, in __call__
+    return self.callable(*self.args, **self.kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\van1sh\Documents\GitHub\spiderfoot\sfwebui.py", line 1043, in opts
+    return templ.render(opts=self.config, pageid='SETTINGS', token=self.token, version=__version__,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\mako\template.py", line 434, in render
+    return runtime._render(self, self.callable_, args, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\mako\runtime.py", line 874, in _render
+    _render_context(
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\mako\runtime.py", line 916, in _render_context
+    _exec_template(inherit, lclcontext, args=args, kwargs=kwargs)
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\mako\runtime.py", line 943, in _exec_template
+    callable_(context, *args, **kwargs)
+  File "spiderfoot_templates_opts_tmpl", line 82, in render_body
+KeyError: '__globaloptdescs__'
+15:15:29 [INFO] 127.0.0.1 - - [22/Jun/2025:15:15:29] "GET /opts HTTP/1.1" 500 31 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_optsexport 
+-------------------------------- live log call --------------------------------
+15:19:34 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:34] "GET /optsexport HTTP/1.1" 200 23137 "" ""
+15:19:34 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:34] "GET /optsexport?pattern=api_key HTTP/1.1" 200 2800 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_optsraw 
+-------------------------------- live log call --------------------------------
+15:19:34 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:34] "GET /optsraw HTTP/1.1" 200 33422 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_ping_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:34 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:34] "GET /ping HTTP/1.1" 200 20 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_query_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:34 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:34] "GET /query?query=SELECT+1 HTTP/1.1" 200 10 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_rerunscan 
+-------------------------------- live log call --------------------------------
+15:19:34 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:34] "GET /rerunscan?id=doesnotexist HTTP/1.1" 200 6744 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_rerunscanmulti_invalid_scan_id_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:34 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:34] "GET /rerunscanmulti?ids=doesnotexist HTTP/1.1" 200 6744 "" ""
+PASSED                                                                   [ 13%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_resultsetfp 
+-------------------------------- live log call --------------------------------
+15:19:34 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:34] "GET /resultsetfp?id=doesnotexist&resultids=doesnotexist&fp=1 HTTP/1.1" 200 29 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_savesettings 
+-------------------------------- live log call --------------------------------
+15:19:34 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:34] "GET /savesettings HTTP/1.1" 404 6854 "" ""
+FAILED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_savesettingsraw 
+-------------------------------- live log call --------------------------------
+15:19:35 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:35] "GET /savesettingsraw HTTP/1.1" 404 6854 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scancorrelationsexport_invalid_scan_id_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:35 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:35] "GET /scancorrelationsexport?id=doesnotexist HTTP/1.1" 200 6745 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scandelete_invalid_scan_id_returns_404 
+-------------------------------- live log call --------------------------------
+15:19:35 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:35] "GET /scandelete?id=doesnotexist HTTP/1.1" 404 80 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanelementtypediscovery_invalid_scan_id_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:35 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:35] "GET /scanelementtypediscovery?id=doesnotexist&eventType=anything HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanerrors_invalid_scan_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:35 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:35] "GET /scanerrors?id=doesnotexist HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scaneventresultexport_invalid_scan_id_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:35 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:35] "GET /scaneventresultexport?id=doesnotexist&type=doesnotexist HTTP/1.1" 200 37 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scaneventresultexportmulti 
+-------------------------------- live log call --------------------------------
+15:19:35 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:35] "GET /scaneventresultexportmulti?ids=doesnotexist HTTP/1.1" 200 - "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scaneventresults_invalid_scan_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:35 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:35] "GET /scaneventresults?id=doesnotexist&eventType=anything HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scaneventresultsunique_invalid_scan_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:35 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:35] "GET /scaneventresultsunique?id=doesnotexist&eventType=anything HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanexportjsonmulti 
+-------------------------------- live log call --------------------------------
+15:19:36 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:36] "GET /scanexportjsonmulti?ids=doesnotexist HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanexportlogs_invalid_scan_id_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:36 [ERROR] [22/Jun/2025:15:19:36] HTTP 
+Traceback (most recent call last):
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\cherrypy\_cprequest.py", line 659, in respond
+    self._do_respond(path_info)
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\cherrypy\_cprequest.py", line 723, in _do_respond
+    response.finalize()
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\cherrypy\_cprequest.py", line 936, in finalize
+    content = self.collapse_body()
+              ^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\van1sh\Documents\GitHub\spiderfoot\.venv\Lib\site-packages\cherrypy\_cprequest.py", line 894, in collapse_body
+    new_body = b''.join(self.body)
+               ^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected a bytes-like object, str found
+15:19:36 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:36] "GET /scanexportlogs?id=doesnotexist HTTP/1.1" 500 31 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanhistory_invalid_scan_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:36 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:36] "GET /scanhistory?id=doesnotexist HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scaninfo_invalid_scan_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:36 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:36] "GET /scaninfo?id=doesnotexist HTTP/1.1" 200 6863 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanlist_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:36 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:36] "GET /scanlist HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanlog_invalid_scan_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:36 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:36] "GET /scanlog?id=doesnotexist HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanopts_invalid_scan_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:36 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:36] "GET /scanopts?id=doesnotexist HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scansearchresultexport 
+-------------------------------- live log call --------------------------------
+15:19:36 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:36] "GET /scansearchresultexport?id=doesnotexist HTTP/1.1" 200 - "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanstatus_invalid_scan_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:36 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:36] "GET /scanstatus?id=doesnotexist HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scansummary_invalid_scan_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:36 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:36] "GET /scansummary?id=doesnotexist&by=anything HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanviz 
+-------------------------------- live log call --------------------------------
+15:19:37 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:37] "GET /scanviz?id=doesnotexist HTTP/1.1" 200 - "" ""
+PASSED                                                                   [ 14%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_scanvizmulti 
+-------------------------------- live log call --------------------------------
+15:19:37 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:37] "GET /scanvizmulti?ids=doesnotexist HTTP/1.1" 200 - "" ""
+PASSED                                                                   [ 15%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_search_returns_200 
+-------------------------------- live log call --------------------------------
+15:19:37 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:37] "GET /search?id=doesnotexist&eventType=doesnotexist&value=doesnotexist HTTP/1.1" 200 2 "" ""
+PASSED                                                                   [ 15%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_startscan_invalid_modules_returns_error 
+-------------------------------- live log call --------------------------------
+15:19:37 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:37] "GET /startscan?scanname=example-scan&scantarget=spiderfoot.net&modulelist=&typelist=&usecase= HTTP/1.1" 200 6892 "" ""
+PASSED                                                                   [ 15%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_startscan_invalid_scan_name_returns_error 
+-------------------------------- live log call --------------------------------
+15:19:37 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:37] "GET /startscan?scanname=&scantarget=&modulelist=&typelist=&usecase= HTTP/1.1" 200 6711 "" ""
+PASSED                                                                   [ 15%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_startscan_invalid_scan_target_returns_error 
+-------------------------------- live log call --------------------------------
+15:19:37 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:37] "GET /startscan?scanname=example-scan&scantarget=&modulelist=&typelist=&usecase= HTTP/1.1" 200 6713 "" ""
+PASSED                                                                   [ 15%]
+test/integration/test_sfwebui.py::TestSpiderFootWebUiRoutes::test_startscan_invalid_typelist_returns_error 
+-------------------------------- live log call --------------------------------
+15:19:37 [INFO] 127.0.0.1 - - [22/Jun/2025:15:19:37] "GET /startscan?scanname=example-scan&scantarget=spiderfoot.net&modulelist=&typelist=doesnotexist&usecase= HTTP/1.1" 200 6892 "" ""
+PASSED                                                                   [ 15%]

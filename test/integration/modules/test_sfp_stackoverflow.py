@@ -7,7 +7,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase  # Add missing import
 
 
-@pytest.mark.usefixtures
+
 class TestModuleIntegrationStackoverflow(SpiderFootTestBase):  # Add inheritance
 
     @unittest.skip("todo")
