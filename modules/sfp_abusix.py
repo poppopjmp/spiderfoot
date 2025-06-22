@@ -12,6 +12,7 @@
 # -------------------------------------------------------------------------------
 
 import ipaddress
+import requests
 
 from netaddr import IPNetwork
 

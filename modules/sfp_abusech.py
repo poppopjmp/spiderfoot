@@ -11,6 +11,7 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+import requests
 from netaddr import IPAddress, IPNetwork
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin

@@ -12,6 +12,7 @@
 # -------------------------------------------------------------------------------
 
 import dns.resolver
+import socket
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 

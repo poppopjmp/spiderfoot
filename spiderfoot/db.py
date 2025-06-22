@@ -576,10 +576,15 @@ class SpiderFootDb:
                     "SQL error encountered when setting up database") from e
 
     def close(self) -> None:
-        """Close the database handle."""
+        """Close the database handle and connection."""
 
         with self.dbhLock:
-            self.dbh.close()
+            if self.dbh:
+                self.dbh.close()
+                self.dbh = None
+            if self.conn:
+                self.conn.close()
+                self.conn = None
 
     def vacuumDB(self) -> None:
         """Vacuum the database. Clears unused database file pages.

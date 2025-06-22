@@ -11,9 +11,18 @@ from sflib import SpiderFoot
 class BaseTestModuleIntegration(unittest.TestCase):
 
     def setUp(self):
+        self.default_options = {
+            '_fetchtimeout': 15,
+            '_useragent': 'SpiderFoot',
+            '_internettlds': 'com,net,org,info,biz,us,uk',
+            '_genericusers': 'admin,administrator,webmaster,hostmaster,postmaster,root,abuse',
+        }
         self.sf = SpiderFoot(self.default_options)
         self.module = self.module_class()
-        self.module.setup(self.sf, dict())
+        opts = dict(self.default_options)
+        opts['api_key'] = 'DUMMY_KEY'
+        self.module.setup(self.sf, opts)
+        self.module.__name__ = "sfp_abusix"
 
     def requests_get_with_retries(self, url, timeout, retries=3, backoff_factor=0.3):
         for i in range(retries):
@@ -27,9 +36,11 @@ class BaseTestModuleIntegration(unittest.TestCase):
                 else:
                     raise e
 
-    def create_event(self, target_value, target_type, event_type, event_data):
+    def create_event(self, target_value, target_type, event_type, event_data=None):
+        if not event_data:
+            event_data = 'dummy_data'
         target = SpiderFootTarget(target_value, target_type)
-        evt = SpiderFootEvent(event_type, event_data, '', '')
+        evt = SpiderFootEvent(event_type, event_data, 'testModule', None)
         return target, evt
 
 
@@ -39,36 +50,23 @@ class TestModuleIntegrationAbusix(BaseTestModuleIntegration):
 
     @patch('modules.sfp_abusix.requests.get')
     def test_handleEvent_malicious_ip(self, mock_get):
-        """Test handleEvent(mock_get) with a malicious IP address.
-
-        Args:
-            mock_get: Mock for requests.get
-        """
-        mock_response_data = {
-            "ip": "1.2.3.4",
-            "abuseTypes": ["Spamming", "Malware"],
-            "lastSeen": "2023-10-26",
-        }
-        mock_get.side_effect = lambda url, timeout: self.requests_get_with_retries(
-            url, timeout)
-
-        target_value = '1.2.3.4'
-        target_type = 'IP_ADDRESS'
-        target, evt = self.create_event(target_value, target_type, 'ROOT', '')
-
-        self.module.setTarget(target)
-        self.module.handleEvent(evt)
-
-        events = self.sf.getEvents()
-        self.assertTrue(any(e.eventType == 'MALICIOUS_IPADDR' for e in events))
-        self.assertTrue(any(e.eventType == 'RAW_RIR_DATA' for e in events))
-
-        malicious_ip_event = next(
-            (e for e in events if e.eventType == 'MALICIOUS_IPADDR'), None)
-        self.assertIsNotNone(malicious_ip_event)
-        self.assertIn("1.2.3.4", malicious_ip_event.data)
-
-        raw_data_event = next(
-            (e for e in events if e.eventType == 'RAW_RIR_DATA'), None)
-        self.assertIsNotNone(raw_data_event)
-        self.assertEqual(raw_data_event.data, str(mock_response_data))
+        import unittest.mock as mock_mod
+        # Patch resolveHost to simulate a blacklist hit
+        with mock_mod.patch.object(self.sf, 'resolveHost', return_value=['127.0.0.2']):
+            target_value = '1.2.3.4'
+            target_type = 'IP_ADDRESS'
+            target, evt = self.create_event(target_value, target_type, 'IP_ADDRESS', '1.2.3.4')
+            self.module.setTarget(target)
+            events = []
+            def collect_event(evt):
+                events.append(evt)
+            with mock_mod.patch.object(self.module, 'notifyListeners', side_effect=collect_event):
+                self.module.handleEvent(evt)
+            self.assertTrue(any(e.eventType == 'MALICIOUS_IPADDR' for e in events))
+            self.assertTrue(any(e.eventType == 'BLACKLISTED_IPADDR' for e in events))
+            malicious_ip_event = next((e for e in events if e.eventType == 'MALICIOUS_IPADDR'), None)
+            self.assertIsNotNone(malicious_ip_event)
+            self.assertIn('Abusix Mail Intelligence', malicious_ip_event.data)
+            blacklist_event = next((e for e in events if e.eventType == 'BLACKLISTED_IPADDR'), None)
+            self.assertIsNotNone(blacklist_event)
+            self.assertIn('Abusix Mail Intelligence', blacklist_event.data)

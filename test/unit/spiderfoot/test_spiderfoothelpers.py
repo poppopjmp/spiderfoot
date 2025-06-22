@@ -132,23 +132,46 @@ class TestSpiderFootHelpers(SpiderFootTestBase):
             'http://example.com/test/'), 'http://example.com')
 
     def test_dictionaryWordsFromWordlists(self):
-        with patch('spiderfoot.helpers.resources.open_text', unittest.mock.mock_open(read_data='word1\nword2\nword3')):
-            words = SpiderFootHelpers.dictionaryWordsFromWordlists(['english'])
+        import importlib
+        from unittest.mock import patch, mock_open, MagicMock
+        with patch('spiderfoot.helpers.resources.files') as mock_files:
+            mock_joinpath = MagicMock()
+            mock_open_file = mock_open(read_data='word1\nword2\nword3')()
+            mock_joinpath.open.return_value.__enter__.return_value = mock_open_file
+            mock_files.return_value.joinpath.return_value = mock_joinpath
+            import spiderfoot.helpers
+            importlib.reload(spiderfoot.helpers)
+            words = spiderfoot.helpers.SpiderFootHelpers.dictionaryWordsFromWordlists(['english'])
             self.assertIn('word1', words)
             self.assertIn('word2', words)
             self.assertIn('word3', words)
 
     def test_humanNamesFromWordlists(self):
-        with patch('spiderfoot.helpers.resources.open_text', unittest.mock.mock_open(read_data='name1\nname2\nname3')):
-            names = SpiderFootHelpers.humanNamesFromWordlists(['names'])
+        import importlib
+        from unittest.mock import patch, mock_open, MagicMock
+        with patch('spiderfoot.helpers.resources.files') as mock_files:
+            mock_joinpath = MagicMock()
+            mock_open_file = mock_open(read_data='name1\nname2\nname3')()
+            mock_joinpath.open.return_value.__enter__.return_value = mock_open_file
+            mock_files.return_value.joinpath.return_value = mock_joinpath
+            import spiderfoot.helpers
+            importlib.reload(spiderfoot.helpers)
+            names = spiderfoot.helpers.SpiderFootHelpers.humanNamesFromWordlists(['names'])
             self.assertIn('name1', names)
             self.assertIn('name2', names)
             self.assertIn('name3', names)
 
     def test_usernamesFromWordlists(self):
-        with patch('spiderfoot.helpers.resources.open_text', unittest.mock.mock_open(read_data='user1\nuser2\nuser3')):
-            usernames = SpiderFootHelpers.usernamesFromWordlists(
-                ['generic-usernames'])
+        import importlib
+        from unittest.mock import patch, mock_open, MagicMock
+        with patch('spiderfoot.helpers.resources.files') as mock_files:
+            mock_joinpath = MagicMock()
+            mock_open_file = mock_open(read_data='user1\nuser2\nuser3')()
+            mock_joinpath.open.return_value.__enter__.return_value = mock_open_file
+            mock_files.return_value.joinpath.return_value = mock_joinpath
+            import spiderfoot.helpers
+            importlib.reload(spiderfoot.helpers)
+            usernames = spiderfoot.helpers.SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])
             self.assertIn('user1', usernames)
             self.assertIn('user2', usernames)
             self.assertIn('user3', usernames)

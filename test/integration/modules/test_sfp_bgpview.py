@@ -1,4 +1,3 @@
-import pytest
 import unittest
 
 from modules.sfp_bgpview import sfp_bgpview
@@ -6,10 +5,8 @@ from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-@pytest.mark.usefixtures
 class TestModuleIntegrationBgpview(unittest.TestCase):
 
-    @unittest.skip("todo")
     def test_handleEvent(self):
         sf = SpiderFoot(self.default_options)
 

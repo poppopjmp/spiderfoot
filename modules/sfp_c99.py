@@ -11,6 +11,7 @@
 # -------------------------------------------------------------------------------
 
 import json
+import requests
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 

@@ -155,54 +155,55 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
                     "DOMAIN_NAME", domain, self.__name__, event)
                 self.notifyListeners(evt)
 
-            for result in data.get(
-                "data",
-            ):
-                for category in result.get(
-                    "categories",
-                ):
-                    evt = SpiderFootEvent(
-                        "RAW_RIR_DATA", category, self.__name__, event
-                    )
-                    self.notifyListeners(evt)
-
-                for cohosted_site in result.get(
-                    "cohosted_sites",
-                ):
-                    evt = SpiderFootEvent(
-                        "CO_HOSTED_SITE", cohosted_site, self.__name__, event
-                    )
-                    self.notifyListeners(evt)
-
-                for geo in result.get(
-                    "geos",
-                ):
-                    evt = SpiderFootEvent("GEOINFO", geo, self.__name__, event)
-                    self.notifyListeners(evt)
-
-                for ip in result.get(
-                    "ips",
-                ):
-                    if ":" in ip:
+            # Fix: Only iterate if data.get("data") is not None
+            results = data.get("data")
+            if results is not None:
+                for result in results:
+                    for category in result.get(
+                        "categories",
+                    ):
                         evt = SpiderFootEvent(
-                            "IPV6_ADDRESS", ip, self.__name__, event)
-                    else:
+                            "RAW_RIR_DATA", category, self.__name__, event
+                        )
+                        self.notifyListeners(evt)
+
+                    for cohosted_site in result.get(
+                        "cohosted_sites",
+                    ):
                         evt = SpiderFootEvent(
-                            "IP_ADDRESS", ip, self.__name__, event)
-                    self.notifyListeners(evt)
+                            "CO_HOSTED_SITE", cohosted_site, self.__name__, event
+                        )
+                        self.notifyListeners(evt)
 
-                registrar = result.get("registrar")
-                if registrar:
-                    evt = SpiderFootEvent(
-                        "DOMAIN_REGISTRAR", registrar, self.__name__, event
-                    )
-                    self.notifyListeners(evt)
+                    for geo in result.get(
+                        "geos",
+                    ):
+                        evt = SpiderFootEvent("GEOINFO", geo, self.__name__, event)
+                        self.notifyListeners(evt)
 
-                whois = result.get("whois")
-                if whois:
-                    evt = SpiderFootEvent(
-                        "DOMAIN_WHOIS", whois, self.__name__, event)
-                    self.notifyListeners(evt)
+                    for ip in result.get(
+                        "ips",
+                    ):
+                        if ":" in ip:
+                            evt = SpiderFootEvent(
+                                "IPV6_ADDRESS", ip, self.__name__, event)
+                        else:
+                            evt = SpiderFootEvent(
+                                "IP_ADDRESS", ip, self.__name__, event)
+                        self.notifyListeners(evt)
+
+                    registrar = result.get("registrar")
+                    if registrar:
+                        evt = SpiderFootEvent(
+                            "DOMAIN_REGISTRAR", registrar, self.__name__, event
+                        )
+                        self.notifyListeners(evt)
+
+                    whois = result.get("whois")
+                    if whois:
+                        evt = SpiderFootEvent(
+                            "DOMAIN_WHOIS", whois, self.__name__, event)
+                        self.notifyListeners(evt)
 
 
 # End of sfp_cisco_umbrella class

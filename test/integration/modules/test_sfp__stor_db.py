@@ -20,7 +20,7 @@ class BaseTestModuleIntegration(unittest.TestCase):
         return target, evt
 
 
-@pytest.mark.usefixtures
+
 class TestModuleIntegration_stor_db(BaseTestModuleIntegration):
 
     @unittest.skip("todo")

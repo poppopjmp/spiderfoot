@@ -17,7 +17,6 @@ Capture Failure Screenshot
 
 Setup Chrome Environment
     Set Environment Variable    webdriver.chrome.driver    ${CHROMEDRIVER_PATH}
-    Set Environment Variable    MOZ_HEADLESS    1
 
 Create a module scan
     [Arguments]  ${scan_name}  ${scan_target}  ${module_name}
@@ -43,7 +42,7 @@ Create a module scan
 Create a use case scan
     [Arguments]  ${scan_name}  ${scan_target}  ${use_case}
     Setup Chrome Environment
-    Open browser              http://localhost:5001/newscan    browser=headlesschrome
+    Open browser              http://127.0.0.1:5001/newscan    browser=headlesschrome
     Wait Until Element Is Visible    name:scanname    timeout=${WAIT_TIMEOUT}
     Press Keys                name:scanname            ${scan_name}
     Press Keys                name:scantarget          ${scan_target}
@@ -157,7 +156,7 @@ Wait For Scan To Finish
 ***Test Cases***
 Main navigation pages should render correctly
     Setup Chrome Environment
-    Open browser              http://localhost:5001    browser=headlesschrome
+    Open browser              http://127.0.0.1:5001    browser=headlesschrome
     Wait Until Element Is Visible    id:nav-link-newscan    timeout=${WAIT_TIMEOUT}
     Click Element                 id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=${WAIT_TIMEOUT}
@@ -168,7 +167,6 @@ Main navigation pages should render correctly
     Click Element                 id:nav-link-settings
     Wait Until Element Is Visible    id:savesettingsform    timeout=${WAIT_TIMEOUT}
     Settings page should render
-    Close All Browsers
 
 Scan info page should render correctly
     Create a module scan           test_scan_info    van1shland.io    sfp_countryname
@@ -183,13 +181,11 @@ Scan info page should render correctly
     Scan info Settings tab should render
     Safe Click Element            id:btn-log
     Scan info Log tab should render
-    Close All Browsers
 
 Scan list page should list scans
     Create a module scan           test_scan_list    van1shland.io    sfp_countryname
     Safe Click Element            id:nav-link-scans
     Wait Until Element Is Visible   xpath=//table[contains(@class, 'table')]//td[contains(text(), 'test_scan_list')]   timeout=${WAIT_TIMEOUT}
-    Close All Browsers
 
 A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
     Create a module scan           dns_resolve     van1shland.io    sfp_dnsresolve
@@ -200,7 +196,6 @@ A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
     Page Should Contain    Domain Name
     Page Should Contain    Internet Name
     Page Should Contain    IP Address
-    Close All Browsers
 
 A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
     Create a module scan           reverse_resolve   1.1.1.1           sfp_dnsresolve
@@ -211,7 +206,6 @@ A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
     Page Should Contain    Domain Name
     Page Should Contain    Internet Name
     Page Should Contain    IP Address
-    Close All Browsers
 
 A passive scan with unresolvable target internet name should fail
     Create a use case scan         shouldnotresolve    shouldnotresolve.doesnotexist.local    Passive
@@ -219,8 +213,3 @@ A passive scan with unresolvable target internet name should fail
     Wait Until Element Contains     scanstatusbadge   ERROR     timeout=${WAIT_TIMEOUT}
     Safe Click Element              id:btn-log
     Wait Until Page Contains     Could not resolve    timeout=${WAIT_TIMEOUT}
-    Close All Browsers
-    Close All Browsers
-    Wait Until Page Contains     Could not resolve    timeout=${WAIT_TIMEOUT}
-    Close All Browsers
-    Close All Browsers

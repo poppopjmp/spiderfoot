@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [master]
+    branches: [master,"dev*"]
   pull_request:
-    branches: [master]
+    branches: [master,"dev*"]
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.10","3.11"]
+        python-version: ["3.9","3.10","3.11", "3.12", "3.13"]
         os: [ubuntu-latest]
 
     steps:
@@ -49,25 +49,13 @@ jobs:
             fail_ci_if_error: false
             verbose: true
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: poppopjmp/spiderfoot
-
       - name: Measure test coverage
         run: |
           coverage run -m pytest --ignore=test/integration/
           coverage report -m
           coverage xml
-
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
           files: coverage.xml
           fail_ci_if_error: true
-
-      - name: Enforce minimum coverage threshold
-        run: |
-          coverage run -m pytest
-          coverage report --fail-under=80

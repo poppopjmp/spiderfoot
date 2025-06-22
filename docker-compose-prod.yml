@@ -17,7 +17,7 @@ networks:
 services:
   # Main SpiderFoot Application
   spiderfoot:
-    image: ghcr.io/poppopjmp/spiderfoot:v5.2.2
+    image: ghcr.io/poppopjmp/spiderfoot:v5.2.3
     container_name: spiderfoot-app
     restart: unless-stopped
     networks:

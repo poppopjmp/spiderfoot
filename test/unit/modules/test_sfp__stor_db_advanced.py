@@ -444,42 +444,44 @@ class TestAutoScaler(unittest.TestCase):
                 'password': 'test',
                 'min_connections': 1,
                 'max_connections': 10
-            }
-        ]
+            }        ]
         
         with patch('modules.sfp__stor_db_advanced.psycopg2.pool.ThreadedConnectionPool'):
             self.load_balancer = ConnectionLoadBalancer(self.mock_configs)
             self.performance_monitor = PerformanceMonitor()
             self.auto_scaler = AutoScaler(self.load_balancer, self.performance_monitor)
-    
+
     def test_scaling_rules_initialization(self):
         """Test auto-scaler initialization with scaling rules."""
         self.assertIn('scale_up_threshold', self.auto_scaler.scaling_rules)
         self.assertIn('scale_down_threshold', self.auto_scaler.scaling_rules)
         self.assertIn('min_connections', self.auto_scaler.scaling_rules)
         self.assertIn('max_connections', self.auto_scaler.scaling_rules)
-    
+
     @patch('modules.sfp__stor_db_advanced.psycopg2.pool.ThreadedConnectionPool')
     def test_scale_up_evaluation(self, mock_pool_class):
         """Test scale-up evaluation logic."""
         mock_pool = MagicMock()
         mock_pool.maxconn = 5
-        mock_pool_class.return_value = mock_pool
+        
+        # Replace the pool in load_balancer with our mock
+        self.load_balancer.pools['pool_0'] = mock_pool
         
         # Set high load factor to trigger scale-up
         self.load_balancer.metrics['pool_0'].load_factor = 0.9  # Above threshold
-        
-        # Test scale-up evaluation
+          # Test scale-up evaluation
         with patch.object(self.auto_scaler, '_recreate_pool') as mock_recreate:
             self.auto_scaler._scale_up('pool_0')
             mock_recreate.assert_called_once()
-    
+
     @patch('modules.sfp__stor_db_advanced.psycopg2.pool.ThreadedConnectionPool')
     def test_scale_down_evaluation(self, mock_pool_class):
         """Test scale-down evaluation logic."""
         mock_pool = MagicMock()
         mock_pool.maxconn = 10
-        mock_pool_class.return_value = mock_pool
+        
+        # Replace the pool in load_balancer with our mock
+        self.load_balancer.pools['pool_0'] = mock_pool
         
         # Set low load factor to trigger scale-down
         self.load_balancer.metrics['pool_0'].load_factor = 0.2  # Below threshold

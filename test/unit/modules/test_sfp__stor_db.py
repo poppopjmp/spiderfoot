@@ -39,8 +39,7 @@ class TestModuleStor_db(SpiderFootTestBase):
 
     def tearDown(self):
         """Clean up after each test."""
-        super().tearDown()
-        # Clean up any open connections
+        super().tearDown()        # Clean up any open connections
         if hasattr(self, 'module') and hasattr(self.module, 'pg_conn'):
             if self.module.pg_conn:
                 try:
@@ -49,20 +48,16 @@ class TestModuleStor_db(SpiderFootTestBase):
                     pass
 
     def create_test_event(self, event_type="IP_ADDRESS", data="192.168.1.1", module="test_module"):
-        """Create a test SpiderFoot event."""
-        # Create ROOT event first for other events to reference
+        """Create a test SpiderFoot event."""        # Create ROOT event first for other events to reference
         if event_type == "ROOT":
             event = SpiderFootEvent("ROOT", data, module)
-        else:
-            # Create a root event to serve as source
+        else:            # Create a root event to serve as source
             root_event = SpiderFootEvent("ROOT", "root", module)
             event = SpiderFootEvent(event_type, data, module, root_event)
         
         event.confidence = 100
         event.visibility = 1
         event.risk = 0
-        event.hash = f"test_hash_{time.time()}"
-        event.generated = time.time()
         return event
 
     @unittest.skip("This module contains an extra private option")
@@ -153,11 +148,9 @@ class TestModuleStor_db(SpiderFootTestBase):
         self.assertIsNotNone(module.pg_conn)
         mock_connect.assert_called_once()
 
-    @patch('modules.sfp__stor_db.psycopg2.connect')
+    @patch('psycopg2.connect', side_effect=Exception('Connection failed'))
     def test_postgresql_connection_failure(self, mock_connect):
-        """Test PostgreSQL connection failure handling."""
-        mock_connect.side_effect = psycopg2.OperationalError("Connection failed")
-        
+        """Test PostgreSQL connection failure sets errorState."""
         module = sfp__stor_db()
         opts = {
             'db_type': 'postgresql',
@@ -165,11 +158,10 @@ class TestModuleStor_db(SpiderFootTestBase):
             'postgresql_port': 5432,
             'postgresql_database': 'spiderfoot',
             'postgresql_username': 'user',
-            'postgresql_password': 'pass'
+            'postgresql_password': 'pass',
+            'enable_auto_recovery': False  # Explicitly set to False
         }
-        
         module.setup(self.sf_instance, opts)
-        
         self.assertTrue(module.errorState)
 
     def test_postgresql_health_check(self):
@@ -675,8 +667,10 @@ class TestModuleStor_db(SpiderFootTestBase):
             module.handleEvent(test_event)
             
         total_time = time.time() - start_time
-        events_per_second = events_count / total_time
-        
+        if total_time == 0:
+            events_per_second = float('inf')
+        else:
+            events_per_second = events_count / total_time
         # Verify reasonable performance (at least 100 events/sec for SQLite)
         self.assertGreater(events_per_second, 100, 
                           f"Performance should be at least 100 events/sec, got {events_per_second:.1f}")

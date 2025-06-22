@@ -21,7 +21,7 @@ Setup Firefox Environment
 Create a module scan
     [Arguments]    ${scan_name}    ${scan_target}    ${module_name}
     Setup Firefox Environment
-    Open browser    http://localhost:5001/newscan   headlessfirefox
+    Open browser    http://127.0.0.1:5001/newscan   headlessfirefox
     Press Keys    name:scanname    ${scan_name}
     Press Keys    name:scantarget    ${scan_target}
     Click Element    id:moduletab
@@ -39,7 +39,7 @@ Create a module scan
 Create a use case scan
     [Arguments]    ${scan_name}    ${scan_target}    ${use_case}
     Setup Firefox Environment
-    Open browser    http://localhost:5001/newscan    headlessfirefox
+    Open browser    http://127.0.0.1:5001/newscan    headlessfirefox
     Press Keys    name:scanname    ${scan_name}
     Press Keys    name:scantarget    ${scan_target}
     Click Element    id:usecase_${use_case}
@@ -122,7 +122,7 @@ Wait For Scan To Finish
 ***Test Cases***
 Main navigation pages should render correctly
     Setup Firefox Environment
-    Open browser    http://localhost:5001    headlessfirefox
+    Open browser    http://127.0.0.1:5001    headlessfirefox
     Click Element    id:nav-link-newscan
     Wait Until Element Is Visible    id:scanname    timeout=120s
     New scan page should render
@@ -132,7 +132,6 @@ Main navigation pages should render correctly
     Click Element    id:nav-link-settings
     Wait Until Element Is Visible    id:savesettingsform    timeout=120s
     Settings page should render
-    [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    1s
 
 Scan info page should render correctly
     Create a module scan    test scan info    van1shland.io    sfp_countryname
@@ -147,13 +146,11 @@ Scan info page should render correctly
     Scan info Settings tab should render
     Click Element    id:btn-log
     Scan info Log tab should render
-    [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    2s
 
 Scan list page should list scans
     Create a module scan    test scan list    van1shland.io    sfp_countryname
     Click Element    id:nav-link-scans
     Wait Until Element Is Visible    xpath=//td[contains(text(), 'test scan list')]    timeout=15s
-    Close All Browsers
 
 A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
     Create a module scan    dns resolve    van1shland.io    sfp_dnsresolve
@@ -163,7 +160,6 @@ A sfp_dnsresolve scan should resolve INTERNET_NAME to IP_ADDRESS
     Element Should Contain    id:browse-table-content    Domain Name
     Element Should Contain    id:browse-table-content    Internet Name
     Element Should Contain    id:browse-table-content    IP Address
-    Close All Browsers
 
 A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
     Create a module scan    reverse resolve    1.1.1.1    sfp_dnsresolve
@@ -173,7 +169,6 @@ A sfp_dnsresolve scan should reverse resolve IP_ADDRESS to INTERNET_NAME
     Element Should Contain    id:browse-table-content    Domain Name
     Element Should Contain    id:browse-table-content    Internet Name
     Element Should Contain    id:browse-table-content    IP Address
-    Close All Browsers
 
 A passive scan with unresolvable target internet name should fail
     Create a use case scan    shouldnotresolve    shouldnotresolve.doesnotexist.local    Passive
@@ -181,10 +176,3 @@ A passive scan with unresolvable target internet name should fail
     Wait Until Element Contains    scanstatusbadge    ERROR    timeout=60s
     Click Element    id:btn-log
     Page Should Contain    Could not resolve
-    [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    1s
-    Click Element    id:btn-log
-    Page Should Contain    Could not resolve
-    [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    1s
-    Click Element    id:btn-log
-    Page Should Contain    Could not resolve
-    [Teardown]    Run Keywords    Close All Browsers    AND    Sleep    1s

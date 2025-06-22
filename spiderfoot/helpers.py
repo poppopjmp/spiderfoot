@@ -400,7 +400,9 @@ class SpiderFootHelpers():
 
         for d in wordlists:
             try:
-                with resources.open_text('spiderfoot.dicts.ispell', f"{d}.dict", errors='ignore') as dict_file:
+                # Use importlib.resources.files for modern API
+                dict_path = resources.files('spiderfoot.dicts.ispell').joinpath(f"{d}.dict")
+                with dict_path.open('r', encoding='utf-8', errors='ignore') as dict_file:
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
@@ -428,7 +430,8 @@ class SpiderFootHelpers():
 
         for d in wordlists:
             try:
-                with resources.open_text('spiderfoot.dicts.ispell', f"{d}.dict", errors='ignore') as dict_file:
+                dict_path = resources.files('spiderfoot.dicts.ispell').joinpath(f"{d}.dict")
+                with dict_path.open('r', encoding='utf-8', errors='ignore') as dict_file:
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
@@ -456,7 +459,8 @@ class SpiderFootHelpers():
 
         for d in wordlists:
             try:
-                with resources.open_text('spiderfoot.dicts', f"{d}.txt", errors='ignore') as dict_file:
+                dict_path = resources.files('spiderfoot.dicts').joinpath(f"{d}.txt")
+                with dict_path.open('r', encoding='utf-8', errors='ignore') as dict_file:
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:

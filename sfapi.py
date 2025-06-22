@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any, Union, Callable
 from urllib.parse import quote, unquote
 
-from fastapi import FastAPI, HTTPException, Depends, status, Request, Query, BackgroundTasks, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Depends, status, Request, Query, BackgroundTasks, UploadFile, File, Form, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -336,7 +336,6 @@ def build_excel(data: list, column_names: list, sheet_name_index: int = 0) -> st
         return base64.b64encode(f.read()).decode()
 
 # Router definitions
-from fastapi import APIRouter
 
 scan_router = APIRouter()
 workspace_router = APIRouter()
@@ -401,8 +400,7 @@ async def list_scans(
         config = get_app_config()
         db = SpiderFootDb(config.get_config())
         scans = db.scanInstanceList()
-        
-        # Apply pagination
+          # Apply pagination
         paginated_scans = scans[offset:offset + limit]
         
         scan_list = []
@@ -414,7 +412,8 @@ async def list_scans(
                 "created": scan[3],
                 "started": scan[4],
                 "ended": scan[5],
-                "status": scan[6]
+                "status": scan[6],
+                "result_count": scan[7] if len(scan) > 7 else 0
             }
             scan_list.append(scan_info)
             

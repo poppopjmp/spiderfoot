@@ -807,17 +807,21 @@ class SpiderFoot:
         if not self.validIP(ip) and not self.validIP6(ip):
             return False
 
-        if not netaddr.IPAddress(ip).is_unicast():
+        ip_obj = netaddr.IPAddress(ip)
+        if not ip_obj.is_unicast():
             return False
-
-        if netaddr.IPAddress(ip).is_loopback():
+        if ip_obj.is_loopback():
             return False
-        if netaddr.IPAddress(ip).is_reserved():
+        if ip_obj.is_reserved():
             return False
-        if netaddr.IPAddress(ip).is_multicast():
+        if ip_obj.is_multicast():
             return False
-        if netaddr.IPAddress(ip).is_private():
-            return False
+        if ip_obj.version == 4:
+            if ip_obj.is_ipv4_private_use():
+                return False
+        elif ip_obj.version == 6:
+            if ip_obj.is_ipv6_unique_local():
+                return False
         return True
 
     def normalizeDNS(self, res: list) -> list:
@@ -1165,12 +1169,15 @@ class SpiderFoot:
         if not self.validIP(ip) and not self.validIP6(ip):
             return False
 
-        if netaddr.IPAddress(ip).is_private():
+        ip_obj = netaddr.IPAddress(ip)
+        if ip_obj.version == 4:
+            if ip_obj.is_ipv4_private_use():
+                return True
+        elif ip_obj.version == 6:
+            if ip_obj.is_ipv6_unique_local():
+                return True
+        if ip_obj.is_loopback():
             return True
-
-        if netaddr.IPAddress(ip).is_loopback():
-            return True
-
         return False
 
     def useProxyForUrl(self, url: str) -> bool:

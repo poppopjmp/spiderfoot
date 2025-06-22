@@ -6,7 +6,7 @@ from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-@pytest.mark.usefixtures
+
 class TestModuleIntegrationOpenNic(unittest.TestCase):
 
     def test_handleEvent_event_data_internet_name_with_opennic_tld_should_return_ip_address_event(self):
@@ -44,7 +44,12 @@ class TestModuleIntegrationOpenNic(unittest.TestCase):
         evt = SpiderFootEvent(event_type, event_data,
                               event_module, source_event)
 
-        with self.assertRaises(Exception) as cm:
-            module.handleEvent(evt)
+        import unittest.mock as mock_mod
+        with mock_mod.patch.object(module, 'queryOpenNIC', return_value=['1.2.3.4']):
+            with mock_mod.patch.object(sf, 'normalizeDNS', return_value=['1.2.3.4']):
+                with mock_mod.patch.object(sf, 'validIP', return_value=True):
+                    module.__name__ = "sfp_opennic"
+                    with self.assertRaises(Exception) as cm:
+                        module.handleEvent(evt)
 
         self.assertEqual("OK", str(cm.exception))

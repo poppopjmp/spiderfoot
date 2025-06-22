@@ -6,7 +6,7 @@ from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-@pytest.mark.usefixtures
+
 class TestModuleIntegrationFofa(unittest.TestCase):
 
     def test_setup(self):

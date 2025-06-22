@@ -15,25 +15,19 @@ class TestSpiderFootCli(SpiderFootTestBase):
     def test_default(self):
         """Test default(self, line)"""
         sfcli = SpiderFootCli()
-
-        io_output = io.StringIO()
-        sys.stdout = io_output
-        sfcli.default("")
-        sys.stdout = sys.__stdout__
-        output = io_output.getvalue()
-
+        from unittest.mock import patch
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sfcli.default("")
+            output = mock_stdout.getvalue()
         self.assertIn("Unknown command", output)
 
     def test_default_should_ignore_comments(self):
         """Test default(self, line)"""
         sfcli = SpiderFootCli()
-
-        io_output = io.StringIO()
-        sys.stdout = io_output
-        result = sfcli.default("# test comment")
-        sys.stdout = sys.__stdout__
-        output = io_output.getvalue()
-
+        from unittest.mock import patch
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            result = sfcli.default("# test comment")
+            output = mock_stdout.getvalue()
         self.assertEqual(None, result)
         self.assertEqual("", output)
 
@@ -173,13 +167,11 @@ class TestSpiderFootCli(SpiderFootTestBase):
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = True
         sfcli.ownopts['cli.spool'] = False
-
-        io_output = io.StringIO()
-        sys.stdout = io_output
-        sfcli.dprint("example output")
-        sys.stdout = sys.__stdout__
-        output = io_output.getvalue()
-
+        sfcli.ownopts['cli.silent'] = False
+        from unittest.mock import patch
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sfcli.dprint("example output")
+            output = mock_stdout.getvalue()
         self.assertIn("example output", output)
 
     def test_dprint_should_not_print_unless_debug_option_is_set(self):
@@ -188,27 +180,22 @@ class TestSpiderFootCli(SpiderFootTestBase):
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = False
         sfcli.ownopts['cli.spool'] = False
-
-        io_output = io.StringIO()
-        sys.stdout = io_output
-        sfcli.dprint("example output")
-        sys.stdout = sys.__stdout__
-        output = io_output.getvalue()
-
-        self.assertIn("", output)
+        from unittest.mock import patch
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sfcli.dprint("example output", deb=True)
+            output = mock_stdout.getvalue()
+        self.assertEqual("", output)
 
     def test_ddprint_should_print_if_debug_option_is_set(self):
         """Test ddprint(self, msg)"""
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = True
         sfcli.ownopts['cli.spool'] = False
-
-        io_output = io.StringIO()
-        sys.stdout = io_output
-        sfcli.ddprint("example debug output")
-        sys.stdout = sys.__stdout__
-        output = io_output.getvalue()
-
+        sfcli.ownopts['cli.silent'] = False
+        from unittest.mock import patch
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sfcli.ddprint("example debug output")
+            output = mock_stdout.getvalue()
         self.assertIn("example debug output", output)
 
     def test_ddprint_should_not_print_unless_debug_option_is_set(self):
@@ -216,13 +203,10 @@ class TestSpiderFootCli(SpiderFootTestBase):
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = False
         sfcli.ownopts['cli.spool'] = False
-
-        io_output = io.StringIO()
-        sys.stdout = io_output
-        sfcli.ddprint("example debug output")
-        sys.stdout = sys.__stdout__
-        output = io_output.getvalue()
-
+        from unittest.mock import patch
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sfcli.ddprint("example debug output")
+            output = mock_stdout.getvalue()
         self.assertEqual("", output)
 
     def test_edprint_should_print_error_regardless_of_debug_option(self):
@@ -230,13 +214,10 @@ class TestSpiderFootCli(SpiderFootTestBase):
         sfcli = SpiderFootCli()
         sfcli.ownopts['cli.debug'] = False
         sfcli.ownopts['cli.spool'] = False
-
-        io_output = io.StringIO()
-        sys.stdout = io_output
-        sfcli.edprint("example debug output")
-        sys.stdout = sys.__stdout__
-        output = io_output.getvalue()
-
+        from unittest.mock import patch
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sfcli.edprint("example debug output")
+            output = mock_stdout.getvalue()
         self.assertIn("example debug output", output)
 
     def test_pretty_should_return_a_string(self):
@@ -293,16 +274,12 @@ class TestSpiderFootCli(SpiderFootTestBase):
         """Test send_output(self, data, cmd, titles=None, total=True,
         raw=False)"""
         sfcli = SpiderFootCli()
-
-        io_output = io.StringIO()
-        sys.stdout = io_output
-        sfcli.send_output("{}", "", raw=True)
-        sys.stdout = sys.__stdout__
-        output = io_output.getvalue()
-
+        sfcli.ownopts['cli.silent'] = False
+        from unittest.mock import patch
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sfcli.send_output("{}", "", raw=True)
+            output = mock_stdout.getvalue()
         self.assertIn("Total records: 0", output)
-
-        self.assertEqual('TBD', 'TBD')
 
     def test_do_query(self):
         """Test do_query(self, line)"""
@@ -475,17 +452,13 @@ class TestSpiderFootCli(SpiderFootTestBase):
     def test_print_topic(self):
         """Test print_topics(self, header, cmds, cmdlen, maxcol)"""
         sfcli = SpiderFootCli()
-
-        io_output = io.StringIO()
-        sys.stdout = io_output
-        sfcli.print_topics(None, "help", None, None)
-        sys.stdout = sys.__stdout__
-        output = io_output.getvalue()
-
+        sfcli.ownopts['cli.silent'] = False
+        from unittest.mock import patch
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sfcli.print_topics(None, "help", None, None)
+            output = mock_stdout.getvalue()
         self.assertIn("Command", output)
         self.assertIn("Description", output)
-
-        self.assertEqual('TBD', 'TBD')
 
     def test_do_set_should_set_option(self):
         """Test do_set(self, line)"""
@@ -500,25 +473,20 @@ class TestSpiderFootCli(SpiderFootTestBase):
     def test_do_shell(self):
         """Test do_shell(self, line)"""
         sfcli = SpiderFootCli()
-
-        io_output = io.StringIO()
-        sys.stdout = io_output
-        sfcli.do_shell("")
-        sys.stdout = sys.__stdout__
-        output = io_output.getvalue()
-
+        sfcli.ownopts['cli.silent'] = False
+        from unittest.mock import patch
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sfcli.do_shell("")
+            output = mock_stdout.getvalue()
         self.assertIn("Running shell command:", output)
 
     def test_do_clear(self):
         """Test do_clear(self, line)"""
         sfcli = SpiderFootCli()
-
-        io_output = io.StringIO()
-        sys.stderr = io_output
-        sfcli.do_clear(None)
-        sys.stderr = sys.__stderr__
-        output = io_output.getvalue()
-
+        from unittest.mock import patch
+        with patch("sys.stderr", new_callable=io.StringIO) as mock_stderr:
+            sfcli.do_clear(None)
+            output = mock_stderr.getvalue()
         self.assertEqual("\x1b[2J\x1b[H", output)
 
     def test_do_exit(self):
