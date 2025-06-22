@@ -338,3 +338,4 @@ test/integration/test_sf.py::TestSf::test_run_scan_invalid_target_should_exit FA
 test/integration/test_sf.py::TestSf::test_run_scan_should_print_scan_result_and_exit FAILED [ 13%]
 test/integration/test_sf.py::TestSf::test_run_scan_should_run_scan_and_exit FAILED [ 13%]
 test/integration/test_sf.py::TestSf::test_run_scan_with_invalid_module_should_run_scan_and_exit FAILED [ 13%]
+test/integration/test_sf.py::TestSf::test_run_scan_with_invalid_type_should_exit FAILED [ 13%]
