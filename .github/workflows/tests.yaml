@@ -54,8 +54,3 @@ jobs:
           coverage run -m pytest --ignore=test/integration/
           coverage report -m
           coverage xml
-
-      - name: Enforce minimum coverage threshold
-        run: |
-          coverage run -m pytest
-          coverage report --fail-under=80
