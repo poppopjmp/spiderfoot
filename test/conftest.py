@@ -22,7 +22,7 @@ from spiderfoot import SpiderFootHelpers
 from test.fixtures.database_fixtures import *
 from test.fixtures.network_fixtures import *
 from test.fixtures.event_fixtures import *
-from test.utils.test_helpers import *
+from test.utils import legacy_test_helpers
 
 # Set up logging
 logging.basicConfig(
@@ -103,47 +103,47 @@ def default_options(request):
     modules_dir = PROJECT_ROOT / "modules"
     if not modules_dir.exists():
         pytest.fail(f"Modules directory not found: {modules_dir}")
-    
-    request.cls.default_options = {
-        '_debug': False,
-        '__logging': True,
-        '__outputfilter': None,
-        '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
-        '_dnsserver': '',
-        '_fetchtimeout': 5,
-        '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
-        '_internettlds_cache': 72,
-        '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
-        '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.test.db",
-        '__modules__': None,
-        '__correlationrules__': None,
-        '_socks1type': '',
-        '_socks2addr': '',
-        '_socks3port': '',
-        '_socks4user': '',
-        '_socks5pwd': '',
-        '__logstdout': False,
-        '__modulesdir': str(modules_dir)  # Add explicit modules directory
-    }
 
-    request.cls.web_default_options = {
-        'root': '/'
-    }
-
-    request.cls.cli_default_options = {
-        "cli.debug": False,
-        "cli.silent": False,
-        "cli.color": True,
-        "cli.output": "pretty",
-        "cli.history": True,
-        "cli.history_file": "",
-        "cli.spool": False,
-        "cli.spool_file": "",
-        "cli.ssl_verify": True,
-        "cli.username": "",
-        "cli.password": "",
-        "cli.server_baseurl": "http://127.0.0.1:5001"
-    }
+    # Only set default_options if running in a class context
+    if hasattr(request, 'cls') and request.cls is not None:
+        request.cls.default_options = {
+            '_debug': False,
+            '__logging': True,
+            '__outputfilter': None,
+            '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
+            '_dnsserver': '',
+            '_fetchtimeout': 5,
+            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+            '_internettlds_cache': 72,
+            '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
+            '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.test.db",
+            '__modules__': None,
+            '__correlationrules__': None,
+            '_socks1type': '',
+            '_socks2addr': '',
+            '_socks3port': '',
+            '_socks4user': '',
+            '_socks5pwd': '',
+            '__logstdout': False,
+            '__modulesdir': str(modules_dir)
+        }
+        request.cls.web_default_options = {'root': '/'}
+        request.cls.cli_default_options = {
+            "cli.debug": False,
+            "cli.silent": False,
+            "cli.color": True,
+            "cli.output": "pretty",
+            "cli.history": True,
+            "cli.history_file": "",
+            "cli.spool": False,
+            "cli.spool_file": "",
+            "cli.ssl_verify": True,
+            "cli.username": "",
+            "cli.password": "",
+            "cli.server_baseurl": "http://127.0.0.1:5001"
+        }
+    # For function-based tests, do nothing (or set module-level if needed)
+    yield
 
 # Force cleanup of lingering resources
 @pytest.fixture(autouse=True, scope="session")

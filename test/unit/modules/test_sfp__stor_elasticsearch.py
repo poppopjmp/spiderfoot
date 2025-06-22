@@ -2,8 +2,7 @@
 from unittest.mock import patch, MagicMock, Mock
 import unittest
 import threading
-import time
-from elasticsearch import Elasticsearch, ConnectionError, RequestsConnectionPool
+from elasticsearch import Elasticsearch, ConnectionError
 from sflib import SpiderFoot
 from spiderfoot.event import SpiderFootEvent
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
@@ -50,12 +49,11 @@ class TestModuleStorElasticsearch(SpiderFootTestBase):
             # Create a root event to serve as source
             root_event = SpiderFootEvent("ROOT", "root", module)
             event = SpiderFootEvent(event_type, data, module, root_event)
-        
         event.confidence = 100
         event.visibility = 1
         event.risk = 0
-        event.hash = f"test_hash_{time.time()}"
-        event.generated = time.time()
+        # PATCH: Do not set event.hash or event.generated (read-only properties)
+        # event.generated = time.time()
         return event
 
     def test_opts(self):
@@ -86,26 +84,25 @@ class TestModuleStorElasticsearch(SpiderFootTestBase):
         """Test setup with basic authentication."""
         mock_es = MagicMock()
         mock_es_class.return_value = mock_es
-        
         module = sfp__stor_elasticsearch()
         opts = {
-            'enabled': True,
-            'host': 'localhost',
-            'port': 9200,
-            'index': 'test_index',
-            'username': 'user',
-            'password': 'pass',
-            'use_ssl': True,
-            'verify_certs': False,
-            'timeout': 30
+'enabled': True,
+'host': 'localhost',
+'port': 9200,
+'index': 'test_index',
+'username': 'user',
+'password': 'pass',
+'use_ssl': True,
+'verify_certs': False,
+'timeout': 30
         }
-        
         module.setup(self.sf_instance, opts)
-        
         self.assertFalse(module.errorState)
         self.assertIsNotNone(module.es)
         self.assertEqual(len(module.buffer), 0)
-        self.assertIsInstance(module.buffer_lock, threading.Lock)
+        # PATCH: Use type(threading.Lock()) for isinstance check
+        import threading
+        self.assertIsInstance(module.buffer_lock, type(threading.Lock()))
 
     def test_producedEvents_should_return_list(self):
         """Test producedEvents method."""
@@ -167,13 +164,14 @@ class TestModuleStorElasticsearch(SpiderFootTestBase):
         self.assertEqual(len(module.buffer), 3)
         mock_es.bulk.assert_not_called()
 
+    @patch('elasticsearch.helpers.bulk')
     @patch('modules.sfp__stor_elasticsearch.Elasticsearch')
-    def test_bulk_insertion_triggered(self, mock_es_class):
+    def test_bulk_insertion_triggered(self, mock_es_class, mock_bulk):
         """Test bulk insertion when buffer size is reached."""
         mock_es = MagicMock()
         mock_es.ping.return_value = True
-        mock_es.bulk.return_value = {'errors': False}
         mock_es_class.return_value = mock_es
+        mock_bulk.return_value = (3, [])  # Simulate 3 successes, no errors
         
         module = sfp__stor_elasticsearch()
         opts = {
@@ -181,7 +179,12 @@ class TestModuleStorElasticsearch(SpiderFootTestBase):
             'host': 'localhost',
             'port': 9200,
             'index': 'test_index',
-            'bulk_size': 3  # Small bulk size for testing
+            'bulk_size': 3,  # Small bulk size for testing
+            'username': 'user',
+            'password': 'pass',
+            'use_ssl': True,
+            'verify_certs': False,
+            'timeout': 30
         }
         
         module.setup(self.sf_instance, opts)
@@ -196,7 +199,7 @@ class TestModuleStorElasticsearch(SpiderFootTestBase):
         
         # Buffer should be empty after bulk insert
         self.assertEqual(len(module.buffer), 0)
-        mock_es.bulk.assert_called_once()
+        mock_bulk.assert_called_once()
 
     @patch('modules.sfp__stor_elasticsearch.Elasticsearch')
     def test_thread_safety(self, mock_es_class):

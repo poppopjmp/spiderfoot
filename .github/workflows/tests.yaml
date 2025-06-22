@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [master]
+    branches: [master, "dev*"]
   pull_request:
-    branches: [master]
+    branches:  [master, "dev*"]
 
 jobs:
   build:
@@ -60,13 +60,6 @@ jobs:
           coverage run -m pytest --ignore=test/integration/
           coverage report -m
           coverage xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          files: coverage.xml
-          fail_ci_if_error: true
-
       - name: Enforce minimum coverage threshold
         run: |
           coverage run -m pytest

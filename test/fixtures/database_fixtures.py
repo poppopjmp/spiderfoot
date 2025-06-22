@@ -5,7 +5,7 @@ import pytest
 import tempfile
 import os
 import sqlite3
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock, MagicMock, patch
 from spiderfoot import SpiderFootDb
 from spiderfoot.event import SpiderFootEvent
 
@@ -227,3 +227,15 @@ class MockSpiderFootDb:
 def mock_spiderfoot_db():
     """Create a mock SpiderFootDb instance."""
     return MockSpiderFootDb()
+
+
+@pytest.fixture
+def mock_psycopg2_connect():
+    with patch('spiderfoot.db.psycopg2.connect') as mock_connect:
+        yield mock_connect
+
+
+@pytest.fixture
+def mock_db_cursor():
+    cursor = MagicMock()
+    yield cursor

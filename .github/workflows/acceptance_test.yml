@@ -2,9 +2,9 @@ name: SpiderFoot Acceptance Tests
 
 on:
   push:
-    branches: [master]
+    branches: [dev]
   pull_request:
-    branches: [master]
+    branches: [dev] 
 
 jobs:
   acceptance-tests-chrome:

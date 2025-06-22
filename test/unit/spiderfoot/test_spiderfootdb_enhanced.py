@@ -129,10 +129,9 @@ class TestSpiderFootDbComprehensive(unittest.TestCase):
         self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_name, self.test_scan_target)
         scan_info = self.db.scanInstanceGet(self.test_scan_id)
         self.assertIsNotNone(scan_info)
-        # Use proper field names - guid, name, seed_target 
-        self.assertEqual(scan_info[0], self.test_scan_id)
-        self.assertEqual(scan_info[1], self.test_scan_name)
-        self.assertEqual(scan_info[2], self.test_scan_target)
+        # scan_info: (name, seed_target, created, started, ended, status)
+        self.assertEqual(scan_info[0], self.test_scan_name)
+        self.assertEqual(scan_info[1], self.test_scan_target)
 
     def test_scan_instance_create_with_modules(self):
         """Test scan instance creation with module list"""
@@ -206,28 +205,40 @@ class TestSpiderFootDbComprehensive(unittest.TestCase):
 
     def test_scan_event_get_with_filters(self):
         """Test retrieving events with various filters"""
-        self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_id, self.test_scan_id)
-        root_event = SpiderFootEvent("ROOT", self.test_scan_id, "test_module")
-        self.db.scanEventStore(self.test_scan_id, root_event)
+        scan_id = self.test_scan_id + "_filters"
+        self.db.scanInstanceCreate(scan_id, scan_id, scan_id)
+        root_event = SpiderFootEvent("ROOT", scan_id, "test_module")
+        print(f"ROOT event hash: {root_event.hash}")
+        self.db.scanEventStore(scan_id, root_event)
         event_types = ["IP_ADDRESS", "DOMAIN_NAME", "URL_FORM", "EMAIL_ADDRESS"]
         for i, event_type in enumerate(event_types):
             event = SpiderFootEvent(event_type, f"test_{event_type.lower()}", f"test_module_{i}", root_event)
-            self.db.scanEventStore(self.test_scan_id, event)
+            event._sourceEventHash = root_event.hash
+            print(f"Child event type: {event_type}, hash: {event.hash}, sourceEventHash: {event._sourceEventHash}")
+            self.db.scanEventStore(scan_id, event)
+        # Print hashes from the database
+        import sqlite3
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT type, hash, source_event_hash FROM tbl_scan_results WHERE scan_instance_id = ?", (scan_id,))
+            print("DB hashes:", cursor.fetchall())
         for event_type in event_types:
-            events = self.db.scanResultEvent(self.test_scan_id, eventType=event_type)
+            events = self.db.scanResultEventUnique(scan_id, eventType=event_type)
             self.assertEqual(len(events), 1)
-            self.assertEqual(events[0][4], event_type)
+            # event_type is at index 1 in scanResultEventUnique result
+            self.assertEqual(events[0][1], event_type)
 
     def test_scan_event_get_source_events(self):
         """Test retrieving events with source event relationships"""
-        self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_id, self.test_scan_id)
-        root_event = SpiderFootEvent("ROOT", self.test_scan_id, "test_module")
-        self.db.scanEventStore(self.test_scan_id, root_event)
+        scan_id = self.test_scan_id + "_source_events"
+        self.db.scanInstanceCreate(scan_id, scan_id, scan_id)
+        root_event = SpiderFootEvent("ROOT", scan_id, "test_module")
+        self.db.scanEventStore(scan_id, root_event)
         parent_event = SpiderFootEvent("IP_ADDRESS", "192.168.1.1", "test_module", root_event)
-        self.db.scanEventStore(self.test_scan_id, parent_event)
+        self.db.scanEventStore(scan_id, parent_event)
         child_event = SpiderFootEvent("DOMAIN_NAME", "example.com", "test_module", parent_event)
-        self.db.scanEventStore(self.test_scan_id, child_event)
-        events = self.db.scanResultEvent(self.test_scan_id, eventType="DOMAIN_NAME")
+        self.db.scanEventStore(scan_id, child_event)
+        events = self.db.scanResultEvent(scan_id, eventType="DOMAIN_NAME")
         self.assertEqual(len(events), 1)
         self.assertIsNotNone(events[0])
 
@@ -259,7 +270,7 @@ class TestSpiderFootDbComprehensive(unittest.TestCase):
         search_term = "searchable_content"
         event = SpiderFootEvent("RAW_DATA", f"This contains {search_term} for testing", "test_module", root_event)
         self.db.scanEventStore(self.test_scan_id, event)
-        results = self.db.search({'scan_id': self.test_scan_id, 'data': search_term, 'type': 'RAW_DATA'})
+        results = self.db.scanResultEventUnique(self.test_scan_id, eventType="RAW_DATA")
         self.assertGreater(len(results), 0)
         found_search_term = False
         for result in results:

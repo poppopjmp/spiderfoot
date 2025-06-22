@@ -23,17 +23,20 @@ class sfp__stor_stdout(SpiderFootPlugin):
     }
 
     _priority = 0
-    firstEvent = True    # Default options
-    opts = {
-        "_format": "tab",  # tab, csv, json
-        "_requested": [],
-        "_showonlyrequested": False,
-        "_stripnewline": False,
-        "_showsource": False,
-        "_csvdelim": ",",
-        "_maxlength": 0,
-        "_eventtypes": []
-    }
+
+    def __init__(self):
+        super().__init__()
+        self.firstEvent = True
+        self.opts = {
+            "_format": "tab",  # tab, csv, json
+            "_requested": [],
+            "_showonlyrequested": False,
+            "_stripnewline": False,
+            "_showsource": False,
+            "_csvdelim": ",",
+            "_maxlength": 0,
+            "_eventtypes": {}  # Changed from [] to {}
+        }
 
     # Option descriptions
     optdescs = {
@@ -41,9 +44,16 @@ class sfp__stor_stdout(SpiderFootPlugin):
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
-
+        # Always start with a fresh opts dict for this instance
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
+        # Also allow 'enabled' to be set via userOpts
+        if 'enabled' in userOpts:
+            self.opts['enabled'] = userOpts['enabled']
+        # For backward compatibility, treat '_store' as 'enabled'
+        if '_store' in userOpts:
+            self.opts['enabled'] = bool(userOpts['_store'])
+        self.firstEvent = True
 
     # What events is this module interested in for input
     # Because this is a storage plugin, we are interested in everything so we
@@ -51,23 +61,31 @@ class sfp__stor_stdout(SpiderFootPlugin):
         return ["*"]
 
     def output(self, event):
+        # If the module is disabled, do not output anything
+        if not self.opts.get('enabled', True):
+            return
         d = self.opts['_csvdelim']
-        if type(event.data) in [list, dict]:
+        # Handle None data gracefully
+        if event.data is None:
+            data = "Null Data"
+        elif isinstance(event.data, (list, dict)):
             data = str(event.data)
         else:
             data = event.data
 
-        if type(data) != str:
+        if not isinstance(data, str):
             data = str(event.data)
 
         # Handle case where sourceEvent might be None
         if event.sourceEvent is not None:
-            if type(event.sourceEvent.data) in [list, dict]:
+            if event.sourceEvent.data is None:
+                srcdata = "Null Data"
+            elif isinstance(event.sourceEvent.data, (list, dict)):
                 srcdata = str(event.sourceEvent.data)
             else:
                 srcdata = event.sourceEvent.data
 
-            if type(srcdata) != str:
+            if not isinstance(srcdata, str):
                 srcdata = str(event.sourceEvent.data)
         else:
             srcdata = ""
@@ -82,37 +100,42 @@ class sfp__stor_stdout(SpiderFootPlugin):
             srcdata = srcdata.replace("<SFURL>", "").replace("</SFURL>", "")
 
         if self.opts['_maxlength'] > 0:
-            data = data[0:self.opts['_maxlength']]
-            srcdata = srcdata[0:self.opts['_maxlength']]
+            data = data[:self.opts['_maxlength']]
+            srcdata = srcdata[:self.opts['_maxlength']]
 
-        if self.opts['_format'] == "tab":
-            event_type = self.opts['_eventtypes'][event.eventType]
-            if self.opts['_showsource']:
-                print(
-                    f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{srcdata}\t{data}")
-            else:
-                print(f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{data}")
+        # Gracefully handle unknown event types
+        event_type = self.opts['_eventtypes'].get(event.eventType, event.eventType)
 
-        if self.opts['_format'] == "csv":
-            print((event.module + d +
-                  self.opts['_eventtypes'][event.eventType] + d + srcdata + d + data))
+        try:
+            if self.opts['_format'] == "tab":
+                if self.opts['_showsource']:
+                    print(
+                        f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{srcdata}\t{data}")
+                else:
+                    print(f"{event.module.ljust(30)}\t{event_type.ljust(45)}\t{data}")
 
-        if self.opts['_format'] == "json":
-            d = event.asDict()
-            d['type'] = self.opts['_eventtypes'][event.eventType]
-            if self.firstEvent:
-                self.firstEvent = False
-            else:
-                print(",")
-            print(json.dumps(d), end='')
+            if self.opts['_format'] == "csv":
+                print((event.module + d + event_type + d + srcdata + d + data))
+
+            if self.opts['_format'] == "json":
+                d = event.asDict()
+                d['type'] = event_type
+                if self.firstEvent:
+                    self.firstEvent = False
+                else:
+                    print(",")
+                print(json.dumps(d), end='')
+        except Exception as e:
+            self.error(f"Stdout write failed: {e}")
 
     # Handle events sent to this module
     def handleEvent(self, sfEvent):
+        if not self.opts.get('enabled', True):
+            return
         if sfEvent.eventType == "ROOT":
             return
-
-        if self.opts['_showonlyrequested']:
-            if sfEvent.eventType in self.opts['_requested']:
+        if self.opts.get('_showonlyrequested', False):
+            if sfEvent.eventType in self.opts.get('_requested', []):
                 self.output(sfEvent)
         else:
             self.output(sfEvent)
