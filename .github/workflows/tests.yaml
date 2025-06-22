@@ -54,8 +54,8 @@ jobs:
           coverage run -m pytest --ignore=test/integration/
           coverage report -m
           coverage xml
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
         with:
-          files: coverage.xml
-          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
