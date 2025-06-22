@@ -85,10 +85,10 @@ SpiderFoot is a production-ready, enterprise-grade open source intelligence (OSI
    DOCUMENTATION_FIXES
    spiderfoot
 
-Version 5.2.2
+Version 5.2.3
 =============
 
-SpiderFoot 5.2.2 introduces powerful new workflow capabilities including multi-target scanning, workspace management, cross-correlation analysis, and CTI report generation with MCP integration.
+SpiderFoot 5.2.3 introduces powerful new workflow capabilities including multi-target scanning, workspace management, cross-correlation analysis, and CTI report generation with MCP integration.
 
 Key Features
 -----------

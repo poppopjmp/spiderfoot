@@ -21,8 +21,8 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'SpiderFoot'
 copyright = '2012-2024, Steve Micallef'
 author = 'Steve Micallef'
-version = '5.2.2'
-release = '5.2.2'
+version = '5.2.3'
+release = '5.2.3'
 
 
 # -- General configuration ---------------------------------------------------
