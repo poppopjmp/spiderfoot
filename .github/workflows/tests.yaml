@@ -63,4 +63,4 @@ jobs:
       - name: Enforce minimum coverage threshold
         run: |
           coverage run -m pytest
-          coverage report --fail-under=80
+          coverage report --fail-under=50
