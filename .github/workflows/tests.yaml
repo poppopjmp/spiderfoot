@@ -43,7 +43,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-            python -m pytest -n auto --dist loadfile --verbose  --ignore=test/integration/ --durations=5 --cov-report term --cov=. .
+            python -m pytest --maxfail=20 --tb=short --cov=spiderfoot --cov-report=term-missing test/unit 
       - uses: codecov/codecov-action@v1
         with:
             fail_ci_if_error: false
