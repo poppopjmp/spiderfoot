@@ -94,7 +94,7 @@ class TestSpiderFootWorkspaceComprehensive:
     @patch('spiderfoot.helpers.SpiderFootHelpers.targetTypeFromString')
     def test_add_target_with_auto_detection(self, mock_target_type):
         """Test adding target with automatic type detection."""
-        mock_target_type.return_value = "DOMAIN"
+        mock_target_type.return_value = "INTERNET_NAME"
         
         workspace = SpiderFootWorkspace(self.config)
         target_id = workspace.add_target("example.com")
@@ -105,7 +105,7 @@ class TestSpiderFootWorkspaceComprehensive:
         target = workspace.targets[0]
         assert target['target_id'] == target_id
         assert target['value'] == "example.com"
-        assert target['type'] == "DOMAIN"
+        assert target['type'] == "INTERNET_NAME"
         assert 'added_time' in target
         assert target['metadata'] == {}
 
