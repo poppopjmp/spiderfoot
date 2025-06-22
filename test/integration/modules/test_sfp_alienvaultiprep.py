@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from unittest.mock import patch
 
 from modules.sfp_alienvaultiprep import sfp_alienvaultiprep
 from sflib import SpiderFoot
@@ -9,25 +10,26 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 class TestModuleIntegrationAlienvaultiprep(unittest.TestCase):
 
-    @unittest.skip("todo")
     def test_handleEvent(self):
-        sf = SpiderFoot(self.default_options)
-
+        sf = SpiderFoot({})
         module = sfp_alienvaultiprep()
-        module.setup(sf, dict())
+        module.setup(sf, {})
+        module.__name__ = 'sfp_alienvaultiprep'
 
-        target_value = 'example target value'
+        target_value = '8.8.8.8'
         target_type = 'IP_ADDRESS'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
-        event_type = 'ROOT'
-        event_data = 'example data'
-        event_module = ''
-        source_event = ''
-        evt = SpiderFootEvent(event_type, event_data,
-                              event_module, source_event)
+        event_type = 'IP_ADDRESS'
+        event_data = '8.8.8.8'
+        event_module = 'sfp_alienvaultiprep'
+        source_event = None
+        evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
 
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
+        with patch.object(module, 'queryBlacklist', return_value=True), \
+             patch.object(module, 'notifyListeners') as mock_notify:
+            module.handleEvent(evt)
+            event_types = [call_args[0][0].eventType for call_args in mock_notify.call_args_list]
+            assert 'MALICIOUS_IPADDR' in event_types
+            assert 'BLACKLISTED_IPADDR' in event_types
