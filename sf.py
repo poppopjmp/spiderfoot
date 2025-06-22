@@ -256,7 +256,7 @@ def main():
         try:
             # web server config
             sfWebUiConfig = {
-                'host': '127.0.0.1',
+                'host': '0.0.0.0',
                 'port': 5001,
                 'root': '/',
                 'cors_origins': [],
@@ -264,7 +264,7 @@ def main():
 
             # FastAPI server config
             sfApiConfig = {
-                'host': '127.0.0.1',
+                'host': '0.0.0.0',
                 'port': 8001,
                 'workers': 1,
                 'log_level': 'info',
