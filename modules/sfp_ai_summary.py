@@ -7,7 +7,8 @@ class sfp_ai_summary(SpiderFootPlugin):
         'summary': "Summarizes scan findings using an LLM.",
         'flags': ['apikey'],
         'useCases': ["Investigate"],
-        'categories': ["ai", "production"],
+        'categories': ["ai"],
+        'dataSource': 'OpenAI, LLM provider'
     }
 
     opts = {

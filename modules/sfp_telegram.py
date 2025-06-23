@@ -51,6 +51,7 @@ class sfp_telegram(SpiderFootPlugin):
         if not TelegramClient:
             self.error("telethon library is not installed. Please add it to requirements.txt.")
             self.errorState = True
+            return False
         # Check for required options
         api_id = self.opts.get("api_id")
         api_hash = self.opts.get("api_hash")
@@ -58,6 +59,8 @@ class sfp_telegram(SpiderFootPlugin):
         if not api_id or not api_hash or not channels:
             self.error("Telegram API credentials and channels must be set.")
             self.errorState = True
+            return False
+        return True
 
     def start(self):
         if self.errorState:
