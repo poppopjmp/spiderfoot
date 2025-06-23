@@ -33,6 +33,10 @@ class TestModuleIntegration_stor_db(BaseTestModuleIntegration):
     def test_handleEvent(self):
         module = self.setup_module(sfp__stor_db)
 
+        # Ensure errorState is not set due to setup issues
+        module.errorState = False
+        self.assertFalse(module.errorState, "Module errorState should be False after setup")
+
         target_value = 'example target value'
         target_type = 'IP_ADDRESS'
         event_type = 'ROOT'
