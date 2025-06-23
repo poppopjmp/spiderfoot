@@ -1,15 +1,20 @@
-import unittest
+import pytest
 from modules.sfp_wificafespots import sfp_wificafespots
 from spiderfoot import SpiderFootEvent
 
-class TestSfpWifiCafeSpotsIntegration(unittest.TestCase):
-    def setUp(self):
-        self.plugin = sfp_wificafespots()
-        self.plugin.setup(None, {})
+@pytest.fixture
+def plugin():
+    return sfp_wificafespots()
 
-    def test_produced_event_type(self):
-        self.assertIn('WIFICAFESPOTS_HOTSPOT', self.plugin.producedEvents())
+def test_produced_event_type(plugin):
+    plugin.setup(None, {'search_term': 'cafe'})
+    assert 'WIFICAFESPOTS_HOTSPOT' in plugin.producedEvents()
 
-    def test_handle_event_stub(self):
-        event = SpiderFootEvent('ROOT', 'integration', 'integration', None)
-        self.assertIsNone(self.plugin.handleEvent(event))
+def test_handle_event_stub(plugin):
+    plugin.setup(None, {'search_term': 'cafe'})
+    event = SpiderFootEvent('ROOT', 'integration', 'integration', None)
+    assert plugin.handleEvent(event) is None
+
+def test_setup_requires_search_term(plugin):
+    with pytest.raises(ValueError):
+        plugin.setup(None, {'search_term': ''})

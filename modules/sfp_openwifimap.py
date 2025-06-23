@@ -16,16 +16,35 @@ class sfp_openwifimap(SpiderFootPlugin):
     }
 
     opts = {
-        "search_term": ""
+        "search_term": "",
+        "country": "",
+        "city": "",
+        "max_results": 50,
+        "output_format": "summary"  # summary, full
     }
 
     optdescs = {
-        "search_term": "Term to search for (SSID, BSSID, location, etc.)"
+        "search_term": "Term to search for (SSID, BSSID, location, etc.)",
+        "country": "Country to filter results.",
+        "city": "City to filter results.",
+        "max_results": "Maximum number of hotspots to return.",
+        "output_format": "Output format: summary (default) or full."
     }
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
         self.opts.update(userOpts)
+        self.debug(f"[setup] Options: {self.opts}")
+        # Option validation
+        if not self.opts.get("search_term"):
+            self.error("[setup] search_term is required.")
+            raise ValueError("search_term is required.")
+        if not isinstance(self.opts.get("max_results"), int) or self.opts["max_results"] <= 0:
+            self.error("[setup] max_results must be a positive integer.")
+            raise ValueError("max_results must be a positive integer.")
+        if self.opts.get("output_format") not in ["summary", "full"]:
+            self.error("[setup] output_format must be 'summary' or 'full'.")
+            raise ValueError("output_format must be 'summary' or 'full'.")
 
     def watchedEvents(self):
         return ["INTERNET_NAME", "IP_ADDRESS", "GEOINFO"]
@@ -34,8 +53,13 @@ class sfp_openwifimap(SpiderFootPlugin):
         return ["OPENWIFIMAP_HOTSPOT"]
 
     def handleEvent(self, event):
-        # Stub: Real API logic to be implemented
-        pass
+        self.debug(f"[handleEvent] Received event: {event.eventType}")
+        # Stub event filtering logic
+        if event.eventType not in self.watchedEvents():
+            self.debug(f"[handleEvent] Ignoring event type: {event.eventType}")
+            return None
+        self.debug("[handleEvent] (stub) Would process and emit OpenWifiMap events here.")
+        return None
 
     def shutdown(self):
-        pass
+        self.debug("[shutdown] Shutting down OpenWifiMap module.")

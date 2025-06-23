@@ -1,15 +1,24 @@
-import unittest
+import pytest
 from modules.sfp_arbitrum import sfp_arbitrum
 from spiderfoot import SpiderFootEvent
 
-class TestSfpArbitrumIntegration(unittest.TestCase):
-    def setUp(self):
-        self.plugin = sfp_arbitrum()
-        self.plugin.setup(None, {})
+@pytest.fixture
+def plugin():
+    return sfp_arbitrum()
 
-    def test_produced_event_type(self):
-        self.assertIn('ARBITRUM_ADDRESS', self.plugin.producedEvents())
+def test_produced_event_type(plugin):
+    plugin.setup(None, {"api_key": "key", "addresses": "0x123", "max_transactions": 10, "output_format": "summary"})
+    assert 'ARBITRUM_ADDRESS' in plugin.producedEvents()
 
-    def test_handle_event_stub(self):
-        event = SpiderFootEvent('ROOT', 'integration', 'integration', None)
-        self.assertIsNone(self.plugin.handleEvent(event))
+def test_handle_event_stub(plugin):
+    plugin.setup(None, {"api_key": "key", "addresses": "0x123", "max_transactions": 10, "output_format": "summary"})
+    event = SpiderFootEvent('ROOT', 'integration', 'integration', None)
+    assert plugin.handleEvent(event) is None
+
+def test_setup_requires_api_key(plugin):
+    with pytest.raises(Exception):
+        plugin.setup(None, {"api_key": "", "addresses": "0x123", "max_transactions": 10, "output_format": "summary"})
+
+def test_setup_requires_addresses(plugin):
+    with pytest.raises(Exception):
+        plugin.setup(None, {"api_key": "key", "addresses": "", "max_transactions": 10, "output_format": "summary"})

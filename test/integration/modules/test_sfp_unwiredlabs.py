@@ -1,15 +1,24 @@
-import unittest
+import pytest
 from modules.sfp_unwiredlabs import sfp_unwiredlabs
 from spiderfoot import SpiderFootEvent
 
-class TestSfpUnwiredLabsIntegration(unittest.TestCase):
-    def setUp(self):
-        self.plugin = sfp_unwiredlabs()
-        self.plugin.setup(None, {})
+@pytest.fixture
+def plugin():
+    return sfp_unwiredlabs()
 
-    def test_produced_event_type(self):
-        self.assertIn('UNWIREDLABS_GEOINFO', self.plugin.producedEvents())
+def test_produced_event_type(plugin):
+    plugin.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': '1.2.3.4'})
+    assert 'UNWIREDLABS_GEOINFO' in plugin.producedEvents()
 
-    def test_handle_event_stub(self):
-        event = SpiderFootEvent('ROOT', 'integration', 'integration', None)
-        self.assertIsNone(self.plugin.handleEvent(event))
+def test_handle_event_stub(plugin):
+    plugin.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': '1.2.3.4'})
+    event = SpiderFootEvent('ROOT', 'integration', 'integration', None)
+    assert plugin.handleEvent(event) is None
+
+def test_setup_requires_api_key(plugin):
+    with pytest.raises(ValueError):
+        plugin.setup(None, {'api_key': '', 'search_type': 'ip', 'search_value': '1.2.3.4'})
+
+def test_setup_requires_search_value(plugin):
+    with pytest.raises(ValueError):
+        plugin.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': ''})
