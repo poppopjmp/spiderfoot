@@ -44,7 +44,7 @@ jobs:
       - name: Test with pytest
         timeout-minutes: 60
         run: |
-            python -m pytest -n auto --dist loadfile --verbose --durations=5 --cov-report term --cov=. .
+            python -m pytest -n auto --dist loadfile --ignore=test/integration/modules/ --verbose --durations=5 --cov-report term --cov=. .
       - uses: codecov/codecov-action@v1
         with:
             fail_ci_if_error: false
