@@ -42,6 +42,7 @@ jobs:
           fi
 
       - name: Test with pytest
+        timeout-minutes: 60
         run: |
             python -m pytest -n auto --dist loadfile --verbose --durations=5 --cov-report term --cov=. .
       - uses: codecov/codecov-action@v1
@@ -50,6 +51,7 @@ jobs:
             verbose: true
 
       - name: Measure test coverage
+        timeout-minutes: 60
         run: |
           coverage run -m pytest
           coverage report -m
