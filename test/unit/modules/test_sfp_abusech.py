@@ -11,7 +11,7 @@ class TestModuleAbusech(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_abusech()
-        self.assertEqual(len(module.opts), len(module.optdescs))
+        self.assertEqual(set(module.opts.keys()), set(module.optdescs.keys()))
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)

@@ -14,6 +14,11 @@ class TestModuleIntegrationAdblock(unittest.TestCase):
             '_useragent': 'SpiderFoot',
             '_internettlds': 'com,net,org,info,biz,us,uk',
             '_genericusers': 'admin,administrator,webmaster,hostmaster,postmaster,root,abuse',
+            '_socks1type': '',
+            '_socks2addr': '',
+            '_socks3port': '',
+            '_socks4user': '',
+            '_socks5pwd': '',
         }
 
     def test_handleEvent_event_data_provider_javascript_url_matching_ad_filter_should_return_event(self):
@@ -82,9 +87,8 @@ class TestModuleIntegrationAdblock(unittest.TestCase):
 
     def test_handleEvent_event_data_external_url_not_matching_ad_filter_should_not_return_event(self):
         sf = SpiderFoot(self.default_options)
-
         module = sfp_adblock()
-        module.setup(sf, dict())
+        module.setup(sf, dict(self.default_options))
 
         target_value = 'spiderfoot.net'
         target_type = 'INTERNET_NAME'
