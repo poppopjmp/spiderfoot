@@ -3,7 +3,7 @@ from modules.sfp_tron import sfp_tron
 
 class TestSfpTron(unittest.TestCase):
     def setUp(self):
-        self.valid_opts = {"api_key": "key", "max_transactions": 10, "output_format": "summary"}
+        self.valid_opts = {"api_key": "key", "addresses": "TXYZ123", "max_transactions": 10, "output_format": "summary"}
         self.plugin = sfp_tron()
         self.plugin.setup(None, self.valid_opts)
 
@@ -33,8 +33,8 @@ class TestSfpTron(unittest.TestCase):
 
     def test_option_validation(self):
         with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"api_key": "", "max_transactions": 10, "output_format": "summary"})
+            self.plugin.setup(None, {"api_key": "", "addresses": "TXYZ123", "max_transactions": 10, "output_format": "summary"})
         with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"api_key": "key", "max_transactions": 0, "output_format": "summary"})
+            self.plugin.setup(None, {"api_key": "key", "addresses": "TXYZ123", "max_transactions": 0, "output_format": "summary"})
         with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"api_key": "key", "max_transactions": 10, "output_format": "invalid"})
+            self.plugin.setup(None, {"api_key": "key", "addresses": "TXYZ123", "max_transactions": 10, "output_format": "invalid"})

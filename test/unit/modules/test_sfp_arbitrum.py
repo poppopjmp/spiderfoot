@@ -4,7 +4,7 @@ from modules.sfp_arbitrum import sfp_arbitrum
 class TestSfpArbitrum(unittest.TestCase):
     def setUp(self):
         # Provide minimal valid options to pass validation
-        self.valid_opts = {"api_key": "key", "max_transactions": 10, "output_format": "summary"}
+        self.valid_opts = {"api_key": "key", "addresses": "0x123", "max_transactions": 10, "output_format": "summary"}
         self.plugin = sfp_arbitrum()
         self.plugin.setup(None, self.valid_opts)
 
@@ -34,8 +34,8 @@ class TestSfpArbitrum(unittest.TestCase):
 
     def test_option_validation(self):
         with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"api_key": "", "max_transactions": 10, "output_format": "summary"})
+            self.plugin.setup(None, {"api_key": "", "addresses": "0x123", "max_transactions": 10, "output_format": "summary"})
         with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"api_key": "key", "max_transactions": 0, "output_format": "summary"})
+            self.plugin.setup(None, {"api_key": "key", "addresses": "0x123", "max_transactions": 0, "output_format": "summary"})
         with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"api_key": "key", "max_transactions": 10, "output_format": "invalid"})
+            self.plugin.setup(None, {"api_key": "key", "addresses": "0x123", "max_transactions": 10, "output_format": "invalid"})
