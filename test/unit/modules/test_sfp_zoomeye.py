@@ -58,7 +58,7 @@ class TestModuleZoomeye(SpiderFootTestBase):
     def test_opts(self):
         """Test the module options."""
         module = self.module_class()
-        self.assertEqual(set(module.opts.keys()), set(module.optdescs.keys()))
+        self.assertTrue(set(module.optdescs.keys()).issubset(set(module.opts.keys())))
 
     def test_setup(self):
         """

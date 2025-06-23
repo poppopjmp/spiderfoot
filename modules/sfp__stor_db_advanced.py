@@ -32,6 +32,7 @@ import logging
 from contextlib import contextmanager
 import queue
 import signal
+import traceback
 
 try:
     import psycopg2
@@ -796,9 +797,8 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
                         self.error(f"Error closing pool {pool_id}: {e}")
             
             self.debug("Graceful shutdown completed")
-            
         except Exception as e:
-            self.error(f"Error during graceful shutdown: {e}")
+            self.error(f"Error during graceful shutdown: {e}\n{traceback.format_exc()}")
 
     def __del__(self):
         """Clean up resources."""

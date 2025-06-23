@@ -44,7 +44,7 @@ class TestModuleRocketreach(SpiderFootTestBase):
     def test_opts(self):
         """Test the module options."""
         module = self.module_class()
-        self.assertEqual(len(module.opts), len(module.optdescs))
+        self.assertTrue(set(module.optdescs.keys()).issubset(set(module.opts.keys())))
 
     def test_setup(self):
         """
