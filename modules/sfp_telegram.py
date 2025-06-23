@@ -12,8 +12,8 @@ class sfp_telegram(SpiderFootPlugin):
     meta = {
         'name': "Telegram Channel Monitor",
         'summary': "Monitors specified Telegram channels for new messages and emits events.",
-        'flags': ["external"],
-        'useCases': ["monitoring", "threat-intel"],
+        'flags': ["security"],
+        'useCases': [ "Passive", "Investigate"],
         'categories': ["Social Media", "Messaging"],
     }
 

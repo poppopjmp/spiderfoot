@@ -33,7 +33,7 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
     def test_module_labels_are_valid(self):
         sf = SpiderFoot(self.default_options)
         valid_labels = ["errorprone", "tor",
-                        "slow", "invasive", "apikey", "tool", "enterprise", "ai", "ml", "security", "production"]
+                        "slow", "invasive", "apikey", "tool", "enterprise", "ai", "ml", "security", "production", "external"]
 
         sfModules = self.load_modules(sf)
         for module in sfModules:

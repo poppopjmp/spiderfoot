@@ -5,9 +5,9 @@ class sfp_ai_summary(SpiderFootPlugin):
     meta = {
         'name': "AI Threat Intelligence Summarizer",
         'summary': "Summarizes scan findings using an LLM.",
-        'flags': [],
-        'useCases': ["Reporting", "Threat Intel"],
-        'categories': ["AI", "Reporting"],
+        'flags': ['apikey'],
+        'useCases': ["Investigate"],
+        'categories': ["ai", "production"],
     }
 
     opts = {
