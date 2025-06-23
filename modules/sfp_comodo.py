@@ -50,6 +50,10 @@ class sfp_comodo(SpiderFootPlugin):
 
     results = None
 
+    def __init__(self):
+        super().__init__()
+        self.__name__ = "sfp_comodo"
+
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
         self.results = self.tempStorage()
