@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master,"dev*"]
 
+defaults:
+  run:
+    timeout-minutes: 60
+
 jobs:
   build:
 
