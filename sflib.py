@@ -1330,10 +1330,10 @@ class SpiderFoot:
             except Exception as e:
                 if noLog:
                     self.debug(
-                        f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {url}", exc_info=True)
+                        f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {url}")
                 else:
                     self.error(
-                        f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {url}", exc_info=True)
+                        f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {url}")
 
                 return result
 
@@ -1379,10 +1379,10 @@ class SpiderFoot:
                 except Exception as e:
                     if noLog:
                         self.debug(
-                            f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {result['realurl']}", exc_info=True)
+                            f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {result['realurl']}")
                     else:
                         self.error(
-                            f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {result['realurl']}", exc_info=True)
+                            f"Unexpected exception ({e}) occurred fetching (HEAD only) URL: {result['realurl']}")
 
                     return result
 
@@ -1426,10 +1426,10 @@ class SpiderFoot:
         except Exception as e:
             if noLog:
                 self.debug(
-                    f"Unexpected exception ({e}) occurred fetching URL: {url}", exc_info=True)
+                    f"Unexpected exception ({e}) occurred fetching URL: {url}")
             else:
                 self.error(
-                    f"Unexpected exception ({e}) occurred fetching URL: {url}", exc_info=True)
+                    f"Unexpected exception ({e}) occurred fetching URL: {url}")
 
             return result
 
@@ -1487,7 +1487,7 @@ class SpiderFoot:
 
         except Exception as e:
             self.error(
-                f"Unexpected exception ({e}) occurred parsing response for URL: {url}", exc_info=True)
+                f"Unexpected exception ({e}) occurred parsing response for URL: {url}")
             result['content'] = None
             result['status'] = str(e)
 

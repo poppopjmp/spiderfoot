@@ -41,6 +41,7 @@ jobs:
         continue-on-error: true
         
       - name: Report flake8 errors (if any)
+        shell: bash
         run: |
           if [ -s "flake8_errors.txt" ]; then
             echo "Flake8 found errors:"

@@ -5,7 +5,7 @@ from spiderfoot import SpiderFootEvent
 class TestSfpOpenWifiMapIntegration(unittest.TestCase):
     def setUp(self):
         self.plugin = sfp_openwifimap()
-        self.plugin.setup(None, {})
+        self.plugin.setup(None, {'search_term': 'test'})
 
     def test_produced_event_type(self):
         self.assertIn('OPENWIFIMAP_HOTSPOT', self.plugin.producedEvents())

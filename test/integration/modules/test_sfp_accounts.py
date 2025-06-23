@@ -14,6 +14,12 @@ class TestModuleIntegrationAccounts(unittest.TestCase):
             '_useragent': 'SpiderFoot',
             '_internettlds': 'com,net,org,info,biz,us,uk',
             '_genericusers': 'admin,administrator,webmaster,hostmaster,postmaster,root,abuse',
+            '_socks1type': '',
+            '_socks1addr': '',
+            '_socks1port': '',
+            '_socks1user': '',
+            '_socks1pwd': '',
+            '__logging': False,
         }
         self.sf = SpiderFoot(self.default_options)
         self.module = sfp_accounts()
