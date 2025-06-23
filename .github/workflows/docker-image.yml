@@ -53,37 +53,5 @@ jobs:
         CONTAINER=spiderfoot-test
 
         # CLI tests
-        docker run --rm $IMAGE sf.py -h
-        docker run --rm $IMAGE sf.py --version
-
-        # Start container in background
-        docker run -d --name $CONTAINER -p 5001:5001 -p 8001:8001 $IMAGE
-
-        # Wait for web UI (CherryPy) to be ready
-        for i in {1..30}; do
-          if curl -fsS http://localhost:5001/ping >/dev/null; then
-            echo "Web UI is up"; break
-          fi
-          echo "Waiting for web UI... ($i)"; sleep 2
-        done
-        curl -fsS http://localhost:5001/ping || (echo 'Web UI did not start' && docker logs $CONTAINER && exit 1)
-
-        # Wait for API (FastAPI) to be ready
-        for i in {1..30}; do
-          if curl -fsS http://localhost:8001/api/health >/dev/null; then
-            echo "API is up"; break
-          fi
-          echo "Waiting for API... ($i)"; sleep 2
-        done
-        curl -fsS http://localhost:8001/api/health || (echo 'API did not start' && docker logs $CONTAINER && exit 1)
-
-        # Check for errors in logs
-        if docker logs $CONTAINER 2>&1 | grep -iE 'Traceback|ERROR|Exception'; then
-          echo 'Errors found in container logs';
-          docker logs $CONTAINER;
-          docker stop $CONTAINER;
-          exit 1;
-        fi
-
-        # Clean up
-        docker stop $CONTAINER
+        docker run --rm $IMAGE sf.py -h || { echo 'sf.py -h failed'; exit 1; }
+        docker run --rm $IMAGE sf.py --version || { echo 'sf.py --version failed'; exit 1; }

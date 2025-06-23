@@ -44,7 +44,7 @@ class TestModuleWhoisfreaks(SpiderFootTestBase):
     def test_opts(self):
         """Test the module options."""
         module = self.module_class()
-        self.assertEqual(len(module.opts), len(module.optdescs))
+        self.assertEqual(set(module.opts.keys()), set(module.optdescs.keys()))
 
     def test_setup(self):
         """

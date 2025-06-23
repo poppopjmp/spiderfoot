@@ -100,8 +100,8 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
             if self.opts.get('username') and self.opts.get('password'):
                 es_conn_config['http_auth'] = (
                     self.opts['username'], self.opts['password'])
-            elif 'api_key' in self.opts:
-                es_conn_config['api_key'] = self.opts['api_key']
+            if 'api_key' in self.opts:
+                es_conn_config['api_key'] = self.opts.get('api_key', '')
 
             self.es = Elasticsearch(**es_conn_config)
 

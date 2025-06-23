@@ -347,7 +347,9 @@ class SpiderFootPlugin:
             *args: passed through to logging.error()
             *kwargs: passed through to logging.error()
         """
-        self.log.error(*args, extra={'scanId': self.__scanId__}, **kwargs)
+        extra = kwargs.pop('extra', {})
+        extra = {**extra, 'scanId': self.__scanId__}
+        self.log.error(*args, extra=extra, **kwargs)
 
     def enrichTarget(self, target: str) -> None:
         """Find aliases for a target.
