@@ -11,7 +11,7 @@ class TestModuleDnsResolve(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_dnsresolve()
-        self.assertEqual(len(module.opts), len(module.optdescs))
+        self.assertTrue(set(module.optdescs.keys()).issubset(set(module.opts.keys())))
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)

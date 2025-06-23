@@ -19,7 +19,7 @@ class BaseTestModuleIntegration(unittest.TestCase):
         # Patch the dbh (database handle) required by the module
         sf.dbh = MagicMock()
         module = module_class()
-        module.setup(sf, dict())
+        module.setup(sf, dict(self.default_options))  # Pass default_options to setup
         return module
 
     def create_event(self, target_value, target_type, event_type, event_data):

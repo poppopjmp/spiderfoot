@@ -95,6 +95,11 @@ class TestModuleIntegrationAdblock(unittest.TestCase):
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
 
+        import unittest.mock as mock_mod
+        mock_rules = mock_mod.Mock()
+        mock_rules.should_block.return_value = False
+        module.rules = mock_rules
+
         def new_notifyListeners(self, event):
             raise Exception(f"Raised event {event.eventType}: {event.data}")
 
