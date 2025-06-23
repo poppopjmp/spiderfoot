@@ -6,11 +6,21 @@ class sfp_apileak(SpiderFootPlugin):
     meta = {
         'name': "API Key/Secret Leak Detector",
         'summary': "Searches for leaked API keys and secrets on GitHub and paste sites.",
-        'flags': [],
+        'flags': ['apikey'],
         'useCases': ['Passive', 'Investigate'],
         'group': ['Passive', 'Investigate'],
         'categories': ["Leaks, Dumps and Breaches"],
-        'dataSource': 'GitHub, Paste sites'
+        'dataSource': {
+            'name': 'GitHub',
+            'summary': 'Searches GitHub and paste sites for API key leaks.',
+            'model': 'FREE_AUTH_LIMITED',
+            'apiKeyInstructions': [
+                'Sign up at https://github.com/',
+                'Go to Settings > Developer settings > Personal access tokens.',
+                'Generate a new token with code search permissions.',
+                'Paste the token into the module configuration.'
+            ]
+        }
     }
 
     opts = {

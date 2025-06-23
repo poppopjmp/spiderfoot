@@ -14,7 +14,7 @@ class sfp_telegram(SpiderFootPlugin):
         'summary': "Monitors specified Telegram channels for new messages and emits events.",
         'flags': ["security"],
         'useCases': [ "Passive", "Investigate"],
-        'categories': ["Social Media", "Messaging"],
+        'categories': ["Social Media"],
     }
 
     opts = {

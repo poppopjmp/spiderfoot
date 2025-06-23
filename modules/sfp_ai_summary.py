@@ -7,8 +7,18 @@ class sfp_ai_summary(SpiderFootPlugin):
         'summary': "Summarizes scan findings using an LLM.",
         'flags': ['apikey'],
         'useCases': ["Investigate"],
-        'categories': ["ai"],
-        'dataSource': 'OpenAI, LLM provider'
+        'group': ["Investigate"],
+        'categories': ["Content Analysis"],
+        'dataSource': {
+            'name': 'OpenAI',
+            'summary': 'LLM provider',
+            'model': 'FREE_AUTH_LIMITED',
+            'apiKeyInstructions': [
+                'Sign up at https://platform.openai.com/',
+                'Create an API key in your account settings.',
+                'Paste the API key into the module configuration.'
+            ]
+        }
     }
 
     opts = {
