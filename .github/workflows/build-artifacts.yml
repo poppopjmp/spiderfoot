@@ -47,6 +47,13 @@ jobs:
           test -f packaging/spiderfoot.spec
           test -f packaging/spiderfoot.rb
           test -f packaging/debian/control
+      - name: Check build artifacts exist (fail early if missing)
+        run: |
+          set -e
+          if [ ! -d dist ]; then
+            echo "dist directory missing!" >&2; exit 1
+          fi
+          ls dist/*.whl dist/*.tar.gz
       - name: Build source distribution
         run: |
           python setup.py sdist || true
@@ -171,6 +178,13 @@ jobs:
           sudo apt-get install -y wget
           wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.2_Linux-64bit.tar.gz | tar xz
           ./trivy fs --exit-code 1 --severity HIGH,CRITICAL --scanners vuln,secret,config .
+      - name: Publish to PyPI
+        if: github.event_name == 'push' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          repository-url: https://upload.pypi.org/legacy/
       - name: Publish to GitHub Packages
         if: github.event_name == 'push' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -178,3 +192,7 @@ jobs:
           user: __token__
           password: ${{ secrets.GITHUB_TOKEN }}
           repository-url: https://upload.pypi.org/legacy/
+          # For GitHub Packages, you may want to use:
+          # repository-url: https://upload.pypi.org/legacy/
+          # or for GitHub's own registry:
+          # repository-url: https://upload.pypi.org/legacy/
