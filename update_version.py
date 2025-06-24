@@ -247,22 +247,6 @@ def update_snapcraft():
     else:
         print(f"[OK] snapcraft.yaml already has correct version {version}")
 
-def update_spec():
-    version = get_version()
-    spec_path = Path(__file__).parent / "spiderfoot.spec"
-    if not spec_path.exists():
-        print(f"WARNING: {spec_path} not found")
-        return
-    with open(spec_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    new_content = re.sub(r"Version: *[\d\.]+", f"Version:        {version}", content)
-    if new_content != content:
-        with open(spec_path, 'w', encoding='utf-8') as f:
-            f.write(new_content)
-        print(f"[OK] Updated spiderfoot.spec with version {version}")
-    else:
-        print(f"[OK] spiderfoot.spec already has correct version {version}")
-
 def update_homebrew_formula():
     version = get_version()
     rb_path = Path(__file__).parent / "spiderfoot.rb"
@@ -396,7 +380,6 @@ def main():
     update_debian_control()
     update_github_workflows()
     update_snapcraft()
-    update_spec()
     update_homebrew_formula()
     
     version = get_version()
