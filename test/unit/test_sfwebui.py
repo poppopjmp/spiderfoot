@@ -4,9 +4,10 @@ import cherrypy
 from sfwebui import SpiderFootWebUi
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
+from cherrypy.test import helper
 
 
-class TestSpiderFootWebUi(SpiderFootTestBase):
+class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
 
     def setUp(self):
         super().setUp()
@@ -498,7 +499,7 @@ class TestSpiderFootWebUi(SpiderFootTestBase):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             # Mock data with all required 15 elements
             mock_db.return_value.search.return_value = [
-                [1627846261, 'data', 'source', 'type', 'ROOT',
+                [1627842461, 'data', 'source', 'type', 'ROOT',
                  '', '', '', '', '', '', '', '', '', '']
             ]
             result = self.webui.search('id', 'eventType', 'value')
@@ -560,3 +561,16 @@ class TestSpiderFootWebUi(SpiderFootTestBase):
             # Test with negative limit
             result = self.webui.workspacescanresults('test_workspace', limit='-5')
             self.assertTrue(result['success'])  # Should fall back to default
+
+    def test_opts_save_list_index_out_of_range(self):
+        """Test that saving options with malformed input triggers a user-friendly error message and does not raise."""
+        with patch('sfwebui.SpiderFootDb') as mock_db:
+            mock_db.return_value.configSet.side_effect = IndexError('list index out of range')
+            self.webui.token = 'test_token'
+            with patch('sfwebui.SpiderFoot') as mock_sf:
+                mock_sf.return_value.configUnserialize.return_value = self.config
+                mock_sf.return_value.configSerialize.return_value = {}
+                # The method should return an error message, not raise
+                result = self.webui.savesettings('{"opt": "value"}', 'test_token')
+                self.assertIn('Processing one or more of your inputs failed', result)
+                self.assertIn('list index out of range', result)

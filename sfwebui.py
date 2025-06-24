@@ -1189,7 +1189,11 @@ class SpiderFootWebUi:
             useropts = json.loads(allopts)
             cleanopts = dict()
             for opt in list(useropts.keys()):
-                cleanopts[opt] = self.cleanUserInput([useropts[opt]])[0]
+                value = useropts[opt]
+                if not isinstance(value, str):
+                    value = str(value)
+                cleaned = self.cleanUserInput([value])
+                cleanopts[opt] = cleaned[0] if cleaned and len(cleaned) > 0 else ""
 
             currentopts = deepcopy(self.config)
 
@@ -1199,6 +1203,8 @@ class SpiderFootWebUi:
             self.config = sf.configUnserialize(cleanopts, currentopts)
             dbh.configSet(sf.configSerialize(self.config))
         except Exception as e:
+            import logging
+            logging.exception("Error processing user input in savesettings")
             return self.error(f"Processing one or more of your inputs failed: {e}")
 
         raise cherrypy.HTTPRedirect(f"{self.docroot}/opts?updated=1")
@@ -2049,7 +2055,7 @@ class SpiderFootWebUi:
                 'workspace_id': workspace.workspace_id,
                 'name': workspace.name,
                 'description': workspace.description,
-                'created_time': workspace.created_time,
+                               'created_time': workspace.created_time,
                 'modified_time': workspace.modified_time,
                 'targets': workspace.targets,
                 'scans': workspace.scans,

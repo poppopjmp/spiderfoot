@@ -450,6 +450,9 @@ class SpiderFoot:
 
                 if modName + ":" + opt in opts:
                     ref_mod = referencePoint['__modules__'][modName]['opts'][opt]
+                    # Defensive: skip if ref_mod is an empty list, but do not log a warning
+                    if isinstance(ref_mod, list) and len(ref_mod) == 0:
+                        continue
                     if isinstance(ref_mod, bool):
                         if opts[modName + ":" + opt] == "1":
                             returnOpts['__modules__'][modName]['opts'][opt] = True
