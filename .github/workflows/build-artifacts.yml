@@ -54,19 +54,19 @@ jobs:
             echo "dist directory missing!" >&2; exit 1
           fi
           ls dist/*.whl dist/*.tar.gz
-      - name: Debug: Show current directory and files
+      - name: Debug Show current directory and files
         run: |
           echo "Current working directory: $(pwd)"
           echo "Listing all files recursively:"
           find .
           echo "Listing dist directory if exists:"
           if [ -d dist ]; then ls -l dist; fi
-      - name: Debug: Show Python version and environment
+      - name: Debug Show Python version and environment
         run: |
           python --version
           which python
           env
-      - name: Debug: Show setup.py and requirements.txt
+      - name: Debug Show setup.py and requirements.txt
         run: |
           echo "--- setup.py ---"
           cat setup.py || true
