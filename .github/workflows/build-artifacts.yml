@@ -90,12 +90,17 @@ jobs:
           cp -r packaging/debian .
           export DEB_BUILD_OPTIONS="nocheck"
           dpkg-buildpackage -us -uc -b
+      - name: Move .deb package to dist/
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          mkdir -p dist
+          mv ../*.deb dist/
       - name: Upload .deb package
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         uses: actions/upload-artifact@v4
         with:
           name: spiderfoot-${{ steps.get_version.outputs.version }}-deb
-          path: ../*.deb
+          path: dist/*.deb
       - name: Build RPM package (Fedora/CentOS/RHEL, Python 3.9 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
