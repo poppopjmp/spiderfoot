@@ -165,41 +165,41 @@ jobs:
           wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.2_Linux-64bit.tar.gz | tar xz
           ./trivy fs --exit-code 1 --severity HIGH,CRITICAL --scanners vuln,secret,config .
 
-  publish-release:
-    name: Publish Release
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref_type == 'tag' || github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-artifacts
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          body_path: packaging/CHANGELOG.md
-          draft: false
-          prerelease: false
-      - name: Upload all artifacts to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            release-artifacts/**/*
-      - name: Publish to PyPI
-        if: github.ref_type == 'tag' && secrets.TWINE_USERNAME != '' && secrets.TWINE_PASSWORD != ''
-        env:
-          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install twine
-          find release-artifacts -type f -name '*.whl' -exec cp {} . \;
-          find release-artifacts -type f -name '*.tar.gz' -exec cp {} . \;
-          twine upload --skip-existing *.whl *.tar.gz
+#   publish-release:
+#     name: Publish Release
+#     needs: build
+#     runs-on: ubuntu-latest
+#     if: github.ref_type == 'tag' || github.ref == 'refs/heads/main'
+#     steps:
+#       - uses: actions/checkout@v4
+#       - name: Download all build artifacts
+#         uses: actions/download-artifact@v4
+#         with:
+#           path: release-artifacts
+#       - name: Create GitHub Release
+#         id: create_release
+#         uses: actions/create-release@v1
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         with:
+#           tag_name: ${{ github.ref_name }}
+#           release_name: Release ${{ github.ref_name }}
+#           body_path: packaging/CHANGELOG.md
+#           draft: false
+#           prerelease: false
+#       - name: Upload all artifacts to Release
+#         uses: softprops/action-gh-release@v2
+#         with:
+#           files: |
+#             release-artifacts/**/*
+#       - name: Publish to PyPI
+#         if: github.ref_type == 'tag' && secrets.TWINE_USERNAME != '' && secrets.TWINE_PASSWORD != ''
+#         env:
+#           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+#           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+#         run: |
+#           python -m pip install --upgrade pip
+#           python -m pip install twine
+#           find release-artifacts -type f -name '*.whl' -exec cp {} . \;
+#           find release-artifacts -type f -name '*.tar.gz' -exec cp {} . \;
+#           twine upload --skip-existing *.whl *.tar.gz
