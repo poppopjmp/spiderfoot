@@ -47,28 +47,6 @@ jobs:
           test -f packaging/spiderfoot.spec
           test -f packaging/spiderfoot.rb
           test -f packaging/debian/control
-      - name: Debug Show current directory and files
-        run: |
-          echo "Current working directory: $(pwd)"
-          echo "Listing all files recursively:"
-          find .
-          echo "Listing dist directory if exists:"
-          if [ -d dist ]; then ls -l dist; fi
-      - name: Debug Show Python version and environment
-        run: |
-          python --version
-          which python
-          env
-      - name: Debug Show setup.py and requirements.txt
-        run: |
-          echo "--- setup.py ---"
-          cat setup.py || true
-          echo "--- requirements.txt ---"
-          cat requirements.txt || true
-          echo "--- VERSION ---"
-          cat VERSION || true
-          echo "--- README.md ---"
-          cat README.md || true
       - name: Build source distribution
         run: |
           python setup.py sdist -v
