@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+# export DH_VERBOSE=1
+
+%:
+	dh $@
+
+# Example of custom override (uncomment and adapt as needed)
+#override_dh_auto_test:
+#	# Disable tests during build
+#	true
+
+#override_dh_auto_install:
+#	# Custom install steps can go here
+#	dh_auto_install
