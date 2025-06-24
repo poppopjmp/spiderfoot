@@ -86,7 +86,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
           sudo apt-get update
-          sudo apt-get install -y debhelper python3-all python3-setuptools
+          sudo apt-get install -y build-essential debhelper python3-all python3-setuptools
           cp -r packaging/debian .
           dpkg-buildpackage -us -uc -b
       - name: Upload .deb package
