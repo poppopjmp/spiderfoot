@@ -9,5 +9,8 @@ Homepage: https://www.spiderfoot.net/
 Package: spiderfoot
 Architecture: all
 Depends: ${python3:Depends}, ${misc:Depends}, python3, python3-setuptools
-Description: SpiderFoot - Open Source Intelligence Automation Tool
- SpiderFoot automates OSINT for threat intelligence, red teaming, and digital footprinting.
+Description: Open source OSINT automation tool for threat intelligence and reconnaissance
+ SpiderFoot automates open source intelligence (OSINT) for threat intelligence,
+ red teaming, and digital footprinting. It helps security professionals and
+ researchers gather, correlate, and analyze data from hundreds of sources to
+ discover information about IPs, domains, emails, and more.
