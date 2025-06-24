@@ -21,6 +21,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install PostgreSQL client libraries (Linux/macOS only)
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            sudo apt-get update
+            sudo apt-get install -y libpq-dev
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            brew update
+            brew install postgresql
+          fi
       - name: Read version
         id: get_version
         run: |
