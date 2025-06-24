@@ -122,6 +122,10 @@ class sfp_rocketreach(SpiderFootPlugin):
             return None
 
     def handleEvent(self, event):
+        """
+        Handle incoming events, query RocketReach, and emit relevant events.
+        Deduplicate emitted events to avoid duplicates.
+        """
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -143,6 +147,15 @@ class sfp_rocketreach(SpiderFootPlugin):
             return
 
         self.results[eventData] = True
+        emitted = set()
+
+        def emit(evt_type, data):
+            key = (evt_type, data)
+            if key in emitted:
+                return
+            emitted.add(key)
+            e = SpiderFootEvent(evt_type, data, self.__class__.__name__, event)
+            self.notifyListeners(e)
 
         query_type = (
             "email"
@@ -167,39 +180,29 @@ class sfp_rocketreach(SpiderFootPlugin):
             # Extract email addresses
             email = match.get("email")
             if email:
-                e = SpiderFootEvent("EMAILADDR", email, self.__name__, event)
-                self.notifyListeners(e)
+                emit("EMAILADDR", email)
 
             # Extract all email addresses from the list if available
             emails = match.get("emails", [])
             for email_obj in emails:
                 if isinstance(email_obj, dict) and "email" in email_obj:
-                    e = SpiderFootEvent(
-                        "EMAILADDR", email_obj["email"], self.__name__, event
-                    )
-                    self.notifyListeners(e)
+                    emit("EMAILADDR", email_obj["email"])
 
             # Extract name
             name = match.get("name")
             if name:
-                e = SpiderFootEvent("PERSON_NAME", name, self.__name__, event)
-                self.notifyListeners(e)
+                emit("PERSON_NAME", name)
 
             # Extract phone numbers
             phone = match.get("phone")
             if phone:
-                e = SpiderFootEvent("PHONE_NUMBER", phone,
-                                    self.__name__, event)
-                self.notifyListeners(e)
+                emit("PHONE_NUMBER", phone)
 
             # Extract all phone numbers from the list if available
             phones = match.get("phones", [])
             for phone_obj in phones:
                 if isinstance(phone_obj, dict) and "number" in phone_obj:
-                    e = SpiderFootEvent(
-                        "PHONE_NUMBER", phone_obj["number"], self.__name__, event
-                    )
-                    self.notifyListeners(e)
+                    emit("PHONE_NUMBER", phone_obj["number"])
 
             # Extract social media profiles
             social_networks = {
@@ -211,12 +214,7 @@ class sfp_rocketreach(SpiderFootPlugin):
 
             for network, url in social_networks.items():
                 if url:
-                    e = SpiderFootEvent(
-                        "SOCIAL_MEDIA", f"{network}: {url}", self.__name__, event
-                    )
-                    self.notifyListeners(e)
+                    emit("SOCIAL_MEDIA", f"{network}: {url}")
 
             # Send raw data
-            e = SpiderFootEvent("RAW_RIR_DATA", json.dumps(
-                match), self.__name__, event)
-            self.notifyListeners(e)
+            emit("RAW_RIR_DATA", json.dumps(match))

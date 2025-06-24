@@ -148,7 +148,7 @@ class sfp_dehashed(SpiderFootPlugin):
         srcModuleName = event.module
         eventData = event.data
 
-        if srcModuleName == self.__name__:
+        if srcModuleName == self.__class__.__name__:
             return
 
         if eventData in self.results:
@@ -203,46 +203,46 @@ class sfp_dehashed(SpiderFootPlugin):
                 if eventName == "EMAILADDR":
                     if email == eventData:
                         evt = SpiderFootEvent(
-                            'EMAILADDR_COMPROMISED', f"{email} [{leakSource}]", self.__name__, event)
+                            'EMAILADDR_COMPROMISED', f"{email} [{leakSource}]", self.__class__.__name__, event)
                         self.notifyListeners(evt)
 
                         if password:
                             evt = SpiderFootEvent(
-                                'PASSWORD_COMPROMISED', f"{email}:{password} [{leakSource}]", self.__name__, event)
+                                'PASSWORD_COMPROMISED', f"{email}:{password} [{leakSource}]", self.__class__.__name__, event)
                             self.notifyListeners(evt)
 
                         if passwordHash:
                             evt = SpiderFootEvent(
-                                'HASH_COMPROMISED', f"{email}:{passwordHash} [{leakSource}]", self.__name__, event)
+                                'HASH_COMPROMISED', f"{email}:{passwordHash} [{leakSource}]", self.__class__.__name__, event)
                             self.notifyListeners(evt)
 
                         evt = SpiderFootEvent(
-                            'RAW_RIR_DATA', str(row), self.__name__, event)
+                            'RAW_RIR_DATA', str(row), self.__class__.__name__, event)
                         self.notifyListeners(evt)
 
                 if eventName == "DOMAIN_NAME":
                     pevent = SpiderFootEvent(
-                        "EMAILADDR", email, self.__name__, event)
+                        "EMAILADDR", email, self.__class__.__name__, event)
                     if email not in emailResults:
                         self.notifyListeners(pevent)
                         emailResults.add(email)
 
                     evt = SpiderFootEvent(
-                        'EMAILADDR_COMPROMISED', f"{email} [{leakSource}]", self.__name__, pevent)
+                        'EMAILADDR_COMPROMISED', f"{email} [{leakSource}]", self.__class__.__name__, pevent)
                     self.notifyListeners(evt)
 
                     if password:
                         evt = SpiderFootEvent(
-                            'PASSWORD_COMPROMISED', f"{email}:{password} [{leakSource}]", self.__name__, pevent)
+                            'PASSWORD_COMPROMISED', f"{email}:{password} [{leakSource}]", self.__class__.__name__, pevent)
                         self.notifyListeners(evt)
 
                     if passwordHash:
                         evt = SpiderFootEvent(
-                            'HASH_COMPROMISED', f"{email}:{passwordHash} [{leakSource}]", self.__name__, pevent)
+                            'HASH_COMPROMISED', f"{email}:{passwordHash} [{leakSource}]", self.__class__.__name__, pevent)
                         self.notifyListeners(evt)
 
                     evt = SpiderFootEvent(
-                        'RAW_RIR_DATA', str(row), self.__name__, pevent)
+                        'RAW_RIR_DATA', str(row), self.__class__.__name__, pevent)
                     self.notifyListeners(evt)
 
             currentPage += 1

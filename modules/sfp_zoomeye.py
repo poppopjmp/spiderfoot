@@ -82,6 +82,10 @@ class sfp_zoomeye(SpiderFootPlugin):
         ]
 
     def query(self, qry, querytype, page=1):
+        """
+        Query ZoomEye API for the given query and query type (host or web).
+        Handle pagination based on the total number of results and page size.
+        """
         if self.errorState:
             return None
 
@@ -191,6 +195,10 @@ class sfp_zoomeye(SpiderFootPlugin):
             return None
 
     def handleEvent(self, event):
+        """
+        Handle incoming events, query ZoomEye, and emit relevant events.
+        Deduplicate emitted events to avoid duplicates.
+        """
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -212,6 +220,15 @@ class sfp_zoomeye(SpiderFootPlugin):
             return
 
         self.results[eventData] = True
+        emitted = set()
+
+        def emit(evt_type, data):
+            key = (evt_type, data)
+            if key in emitted:
+                return
+            emitted.add(key)
+            e = SpiderFootEvent(evt_type, data, self.__class__.__name__, event)
+            self.notifyListeners(e)
 
         if eventName == "DOMAIN_NAME":
             ret = self.query(eventData, "web")
@@ -228,9 +245,7 @@ class sfp_zoomeye(SpiderFootPlugin):
                 for match in matches:
                     host = match.get("site")
                     if host:
-                        e = SpiderFootEvent(
-                            "INTERNET_NAME", host, self.__name__, event)
-                        self.notifyListeners(e)
+                        emit("INTERNET_NAME", host)
 
         elif eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
             ret = self.query(eventData, "host")
@@ -247,17 +262,10 @@ class sfp_zoomeye(SpiderFootPlugin):
                 for match in matches:
                     ip = match.get("ip")
                     if ip:
-                        e = SpiderFootEvent(
-                            "IP_ADDRESS", ip, self.__name__, event)
-                        self.notifyListeners(e)
+                        emit("IP_ADDRESS", ip)
 
                     domain = match.get("domain")
                     if domain:
-                        e = SpiderFootEvent(
-                            "DOMAIN_NAME", domain, self.__name__, event)
-                        self.notifyListeners(e)
+                        emit("DOMAIN_NAME", domain)
 
-                    e = SpiderFootEvent(
-                        "RAW_RIR_DATA", str(match), self.__name__, event
-                    )
-                    self.notifyListeners(e)
+                    emit("RAW_RIR_DATA", str(match))

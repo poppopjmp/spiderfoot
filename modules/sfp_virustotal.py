@@ -267,7 +267,7 @@ class sfp_virustotal(SpiderFootPlugin):
 
                 e = SpiderFootEvent(
                     evt, f"VirusTotal [{addr}]\n{infourl}",
-                    self.__name__,
+                    self.__class__.__name__,
                     event
                 )
                 self.notifyListeners(e)
@@ -299,17 +299,17 @@ class sfp_virustotal(SpiderFootPlugin):
                     self.debug(f"Host {domain} could not be resolved")
                     evt_type += '_UNRESOLVED'
 
-                evt = SpiderFootEvent(evt_type, domain, self.__name__, event)
+                evt = SpiderFootEvent(evt_type, domain, self.__class__.__name__, event)
                 self.notifyListeners(evt)
 
                 if self.sf.isDomain(domain, self.opts['_internettlds']):
                     if evt_type.startswith('AFFILIATE'):
                         evt = SpiderFootEvent(
-                            'AFFILIATE_DOMAIN_NAME', domain, self.__name__, event)
+                            'AFFILIATE_DOMAIN_NAME', domain, self.__class__.__name__, event)
                         self.notifyListeners(evt)
                     else:
                         evt = SpiderFootEvent(
-                            'DOMAIN_NAME', domain, self.__name__, event)
+                            'DOMAIN_NAME', domain, self.__class__.__name__, event)
                         self.notifyListeners(evt)
 
 # End of sfp_virustotal class

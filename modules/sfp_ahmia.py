@@ -140,7 +140,7 @@ class sfp_ahmia(SpiderFootPlugin):
 
             if not self.opts['fetchlinks']:
                 evt = SpiderFootEvent(
-                    "DARKNET_MENTION_URL", link, self.__name__, event)
+                    "DARKNET_MENTION_URL", link, self.__class__.__name__, event)
                 self.notifyListeners(evt)
                 continue
 
@@ -160,7 +160,7 @@ class sfp_ahmia(SpiderFootPlugin):
                 continue
 
             evt = SpiderFootEvent("DARKNET_MENTION_URL",
-                                  link, self.__name__, event)
+                                  link, self.__class__.__name__, event)
             self.notifyListeners(evt)
 
             try:
@@ -172,7 +172,7 @@ class sfp_ahmia(SpiderFootPlugin):
 
             wdata = res['content'][startIndex:endIndex]
             evt = SpiderFootEvent("DARKNET_MENTION_CONTENT",
-                                  f"...{wdata}...", self.__name__, evt)
+                                  f"...{wdata}...", self.__class__.__name__, evt)
             self.notifyListeners(evt)
 
 # End of sfp_ahmia class

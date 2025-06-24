@@ -159,19 +159,19 @@ class sfp_adblock(SpiderFootPlugin):
             if eventName == 'PROVIDER_JAVASCRIPT':
                 if self.rules and self.rules.should_block(eventData, {'third-party': True, 'script': True}):
                     evt = SpiderFootEvent(
-                        "URL_ADBLOCKED_EXTERNAL", eventData, self.__name__, event)
+                        "URL_ADBLOCKED_EXTERNAL", eventData, self.__class__.__name__, event)
                     self.notifyListeners(evt)
 
             if eventName == 'LINKED_URL_EXTERNAL':
                 if self.rules and self.rules.should_block(eventData, {'third-party': True}):
                     evt = SpiderFootEvent(
-                        "URL_ADBLOCKED_EXTERNAL", eventData, self.__name__, event)
+                        "URL_ADBLOCKED_EXTERNAL", eventData, self.__class__.__name__, event)
                     self.notifyListeners(evt)
 
             if eventName == 'LINKED_URL_INTERNAL':
                 if self.rules and self.rules.should_block(eventData):
                     evt = SpiderFootEvent(
-                        "URL_ADBLOCKED_INTERNAL", eventData, self.__name__, event)
+                        "URL_ADBLOCKED_INTERNAL", eventData, self.__class__.__name__, event)
                     self.notifyListeners(evt)
 
         except ValueError as e:

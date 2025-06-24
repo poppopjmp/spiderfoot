@@ -181,12 +181,12 @@ class sfp_bitcoinabuse(SpiderFootPlugin):
             evt = SpiderFootEvent(
                 "MALICIOUS_BITCOIN_ADDRESS",
                 f"BitcoinAbuse [{address}]\n<SFURL>{url}</SFURL>",
-                self.__name__,
+                self.__class__.__name__,
                 event
             )
             self.notifyListeners(evt)
 
             rirevt = SpiderFootEvent(
-                "RAW_RIR_DATA", json.dumps(rec), self.__name__, event
+                "RAW_RIR_DATA", json.dumps(rec), self.__class__.__name__, event
             )
             self.notifyListeners(rirevt)

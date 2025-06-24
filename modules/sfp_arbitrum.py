@@ -65,13 +65,76 @@ class sfp_arbitrum(SpiderFootPlugin):
         return ["ARBITRUM_ADDRESS", "ARBITRUM_TX"]
 
     def handleEvent(self, event):
+        """
+        Handle ROOT event and monitor Arbitrum blockchain for transactions for configured addresses.
+        Emits ARBITRUM_TX and ARBITRUM_ADDRESS events for each relevant transaction found.
+        """
         self.debug(f"[handleEvent] Received event: {event.eventType}")
-        # Stub event filtering logic
         if event.eventType not in self.watchedEvents():
             self.debug(f"[handleEvent] Ignoring event type: {event.eventType}")
             return
-        # Stub for Arbitrum monitoring logic
-        self.debug("[handleEvent] (stub) No real logic implemented.")
+
+        import requests
+        addresses = [a.strip() for a in str(self.opts.get("addresses", "")).split(",") if a.strip()]
+        api_key = self.opts.get("api_key")
+        max_tx = int(self.opts.get("max_transactions", 10))
+        start_block = int(self.opts.get("start_block", 0))
+        end_block = int(self.opts.get("end_block", 0))
+        min_value = float(self.opts.get("min_value", 0.0))
+        event_types = [e.strip().lower() for e in str(self.opts.get("event_types", "transfer,contract")).split(",") if e.strip()]
+        output_format = self.opts.get("output_format", "summary")
+
+        for address in addresses:
+            url = (
+                f"https://api.arbiscan.io/api?module=account&action=txlist&address={address}"
+                f"&startblock={start_block}&endblock={end_block if end_block > 0 else 99999999}"
+                f"&sort=desc&apikey={api_key}"
+            )
+            self.debug(f"[handleEvent] Fetching transactions for {address} from {url}")
+            try:
+                resp = requests.get(url, timeout=15)
+                if resp.status_code != 200:
+                    self.error(f"[handleEvent] Arbiscan API error: {resp.status_code}")
+                    continue
+                data = resp.json()
+                if data.get("status") != "1" or not data.get("result"):
+                    self.info(f"[handleEvent] No transactions found for {address}.")
+                    continue
+                txs = data["result"][:max_tx]
+                for tx in txs:
+                    value_eth = float(tx.get("value", 0)) / 1e18
+                    if value_eth < min_value:
+                        continue
+                    tx_type = "transfer" if tx.get("input", "0x") == "0x" else "contract"
+                    if tx_type not in event_types:
+                        continue
+                    if output_format == "summary":
+                        tx_summary = f"From: {tx.get('from')} To: {tx.get('to')} Value: {value_eth} ETH Hash: {tx.get('hash')} Block: {tx.get('blockNumber')}"
+                        evt = SpiderFootEvent(
+                            "ARBITRUM_TX",
+                            tx_summary,
+                            self.__class__.__name__,
+                            event
+                        )
+                        self.notifyListeners(evt)
+                    else:
+                        evt = SpiderFootEvent(
+                            "ARBITRUM_TX",
+                            str(tx),
+                            self.__class__.__name__,
+                            event
+                        )
+                        self.notifyListeners(evt)
+                # Emit ARBITRUM_ADDRESS event for the address
+                evt_addr = SpiderFootEvent(
+                    "ARBITRUM_ADDRESS",
+                    address,
+                    self.__class__.__name__,
+                    event
+                )
+                self.notifyListeners(evt_addr)
+            except Exception as e:
+                self.error(f"[handleEvent] Error fetching Arbitrum transactions for {address}: {e}")
 
     def shutdown(self):
         self.debug("[shutdown] Shutting down Arbitrum module.")

@@ -56,6 +56,13 @@ class sfp_bambenek(SpiderFootPlugin):
     # Be sure to completely clear any class variables in setup()
     # or you risk data persisting between scan runs.
     def setup(self, sfc, userOpts=dict()):
+        """
+        Set up the plugin with SpiderFoot context and user options.
+
+        Args:
+            sfc (SpiderFoot): The SpiderFoot context object.
+            userOpts (dict): User-supplied options for the module.
+        """
         self.sf = sfc
         self.results = self.tempStorage()
         self.opts.update(userOpts)
@@ -74,6 +81,14 @@ class sfp_bambenek(SpiderFootPlugin):
         }
 
     def retrieveDataFromFeed(self, url):
+        """
+        Retrieve and cache data from a Bambenek feed URL.
+
+        Args:
+            url (str): The feed URL.
+        Returns:
+            list: List of parsed items from the feed.
+        """
         data = self.sf.cacheGet("bambenek_" + url, self.opts["cacheperiod"])
         if data:
             self.debug(f"Using cached data from Bambenek feed: {url}")
@@ -101,6 +116,14 @@ class sfp_bambenek(SpiderFootPlugin):
             return []
 
     def parseData(self, data):
+        """
+        Parse feed data into a list of items.
+
+        Args:
+            data (str): Raw feed data.
+        Returns:
+            list: List of items (domains/IPs).
+        """
         items = []
         for line in data.splitlines():
             if not line or line.startswith("#"):
@@ -115,6 +138,12 @@ class sfp_bambenek(SpiderFootPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
+        """
+        Return a list of event types this module is interested in.
+
+        Returns:
+            list: List of event type strings.
+        """
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
@@ -125,6 +154,12 @@ class sfp_bambenek(SpiderFootPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """
+        Return a list of event types this module produces.
+
+        Returns:
+            list: List of event type strings.
+        """
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -140,6 +175,15 @@ class sfp_bambenek(SpiderFootPlugin):
 
     # Check if an IP or domain is malicious
     def queryFeed(self, qry, feed_type):
+        """
+        Check if a query value is present in the specified feed type.
+
+        Args:
+            qry (str): The value to check (domain/IP).
+            feed_type (str): The feed type key.
+        Returns:
+            bool: True if found, False otherwise.
+        """
         if feed_type == "dga_domains":
             return qry.lower() in self.feedCache.get("dga_domains", [])
         elif feed_type == "c2_ips":
@@ -150,6 +194,12 @@ class sfp_bambenek(SpiderFootPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """
+        Handle incoming events, check Bambenek feeds, and emit events for matches.
+
+        Args:
+            event (SpiderFootEvent): The event to handle.
+        """
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -202,13 +252,13 @@ class sfp_bambenek(SpiderFootPlugin):
 
             for malicious_type, malicious_desc in malicious_types:
                 evt = SpiderFootEvent(
-                    malicious_type, malicious_desc, self.__name__, event
+                    malicious_type, malicious_desc, self.__class__.__name__, event
                 )
                 self.notifyListeners(evt)
                 evt = SpiderFootEvent(
                     "MALICIOUS_" + malicious_type.split("_", 1)[1],
                     malicious_desc,
-                    self.__name__,
+                    self.__class__.__name__,
                     event,
                 )
                 self.notifyListeners(evt)
@@ -239,13 +289,13 @@ class sfp_bambenek(SpiderFootPlugin):
 
             for malicious_type, malicious_desc in malicious_types:
                 evt = SpiderFootEvent(
-                    malicious_type, malicious_desc, self.__name__, event
+                    malicious_type, malicious_desc, self.__class__.__name__, event
                 )
                 self.notifyListeners(evt)
                 evt = SpiderFootEvent(
                     "MALICIOUS_" + malicious_type.split("_", 1)[1],
                     malicious_desc,
-                    self.__name__,
+                    self.__class__.__name__,
                     event,
                 )
                 self.notifyListeners(evt)
@@ -270,29 +320,26 @@ class sfp_bambenek(SpiderFootPlugin):
 
             for malicious_type, malicious_desc in malicious_types:
                 evt = SpiderFootEvent(
-                    malicious_type, malicious_desc, self.__name__, event
+                    malicious_type, malicious_desc, self.__class__.__name__, event
                 )
                 self.notifyListeners(evt)
                 evt = SpiderFootEvent(
-                    "MALICIOUS_COHOST", malicious_desc, self.__name__, event
+                    "MALICIOUS_COHOST", malicious_desc, self.__class__.__name__, event
                 )
                 self.notifyListeners(evt)
             return
-        else:
-            return
-
         # For IP addresses, handle in a simpler way
         if is_malicious:
             self.debug(f"{eventData} found in Bambenek Consulting feeds")
 
             evt = SpiderFootEvent(
-                malicious_type, malicious_desc, self.__name__, event)
+                malicious_type, malicious_desc, self.__class__.__name__, event)
             self.notifyListeners(evt)
 
             evt = SpiderFootEvent(
                 "MALICIOUS_" + malicious_type.split("_", 1)[1],
                 malicious_desc,
-                self.__name__,
+                self.__class__.__name__,
                 event,
             )
             self.notifyListeners(evt)

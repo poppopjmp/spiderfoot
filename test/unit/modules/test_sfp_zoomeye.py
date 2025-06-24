@@ -6,6 +6,8 @@ from modules.sfp_zoomeye import sfp_zoomeye
 import unittest
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
+import json
+import requests
 
 
 class TestModuleZoomeye(SpiderFootTestBase):
@@ -14,6 +16,7 @@ class TestModuleZoomeye(SpiderFootTestBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()
+        self.sf = MagicMock()
         
         # Import and fix the module if needed
         import modules.sfp_zoomeye as zoomeye_module
@@ -72,6 +75,63 @@ class TestModuleZoomeye(SpiderFootTestBase):
         """Test the producedEvents function returns a list."""
         module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
+
+    @patch('modules.sfp_zoomeye.requests.get')
+    def test_query_handles_rate_limit(self, mock_get):
+        module = self.module_class()
+        module.setup(self.sf, {'api_key': 'DUMMY', 'delay': 0, 'max_pages': 1})
+        mock_response = MagicMock()
+        mock_response.status_code = 429
+        mock_response.text = 'Rate limit'
+        mock_get.return_value = mock_response
+        result = module.query('example.com', 'web')
+        self.assertIsNone(result)
+        self.assertTrue(module.errorState)
+
+    @patch('modules.sfp_zoomeye.requests.get')
+    def test_query_handles_malformed_json(self, mock_get):
+        module = self.module_class()
+        module.setup(self.sf, {'api_key': 'DUMMY', 'delay': 0, 'max_pages': 1})
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.side_effect = json.JSONDecodeError('Expecting value', '', 0)
+        mock_get.return_value = mock_response
+        result = module.query('example.com', 'web')
+        self.assertIsNone(result)
+        self.assertTrue(module.errorState)
+
+    @patch('modules.sfp_zoomeye.requests.get')
+    def test_query_handles_http_error(self, mock_get):
+        module = self.module_class()
+        module.setup(self.sf, {'api_key': 'DUMMY', 'delay': 0, 'max_pages': 1})
+        mock_get.side_effect = requests.exceptions.RequestException('HTTP error')
+        result = module.query('example.com', 'web')
+        self.assertIsNone(result)
+        self.assertTrue(module.errorState)
+
+    def test_handleEvent_partial_and_duplicate(self):
+        sf = MagicMock()
+        module = sfp_zoomeye()
+        opts = dict(api_key='DUMMY_KEY', _fetchtimeout=15)
+        module.setup(sf, opts)
+        event = SpiderFootEvent('DOMAIN_NAME', 'example.com', 'test', None)
+        # Simulate partial and duplicate data
+        mock_response = [
+            {'matches': [
+                {'site': 'site1.com'},
+                {'site': 'site1.com'},
+                {'ip': '1.2.3.4'},
+                {'domain': 'domain1.com'}
+            ]}
+        ]
+        events = []
+        module.notifyListeners = lambda e: events.append(e)
+        with unittest.mock.patch.object(module, 'query', return_value=mock_response):
+            module.handleEvent(event)
+        types = [e.eventType for e in events]
+        # Only one INTERNET_NAME for 'site1.com' should be emitted
+        self.assertEqual(types.count('INTERNET_NAME'), 1)
+        # For DOMAIN_NAME event, only INTERNET_NAME is emitted (not IP_ADDRESS or DOMAIN_NAME)
 
     def tearDown(self):
         """Clean up after each test."""

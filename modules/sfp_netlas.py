@@ -134,47 +134,46 @@ class sfp_netlas(SpiderFootPlugin):
             res (dict): API response
 
         Returns:
-            dict: Parsed response data
+            dict or None: Parsed response data or None on error
         """
         if not res:
             self.error("No response from Netlas API.")
+            self.errorState = True
             return None
 
-        if res["code"] == "429":
+        code = res.get("code")
+        if code == "429":
             self.error("You are being rate-limited by Netlas API.")
+            self.errorState = True
             return None
-
-        if res["code"] == "401":
+        elif code == "401":
             self.error("Unauthorized. Invalid Netlas API key.")
             self.errorState = True
             return None
-
-        if res["code"] == "422":
+        elif code == "422":
             self.error("Usage quota reached. Insufficient API credit.")
             self.errorState = True
             return None
-
-        if res["code"] == "500" or res["code"] == "502" or res["code"] == "503":
+        elif code in ("500", "502", "503"):
             self.error("Netlas API service is unavailable")
             self.errorState = True
             return None
-
-        if res["code"] == "204":
+        elif code == "204":
             self.debug("No response data for target")
             return None
-
-        if res["code"] != "200":
-            self.error(f"Unexpected reply from Netlas API: {res['code']}")
+        elif code != "200":
+            self.error(f"Unexpected reply from Netlas API: {code}")
+            self.errorState = True
             return None
 
-        if res["content"] is None:
+        if res.get("content") is None:
             return None
 
         try:
             return json.loads(res["content"])
         except Exception as e:
-            self.debug(f"Error processing JSON response: {e}")
-
+            self.error(f"Error processing JSON response: {e}")
+            self.errorState = True
         return None
 
     def handleEvent(self, event):
@@ -189,12 +188,6 @@ class sfp_netlas(SpiderFootPlugin):
 
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
-        if eventData in self.results:
-            self.debug(f"Skipping {eventData}, already checked.")
-            return
-
-        self.results[eventData] = True
-
         if self.opts["api_key"] == "":
             self.error(
                 f"You enabled {self.__class__.__name__} but did not set any API keys!"
@@ -202,49 +195,47 @@ class sfp_netlas(SpiderFootPlugin):
             self.errorState = True
             return
 
+        if eventData in self.results:
+            self.debug(f"Skipping {eventData}, already checked.")
+            return
+
+        self.results[eventData] = True
+        emitted = set()
+        def emit(evt_type, data):
+            key = (evt_type, str(data))
+            if key in emitted:
+                return
+            emitted.add(key)
+            e = SpiderFootEvent(evt_type, data, self.__class__.__name__, event)
+            self.notifyListeners(e)
+
         if eventName not in self.watchedEvents():
             return
 
         if eventName == "DOMAIN_NAME":
             data = self.queryNetlas(eventData, "domain")
-
             if not data:
                 return
-
-            e = SpiderFootEvent("RAW_RIR_DATA", str(data),
-                                self.__name__, event)
-            self.notifyListeners(e)
-
+            emit("RAW_RIR_DATA", str(data))
             geoinfo = data.get("geoinfo")
             if geoinfo:
-                e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
-                self.notifyListeners(e)
+                emit("GEOINFO", geoinfo)
 
         elif eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
             data = self.queryNetlas(eventData, "ip")
-
             if not data:
                 return
-
-            e = SpiderFootEvent("RAW_RIR_DATA", str(data),
-                                self.__name__, event)
-            self.notifyListeners(e)
-
+            emit("RAW_RIR_DATA", str(data))
             geoinfo = data.get("geoinfo")
             if geoinfo:
-                e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
-                self.notifyListeners(e)
-
+                emit("GEOINFO", geoinfo)
             latitude = data.get("latitude")
             longitude = data.get("longitude")
             if latitude and longitude:
-                e = SpiderFootEvent(
+                emit(
                     "PHYSICAL_COORDINATES",
-                    f"{latitude}, {longitude}",
-                    self.__name__,
-                    event,
+                    f"{latitude}, {longitude}"
                 )
-                self.notifyListeners(e)
 
 
 # End of sfp_netlas class

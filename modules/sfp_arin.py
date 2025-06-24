@@ -55,25 +55,47 @@ class sfp_arin(SpiderFootPlugin):
     keywords = None
 
     def setup(self, sfc, userOpts=dict()):
+        """
+        Set up the plugin with SpiderFoot context and user options.
+
+        Args:
+            sfc (SpiderFoot): The SpiderFoot context object.
+            userOpts (dict): User-supplied options for the module.
+        """
         self.sf = sfc
         self.results = self.tempStorage()
         self.currentEventSrc = None
-
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
-    # What events is this module interested in for input
     def watchedEvents(self):
+        """
+        Return a list of event types this module is interested in.
+
+        Returns:
+            list: List of event type strings.
+        """
         return ["DOMAIN_NAME", "HUMAN_NAME"]
 
-    # What events this module produces
-    # This is to support the end user in selecting modules based on events
-    # produced.
     def producedEvents(self):
+        """
+        Return a list of event types this module produces.
+
+        Returns:
+            list: List of event type strings.
+        """
         return ["RAW_RIR_DATA", "HUMAN_NAME"]
 
-    # Fetch content and notify of the raw data
     def fetchRir(self, url):
+        """
+        Fetch content from ARIN and return the response if available.
+
+        Args:
+            url (str): The URL to fetch.
+
+        Returns:
+            dict or None: The response dict or None if not found.
+        """
         head = {"Accept": "application/json"}
         res = self.sf.fetchUrl(
             url,
@@ -85,13 +107,20 @@ class sfp_arin(SpiderFootPlugin):
             return res
         return None
 
-    # Owner information about an AS
     def query(self, qtype, value):
-        url = "https://whois.arin.net/rest/"
+        """
+        Query ARIN for information based on type and value.
 
+        Args:
+            qtype (str): Query type ('domain', 'name', or 'contact').
+            value (str): Value to query.
+
+        Returns:
+            dict or None: The parsed JSON data or None if not found.
+        """
+        url = "https://whois.arin.net/rest/"
         if qtype == "domain":
             url += "pocs;domain=@" + value
-
         try:
             if qtype == "name":
                 fname, lname = value.split(" ", 1)
@@ -103,43 +132,40 @@ class sfp_arin(SpiderFootPlugin):
         except Exception as e:
             self.debug("Couldn't process name: " + value + " (" + str(e) + ")")
             return None
-
         if qtype == "contact":
             url = value
-
         res = self.fetchRir(url)
         if not res:
             self.debug("No info found/available for " + value + " at ARIN.")
             return None
-
         try:
             data = json.loads(res["content"])
         except Exception as e:
             self.debug(f"Error processing JSON response: {e}")
             return None
-
         evt = SpiderFootEvent(
-            "RAW_RIR_DATA", str(data), self.__name__, self.currentEventSrc
+            "RAW_RIR_DATA", str(data), self.__class__.__name__, self.currentEventSrc
         )
         self.notifyListeners(evt)
         return data
 
-    # Handle events sent to this module
     def handleEvent(self, event):
+        """
+        Handle incoming events, query ARIN for data, and emit events for found information.
+
+        Args:
+            event (SpiderFootEvent): The event to handle.
+        """
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
         self.currentEventSrc = event
-
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
-
         # Don't look up stuff twice
         if eventData in self.results:
             self.debug(f"Skipping {eventData}, already checked.")
             return
-
         self.results[eventData] = True
-
         if eventName == "DOMAIN_NAME":
             ret = self.query("domain", eventData)
             if not ret:
@@ -148,7 +174,7 @@ class sfp_arin(SpiderFootPlugin):
                 if "pocRef" in ret["pocs"]:
                     ref = list()
                     # Might be a list or a dictionary
-                    if type(ret["pocs"]["pocRef"]) == dict:
+                    if isinstance(ret["pocs"]["pocRef"], dict):
                         ref = [ret["pocs"]["pocRef"]]
                     else:
                         ref = ret["pocs"]["pocRef"]
@@ -157,16 +183,13 @@ class sfp_arin(SpiderFootPlugin):
                         if "," in name:
                             sname = name.split(", ", 1)
                             name = sname[1] + " " + sname[0]
-
                         evt = SpiderFootEvent(
-                            "HUMAN_NAME", name, self.__name__, self.currentEventSrc
+                            "HUMAN_NAME", name, self.__class__.__name__, self.currentEventSrc
                         )
                         self.notifyListeners(evt)
-
                         # We just want the raw data so we can get potential
                         # e-mail addresses.
                         self.query("contact", p["$"])
-
         if eventName == "HUMAN_NAME":
             ret = self.query("name", eventData)
             if not ret:
@@ -175,7 +198,7 @@ class sfp_arin(SpiderFootPlugin):
                 if "pocRef" in ret["pocs"]:
                     ref = list()
                     # Might be a list or a dictionary
-                    if type(ret["pocs"]["pocRef"]) == dict:
+                    if isinstance(ret["pocs"]["pocRef"], dict):
                         ref = [ret["pocs"]["pocRef"]]
                     else:
                         ref = ret["pocs"]["pocRef"]

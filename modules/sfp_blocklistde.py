@@ -212,10 +212,10 @@ class sfp_blocklistde(SpiderFootPlugin):
             url = "https://lists.blocklist.de/lists/all.txt"
             text = f"blocklist.de [{eventData}]\n<SFURL>{url}</SFURL>"
 
-            evt = SpiderFootEvent(malicious_type, text, self.__name__, event)
+            evt = SpiderFootEvent(malicious_type, text, self.__class__.__name__, event)
             self.notifyListeners(evt)
 
-            evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
+            evt = SpiderFootEvent(blacklist_type, text, self.__class__.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_blocklistde class

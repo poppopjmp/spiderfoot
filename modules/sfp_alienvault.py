@@ -340,7 +340,7 @@ class sfp_alienvault(SpiderFootPlugin):
                 if url not in self.results:
                     self.results[url] = True
                     evt = SpiderFootEvent(
-                        'LINKED_URL_INTERNAL', url, self.__name__, event)
+                        'LINKED_URL_INTERNAL', url, self.__class__.__name__, event)
                     self.notifyListeners(evt)
 
             return
@@ -403,7 +403,7 @@ class sfp_alienvault(SpiderFootPlugin):
                             if not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
                                 evtType = "INTERNET_NAME_UNRESOVLED"
                             evt = SpiderFootEvent(
-                                evtType, host, self.__name__, event)
+                                evtType, host, self.__class__.__name__, event)
                             self.notifyListeners(evt)
                             continue
 
@@ -430,7 +430,7 @@ class sfp_alienvault(SpiderFootPlugin):
 
                         if self.cohostcount < self.opts['maxcohost']:
                             e = SpiderFootEvent(
-                                "CO_HOSTED_SITE", host, self.__name__, event)
+                                "CO_HOSTED_SITE", host, self.__class__.__name__, event)
                             self.notifyListeners(e)
                             self.cohostcount += 1
                         else:
@@ -501,24 +501,24 @@ class sfp_alienvault(SpiderFootPlugin):
                 # the threat intel event is more meaningful.
                 if eventName == 'NETBLOCK_OWNER':
                     pevent = SpiderFootEvent(
-                        "IP_ADDRESS", addr, self.__name__, event)
+                        "IP_ADDRESS", addr, self.__class__.__name__, event)
                     self.notifyListeners(pevent)
                 if eventName == 'NETBLOCKV6_OWNER':
                     pevent = SpiderFootEvent(
-                        "IPV6_ADDRESS", addr, self.__name__, event)
+                        "IPV6_ADDRESS", addr, self.__class__.__name__, event)
                     self.notifyListeners(pevent)
                 elif eventName == 'NETBLOCK_MEMBER':
                     pevent = SpiderFootEvent(
-                        "AFFILIATE_IPADDR", addr, self.__name__, event)
+                        "AFFILIATE_IPADDR", addr, self.__class__.__name__, event)
                     self.notifyListeners(pevent)
                 elif eventName == 'NETBLOCKV6_MEMBER':
                     pevent = SpiderFootEvent(
-                        "AFFILIATE_IPV6_ADDRESS", addr, self.__name__, event)
+                        "AFFILIATE_IPV6_ADDRESS", addr, self.__class__.__name__, event)
                     self.notifyListeners(pevent)
                 else:
                     pevent = event
 
-                e = SpiderFootEvent(evtType, descr, self.__name__, pevent)
+                e = SpiderFootEvent(evtType, descr, self.__class__.__name__, pevent)
                 self.notifyListeners(e)
 
 # End of sfp_alienvault class
