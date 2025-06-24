@@ -38,7 +38,7 @@ jobs:
         tags: |
           ghcr.io/${{ github.repository }}:${{ github.sha }}
           ghcr.io/${{ github.repository }}:latest
-          v5.2.7
+          v5.2.7
     - name: Trivy vulnerability scan
       uses: aquasecurity/trivy-action@master
       with:
