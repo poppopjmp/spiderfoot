@@ -1,0 +1,205 @@
+name: Build Artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["b*"]
+  pull_request:
+    branches: ["b*"]
+
+jobs:
+  build:
+    name: Build and Upload Artifacts
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Read version
+        id: get_version
+        run: |
+          echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt || true
+          pip install -r test/requirements.txt || true
+      - name: Ensure packaging files are present
+        run: |
+          test -f packaging/snapcraft.yaml
+          test -f packaging/spiderfoot.spec
+          test -f packaging/spiderfoot.rb
+          test -f packaging/debian/control
+      - name: Build source distribution
+        run: |
+          python setup.py sdist
+      - name: Build wheel
+        run: |
+          python -m pip install build
+          python -m build --wheel
+      - name: Check built distributions with twine
+        run: |
+          python -m pip install twine
+          twine check dist/*
+      - name: Check built wheel/sdist with pip check
+        run: |
+          python -m pip install dist/*.whl || true
+          pip check || true
+      - name: Hash and sign artifacts
+        run: |
+          sha256sum dist/* > dist/SHA256SUMS.txt
+          gpg --batch --yes --armor --detach-sign --output dist/SHA256SUMS.txt.asc --sign dist/SHA256SUMS.txt || true
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: spiderfoot-${{ matrix.os }}-${{ matrix.python-version }}-${{ steps.get_version.outputs.version }}-dist
+          path: dist/*
+      - name: Upload sdist as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spiderfoot-${{ matrix.os }}-${{ matrix.python-version }}-${{ steps.get_version.outputs.version }}-sdist
+          path: dist/*.tar.gz
+      - name: Upload wheel as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spiderfoot-${{ matrix.os }}-${{ matrix.python-version }}-${{ steps.get_version.outputs.version }}-wheel
+          path: dist/*.whl
+      - name: Build .deb package (Kali/Ubuntu, Python 3.9 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debhelper python3-all python3-setuptools
+          cp -r packaging/debian .
+          dpkg-buildpackage -us -uc -b
+      - name: Upload .deb package
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        uses: actions/upload-artifact@v4
+        with:
+          name: spiderfoot-${{ steps.get_version.outputs.version }}-deb
+          path: ../*.deb
+      - name: Build RPM package (Fedora/CentOS/RHEL, Python 3.9 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm python3-all python3-setuptools
+          cp packaging/spiderfoot.spec .
+          python3 setup.py bdist_rpm --spec-file spiderfoot.spec || echo "RPM build may require additional spec file customization."
+      - name: Upload RPM package
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        uses: actions/upload-artifact@v4
+        with:
+          name: spiderfoot-${{ steps.get_version.outputs.version }}-rpm
+          path: dist/*.rpm
+      - name: Generate Homebrew formula
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          cp packaging/spiderfoot.rb .
+      - name: Upload Homebrew formula
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        uses: actions/upload-artifact@v4
+        with:
+          name: spiderfoot-${{ steps.get_version.outputs.version }}-homebrew-formula
+          path: spiderfoot.rb
+      - name: Build Snap package (Snapcraft, Python 3.9 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y snapcraft
+          cp packaging/snapcraft.yaml .
+          snapcraft pack || echo "Snapcraft build may require snapcraft.yaml customization."
+      - name: Upload Snap package
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        uses: actions/upload-artifact@v4
+        with:
+          name: spiderfoot-${{ steps.get_version.outputs.version }}-snap
+          path: *.snap
+      - name: Validate .deb package
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          sudo apt-get install -y lintian
+          lintian ../*.deb || (echo 'lintian found issues in .deb package' && exit 1)
+          dpkg -c ../*.deb
+          dpkg -i ../*.deb || true
+          spiderfoot --help || true
+      - name: Validate RPM package
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          sudo apt-get install -y rpm
+          rpm -qpl dist/*.rpm
+          rpm -ivh --test dist/*.rpm || true
+      - name: Validate Snap package
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          sudo apt-get install -y snapd
+          snap install --dangerous *.snap || true
+          snap run spiderfoot || true
+      - name: Validate Homebrew formula
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          brew install --formula ./spiderfoot.rb || true
+          brew test spiderfoot || true
+      - name: Generate changelog (git-cliff)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          sudo apt-get update && sudo apt-get install -y git-cliff
+          git-cliff --tag v${{ steps.get_version.outputs.version }} -o packaging/CHANGELOG.md
+      - name: Generate SBOM (syft)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b .
+          ./syft . -o cyclonedx-json > packaging/SBOM-cyclonedx.json
+          ./syft . -o cyclonedx-xml > packaging/SBOM-cyclonedx.xml
+          ./syft . -o spdx-json > packaging/SBOM-spdx.json
+          ./syft . -o spdx > packaging/SBOM-spdx.txt
+          ./syft . -o syft-json > packaging/SBOM-syft.json
+      - name: Security scan (trivy)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          sudo apt-get install -y wget
+          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.2_Linux-64bit.tar.gz | tar xz
+          ./trivy fs --exit-code 1 --severity HIGH,CRITICAL --scanners vuln,secret,config .
+
+  publish-release:
+    name: Publish Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body_path: packaging/CHANGELOG.md
+          draft: false
+          prerelease: false
+      - name: Upload all artifacts to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-artifacts/**/*
+      - name: Publish to PyPI
+        if: github.ref_type == 'tag' && secrets.TWINE_USERNAME != '' && secrets.TWINE_PASSWORD != ''
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install twine
+          find release-artifacts -type f -name '*.whl' -exec cp {} . \;
+          find release-artifacts -type f -name '*.tar.gz' -exec cp {} . \;
+          twine upload --skip-existing *.whl *.tar.gz

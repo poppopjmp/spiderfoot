@@ -192,6 +192,94 @@ def update_code_fallback():
     else:
         print(f"[OK] __version__.py already has correct fallback version {version}")
 
+def update_debian_control():
+    """Update version in debian/control if present."""
+    version = get_version()
+    control_path = Path(__file__).parent / "debian" / "control"
+    if not control_path.exists():
+        print(f"WARNING: {control_path} not found")
+        return
+    with open(control_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    original_content = content
+    # Optionally update a Version: field if present (not required for all controls)
+    content = re.sub(r'^(Version: )\d+\.\d+\.\d+', f'\\1{version}', content, flags=re.MULTILINE)
+    if content != original_content:
+        with open(control_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f"[OK] Updated debian/control with version {version}")
+    else:
+        print(f"[OK] debian/control already has correct version {version} or no version field present")
+
+def update_github_workflows():
+    """Update artifact names in build-artifacts.yaml with the new version."""
+    version = get_version()
+    workflow_path = Path(__file__).parent / ".github" / "workflows" / "build-artifacts.yaml"
+    if not workflow_path.exists():
+        print(f"WARNING: {workflow_path} not found")
+        return
+    with open(workflow_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    original_content = content
+    # Update artifact names with version
+    content = re.sub(r'spiderfoot-(\$\{[^}]+\})-(dist|sdist|wheel)', f'spiderfoot-\\1-{version}-\\2', content)
+    content = re.sub(r'spiderfoot-(\$\{ steps.get_version.outputs.version \})-deb', f'spiderfoot-{version}-deb', content)
+    if content != original_content:
+        with open(workflow_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f"[OK] Updated build-artifacts.yaml with version {version}")
+    else:
+        print(f"[OK] build-artifacts.yaml already has correct version {version}")
+
+def update_snapcraft():
+    version = get_version()
+    snap_path = Path(__file__).parent / "snapcraft.yaml"
+    if not snap_path.exists():
+        print(f"WARNING: {snap_path} not found")
+        return
+    with open(snap_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    new_content = re.sub(r"version: '([\d\.]+)'", f"version: '{version}'", content)
+    if new_content != content:
+        with open(snap_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        print(f"[OK] Updated snapcraft.yaml with version {version}")
+    else:
+        print(f"[OK] snapcraft.yaml already has correct version {version}")
+
+def update_spec():
+    version = get_version()
+    spec_path = Path(__file__).parent / "spiderfoot.spec"
+    if not spec_path.exists():
+        print(f"WARNING: {spec_path} not found")
+        return
+    with open(spec_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    new_content = re.sub(r"Version: *[\d\.]+", f"Version:        {version}", content)
+    if new_content != content:
+        with open(spec_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        print(f"[OK] Updated spiderfoot.spec with version {version}")
+    else:
+        print(f"[OK] spiderfoot.spec already has correct version {version}")
+
+def update_homebrew_formula():
+    version = get_version()
+    rb_path = Path(__file__).parent / "spiderfoot.rb"
+    if not rb_path.exists():
+        print(f"WARNING: {rb_path} not found")
+        return
+    with open(rb_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    new_content = re.sub(r'version "[\d\.]+"', f'version "{version}"', content)
+    new_content = re.sub(r'v[\d\.]+.tar.gz', f'v{version}.tar.gz', new_content)
+    if new_content != content:
+        with open(rb_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        print(f"[OK] Updated spiderfoot.rb with version {version}")
+    else:
+        print(f"[OK] spiderfoot.rb already has correct version {version}")
+
 def check_version_consistency():
     """Check that all version references are consistent."""
     version = get_version()
@@ -302,9 +390,14 @@ def main():
     print("==================================")
     
     update_readme()
-    update_docs() 
+    update_docs()
     update_docker_configs()
     update_code_fallback()
+    update_debian_control()
+    update_github_workflows()
+    update_snapcraft()
+    update_spec()
+    update_homebrew_formula()
     
     version = get_version()
     print(f"\n[SUCCESS] All version references updated to {version}")
