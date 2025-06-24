@@ -2,9 +2,9 @@ name: Build and Upload Artifacts
 
 on:
   push:
-    branches: [master, "dev*"]
+    branches: [master, "b*"]
   pull_request:
-    branches: [master, "dev*"]
+    branches: [master, "b*"]
   workflow_dispatch:
 
 jobs:
