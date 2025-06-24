@@ -1,10 +1,4 @@
 name: Build Artifacts
-on:
-  push:
-    branches: ["build*"]
-  pull_request:
-    branches: ["build*"]
-
 jobs:
   build:
     name: Build and Upload Artifacts
@@ -26,9 +20,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt || true
-          pip install -r test/requirements.txt || true
-      - name: Ensure packaging files are present
+          pip install -r requirements.txt
+          pip install -r test/requirements.txt
+      # Only check packaging files on Ubuntu
+      - name: Ensure packaging files are present (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           test -f packaging/snapcraft.yaml
           test -f packaging/spiderfoot.spec
@@ -41,6 +37,12 @@ jobs:
         run: |
           python -m pip install build
           python -m build --wheel
+      # Only sign and hash artifacts on Ubuntu
+      - name: Hash and sign artifacts (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sha256sum dist/* > dist/SHA256SUMS.txt
+          gpg --batch --yes --armor --detach-sign --output dist/SHA256SUMS.txt.asc --sign dist/SHA256SUMS.txt || true
       - name: Check built distributions with twine
         run: |
           python -m pip install twine
@@ -49,10 +51,6 @@ jobs:
         run: |
           python -m pip install dist/*.whl || true
           pip check || true
-      - name: Hash and sign artifacts
-        run: |
-          sha256sum dist/* > dist/SHA256SUMS.txt
-          gpg --batch --yes --armor --detach-sign --output dist/SHA256SUMS.txt.asc --sign dist/SHA256SUMS.txt || true
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -68,6 +66,7 @@ jobs:
         with:
           name: spiderfoot-${{ matrix.os }}-${{ matrix.python-version }}-${{ steps.get_version.outputs.version }}-wheel
           path: dist/*.whl
+      # Build .deb package (Kali/Ubuntu, Python 3.9 only)
       - name: Build .deb package (Kali/Ubuntu, Python 3.9 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
@@ -81,6 +80,7 @@ jobs:
         with:
           name: spiderfoot-${{ steps.get_version.outputs.version }}-deb
           path: ../*.deb
+      # Build RPM package (Fedora/CentOS/RHEL, Python 3.9 only)
       - name: Build RPM package (Fedora/CentOS/RHEL, Python 3.9 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
@@ -94,6 +94,7 @@ jobs:
         with:
           name: spiderfoot-${{ steps.get_version.outputs.version }}-rpm
           path: dist/*.rpm
+      # Generate Homebrew formula
       - name: Generate Homebrew formula
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
@@ -104,6 +105,7 @@ jobs:
         with:
           name: spiderfoot-${{ steps.get_version.outputs.version }}-homebrew-formula
           path: spiderfoot.rb
+      # Build Snap package (Snapcraft, Python 3.9 only)
       - name: Build Snap package (Snapcraft, Python 3.9 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
@@ -117,6 +119,7 @@ jobs:
         with:
           name: spiderfoot-${{ steps.get_version.outputs.version }}-snap
           path: *.snap
+      # Validate .deb package
       - name: Validate .deb package
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
@@ -125,28 +128,33 @@ jobs:
           dpkg -c ../*.deb
           dpkg -i ../*.deb || true
           spiderfoot --help || true
+      # Validate RPM package
       - name: Validate RPM package
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
           sudo apt-get install -y rpm
           rpm -qpl dist/*.rpm
           rpm -ivh --test dist/*.rpm || true
+      # Validate Snap package
       - name: Validate Snap package
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
           sudo apt-get install -y snapd
           snap install --dangerous *.snap || true
           snap run spiderfoot || true
+      # Validate Homebrew formula
       - name: Validate Homebrew formula
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
           brew install --formula ./spiderfoot.rb || true
           brew test spiderfoot || true
+      # Generate changelog (git-cliff)
       - name: Generate changelog (git-cliff)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
           sudo apt-get update && sudo apt-get install -y git-cliff
           git-cliff --tag v${{ steps.get_version.outputs.version }} -o packaging/CHANGELOG.md
+      # Generate SBOM (syft)
       - name: Generate SBOM (syft)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
@@ -156,6 +164,7 @@ jobs:
           ./syft . -o spdx-json > packaging/SBOM-spdx.json
           ./syft . -o spdx > packaging/SBOM-spdx.txt
           ./syft . -o syft-json > packaging/SBOM-syft.json
+      # Security scan (trivy)
       - name: Security scan (trivy)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
