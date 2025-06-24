@@ -1,11 +1,10 @@
 name: Build Artifacts
 
 on:
-  workflow_dispatch:
   push:
-    branches: ["b*"]
+    branches: ["build*"]
   pull_request:
-    branches: ["b*"]
+    branches: ["build*"]
 
 jobs:
   build:
