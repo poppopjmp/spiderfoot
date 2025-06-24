@@ -1,1 +1,22 @@
 # ...moved from root, see previous content...
+
+parts:
+  spiderfoot:
+    plugin: python
+    source: .
+    python-packages:
+      - .
+    stage:
+      - modules/**
+      - correlations/**
+      - spiderfoot/**
+      - sf.py
+      - sfcli.py
+      - sfapi.py
+      - sflib.py
+      - sfscan.py
+      - sfwebui.py
+      - sfworkflow.py
+      - test_version.py
+      - update_version.py
+      - version_check_hook.py
