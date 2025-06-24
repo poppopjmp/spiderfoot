@@ -164,7 +164,8 @@ jobs:
       - name: Generate changelog (git-cliff)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
-          sudo apt-get update && sudo apt-get install -y git-cliff
+          curl -sSL https://github.com/orhun/git-cliff/releases/latest/download/git-cliff-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          sudo mv git-cliff /usr/local/bin/
           git-cliff --tag v${{ steps.get_version.outputs.version }} -o packaging/CHANGELOG.md
       - name: Generate SBOM (syft)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
