@@ -115,12 +115,7 @@ jobs:
           sudo apt-get install -y snapcraft
           cp packaging/snapcraft.yaml .
           snapcraft pack || echo "Snapcraft build may require snapcraft.yaml customization."
-      - name: Upload Snap package
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
-        uses: actions/upload-artifact@v4
-        with:
-          name: spiderfoot-${{ steps.get_version.outputs.version }}-snap
-          path: *.snap
+
       - name: Validate .deb package
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
