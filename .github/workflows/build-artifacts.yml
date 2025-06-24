@@ -62,7 +62,7 @@ jobs:
       - name: Check built distributions with twine
         run: |
           python -m pip install twine
-          twine check dist/*
+          twine check dist/*.whl dist/*.tar.gz
       - name: Check built wheel/sdist with pip check
         run: |
           python -m pip install dist/*.whl || true
