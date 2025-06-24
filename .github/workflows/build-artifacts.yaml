@@ -1,5 +1,4 @@
 name: Build Artifacts
-
 on:
   push:
     branches: ["build*"]
