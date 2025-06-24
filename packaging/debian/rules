@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+
+export PYBUILD_TEST_ARGS=-v
+export PYTHONPATH=$(CURDIR)
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+# Example of custom override (uncomment and adapt as needed)
+#override_dh_auto_test:
+#	# Disable tests during build
+#	true
+
+#override_dh_auto_install:
+#	# Custom install steps can go here
+#	dh_auto_install

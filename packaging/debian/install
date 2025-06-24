@@ -1,0 +1,13 @@
+modules/* usr/lib/python3/dist-packages/modules/
+correlations/* usr/lib/python3/dist-packages/correlations/
+spiderfoot/* usr/lib/python3/dist-packages/spiderfoot/
+sf.py usr/lib/python3/dist-packages/
+sfcli.py usr/lib/python3/dist-packages/
+sfapi.py usr/lib/python3/dist-packages/
+sflib.py usr/lib/python3/dist-packages/
+sfscan.py usr/lib/python3/dist-packages/
+sfwebui.py usr/lib/python3/dist-packages/
+sfworkflow.py usr/lib/python3/dist-packages/
+test_version.py usr/lib/python3/dist-packages/
+update_version.py usr/lib/python3/dist-packages/
+version_check_hook.py usr/lib/python3/dist-packages/

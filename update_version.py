@@ -52,7 +52,17 @@ def update_readme():
     
     updated = False
     
-    # Update badge version
+    # Update Stable Release badge version (both badge and link)
+    new_content = re.sub(
+        r'(\[!\[Stable Release\]\(https://img\.shields\.io/badge/version-)(\d+\.\d+\.\d+)(-blue\.svg\)\]\(https://github.com/poppopjmp/spiderfoot/releases/tag/v)(\d+\.\d+\.\d+)(\))',
+        lambda m: f"{m.group(1)}{version}{m.group(3)}{version}{m.group(5)}",
+        content
+    )
+    if new_content != content:
+        updated = True
+        content = new_content
+    
+    # Update badge version for --Enterprise (if present)
     new_content = re.sub(
         r'version-\d+\.\d+\.\d+--Enterprise',
         f'version-{version}--Enterprise',
@@ -62,7 +72,7 @@ def update_readme():
         updated = True
         content = new_content
     
-    # Update release tag
+    # Update release tag (for any other occurrences)
     new_content = re.sub(
         r'/releases/tag/v\d+\.\d+\.\d+',
         f'/releases/tag/v{version}',
@@ -192,6 +202,149 @@ def update_code_fallback():
     else:
         print(f"[OK] __version__.py already has correct fallback version {version}")
 
+def update_debian_control():
+    """Update version in debian/control if present."""
+    version = get_version()
+    control_path = Path(__file__).parent / "packaging" / "debian" / "control"
+    if not control_path.exists():
+        print(f"WARNING: {control_path} not found")
+        return
+    with open(control_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    original_content = content
+    # Optionally update a Version: field if present (not required for all controls)
+    content = re.sub(
+        r'^(Version: )\d+\.\d+\.\d+',
+        lambda m: f"{m.group(1)}{version}",
+        content,
+        flags=re.MULTILINE
+    )
+    if content != original_content:
+        with open(control_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f"[OK] Updated debian/control with version {version}")
+    else:
+        print(f"[OK] debian/control already has correct version {version} or no version field present")
+
+def update_github_workflows():
+    """Update artifact names in build-artifacts.yml with the new version."""
+    version = get_version()
+    workflow_path = Path(__file__).parent / ".github" / "workflows" / "build-artifacts.yml"
+    if not workflow_path.exists():
+        print(f"WARNING: {workflow_path} not found")
+        return
+    with open(workflow_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    original_content = content
+    # Update artifact names with version
+    content = re.sub(r'spiderfoot-(\$\{[^}]+\})-(dist|sdist|wheel)', f'spiderfoot-\\1-{version}-\\2', content)
+    content = re.sub(r'spiderfoot-(\$\{ steps.get_version.outputs.version \})-deb', f'spiderfoot-{version}-deb', content)
+    if content != original_content:
+        with open(workflow_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f"[OK] Updated build-artifacts.yml with version {version}")
+    else:
+        print(f"[OK] build-artifacts.yml already has correct version {version}")
+
+def update_snapcraft():
+    version = get_version()
+    snap_path = Path(__file__).parent / "packaging" / "snapcraft.yaml"
+    if not snap_path.exists():
+        print(f"WARNING: {snap_path} not found")
+        return
+    with open(snap_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    new_content = re.sub(r"version: '([\d\.]+)'", f"version: '{version}'", content)
+    if new_content != content:
+        with open(snap_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        print(f"[OK] Updated snapcraft.yaml with version {version}")
+    else:
+        print(f"[OK] snapcraft.yaml already has correct version {version}")
+
+def update_homebrew_formula():
+    version = get_version()
+    rb_path = Path(__file__).parent / "packaging" / "spiderfoot.rb"
+    if not rb_path.exists():
+        print(f"WARNING: {rb_path} not found")
+        return
+    with open(rb_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    new_content = re.sub(r'version "[\d\.]+"', f'version "{version}"', content)
+    new_content = re.sub(r'v[\d\.]+.tar.gz', f'v{version}.tar.gz', new_content)
+    if new_content != content:
+        with open(rb_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        print(f"[OK] Updated spiderfoot.rb with version {version}")
+    else:
+        print(f"[OK] spiderfoot.rb already has correct version {version}")
+
+def update_docker_image_yml():
+    """Update version tag in .github/workflows/docker-image.yml."""
+    version = get_version()
+    docker_image_yml = Path(__file__).parent / ".github" / "workflows" / "docker-image.yml"
+    if not docker_image_yml.exists():
+        print(f"WARNING: {docker_image_yml} not found")
+        return
+    with open(docker_image_yml, 'r', encoding='utf-8') as f:
+        content = f.read()
+    # Replace the vX.Y.Z tag in the tags: block
+    new_content = re.sub(r'(ghcr\.io/\$\{\{ github\.repository \}\}:)v\d+\.\d+\.\d+', f'\1v{version}', content)
+    if new_content != content:
+        with open(docker_image_yml, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        print(f"[OK] Updated docker-image.yml with version {version}")
+    else:
+        print(f"[OK] docker-image.yml already has correct version {version}")
+
+def update_test_versions():
+    """Update hardcoded version strings in test files and workflow_api.py."""
+    version = get_version()
+    # test_sfcli.py
+    sfcli_path = Path(__file__).parent / "test" / "unit" / "test_sfcli.py"
+    if sfcli_path.exists():
+        with open(sfcli_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        new_content = re.sub(r'self.cli.version = "\d+\.\d+\.\d+"', f'self.cli.version = "{version}"', content)
+        if new_content != content:
+            with open(sfcli_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            print(f"[OK] Updated test_sfcli.py with version {version}")
+        else:
+            print(f"[OK] test_sfcli.py already has correct version {version}")
+    else:
+        print(f"WARNING: {sfcli_path} not found")
+
+    # test_spiderfootcli.py
+    spiderfootcli_path = Path(__file__).parent / "test" / "unit" / "test_spiderfootcli.py"
+    if spiderfootcli_path.exists():
+        with open(spiderfootcli_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        new_content = re.sub(r'\["SUCCESS", "\d+\.\d+\.\d+"\]', f'["SUCCESS", "{version}"]', content)
+        if new_content != content:
+            with open(spiderfootcli_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            print(f"[OK] Updated test_spiderfootcli.py with version {version}")
+        else:
+            print(f"[OK] test_spiderfootcli.py already has correct version {version}")
+    else:
+        print(f"WARNING: {spiderfootcli_path} not found")
+
+    # workflow_api.py
+    workflow_api_path = Path(__file__).parent / "spiderfoot" / "workflow_api.py"
+    if workflow_api_path.exists():
+        with open(workflow_api_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        new_content = re.sub(r"('version': ')\d+\.\d+\.\d+(')", lambda m: f"{m.group(1)}{version}{m.group(2)}", content)
+        if new_content != content:
+            with open(workflow_api_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            print(f"[OK] Updated workflow_api.py with version {version}")
+        else:
+            print(f"[OK] workflow_api.py already has correct version {version}")
+    else:
+        print(f"WARNING: {workflow_api_path} not found")
+
 def check_version_consistency():
     """Check that all version references are consistent."""
     version = get_version()
@@ -302,9 +455,15 @@ def main():
     print("==================================")
     
     update_readme()
-    update_docs() 
+    update_docs()
     update_docker_configs()
     update_code_fallback()
+    update_debian_control()
+    update_github_workflows()
+    update_snapcraft()
+    update_homebrew_formula()
+    update_docker_image_yml()
+    update_test_versions()
     
     version = get_version()
     print(f"\n[SUCCESS] All version references updated to {version}")

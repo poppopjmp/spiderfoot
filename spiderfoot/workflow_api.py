@@ -584,7 +584,7 @@ def create_workflow_api(config: dict) -> Flask:
     def health_check():
         return jsonify({
             'status': 'healthy',
-            'version': '1.0.0',
+            'version': '5.2.7',
             'timestamp': datetime.utcnow().isoformat()
         })
     

@@ -1,14 +1,17 @@
+# Make the Workflow run only over acceptance branches
 name: SpiderFoot Acceptance Tests
 
 on:
   push:
     branches: [acc*]
+    paths:
+      - 'test/acceptance/**'
+      - '.github/workflows/acceptance_test.yml'
   pull_request:
     branches: [acc*]
-#Make the Workflow run only over acceptance branches
-  paths:
-    - 'test/acceptance/**'
-    - '.github/workflows/acceptance_test.yml'
+    paths:
+      - 'test/acceptance/**'
+      - '.github/workflows/acceptance_test.yml'
 jobs:
   acceptance-tests-chrome:
     runs-on: ubuntu-latest
@@ -47,7 +50,7 @@ jobs:
       - name: Start SpiderFoot container
         run: |
           set -e
-          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v5.2.5
+          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v5.2.7
 
       - name: Wait for SpiderFoot to start
         run: |
@@ -130,7 +133,7 @@ jobs:
       - name: Start SpiderFoot container
         run: |
           set -e
-          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v5.2.5
+          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v5.2.7
 
       - name: Wait for SpiderFoot to start
         run: |
