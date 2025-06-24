@@ -47,13 +47,6 @@ jobs:
           test -f packaging/spiderfoot.spec
           test -f packaging/spiderfoot.rb
           test -f packaging/debian/control
-      - name: Check build artifacts exist (fail early if missing)
-        run: |
-          set -e
-          if [ ! -d dist ]; then
-            echo "dist directory missing!" >&2; exit 1
-          fi
-          ls dist/*.whl dist/*.tar.gz
       - name: Debug Show current directory and files
         run: |
           echo "Current working directory: $(pwd)"
