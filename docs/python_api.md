@@ -18,7 +18,7 @@ config = {
     '_maxthreads': 3,
     '_timeout': 300,
     '_modulesenabled': ['sfp_dnsresolve', 'sfp_ssl'],
-    '__database': 'spiderfoot.db'
+    '__database': 'data/spiderfoot.db'
 }
 sf = SpiderFoot(config)
 ```
@@ -72,7 +72,7 @@ Database interface for storing and retrieving scan data.
 from spiderfoot import SpiderFootDb
 
 # Initialize database connection
-config = {'__database': 'spiderfoot.db'}
+config = {'__database': 'data/spiderfoot.db'}
 db = SpiderFootDb(config)
 
 # Create new scan instance
@@ -515,7 +515,7 @@ def is_old_scan(created_time):
     return (time.time() - created_time) > (30 * 24 * 60 * 60)
 
 # Example usage
-config = {'__database': 'spiderfoot.db'}
+config = {'__database': 'data/spiderfoot.db'}
 database_utilities(config)
 ```
 

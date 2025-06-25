@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+let's #!/usr/bin/env python3
 """SpiderFoot Workflow CLI.
 
 Command-line interface for SpiderFoot workflow functionality,
@@ -611,7 +611,7 @@ def main():
     """Main entry point for CLI."""
     # Use a basic configuration
     config = {
-        '__database': 'spiderfoot.db',
+        '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
         '_internettlds': ['com', 'org', 'net'],
         '_maxthreads': 3,
         '__correlationrules__': []

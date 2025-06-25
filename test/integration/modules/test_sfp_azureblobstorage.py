@@ -12,7 +12,9 @@ class TestModuleIntegrationazureblobstorage(unittest.TestCase):
     def setUp(self):
         self.sf = SpiderFoot({})
         self.module = sfp_azureblobstorage()
-        self.module.setup(self.sf, dict())
+        # Add required option _internettlds for the test
+        opts = {"_internettlds": "com,net,org"}
+        self.module.setup(self.sf, opts)
         self.events = []
         self.module.notifyListeners = lambda evt: self.events.append(evt)
 
@@ -25,8 +27,10 @@ class TestModuleIntegrationazureblobstorage(unittest.TestCase):
         event = SpiderFootEvent("DOMAIN_NAME", test_domain, "testsrc", None)
         self.module.handleEvent(event)
         # The module should emit at least one CLOUD_STORAGE_BUCKET event
-        found = any(evt.eventType == "CLOUD_STORAGE_BUCKET" and \
-                   evt.data.startswith("spiderfoot-test") and \
-                   evt.data.endswith(".blob.core.windows.net")
-                   for evt in self.events)
+        found = any(
+            evt.eventType == "CLOUD_STORAGE_BUCKET"
+            and evt.data.startswith("spiderfoot-test")
+            and evt.data.endswith(".blob.core.windows.net")
+            for evt in self.events
+        )
         self.assertTrue(found, "CLOUD_STORAGE_BUCKET event not emitted for accessible blob")

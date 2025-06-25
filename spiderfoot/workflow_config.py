@@ -93,21 +93,20 @@ class WorkflowConfig:
     
     def _get_default_config_file(self) -> str:
         """Get default configuration file path."""
-        # Try to find SpiderFoot installation directory
+        # Use new standard config directory first
         possible_paths = [
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config', 'workflow.conf'),
             'spiderfoot_workflow.conf',
             '~/.spiderfoot/workflow.conf',
             '/etc/spiderfoot/workflow.conf',
             os.path.join(os.path.dirname(__file__), 'workflow.conf')
         ]
-        
         for path in possible_paths:
             expanded_path = os.path.expanduser(path)
             if os.path.exists(expanded_path):
                 return expanded_path
-        
-        # Return first option as default
-        return os.path.expanduser(possible_paths[1])
+        # Return new config path as default
+        return os.path.expanduser(possible_paths[0])
     
     def load_config(self):
         """Load configuration from file."""

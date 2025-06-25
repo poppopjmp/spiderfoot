@@ -138,26 +138,26 @@ ls -la data/spiderfoot.db
 ls -la spiderfoot.db
 
 # Database locked errors
-lsof spiderfoot.db            # Check what's accessing DB
+lsof data/spiderfoot.db            # Check what's accessing DB
 pkill -f sf.py                # Kill any hanging processes
 
 # Backup and recreate database
-cp spiderfoot.db spiderfoot.db.backup
-rm spiderfoot.db
+cp data/spiderfoot.db data/spiderfoot.db.backup
+rm data/spiderfoot.db
 python sf.py --create-db      # If option exists
 ```
 
 #### Database Corruption
 ```bash
 # Check database integrity
-sqlite3 spiderfoot.db "PRAGMA integrity_check;"
+sqlite3 data/spiderfoot.db "PRAGMA integrity_check;"
 
 # Repair database
-sqlite3 spiderfoot.db "VACUUM;"
-sqlite3 spiderfoot.db "REINDEX;"
+sqlite3 data/spiderfoot.db "VACUUM;"
+sqlite3 data/spiderfoot.db "REINDEX;"
 
 # Restore from backup
-cp spiderfoot.db.backup spiderfoot.db
+cp data/spiderfoot.db.backup data/spiderfoot.db
 ```
 
 ### Scanning Issues
@@ -193,7 +193,7 @@ top                               # Linux/macOS
 taskmgr                          # Windows
 
 # Monitor database activity
-lsof spiderfoot.db
+lsof data/spiderfoot.db
 ```
 
 #### Module-Specific Errors
@@ -243,7 +243,7 @@ export PYTHONHTTPSVERIFY=0
 python -c "from spiderfoot.workflow_config import WorkflowConfig; print(WorkflowConfig().config)"
 
 # Verify database schema
-sqlite3 spiderfoot.db ".schema tbl_workspaces"
+sqlite3 data/spiderfoot.db ".schema tbl_workspaces"
 
 # Check permissions
 ls -la data/
@@ -259,7 +259,7 @@ python sfworkflow.py list-workspaces
 python sfworkflow.py show-workspace ws_abc123
 
 # Check database entries
-sqlite3 spiderfoot.db "SELECT * FROM tbl_workspaces;"
+sqlite3 data/spiderfoot.db "SELECT * FROM tbl_workspaces;"
 ```
 
 ### Multi-Target Scanning Issues
@@ -328,14 +328,14 @@ python -c "import asyncio; print('Asyncio available')"
 #### Database Performance
 ```bash
 # Optimize database
-sqlite3 spiderfoot.db "VACUUM;"
-sqlite3 spiderfoot.db "ANALYZE;"
+sqlite3 data/spiderfoot.db "VACUUM;"
+sqlite3 data/spiderfoot.db "ANALYZE;"
 
 # Check database size
-du -sh spiderfoot.db
+du -sh data/spiderfoot.db
 
 # Clean old scans
-sqlite3 spiderfoot.db "DELETE FROM tbl_scan_instance WHERE created < datetime('now', '-30 days');"
+sqlite3 data/spiderfoot.db "DELETE FROM tbl_scan_instance WHERE created < datetime('now', '-30 days');"
 ```
 
 #### Memory Optimization
@@ -491,7 +491,7 @@ grep "Module.*took" logs/spiderfoot.log | sort -k4 -n
 ### Debug Specific Components
 ```bash
 # Debug database operations
-sqlite3 spiderfoot.db ".log debug.log"
+sqlite3 data/spiderfoot.db ".log debug.log"
 
 # Debug web interface
 python sf.py -l 127.0.0.1:5001 --debug
@@ -513,7 +513,7 @@ echo "SpiderFoot: $(python sf.py --version)"
 echo "Working directory: $(pwd)"
 
 # Configuration
-echo "Database: $(ls -la spiderfoot.db 2>/dev/null || echo 'Not found')"
+echo "Database: $(ls -la data/spiderfoot.db 2>/dev/null || echo 'Not found')"
 echo "Modules: $(python sf.py -M | wc -l) available"
 
 # Recent errors
@@ -548,7 +548,7 @@ For enterprise deployments or complex issues:
 ```bash
 # Backup current state
 cp -r spiderfoot/ spiderfoot_backup/
-cp spiderfoot.db spiderfoot.db.backup
+cp data/spiderfoot.db data/spiderfoot.db.backup
 
 # Clean installation
 rm -rf spiderfoot/
@@ -557,20 +557,20 @@ cd spiderfoot/
 pip3 install -r requirements.txt
 
 # Restore database if needed
-cp ../spiderfoot.db.backup ./spiderfoot.db
+cp ../data/spiderfoot.db.backup ./data/spiderfoot.db
 ```
 
 ### Data Recovery
 ```bash
 # Recover scan data from database
-sqlite3 spiderfoot.db "
+sqlite3 data/spiderfoot.db "
 SELECT scan_id, scan_name, scan_target 
 FROM tbl_scan_instance 
 ORDER BY created DESC LIMIT 10;
 "
 
 # Export important scan results
-sqlite3 spiderfoot.db "
+sqlite3 data/spiderfoot.db "
 .mode csv
 .output important_scans.csv
 SELECT * FROM tbl_scan_results WHERE scan_id = 'your_scan_id';
@@ -615,14 +615,18 @@ python sf.py -s example.com -t DOMAIN_NAME -m sfp_virustotal -v
 
 ### Database Issues
 ```bash
-# Database locked
-rm spiderfoot.db
+# Check database file exists and is writable
+ls -la data/spiderfoot.db
+ls -la spiderfoot.db
 
-# Database corruption
-python sf.py --validate-database
+# Database locked errors
+lsof data/spiderfoot.db            # Check what's accessing DB
+pkill -f sf.py                # Kill any hanging processes
 
-# Permission issues
-chmod 644 spiderfoot.db
+# Backup and recreate database
+cp data/spiderfoot.db data/spiderfoot.db.backup
+rm data/spiderfoot.db
+python sf.py --create-db      # If option exists
 ```
 
 ## Performance Issues
@@ -689,7 +693,7 @@ __password = newpassword
 python sfworkflow.py create-workspace "Valid Name Without Special Chars"
 
 # Verify database permissions
-ls -la spiderfoot.db
+ls -la data/spiderfoot.db
 ```
 
 ### Multi-Target Scan Issues
