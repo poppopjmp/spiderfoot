@@ -4,7 +4,7 @@
 #
 
 # Build stage
-FROM python:3.11-slim-bullseye AS builder
+FROM python:3.11-slim-bullseye as builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -98,7 +98,9 @@ RUN addgroup --system spiderfoot && \
     adduser --system --ingroup spiderfoot --home /home/spiderfoot \
             --shell /usr/sbin/nologin --gecos "SpiderFoot User" spiderfoot && \
     mkdir -p $SPIDERFOOT_DATA $SPIDERFOOT_LOGS $SPIDERFOOT_CACHE /home/spiderfoot/.spiderfoot/logs && \
-    chown -R spiderfoot:spiderfoot /home/spiderfoot $SPIDERFOOT_DATA $SPIDERFOOT_LOGS $SPIDERFOOT_CACHE
+    # Do NOT chown bind-mounted folders here; this causes errors if the host directory is mounted at runtime.
+    # Only set ownership for files inside the image.
+    chown -R spiderfoot:spiderfoot /home/spiderfoot
 
 # Enable NMAP capabilities
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap
@@ -115,6 +117,8 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Remove any database files from application directory to prevent conflicts
 RUN rm -f /home/spiderfoot/spiderfoot.db && \
+    # Do NOT chown bind-mounted folders (e.g., /var/lib/spiderfoot, /var/lib/spiderfoot/log, /var/lib/spiderfoot/cache, /etc/spiderfoot) here; this causes errors if the host directory is mounted at runtime.
+    # Only set ownership for files and folders created inside the image, not for host bind-mounts.
     rm -f /home/spiderfoot/data/spiderfoot.db
 
 # Remove any existing logs that might have been copied and recreate logs directory
@@ -133,7 +137,7 @@ RUN touch /home/spiderfoot/__init__.py && \
     touch /home/spiderfoot/spiderfoot/__init__.py
 
 # Ensure proper ownership of all application files and directories (final step)
-RUN chown -R spiderfoot:spiderfoot /home/spiderfoot
+RUN chown -R spiderfoot:spiderfoot /home/spiderfoot 
 
 # Verify critical dependencies and module structure
 RUN echo "=== Virtual Environment Test ===" && \
@@ -164,3 +168,13 @@ EXPOSE 5001 8001
 # Default command with support for both web UI and API
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh", "python"]
 CMD ["sf.py", "--both", "-l", "0.0.0.0:5001", "--api-listen", "0.0.0.0:8001"]
+
+# ---
+# NOTE: For persistent storage, logs, cache, and config, ensure the following paths are writeable by the spiderfoot user inside the container:
+#   - /var/lib/spiderfoot           (main data, including spiderfoot.db)
+#   - /var/lib/spiderfoot/cache     (cache)
+#   - /var/lib/spiderfoot/log       (logs)
+#   - /etc/spiderfoot               (config, if used)
+# If these are bind-mounted from the host, you must set correct permissions/ownership on the host before starting the container.
+# The Dockerfile cannot change ownership of bind-mounted folders at runtime.
+# ---

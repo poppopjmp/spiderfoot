@@ -25,7 +25,8 @@ services:
       - spiderfoot-backend
     volumes:
       - spiderfoot-data:/var/lib/spiderfoot
-      - spiderfoot-logs:/home/spiderfoot/.spiderfoot/logs
+      - spiderfoot-logs:/var/lib/spiderfoot/log
+      - spiderfoot-dotlogs:/home/spiderfoot/.spiderfoot/logs
       - spiderfoot-cache:/var/lib/spiderfoot/cache
       - spiderfoot-config:/etc/spiderfoot
     environment:
@@ -402,16 +403,34 @@ volumes:
       type: none
       o: bind
       device: ${DATA_PATH:-./data}/spiderfoot
+
   spiderfoot-logs:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: ${LOGS_PATH:-./logs}/spiderfoot
+
+  spiderfoot-dotlogs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${LOGS_PATH:-./logs}/dotspiderfoot
+
   spiderfoot-cache:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${CACHE_PATH:-./cache}/spiderfoot
+
   spiderfoot-config:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${CONFIG_PATH:-./config}/spiderfoot
 
   # Database Volumes
   postgres-data:
