@@ -54,6 +54,10 @@ class TestModuleIntegrationToolNmap(unittest.TestCase):
         self.events.clear()
         self.module.handleEvent(evt)
         event_types = [e.eventType for e in self.events]
+        if 'OPERATING_SYSTEM' not in event_types:
+            print('DEBUG: Events collected:', self.events)
+            print('DEBUG: Event types:', event_types)
+            print('DEBUG: errorState:', self.module.errorState)
         assert 'OPERATING_SYSTEM' in event_types, 'OPERATING_SYSTEM event not emitted (local).'
 
     @patch('os.path.isfile', return_value=True)
@@ -90,4 +94,8 @@ class TestModuleIntegrationToolNmap(unittest.TestCase):
         self.module.errorState = False
         self.module.handleEvent(evt)
         event_types = [e.eventType for e in self.events]
+        if 'OPERATING_SYSTEM' not in event_types:
+            print('DEBUG: Events collected:', self.events)
+            print('DEBUG: Event types:', event_types)
+            print('DEBUG: errorState:', self.module.errorState)
         assert 'OPERATING_SYSTEM' in event_types, 'OPERATING_SYSTEM event not emitted (remote).'

@@ -54,7 +54,9 @@ class TestModuleIntegrationToolGobuster(unittest.TestCase):
         temp_output = tempfile.NamedTemporaryFile(delete=False)
         temp_output.close()
         mock_execute_command.return_value = temp_output.name
-        # Use a valid target type for SpiderFootTarget
+        # Set the wordlist option to the temp file path to match what the module expects
+        self.options['wordlist'] = temp_output.name
+        self.module.setup(self.sf, self.options)
         target = SpiderFootTarget('example.com', 'INTERNET_NAME')
         self.module.setTarget(target)
         parent_evt = SpiderFootEvent('ROOT', 'rootdata', 'test', None)
