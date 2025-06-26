@@ -14,6 +14,8 @@
 import json
 import os.path
 import tempfile
+import paramiko
+import io
 
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
@@ -45,6 +47,15 @@ class sfp_tool_gobuster(SpiderFootPlugin):
         "follow_redirects": True,
         "extensions": "php,asp,aspx,jsp,html,htm,js",
         "use_proxy": False,
+        # Remote execution options
+        "remote_enabled": False,
+        "remote_host": "",
+        "remote_user": "",
+        "remote_password": "",
+        "remote_ssh_key": "",  # (deprecated, for backward compatibility)
+        "remote_ssh_key_data": "",  # New: paste private key directly
+        "remote_tool_path": "",
+        "remote_tool_args": "",
     }
 
     # Option descriptions
@@ -57,6 +68,14 @@ class sfp_tool_gobuster(SpiderFootPlugin):
         "follow_redirects": "Follow redirects (gobuster -r)",
         "extensions": "Comma-separated list of file extensions to look for (gobuster -x).",
         "use_proxy": "Use the configured SpiderFoot proxy for scanning.",
+        "remote_enabled": "Enable remote execution via SSH (true/false)",
+        "remote_host": "Remote SSH host (IP or hostname)",
+        "remote_user": "Remote SSH username",
+        "remote_password": "Remote SSH password (optional if using key)",
+        "remote_ssh_key": "(Deprecated) Path to SSH private key (use remote_ssh_key_data instead)",
+        "remote_ssh_key_data": "Paste your SSH private key here (PEM format, multi-line)",
+        "remote_tool_path": "Path to the tool on the remote machine",
+        "remote_tool_args": "Extra arguments/config for the tool on the remote machine",
     }
 
     # Target
@@ -105,21 +124,92 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             except Exception:
                 pass
 
+    def run_remote_tool(self, target_url):
+        host = self.opts.get("remote_host")
+        user = self.opts.get("remote_user")
+        password = self.opts.get("remote_password")
+        ssh_key_data = self.opts.get("remote_ssh_key_data")
+        ssh_key_path = self.opts.get("remote_ssh_key")
+        tool_path = self.opts.get("remote_tool_path")
+        tool_args = self.opts.get("remote_tool_args", "")
+        wordlist = self.opts.get("wordlist")
+        threads = self.opts.get("threads", 10)
+        status_codes = self.opts.get("status_codes", "200,204,301,302,307,401,403")
+        timeout = self.opts.get("timeout", 30)
+        extensions = self.opts.get("extensions", "")
+        follow_redirects = self.opts.get("follow_redirects", True)
+        if not (host and user and tool_path and wordlist):
+            self.error("Remote execution enabled but host/user/tool_path/wordlist not set.")
+            return None
+        cmd = f'{tool_path} dir -q -u "{target_url}" -w "{wordlist}" -t {threads} -s {status_codes} -to {timeout}s -j'
+        if follow_redirects:
+            cmd += ' -r'
+        if extensions:
+            cmd += f' -x {extensions}'
+        if tool_args:
+            cmd += f' {tool_args}'
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            pkey = None
+            if ssh_key_data:
+                try:
+                    pkey = paramiko.RSAKey.from_private_key(io.StringIO(ssh_key_data))
+                except Exception as e:
+                    self.error(f"Failed to parse pasted SSH key: {e}")
+                    return None
+            if pkey:
+                ssh.connect(host, username=user, pkey=pkey, password=password or None, timeout=10)
+            elif ssh_key_path:
+                ssh.connect(host, username=user, key_filename=ssh_key_path, password=password or None, timeout=10)
+            else:
+                ssh.connect(host, username=user, password=password or None, timeout=10)
+            stdin, stdout, stderr = ssh.exec_command(cmd)
+            output = stdout.read().decode()
+            err = stderr.read().decode()
+            ssh.close()
+            if err:
+                self.error(f"Remote tool error: {err}")
+                return None
+            try:
+                return json.loads(output)
+            except Exception as e:
+                self.error(f"Error parsing remote tool output: {e}")
+                return None
+        except Exception as e:
+            self.error(f"SSH connection or execution failed: {e}")
+            return None
+
     def handleEvent(self, event):
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
 
-        self.debug(f"Received event, {eventName}, from {srcModuleName}")
-
         if self.errorState:
             return
 
         if eventData in self.results:
-            self.debug(f"Skipping {eventData}, already checked.")
             return
 
         self.results[eventData] = True
+
+        # Remote execution support (exclusive)
+        if self.opts.get("remote_enabled"):
+            results = self.run_remote_tool(eventData)
+            if not results:
+                return
+            # Process the results (same as local)
+            for result in results.get("results", []):
+                path = result.get("path")
+                status = result.get("status")
+                if not path:
+                    continue
+                base_url = eventData.rstrip("/")
+                full_url = f"{base_url}{path}"
+                event_type = "URL_DIRECTORY" if path.endswith("/") else "URL_FILE"
+                evt = SpiderFootEvent(event_type, full_url, self.__name__, event)
+                self.notifyListeners(evt)
+            return
 
         gobuster_path = self.opts["gobuster_path"]
         wordlist = self.opts["wordlist"]

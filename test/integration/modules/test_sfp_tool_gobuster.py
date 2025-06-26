@@ -59,3 +59,37 @@ class TestModuleIntegrationToolGobuster(unittest.TestCase):
         event_types = [e.eventType for e in self.events]
         assert 'URL_DIRECTORY' in event_types, 'URL_DIRECTORY event not emitted.'
         assert 'URL_FILE' in event_types, 'URL_FILE event not emitted.'
+
+    @patch('os.path.isfile', return_value=True)
+    @patch('modules.sfp_tool_gobuster.paramiko.SSHClient')
+    @patch('modules.sfp_tool_gobuster.io.StringIO')
+    @patch('modules.sfp_tool_gobuster.paramiko.RSAKey.from_private_key', return_value='pkey')
+    def test_handleEvent_remote(self, mock_rsa, mock_stringio, mock_sshclient, mock_isfile):
+        # Set remote options
+        self.module.opts.update({
+            'remote_enabled': True,
+            'remote_host': '1.2.3.4',
+            'remote_user': 'user',
+            'remote_ssh_key_data': 'FAKEKEYDATA',
+            'remote_tool_path': '/usr/bin/gobuster',
+            'wordlist': '/tmp/wordlist.txt',
+            'remote_password': '',
+            'remote_ssh_key': ''
+        })
+        # Mock SSH client and output
+        mock_ssh = MagicMock()
+        mock_sshclient.return_value = mock_ssh
+        mock_stdout = MagicMock()
+        mock_stdout.read.return_value = b'{"results": [{"path": "/admin/", "status": 200}, {"path": "/index.html", "status": 200}]}'
+        mock_stderr = MagicMock()
+        mock_stderr.read.return_value = b''
+        mock_ssh.exec_command.return_value = (None, mock_stdout, mock_stderr)
+        target = SpiderFootTarget('example.com', 'INTERNET_NAME')
+        self.module.setTarget(target)
+        parent_evt = SpiderFootEvent('ROOT', 'rootdata', 'test', None)
+        evt = SpiderFootEvent('INTERNET_NAME', 'example.com', 'test', parent_evt)
+        self.events.clear()
+        self.module.handleEvent(evt)
+        event_types = [e.eventType for e in self.events]
+        assert 'URL_DIRECTORY' in event_types, 'URL_DIRECTORY event not emitted (remote).'
+        assert 'URL_FILE' in event_types, 'URL_FILE event not emitted (remote).'

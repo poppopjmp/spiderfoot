@@ -27,6 +27,15 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
         "api_key": "",
         "retries": 2,
         "retry_delay": 2,
+        # Remote execution options
+        "remote_enabled": False,
+        "remote_host": "",
+        "remote_user": "",
+        "remote_password": "",
+        "remote_ssh_key": "",  # (deprecated, for backward compatibility)
+        "remote_ssh_key_data": "",  # New: paste private key directly
+        "remote_tool_path": "",
+        "remote_tool_args": "",
     }
 
     optdescs = {
@@ -35,6 +44,14 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
         "api_key": "API key for PhoneInfoga (if required, sent as X-Api-Key header)",
         "retries": "Number of times to retry the API call on failure.",
         "retry_delay": "Seconds to wait between retries.",
+        "remote_enabled": "Enable remote execution via SSH (true/false)",
+        "remote_host": "Remote SSH host (IP or hostname)",
+        "remote_user": "Remote SSH username",
+        "remote_password": "Remote SSH password (optional if using key)",
+        "remote_ssh_key": "(Deprecated) Path to SSH private key (use remote_ssh_key_data instead)",
+        "remote_ssh_key_data": "Paste your SSH private key here (PEM format, multi-line)",
+        "remote_tool_path": "Path to the tool on the remote machine",
+        "remote_tool_args": "Extra arguments/config for the tool on the remote machine",
     }
 
     results = None
@@ -66,7 +83,56 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
             "CARRIER_TYPE",
         ]
 
+    def run_remote_tool(self, phone_number):
+        """Run the tool remotely via SSH and return parsed JSON output."""
+        import paramiko
+        import io
+        host = self.opts.get("remote_host")
+        user = self.opts.get("remote_user")
+        password = self.opts.get("remote_password")
+        ssh_key_data = self.opts.get("remote_ssh_key_data")
+        ssh_key_path = self.opts.get("remote_ssh_key")
+        tool_path = self.opts.get("remote_tool_path")
+        tool_args = self.opts.get("remote_tool_args", "")
+        if not (host and user and tool_path):
+            self.error("Remote execution enabled but host/user/tool_path not set.")
+            return None
+        cmd = f'{tool_path} {tool_args} --format json --number "{phone_number}"'
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            pkey = None
+            if ssh_key_data:
+                try:
+                    pkey = paramiko.RSAKey.from_private_key(io.StringIO(ssh_key_data))
+                except Exception as e:
+                    self.error(f"Failed to parse pasted SSH key: {e}")
+                    return None
+            if pkey:
+                ssh.connect(host, username=user, pkey=pkey, password=password or None, timeout=10)
+            elif ssh_key_path:
+                ssh.connect(host, username=user, key_filename=ssh_key_path, password=password or None, timeout=10)
+            else:
+                ssh.connect(host, username=user, password=password or None, timeout=10)
+            stdin, stdout, stderr = ssh.exec_command(cmd)
+            output = stdout.read().decode()
+            err = stderr.read().decode()
+            ssh.close()
+            if err:
+                self.error(f"Remote tool error: {err}")
+                return None
+            try:
+                return json.loads(output)
+            except Exception as e:
+                self.error(f"Error parsing remote tool output: {e}")
+                return None
+        except Exception as e:
+            self.error(f"SSH connection or execution failed: {e}")
+            return None
+
     def query_api(self, phone_number):
+        if self.opts.get("remote_enabled"):
+            return self.run_remote_tool(phone_number)
         """Query the PhoneInfoga API for information about a phone number."""
         url = self.opts["api_endpoint"]
         headers = {"Content-Type": "application/json"}
