@@ -62,7 +62,9 @@ class sfp_archiveorg(SpiderFootPlugin):
         'staticpages': False,
         'uploadpages': False,
         'webframeworkpages': False,
-        'javascriptpages': False
+        'javascriptpages': False,
+        '_fetchtimeout': 0.1,
+        '_useragent': 'SpiderFoot'
     }
 
     # Option descriptions
