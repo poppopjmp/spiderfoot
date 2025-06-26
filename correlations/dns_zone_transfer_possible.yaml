@@ -1,5 +1,5 @@
 id: dns_zone_transfer_possible
-version: 1
+version: "1"
 meta:
   name: DNS Zone Transfer is possible
   description: >

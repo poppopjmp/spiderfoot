@@ -1,5 +1,5 @@
 id: multiple_malicious_cohost
-version: 1
+version: "1"
 meta:
   name: >
     A co-hosted site was considered malicious by multiple sources

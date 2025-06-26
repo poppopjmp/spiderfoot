@@ -1,5 +1,5 @@
 id: host_only_from_bruteforce
-version: 1
+version: "1"
 meta:
   name: Host only from bruteforcing
   description: >

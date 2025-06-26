@@ -1,5 +1,5 @@
 id: outlier_email
-version: 1
+version: "1"
 meta:
   name: Outlier email address found
   description: >

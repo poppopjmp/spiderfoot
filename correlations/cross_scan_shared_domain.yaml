@@ -1,5 +1,5 @@
 id: cross_scan_shared_domain
-version: 1
+version: "1"
 meta:
   name: Shared domain name across scans
   description: >

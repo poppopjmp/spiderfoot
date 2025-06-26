@@ -1,5 +1,5 @@
 id: remote_desktop_exposed
-version: 1
+version: "1"
 meta:
   name: Remote desktop technology found exposed to the Internet
   description: >

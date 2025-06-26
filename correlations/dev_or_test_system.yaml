@@ -1,5 +1,5 @@
 id: dev_or_test_system
-version: 1
+version: "1"
 meta:
   name: A host appearing to be a test or development system was found
   description: >

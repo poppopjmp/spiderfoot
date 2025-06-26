@@ -1,5 +1,5 @@
 id: cloud_bucket_open_related
-version: 1
+version: "1"
 meta:
   name: Possibly related cloud storage bucket open to the Internet
   description: >

@@ -1,5 +1,5 @@
 id: outlier_hostname
-version: 1
+version: "1"
 meta:
   name: Outlier hostname
   description: >

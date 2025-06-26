@@ -1,5 +1,5 @@
 id: cross_scan_rare_technology
-version: 1
+version: "1"
 meta:
   name: Rare technology across scans
   description: >

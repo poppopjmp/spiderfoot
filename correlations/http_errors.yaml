@@ -1,5 +1,5 @@
 id: http_errors
-version: 1
+version: "1"
 meta:
   name: Multiple HTTP errors found
   description: >

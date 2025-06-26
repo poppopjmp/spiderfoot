@@ -1,5 +1,5 @@
 id: multiple_malicious_affiliate
-version: 1
+version: "1"
 meta:
   name: >
     An affiliated IP or host was considered malicious by multiple sources

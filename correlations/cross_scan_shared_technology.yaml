@@ -1,5 +1,5 @@
 id: cross_scan_shared_technology
-version: 1
+version: "1"
 meta:
   name: Shared technology stack across scans
   description: >

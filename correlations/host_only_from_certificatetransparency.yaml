@@ -1,5 +1,5 @@
 id: host_only_from_certificatetransparency
-version: 1
+version: "1"
 meta:
   name: Hostname only from certificate transparency
   description: >

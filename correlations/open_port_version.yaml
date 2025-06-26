@@ -1,5 +1,5 @@
 id: open_port_version
-version: 1
+version: "1"
 meta:
   name: Open TCP port reveals version
   description: >

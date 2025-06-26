@@ -1,5 +1,5 @@
 id: cross_scan_shared_malicious
-version: 1
+version: "1"
 meta:
   name: Shared malicious indicator across scans
   description: >

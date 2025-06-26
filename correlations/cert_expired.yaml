@@ -1,5 +1,5 @@
 id: cert_expired
-version: 1
+version: "1"
 meta:
   name: Expired SSL certificate found
   description: >

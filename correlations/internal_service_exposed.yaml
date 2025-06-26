@@ -1,5 +1,5 @@
 id: internal_service_exposed
-version: 1
+version: "1"
 meta:
   name: Internal service exposed to the Internet
   description: >

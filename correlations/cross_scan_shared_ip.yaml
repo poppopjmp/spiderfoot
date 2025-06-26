@@ -1,5 +1,5 @@
 id: cross_scan_shared_ip
-version: 1
+version: "1"
 meta:
   name: Shared IP address across scans
   description: >

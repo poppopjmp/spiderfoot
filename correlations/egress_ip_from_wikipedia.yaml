@@ -1,5 +1,5 @@
 id: egress_ip_from_wikipedia
-version: 1
+version: "1"
 meta:
   name: Wikipedia page edit from target-owned network
   description: >

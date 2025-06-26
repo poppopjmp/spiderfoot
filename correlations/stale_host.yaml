@@ -1,5 +1,5 @@
 id: stale_host
-version: 1
+version: "1"
 meta:
   name: Stale host found
   description: >

@@ -1,5 +1,5 @@
 id: email_only_from_pasteleak_site
-version: 1
+version: "1"
 meta:
   name: Email address only from paste/leak site
   description: >

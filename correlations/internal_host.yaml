@@ -1,5 +1,5 @@
 id: internal_host
-version: 1
+version: "1"
 meta:
   name: A host resolving to unroutable IPs was found
   description: >

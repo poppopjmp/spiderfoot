@@ -1,5 +1,5 @@
 id: cross_scan_shared_ssl
-version: 1
+version: "1"
 meta:
   name: Shared SSL certificate across scans
   description: >

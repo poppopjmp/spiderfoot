@@ -1,5 +1,5 @@
 id: outlier_cloud
-version: 1
+version: "1"
 meta:
   name: Outlier Cloud provider
   description: >

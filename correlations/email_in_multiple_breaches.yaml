@@ -1,5 +1,5 @@
 id: email_in_multiple_breaches
-version: 1
+version: "1"
 meta:
   name: >
     An email address was reported to be in multiple breaches

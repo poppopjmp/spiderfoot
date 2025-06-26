@@ -1,5 +1,5 @@
 id: cross_scan_shared_hosting
-version: 1
+version: "1"
 meta:
   name: Shared hosting provider across scans
   description: >

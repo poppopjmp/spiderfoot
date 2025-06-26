@@ -1,5 +1,5 @@
 id: cross_scan_shared_exposure
-version: 1
+version: "1"
 meta:
   name: Shared exposure (open port/service) across scans
   description: >

@@ -3,7 +3,7 @@
 id: set_a_meaningful_id_here
 
 # Use version 1 for now.
-version: 1
+version: "1"
 
 # The meta section sets meta attributes about the rule.
 meta:
