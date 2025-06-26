@@ -1,4 +1,5 @@
 import json
+import time
 import unittest.mock as mock
 
 from modules.sfp_virustotal import sfp_virustotal
@@ -45,8 +46,8 @@ class TestModuleVirustotal(SpiderFootTestBase):
         source_event = ''
         evt = SpiderFootEvent(event_type, event_data,
                               event_module, source_event)
-
-        result = module.handleEvent(evt)
+        with mock.patch.object(time, 'sleep', return_value=None):
+            result = module.handleEvent(evt)
 
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
@@ -59,7 +60,8 @@ class TestModuleVirustotal(SpiderFootTestBase):
         event = SpiderFootEvent('IP_ADDRESS', '8.8.8.8', 'test', None)
         vt_response = json.dumps({'detected_urls': [{}]})
         with mock.patch.object(module.sf, 'fetchUrl', return_value={'content': vt_response, 'code': '200'}), \
-             mock.patch.object(module, 'notifyListeners') as mock_notify:
+             mock.patch.object(module, 'notifyListeners') as mock_notify, \
+             mock.patch.object(time, 'sleep', return_value=None):
             module.handleEvent(event)
             self.assertTrue(mock_notify.called)
             event_types = [call_args[0][0].eventType for call_args in mock_notify.call_args_list]

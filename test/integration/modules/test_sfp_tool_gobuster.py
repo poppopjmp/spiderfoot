@@ -1,67 +1,61 @@
 # filepath: spiderfoot/test/integration/modules/test_sfptool_gobuster.py
-import pytest
-from unittest.mock import patch, MagicMock
-import os
+import unittest
+from unittest.mock import patch, MagicMock, mock_open
+import json
 
+from modules.sfp_tool_gobuster import sfp_tool_gobuster
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from modules.sfp_tool_gobuster import sfp_tool_gobuster
-
-# This test requires credentials for the Tool Gobuster service
-# To run this test, set the environment variables:
-# - SF_SFP_TOOL_GOBUSTER_API_KEY
 
 
-@pytest.mark.skipif(
-    not all(os.environ.get(env_var)
-            for env_var in ['SF_SFP_TOOL_GOBUSTER_API_KEY']),
-    reason="Integration test - requires Tool Gobuster credentials"
-)
-class TestModuleIntegrationToolGobuster:
-    """Integration testing for the Tool Gobuster module."""
-
-    @pytest.fixture
-    def module(self):
-        """Return a Tool Gobuster module."""
-        sf = SpiderFoot({
-            '_debug': True,
-            '__logging': True,
-            '__outputfilter': None,
-            'api_key': os.environ.get('SF_API_KEY', ''),
-            'checkaffiliates': True,
+class TestModuleIntegrationToolGobuster(unittest.TestCase):
+    def setUp(self):
+        self.sf = SpiderFoot({
+            '_fetchtimeout': 0.1,
+            '_useragent': 'SpiderFootTestAgent',
+            '_internettlds': 'com,net,org',
+            '_debug': False,
+            '_genericusers': 'info,admin',
         })
-        module = sfp_tool_gobuster()
-        module.setup(sf, {
-            '_debug': True,
-            '__logging': True,
-            '__outputfilter': None,
-            'api_key': os.environ.get('SF_API_KEY', ''),
-            'checkaffiliates': True,
-        })
-        return module
+        self.sf.execute = MagicMock(return_value=0)
+        self.sf.outputProgress = MagicMock(return_value=True)
+        self.module = sfp_tool_gobuster()
+        self.module.__name__ = 'sfp_tool_gobuster'
+        self.options = {
+            'gobuster_path': '/usr/bin/gobuster',
+            'wordlist': '/tmp/wordlist.txt',
+            'threads': 10,
+            'timeout': 30,
+            'status_codes': '200,204,301,302,307,401,403',
+            'follow_redirects': True,
+            'extensions': 'php,asp,aspx,jsp,html,htm,js',
+            'use_proxy': False,
+            '_fetchtimeout': 0.1,
+            '_useragent': 'SpiderFootTestAgent',
+            '_internettlds': 'com,net,org',
+            '_debug': False,
+            '_genericusers': 'info,admin',
+        }
+        self.module.setup(self.sf, self.options)
+        self.events = []
+        self.module.notifyListeners = self.events.append
 
-    def test_module_produces_events(self, module):
-        """Test whether the module produces events when given input data."""
-        target_value = "example.com"
-        target_type = "DOMAIN_NAME"
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        event_type = "DOMAIN_NAME"
-        event_data = "example.com"
-        event_module = "test"
-        source_event = SpiderFootEvent("ROOT", "", "", "")
-        evt = SpiderFootEvent(event_type, event_data,
-                              event_module, source_event)
-
-        # We're using a direct call to handleEvent, bypassing the framework's logic
-        # for calling it in order to test it directly.
-        result = module.handleEvent(evt)
-
-        # Assert that the module produced events
-        assert len(module.sf.events) > 0
-
-        # Each event should be a dict with certain required fields
-        for event in module.sf.events:
-            assert event.get('type') is not None
-            assert event.get('data') is not None
+    @patch('os.path.isfile', return_value=True)
+    @patch('builtins.open', new_callable=mock_open, read_data=json.dumps({
+        'results': [
+            {'path': '/admin/', 'status': 200},
+            {'path': '/index.html', 'status': 200}
+        ]
+    }))
+    @patch.object(sfp_tool_gobuster, 'execute_command')
+    def test_handleEvent_gobuster(self, mock_execute_command, mock_open_file, mock_isfile):
+        # Simulate execute_command returning a fake file path
+        mock_execute_command.return_value = '/tmp/fake_gobuster_output.json'
+        target = SpiderFootTarget('example.com', 'INTERNET_NAME')
+        self.module.setTarget(target)
+        parent_evt = SpiderFootEvent('ROOT', 'rootdata', 'test', None)
+        evt = SpiderFootEvent('INTERNET_NAME', 'example.com', 'test', parent_evt)
+        self.module.handleEvent(evt)
+        event_types = [e.eventType for e in self.events]
+        assert 'URL_DIRECTORY' in event_types, 'URL_DIRECTORY event not emitted.'
+        assert 'URL_FILE' in event_types, 'URL_FILE event not emitted.'

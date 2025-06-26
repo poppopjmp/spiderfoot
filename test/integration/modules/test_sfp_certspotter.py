@@ -12,7 +12,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 class TestModuleIntegrationCertspotter(unittest.TestCase):
     def setUp(self):
         self.sf = SpiderFoot({
-            '_fetchtimeout': 5,
+            '_fetchtimeout': 0.1,
             '_useragent': 'SpiderFootTestAgent',
             '_internettlds': 'com,net,org',
         })
@@ -20,7 +20,7 @@ class TestModuleIntegrationCertspotter(unittest.TestCase):
         self.module.__name__ = 'sfp_certspotter'
         self.options = {
             'api_key': 'DUMMYKEY',
-            '_fetchtimeout': 5,
+            '_fetchtimeout': 0.1,
             '_useragent': 'SpiderFootTestAgent',
             '_internettlds': 'com,net,org',
         }
@@ -41,8 +41,9 @@ class TestModuleIntegrationCertspotter(unittest.TestCase):
         self.module.sf.resolveHost6 = lambda d: True
         self.module.getTarget = lambda: SpiderFootTarget('example.com', 'INTERNET_NAME')
 
+    @patch('time.sleep', return_value=None)
     @patch.object(SpiderFoot, 'fetchUrl')
-    def test_handleEvent_domain_name(self, mock_fetch):
+    def test_handleEvent_domain_name(self, mock_fetch, mock_sleep):
         # Simulate CertSpotter API response with one certificate
         api_response = [
             {

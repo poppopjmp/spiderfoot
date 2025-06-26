@@ -58,7 +58,8 @@ class sfp_virustotal(SpiderFootPlugin):
         'netblocklookup': True,
         'maxnetblock': 24,
         'subnetlookup': True,
-        'maxsubnet': 24
+        'maxsubnet': 24,
+        '_fetchtimeout': 5
     }
 
     optdescs = {
@@ -70,7 +71,8 @@ class sfp_virustotal(SpiderFootPlugin):
         'maxnetblock': 'If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)',
         'subnetlookup': 'Look up all IPs on subnets which your target is a part of?',
         'maxsubnet': 'If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)',
-        'verify': 'Verify that any hostnames found on the target domain still resolve?'
+        'verify': 'Verify that any hostnames found on the target domain still resolve?',
+        '_fetchtimeout': 'Number of seconds to wait for a response from VirusTotal.'
     }
 
     results = None

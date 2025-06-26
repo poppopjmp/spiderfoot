@@ -127,14 +127,18 @@ class TestSf(unittest.TestCase):
     def test_run_scan_with_modules_no_target_should_exit(self):
         with patch('spiderfoot.SpiderFootHelpers.loadModulesAsDict', return_value={'sfp__stor_stdout': {'opts': {}}}):
             out, err, code = self.execute(
-                [sys.executable, os.path.abspath("sf.py"), "-m", ",".join(self.default_modules)])
+                [sys.executable, os.path.abspath("sf.py"), "-m", ",".join(self.default_modules)],
+                timeout=5
+            )
         self.assertTrue(b"specify a target" in err.lower() or b"specify a target" in out.lower() or b"timeout" in err.lower())
         self.assertIn(code, (255, 4294967295, 1, -1))
 
     def test_run_scan_with_types_no_target_should_exit(self):
         with patch('spiderfoot.SpiderFootHelpers.loadModulesAsDict', return_value={'sfp__stor_stdout': {'opts': {}}}):
             out, err, code = self.execute(
-                [sys.executable, os.path.abspath("sf.py"), "-t", ",".join(self.default_types)])
+                [sys.executable, os.path.abspath("sf.py"), "-t", ",".join(self.default_types)],
+                timeout=5
+            )
         self.assertTrue(b"specify a target" in err.lower() or b"specify a target" in out.lower() or b"timeout" in err.lower())
         self.assertIn(code, (255, 4294967295, 1, -1))
 
