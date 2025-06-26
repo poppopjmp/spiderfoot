@@ -31,6 +31,8 @@ from cherrypy import _cperror
 from mako.lookup import TemplateLookup
 from mako.template import Template
 
+import markdown
+
 from sflib import SpiderFoot
 from sfscan import startSpiderFootScanner
 from spiderfoot import SpiderFootDb
@@ -100,13 +102,13 @@ class SpiderFootWebUi:
 
         csp = (
             secure.ContentSecurityPolicy()
-            .default_src("'self'")
-            .script_src("'self'", "'unsafe-inline'", "blob:")
-            .style_src("'self'", "'unsafe-inline'")
-            .base_uri("'self'")
-            .connect_src("'self'", "data:")
-            .frame_src("'self'", 'data:')
-            .img_src("'self'", "data:")
+                .default_src("'self'")
+                .script_src("'self'", "'unsafe-inline'", "blob:")
+                .style_src("'self'", "'unsafe-inline'")
+                .base_uri("'self'")
+                .connect_src("'self'", "data:")
+                .frame_src("'self'", 'data:')
+                .img_src("'self'", "data:")
         )
 
         secure_headers = secure.Secure(
@@ -2633,67 +2635,175 @@ This is a placeholder MCP report. Integration with actual MCP server required.
                 
         except Exception as e:
             self.log.error(f"Failed to download report: {e}")
-            raise cherrypy.HTTPError(500, f"Failed to download report: {e}")
-
     @cherrypy.expose
-    def documentation(self: 'SpiderFootWebUi') -> str:
-        """Serve the main documentation page using the documentation/ folder."""
+    def documentation(self: 'SpiderFootWebUi', doc: str = None, q: str = None) -> str:
+        """
+        Render documentation from the documentation/ folder as HTML, including subfolders.
+        """
+        self.log.debug("Documentation endpoint called with doc=%s, q=%s", doc, q)
+        import re
+        doc_dir = os.path.join(os.path.dirname(__file__), 'documentation')
+        doc_dir = os.path.abspath(doc_dir)
+        doc_index = []
+        selected_file = None
+        content = ''
+        search_results = []
+        search_query = q or ''
+        toc_html = ''
+        breadcrumbs = []
+        last_updated = ''
+        author = ''
+        version_dirs = []
+        current_version = 'latest'
+        related = []
         try:
-            # Use the documentation directory relative to this file (spiderfoot/documentation)
-            doc_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),'documentation'))
+            # Recursively find all .md files
+            md_files = []
+            for root, dirs, files in os.walk(doc_dir):
+                for fname in files:
+                    if fname.endswith('.md'):
+                        rel_path = os.path.relpath(os.path.join(root, fname), doc_dir)
+                        rel_path = rel_path.replace('\\', '/')  # For Windows compatibility
+                        md_files.append(rel_path)
+            # Use README.md table for sidebar if present
             readme_path = os.path.join(doc_dir, 'README.md')
-            if not os.path.isdir(doc_dir):
-                raise FileNotFoundError(f"Documentation directory not found: {doc_dir}")
-            doc_files = set(f for f in os.listdir(doc_dir) if f.endswith('.md'))
-
-            # Parse doc index from README.md
-            doc_index = []
-            import re
-            with open(readme_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            tables = re.findall(r'(\|.*\|\n\|[ \-:|]+\|(?:\n\|.*\|)+)', content)
-            for table in tables:
-                lines = [l.strip() for l in table.split('\n') if l.strip()]
-                if len(lines) < 2:
-                    continue
-                header = [c.strip().lower() for c in lines[0].strip('|').split('|')]
-                if not (('section' in header[0] and 'icon' in header[-1]) or ('file' in header[1])):
-                    continue
-                for line in lines[2:]:
-                    cols = [c.strip() for c in line.strip('|').split('|')]
-                    if len(cols) == 3 and cols[1] in doc_files:
-                        doc_index.append({'title': cols[0], 'file': cols[1], 'icon': cols[2]})
-                if doc_index:
-                    break
-
-            # Optionally log missing files for debug
-            missing = [entry['file'] for entry in doc_index if entry['file'] not in doc_files]
-            if missing:
-                with open('sidebar_debug.log', 'a', encoding='utf-8') as dbg:
-                    for fname in missing:
-                        dbg.write(f"Missing documentation file: {fname}\n")
-
-            request = getattr(cherrypy, 'request', None)
-            if not request or not hasattr(request, 'path'):
-                class DummyRequest:
-                    path = '/documentation/'
-                    args = {}
-                request = DummyRequest()
-
-            templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
+            sidebar_entries = []
+            if os.path.exists(readme_path):
+                with open(readme_path, encoding='utf-8') as f:
+                    readme_content = f.read()
+                # Extract table rows: | Section | File | Icon |
+                table_rows = re.findall(r'\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|', readme_content)
+                for section, file, icon in table_rows:
+                    # Skip header row
+                    if section.lower() == 'section':
+                        continue
+                    # Only add if file exists in md_files
+                    if file.strip() in md_files:
+                        sidebar_entries.append({
+                            'file': file.strip(),
+                            'title': section.strip(),
+                            'icon': f'fa {icon.strip()}'
+                        })
+            # Fallback: use all .md files
+            if not sidebar_entries:
+                for rel_path in sorted(md_files):
+                    title = rel_path.replace('.md', '').replace('_', ' ').replace('/', ' / ').title()
+                    sidebar_entries.append({
+                        'file': rel_path,
+                        'title': title,
+                        'icon': 'fa fa-file-text-o'
+                    })
+            doc_index = sidebar_entries
+            # Determine which file to show
+            if doc and doc.endswith('.md') and doc in md_files:
+                selected_file = doc
+            elif doc_index:
+                selected_file = doc_index[0]['file']
+            # Read and render the selected file
+            if selected_file:
+                file_path = os.path.join(doc_dir, selected_file)
+                try:
+                    with open(file_path, encoding='utf-8') as f:
+                        raw_content = f.read()
+                    content = markdown.markdown(
+                        raw_content,
+                        extensions=['extra', 'toc', 'tables', 'fenced_code']
+                    )
+                    # --- POST-PROCESS: Rewrite .md links to /documentation?doc=... ---
+                    def md_link_rewrite(match):
+                        text, url = match.group(1), match.group(2)
+                        if url.endswith('.md'):
+                            # Remove leading ./ or / if present
+                            url = url.lstrip('./')
+                            return f'<a href="/documentation?doc={url}">{text}</a>'
+                        return match.group(0)
+                    content = re.sub(r'<a href=["\']([^"\']+\.md)["\']>(.*?)</a>',
+                                     lambda m: f'<a href="/documentation?doc={m.group(1)}">{m.group(2)}</a>',
+                                     content)
+                    # Also handle Markdown links rendered as <a href="modules/sfp_virustotal.md">...</a>
+                    content = re.sub(r'<a href=["\'](modules/[^"\']+\.md)["\']>(.*?)</a>',
+                                     lambda m: f'<a href="/documentation?doc={m.group(1)}">{m.group(2)}</a>',
+                                     content)
+                except Exception as e:
+                    self.log.error("Failed to load documentation file %s: %s", file_path, e)
+                    content = (
+                        '<div class="alert alert-danger">'
+                        f'Failed to load documentation: {e}'
+                        '</div>'
+                    )
+            # Search functionality
+            if search_query:
+                for entry in doc_index:
+                    file_path = os.path.join(doc_dir, entry['file'])
+                    try:
+                        with open(file_path, encoding='utf-8') as f:
+                            text = f.read()
+                        if (
+                            search_query.lower() in text.lower()
+                            or search_query.lower() in entry['title'].lower()
+                        ):
+                            search_results.append(entry)
+                    except Exception as e:
+                        self.log.warning("Error searching documentation file %s: %s", file_path, e)
+                        continue
+            # Breadcrumbs (simple: Home > Current)
+            breadcrumbs = [
+                {
+                    'url': self.docroot + '/documentation',
+                    'title': 'Documentation'
+                }
+            ]
+            if selected_file:
+                breadcrumbs.append({
+                    'url': (
+                        self.docroot
+                        + '/documentation?doc='
+                        + selected_file
+                    ),
+                    'title': (
+                        selected_file.replace('.md', '')
+                        .replace('_', ' ')
+                        .replace('/', ' / ')
+                        .title()
+                    )
+                })
+            # Render template
+            templ = Template(
+                filename='spiderfoot/templates/documentation.tmpl',
+                lookup=self.lookup
+            )
+            # Provide a dummy highlight function if not searching
+            def highlight(text, query):
+                import re
+                if not text or not query:
+                    return text
+                pattern = re.compile(re.escape(query), re.IGNORECASE)
+                return pattern.sub(lambda m: f'<mark>{m.group(0)}</mark>', text)
             return templ.render(
                 docroot=self.docroot,
-                version=__version__,
                 doc_index=doc_index,
-                doc_files=doc_files,
-                request=request,
-                title='Documentation',
-                pageid="DOCS"
+                selected_file=selected_file,
+                content=content,
+                search_query=search_query,
+                search_results=search_results,
+                toc_html=toc_html,
+                breadcrumbs=breadcrumbs,
+                last_updated=last_updated,
+                author=author,
+                version_dirs=version_dirs,
+                current_version=current_version,
+                related=related,
+                version=__version__,
+                pageid="DOCUMENTATION",
+                highlight=highlight
             )
         except Exception as e:
-            self.log.error(f"Error serving documentation page: {e}")
-            return self.error(f"Error loading documentation page: {e}")
-
+            self.log.error("Error in documentation endpoint: %s", e, exc_info=True)
+            return (
+                '<div class="alert alert-danger">'
+            f'Error loading documentation: {e}'
+            '</div>'
+        )
     @cherrypy.expose
     def workspacedetails(self: 'SpiderFootWebUi', workspace_id: str) -> str:
         """Enhanced workspace details page.
@@ -2740,7 +2850,7 @@ This is a placeholder MCP report. Integration with actual MCP server required.
         except Exception as e:
             self.log.error(f"Error loading workspace details: {e}")
             return self.error(f"Error loading workspace details: {e}")
-
+        
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacescancorrelations(self: 'SpiderFootWebUi', workspace_id: str) -> dict:
