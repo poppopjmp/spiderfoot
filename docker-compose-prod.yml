@@ -27,11 +27,11 @@ services:
       # NOTE: The following host directories must be writable by the 'spiderfoot' user inside the container (UID:GID 1000:1000 by default).
       # If you see 'Permission denied' errors, run this on your host:
       #   sudo chown -R 1000:1000 ./data/spiderfoot ./logs/spiderfoot ./logs/dotspiderfoot ./cache/spiderfoot ./config/spiderfoot
-      - spiderfoot-data:/var/lib/spiderfoot
-      - spiderfoot-logs:/var/lib/spiderfoot/log
+      - spiderfoot-data:/home/spiderfoot/data
+      - spiderfoot-logs:/home/spiderfoot/logs
       - spiderfoot-dotlogs:/home/spiderfoot/.spiderfoot/logs
-      - spiderfoot-cache:/var/lib/spiderfoot/cache
-      - spiderfoot-config:/etc/spiderfoot
+      - spiderfoot-cache:/home/spiderfoot/cache
+      - spiderfoot-config:/home/spiderfoot/config
     environment:
       # Database Configuration
       - POSTGRES_HOST=postgres
