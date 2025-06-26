@@ -76,6 +76,9 @@ class sfp_virustotal(SpiderFootPlugin):
     results = None
     errorState = False
 
+    def __init__(self):
+        super().__init__()
+
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
         self.results = self.tempStorage()

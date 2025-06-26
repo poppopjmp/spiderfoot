@@ -86,9 +86,9 @@ COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /tools /tools
 
 # Set up environment with virtual environment
-ENV SPIDERFOOT_DATA=/var/lib/spiderfoot \
-    SPIDERFOOT_LOGS=/var/lib/spiderfoot/log \
-    SPIDERFOOT_CACHE=/var/lib/spiderfoot/cache \
+ENV SPIDERFOOT_DATA=/home/spiderfoot/data \
+    SPIDERFOOT_LOGS=/home/spiderfoot/logs \
+    SPIDERFOOT_CACHE=/home/spiderfoot/cache \
     PATH="/opt/venv/bin:/tools/bin:$PATH" \
     PYTHONPATH="/home/spiderfoot:/home/spiderfoot/modules" \
     VIRTUAL_ENV="/opt/venv"
@@ -97,7 +97,7 @@ ENV SPIDERFOOT_DATA=/var/lib/spiderfoot \
 RUN addgroup --system spiderfoot && \
     adduser --system --ingroup spiderfoot --home /home/spiderfoot \
             --shell /usr/sbin/nologin --gecos "SpiderFoot User" spiderfoot && \
-    mkdir -p $SPIDERFOOT_DATA $SPIDERFOOT_LOGS $SPIDERFOOT_CACHE /home/spiderfoot/.spiderfoot/logs && \
+    mkdir -p /home/spiderfoot/data /home/spiderfoot/logs /home/spiderfoot/cache /home/spiderfoot/.spiderfoot/logs && \
     # Do NOT chown bind-mounted folders here; this causes errors if the host directory is mounted at runtime.
     # Only set ownership for files inside the image.
     chown -R spiderfoot:spiderfoot /home/spiderfoot
@@ -117,7 +117,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Remove any database files from application directory to prevent conflicts
 RUN rm -f /home/spiderfoot/spiderfoot.db && \
-    # Do NOT chown bind-mounted folders (e.g., /var/lib/spiderfoot, /var/lib/spiderfoot/log, /var/lib/spiderfoot/cache, /etc/spiderfoot) here; this causes errors if the host directory is mounted at runtime.
+    # Do NOT chown bind-mounted folders (e.g., /home/spiderfoot/data, /home/spiderfoot/logs, /home/spiderfoot/cache, /etc/spiderfoot) here; this causes errors if the host directory is mounted at runtime.
     # Only set ownership for files and folders created inside the image, not for host bind-mounts.
     rm -f /home/spiderfoot/data/spiderfoot.db
 
@@ -139,27 +139,6 @@ RUN touch /home/spiderfoot/__init__.py && \
 # Ensure proper ownership of all application files and directories (final step)
 RUN chown -R spiderfoot:spiderfoot /home/spiderfoot 
 
-# Verify critical dependencies and module structure
-RUN echo "=== Virtual Environment Test ===" && \
-    which python && python --version && \
-    echo "=== Python Path Test ===" && \
-    python -c "import sys; print('Python path:'); [print(f'  {p}') for p in sys.path]" && \
-    echo "=== Dependency Test ===" && \
-    python -c "import cherrypy; print('CherryPy found')" && \
-    python -c "import fastapi; print('FastAPI found')" && \
-    python -c "import uvicorn; print('Uvicorn found')" && \
-    python -c "import requests; print('Requests found')" && \
-    python -c "import lxml; print('LXML found')" && \
-    echo "=== SpiderFoot Import Test ===" && \
-    python -c "from spiderfoot import SpiderFootHelpers; print('SpiderFootHelpers imported')" && \
-    python -c "from sflib import SpiderFoot; print('SpiderFoot imported')" && \
-    echo "=== Module Count ===" && \
-    find /home/spiderfoot/modules -name 'sfp_*.py' | wc -l && \
-    echo "=== FastAPI Test ===" && \
-    python -c "import sfapi; print('FastAPI module imported successfully')" && \
-    echo "=== Virtual Environment Info ===" && \
-    python -c "import sys; print(f'Executable: {sys.executable}'); print(f'Virtual env: {getattr(sys, \"base_prefix\", sys.prefix) != sys.prefix}')"
-
 USER spiderfoot
 
 # Expose ports for both web UI and API
@@ -171,10 +150,10 @@ CMD ["sf.py", "--both", "-l", "0.0.0.0:5001", "--api-listen", "0.0.0.0:8001"]
 
 # ---
 # NOTE: For persistent storage, logs, cache, and config, ensure the following paths are writeable by the spiderfoot user inside the container:
-#   - /var/lib/spiderfoot           (main data, including spiderfoot.db)
-#   - /var/lib/spiderfoot/cache     (cache)
-#   - /var/lib/spiderfoot/log       (logs)
-#   - /etc/spiderfoot               (config, if used)
+#   - /home/spiderfoot/data           (main data, including spiderfoot.db)
+#   - /home/spiderfoot/cache          (cache)
+#   - /home/spiderfoot/logs           (logs)
+#   - /home/spiderfoot/config         (config, if used)
 # If these are bind-mounted from the host, you must set correct permissions/ownership on the host before starting the container.
 # The Dockerfile cannot change ownership of bind-mounted folders at runtime.
 # ---

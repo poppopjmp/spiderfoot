@@ -1,6 +1,6 @@
 # Configuration Guide
 
-SpiderFoot offers extensive configuration options to customize behavior, performance, and integration with external services. This guide covers all configuration methods and options available in SpiderFoot 5.2.7.
+SpiderFoot offers extensive configuration options to customize behavior, performance, and integration with external services. This guide covers all configuration methods and options available in SpiderFoot 5.2.9.
 
 ## Configuration Methods
 
