@@ -1,0 +1,20 @@
+id: cross_scan_shared_hosting
+version: 1
+meta:
+  name: Shared hosting provider across scans
+  description: >
+    The same hosting provider was found in multiple scans, indicating shared infrastructure or service provider.
+  risk: INFO
+  scope: workspace
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: PROVIDER_HOSTING
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Hosting provider {data} found in multiple scans"

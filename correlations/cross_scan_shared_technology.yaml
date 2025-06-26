@@ -1,0 +1,20 @@
+id: cross_scan_shared_technology
+version: 1
+meta:
+  name: Shared technology stack across scans
+  description: >
+    The same web technology was found in multiple scans, indicating commonality in technology stack.
+  risk: INFO
+  scope: workspace
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: WEBSERVER_TECHNOLOGY
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Technology {data} found in multiple scans"

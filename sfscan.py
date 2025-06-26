@@ -21,7 +21,7 @@ from collections import OrderedDict
 import dns.resolver
 
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool, SpiderFootCorrelator, logger
+from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool, logger
 from spiderfoot.logger import logWorkerSetup
 
 
@@ -123,8 +123,6 @@ class SpiderFootScanner():
                 f"targetType is {type(targetType)}; expected str()")
         if not targetType:
             raise ValueError("targetType value is blank")
-
-        self.__targetType = targetType
 
         if not isinstance(moduleList, list):
             raise TypeError(
@@ -480,15 +478,26 @@ class SpiderFootScanner():
             self.__dbh.close()
 
     def runCorrelations(self) -> None:
-        """Run correlation rules."""
+        """Run correlation rules using the modular engine."""
+        from spiderfoot.correlation.rule_executor import RuleExecutor
+        from spiderfoot.correlation.event_enricher import EventEnricher
+        from spiderfoot.correlation.result_aggregator import ResultAggregator
 
         self.__sf.status(
             f"Running {len(self.__config['__correlationrules__'])} correlation rules on scan {self.__scanId}.")
-        ruleset = dict()
-        for rule in self.__config['__correlationrules__']:
-            ruleset[rule['id']] = rule['rawYaml']
-        corr = SpiderFootCorrelator(self.__dbh, ruleset, self.__scanId)
-        corr.run_correlations()
+        rules = self.__config['__correlationrules__']
+        executor = RuleExecutor(self.__dbh, rules, scan_ids=[self.__scanId])
+        results = executor.run()
+        # Enrich results (optional, can be expanded)
+        enricher = EventEnricher(self.__dbh)
+        for rule_id, result in results.items():
+            if 'events' in result:
+                result['events'] = enricher.enrich_sources(self.__scanId, result['events'])
+                result['events'] = enricher.enrich_entities(self.__scanId, result['events'])
+        # Aggregate results (optional)
+        aggregator = ResultAggregator()
+        agg_count = aggregator.aggregate(list(results.values()), method='count')
+        self.__sf.status(f"Correlated {agg_count} results for scan {self.__scanId}")
 
     def waitForThreads(self) -> None:
         """Wait for threads.

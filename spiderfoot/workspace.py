@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
-from spiderfoot import SpiderFootDb, SpiderFootHelpers, SpiderFootCorrelator
+from spiderfoot import SpiderFootDb, SpiderFootHelpers
 
 
 class SpiderFootWorkspace:

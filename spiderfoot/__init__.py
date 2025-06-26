@@ -20,7 +20,6 @@ from .helpers import SpiderFootHelpers
 from .plugin import SpiderFootPlugin
 from .target import SpiderFootTarget
 from .threadpool import SpiderFootThreadPool
-from .correlation import SpiderFootCorrelator
 
 # Logger import - assuming it exists in the package
 try:
@@ -37,7 +36,6 @@ __all__ = [
     'SpiderFootPlugin',
     'SpiderFootTarget',
     'SpiderFootThreadPool',
-    'SpiderFootCorrelator',
     'logger',
     '__version__'
 ]

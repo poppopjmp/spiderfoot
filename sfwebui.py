@@ -604,6 +604,404 @@ class SpiderFootWebUi:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scancorrelations_modular(self: 'SpiderFootWebUi', id: str) -> list:
+        """Run modular correlation engine for a scan and return results."""
+        from spiderfoot.correlation.rule_executor import RuleExecutor
+        from spiderfoot.correlation.event_enricher import EventEnricher
+        from spiderfoot.correlation.result_aggregator import ResultAggregator
+        dbh = SpiderFootDb(self.config)
+        rules = self.config.get('__correlationrules__', [])
+        scan_id = id
+        executor = RuleExecutor(dbh, rules, scan_ids=[scan_id])
+        results = executor.run()
+        enricher = EventEnricher(dbh)
+        for rule_id, result in results.items():
+            if 'events' in result:
+                result['events'] = enricher.enrich_sources(scan_id, result['events'])
+                result['events'] = enricher.enrich_entities(scan_id, result['events'])
+        aggregator = ResultAggregator()
+        agg_count = aggregator.aggregate(list(results.values()), method='count')
+        return {'count': agg_count, 'results': results}
+
+    def searchBase(self: 'SpiderFootWebUi', id: str = None, eventType: str = None, value: str = None) -> list:
+        """Search.
+
+        Args:
+            id (str): scan ID
+            eventType (str): TBD
+            value (str): TBD
+
+        Returns:
+            list: search results
+        """
+        retdata = []
+
+        if not id and not eventType and not value:
+            return retdata
+
+        if not value:
+            value = ''
+
+        regex = ""
+        if value.startswith("/") and value.endswith("/"):
+            regex = value[1:len(value) - 1]
+            value = ""
+
+        value = value.replace('*', '%')
+        if value in [None, ""] and regex in [None, ""]:
+            value = "%"
+            regex = ""
+
+        dbh = SpiderFootDb(self.config)
+        criteria = {
+            'scan_id': id or '',
+            'type': eventType or '',
+            'value': value or '',
+            'regex': regex or '',
+        }
+
+        try:
+            data = dbh.search(criteria)
+        except Exception:
+            return retdata
+
+        for row in data:
+            lastseen = time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
+            escapeddata = html.escape(row[1])
+            escapedsrc = html.escape(row[2])
+            retdata.append([lastseen, escapeddata, escapedsrc,
+                            row[3], row[5], row[6], row[7], row[8], row[10],
+                            row[11], row[4], row[13], row[14]])
+
+        return retdata
+
+    def buildExcel(self: 'SpiderFootWebUi', data: list, columnNames: list, sheetNameIndex: int = 0) -> str:
+        """Convert supplied raw data into Excel format.
+
+        Args:
+            data (list): Scan result as list
+            columnNames (list): column names
+            sheetNameIndex (int): TBD
+
+        Returns:
+            str: Excel workbook
+        """
+        rowNums = dict()
+        workbook = openpyxl.Workbook()
+        defaultSheet = workbook.active
+        columnNames.pop(sheetNameIndex)
+        allowed_sheet_chars = string.ascii_uppercase + string.digits + '_'
+        
+        for row in data:
+            sheetName = "".join(
+                [c for c in str(row.pop(sheetNameIndex)) if c.upper() in allowed_sheet_chars])
+            try:
+                worksheet = workbook[sheetName]
+            except KeyError:
+                worksheet = workbook.create_sheet(sheetName)
+                rowNums[sheetName] = 1
+                # Write headers
+                for col_num, header in enumerate(columnNames, 1):
+                    worksheet.cell(row=1, column=col_num, value=header)
+                rowNums[sheetName] = 2
+
+            # Write row
+            for col_num, cell_value in enumerate(row, 1):
+                worksheet.cell(row=rowNums[sheetName], column=col_num, value=str(cell_value))
+
+            rowNums[sheetName] += 1
+
+        if rowNums:
+            workbook.remove(defaultSheet)
+
+        # Sort sheets alphabetically
+        workbook._sheets.sort(key=lambda ws: ws.title)
+
+        # Save workbook
+        with BytesIO() as f:
+            workbook.save(f)
+            f.seek(0)
+            return f.read()
+
+    #
+    # USER INTERFACE PAGES
+    #
+
+    @cherrypy.expose
+    def scanexportlogs(self: 'SpiderFootWebUi', id: str, dialect: str = "excel") -> bytes:
+        """Get scan log.
+
+        Args:
+            id (str): scan ID
+            dialect (str): CSV dialect (default: excel)
+
+        Returns:
+            bytes: scan logs in CSV format
+        """
+        dbh = SpiderFootDb(self.config)
+
+        try:
+            data = dbh.scanLogs(id)
+        except Exception:
+            return json.dumps(self.jsonify_error("404", "Scan ID not found")).encode("utf-8")
+
+        if not data:
+            return json.dumps(self.jsonify_error("404", "No scan logs found")).encode("utf-8")
+
+        fileobj = StringIO()
+        parser = csv.writer(fileobj, dialect=dialect)
+        parser.writerow(["Date", "Component", "Type", "Event", "Event ID"])
+        for row in data:
+            parser.writerow([str(x) for x in row])
+        cherrypy.response.headers[
+            'Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.log.csv"
+        cherrypy.response.headers['Content-Type'] = "application/csv"
+        cherrypy.response.headers['Pragma'] = "no-cache"
+        return fileobj.getvalue().encode('utf-8')
+
+    @cherrypy.expose
+    def scancorrelationsexport(self: 'SpiderFootWebUi', id: str, filetype: str = "csv", dialect: str = "excel") -> str:
+        """Get scan correlation data in CSV or Excel format.
+
+        Args:
+            id (str): scan ID
+            filetype (str): type of file ("xlsx|excel" or "csv")
+            dialect (str): CSV dialect (default: excel)
+
+        Returns:
+            str: results in CSV or Excel format
+        """
+        dbh = SpiderFootDb(self.config)
+
+        try:
+            data = dbh.scanCorrelations(id)
+        except Exception:
+            return self.error("Scan ID not found")
+
+        try:
+            scan = dbh.scanInstanceGet(id)
+        except Exception:
+            return self.error("Scan ID not found")
+
+        headings = ["Rule Name", "Correlation", "Risk", "Description"]
+
+        if filetype.lower() in ["xlsx", "excel"]:
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}-correlations.xlsx"
+            cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return self.buildExcel(data, headings)
+
+        if filetype.lower() == 'csv':
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}-correlations.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(headings)
+            for row in data:
+                parser.writerow([str(x) for x in row])
+            return fileobj.getvalue()
+
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scaneventresultexport(self: 'SpiderFootWebUi', id: str, type: str, filetype: str = "csv", dialect: str = "excel") -> str:
+        """Get scan event result data in CSV or Excel format.
+
+        Args:
+            id (str): scan ID
+            type (str): TBD
+            filetype (str): type of file ("xlsx|excel" or "csv")
+            dialect (str): CSV dialect (default: excel)
+
+        Returns:
+            str: results in CSV or Excel format
+        """
+        dbh = SpiderFootDb(self.config)
+        data = dbh.scanResultEvent(id, type)
+
+        if filetype.lower() in ["xlsx", "excel"]:
+            rows = []
+            for row in data:
+                if row[4] == "ROOT":
+                    continue
+                lastseen = time.strftime(
+                    "%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
+                datafield = str(row[1]).replace(
+                    "<SFURL>", "").replace("</SFURL>", "")
+                rows.append([lastseen, str(row[4]), str(row[3]),
+                            str(row[2]), row[13], datafield])
+
+            fname = "SpiderFoot.xlsx"
+            cherrypy.response.headers[
+                'Content-Disposition'] = f"attachment; filename={fname}"
+            cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return self.buildExcel(rows, ["Updated", "Type", "Module", "Source",
+                                   "F/P", "Data"], sheetNameIndex=1)
+
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(
+                ["Updated", "Type", "Module", "Source", "F/P", "Data"])
+            for row in data:
+                if row[4] == "ROOT":
+                    continue
+                lastseen = time.strftime(
+                    "%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
+                datafield = str(row[1]).replace(
+                    "<SFURL>", "").replace("</SFURL>", "")
+                parser.writerow([lastseen, str(row[4]), str(
+                    row[3]), str(row[2]), row[13], datafield])
+
+            fname = "SpiderFoot.csv"
+            cherrypy.response.headers[
+                'Content-Disposition'] = f"attachment; filename={fname}"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scaneventresultexportmulti(self: 'SpiderFootWebUi', ids: str, filetype: str = "csv", dialect: str = "excel") -> str:
+        """Get scan event result data in CSV or Excel format for multiple
+        scans.
+
+        Args:
+            ids (str): comma separated list of scan IDs
+            filetype (str): type of file ("xlsx|excel" or "csv")
+            dialect (str): CSV dialect (default: excel)
+
+        Returns:
+            str: results in CSV or Excel format
+        """
+        dbh = SpiderFootDb(self.config)
+        scaninfo = dict()
+        data = list()
+        scan_name = ""
+
+        for id in ids.split(','):
+            scaninfo[id] = dbh.scanInstanceGet(id)
+            if scaninfo[id] is None:
+                continue
+            scan_name = scaninfo[id][0]
+            data = data + dbh.scanResultEvent(id)
+
+        if not data:
+            return None
+
+        if filetype.lower() in ["xlsx", "excel"]:
+            rows = []
+            for row in data:
+                if row[4] == "ROOT":
+                    continue
+                lastseen = time.strftime(
+                    "%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
+                datafield = str(row[1]).replace(
+                    "<SFURL>", "").replace("</SFURL>", "")
+                rows.append([scaninfo[row[12]][0], lastseen, str(row[4]), str(row[3]),
+                            str(row[2]), row[13], datafield])
+
+            if len(ids.split(',')) > 1 or scan_name == "":
+                fname = "SpiderFoot.xlsx"
+            else:
+                fname = scan_name + "-SpiderFoot.xlsx"
+
+            cherrypy.response.headers[
+                'Content-Disposition'] = f"attachment; filename={fname}"
+            cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return self.buildExcel(rows, ["Scan Name", "Updated", "Type", "Module",
+                                   "Source", "F/P", "Data"], sheetNameIndex=2)
+
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(["Scan Name", "Updated", "Type",
+                            "Module", "Source", "F/P", "Data"])
+            for row in data:
+                if row[4] == "ROOT":
+                    continue
+                lastseen = time.strftime(
+                    "%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
+                datafield = str(row[1]).replace(
+                    "<SFURL>", "").replace("</SFURL>", "")
+                parser.writerow([scaninfo[row[12]][0], lastseen, str(row[4]), str(row[3]),
+                                str(row[2]), row[13], datafield])
+
+            if len(ids.split(',')) > 1 or scan_name == "":
+                fname = "SpiderFoot.csv"
+            else:
+                fname = scan_name + "-SpiderFoot.csv"
+
+            cherrypy.response.headers[
+                'Content-Disposition'] = f"attachment; filename={fname}"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scansearchresultexport(self: 'SpiderFootWebUi', id: str, eventType: str = None, value: str = None, filetype: str = "csv", dialect: str = "excel") -> str:
+        """Get search result data in CSV or Excel format.
+
+        Args:
+            id (str): scan ID
+            eventType (str): TBD
+            value (str): TBD
+            filetype (str): type of file ("xlsx|excel" or "csv")
+            dialect (str): CSV dialect (default: excel)
+
+        Returns:
+            str: results in CSV or Excel format
+        """
+        data = self.searchBase(id, eventType, value)
+
+        if not data:
+            return None
+
+        if filetype.lower() in ["xlsx", "excel"]:
+            rows = []
+            for row in data:
+                if row[10] == "ROOT":
+                    continue
+                datafield = str(row[1]).replace(
+                    "<SFURL>", "").replace("</SFURL>", "")
+                rows.append([row[0], str(row[10]), str(row[3]),
+                            str(row[2]), row[11], datafield])
+            cherrypy.response.headers['Content-Disposition'] = "attachment; filename=SpiderFoot.xlsx"
+            cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return self.buildExcel(rows, ["Updated", "Type", "Module", "Source",
+                                   "F/P", "Data"], sheetNameIndex=1)
+
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(
+                ["Updated", "Type", "Module", "Source", "F/P", "Data"])
+            for row in data:
+                if row[10] == "ROOT":
+                    continue
+                datafield = str(row[1]).replace(
+                    "<SFURL>", "").replace("</SFURL>", "")
+                parser.writerow([row[0], str(row[10]), str(
+                    row[3]), str(row[2]), row[11], datafield])
+
+            cherrypy.response.headers['Content-Disposition'] = "attachment; filename=SpiderFoot.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
     def scanexportjsonmulti(self: 'SpiderFootWebUi', ids: str) -> str:
         """Get scan event result data in JSON format for multiple scans.
 

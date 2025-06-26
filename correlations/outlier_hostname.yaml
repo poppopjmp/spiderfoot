@@ -7,6 +7,7 @@ meta:
     total hostnames found. Outliers can often reveal
     entities that are rare and therefore interesting.
   risk: INFO
+  scope: workspace
 collections:
   - collect:
       - method: exact

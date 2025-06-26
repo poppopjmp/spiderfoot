@@ -1,0 +1,19 @@
+id: cross_scan_outlier_email
+version: 1
+meta:
+  name: Outlier email address across scans
+  description: >
+    An email address that appears in only one scan (or a very small percentage of scans) may indicate a unique or targeted account, or a spear phishing attempt.
+  risk: INFO
+  scope: workspace
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: EMAILADDR
+aggregation:
+  field: data
+analysis:
+  - method: outlier
+    maximum_percent: 10
+headline: "Outlier email address {data} found in only one scan or a small subset of scans"

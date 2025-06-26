@@ -1,0 +1,20 @@
+id: cross_scan_shared_malicious
+version: 1
+meta:
+  name: Shared malicious indicator across scans
+  description: >
+    The same malicious indicator (IP, domain, email, etc.) was found in multiple scans, indicating a broader threat or compromise.
+  risk: HIGH
+  scope: workspace
+collections:
+  - collect:
+      - method: regex
+        field: type
+        value: 'MALICIOUS_.*|BLACKLIST_.*'
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Malicious indicator {data} found in multiple scans"

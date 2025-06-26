@@ -1,0 +1,20 @@
+id: cross_scan_shared_ip
+version: 1
+meta:
+  name: Shared IP address across scans
+  description: >
+    The same IP address was found in multiple scans, indicating shared infrastructure or hosting.
+  risk: INFO
+  scope: workspace
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: IP_ADDRESS
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "IP address {data} found in multiple scans"

@@ -1,0 +1,20 @@
+id: cross_scan_shared_exposure
+version: 1
+meta:
+  name: Shared exposure (open port/service) across scans
+  description: >
+    The same open port or exposed service was found on multiple targets, which may indicate a common vulnerability or misconfiguration across the organization.
+  risk: MEDIUM
+  scope: workspace
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: TCP_PORT_OPEN
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Open port {data} found exposed on multiple targets in the workspace"
