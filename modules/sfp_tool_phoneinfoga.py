@@ -12,7 +12,7 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
         "summary": "Gather phone number intelligence using PhoneInfoga.",
         "flags": ["tool", "invasive"],
         "useCases": ["Investigate"],
-        "categories": ["Phone Numbers"],
+        "categories": ["Content Analysis"],
         "toolDetails": {
             "name": "PhoneInfoga",
             "description": "PhoneInfoga is one of the most advanced tools to scan international phone numbers.",

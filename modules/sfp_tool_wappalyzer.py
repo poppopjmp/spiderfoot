@@ -23,6 +23,7 @@ class sfp_tool_wappalyzer(SpiderFootPlugin):
         "flags": ["tool"],
         "useCases": ["Footprint", "Investigate"],
         "categories": ["Content Analysis"],
+        "labels": ["tool", "apikey"],
         "toolDetails": {
             "name": "Wappalyzer API",
             "description": "Wappalyzer identifies technologies on websites, including content management systems, ecommerce platforms, JavaScript frameworks, analytics tools and much more, using the official API.",

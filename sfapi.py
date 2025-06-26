@@ -44,7 +44,6 @@ from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import __version__
 from spiderfoot.workspace import SpiderFootWorkspace
-from spiderfoot.workflow import SpiderFootWorkflow
 from sfscan import startSpiderFootScanner
 
 # Configure logging
@@ -839,20 +838,20 @@ async def start_multi_scan(workspace_id: str, multi_scan_request: MultiScanReque
             raise HTTPException(status_code=400, detail="No targets available for scanning")
         
         # Create workflow for multi-target scan
-        from spiderfoot.workflow import SpiderFootWorkflow
-        workflow = SpiderFootWorkflow(config.get_config(), workspace)
+        # from spiderfoot.workflow import SpiderFootWorkflow
+        # workflow = SpiderFootWorkflow(config.get_config(), workspace)
         
         # Start multi-target scan in background
-        background_tasks.add_task(
-            start_multi_scan_background,
-            workflow,
-            targets,
-            multi_scan_request.modules,
-            multi_scan_request.scan_options
-        )
+        # background_tasks.add_task(
+        #     start_multi_scan_background,
+        #     workflow,
+        #     targets,
+        #     multi_scan_request.modules,
+        #     multi_scan_request.scan_options
+        # )
         
         return {
-            "workflow_id": workflow.workflow_id,
+            # "workflow_id": workflow.workflow_id,
             "targets": targets,
             "modules": multi_scan_request.modules,
             "message": f"Multi-target scan started for {len(targets)} targets"
@@ -863,22 +862,22 @@ async def start_multi_scan(workspace_id: str, multi_scan_request: MultiScanReque
         logger.error(f"Failed to start multi-scan: {e}")
         raise HTTPException(status_code=500, detail="Failed to start multi-scan")
 
-async def start_multi_scan_background(workflow, targets: List[str], 
-                                    modules: List[str], scan_options: Dict[str, Any]):
-    """Start multi-target scan in background"""
-    try:
-        # Convert targets to proper format
-        target_objects = []
-        for target in targets:
-            target_type = SpiderFootHelpers.targetTypeFromString(target)
-            target_objects.append({
-                'value': target,
-                'type': target_type
-            })
+# async def start_multi_scan_background(workflow, targets: List[str], 
+#                                     modules: List[str], scan_options: Dict[str, Any]):
+#     """Start multi-target scan in background"""
+#     try:
+#         # Convert targets to proper format
+#         target_objects = []
+#         for target in targets:
+#             target_type = SpiderFootHelpers.targetTypeFromString(target)
+#             target_objects.append({
+#                 'value': target,
+#                 'type': target_type
+#             })
         
-        workflow.start_multi_target_scan(target_objects, modules, scan_options)
-    except Exception as e:
-        logger.error(f"Failed to start multi-target scan: {e}")
+#         workflow.start_multi_target_scan(target_objects, modules, scan_options)
+#     except Exception as e:
+#         logger.error(f"Failed to start multi-target scan: {e}")
 
 # Configuration endpoints
 @config_router.get("/config")
