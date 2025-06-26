@@ -77,6 +77,8 @@ class sfp_archiveorg(SpiderFootPlugin):
         'staticpages': "Query the Wayback Machine for historic versions of purely static URLs.",
         "webframeworkpages": "Query the Wayback Machine for historic versions of URLs using Javascript frameworks.",
         "javascriptpages": "Query the Wayback Machine for historic versions of URLs using Javascript.",
+        '_fetchtimeout': 'Timeout for HTTP requests (seconds).',
+        '_useragent': 'User-Agent string to use for HTTP requests.'
     }
 
     results = None

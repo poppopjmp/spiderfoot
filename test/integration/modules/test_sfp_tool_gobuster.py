@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch, MagicMock, mock_open
 import json
+import tempfile
 
 from modules.sfp_tool_gobuster import sfp_tool_gobuster
 from sflib import SpiderFoot
@@ -49,12 +50,15 @@ class TestModuleIntegrationToolGobuster(unittest.TestCase):
     }))
     @patch.object(sfp_tool_gobuster, 'execute_command')
     def test_handleEvent_gobuster(self, mock_execute_command, mock_open_file, mock_isfile):
-        # Simulate execute_command returning a fake file path
-        mock_execute_command.return_value = '/tmp/fake_gobuster_output.json'
+        # Use a platform-independent temp file path
+        temp_output = tempfile.NamedTemporaryFile(delete=False)
+        temp_output.close()
+        mock_execute_command.return_value = temp_output.name
+        # Use a valid target type for SpiderFootTarget
         target = SpiderFootTarget('example.com', 'INTERNET_NAME')
         self.module.setTarget(target)
         parent_evt = SpiderFootEvent('ROOT', 'rootdata', 'test', None)
-        evt = SpiderFootEvent('INTERNET_NAME', 'example.com', 'test', parent_evt)
+        evt = SpiderFootEvent('URL', 'http://example.com', 'test', parent_evt)
         self.module.handleEvent(evt)
         event_types = [e.eventType for e in self.events]
         if 'URL_DIRECTORY' not in event_types:
@@ -90,7 +94,7 @@ class TestModuleIntegrationToolGobuster(unittest.TestCase):
         target = SpiderFootTarget('example.com', 'INTERNET_NAME')
         self.module.setTarget(target)
         parent_evt = SpiderFootEvent('ROOT', 'rootdata', 'test', None)
-        evt = SpiderFootEvent('INTERNET_NAME', 'example.com', 'test', parent_evt)
+        evt = SpiderFootEvent('URL', 'http://example.com', 'test', parent_evt)
         self.events.clear()
         self.module.handleEvent(evt)
         event_types = [e.eventType for e in self.events]
