@@ -58,6 +58,7 @@ class TestModuleIntegrationToolNmap(unittest.TestCase):
             print('DEBUG: Events collected:', self.events)
             print('DEBUG: Event types:', event_types)
             print('DEBUG: errorState:', self.module.errorState)
+            print('DEBUG: results:', self.module.results)
         assert 'OPERATING_SYSTEM' in event_types, 'OPERATING_SYSTEM event not emitted (local).'
 
     @patch('os.path.isfile', return_value=True)
@@ -98,4 +99,5 @@ class TestModuleIntegrationToolNmap(unittest.TestCase):
             print('DEBUG: Events collected:', self.events)
             print('DEBUG: Event types:', event_types)
             print('DEBUG: errorState:', self.module.errorState)
+            print('DEBUG: results:', self.module.results)
         assert 'OPERATING_SYSTEM' in event_types, 'OPERATING_SYSTEM event not emitted (remote).'
