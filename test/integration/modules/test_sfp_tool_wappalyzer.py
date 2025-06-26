@@ -16,7 +16,7 @@ def test_integration_wappalyzer_api_success():
     target_value = 'example.com'
     target = SpiderFootTarget(target_value, 'INTERNET_NAME')
     module.setTarget(target)
-    event = SpiderFootEvent('INTERNET_NAME', target_value, 'sfp_tool_wappalyzer', '')
+    event = SpiderFootEvent('INTERNET_NAME', target_value, 'sfp_tool_wappalyzer', None)
     with patch('modules.sfp_tool_wappalyzer.requests.get') as mock_get, \
          patch('modules.sfp_tool_wappalyzer.sfp_tool_wappalyzer.notifyListeners') as mock_notify:
         mock_resp = MagicMock()
@@ -47,7 +47,7 @@ def test_integration_wappalyzer_api_error():
     target_value = 'example.com'
     target = SpiderFootTarget(target_value, 'INTERNET_NAME')
     module.setTarget(target)
-    event = SpiderFootEvent('INTERNET_NAME', target_value, 'sfp_tool_wappalyzer', '')
+    event = SpiderFootEvent('INTERNET_NAME', target_value, 'sfp_tool_wappalyzer', None)
     with patch('modules.sfp_tool_wappalyzer.requests.get') as mock_get:
         mock_resp = MagicMock()
         mock_resp.status_code = 403
@@ -68,7 +68,7 @@ def test_integration_wappalyzer_api_no_technologies():
     target_value = 'example.com'
     target = SpiderFootTarget(target_value, 'INTERNET_NAME')
     module.setTarget(target)
-    event = SpiderFootEvent('INTERNET_NAME', target_value, 'sfp_tool_wappalyzer', '')
+    event = SpiderFootEvent('INTERNET_NAME', target_value, 'sfp_tool_wappalyzer', None)
     with patch('modules.sfp_tool_wappalyzer.requests.get') as mock_get:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
