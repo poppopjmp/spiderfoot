@@ -7,10 +7,10 @@ meta:
   risk: MEDIUM
   scope: workspace
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value: TCP_PORT_OPEN
+  collect:
+    - method: exact
+      field: type
+      value: TCP_PORT_OPEN
 aggregation:
   field: data
 analysis:

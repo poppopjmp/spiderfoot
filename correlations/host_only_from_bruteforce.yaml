@@ -10,14 +10,14 @@ meta:
     be publicly exposed/used.
   risk: LOW
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: INTERNET_NAME
       - method: exact
         field: module
         value: sfp_dnsbrute
-  - collect:
+  collect:
       - method: exact
         field: type
         value: INTERNET_NAME

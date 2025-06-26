@@ -246,7 +246,7 @@ def test_rule_loader_yaml():
     risk: INFO
     scope: scan
   collections:
-    - collect:
+    collect:
         - method: exact
           field: type
           value: EMAILADDR

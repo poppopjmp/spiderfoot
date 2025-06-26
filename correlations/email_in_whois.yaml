@@ -12,7 +12,7 @@ meta:
     to GDPR.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: EMAILADDR

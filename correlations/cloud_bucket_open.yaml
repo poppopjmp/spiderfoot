@@ -9,7 +9,7 @@ meta:
     listed, even if needing to be publicly accessible.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: CLOUD_STORAGE_BUCKET

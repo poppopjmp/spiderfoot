@@ -8,7 +8,7 @@ meta:
     failures.
   risk: LOW
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: HTTP_CODE

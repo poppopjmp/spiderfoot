@@ -9,10 +9,10 @@ meta:
   risk: INFO
   scope: workspace
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value: EMAILADDR
+  collect:
+    - method: exact
+      field: type
+      value: EMAILADDR
 aggregation:
   field: data
 analysis:

@@ -9,12 +9,12 @@ meta:
   risk: INFO
   scope: workspace
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value:
-          - IP_ADDRESS
-          - IPV6_ADDRESS
+  collect:
+    - method: exact
+      field: type
+      value:
+        - IP_ADDRESS
+        - IPV6_ADDRESS
 aggregation:
   field: data
 analysis:

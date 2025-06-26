@@ -7,7 +7,7 @@ meta:
   risk: HIGH
   scope: workspace
 collections:
-  - collect:
+  collect:
       - method: regex
         field: type
         value: 'MALICIOUS_.*|BLACKLIST_.*'

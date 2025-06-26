@@ -14,7 +14,7 @@ meta:
     an impact on the target.
   risk: LOW
 collections:
-  - collect:
+  collect:
       - method: regex
         field: type
         value:

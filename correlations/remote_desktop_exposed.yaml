@@ -11,16 +11,16 @@ meta:
     or unpatched vulnerabilities.
   risk: HIGH
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value: TCP_PORT_OPEN
-      - method: regex
-        field: data
-        value:
-          - .*:5900$
-          - .*:3389$
-          - .*:4000$
+  collect:
+    - method: exact
+      field: type
+      value: TCP_PORT_OPEN
+    - method: regex
+      field: data
+      value:
+        - .*:5900$
+        - .*:3389$
+        - .*:4000$
 aggregation:
   field: source.data
 headline: "Remote desktop exposed to the Internet: {source.data}"

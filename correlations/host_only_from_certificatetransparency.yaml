@@ -11,7 +11,7 @@ meta:
     be publicly exposed/used.
   risk: LOW
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: INTERNET_NAME
@@ -20,7 +20,7 @@ collections:
         value:
           - sfp_crt
           - sfp_certspotter
-  - collect:
+  collect:
       - method: exact
         field: type
         value: INTERNET_NAME

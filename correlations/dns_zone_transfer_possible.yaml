@@ -9,7 +9,7 @@ meta:
     real need to be enabled in modern networks.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: module
         value: sfp_dnszonexfer

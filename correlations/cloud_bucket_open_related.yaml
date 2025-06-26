@@ -10,7 +10,7 @@ meta:
     for actual association with the target is necessary.
   risk: LOW
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: CLOUD_STORAGE_BUCKET

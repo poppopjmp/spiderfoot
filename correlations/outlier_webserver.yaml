@@ -13,10 +13,10 @@ meta:
   risk: MEDIUM
   scope: workspace
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value: WEBSERVER_BANNER
+  collect:
+    - method: exact
+      field: type
+      value: WEBSERVER_BANNER
 aggregation:
   field: data
 analysis:

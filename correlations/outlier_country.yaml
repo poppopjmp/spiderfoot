@@ -9,7 +9,7 @@ meta:
   risk: INFO
   scope: workspace
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: COUNTRY_NAME

@@ -12,7 +12,7 @@ meta:
     or unpatched vulnerabilities.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: TCP_PORT_OPEN

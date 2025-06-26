@@ -11,7 +11,7 @@ meta:
     GDPR.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: HUMAN_NAME

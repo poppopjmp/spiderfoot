@@ -9,7 +9,7 @@ meta:
     verify the certificate.
   risk: MEDIUM
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: SSL_CERTIFICATE_EXPIRED

@@ -14,7 +14,7 @@ meta:
     Internet due to its presence in these lists.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: regex
         field: type
         value:

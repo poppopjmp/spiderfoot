@@ -7,7 +7,7 @@ meta:
     server is likely sensitive or important.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: HTTP_CODE

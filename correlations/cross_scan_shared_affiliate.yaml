@@ -7,10 +7,10 @@ meta:
   risk: INFO
   scope: workspace
 collections:
-  - collect:
-      - method: regex
-        field: type
-        value: 'AFFILIATE.*|COHOST.*'
+  collect:
+    - method: regex
+      field: type
+      value: 'AFFILIATE.*|COHOST.*'
 aggregation:
   field: data
 analysis:

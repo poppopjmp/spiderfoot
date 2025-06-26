@@ -9,11 +9,11 @@ meta:
     infrastructure and workings of the target.
   risk: MEDIUM
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: INTERNAL_IP_ADDRESS
-  - collect:
+  collect:
       - method: exact
         field: type
         value: IP_ADDRESS

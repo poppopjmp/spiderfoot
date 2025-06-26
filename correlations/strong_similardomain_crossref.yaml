@@ -10,7 +10,7 @@ meta:
     included in the scope of scanning to ensure more complete coverage.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: module
         value: sfp_crossref

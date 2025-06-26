@@ -7,7 +7,7 @@ meta:
   risk: HIGH
   scope: workspace
 collections:
-  - collect:
+  collect:
       - method: regex
         field: type
         value: 'LEAKED_.*|PASTELEAK_.*|CREDENTIAL_.*'

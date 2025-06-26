@@ -8,7 +8,7 @@ meta:
     cause connecting services to fail due to being unable to verify the certificate.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: TCP_PORT_OPEN

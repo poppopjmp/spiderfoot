@@ -7,7 +7,7 @@ meta:
     such as software versions, names, email addresses and hostnames.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: RAW_FILE_META_DATA

@@ -7,10 +7,10 @@ meta:
   risk: INFO
   scope: workspace
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value: DOMAIN_NAME
+  collect:
+    - method: exact
+      field: type
+      value: DOMAIN_NAME
 aggregation:
   field: data
 analysis:

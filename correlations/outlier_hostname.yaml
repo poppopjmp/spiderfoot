@@ -9,10 +9,10 @@ meta:
   risk: INFO
   scope: workspace
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value: INTERNET_NAME
+  collect:
+    - method: exact
+      field: type
+      value: INTERNET_NAME
 aggregation:
   field: data
 analysis:

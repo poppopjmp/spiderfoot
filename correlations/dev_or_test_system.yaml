@@ -9,7 +9,7 @@ meta:
     than other systems.
   risk: MEDIUM
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: INTERNET_NAME
