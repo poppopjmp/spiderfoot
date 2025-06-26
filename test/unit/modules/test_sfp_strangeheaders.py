@@ -34,7 +34,7 @@ class TestModuleStrangeHeaders(SpiderFootTestBase):
         module = sfp_strangeheaders()
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -66,7 +66,7 @@ class TestModuleStrangeHeaders(SpiderFootTestBase):
         source_event = evt
         evt = SpiderFootEvent(event_type, event_data,
                               event_module, source_event)
-        evt.actualSource = "https://spiderfoot.net/example"
+        evt.actualSource = "https://van1shland.io/example"
 
         with self.assertRaises(Exception) as cm:
             module.handleEvent(evt)
@@ -80,7 +80,7 @@ class TestModuleStrangeHeaders(SpiderFootTestBase):
         module = sfp_strangeheaders()
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -104,7 +104,7 @@ class TestModuleStrangeHeaders(SpiderFootTestBase):
         source_event = evt
         evt = SpiderFootEvent(event_type, event_data,
                               event_module, source_event)
-        evt.actualSource = "https://spiderfoot.net/example"
+        evt.actualSource = "https://van1shland.io/example"
 
         result = module.handleEvent(evt)
 

@@ -41,7 +41,7 @@ class TestModuleBase64(SpiderFootTestBase):
         module = sfp_base64()
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -61,7 +61,7 @@ class TestModuleBase64(SpiderFootTestBase):
             module, sfp_base64)
 
         event_type = 'ROOT'
-        event_data = 'https://spiderfoot.net/path?param=example%20data%20U3BpZGVyRm9vdA%3d%3d%20example%20data'
+        event_data = 'https://van1shland.io/path?param=example%20data%20U3BpZGVyRm9vdA%3d%3d%20example%20data'
         event_module = ''
         source_event = ''
 
@@ -80,7 +80,7 @@ class TestModuleBase64(SpiderFootTestBase):
         module = sfp_base64()
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)

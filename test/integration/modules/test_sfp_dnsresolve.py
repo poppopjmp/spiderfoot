@@ -41,7 +41,7 @@ class TestModuleIntegrationDnsResolve(unittest.TestCase):
         module.setup(sf, dict())
         module.__name__ = "sfp_dnsresolve"
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -52,10 +52,10 @@ class TestModuleIntegrationDnsResolve(unittest.TestCase):
                 resolve_targets = module.resolveTargets(invalid_type, False)
                 self.assertIsInstance(resolve_targets, list)
 
-        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
+        target = SpiderFootTarget("van1shland.io", "INTERNET_NAME")
         resolve_targets = module.resolveTargets(target, False)
         self.assertIsInstance(resolve_targets, list)
-        self.assertIn('spiderfoot.net', resolve_targets)
+        self.assertIn('van1shland.io', resolve_targets)
 
         target = SpiderFootTarget("127.0.0.1", "IP_ADDRESS")
         resolve_targets = module.resolveTargets(target, False)
@@ -80,7 +80,7 @@ class TestModuleIntegrationDnsResolve(unittest.TestCase):
         module.setup(sf, dict(self.default_options))
         module.__name__ = "sfp_dnsresolve"
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -112,7 +112,7 @@ class TestModuleIntegrationDnsResolve(unittest.TestCase):
         module.setup(sf, dict(self.default_options))
         module.__name__ = "sfp_dnsresolve"
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -144,7 +144,7 @@ class TestModuleIntegrationDnsResolve(unittest.TestCase):
         module.setup(sf, dict(self.default_options))
         module.__name__ = "sfp_dnsresolve"
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -176,7 +176,7 @@ class TestModuleIntegrationDnsResolve(unittest.TestCase):
         module.setup(sf, dict(self.default_options))
         module.__name__ = "sfp_dnsresolve"
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -188,13 +188,13 @@ class TestModuleIntegrationDnsResolve(unittest.TestCase):
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
 
         event_type = 'RAW_RIR_DATA'
-        event_data = 'example data www.spiderfoot.net example data'
+        event_data = 'example data www.van1shland.io example data'
         event_module = 'example module'
         source_event = evt
         evt = SpiderFootEvent(event_type, event_data, event_module, source_event)
 
         events = []
         with mock_mod.patch.object(module, 'notifyListeners', side_effect=events.append):
-            with mock_mod.patch.object(sf, 'resolveHost', return_value=['www.spiderfoot.net']):
+            with mock_mod.patch.object(sf, 'resolveHost', return_value=['www.van1shland.io']):
                 module.handleEvent(evt)
-        self.assertTrue(any(e.eventType == 'INTERNET_NAME' and e.data == 'www.spiderfoot.net' for e in events))
+        self.assertTrue(any(e.eventType == 'INTERNET_NAME' and e.data == 'www.van1shland.io' for e in events))

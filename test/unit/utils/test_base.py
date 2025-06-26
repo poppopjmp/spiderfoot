@@ -35,10 +35,12 @@ class SpiderFootTestBase(unittest.TestCase):
             '__outputfilter': None,
             '_useragent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0',
             '_dnsserver': '',
-            '_fetchtimeout': 5,            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
+            '_fetchtimeout': 5,
+            '_internettlds': 'https://publicsuffix.org/list/effective_tld_names.dat',
             '_internettlds_cache': 72,
             '_genericusers': ",".join(SpiderFootHelpers.usernamesFromWordlists(['generic-usernames'])),
-            '__database': f"{self._temp_dir}/spiderfoot_test.db",            '__modules__': {
+            '__database': f"{self._temp_dir}/spiderfoot_test.db",
+            '__modules__': {
                 'sfp_example': {
                     'descr': 'Example module for testing',
                     'provides': ['EXAMPLE_EVENT'],
@@ -49,6 +51,15 @@ class SpiderFootTestBase(unittest.TestCase):
                     },
                     'opts': {
                         'example_option': 'default_value'
+                    },
+                    'meta': {
+                        'targetType': 'INTERNET_NAME',
+                        'name': 'sfp_example',
+                        'title': 'Example',
+                        'summary': 'Example module for testing',
+                        'flags': [],
+                        'categories': ['test'],
+                        'labels': ['test']
                     }
                 }
             },

@@ -27,7 +27,7 @@ class TestModuleIntegrationcomodo(unittest.TestCase):
         sf = SpiderFoot(self.default_options)
         module = sfp_comodo()
         module.setup(sf, dict(self.default_options))
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -57,7 +57,7 @@ class TestModuleIntegrationcomodo(unittest.TestCase):
         sf = SpiderFoot(self.default_options)
         module = sfp_comodo()
         module.setup(sf, dict(self.default_options))
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)

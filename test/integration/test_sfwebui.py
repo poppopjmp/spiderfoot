@@ -214,19 +214,19 @@ class TestSpiderFootWebUiRoutes(helper.CPWebCase):
 
     def test_startscan_invalid_modules_returns_error(self):
         self.getPage(
-            "/startscan?scanname=example-scan&scantarget=spiderfoot.net&modulelist=&typelist=&usecase=")
+            "/startscan?scanname=example-scan&scantarget=van1shland.io&modulelist=&typelist=&usecase=")
         self.assertStatus('200 OK')
         self.assertInBody('Invalid request: no modules specified for scan.')
 
     def test_startscan_invalid_typelist_returns_error(self):
         self.getPage(
-            "/startscan?scanname=example-scan&scantarget=spiderfoot.net&modulelist=&typelist=doesnotexist&usecase=")
+            "/startscan?scanname=example-scan&scantarget=van1shland.io&modulelist=&typelist=doesnotexist&usecase=")
         self.assertStatus('200 OK')
         self.assertInBody('Invalid request: no modules specified for scan.')
 
     def test_startscan_should_start_a_scan(self):
         self.getPage(
-            "/startscan?scanname=spiderfoot.net&scantarget=spiderfoot.net&modulelist=doesnotexist&typelist=doesnotexist&usecase=doesnotexist")
+            "/startscan?scanname=van1shland.io&scantarget=van1shland.io&modulelist=doesnotexist&typelist=doesnotexist&usecase=doesnotexist")
         self.assertStatus('303 See Other')
 
     def test_stopscan_invalid_scan_id_returns_404(self):

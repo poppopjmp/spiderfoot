@@ -209,7 +209,7 @@ class TestSpiderFoot(SpiderFootTestBase):
         sf = SpiderFoot(self.default_options)
         sf.opts['_internettlds'] = self.test_tlds
         keyword = sf.domainKeyword(
-            'www.spiderfoot.net', sf.opts.get('_internettlds'))
+            'www.van1shland.io', sf.opts.get('_internettlds'))
         self.assertIsInstance(keyword, str)
         self.assertEqual('spiderfoot', keyword)
 
@@ -221,12 +221,12 @@ class TestSpiderFoot(SpiderFootTestBase):
 
     def test_useProxyForUrl_argument_url_with_public_host_should_return_True(self):
         opts = self.default_options.copy()
-        proxy_host = 'proxy.spiderfoot.net'
+        proxy_host = 'proxy.van1shland.io'
         opts['_socks1type'] = '5'
         opts['_socks2addr'] = proxy_host
         opts['_socks3port'] = '8080'
         sf = SpiderFoot(opts)
-        self.assertTrue(sf.useProxyForUrl('spiderfoot.net'))
+        self.assertTrue(sf.useProxyForUrl('van1shland.io'))
         self.assertTrue(sf.useProxyForUrl('1.1.1.1'))
 
     def test_fetchUrl_argument_url_should_return_http_response_as_dict(self):
@@ -247,7 +247,7 @@ class TestSpiderFoot(SpiderFootTestBase):
         sf = SpiderFoot(self.default_options)
         res = sf.fetchUrl("")
         self.assertEqual(None, res)
-        res = sf.fetchUrl("://spiderfoot.net/")
+        res = sf.fetchUrl("://van1shland.io/")
         self.assertEqual(None, res)
 
     def setUp(self):

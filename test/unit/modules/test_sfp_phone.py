@@ -42,7 +42,7 @@ class TestModulePhone(SpiderFootTestBase):
         module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -87,7 +87,7 @@ class TestModulePhone(SpiderFootTestBase):
         module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -123,7 +123,7 @@ class TestModulePhone(SpiderFootTestBase):
         module.__name__ = "sfp_phone"
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)

@@ -35,7 +35,7 @@ class TestModuleEmail(SpiderFootTestBase):
         module = sfp_email()
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -45,7 +45,7 @@ class TestModuleEmail(SpiderFootTestBase):
             if str(event.eventType) != expected:
                 raise Exception(f"{event.eventType} != {expected}")
 
-            expected = 'firstname.lastname@spiderfoot.net'
+            expected = 'firstname.lastname@van1shland.io'
             if str(event.data) != expected:
                 raise Exception(f"{event.data} != {expected}")
 
@@ -61,7 +61,7 @@ class TestModuleEmail(SpiderFootTestBase):
                               event_module, source_event)
 
         event_type = 'TARGET_WEB_CONTENT'
-        event_data = '<p>sample data firstname.lastname@spiderfoot.net sample data.</p>'
+        event_data = '<p>sample data firstname.lastname@van1shland.io sample data.</p>'
         event_module = 'example module'
         source_event = evt
         evt = SpiderFootEvent(event_type, event_data,

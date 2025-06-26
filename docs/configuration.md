@@ -365,7 +365,7 @@ dns_cache_ttl = 300
 ```ini
 [network]
 # Default user agent
-user_agent = Mozilla/5.0 (compatible; SpiderFoot/5.0; +https://spiderfoot.net)
+user_agent = Mozilla/5.0 (compatible; SpiderFoot/5.0; +https://van1shland.io)
 
 # Rotate user agents
 rotate_user_agents = true

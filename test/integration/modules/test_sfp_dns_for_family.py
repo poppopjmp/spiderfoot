@@ -20,7 +20,7 @@ class TestModuleIntegrationDnsForFamily(unittest.TestCase):
     def test_handleEvent_event_data_safe_internet_name_not_blocked_should_not_return_event(self, mock_resolve):
         # Simulate DNS response not matching the block IP
         mock_resolve.return_value = [MagicMock(__str__=lambda self: '1.2.3.4')]
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         self.module.setTarget(target)
@@ -35,7 +35,7 @@ class TestModuleIntegrationDnsForFamily(unittest.TestCase):
     def test_handleEvent_event_data_adult_internet_name_blocked_should_return_event(self, mock_resolve):
         # Simulate DNS response matching the block IP
         mock_resolve.return_value = [MagicMock(__str__=lambda self: '159.69.10.249')]
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         self.module.setTarget(target)

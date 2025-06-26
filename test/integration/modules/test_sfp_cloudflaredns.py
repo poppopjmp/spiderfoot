@@ -25,7 +25,7 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
 
     def test_handleEvent_safe_domain(self):
         """Test handleEvent() with a safe domain."""
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         self.module.setTarget(target)
@@ -47,7 +47,7 @@ class TestModuleIntegrationCloudflaredns(unittest.TestCase):
 
     def test_handleEvent_blocked_domain(self):
         """Test handleEvent() with a blocked domain."""
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         self.module.setTarget(target)

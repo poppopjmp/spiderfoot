@@ -124,6 +124,7 @@ class SpiderFootScanner():
         if not targetType:
             raise ValueError("targetType value is blank")
 
+        self.__targetType = targetType
         if not isinstance(moduleList, list):
             raise TypeError(
                 f"moduleList is {type(moduleList)}; expected list()")
