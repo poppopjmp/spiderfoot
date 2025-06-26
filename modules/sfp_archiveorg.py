@@ -76,7 +76,7 @@ class sfp_archiveorg(SpiderFootPlugin):
         'javapages': "Query the Wayback Machine for historic versions of URLs using Java Applets.",
         'staticpages': "Query the Wayback Machine for historic versions of purely static URLs.",
         "webframeworkpages": "Query the Wayback Machine for historic versions of URLs using Javascript frameworks.",
-        "javascriptpages": "Query the Wayback Machine for historic versions of URLs using Javascript."
+        "javascriptpages": "Query the Wayback Machine for historic versions of URLs using Javascript.",
     }
 
     results = None

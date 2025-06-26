@@ -149,7 +149,7 @@ class sfp_tool_nmap(SpiderFootPlugin):
                 return
 
             # Normalize path
-            if self.opts['nmappath'].endswith('nmap'):
+            if self.opts['nmappath'].endswith('nmap') or self.opts['nmappath'].endswith('nmap.exe'):
                 exe = self.opts['nmappath']
             elif self.opts['nmappath'].endswith('/'):
                 exe = self.opts['nmappath'] + "nmap"

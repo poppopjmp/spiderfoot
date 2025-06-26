@@ -57,6 +57,9 @@ class TestModuleIntegrationToolGobuster(unittest.TestCase):
         evt = SpiderFootEvent('INTERNET_NAME', 'example.com', 'test', parent_evt)
         self.module.handleEvent(evt)
         event_types = [e.eventType for e in self.events]
+        if 'URL_DIRECTORY' not in event_types:
+            print('DEBUG: Events collected:', self.events)
+            print('DEBUG: Event types:', event_types)
         assert 'URL_DIRECTORY' in event_types, 'URL_DIRECTORY event not emitted.'
         assert 'URL_FILE' in event_types, 'URL_FILE event not emitted.'
 
