@@ -117,6 +117,7 @@ class sfp_dnsresolve(SpiderFootPlugin):
             if r:
                 ret.extend(r)
         if t == "INTERNET_NAME":
+            ret.append(v)  # Always include the original domain name
             r = self.sf.resolveHost(v)
             if r:
                 ret.extend(r)

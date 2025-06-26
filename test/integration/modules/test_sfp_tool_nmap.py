@@ -69,6 +69,8 @@ class TestModuleIntegrationToolNmap(unittest.TestCase):
         self.module.setTarget(target)
         evt = SpiderFootEvent('IP_ADDRESS', '1.2.3.4', 'test', None)
         self.events.clear()
+        self.module.results.clear()
+        self.module.errorState = False
         self.module.handleEvent(evt)
         event_types = [e.eventType for e in self.events]
         assert 'OPERATING_SYSTEM' in event_types, 'OPERATING_SYSTEM event not emitted (remote).'

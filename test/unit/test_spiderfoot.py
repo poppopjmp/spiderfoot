@@ -211,7 +211,7 @@ class TestSpiderFoot(SpiderFootTestBase):
         keyword = sf.domainKeyword(
             'www.van1shland.io', sf.opts.get('_internettlds'))
         self.assertIsInstance(keyword, str)
-        self.assertEqual('spiderfoot', keyword)
+        self.assertEqual('van1shland', keyword)
 
     def test_domain_keyword_invalid_domain_should_return_none(self):
         sf = SpiderFoot(self.default_options)

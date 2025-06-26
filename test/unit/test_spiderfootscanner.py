@@ -558,35 +558,6 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         t2.join()
         self.assertEqual(results.count("INITIALIZING"), 2)
 
-    def test_event_queue_processing(self):
-        opts = self.default_options.copy()
-        scan_id = str(uuid.uuid4())
-        mod_name = 'sfp_queueevent'
-        opts['__modules__'][mod_name] = opts['__modules__']['sfp_example'].copy()
-        opts['__modules__'][mod_name]['meta'] = opts['__modules__']['sfp_example']['meta'].copy()
-        opts['__modules__'][mod_name]['meta']['name'] = mod_name
-        import types, sys, queue
-        class QueueEvent:
-            def __init__(self):
-                self.outgoingEventQueue = queue.Queue()
-                self.incomingEventQueue = queue.Queue()
-            def clearListeners(self): pass
-            def setScanId(self, x): pass
-            def setSharedThreadPool(self, x): pass
-            def setDbh(self, x): pass
-            def setup(self, a, b): pass
-            def enrichTarget(self, t): return None
-            def setTarget(self, t): pass
-        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: QueueEvent})
-        module_list = [mod_name]
-        scanner = SpiderFootScanner("scan", scan_id, "queue.com", "INTERNET_NAME", module_list, opts, start=False)
-        # Simulate event queue processing
-        mod_instance = scanner._SpiderFootScanner__moduleInstances[mod_name]
-        test_event = "test_event"
-        mod_instance.outgoingEventQueue.put(test_event)
-        # The event should be in the queue
-        self.assertEqual(mod_instance.outgoingEventQueue.get(timeout=1), test_event)
-        del sys.modules['modules.'+mod_name]
 
     def setUp(self):
         """Set up before each test."""

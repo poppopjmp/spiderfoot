@@ -20,7 +20,7 @@ class sfp_tool_wappalyzer(SpiderFootPlugin):
     meta = {
         "name": "Tool - Wappalyzer (API)",
         "summary": "Wappalyzer identifies technologies on websites using the official API.",
-        "flags": ["tool"],
+        "flags": ["tool", "apikey"],
         "useCases": ["Footprint", "Investigate"],
         "categories": ["Content Analysis"],
         "labels": ["tool", "apikey"],
@@ -29,7 +29,15 @@ class sfp_tool_wappalyzer(SpiderFootPlugin):
             "description": "Wappalyzer identifies technologies on websites, including content management systems, ecommerce platforms, JavaScript frameworks, analytics tools and much more, using the official API.",
             "website": "https://www.wappalyzer.com/",
             "repository": "https://github.com/AliasIO/wappalyzer"
-        }
+        },
+        "dataSource": {
+            "type": "api",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "apiKeyInstructions": [
+                "Sign up at https://www.wappalyzer.com/api/ to obtain an API key.",
+                "Enter your API key in the module options."
+            ]
+        },
     }
 
     opts = {

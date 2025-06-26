@@ -10,7 +10,7 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
     meta = {
         "name": "Tools - PhoneInfoga",
         "summary": "Gather phone number intelligence using PhoneInfoga.",
-        "flags": ["tool", "invasive"],
+        "flags": ["tool", "invasive", "apikey"],
         "useCases": ["Investigate"],
         "categories": ["Content Analysis"],
         "labels": ["tool", "invasive", "apikey"],
@@ -19,6 +19,14 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
             "description": "PhoneInfoga is one of the most advanced tools to scan international phone numbers.",
             "website": "https://github.com/sundowndev/phoneinfoga",
             "repository": "https://github.com/sundowndev/phoneinfoga",
+        },
+        "dataSource": {
+            "type": "api",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "apiKeyInstructions": [
+                "See https://github.com/sundowndev/phoneinfoga for API key setup instructions.",
+                "Enter your API key in the module options."
+            ]
         },
     }
 
