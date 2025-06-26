@@ -1,0 +1,20 @@
+id: cross_scan_shared_domain
+version: "1"
+meta:
+  name: Shared domain name across scans
+  description: >
+    The same domain name was found in multiple scans, indicating shared infrastructure or relationships.
+  risk: INFO
+  scope: workspace
+collections:
+  collect:
+    - method: exact
+      field: type
+      value: DOMAIN_NAME
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Domain name {data} found in multiple scans"

@@ -12,6 +12,8 @@
 
 import os.path
 from subprocess import PIPE, Popen
+import paramiko
+import io
 
 from netaddr import IPNetwork
 
@@ -42,14 +44,31 @@ class sfp_tool_nmap(SpiderFootPlugin):
     opts = {
         'nmappath': "",
         'netblockscan': True,
-        'netblockscanmax': 24
+        'netblockscanmax': 24,
+        # Remote execution options
+        'remote_enabled': False,
+        'remote_host': '',
+        'remote_user': '',
+        'remote_password': '',
+        'remote_ssh_key': '',  # (deprecated, for backward compatibility)
+        'remote_ssh_key_data': '',  # New: paste private key directly
+        'remote_tool_path': '',
+        'remote_tool_args': '',
     }
 
     # Option descriptions
     optdescs = {
         'nmappath': "Path to the where the nmap binary lives. Must be set.",
         'netblockscan': "Port scan all IPs within identified owned netblocks?",
-        'netblockscanmax': "Maximum netblock/subnet size to scan IPs within (CIDR value, 24 = /24, 16 = /16, etc.)"
+        'netblockscanmax': "Maximum netblock/subnet size to scan IPs within (CIDR value, 24 = /24, 16 = /16, etc.)",
+        'remote_enabled': "Enable remote execution via SSH (true/false)",
+        'remote_host': "Remote SSH host (IP or hostname)",
+        'remote_user': "Remote SSH username",
+        'remote_password': "Remote SSH password (optional if using key)",
+        'remote_ssh_key': "(Deprecated) Path to SSH private key (use remote_ssh_key_data instead)",
+        'remote_ssh_key_data': "Paste your SSH private key here (PEM format, multi-line)",
+        'remote_tool_path': "Path to the tool on the remote machine",
+        'remote_tool_args': "Extra arguments/config for the tool on the remote machine",
     }
 
     results = None
@@ -116,50 +135,57 @@ class sfp_tool_nmap(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        if not self.opts['nmappath']:
-            self.error(
-                "You enabled sfp_tool_nmap but did not set a path to the tool!")
-            self.errorState = True
-            return
-
-        # Normalize path
-        if self.opts['nmappath'].endswith('nmap'):
-            exe = self.opts['nmappath']
-        elif self.opts['nmappath'].endswith('/'):
-            exe = self.opts['nmappath'] + "nmap"
+        # Remote execution support (exclusive)
+        if self.opts.get("remote_enabled"):
+            output = self.run_remote_tool(eventData)
+            if not output:
+                return
+            content = output
         else:
-            self.error("Could not recognize your nmap path configuration.")
-            self.errorState = True
-            return
+            if not self.opts['nmappath']:
+                self.error(
+                    "You enabled sfp_tool_nmap but did not set a path to the tool!")
+                self.errorState = True
+                return
 
-        # If tool is not found, abort
-        if not os.path.isfile(exe):
-            self.error("File does not exist: " + exe)
-            self.errorState = True
-            return
-
-        # Sanitize domain name.
-        if not self.sf.validIP(eventData) and not self.sf.validIpNetwork(eventData):
-            self.error("Invalid input, refusing to run.")
-            return
-
-        try:
-            p = Popen([exe, "-O", "--osscan-limit", eventData],
-                      stdout=PIPE, stderr=PIPE)
-            stdout, stderr = p.communicate(input=None)
-            if p.returncode == 0:
-                content = stdout.decode('utf-8', errors='replace')
+            # Normalize path
+            if self.opts['nmappath'].endswith('nmap') or self.opts['nmappath'].endswith('nmap.exe'):
+                exe = self.opts['nmappath']
+            elif self.opts['nmappath'].endswith('/'):
+                exe = self.opts['nmappath'] + "nmap"
             else:
-                self.error("Unable to read Nmap content.")
-                self.debug(f"Error running Nmap: {stderr}, {stdout}")
+                self.error("Could not recognize your nmap path configuration.")
+                self.errorState = True
                 return
 
-            if "No exact OS matches for host" in content or "OSScan results may be unreliable" in content:
-                self.debug(f"Couldn't reliably detect the OS for {eventData}")
+            # If tool is not found, abort
+            if not os.path.isfile(exe):
+                self.error("File does not exist: " + exe)
+                self.errorState = True
                 return
-        except Exception as e:
-            self.error(f"Unable to run Nmap: {e}")
-            return
+
+            # Sanitize domain name.
+            if not self.sf.validIP(eventData) and not self.sf.validIpNetwork(eventData):
+                self.error("Invalid input, refusing to run.")
+                return
+
+            try:
+                p = Popen([exe, "-O", "--osscan-limit", eventData],
+                          stdout=PIPE, stderr=PIPE)
+                stdout, stderr = p.communicate(input=None)
+                if p.returncode == 0:
+                    content = stdout.decode('utf-8', errors='replace')
+                else:
+                    self.error("Unable to read Nmap content.")
+                    self.debug(f"Error running Nmap: {stderr}, {stdout}")
+                    return
+
+                if "No exact OS matches for host" in content or "OSScan results may be unreliable" in content:
+                    self.debug(f"Couldn't reliably detect the OS for {eventData}")
+                    return
+            except Exception as e:
+                self.error(f"Unable to run Nmap: {e}")
+                return
 
         if not content:
             self.debug("No content from Nmap to parse.")
@@ -201,5 +227,47 @@ class sfp_tool_nmap(SpiderFootPlugin):
             except Exception as e:
                 self.error(f"Couldn't parse the output of Nmap: {e}")
                 return
+
+    def run_remote_tool(self, target):
+        host = self.opts.get("remote_host")
+        user = self.opts.get("remote_user")
+        password = self.opts.get("remote_password")
+        ssh_key_data = self.opts.get("remote_ssh_key_data")
+        ssh_key_path = self.opts.get("remote_ssh_key")
+        tool_path = self.opts.get("remote_tool_path")
+        tool_args = self.opts.get("remote_tool_args", "")
+        if not (host and user and tool_path):
+            self.error("Remote execution enabled but host/user/tool_path not set.")
+            return None
+        cmd = f'{tool_path} -O --osscan-limit {target}'
+        if tool_args:
+            cmd += f' {tool_args}'
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            pkey = None
+            if ssh_key_data:
+                try:
+                    pkey = paramiko.RSAKey.from_private_key(io.StringIO(ssh_key_data))
+                except Exception as e:
+                    self.error(f"Failed to parse pasted SSH key: {e}")
+                    return None
+            if pkey:
+                ssh.connect(host, username=user, pkey=pkey, password=password or None, timeout=10)
+            elif ssh_key_path:
+                ssh.connect(host, username=user, key_filename=ssh_key_path, password=password or None, timeout=10)
+            else:
+                ssh.connect(host, username=user, password=password or None, timeout=10)
+            stdin, stdout, stderr = ssh.exec_command(cmd)
+            output = stdout.read().decode()
+            err = stderr.read().decode()
+            ssh.close()
+            if err:
+                self.error(f"Remote tool error: {err}")
+                return None
+            return output
+        except Exception as e:
+            self.error(f"SSH connection or execution failed: {e}")
+            return None
 
 # End of sfp_tool_nmap class

@@ -1,5 +1,5 @@
 id: host_only_from_bruteforce
-version: 1
+version: "1"
 meta:
   name: Host only from bruteforcing
   description: >
@@ -10,14 +10,14 @@ meta:
     be publicly exposed/used.
   risk: LOW
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: INTERNET_NAME
       - method: exact
         field: module
         value: sfp_dnsbrute
-  - collect:
+  collect:
       - method: exact
         field: type
         value: INTERNET_NAME

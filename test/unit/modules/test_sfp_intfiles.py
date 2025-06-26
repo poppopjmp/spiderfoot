@@ -34,7 +34,7 @@ class TestModuleIntfiles(SpiderFootTestBase):
         module = sfp_intfiles()
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -44,7 +44,7 @@ class TestModuleIntfiles(SpiderFootTestBase):
             if str(event.eventType) != expected:
                 raise Exception(f"{event.eventType} != {expected}")
 
-            expected = 'https://spiderfoot.net/example.zip'
+            expected = 'https://van1shland.io/example.zip'
             if str(event.data) != expected:
                 raise Exception(f"{event.data} != {expected}")
 
@@ -61,7 +61,7 @@ class TestModuleIntfiles(SpiderFootTestBase):
                               event_module, source_event)
 
         event_type = 'LINKED_URL_INTERNAL'
-        event_data = 'https://spiderfoot.net/example.zip'
+        event_data = 'https://van1shland.io/example.zip'
         event_module = 'example module'
         source_event = evt
 
@@ -80,7 +80,7 @@ class TestModuleIntfiles(SpiderFootTestBase):
         module = sfp_intfiles()
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -99,7 +99,7 @@ class TestModuleIntfiles(SpiderFootTestBase):
                               event_module, source_event)
 
         event_type = 'LINKED_URL_INTERNAL'
-        event_data = 'https://spiderfoot.net/example'
+        event_data = 'https://van1shland.io/example'
         event_module = 'example module'
         source_event = evt
 

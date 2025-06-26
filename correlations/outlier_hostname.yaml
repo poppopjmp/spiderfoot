@@ -1,5 +1,5 @@
 id: outlier_hostname
-version: 1
+version: "1"
 meta:
   name: Outlier hostname
   description: >
@@ -7,11 +7,12 @@ meta:
     total hostnames found. Outliers can often reveal
     entities that are rare and therefore interesting.
   risk: INFO
+  scope: workspace
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value: INTERNET_NAME
+  collect:
+    - method: exact
+      field: type
+      value: INTERNET_NAME
 aggregation:
   field: data
 analysis:

@@ -35,7 +35,7 @@ class TestModuleCompany(SpiderFootTestBase):
         module = sfp_company()
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -81,7 +81,7 @@ class TestModuleCompany(SpiderFootTestBase):
         module = sfp_company()
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -127,7 +127,7 @@ class TestModuleCompany(SpiderFootTestBase):
         module = sfp_company()
         module.setup(sf, dict())
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)

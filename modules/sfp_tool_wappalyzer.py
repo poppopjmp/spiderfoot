@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_tool_wappalyzer
-# Purpose:      SpiderFoot plug-in for using the 'Wappalyzer' tool.
-#               Tool: https://github.com/EnableSecurity/wappalyzer
+# Purpose:      SpiderFoot plug-in for using the Wappalyzer API directly.
 #
 # Author:      Steve Micallef <steve@binarypool.com>
 #
@@ -11,50 +10,52 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-import os
 import sys
 import json
-from subprocess import Popen, PIPE, TimeoutExpired
-
+import requests
 from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
 
 
 class sfp_tool_wappalyzer(SpiderFootPlugin):
-
     meta = {
-        "name": "Tool - Wappalyzer",
-        "summary": "Wappalyzer indentifies technologies on websites.",
-        "flags": ["tool"],
+        "name": "Tool - Wappalyzer (API)",
+        "summary": "Wappalyzer identifies technologies on websites using the official API.",
+        "flags": ["tool", "apikey"],
         "useCases": ["Footprint", "Investigate"],
         "categories": ["Content Analysis"],
+        "labels": ["tool", "apikey"],
         "toolDetails": {
-            "name": "Wappalyzer",
-            "description": "Wappalyzer identifies technologies on websites, including content management systems, ecommerce platforms, JavaScript frameworks, analytics tools and much more.",
+            "name": "Wappalyzer API",
+            "description": "Wappalyzer identifies technologies on websites, including content management systems, ecommerce platforms, JavaScript frameworks, analytics tools and much more, using the official API.",
             "website": "https://www.wappalyzer.com/",
-            "repository": "https://github.com/AliasIO/Wappalyzer"
-        }
+            "repository": "https://github.com/AliasIO/wappalyzer"
+        },
+        "dataSource": {
+            "type": "api",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "apiKeyInstructions": [
+                "Sign up at https://www.wappalyzer.com/api/ to obtain an API key.",
+                "Enter your API key in the module options."
+            ]
+        },
     }
 
-    # Default options
     opts = {
-        "node_path": "/usr/bin/node",
-        "wappalyzer_path": ""
+        "wappalyzer_api_key": "",
+        "wappalyzer_api_url": "https://api.wappalyzer.com/v2/lookup/"
     }
 
-    # Option descriptions
     optdescs = {
-        "node_path": "Path to your NodeJS binary. Must be set.",
-        "wappalyzer_path": "Path to your wappalyzer cli.js file. Must be set.",
+        "wappalyzer_api_key": "Your Wappalyzer API key (required). Get one at https://www.wappalyzer.com/api/.",
+        "wappalyzer_api_url": "Wappalyzer API endpoint (default should be fine)."
     }
 
-    # Target
     results = None
     errorState = False
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
         self.results = self.tempStorage()
-
         for opt in userOpts.keys():
             self.opts[opt] = userOpts[opt]
 
@@ -64,7 +65,6 @@ class sfp_tool_wappalyzer(SpiderFootPlugin):
     def producedEvents(self):
         return ["OPERATING_SYSTEM", "SOFTWARE_USED", "WEBSERVER_TECHNOLOGY"]
 
-    # Handle events sent to this module
     def handleEvent(self, event):
         eventName = event.eventType
         srcModuleName = event.module
@@ -75,18 +75,8 @@ class sfp_tool_wappalyzer(SpiderFootPlugin):
         if self.errorState:
             return
 
-        if not self.opts['wappalyzer_path']:
-            self.error(
-                "You enabled sfp_tool_wappalyzer but did not set a path to the tool!")
-            self.errorState = True
-            return
-
-        exe = self.opts['wappalyzer_path']
-        if self.opts['wappalyzer_path'].endswith('/'):
-            exe = f"{exe}cli.js"
-
-        if not os.path.isfile(exe):
-            self.error(f"File does not exist: {exe}")
+        if not self.opts["wappalyzer_api_key"]:
+            self.error("You must set your Wappalyzer API key in the module options!")
             self.errorState = True
             return
 
@@ -94,61 +84,59 @@ class sfp_tool_wappalyzer(SpiderFootPlugin):
             self.debug("Invalid input, skipping.")
             return
 
-        # Don't look up stuff twice
         if eventData in self.results:
             self.debug(f"Skipping {eventData} as already scanned.")
             return
         self.results[eventData] = True
 
+        url = self.opts["wappalyzer_api_url"].rstrip("/")
+        headers = {"x-api-key": self.opts["wappalyzer_api_key"]}
+        params = {"urls": f"https://{eventData}"}
+
         try:
-            args = [self.opts["node_path"], exe, f"https://{eventData}"]
-            p = Popen(args, stdout=PIPE, stderr=PIPE)
-            try:
-                stdout, stderr = p.communicate(input=None, timeout=60)
-                if p.returncode == 0:
-                    content = stdout.decode(sys.stdin.encoding)
-                else:
-                    self.error("Unable to read Wappalyzer content.")
-                    self.error(f"Error running Wappalyzer: {stderr}, {stdout}")
-                    return
-            except TimeoutExpired:
-                p.kill()
-                stdout, stderr = p.communicate()
-                self.debug("Timed out waiting for Wappalyzer to finish")
+            resp = requests.get(url, headers=headers, params=params, timeout=30)
+            if resp.status_code != 200:
+                self.error(f"Wappalyzer API error: {resp.status_code} {resp.text}")
+                self.errorState = True
                 return
+            data = resp.json()
         except Exception as e:
-            self.error(f"Unable to run Wappalyzer: {e}")
+            self.error(f"Unable to query Wappalyzer API: {e}")
+            self.errorState = True
+            return
+
+        if not data or not isinstance(data, list) or not data[0].get("technologies"):
+            self.debug(f"No technologies found for {eventData}")
             return
 
         try:
-            data = json.loads(content)
-            for item in data["technologies"]:
-                for cat in item["categories"]:
+            for item in data[0]["technologies"]:
+                for cat in item.get("categories", []):
                     if cat["name"] == "Operating systems":
                         evt = SpiderFootEvent(
                             "OPERATING_SYSTEM",
                             item["name"],
-                            self.__name__,
+                            self.__class__.__name__,
                             event,
                         )
                     elif cat["name"] == "Web servers":
                         evt = SpiderFootEvent(
                             "WEBSERVER_TECHNOLOGY",
                             item["name"],
-                            self.__name__,
+                            self.__class__.__name__,
                             event,
                         )
                     else:
                         evt = SpiderFootEvent(
                             "SOFTWARE_USED",
                             item["name"],
-                            self.__name__,
+                            self.__class__.__name__,
                             event,
                         )
                     self.notifyListeners(evt)
         except (KeyError, ValueError) as e:
-            self.error(f"Couldn't parse the JSON output of Wappalyzer: {e}")
-            self.error(f"Wappalyzer content: {content}")
+            self.error(f"Couldn't parse the JSON output of Wappalyzer API: {e}")
+            self.error(f"Wappalyzer API content: {data}")
             return
 
 

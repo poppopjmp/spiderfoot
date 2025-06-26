@@ -281,10 +281,10 @@ class sfp_abstractapi(SpiderFootPlugin):
                 return
 
             e = SpiderFootEvent("RAW_RIR_DATA", str(data),
-                                self.__name__, event)
+                                self.__class__.__name__, event)
             self.notifyListeners(e)
 
-            e = SpiderFootEvent("COMPANY_NAME", name, self.__name__, event)
+            e = SpiderFootEvent("COMPANY_NAME", name, self.__class__.__name__, event)
             self.notifyListeners(e)
 
             linkedin_url = data.get("linkedin_url")
@@ -296,7 +296,7 @@ class sfp_abstractapi(SpiderFootPlugin):
                 e = SpiderFootEvent(
                     "SOCIAL_MEDIA",
                     f"LinkedIn (Company): <SFURL>{linkedin_url}</SFURL>",
-                    self.__name__,
+                    self.__class__.__name__,
                     event,
                 )
                 self.notifyListeners(e)
@@ -306,7 +306,7 @@ class sfp_abstractapi(SpiderFootPlugin):
             geoinfo = ", ".join(filter(None, [locality, country]))
 
             if geoinfo:
-                e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
+                e = SpiderFootEvent("GEOINFO", geoinfo, self.__class__.__name__, event)
                 self.notifyListeners(e)
 
         elif eventName == "PHONE_NUMBER":
@@ -326,13 +326,13 @@ class sfp_abstractapi(SpiderFootPlugin):
                 return
 
             e = SpiderFootEvent("RAW_RIR_DATA", str(data),
-                                self.__name__, event)
+                                self.__class__.__name__, event)
             self.notifyListeners(e)
 
             carrier = data.get("carrier")
             if carrier:
                 e = SpiderFootEvent(
-                    "PROVIDER_TELCO", carrier, self.__name__, event)
+                    "PROVIDER_TELCO", carrier, self.__class__.__name__, event)
                 self.notifyListeners(e)
 
             location = data.get("location")
@@ -344,7 +344,7 @@ class sfp_abstractapi(SpiderFootPlugin):
             geoinfo = ", ".join(filter(None, [location, country_name]))
 
             if geoinfo:
-                e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
+                e = SpiderFootEvent("GEOINFO", geoinfo, self.__class__.__name__, event)
                 self.notifyListeners(e)
 
         elif eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
@@ -360,7 +360,7 @@ class sfp_abstractapi(SpiderFootPlugin):
                 return
 
             e = SpiderFootEvent("RAW_RIR_DATA", str(data),
-                                self.__name__, event)
+                                self.__class__.__name__, event)
             self.notifyListeners(e)
 
             geoinfo = ", ".join(
@@ -378,7 +378,7 @@ class sfp_abstractapi(SpiderFootPlugin):
             )
 
             if geoinfo:
-                e = SpiderFootEvent("GEOINFO", geoinfo, self.__name__, event)
+                e = SpiderFootEvent("GEOINFO", geoinfo, self.__class__.__name__, event)
                 self.notifyListeners(e)
 
             latitude = data.get("latitude")
@@ -387,7 +387,7 @@ class sfp_abstractapi(SpiderFootPlugin):
                 e = SpiderFootEvent(
                     "PHYSICAL_COORDINATES",
                     f"{latitude}, {longitude}",
-                    self.__name__,
+                    self.__class__.__name__,
                     event,
                 )
                 self.notifyListeners(e)

@@ -1,5 +1,5 @@
 id: outlier_webserver
-version: 1
+version: "1"
 meta:
   name: Outlier web server
   description: >
@@ -11,11 +11,12 @@ meta:
     may be an indicator of Shadow IT or unmtaintained
     infrastructure.
   risk: MEDIUM
+  scope: workspace
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value: WEBSERVER_BANNER
+  collect:
+    - method: exact
+      field: type
+      value: WEBSERVER_BANNER
 aggregation:
   field: data
 analysis:

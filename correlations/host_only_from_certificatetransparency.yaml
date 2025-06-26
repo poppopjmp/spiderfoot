@@ -1,5 +1,5 @@
 id: host_only_from_certificatetransparency
-version: 1
+version: "1"
 meta:
   name: Hostname only from certificate transparency
   description: >
@@ -11,7 +11,7 @@ meta:
     be publicly exposed/used.
   risk: LOW
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: INTERNET_NAME
@@ -20,7 +20,7 @@ collections:
         value:
           - sfp_crt
           - sfp_certspotter
-  - collect:
+  collect:
       - method: exact
         field: type
         value: INTERNET_NAME

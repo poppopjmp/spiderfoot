@@ -1,0 +1,20 @@
+id: cross_scan_shared_leak
+version: "1"
+meta:
+  name: Shared credential or data leak across scans
+  description: >
+    The same leaked credential, password, or sensitive data was found in multiple scans, indicating a widespread compromise or reuse of credentials.
+  risk: HIGH
+  scope: workspace
+collections:
+  collect:
+      - method: regex
+        field: type
+        value: 'LEAKED_.*|PASTELEAK_.*|CREDENTIAL_.*'
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Leaked credential or data {data} found in multiple scans"

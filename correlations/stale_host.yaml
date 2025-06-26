@@ -1,5 +1,5 @@
 id: stale_host
-version: 1
+version: "1"
 meta:
   name: Stale host found
   description: >
@@ -9,11 +9,11 @@ meta:
     may be unmaintained, exposing the target to security risks.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: SSL_CERTIFICATE_EXPIRED
-  - collect:
+  collect:
       - method: exact
         field: type
         value: HTTP_CODE
@@ -23,15 +23,15 @@ collections:
       - method: regex
         field: data
         value: not 40[13]
-  - collect:
+  collect:
       - method: exact
         field: type
         value: ERROR_MESSAGE
-  - collect:
+  collect:
       - method: exact
         field: type
         value: JUNK_FILE
-  - collect:
+  collect:
       - method: regex
         field: type
         value: VULNERABILITY_.*

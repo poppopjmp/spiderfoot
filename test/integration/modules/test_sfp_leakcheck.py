@@ -1,67 +1,81 @@
 # filepath: spiderfoot/test/integration/modules/test_sfpleakcheck.py
 import pytest
-from unittest.mock import patch, MagicMock
+import unittest
+from unittest.mock import patch
+import json
 import os
 
+from modules.sfp_leakcheck import sfp_leakcheck
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from modules.sfp_leakcheck import sfp_leakcheck
-
-# This test requires credentials for the Leakcheck service
-# To run this test, set the environment variables:
-# - SF_SFP_LEAKCHECK_API_KEY
 
 
-@pytest.mark.skipif(
-    not all(os.environ.get(env_var)
-            for env_var in ['SF_SFP_LEAKCHECK_API_KEY']),
-    reason="Integration test - requires Leakcheck credentials"
-)
-class TestModuleIntegrationLeakcheck:
-    """Integration testing for the Leakcheck module."""
-
-    @pytest.fixture
-    def module(self):
-        """Return a Leakcheck module."""
-        sf = SpiderFoot({
-            '_debug': True,
-            '__logging': True,
-            '__outputfilter': None,
-            'api_key': os.environ.get('SF_API_KEY', ''),
+class TestModuleIntegrationLeakcheck(unittest.TestCase):
+    def setUp(self):
+        self.sf = SpiderFoot({
+            '_fetchtimeout': 0.1,
+            '_useragent': 'SpiderFootTestAgent',
+            '_internettlds': 'com,net,org',
+            '_debug': False,
+            '_genericusers': 'info,admin',
+            'api_key': 'DUMMYKEY',
             'checkaffiliates': True,
         })
-        module = sfp_leakcheck()
-        module.setup(sf, {
-            '_debug': True,
-            '__logging': True,
-            '__outputfilter': None,
-            'api_key': os.environ.get('SF_API_KEY', ''),
+        self.module = sfp_leakcheck()
+        self.module.__name__ = 'sfp_leakcheck'
+        self.options = {
+            'api_key': 'DUMMYKEY',
+            '_fetchtimeout': 0.1,
+            '_useragent': 'SpiderFootTestAgent',
+            '_internettlds': 'com,net,org',
+            '_debug': False,
+            '_genericusers': 'info,admin',
             'checkaffiliates': True,
-        })
-        return module
+        }
+        self.module.setup(self.sf, self.options)
+        self.events = []
+        self.module.notifyListeners = self.events.append
 
-    def test_module_produces_events(self, module):
-        """Test whether the module produces events when given input data."""
-        target_value = "example.com"
-        target_type = "DOMAIN_NAME"
-        target = SpiderFootTarget(target_value, target_type)
-        module.setTarget(target)
-
-        event_type = "DOMAIN_NAME"
-        event_data = "example.com"
-        event_module = "test"
-        source_event = SpiderFootEvent("ROOT", "", "", "")
-        evt = SpiderFootEvent(event_type, event_data,
-                              event_module, source_event)
-
-        # We're using a direct call to handleEvent, bypassing the framework's logic
-        # for calling it in order to test it directly.
-        result = module.handleEvent(evt)
-
-        # Assert that the module produced events
-        assert len(module.sf.events) > 0
-
-        # Each event should be a dict with certain required fields
-        for event in module.sf.events:
-            assert event.get('type') is not None
-            assert event.get('data') is not None
+    @patch('time.sleep', return_value=None)
+    @patch.object(SpiderFoot, 'fetchUrl')
+    def test_handleEvent_domain_name(self, mock_fetch, _mock_sleep):
+        # Simulate LeakCheck API response
+        leakcheck_response = {
+            'found': True,
+            'result': [
+                {
+                    'email': 'john@example.com',
+                    'username': 'johnny',
+                    'phone': '+1234567890',
+                    'source': {'name': 'ExampleBreach', 'breach_date': '2020-01-01'},
+                    'country': 'USA',
+                    'ip': '1.2.3.4',
+                    'dob': '1990-01-01',
+                    'password': 'hunter2',
+                    'first_name': 'John',
+                    'last_name': 'Doe',
+                    'zip': '94105',
+                    'address': '123 Main St',
+                    'city': 'San Francisco',
+                }
+            ]
+        }
+        mock_fetch.return_value = {'code': '200', 'content': json.dumps(leakcheck_response)}
+        target = SpiderFootTarget('example.com', 'INTERNET_NAME')
+        self.module.setTarget(target)
+        parent_evt = SpiderFootEvent('ROOT', 'rootdata', 'test', None)
+        evt = SpiderFootEvent('DOMAIN_NAME', 'example.com', 'test', parent_evt)
+        self.module.handleEvent(evt)
+        event_types = [e.eventType for e in self.events]
+        # Check for all expected event types
+        assert 'EMAILADDR' in event_types, 'EMAILADDR event not emitted.'
+        assert 'EMAILADDR_COMPROMISED' in event_types, 'EMAILADDR_COMPROMISED event not emitted.'
+        assert 'ACCOUNT_EXTERNAL_OWNED_COMPROMISED' in event_types, 'ACCOUNT_EXTERNAL_OWNED_COMPROMISED event not emitted.'
+        assert 'PHONE_NUMBER_COMPROMISED' in event_types, 'PHONE_NUMBER_COMPROMISED event not emitted.'
+        assert 'IP_ADDRESS' in event_types, 'IP_ADDRESS event not emitted.'
+        assert 'DATE_HUMAN_DOB' in event_types, 'DATE_HUMAN_DOB event not emitted.'
+        assert 'COUNTRY_NAME' in event_types, 'COUNTRY_NAME event not emitted.'
+        assert 'PASSWORD_COMPROMISED' in event_types, 'PASSWORD_COMPROMISED event not emitted.'
+        assert 'HUMAN_NAME' in event_types, 'HUMAN_NAME event not emitted.'
+        assert 'GEOINFO' in event_types, 'GEOINFO event not emitted.'
+        assert 'RAW_RIR_DATA' in event_types, 'RAW_RIR_DATA event not emitted.'

@@ -329,7 +329,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
         evt = SpiderFootEvent(
             malicious_type,
             f"AbuseIPDB [{eventData}]\n<SFURL>{url}</SFURL>",
-            self.__name__,
+            self.__class__.__name__,
             event
         )
         self.notifyListeners(evt)
@@ -337,7 +337,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
         evt = SpiderFootEvent(
             blacklist_type,
             f"AbuseIPDB [{eventData}]\n<SFURL>{url}</SFURL>",
-            self.__name__,
+            self.__class__.__name__,
             event
         )
         self.notifyListeners(evt)

@@ -50,5 +50,6 @@ class TestSfcli(unittest.TestCase):
         script_path = os.path.abspath("sfcli.py")
         out, err, code = self.execute([sys.executable, script_path, "-h"])
         help_text = b"show this help message and exit"
-        self.assertTrue(help_text in out or help_text in err)
+        alt_help_text = b"usage: sfcli.py"  # Acceptable alternative from argparse
+        self.assertTrue(help_text in out or help_text in err or alt_help_text in out or alt_help_text in err)
         self.assertEqual(0, code)

@@ -31,7 +31,7 @@ class TestModuleIntegrationAdblock(unittest.TestCase):
         mock_rules = mock_mod.Mock()
         mock_rules.should_block.return_value = True
         module.rules = mock_rules
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -59,7 +59,7 @@ class TestModuleIntegrationAdblock(unittest.TestCase):
         module = sfp_adblock()
         module.setup(sf, dict(self.default_options))
         module.__name__ = "sfp_adblock"
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -90,7 +90,7 @@ class TestModuleIntegrationAdblock(unittest.TestCase):
         module = sfp_adblock()
         module.setup(sf, dict(self.default_options))
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)

@@ -30,7 +30,7 @@ class TestModuleIntegrationcleanbrowsing(unittest.TestCase):
         module.setup(sf, dict(self.default_options))
         module.__name__ = "sfp_cleanbrowsing"
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -73,7 +73,7 @@ class TestModuleIntegrationcleanbrowsing(unittest.TestCase):
         module.setup(sf, dict(self.default_options))
         module.__name__ = "sfp_cleanbrowsing"
 
-        target_value = 'spiderfoot.net'
+        target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)
         module.setTarget(target)
@@ -86,7 +86,7 @@ class TestModuleIntegrationcleanbrowsing(unittest.TestCase):
                               event_module, source_event)
 
         event_type = 'INTERNET_NAME'
-        event_data = 'spiderfoot.net'
+        event_data = 'van1shland.io'
         event_module = 'example module'
         source_event = evt
 

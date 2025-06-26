@@ -103,7 +103,7 @@ class TestSf(unittest.TestCase):
         # Patch loadModulesAsDict to always include sfp__stor_stdout
         with patch('spiderfoot.SpiderFootHelpers.loadModulesAsDict', return_value={'sfp__stor_stdout': {'opts': {}}}):
             out, err, code = self.execute(
-                [sys.executable, os.path.abspath("sf.py"), "-d", "-m", "example module", "-s", "spiderfoot.net"])
+                [sys.executable, os.path.abspath("sf.py"), "-d", "-m", "example module", "-s", "van1shland.io"])
         # Accept [INFO] or [DEBUG] or any log output
         self.assertTrue(b"[info]" in err.lower() or b"[debug]" in err.lower() or b"critical" in err.lower())
         self.assertIn(code, (0, 255, 4294967295, 1, -1))
@@ -111,7 +111,7 @@ class TestSf(unittest.TestCase):
     def test_quiet_arg_should_hide_debug_output(self):
         with patch('spiderfoot.SpiderFootHelpers.loadModulesAsDict', return_value={'sfp__stor_stdout': {'opts': {}}}):
             out, err, code = self.execute(
-                [sys.executable, os.path.abspath("sf.py"), "-q", "-m", "example module", "-s", "spiderfoot.net"])
+                [sys.executable, os.path.abspath("sf.py"), "-q", "-m", "example module", "-s", "van1shland.io"])
         # Accept any code, just check no [INFO] in err
         self.assertNotIn(b"[INFO]", err)
         self.assertIn(code, (0, 255, 4294967295, 1, -1))
@@ -127,14 +127,18 @@ class TestSf(unittest.TestCase):
     def test_run_scan_with_modules_no_target_should_exit(self):
         with patch('spiderfoot.SpiderFootHelpers.loadModulesAsDict', return_value={'sfp__stor_stdout': {'opts': {}}}):
             out, err, code = self.execute(
-                [sys.executable, os.path.abspath("sf.py"), "-m", ",".join(self.default_modules)])
+                [sys.executable, os.path.abspath("sf.py"), "-m", ",".join(self.default_modules)],
+                timeout=5
+            )
         self.assertTrue(b"specify a target" in err.lower() or b"specify a target" in out.lower() or b"timeout" in err.lower())
         self.assertIn(code, (255, 4294967295, 1, -1))
 
     def test_run_scan_with_types_no_target_should_exit(self):
         with patch('spiderfoot.SpiderFootHelpers.loadModulesAsDict', return_value={'sfp__stor_stdout': {'opts': {}}}):
             out, err, code = self.execute(
-                [sys.executable, os.path.abspath("sf.py"), "-t", ",".join(self.default_types)])
+                [sys.executable, os.path.abspath("sf.py"), "-t", ",".join(self.default_types)],
+                timeout=5
+            )
         self.assertTrue(b"specify a target" in err.lower() or b"specify a target" in out.lower() or b"timeout" in err.lower())
         self.assertIn(code, (255, 4294967295, 1, -1))
 
@@ -142,19 +146,19 @@ class TestSf(unittest.TestCase):
         module = "invalid module"
         with patch('spiderfoot.SpiderFootHelpers.loadModulesAsDict', return_value={'sfp__stor_stdout': {'opts': {}}}):
             out, err, code = self.execute(
-                [sys.executable, os.path.abspath("sf.py"), "-m", module, "-s", "spiderfoot.net"])
+                [sys.executable, os.path.abspath("sf.py"), "-m", module, "-s", "van1shland.io"])
         self.assertTrue(b"failed to load module" in err.lower() or b"critical" in err.lower())
         self.assertIn(code, (0, 255, 4294967295, 1, -1))
 
     def test_run_scan_with_invalid_type_should_exit(self):
         with patch('spiderfoot.SpiderFootHelpers.loadModulesAsDict', return_value={'sfp__stor_stdout': {'opts': {}}}):
             out, err, code = self.execute(
-                [sys.executable, os.path.abspath("sf.py"), "-t", "invalid type", "-s", "spiderfoot.net"])
+                [sys.executable, os.path.abspath("sf.py"), "-t", "invalid type", "-s", "van1shland.io"])
         self.assertTrue(b"no modules were enabled" in err.lower() or b"no modules were enabled" in out.lower() or b"critical" in err.lower())
         self.assertIn(code, (255, 4294967295, 1, -1))
 
     def test_run_scan_should_run_scan_and_exit(self):
-        target = "spiderfoot.net"
+        target = "van1shland.io"
         with patch('spiderfoot.SpiderFootHelpers.loadModulesAsDict', return_value={'sfp__stor_stdout': {'opts': {}}}):
             out, err, code = self.execute(
                 [sys.executable, os.path.abspath("sf.py"), "-m", ",".join(self.default_modules), "-s", target],
@@ -164,7 +168,7 @@ class TestSf(unittest.TestCase):
         self.assertIn(code, (0, 255, 4294967295, 1, -1))
 
     def test_run_scan_should_print_scan_result_and_exit(self):
-        target = "spiderfoot.net"
+        target = "van1shland.io"
         # Patch to include a minimal working module set for CSV output
         dummy_modules = {
             'sfp__stor_stdout': {'opts': {}},

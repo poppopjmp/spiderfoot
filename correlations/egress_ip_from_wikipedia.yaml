@@ -1,5 +1,5 @@
 id: egress_ip_from_wikipedia
-version: 1
+version: "1"
 meta:
   name: Wikipedia page edit from target-owned network
   description: >
@@ -9,11 +9,11 @@ meta:
     proxy/gateway.
   risk: MEDIUM
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: NETBLOCK_OWNER
-  - collect:
+  collect:
       - method: exact
         field: type
         value: IP_ADDRESS
@@ -27,7 +27,4 @@ analysis:
     field: data
     # Could also be 'contains' or 'exact'
     match_method: subnet
-headline:
-  text: "Wikipedia edit from IP within target-owned network: {data}"
-  publish_collections:
-    - 1
+headline: "Wikipedia edit from IP within target-owned network: {data}"

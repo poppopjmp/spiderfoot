@@ -1,5 +1,5 @@
 id: outlier_ipaddress
-version: 1
+version: "1"
 meta:
   name: Outlier IP address
   description: >
@@ -7,13 +7,14 @@ meta:
     total IP addresses found. Outliers can often reveal
     entities that are rare and therefore interesting.
   risk: INFO
+  scope: workspace
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value:
-          - IP_ADDRESS
-          - IPV6_ADDRESS
+  collect:
+    - method: exact
+      field: type
+      value:
+        - IP_ADDRESS
+        - IPV6_ADDRESS
 aggregation:
   field: data
 analysis:

@@ -42,7 +42,7 @@ meta:
     the target.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: TCP_PORT_OPEN_BANNER
@@ -209,7 +209,7 @@ meta:
     verify the certificate.
   risk: MEDIUM
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: SSL_CERTIFICATE_EXPIRED
@@ -232,7 +232,7 @@ meta:
     for actual association with the target is necessary.
   risk: LOW
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: CLOUD_STORAGE_BUCKET
@@ -260,7 +260,7 @@ meta:
     listed, even if needing to be publicly accessible.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: CLOUD_STORAGE_BUCKET
@@ -286,7 +286,7 @@ meta:
     such as software versions, names, email addresses and hostnames.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: BASE64_DATA
@@ -312,7 +312,7 @@ meta:
     such as software versions, names, email addresses and hostnames.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: RAW_FILE_META_DATA
@@ -339,7 +339,7 @@ meta:
     cause connecting services to fail due to being unable to verify the certificate.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: TCP_PORT_OPEN
@@ -365,7 +365,7 @@ meta:
     cause connecting services to fail due to being unable to verify the certificate.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: FOFA_SERVICE
@@ -386,7 +386,7 @@ meta:
     is exposed.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: ROCKETREACH_CONTACT
@@ -407,7 +407,7 @@ meta:
     cause connecting services to fail due to being unable to verify the certificate.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: ZOOMEYE_SERVICE

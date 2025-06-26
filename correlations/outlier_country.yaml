@@ -1,5 +1,5 @@
 id: outlier_country
-version: 1
+version: "1"
 meta:
   name: Outlier country
   description: >
@@ -7,8 +7,9 @@ meta:
     found. Outliers can often reveal entities that are rare and
     therefore interesting.
   risk: INFO
+  scope: workspace
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: COUNTRY_NAME

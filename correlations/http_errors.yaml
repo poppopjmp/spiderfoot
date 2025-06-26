@@ -1,5 +1,5 @@
 id: http_errors
-version: 1
+version: "1"
 meta:
   name: Multiple HTTP errors found
   description: >
@@ -8,7 +8,7 @@ meta:
     failures.
   risk: LOW
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: HTTP_CODE

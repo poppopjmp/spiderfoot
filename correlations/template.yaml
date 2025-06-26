@@ -3,7 +3,7 @@
 id: set_a_meaningful_id_here
 
 # Use version 1 for now.
-version: 1
+version: "1"
 
 # The meta section sets meta attributes about the rule.
 meta:
@@ -38,7 +38,7 @@ collections:
   # Each 'collect' block represents a collection of data from
   # the SpiderFoot database. You need at least one 'collect'
   # block for the rule to actually do something.
-  - collect:
+  collect:
       # Each 'collect' block may contain multiple blocks
       # for collecting and analyzing data. The first pulls
       # data from the SpiderFoot database, and subsequent

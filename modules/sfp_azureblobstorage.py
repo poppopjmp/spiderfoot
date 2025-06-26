@@ -50,14 +50,18 @@ class sfp_azureblobstorage(SpiderFootPlugin):
     results = None
     s3results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
-        self.s3results = self.tempStorage()
-        self.results = self.tempStorage()
+    def __init__(self):
+        super().__init__()
         self.lock = threading.Lock()
 
+    def setup(self, sfc, userOpts=dict()):
+        self.sf = sfc
+        self.results = self.tempStorage()
+        # Debug: print options to ensure suffixes is set
+        print("DEBUG sfp_azureblobstorage opts:", self.opts)
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
+        print("DEBUG sfp_azureblobstorage opts after userOpts:", self.opts)
 
     # What events is this module interested in for input
     def watchedEvents(self):
@@ -74,6 +78,7 @@ class sfp_azureblobstorage(SpiderFootPlugin):
             url, timeout=10, useragent="SpiderFoot", noLog=True)
 
         if res["code"]:
+            print(f"DEBUG: Emitting CLOUD_STORAGE_BUCKET for {url}")
             with self.lock:
                 self.s3results[url] = True
 
@@ -155,7 +160,7 @@ class sfp_azureblobstorage(SpiderFootPlugin):
             if parsed_url.hostname and parsed_url.hostname.endswith(".blob.core.windows.net"):
                 b = self.sf.urlFQDN(eventData)
                 evt = SpiderFootEvent(
-                    "CLOUD_STORAGE_BUCKET", b, self.__name__, event)
+                    "CLOUD_STORAGE_BUCKET", b, self.__class__.__name__, event)
                 self.notifyListeners(evt)
             return
 
@@ -178,8 +183,13 @@ class sfp_azureblobstorage(SpiderFootPlugin):
         # Batch the scans
         ret = self.batchSites(urls)
         for b in ret:
+            # Extract bucket name from URL
+            if b.startswith("https://"):
+                bucket = b[len("https://"):]
+            else:
+                bucket = b
             evt = SpiderFootEvent("CLOUD_STORAGE_BUCKET",
-                                  b, self.__name__, event)
+                                  bucket, self.__class__.__name__, event)
             self.notifyListeners(evt)
 
 

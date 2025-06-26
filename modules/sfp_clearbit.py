@@ -53,11 +53,15 @@ class sfp_clearbit(SpiderFootPlugin):
     }
 
     opts = {
-        "api_key": ""
+        "api_key": "",
+        "_fetchtimeout": 5,
+        "_genericusers": "info,admin"
     }
 
     optdescs = {
-        "api_key": "Clearbit.com API key."
+        "api_key": "Clearbit.com API key.",
+        "_fetchtimeout": "Number of seconds to wait for a response from Clearbit.",
+        "_genericusers": "Comma-separated list of generic user names to classify as generic email addresses."
     }
 
     results = None
@@ -177,6 +181,7 @@ class sfp_clearbit(SpiderFootPlugin):
         self.results[eventData] = True
 
         data = self.query(eventData)
+        print('DEBUG: data returned from query:', data)
         if not data:
             return
 

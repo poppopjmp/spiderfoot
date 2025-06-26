@@ -1,5 +1,5 @@
 id: cloud_bucket_open
-version: 1
+version: "1"
 meta:
   name: Cloud storage bucket open to the Internet
   description: >
@@ -9,7 +9,7 @@ meta:
     listed, even if needing to be publicly accessible.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: CLOUD_STORAGE_BUCKET

@@ -47,6 +47,13 @@ class sfp_bgpview(SpiderFootPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=dict()):
+        """
+        Set up the plugin with SpiderFoot context and user options.
+
+        Args:
+            sfc (SpiderFoot): The SpiderFoot context object.
+            userOpts (dict): User-supplied options for the module.
+        """
         self.sf = sfc
         self.results = self.tempStorage()
 
@@ -54,6 +61,12 @@ class sfp_bgpview(SpiderFootPlugin):
             self.opts[opt] = userOpts[opt]
 
     def watchedEvents(self):
+        """
+        Return a list of event types this module is interested in.
+
+        Returns:
+            list: List of event type strings.
+        """
         return [
             'IP_ADDRESS',
             'IPV6_ADDRESS',
@@ -63,6 +76,12 @@ class sfp_bgpview(SpiderFootPlugin):
         ]
 
     def producedEvents(self):
+        """
+        Return a list of event types this module produces.
+
+        Returns:
+            list: List of event type strings.
+        """
         return [
             'BGP_AS_MEMBER',
             'NETBLOCK_MEMBER',
@@ -72,6 +91,14 @@ class sfp_bgpview(SpiderFootPlugin):
         ]
 
     def queryAsn(self, qry):
+        """
+        Query BGPView for ASN information.
+
+        Args:
+            qry (str): ASN to query (e.g., 'AS12345').
+        Returns:
+            dict or None: ASN data or None if not found.
+        """
         res = self.sf.fetchUrl("https://api.bgpview.io/asn/" + qry.replace('AS', ''),
                                useragent=self.opts['_useragent'],
                                timeout=self.opts['_fetchtimeout'])
@@ -100,6 +127,14 @@ class sfp_bgpview(SpiderFootPlugin):
         return data
 
     def queryIp(self, qry):
+        """
+        Query BGPView for IP address information.
+
+        Args:
+            qry (str): IP address to query.
+        Returns:
+            dict or None: IP data or None if not found.
+        """
         res = self.sf.fetchUrl("https://api.bgpview.io/ip/" + qry,
                                useragent=self.opts['_useragent'],
                                timeout=self.opts['_fetchtimeout'])
@@ -128,6 +163,14 @@ class sfp_bgpview(SpiderFootPlugin):
         return data
 
     def queryNetblock(self, qry):
+        """
+        Query BGPView for netblock information.
+
+        Args:
+            qry (str): Netblock to query (e.g., '1.2.3.0/24').
+        Returns:
+            dict or None: Netblock data or None if not found.
+        """
         res = self.sf.fetchUrl("https://api.bgpview.io/prefix/" + qry,
                                useragent=self.opts['_useragent'],
                                timeout=self.opts['_fetchtimeout'])
@@ -156,6 +199,12 @@ class sfp_bgpview(SpiderFootPlugin):
         return data
 
     def handleEvent(self, event):
+        """
+        Handle incoming events, query BGPView, and emit events for found information.
+
+        Args:
+            event (SpiderFootEvent): The event to handle.
+        """
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -179,7 +228,7 @@ class sfp_bgpview(SpiderFootPlugin):
                 return
 
             e = SpiderFootEvent('RAW_RIR_DATA', str(data),
-                                self.__name__, event)
+                                self.__class__.__name__, event)
             self.notifyListeners(e)
 
             address = data.get('owner_address')
@@ -188,7 +237,7 @@ class sfp_bgpview(SpiderFootPlugin):
                 return
 
             evt = SpiderFootEvent('PHYSICAL_ADDRESS', ', '.join(
-                [_f for _f in address if _f]), self.__name__, event)
+                [_f for _f in address if _f]), self.__class__.__name__, event)
             self.notifyListeners(evt)
 
         if eventName in ['NETBLOCK_MEMBER', 'NETBLOCKV6_MEMBER']:
@@ -199,7 +248,7 @@ class sfp_bgpview(SpiderFootPlugin):
                 return
 
             e = SpiderFootEvent('RAW_RIR_DATA', str(data),
-                                self.__name__, event)
+                                self.__class__.__name__, event)
             self.notifyListeners(e)
 
             address = data.get('owner_address')
@@ -208,7 +257,7 @@ class sfp_bgpview(SpiderFootPlugin):
                 return
 
             evt = SpiderFootEvent('PHYSICAL_ADDRESS', ', '.join(
-                [_f for _f in address if _f]), self.__name__, event)
+                [_f for _f in address if _f]), self.__class__.__name__, event)
             self.notifyListeners(evt)
 
         if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
@@ -219,7 +268,7 @@ class sfp_bgpview(SpiderFootPlugin):
                 return
 
             e = SpiderFootEvent('RAW_RIR_DATA', str(data),
-                                self.__name__, event)
+                                self.__class__.__name__, event)
             self.notifyListeners(e)
 
             prefixes = data.get('prefixes')
@@ -242,16 +291,16 @@ class sfp_bgpview(SpiderFootPlugin):
 
                 self.info(f"Netblock found: {p} ({asn})")
                 evt = SpiderFootEvent(
-                    "BGP_AS_MEMBER", str(asn), self.__name__, event)
+                    "BGP_AS_MEMBER", str(asn), self.__class__.__name__, event)
                 self.notifyListeners(evt)
 
                 if self.sf.validIpNetwork(p):
                     if ":" in p:
                         evt = SpiderFootEvent(
-                            "NETBLOCKV6_MEMBER", p, self.__name__, event)
+                            "NETBLOCKV6_MEMBER", p, self.__class__.__name__, event)
                     else:
                         evt = SpiderFootEvent(
-                            "NETBLOCK_MEMBER", p, self.__name__, event)
+                            "NETBLOCK_MEMBER", p, self.__class__.__name__, event)
                     self.notifyListeners(evt)
 
 # End of sfp_bgpview class

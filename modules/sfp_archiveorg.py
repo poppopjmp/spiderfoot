@@ -18,6 +18,10 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_archiveorg(SpiderFootPlugin):
+    """
+    SpiderFoot plugin to query archive.org (Wayback Machine) for historic versions of certain pages/files.
+    Emits events for historic versions found, based on input event types and configuration.
+    """
 
     meta = {
         'name': "Archive.org",
@@ -58,7 +62,9 @@ class sfp_archiveorg(SpiderFootPlugin):
         'staticpages': False,
         'uploadpages': False,
         'webframeworkpages': False,
-        'javascriptpages': False
+        'javascriptpages': False,
+        '_fetchtimeout': 0.1,
+        '_useragent': 'SpiderFoot'
     }
 
     # Option descriptions
@@ -72,7 +78,9 @@ class sfp_archiveorg(SpiderFootPlugin):
         'javapages': "Query the Wayback Machine for historic versions of URLs using Java Applets.",
         'staticpages': "Query the Wayback Machine for historic versions of purely static URLs.",
         "webframeworkpages": "Query the Wayback Machine for historic versions of URLs using Javascript frameworks.",
-        "javascriptpages": "Query the Wayback Machine for historic versions of URLs using Javascript."
+        "javascriptpages": "Query the Wayback Machine for historic versions of URLs using Javascript.",
+        '_fetchtimeout': 'Timeout for HTTP requests (seconds).',
+        '_useragent': 'User-Agent string to use for HTTP requests.'
     }
 
     results = None
@@ -80,6 +88,13 @@ class sfp_archiveorg(SpiderFootPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=dict()):
+        """
+        Set up the plugin with SpiderFoot context and user options.
+
+        Args:
+            sfc (SpiderFoot): The SpiderFoot context object.
+            userOpts (dict): User-supplied options for the module.
+        """
         self.sf = sfc
         self.results = self.tempStorage()
         self.foundDates = list()
@@ -88,24 +103,41 @@ class sfp_archiveorg(SpiderFootPlugin):
         for opt in list(userOpts.keys()):
             self.opts[opt] = userOpts[opt]
 
-    # What events is this module interested in for input
     def watchedEvents(self):
-        return ["INTERESTING_FILE", "URL_PASSWORD", "URL_FORM", "URL_FLASH",
-                "URL_STATIC", "URL_JAVA_APPLET", "URL_UPLOAD", "URL_JAVASCRIPT",
-                "URL_WEB_FRAMEWORK"]
+        """
+        Return a list of event types this module is interested in.
 
-    # What events this module produces
-    # This is to support the end user in selecting modules based on events
-    # produced.
+        Returns:
+            list: List of event type strings.
+        """
+        return [
+            "INTERESTING_FILE", "URL_PASSWORD", "URL_FORM", "URL_FLASH",
+            "URL_STATIC", "URL_JAVA_APPLET", "URL_UPLOAD", "URL_JAVASCRIPT",
+            "URL_WEB_FRAMEWORK"
+        ]
+
     def producedEvents(self):
-        return ["INTERESTING_FILE_HISTORIC", "URL_PASSWORD_HISTORIC",
-                "URL_FORM_HISTORIC", "URL_FLASH_HISTORIC",
-                "URL_STATIC_HISTORIC", "URL_JAVA_APPLET_HISTORIC",
-                "URL_UPLOAD_HISTORIC", "URL_WEB_FRAMEWORK_HISTORIC",
-                "URL_JAVASCRIPT_HISTORIC"]
+        """
+        Return a list of event types this module produces.
 
-    # Handle events sent to this module
+        Returns:
+            list: List of event type strings.
+        """
+        return [
+            "INTERESTING_FILE_HISTORIC", "URL_PASSWORD_HISTORIC",
+            "URL_FORM_HISTORIC", "URL_FLASH_HISTORIC",
+            "URL_STATIC_HISTORIC", "URL_JAVA_APPLET_HISTORIC",
+            "URL_UPLOAD_HISTORIC", "URL_WEB_FRAMEWORK_HISTORIC",
+            "URL_JAVASCRIPT_HISTORIC"
+        ]
+
     def handleEvent(self, event):
+        """
+        Handle incoming events, query archive.org for historic versions, and emit events for found snapshots.
+
+        Args:
+            event (SpiderFootEvent): The event to handle.
+        """
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -143,17 +175,14 @@ class sfp_archiveorg(SpiderFootPlugin):
             try:
                 newDate = datetime.datetime.now() - datetime.timedelta(days=int(daysback))
             except Exception:
-                self.error(
-                    "Unable to parse option for number of days back to search.")
+                self.error("Unable to parse option for number of days back to search.")
                 self.errorState = True
                 return
 
             maxDate = newDate.strftime("%Y%m%d")
 
-            url = "https://archive.org/wayback/available?url=" + eventData + \
-                  "&timestamp=" + maxDate
-            res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
-                                   useragent=self.opts['_useragent'])
+            url = f"https://archive.org/wayback/available?url={eventData}&timestamp={maxDate}"
+            res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
             if res['content'] is None:
                 self.error(f"Unable to fetch {url}")
@@ -162,19 +191,20 @@ class sfp_archiveorg(SpiderFootPlugin):
             try:
                 ret = json.loads(res['content'])
             except Exception as e:
-                self.debug(
-                    f"Error processing JSON response from Archive.org: {e}")
+                self.debug(f"Error processing JSON response from Archive.org: {e}")
                 ret = None
 
             if not ret:
                 self.debug(f"Empty response from archive.org for {eventData}")
                 continue
 
-            if len(ret['archived_snapshots']) < 1:
-                self.debug("No archived snapshots for " + eventData)
+            # Robustly check for archived_snapshots and closest keys
+            archived_snapshots = ret.get('archived_snapshots', {})
+            if not archived_snapshots or 'closest' not in archived_snapshots or 'url' not in archived_snapshots.get('closest', {}):
+                self.debug(f"No archived snapshots for {eventData}")
                 continue
 
-            wbmlink = ret['archived_snapshots']['closest']['url']
+            wbmlink = archived_snapshots['closest']['url']
             if wbmlink in self.foundDates:
                 self.debug("Snapshot already fetched.")
                 continue
@@ -183,7 +213,7 @@ class sfp_archiveorg(SpiderFootPlugin):
             name = eventName + "_HISTORIC"
 
             self.info("Found a historic file: " + wbmlink)
-            evt = SpiderFootEvent(name, wbmlink, self.__name__, event)
+            evt = SpiderFootEvent(name, wbmlink, self.__class__.__name__, event)
             self.notifyListeners(evt)
 
 # End of sfp_archiveorg class

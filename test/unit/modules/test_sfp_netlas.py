@@ -90,7 +90,7 @@ class TestModuleNetlas(SpiderFootTestBase):
         module.notifyListeners = new_notifyListeners.__get__(module, module.__class__)
 
         event_type = 'ROOT'
-        event_data = 'spiderfoot.net'
+        event_data = 'van1shland.io'
         event_module = ''
         source_event = ''
 

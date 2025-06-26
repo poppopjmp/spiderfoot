@@ -1,5 +1,5 @@
 id: email_only_from_pasteleak_site
-version: 1
+version: "1"
 meta:
   name: Email address only from paste/leak site
   description: >
@@ -11,7 +11,7 @@ meta:
     be publicly exposed/used or targeted in an attack.
   risk: MEDIUM
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: EMAILADDR
@@ -19,7 +19,7 @@ collections:
         field: source.type
         value:
           - LEAKSITE_CONTENT
-  - collect:
+  collect:
       - method: exact
         field: type
         value: EMAILADDR

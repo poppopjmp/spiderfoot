@@ -44,8 +44,11 @@ COPYRIGHT_INFO = "               by Poppopjmp | @spiderfoot\n"
 
 try:
     import readline
-except ImportError:
-    import pyreadline as readline
+except Exception:
+    try:
+        import pyreadline as readline
+    except Exception:
+        readline = None  # Continue without readline if unavailable
 
 
 # Colors to make things purty

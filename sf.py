@@ -33,7 +33,6 @@ from sfscan import startSpiderFootScanner
 from sfwebui import SpiderFootWebUi
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import SpiderFootDb
-from spiderfoot import SpiderFootCorrelator
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 
 from spiderfoot import __version__
@@ -499,35 +498,44 @@ def main():
 
             # Load correlation rules
             try:
-                import yaml
+                from spiderfoot.correlation.rule_loader import RuleLoader
                 correlations_dir = os.path.join(script_dir, 'correlations')
                 correlation_rules = []
-                
                 if os.path.exists(correlations_dir):
-                    for filename in os.listdir(correlations_dir):
-                        if filename.endswith('.yaml') and filename != 'template.yaml':
-                            filepath = os.path.join(correlations_dir, filename)
-                            try:
-                                with open(filepath, 'r', encoding='utf-8') as f:
-                                    raw_yaml = f.read()
-                                    rule = yaml.safe_load(raw_yaml)
-                                    if rule and isinstance(rule, dict):
-                                        rule['id'] = filename[:-5]  # Remove .yaml extension
-                                        rule['rawYaml'] = raw_yaml  # Store raw YAML content
-                                        correlation_rules.append(rule)
-                            except Exception as e:
-                                log.warning(f"Failed to load correlation rule {filename}: {e}")
-                
+                    loader = RuleLoader(correlations_dir)
+                    rules = loader.load_rules()
+                    errors = loader.get_errors()
+                    if errors:
+                        for fname, err in errors:
+                            log.warning(f"Failed to load correlation rule {fname}: {err}")
+                    correlation_rules = rules
                 sfConfig['__correlationrules__'] = correlation_rules
                 log.info(f"Loaded {len(correlation_rules)} correlation rules")
             except Exception as e:
                 log.warning(f"Failed to load correlation rules: {e}")
                 sfConfig['__correlationrules__'] = []# Handle different command line options
             if args.correlate:
-                # Correlate
+                # Correlate using modular engine
+                from spiderfoot.correlation.rule_executor import RuleExecutor
+                from spiderfoot.correlation.event_enricher import EventEnricher
+                from spiderfoot.correlation.result_aggregator import ResultAggregator
                 dbh = SpiderFootDb(sfConfig, init=True)
-                correlator = SpiderFootCorrelator(sfConfig, dbh)
-                correlator.correlateAll(args.correlate)
+                rules = sfConfig.get('__correlationrules__', [])
+                scan_id = args.correlate
+                # Execute rules
+                executor = RuleExecutor(dbh, rules, scan_ids=[scan_id])
+                results = executor.run()
+                # Enrich results (optional, can be expanded)
+                enricher = EventEnricher(dbh)
+                for rule_id, result in results.items():
+                    # Example: enrich with sources/entities if result has events
+                    if 'events' in result:
+                        result['events'] = enricher.enrich_sources(scan_id, result['events'])
+                        result['events'] = enricher.enrich_entities(scan_id, result['events'])
+                # Aggregate results (optional)
+                aggregator = ResultAggregator()
+                agg_count = aggregator.aggregate(list(results.values()), method='count')
+                print(f"Correlated {agg_count} results for scan {scan_id}")
                 sys.exit(0)
 
             if args.modules:

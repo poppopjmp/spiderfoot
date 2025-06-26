@@ -16,3 +16,49 @@ class TestSfpDouyinIntegration(unittest.TestCase):
     def test_handle_event_stub(self):
         event = SpiderFootEvent('ROOT', 'integration', 'integration', None)
         self.assertIsNone(self.plugin.handleEvent(event))
+
+    def test_integration_emits_all_events(self):
+        self.plugin.setup(None, {'usernames': 'alice,bob', 'max_videos': 2})
+        self.events = []
+        self.plugin.notifyListeners = lambda e: self.events.append(e)
+        event = SpiderFootEvent('ROOT', 'test', 'test', None)
+        self.plugin.handleEvent(event)
+        self.assertEqual(len(self.events), 4)
+        for evt in self.events:
+            self.assertIn('username', evt.data)
+            self.assertIn('desc', evt.data)
+            self.assertIn('timestamp', evt.data)
+
+    def test_integration_deduplication(self):
+        self.plugin.setup(None, {'usernames': 'alice', 'max_videos': 2})
+        self.events = []
+        self.plugin.notifyListeners = lambda e: self.events.append(e)
+        event = SpiderFootEvent('ROOT', 'test', 'test', None)
+        self.plugin.handleEvent(event)
+        self.events.clear()
+        self.plugin.handleEvent(event)
+        self.assertEqual(len(self.events), 0)
+
+    def test_integration_no_users(self):
+        self.plugin.setup(None, {'usernames': '', 'max_videos': 2})
+        self.events = []
+        self.plugin.notifyListeners = lambda e: self.events.append(e)
+        event = SpiderFootEvent('ROOT', 'test', 'test', None)
+        self.plugin.handleEvent(event)
+        self.assertEqual(len(self.events), 0)
+
+    def test_integration_no_videos(self):
+        self.plugin.setup(None, {'usernames': 'nouser', 'max_videos': 2})
+        self.events = []
+        self.plugin.notifyListeners = lambda e: self.events.append(e)
+        event = SpiderFootEvent('ROOT', 'test', 'test', None)
+        self.plugin.handleEvent(event)
+        self.assertEqual(len(self.events), 0)
+
+    def test_integration_api_error(self):
+        self.plugin.setup(None, {'usernames': 'erroruser', 'max_videos': 2})
+        self.events = []
+        self.plugin.notifyListeners = lambda e: self.events.append(e)
+        event = SpiderFootEvent('ROOT', 'test', 'test', None)
+        self.plugin.handleEvent(event)
+        self.assertEqual(len(self.events), 0)

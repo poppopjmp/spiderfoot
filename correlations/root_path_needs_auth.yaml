@@ -1,5 +1,5 @@
 id: root_path_needs_auth
-version: 1
+version: "1"
 meta:
   name: Website root path needs authentication
   description: >
@@ -7,7 +7,7 @@ meta:
     server is likely sensitive or important.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: HTTP_CODE

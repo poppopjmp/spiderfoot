@@ -1,5 +1,5 @@
 id: outlier_email
-version: 1
+version: "1"
 meta:
   name: Outlier email address found
   description: >
@@ -7,11 +7,12 @@ meta:
     total email addresses found. Outliers can often reveal
     entities that are rare and therefore interesting.
   risk: INFO
+  scope: workspace
 collections:
-  - collect:
-      - method: exact
-        field: type
-        value: EMAILADDR
+  collect:
+    - method: exact
+      field: type
+      value: EMAILADDR
 aggregation:
   field: data
 analysis:

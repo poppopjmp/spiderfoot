@@ -225,7 +225,7 @@ class sfp_binaryedge(SpiderFootPlugin):
 
                 for leak in events:
                     e = SpiderFootEvent(
-                        'EMAILADDR_COMPROMISED', f"{eventData} [{leak}]", self.__name__, event)
+                        'EMAILADDR_COMPROMISED', f"{eventData} [{leak}]", self.__class__.__name__, event)
                     self.notifyListeners(e)
 
             # No further API endpoints available for email addresses. we can bail out here
@@ -277,11 +277,11 @@ class sfp_binaryedge(SpiderFootPlugin):
                             continue
 
                         evt = SpiderFootEvent(
-                            "INTERNET_NAME", host, self.__name__, event)
+                            "INTERNET_NAME", host, self.__class__.__name__, event)
                         self.notifyListeners(evt)
                         if self.sf.isDomain(host, self.opts['_internettlds']):
                             evt = SpiderFootEvent(
-                                "DOMAIN_NAME", host, self.__name__, event)
+                                "DOMAIN_NAME", host, self.__class__.__name__, event)
                             self.notifyListeners(evt)
 
                         self.reportedhosts[host] = True
@@ -289,7 +289,7 @@ class sfp_binaryedge(SpiderFootPlugin):
 
                     if self.cohostcount < self.opts['maxcohost']:
                         e = SpiderFootEvent(
-                            evtType, host, self.__name__, event)
+                            evtType, host, self.__class__.__name__, event)
                         self.notifyListeners(e)
                         self.cohostcount += 1
 
@@ -316,7 +316,7 @@ class sfp_binaryedge(SpiderFootPlugin):
                         continue
 
                     e = SpiderFootEvent(
-                        'INTERNET_NAME', rec, self.__name__, event)
+                        'INTERNET_NAME', rec, self.__class__.__name__, event)
                     self.notifyListeners(e)
 
         # Loop through all IP addresses / host names
@@ -364,7 +364,7 @@ class sfp_binaryedge(SpiderFootPlugin):
                         rec.get("torrent", "???").get("name") + " @ " + \
                         rec.get('torrent').get("source", "???")
                     e = SpiderFootEvent('MALICIOUS_IPADDR',
-                                        dat, self.__name__, event)
+                                        dat, self.__class__.__name__, event)
                     self.notifyListeners(e)
 
         for addr in qrylist:
@@ -406,7 +406,7 @@ class sfp_binaryedge(SpiderFootPlugin):
                         for c in cves:
                             etype, cvetext = self.sf.cveInfo(c['cve'])
                             e = SpiderFootEvent(
-                                etype, cvetext, self.__name__, event)
+                                etype, cvetext, self.__class__.__name__, event)
                             self.notifyListeners(e)
 
         for addr in qrylist:
@@ -453,7 +453,7 @@ class sfp_binaryedge(SpiderFootPlugin):
 
                         if f"{evttype}:{port}" not in ports:
                             ev = SpiderFootEvent(
-                                evttype, entity, self.__name__, event)
+                                evttype, entity, self.__class__.__name__, event)
                             self.notifyListeners(ev)
                             ports.append(f"{evttype}:{port}")
 
@@ -468,7 +468,7 @@ class sfp_binaryedge(SpiderFootPlugin):
                             continue
 
                         e = SpiderFootEvent(
-                            evtbtype, banner, self.__name__, ev)
+                            evtbtype, banner, self.__class__.__name__, ev)
                         self.notifyListeners(e)
 
         for addr in qrylist:

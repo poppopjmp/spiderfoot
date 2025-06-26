@@ -63,5 +63,5 @@ cp version_check_hook.py %{buildroot}%{python3_sitelib}/
 %{python3_sitelib}/version_check_hook.py
 
 %changelog
-* Tue Jun 24 2025 SpiderFoot Team <info@spiderfoot.net> - %{version}-1
+* Tue Jun 24 2025 SpiderFoot Team <info@van1shland.io> - %{version}-1
 - Initial RPM release

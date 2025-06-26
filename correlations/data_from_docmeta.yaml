@@ -1,5 +1,5 @@
 id: data_from_docmeta
-version: 1
+version: "1"
 meta:
   name: Data was found within document/image meta data
   description: >
@@ -7,7 +7,7 @@ meta:
     such as software versions, names, email addresses and hostnames.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: RAW_FILE_META_DATA

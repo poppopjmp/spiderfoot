@@ -287,11 +287,11 @@ class sfp_abusix(SpiderFootPlugin):
                 text = f"Abusix Mail Intelligence - {self.checks[k]} [{addr}]\n<SFURL>https://lookup.abusix.com/search?q={addr}</SFURL>"
 
                 evt = SpiderFootEvent(
-                    blacklist_type, text, self.__name__, event)
+                    blacklist_type, text, self.__class__.__name__, event)
                 self.notifyListeners(evt)
 
                 evt = SpiderFootEvent(
-                    malicious_type, text, self.__name__, event)
+                    malicious_type, text, self.__class__.__name__, event)
                 self.notifyListeners(evt)
 
 # End of sfp_abusix class

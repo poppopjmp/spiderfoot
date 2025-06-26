@@ -1,5 +1,5 @@
 id: dns_zone_transfer_possible
-version: 1
+version: "1"
 meta:
   name: DNS Zone Transfer is possible
   description: >
@@ -9,7 +9,7 @@ meta:
     real need to be enabled in modern networks.
   risk: HIGH
 collections:
-  - collect:
+  collect:
       - method: exact
         field: module
         value: sfp_dnszonexfer

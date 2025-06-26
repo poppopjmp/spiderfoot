@@ -1,5 +1,5 @@
 id: data_from_base64
-version: 1
+version: "1"
 meta:
   name: Data was found within base64-encoded data
   description: >
@@ -7,7 +7,7 @@ meta:
     such as software versions, names, email addresses and hostnames.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: BASE64_DATA

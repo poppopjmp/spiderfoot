@@ -1,0 +1,20 @@
+id: cross_scan_shared_affiliate
+version: "1"
+meta:
+  name: Shared affiliate across scans
+  description: >
+    The same affiliate (e.g., co-host, related domain) was found in multiple scans, indicating shared relationships or infrastructure.
+  risk: INFO
+  scope: workspace
+collections:
+  collect:
+    - method: regex
+      field: type
+      value: 'AFFILIATE.*|COHOST.*'
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Affiliate {data} found in multiple scans"

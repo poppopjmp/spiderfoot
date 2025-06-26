@@ -36,7 +36,7 @@ def module(sf, default_options):
 
 @pytest.fixture
 def target():
-    return SpiderFootTarget('spiderfoot.net', 'INTERNET_NAME')
+    return SpiderFootTarget('van1shland.io', 'INTERNET_NAME')
 
 
 @pytest.fixture

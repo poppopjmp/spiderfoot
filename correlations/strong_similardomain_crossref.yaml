@@ -1,5 +1,5 @@
 id: strong_similardomain_crossref
-version: 1
+version: "1"
 meta:
   name: Similar domain with strong relationship to the target
   description: >
@@ -10,7 +10,7 @@ meta:
     included in the scope of scanning to ensure more complete coverage.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: module
         value: sfp_crossref

@@ -89,18 +89,19 @@ def update_readme():
     else:
         print(f"[OK] README.md already has correct version {version}")
 
+
 def update_docs():
     """Update version references in documentation files."""
     version = get_version()
     docs_dir = Path(__file__).parent / "docs"
-    
+
     # Files to update
     files_to_update = [
         docs_dir / "index.rst",
-        docs_dir / "configuration.md", 
-        docs_dir / "conf.py",
+        docs_dir / "configuration.md",
+        docs_dir / "conf.py"
     ]
-    
+
     for file_path in files_to_update:
         if not file_path.exists():
             print(f"WARNING: {file_path} not found")
@@ -124,55 +125,6 @@ def update_docs():
         else:
             print(f"[OK] {file_path.name} already has correct version {version}")
 
-def update_docker_configs():
-    """Update version references in Docker configuration files."""
-    version = get_version()
-    
-    # Update docker-compose files and GitHub workflows
-    docker_files = [
-        "docker-compose-prod.yml",
-        "docker-compose.yml",
-        ".github/workflows/docker-image.yml",
-        ".github/workflows/acceptance_test.yml"
-    ]
-    
-    for file_name in docker_files:
-        file_path = Path(__file__).parent / file_name
-        if not file_path.exists():
-            print(f"WARNING: {file_name} not found")
-            continue
-            
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        original_content = content
-        
-        # Update Docker image versions
-        content = re.sub(
-            r'spiderfoot:v\d+\.\d+\.\d+',
-            f'spiderfoot:v{version}',
-            content
-        )
-        
-        # Update any other version tags
-        content = re.sub(
-            r'poppopjmp/spiderfoot:v\d+\.\d+\.\d+',
-            f'poppopjmp/spiderfoot:v{version}',
-            content
-        )
-        
-        content = re.sub(
-            r'ghcr\.io/poppopjmp/spiderfoot:v\d+\.\d+\.\d+',
-            f'ghcr.io/poppopjmp/spiderfoot:v{version}',
-            content
-        )
-        
-        if content != original_content:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(content)
-            print(f"[OK] Updated {file_name} with version {version}")
-        else:
-            print(f"[OK] {file_name} already has correct version {version}")
 
 def update_code_fallback():
     """Update fallback version in __version__.py."""
@@ -202,6 +154,7 @@ def update_code_fallback():
     else:
         print(f"[OK] __version__.py already has correct fallback version {version}")
 
+
 def update_debian_control():
     """Update version in debian/control if present."""
     version = get_version()
@@ -226,6 +179,7 @@ def update_debian_control():
     else:
         print(f"[OK] debian/control already has correct version {version} or no version field present")
 
+
 def update_github_workflows():
     """Update artifact names in build-artifacts.yml with the new version."""
     version = get_version()
@@ -246,6 +200,7 @@ def update_github_workflows():
     else:
         print(f"[OK] build-artifacts.yml already has correct version {version}")
 
+
 def update_snapcraft():
     version = get_version()
     snap_path = Path(__file__).parent / "packaging" / "snapcraft.yaml"
@@ -261,6 +216,7 @@ def update_snapcraft():
         print(f"[OK] Updated snapcraft.yaml with version {version}")
     else:
         print(f"[OK] snapcraft.yaml already has correct version {version}")
+
 
 def update_homebrew_formula():
     version = get_version()
@@ -279,6 +235,7 @@ def update_homebrew_formula():
     else:
         print(f"[OK] spiderfoot.rb already has correct version {version}")
 
+
 def update_docker_image_yml():
     """Update version tag in .github/workflows/docker-image.yml."""
     version = get_version()
@@ -296,6 +253,7 @@ def update_docker_image_yml():
         print(f"[OK] Updated docker-image.yml with version {version}")
     else:
         print(f"[OK] docker-image.yml already has correct version {version}")
+
 
 def update_test_versions():
     """Update hardcoded version strings in test files and workflow_api.py."""
@@ -345,10 +303,12 @@ def update_test_versions():
     else:
         print(f"WARNING: {workflow_api_path} not found")
 
+
 def check_version_consistency():
     """Check that all version references are consistent."""
     version = get_version()
-    print(f"\nChecking version consistency across repository...")
+    print()  # blank line for output formatting
+    print("Checking version consistency across repository...")
     print(f"Expected version: {version}")
     
     # Check patterns in different files
@@ -403,14 +363,14 @@ def list_all_version_files():
     managed_files = [
         "VERSION (master version file)",
         "README.md",
-        "docs/index.rst", 
+        "docs/index.rst",
         "docs/configuration.md",
         "docs/conf.py",
         "docker-compose-prod.yml",
-        "docker-compose.yml", 
+        "docker-compose.yml",
         ".github/workflows/docker-image.yml",
         ".github/workflows/acceptance_test.yml",
-        "spiderfoot/__version__.py (fallback version)",
+        "spiderfoot/__version__.py (fallback version)"
     ]
     
     for file_name in managed_files:
@@ -423,7 +383,7 @@ def list_all_version_files():
     auto_files = [
         "setup.py",
         "spiderfoot/__version__.py",
-        "All Python modules importing __version__",
+        "All Python modules importing __version__"
     ]
     
     for file_name in auto_files:
@@ -437,19 +397,18 @@ def main():
             print(f"Current version: {version}")
             check_version_consistency()
             return
-        elif sys.argv[1] == "--list":
+        if sys.argv[1] == "--list":
             list_all_version_files()
             return
-        elif sys.argv[1] == "--set" and len(sys.argv) > 2:
+        if sys.argv[1] == "--set" and len(sys.argv) > 2:
             new_version = sys.argv[2]
             set_version(new_version)
             # Fall through to update all references
-        elif sys.argv[1] == "--help":
+        if sys.argv[1] == "--help":
             print(__doc__)
             return
-        else:
-            print("Usage: update_version.py [--check|--list|--set VERSION|--help]")
-            return
+        print("Usage: update_version.py [--check|--list|--set VERSION|--help]")
+        return
     
     print("Updating all version references...")
     print("==================================")

@@ -1,5 +1,5 @@
 id: cert_expired
-version: 1
+version: "1"
 meta:
   name: Expired SSL certificate found
   description: >
@@ -9,7 +9,7 @@ meta:
     verify the certificate.
   risk: MEDIUM
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: SSL_CERTIFICATE_EXPIRED

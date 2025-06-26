@@ -188,6 +188,69 @@ class TestSFPRrocketreach(unittest.TestCase):
         result = module.handleEvent(evt)
         self.assertIsNone(result)  # handleEvent() does not return any value
 
+    def test_handleEvent_emits_events(self):
+        """Test that handleEvent emits correct events for a found domain."""
+        module = sfp_rocketreach()
+        module.setup(self.sf, dict(api_key='API_KEY', _fetchtimeout=30))
+        evt = SpiderFootEvent("DOMAIN_NAME", "example.com", self.__class__.__name__, None)
+        # Patch query to return a realistic API response
+        module.query = lambda value, qtype: {
+            "results": [{
+                "email": "a@example.com",
+                "emails": [{"email": "b@example.com"}],
+                "name": "John Doe",
+                "phone": "123",
+                "phones": [{"number": "456"}],
+                "linkedin_url": "https://linkedin.com/in/test",
+                "twitter_url": "https://twitter.com/test",
+                "facebook_url": "https://facebook.com/test",
+                "github_url": "https://github.com/test"
+            }]
+        }
+        events = []
+        module.notifyListeners = lambda e: events.append(e)
+        module.handleEvent(evt)
+        types = [e.eventType for e in events]
+        self.assertIn("EMAILADDR", types)
+        self.assertIn("PERSON_NAME", types)
+        self.assertIn("PHONE_NUMBER", types)
+        self.assertIn("SOCIAL_MEDIA", types)
+        self.assertIn("RAW_RIR_DATA", types)
+
+    def test_handleEvent_deduplication(self):
+        """Test that handleEvent does not emit duplicate events for the same input."""
+        module = sfp_rocketreach()
+        module.setup(self.sf, dict(api_key='API_KEY', _fetchtimeout=30))
+        evt = SpiderFootEvent("DOMAIN_NAME", "example.com", self.__class__.__name__, None)
+        module.query = lambda value, qtype: {"results": [{"email": "a@example.com"}]}
+        events = []
+        module.notifyListeners = lambda e: events.append(e)
+        module.handleEvent(evt)
+        first_emit_count = len(events)
+        module.handleEvent(evt)
+        # No new events should be emitted on the second call
+        self.assertEqual(len(events), first_emit_count)
+
+    def test_handleEvent_error_handling(self):
+        """Test that handleEvent sets errorState on API key error."""
+        module = sfp_rocketreach()
+        module.setup(self.sf, dict(api_key='', _fetchtimeout=30))
+        evt = SpiderFootEvent("DOMAIN_NAME", "example.com", self.__class__.__name__, None)
+        module.handleEvent(evt)
+        self.assertTrue(module.errorState)
+
+    def test_handleEvent_malformed_response(self):
+        """Test that handleEvent handles malformed API responses gracefully."""
+        module = sfp_rocketreach()
+        module.setup(self.sf, dict(api_key='API_KEY', _fetchtimeout=30))
+        evt = SpiderFootEvent("DOMAIN_NAME", "example.com", self.__class__.__name__, None)
+        # No 'results' key
+        module.query = lambda value, qtype: {"unexpected": []}
+        events = []
+        module.notifyListeners = lambda e: events.append(e)
+        module.handleEvent(evt)
+        self.assertEqual(len(events), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

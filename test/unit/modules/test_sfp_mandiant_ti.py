@@ -43,7 +43,7 @@ class TestModuleMandiantTI(SpiderFootTestBase):
         """
         Test handleEvent(self, event)
         """
-        target = SpiderFootTarget("spiderfoot.net", "INTERNET_NAME")
+        target = SpiderFootTarget("van1shland.io", "INTERNET_NAME")
         
         def new_notifyListeners(self, event):
             expected = 'MALICIOUS_INTERNET_NAME'
@@ -53,7 +53,7 @@ class TestModuleMandiantTI(SpiderFootTestBase):
         module.notifyListeners = new_notifyListeners.__get__(module, module.__class__)
 
         event_type = 'ROOT'
-        event_data = 'spiderfoot.net'
+        event_data = 'van1shland.io'
         event_module = ''
         source_event = ''
         

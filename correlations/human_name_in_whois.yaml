@@ -1,5 +1,5 @@
 id: human_name_in_whois
-version: 1
+version: "1"
 meta:
   name: A human name was found in Whois data
   description: >
@@ -11,7 +11,7 @@ meta:
     GDPR.
   risk: INFO
 collections:
-  - collect:
+  collect:
       - method: exact
         field: type
         value: HUMAN_NAME

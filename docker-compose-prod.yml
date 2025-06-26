@@ -24,10 +24,14 @@ services:
       - spiderfoot-frontend
       - spiderfoot-backend
     volumes:
-      - spiderfoot-data:/var/lib/spiderfoot
-      - spiderfoot-logs:/home/spiderfoot/.spiderfoot/logs
-      - spiderfoot-cache:/var/lib/spiderfoot/cache
-      - spiderfoot-config:/etc/spiderfoot
+      # NOTE: The following host directories must be writable by the 'spiderfoot' user inside the container (UID:GID 1000:1000 by default).
+      # If you see 'Permission denied' errors, run this on your host:
+      #   sudo chown -R 1000:1000 ./data/spiderfoot ./logs/spiderfoot ./logs/dotspiderfoot ./cache/spiderfoot ./config/spiderfoot
+      - spiderfoot-data:/home/spiderfoot/data
+      - spiderfoot-logs:/home/spiderfoot/logs
+      - spiderfoot-dotlogs:/home/spiderfoot/.spiderfoot/logs
+      - spiderfoot-cache:/home/spiderfoot/cache
+      - spiderfoot-config:/home/spiderfoot/config
     environment:
       # Database Configuration
       - POSTGRES_HOST=postgres
@@ -402,16 +406,34 @@ volumes:
       type: none
       o: bind
       device: ${DATA_PATH:-./data}/spiderfoot
+
   spiderfoot-logs:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: ${LOGS_PATH:-./logs}/spiderfoot
+
+  spiderfoot-dotlogs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${LOGS_PATH:-./logs}/dotspiderfoot
+
   spiderfoot-cache:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${CACHE_PATH:-./cache}/spiderfoot
+
   spiderfoot-config:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${CONFIG_PATH:-./config}/spiderfoot
 
   # Database Volumes
   postgres-data:

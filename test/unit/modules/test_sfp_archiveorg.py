@@ -11,7 +11,9 @@ class TestModuleArchiveorg(SpiderFootTestBase):
 
     def test_opts(self):
         module = sfp_archiveorg()
-        self.assertEqual(len(module.opts), len(module.optdescs))
+        self.assertEqual(set(module.opts.keys()), set(module.optdescs.keys()))
+        # Ensure the number of options matches the expected count
+        self.assertEqual(len(module.opts), len(module.optdescs))  # opts and optdescs should always match
 
     def test_setup(self):
         sf = SpiderFoot(self.default_options)

@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.2.7-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.2.7)
+[![Stable Release](https://img.shields.io/badge/version-5.2.9-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.2.9)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -20,6 +20,24 @@ SpiderFoot features an embedded web-server for providing a clean and intuitive w
 
 ---
 
+## Platform Architecture
+
+```mermaid
+graph TD;
+    A[User] -->|Web UI| B[SpiderFoot Core Engine];
+    A -->|CLI| B;
+    B --> C[Modules];
+    B --> D[Database];
+    B --> E[API];
+    C --> F[External Data Sources];
+    E --> G[SIEM/SOAR/Integrations];
+    B --> H[Scheduler];
+    B --> I[Correlation Engine];
+    B --> J[Reporting & Export];
+```
+
+---
+
 ## Spiderfoot Enhancements
 
 This version includes production-ready enterprise features:
@@ -31,7 +49,7 @@ This version includes production-ready enterprise features:
 - **Performance Optimization**: Scalable architecture for enterprise workloads
 - **Production Configuration**: Ready-to-deploy configurations for enterprise environments
 
-![Spiderfoot v5](./docs/images/v5.png)
+![Spiderfoot v5](./documentation/images/v5.png)
 
 ---
 
@@ -55,15 +73,20 @@ This version includes production-ready enterprise features:
 - Actively developed since 2012!
 - Comprehensive REST API for enterprise integration
 
-### Enterprise Features
+---
 
-- **Advanced Storage Engine**: High-performance data storage with optimized indexing and compression
-- **AI Threat Intelligence**: Machine learning-powered threat analysis and automated pattern recognition
-- **Security Hardening**: Enhanced input validation, secure configurations, and audit logging
-- **Scalable Architecture**: Support for high-volume scanning and enterprise workloads
-- **Advanced Analytics**: Comprehensive reporting with customizable dashboards and metrics
-- **Production Monitoring**: Health checks, performance metrics, and operational monitoring
-- **Enterprise Integration**: Advanced API capabilities for seamless integration with security tools
+## Visual Workflow: Typical OSINT Scan
+
+```mermaid
+graph LR;
+    A[Start Scan] --> B[Select Target];
+    B --> C[Choose Modules];
+    C --> D[Run Scan];
+    D --> E[Data Collection];
+    E --> F[Correlation & Analysis];
+    F --> G[View Results];
+    G --> H[Export/Integrate];
+```
 
 ---
 
@@ -106,32 +129,32 @@ This version includes production-ready enterprise features:
 
 ---
 
+## Deployment Overview
+
+```mermaid
+graph TD;
+    A[User/Analyst] -->|Web UI/CLI| B[SpiderFoot Container];
+    B --> C[Persistent Storage];
+    B --> D[Network];
+    B --> E[External APIs];
+    B --> F[SIEM/SOAR];
+    B --> G[Monitoring];
+```
+
+---
+
 ## Documentation
 
 Comprehensive documentation is available for all aspects of SpiderFoot Enterprise:
 
 ### Quick Links
 
-- **[Installation Guide](docs/installation.md)** - Complete setup instructions
-- **[Quick Start Guide](docs/quickstart.md)** - Get scanning quickly
-- **[User Guide](docs/basic_usage.md)** - Fundamental concepts and usage
-- **[CLI Reference](docs/cli_usage.md)** - Command-line interface guide
-- **[API Documentation](docs/api/rest_api.md)** - REST API reference
-- **[Module Guide](docs/modules_guide.md)** - Understanding modules
-
-### Enterprise Features
-
-- **[Enterprise Deployment](docs/enterprise_deployment.md)** - Production deployment guide
-- **[Advanced Storage](docs/advanced/enterprise_storage.md)** - High-performance storage setup
-- **[AI Threat Intelligence](docs/advanced/ai_threat_intelligence.md)** - AI-powered analysis
-- **[Security Hardening](docs/advanced/security_hardening.md)** - Security best practices
-- **[Performance Optimization](docs/advanced/performance_optimization.md)** - Optimization guide
-
-### Advanced Workflows
-
-- **[Workflow Engine](docs/workflow/getting_started.md)** - Multi-target workflows
-- **[Correlation Analysis](docs/workflow/correlation_analysis.md)** - Pattern identification
-- **[CTI Reports](docs/workflow/cti_reports.md)** - Intelligence report generation
+- **[Installation Guide](documentation/installation.md)** - Complete setup instructions
+- **[Quick Start Guide](documentation/quickstart.md)** - Get scanning quickly
+- **[User Guide](documentation/user_guide.md)** - Fundamental concepts and usage
+- **[CLI Reference](documentation/user_guide.md)** - Command-line interface guide
+- **[API Documentation](documentation/api_reference.md)** - REST API reference
+- **[Module Guide](documentation/modules.md)** - Understanding modules
 
 ---
 
@@ -655,3 +678,7 @@ curl -X GET "http://127.0.0.1:8000/api/scan/results?scan_id=12345"
 ```
 
 For more detailed instructions and examples, refer to the API documentation.
+
+---
+
+*For more diagrams and visualizations, see the documentation and web UI dashboards!*

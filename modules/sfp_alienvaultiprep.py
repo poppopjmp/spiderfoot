@@ -211,10 +211,10 @@ class sfp_alienvaultiprep(SpiderFootPlugin):
         url = "https://reputation.alienvault.com/reputation.generic"
         text = f"AlienVault IP Reputation Database [{eventData}]\n<SFURL>{url}</SFURL>"
 
-        evt = SpiderFootEvent(malicious_type, text, self.__name__, event)
+        evt = SpiderFootEvent(malicious_type, text, self.__class__.__name__, event)
         self.notifyListeners(evt)
 
-        evt = SpiderFootEvent(blacklist_type, text, self.__name__, event)
+        evt = SpiderFootEvent(blacklist_type, text, self.__class__.__name__, event)
         self.notifyListeners(evt)
 
 # End of sfp_alienvaultiprep class

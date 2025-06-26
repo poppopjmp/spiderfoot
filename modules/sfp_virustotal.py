@@ -58,7 +58,8 @@ class sfp_virustotal(SpiderFootPlugin):
         'netblocklookup': True,
         'maxnetblock': 24,
         'subnetlookup': True,
-        'maxsubnet': 24
+        'maxsubnet': 24,
+        '_fetchtimeout': 5
     }
 
     optdescs = {
@@ -70,11 +71,15 @@ class sfp_virustotal(SpiderFootPlugin):
         'maxnetblock': 'If looking up owned netblocks, the maximum netblock size to look up all IPs within (CIDR value, 24 = /24, 16 = /16, etc.)',
         'subnetlookup': 'Look up all IPs on subnets which your target is a part of?',
         'maxsubnet': 'If looking up subnets, the maximum subnet size to look up all the IPs within (CIDR value, 24 = /24, 16 = /16, etc.)',
-        'verify': 'Verify that any hostnames found on the target domain still resolve?'
+        'verify': 'Verify that any hostnames found on the target domain still resolve?',
+        '_fetchtimeout': 'Number of seconds to wait for a response from VirusTotal.'
     }
 
     results = None
     errorState = False
+
+    def __init__(self):
+        super().__init__()
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc
@@ -267,7 +272,7 @@ class sfp_virustotal(SpiderFootPlugin):
 
                 e = SpiderFootEvent(
                     evt, f"VirusTotal [{addr}]\n{infourl}",
-                    self.__name__,
+                    self.__class__.__name__,
                     event
                 )
                 self.notifyListeners(e)
@@ -299,17 +304,17 @@ class sfp_virustotal(SpiderFootPlugin):
                     self.debug(f"Host {domain} could not be resolved")
                     evt_type += '_UNRESOLVED'
 
-                evt = SpiderFootEvent(evt_type, domain, self.__name__, event)
+                evt = SpiderFootEvent(evt_type, domain, self.__class__.__name__, event)
                 self.notifyListeners(evt)
 
                 if self.sf.isDomain(domain, self.opts['_internettlds']):
                     if evt_type.startswith('AFFILIATE'):
                         evt = SpiderFootEvent(
-                            'AFFILIATE_DOMAIN_NAME', domain, self.__name__, event)
+                            'AFFILIATE_DOMAIN_NAME', domain, self.__class__.__name__, event)
                         self.notifyListeners(evt)
                     else:
                         evt = SpiderFootEvent(
-                            'DOMAIN_NAME', domain, self.__name__, event)
+                            'DOMAIN_NAME', domain, self.__class__.__name__, event)
                         self.notifyListeners(evt)
 
 # End of sfp_virustotal class

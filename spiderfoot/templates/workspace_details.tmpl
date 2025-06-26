@@ -1009,21 +1009,28 @@ function multiTargetScan(workspaceId) {
 }
 
 function removeTarget(workspaceId, targetId) {
-    if (confirm('Are you sure you want to remove this target?')) {
-        $.post('${docroot}/workspaceremovetarget', {
-            workspace_id: workspaceId,
-            target_id: targetId
-        }, function(data) {
-            if (data.success) {
-                alertify.success('Target removed successfully');
-                location.reload(); // Refresh the page to show updated target list
-            } else {
-                alertify.error('Failed to remove target: ' + data.error);
-            }
-        }).fail(function() {
-            alertify.error('Failed to remove target: Server error');
-        });
-    }
+    alertify.confirm(
+        'Remove Target',
+        'Are you sure you want to remove this target?',
+        function() {
+            $.post('${docroot}/workspaceremovetarget', {
+                workspace_id: workspaceId,
+                target_id: targetId
+            }, function(data) {
+                if (data.success) {
+                    alertify.success('Target removed successfully');
+                    location.reload(); // Refresh the page to show updated target list
+                } else {
+                    alertify.error('Failed to remove target: ' + data.error);
+                }
+            }).fail(function() {
+                alertify.error('Failed to remove target: Server error');
+            });
+        },
+        function() {
+            alertify.message('Target removal cancelled');
+        }
+    ).set('labels', {ok:'Remove', cancel:'Cancel'});
 }
 
 function viewScanResults(scanId) {

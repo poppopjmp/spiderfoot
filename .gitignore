@@ -2,6 +2,8 @@
 #######################
 /cache/
 /log/
+/data
+/config
 /logs
 /spiderfoot.db*
 passwd
