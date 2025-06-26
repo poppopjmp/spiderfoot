@@ -47,24 +47,24 @@
           </h4>
         </div>
         <div class="panel-body" style="padding: 0;">
-          % if version_dirs and hasattr(version_dirs, '__iter__'):
+          % if version_dirs or []:
           <form method="get" action="/documentation/" style="padding: 10px 10px 0 10px;">
             <div class="form-group">
               <label for="version-select"><i class="fa fa-code-fork"></i> Version:</label>
               <select id="version-select" name="ver" class="form-control input-sm" onchange="this.form.submit()">
-                <option value="latest"${' selected' if current_version=='latest' else ''}>Latest</option>
-                % for v in version_dirs or []:
-                  <option value="${v}"${' selected' if v==current_version else ''}>${v}</option>
+                <option value="latest"${' selected' if (current_version or '')=='latest' else ''}>Latest</option>
+                % for v in (version_dirs or []):
+                  <option value="${v}"${' selected' if v==(current_version or '') else ''}>${v}</option>
                 % endfor
               </select>
-              <input type="hidden" name="doc" value="${selected_file}">
-              <input type="hidden" name="q" value="${search_query}">
+              <input type="hidden" name="doc" value="${selected_file or ''}">
+              <input type="hidden" name="q" value="${search_query or ''}">
             </div>
           </form>
           % endif
           <form method="get" action="/documentation/" style="padding: 10px;">
             <div class="input-group">
-              <input type="text" class="form-control" name="q" placeholder="Search docs..." value="${search_query}">
+              <input type="text" class="form-control" name="q" placeholder="Search docs..." value="${search_query or ''}">
               <span class="input-group-btn">
                 <button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
               </span>
@@ -72,9 +72,9 @@
           </form>
           <div class="list-group" style="margin-bottom: 0;">
             % if search_query:
-              % if search_results and hasattr(search_results, '__iter__'):
-                % for entry in search_results or []:
-                  <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==selected_file else ''}">
+              % if search_results or []:
+                % for entry in (search_results or []):
+                  <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==(selected_file or '') else ''}">
                     <i class="${entry['icon']}"></i> ${highlight(entry['title'], search_query)}
                   </a>
                 % endfor
@@ -82,20 +82,18 @@
                 <div class="list-group-item">No results found.</div>
               % endif
             % else:
-              % if doc_index and hasattr(doc_index, '__iter__'):
-                % for entry in doc_index or []:
-                  <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==selected_file else ''}">
-                    <i class="${entry['icon']}"></i> ${entry['title']}
-                  </a>
-                % endfor
-              % endif
+              % for entry in (doc_index or []):
+                <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==(selected_file or '') else ''}">
+                  <i class="${entry['icon']}"></i> ${entry['title']}
+                </a>
+              % endfor
             % endif
           </div>
           % if toc_html:
             <div class="panel panel-default" style="margin:10px 0 0 0;">
               <div class="panel-heading"><strong><i class="fa fa-list"></i> Contents</strong></div>
               <div class="panel-body" style="padding:10px;">
-                ${toc_html | n}
+                ${(toc_html or '') | n}
               </div>
             </div>
           % endif
@@ -126,7 +124,7 @@
           <div class="row">
             <div class="col-md-8">
               <h3 class="panel-title">
-                <i class="fa fa-file-text-o"></i> <span id="doc-title">${title}</span>
+                <i class="fa fa-file-text-o"></i> <span id="doc-title">${title or ''}</span>
               </h3>
             </div>
             <div class="col-md-4 text-right">
@@ -141,24 +139,22 @@
             </div>
           </div>
           <div class="documentation-breadcrumb" style="margin-top:10px;">
-            % if breadcrumbs and hasattr(breadcrumbs, '__iter__'):
-              % for crumb in breadcrumbs or []:
-                <a href="${crumb['url']}">${crumb['title']}</a>
-                % if not loop.last:
-                  &raquo;
-                % endif
-              % endfor
-            % endif
+            % for crumb in (breadcrumbs or []):
+              <a href="${crumb['url']}">${crumb['title']}</a>
+              % if not loop.last:
+                &raquo;
+              % endif
+            % endfor
           </div>
           <div style="font-size:12px; color:#888; margin-top:5px;">
-            <i class="fa fa-clock-o"></i> Last updated: ${last_updated}
+            <i class="fa fa-clock-o"></i> Last updated: ${last_updated or ''}
             &nbsp;|&nbsp;
-            <i class="fa fa-user"></i> Author: ${author}
+            <i class="fa fa-user"></i> Author: ${author or ''}
           </div>
         </div>
         <div class="panel-body" id="doc-content">
           <div class="markdown-content" id="markdown-content">
-            ${highlight(content, search_query) if search_query else content | n}
+            ${highlight(content, search_query) if search_query else (content or '') | n}
           </div>
           <div id="doc-feedback" style="margin-top:30px; border-top:1px solid #eee; padding-top:15px;">
             <strong>Was this page helpful?</strong>
@@ -168,12 +164,12 @@
             </span>
             <span id="feedback-msg" style="margin-left:15px; color: #4cae4c; display:none;"></span>
           </div>
-          % if related and hasattr(related, '__iter__'):
+          % if related or []:
           <div id="related-docs" style="margin-top:30px; border-top:1px solid #eee; padding-top:15px;">
             <strong><i class="fa fa-link"></i> Related Articles</strong>
             <ul>
-              % for entry in related or []:
-                <li><a href="/documentation/${entry['file']}"><i class="${entry['icon']}"></i> ${entry['title']}</a></li>
+              % for entry in (related or []):
+                <li><a href="/documentation/${entry['file']}"<i class="${entry['icon']}"></i> ${entry['title']}</a></li>
               % endfor
             </ul>
           </div>
