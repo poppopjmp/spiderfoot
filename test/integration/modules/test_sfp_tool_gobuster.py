@@ -50,12 +50,10 @@ class TestModuleIntegrationToolGobuster(unittest.TestCase):
     }))
     @patch.object(sfp_tool_gobuster, 'execute_command')
     def test_handleEvent_gobuster(self, mock_execute_command, mock_open_file, mock_isfile):
-        # Use a platform-independent temp file path
-        temp_output = tempfile.NamedTemporaryFile(delete=False)
-        temp_output.close()
-        mock_execute_command.return_value = temp_output.name
-        # Set the wordlist option to the temp file path to match what the module expects
-        self.options['wordlist'] = temp_output.name
+        # Use a fake file path and rely on mock_open for file content
+        fake_output_path = '/tmp/fake_gobuster_output.json'
+        mock_execute_command.return_value = fake_output_path
+        self.options['wordlist'] = fake_output_path
         self.module.setup(self.sf, self.options)
         target = SpiderFootTarget('example.com', 'INTERNET_NAME')
         self.module.setTarget(target)

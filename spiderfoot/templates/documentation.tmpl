@@ -1,763 +1,380 @@
 <%
-# Set default values for template variables to prevent undefined errors
-docroot = docroot if 'docroot' in locals() else ''
-version = version if 'version' in locals() else '4.0'
-pageid = pageid if 'pageid' in locals() else 'DOCS'
-title = title if 'title' in locals() else 'Documentation'
-content = content if 'content' in locals() else None
-raw_content = raw_content if 'raw_content' in locals() else None
+# Defensive: ensure request has .path and .args
+if not hasattr(request, 'path'):
+    request.path = '/documentation/'
+if not hasattr(request, 'args'):
+    request.args = {}
+if isinstance(request.args, tuple):
+    try:
+        request.args = dict(request.args)
+    except Exception:
+        request.args = {}
+
+# Load documentation index from README.md table
+import re
+import markdown
+import os
+import datetime
+import subprocess
+
+def parse_doc_index():
+    doc_index = []
+    readme_path = os.path.join(docroot, 'documentation', 'README.md')
+    with open(readme_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    # Find all markdown tables
+    tables = re.findall(r'(\|.*\|\n\|[ \-:|]+\|(?:\n\|.*\|)+)', content)
+    for table in tables:
+        lines = [l.strip() for l in table.split('\n') if l.strip()]
+        if len(lines) < 2:
+            continue
+        header = [c.strip().lower() for c in lines[0].strip('|').split('|')]
+        if not (('section' in header[0] and 'icon' in header[-1]) or ('file' in header[1])):
+            continue
+        for line in lines[2:]:  # skip header and separator
+            cols = [c.strip() for c in line.strip('|').split('|')]
+            if len(cols) == 3:
+                file_path = os.path.join(docroot, 'documentation', cols[1])
+                # Debug: log the file path being checked
+                try:
+                    with open('sidebar_debug.log', 'a', encoding='utf-8') as dbg:
+                        dbg.write(f"Checking: {file_path} - Exists: {os.path.isfile(file_path)}\n")
+                except Exception:
+                    pass
+                if os.path.isfile(file_path):
+                    doc_index.append({'title': cols[0], 'file': cols[1], 'icon': cols[2]})
+        if doc_index:
+            break  # Use the first matching table only
+    return doc_index
+
+doc_index = parse_doc_index()
+
+# Determine which doc to show
+import urllib.parse
+req_path = request.path
+selected_file = request.args.get('doc') or req_path.split('/')[-1]
+if not selected_file or selected_file == 'documentation' or selected_file == '':
+    selected_file = 'README.md'
+
+selected_entry = next((e for e in doc_index if e['file'] == selected_file), None)
+title = selected_entry['title'] if selected_entry else 'Documentation'
+content = ''
+try:
+    doc_path = os.path.join(docroot, 'documentation', selected_file)
+    with open(doc_path, 'r', encoding='utf-8') as f:
+        md = f.read()
+    content = markdown.markdown(md, extensions=['extra', 'fenced_code', 'tables'])
+except Exception as e:
+    content = '<div class="alert alert-warning">Documentation not found.</div>'
+
+# Enable Mermaid.js diagrams if code block is marked as mermaid
+if content:
+    content = re.sub(r'<pre><code class="language-mermaid">(.*?)</code></pre>', r'<div class="mermaid">\1</div>', content, flags=re.DOTALL)
+
+# Breadcrumbs
+breadcrumbs = [{'title': 'Documentation', 'url': '/documentation/'}]
+if selected_entry:
+    # If file is in a subfolder, add each folder as a breadcrumb
+    parts = selected_entry['file'].split('/')
+    if len(parts) > 1:
+        path_accum = ''
+        for part in parts[:-1]:
+            path_accum = f"{path_accum}{part}/"
+            breadcrumbs.append({'title': part.replace('_', ' ').title(), 'url': f"/documentation/{path_accum}"})
+    breadcrumbs.append({'title': selected_entry['title'], 'url': f"/documentation/{selected_entry['file']}"})
+
+# Search logic
+search_query = request.args.get('q', '').strip() if hasattr(request.args, 'get') else ''
+search_results = []
+if search_query:
+    for entry in doc_index:
+        doc_path = os.path.join(docroot, 'documentation', entry['file'])
+        try:
+            with open(doc_path, 'r', encoding='utf-8') as f:
+                md = f.read()
+            if search_query.lower() in md.lower() or search_query.lower() in entry['title'].lower():
+                search_results.append(entry)
+        except Exception:
+            continue
+
+def get_last_updated_and_author(path):
+    try:
+        # Get last commit info for the file
+        result = subprocess.run([
+            'git', 'log', '-1', '--format=%an|%ad', '--date=short', '--', path
+        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        author, date = result.stdout.strip().split('|')
+        return author, date
+    except Exception:
+        # Fallback to file mtime
+        try:
+            mtime = os.path.getmtime(path)
+            date = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
+            return 'Unknown', date
+        except Exception:
+            return 'Unknown', 'Unknown'
+
+doc_file_path = os.path.join(docroot, 'documentation', selected_file)
+author, last_updated = get_last_updated_and_author(doc_file_path)
+
+# Related docs: suggest up to 3 others with similar words in title
+related = []
+if selected_entry:
+    keywords = set(selected_entry['title'].lower().split())
+    for entry in doc_index:
+        if entry['file'] == selected_file:
+            continue
+        entry_words = set(entry['title'].lower().split())
+        if keywords & entry_words:
+            related.append(entry)
+    if len(related) < 3:
+        # Fill up with others
+        related += [e for e in doc_index if e not in related and e['file'] != selected_file][:3-len(related)]
 %>
-
 <%include file="HEADER.tmpl"/>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-3">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h4><i class="fa fa-book"></i> Documentation</h4>
-                </div>
-                <div class="panel-body" style="padding: 0;">
-                    <div class="list-group" style="margin-bottom: 0;">                        <!-- Getting Started -->
-                        <div class="list-group-item list-group-item-info">
-                            <strong><i class="fa fa-rocket"></i> Getting Started</strong>
-                        </div>
-                        <a href="/docs/overview.md" class="list-group-item">
-                            <i class="fa fa-info-circle"></i> Overview
-                        </a>
-                        <a href="/docs/README.md" class="list-group-item">
-                            <i class="fa fa-home"></i> Documentation Home
-                        </a>
-                        <a href="/docs/installation.md" class="list-group-item">
-                            <i class="fa fa-download"></i> Installation Guide
-                        </a>
-                        <a href="/docs/quickstart.md" class="list-group-item">
-                            <i class="fa fa-flash"></i> Quick Start
-                        </a>
-                        <a href="/docs/configuration.md" class="list-group-item">
-                            <i class="fa fa-cogs"></i> Configuration
-                        </a>                        <!-- Enterprise Features -->
-                        <div class="list-group-item list-group-item-info">
-                            <strong><i class="fa fa-building"></i> Enterprise Features</strong>
-                        </div>
-                        <a href="/docs/PRODUCTION_READY.md" class="list-group-item">
-                            <i class="fa fa-check-circle"></i> Production Ready
-                        </a>
-                        <a href="/docs/enterprise_deployment.md" class="list-group-item">
-                            <i class="fa fa-server"></i> Enterprise Deployment
-                        </a>
-                        <a href="/docs/advanced/enterprise_storage.md" class="list-group-item">
-                            <i class="fa fa-database"></i> Advanced Storage
-                        </a>
-                        <a href="/docs/advanced/ai_threat_intelligence.md" class="list-group-item">
-                            <i class="fa fa-brain"></i> AI Threat Intelligence
-                        </a>
-                        <a href="/docs/advanced/security_hardening.md" class="list-group-item">
-                            <i class="fa fa-shield"></i> Security Hardening
-                        </a>
-                        <a href="/docs/advanced/performance_optimization.md" class="list-group-item">
-                            <i class="fa fa-tachometer"></i> Performance Optimization
-                        </a>
-                        
-                        <!-- Workflow & Workspaces -->
-                        <div class="list-group-item list-group-item-info">
-                            <strong><i class="fa fa-sitemap"></i> Workflow & Workspaces</strong>
-                        </div>
-                        <a href="/docs/workflow/getting_started.md" class="list-group-item">
-                            <i class="fa fa-play"></i> Getting Started
-                        </a>
-                        <a href="/docs/workflow/multi_target_scanning.md" class="list-group-item">
-                            <i class="fa fa-crosshairs"></i> Multi-Target Scanning
-                        </a>
-                        <a href="/docs/workflow/correlation_analysis.md" class="list-group-item">
-                            <i class="fa fa-share-alt"></i> Correlation Analysis
-                        </a>
-                        <a href="/docs/workflow/cti_reports.md" class="list-group-item">
-                            <i class="fa fa-file-text-o"></i> CTI Reports
-                        </a>
-                          <!-- User Guide -->
-                        <div class="list-group-item list-group-item-info">
-                            <strong><i class="fa fa-user"></i> User Guide</strong>
-                        </div>
-                        <a href="/docs/user_guide/basic_usage.md" class="list-group-item">
-                            <i class="fa fa-play"></i> Basic Usage
-                        </a>
-                        <a href="/docs/user_guide/web_interface.md" class="list-group-item">
-                            <i class="fa fa-desktop"></i> Web Interface
-                        </a>
-                        <a href="/docs/user_guide/cli_usage.md" class="list-group-item">
-                            <i class="fa fa-terminal"></i> CLI Usage
-                        </a>
-                        <a href="/docs/user_guide/modules_guide.md" class="list-group-item">
-                            <i class="fa fa-puzzle-piece"></i> Modules Guide
-                        </a>
-                        
-                        <!-- Module Documentation -->
-                        <div class="list-group-item list-group-item-info">
-                            <strong><i class="fa fa-puzzle-piece"></i> Modules</strong>
-                        </div>
-                        <a href="/docs/modules/index.md" class="list-group-item">
-                            <i class="fa fa-list"></i> Module Index
-                        </a>
-                        <a href="/docs/modules/sfp_recordedfuture.md" class="list-group-item">
-                            <i class="fa fa-shield"></i> Recorded Future
-                        </a>
-                        <a href="/docs/modules/custom_modules.md" class="list-group-item">
-                            <i class="fa fa-code"></i> Custom Modules
-                        </a>
-                        
-                        <!-- API Reference -->
-                        <div class="list-group-item list-group-item-info">
-                            <strong><i class="fa fa-code"></i> API Reference</strong>
-                        </div>
-                        <a href="/docs/api/rest_api.md" class="list-group-item">
-                            <i class="fa fa-exchange"></i> REST API
-                        </a>
-                        <a href="/docs/python_api.md" class="list-group-item">
-                            <i class="fa fa-python"></i> Python API
-                        </a>
-                        <a href="/docs/webhook_integration.md" class="list-group-item">
-                            <i class="fa fa-link"></i> Webhook Integration
-                        </a>                        <!-- Advanced Topics -->
-                        <div class="list-group-item list-group-item-info">
-                            <strong><i class="fa fa-graduation-cap"></i> Advanced</strong>
-                        </div>
-                        <a href="/docs/docker_deployment.md" class="list-group-item">
-                            <i class="fa fa-docker"></i> Docker Deployment
-                        </a>
-                        <a href="/docs/advanced/performance_optimization.md" class="list-group-item">
-                            <i class="fa fa-rocket"></i> Performance Optimization
-                        </a>
-                        <a href="/docs/advanced/performance_tuning.md" class="list-group-item">
-                            <i class="fa fa-tachometer"></i> Performance Tuning
-                        </a>
-                        <a href="/docs/security_considerations.md" class="list-group-item">
-                            <i class="fa fa-lock"></i> Security
-                        </a>
-                        <a href="/docs/troubleshooting.md" class="list-group-item">
-                            <i class="fa fa-wrench"></i> Troubleshooting
-                        </a>                        <!-- Developer Guide -->
-                        <div class="list-group-item list-group-item-info">
-                            <strong><i class="fa fa-code-fork"></i> Developers</strong>
-                        </div>
-                        <a href="/docs/contributing.md" class="list-group-item">
-                            <i class="fa fa-heart"></i> Contributing
-                        </a>
-                        <a href="/docs/developer/module_development.md" class="list-group-item">
-                            <i class="fa fa-gear"></i> Module Development
-                        </a>
-                        <a href="/docs/developer/api_development.md" class="list-group-item">
-                            <i class="fa fa-server"></i> API Development
-                        </a>
-                        <a href="/docs/VERSION_MANAGEMENT.md" class="list-group-item">
-                            <i class="fa fa-tag"></i> Version Management
-                        </a>
-                        <a href="/docs/DOCUMENTATION_BUILD.md" class="list-group-item">
-                            <i class="fa fa-book"></i> Documentation Build
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Debug Information - Remove problematic variables -->
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h5><i class="fa fa-bug"></i> Debug Info</h5>
-                </div>
-                <div class="panel-body">
-                    <small>
-                        <strong>Current URL:</strong> <span id="current-url"></span><br>
-                        <strong>Doc Parameter:</strong> <span id="doc-param"></span><br>
-                        <strong>Template Status:</strong> Loaded Successfully
-                    </small>
-                </div>
-            </div>
-            
-            <!-- Quick Links -->
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h5><i class="fa fa-external-link"></i> Quick Links</h5>
-                </div>
-                <div class="panel-body">
-                    <div class="btn-group-vertical btn-block">
-                        <a href="https://github.com/poppopjmp/spiderfoot" class="btn btn-sm btn-default" target="_blank">
-                            <i class="fa fa-github"></i> GitHub Repository
-                        </a>
-                        <a href="https://discord.gg/vyvztrG" class="btn btn-sm btn-default" target="_blank">
-                            <i class="fa fa-discord"></i> Discord Community
-                        </a>
-                        <a href="https://twitter.com/van1sh_bsidesit" class="btn btn-sm btn-default" target="_blank">
-                            <i class="fa fa-twitter"></i> Twitter Updates
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-          <div class="col-md-9">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h3 class="panel-title">
-                                <i class="fa fa-file-text-o"></i> <span id="doc-title">${title}</span>
-                            </h3>
-                        </div>
-                        <div class="col-md-4 text-right">
-                            <div class="btn-group btn-group-sm">
-                                <button type="button" class="btn btn-default" onclick="window.print()">
-                                    <i class="fa fa-print"></i> Print
-                                </button>
-                                <button type="button" class="btn btn-default" onclick="alertify.message('Export feature coming soon')">
-                                    <i class="fa fa-download"></i> Export
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel-body" id="doc-content">
-                    % if content:
-                    <div class="markdown-content">
-                        ${content | n}
-                    </div>
-                    % elif raw_content:
-                    <div class="raw-content">
-                        <pre>${raw_content}</pre>
-                    </div>
-                    % else:
-                    <div class="alert alert-info">
-                        <i class="fa fa-info-circle"></i>
-                        <strong>Welcome to SpiderFoot Documentation</strong><br>
-                        Select a documentation topic from the navigation menu on the left to get started.
-                    </div>
-                    
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h6><i class="fa fa-rocket"></i> Quick Start Guide</h6>
-                        </div>
-                        <div class="panel-body">
-                            <h4>Getting Started with SpiderFoot</h4>
-                            <p>SpiderFoot is an open source intelligence (OSINT) automation tool. Here's how to get started:</p>
-                            
-                            <h5>1. Basic Scanning</h5>
-                            <pre><code># Start a basic domain scan
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl,sfp_whois</code></pre>
-                            
-                            <h5>2. Web Interface</h5>
-                            <ul>
-                                <li>Navigate to <strong>New Scan</strong> to start a traditional scan</li>
-                                <li>Use <strong>Workspaces</strong> for multi-target assessments</li>
-                                <li>Check <strong>Settings</strong> to configure API keys</li>
-                            </ul>
-                            
-                            <h5>3. Workspace Scanning</h5>
-                            <pre><code># Create workspace for multi-target scanning
-python sfworkflow.py create-workspace "My Assessment"
-python sfworkflow.py add-target ws_abc123 example.com --type DOMAIN_NAME
-python sfworkflow.py multi-scan ws_abc123 --modules sfp_dnsresolve,sfp_ssl</code></pre>
-                            
-                            <h5>4. Common Modules</h5>
-                            <ul>
-                                <li><code>sfp_dnsresolve</code> - DNS resolution</li>
-                                <li><code>sfp_ssl</code> - SSL certificate analysis</li>
-                                <li><code>sfp_whois</code> - WHOIS information</li>
-                                <li><code>sfp_portscan_tcp</code> - Port scanning</li>
-                                <li><code>sfp_threatcrowd</code> - Threat intelligence</li>
-                            </ul>
-                            
-                            <h5>5. Getting Help</h5>
-                            <pre><code># List all modules
-python sf.py -M
-
-# Get help for specific module  
-python sf.py -M sfp_dnsresolve
-
-# Command line help
-python sf.py --help</code></pre>
-                            
-                            <h5>6. Key Features</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6>Traditional Scanning</h6>
-                                    <ul>
-                                        <li>Single target scans</li>
-                                        <li>200+ intelligence modules</li>
-                                        <li>Real-time progress monitoring</li>
-                                        <li>Multiple export formats</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6>Workspace Features</h6>
-                                    <ul>
-                                        <li>Multi-target management</li>
-                                        <li>Cross-correlation analysis</li>
-                                        <li>CTI report generation</li>
-                                        <li>Team collaboration</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <div class="alert alert-success">
-                                <strong>Next Steps:</strong> Click on any documentation link in the left sidebar to explore specific topics in detail.
-                            </div>
-                        </div>
-                    </div>
-                    % endif
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+<style id="dark-mode-style" disabled>
+/* ...existing code... */
+</style>
 <style>
-/* Documentation-specific styles */
-.markdown-content {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    line-height: 1.6;
-}
-
-.markdown-content h1, .markdown-content h2, .markdown-content h3, .markdown-content h4, .markdown-content h5, .markdown-content h6 {
-    margin-top: 24px;
-    margin-bottom: 16px;
-    font-weight: 600;
-    line-height: 1.25;
-    color: #24292e;
-}
-
-.markdown-content h1 {
-    padding-bottom: 0.3em;
-    border-bottom: 1px solid #eaecef;
-}
-
-.markdown-content h2 {
-    padding-bottom: 0.3em;
-    border-bottom: 1px solid #eaecef;
-}
-
-.markdown-content code {
-    padding: 0.2em 0.4em;
-    margin: 0;
-    font-size: 85%;
-    background-color: rgba(27,31,35,0.05);
-    border-radius: 3px;
-}
-
-.markdown-content pre {
-    padding: 16px;
-    overflow: auto;
-    font-size: 85%;
-    line-height: 1.45;
-    background-color: #f6f8fa;
-    border-radius: 6px;
-    border: 1px solid #e1e4e8;
-}
-
-.markdown-content pre code {
-    background: transparent;
-    border: 0;
-    padding: 0;
-    margin: 0;
-}
-
-.markdown-content blockquote {
-    padding: 0 1em;
-    color: #6a737d;
-    border-left: 0.25em solid #dfe2e5;
-    margin: 0 0 16px 0;
-}
-
-.markdown-content table {
-    border-spacing: 0;
-    border-collapse: collapse;
-    width: 100%;
-    margin-bottom: 16px;
-}
-
-.markdown-content table th,
-.markdown-content table td {
-    padding: 6px 13px;
-    border: 1px solid #dfe2e5;
-}
-
-.markdown-content table th {
-    font-weight: 600;
-    background-color: #f6f8fa;
-}
-
-.markdown-content table tr:nth-child(2n) {
-    background-color: #f6f8fa;
-}
-
-.list-group-item.active {
-    background-color: #337ab7;
-    border-color: #337ab7;
-}
-
-.list-group-item:hover {
-    background-color: #f5f5f5;
-}
-
-.text-content pre,
-.raw-content pre {
-    max-height: 600px;
-    overflow-y: auto;
-}
-
-#toc-content {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-#toc-content a {
-    display: block;
-    padding: 4px 8px;
-    text-decoration: none;
-    color: #333;
-    border-left: 3px solid transparent;
-}
-
-#toc-content a:hover {
-    background-color: #f5f5f5;
-    border-left-color: #337ab7;
-}
-
-.documentation-breadcrumb {
-    background: #f8f9fa;
-    padding: 8px 15px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    font-size: 12px;
-}
-
-.documentation-breadcrumb a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.documentation-breadcrumb a:hover {
-    text-decoration: underline;
+@media print {
+  body, #doc-root, .container-fluid, .panel, .panel-default, .panel-body, .markdown-content {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .panel, .panel-default {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .panel-heading, .panel-footer, .documentation-breadcrumb, #dark-toggle, #export-pdf-btn, .btn, .panel-default > .panel-heading, .panel-default > .panel-footer, .panel-default > .panel-heading *, .panel-default > .panel-footer * {
+    display: none !important;
+  }
+  .list-group, .panel-default > .panel-body, .panel-body, .markdown-content {
+    border: none !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  pre, code {
+    background: #f5f5f5 !important;
+    color: #222 !important;
+    border: 1px solid #ccc !important;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: underline !important;
+  }
+  #doc-feedback, #related-docs, #toc-content, .copy-btn {
+    display: none !important;
+  }
 }
 </style>
-
+<div class="container-fluid" id="doc-root">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4><i class="fa fa-book"></i> Documentation
+            <button id="dark-toggle" class="btn btn-xs btn-default pull-right" title="Toggle dark mode" style="margin-top:-2px;">
+              <i class="fa fa-moon-o"></i>
+            </button>
+          </h4>
+        </div>
+        <div class="panel-body" style="padding: 0;">
+          % if version_dirs:
+          <form method="get" action="/documentation/" style="padding: 10px 10px 0 10px;">
+            <div class="form-group">
+              <label for="version-select"><i class="fa fa-code-fork"></i> Version:</label>
+              <select id="version-select" name="ver" class="form-control input-sm" onchange="this.form.submit()">
+                <option value="latest"${' selected' if current_version=='latest' else ''}>Latest</option>
+                % for v in version_dirs:
+                  <option value="${v}"${' selected' if v==current_version else ''}>${v}</option>
+                % endfor
+              </select>
+              <input type="hidden" name="doc" value="${selected_file}">
+              <input type="hidden" name="q" value="${search_query}">
+            </div>
+          </form>
+          % endif
+          <form method="get" action="/documentation/" style="padding: 10px;">
+            <div class="input-group">
+              <input type="text" class="form-control" name="q" placeholder="Search docs..." value="${search_query}">
+              <span class="input-group-btn">
+                <button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
+              </span>
+            </div>
+          </form>
+          <div class="list-group" style="margin-bottom: 0;">
+            % if search_query:
+              % if search_results:
+                % for entry in search_results:
+                  <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==selected_file else ''}">
+                    <i class="${entry['icon']}"></i> ${highlight(entry['title'], search_query)}
+                  </a>
+                % endfor
+              % else:
+                <div class="list-group-item">No results found.</div>
+              % endif
+            % else:
+              % for entry in doc_index:
+                <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==selected_file else ''}">
+                  <i class="${entry['icon']}"></i> ${entry['title']}
+                </a>
+              % endfor
+            % endif
+          </div>
+          % if toc_html:
+            <div class="panel panel-default" style="margin:10px 0 0 0;">
+              <div class="panel-heading"><strong><i class="fa fa-list"></i> Contents</strong></div>
+              <div class="panel-body" style="padding:10px;">
+                ${toc_html | n}
+              </div>
+            </div>
+          % endif
+        </div>
+      </div>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h5><i class="fa fa-external-link"></i> Quick Links</h5>
+        </div>
+        <div class="panel-body">
+          <div class="btn-group-vertical btn-block">
+            <a href="https://github.com/poppopjmp/spiderfoot" class="btn btn-sm btn-default" target="_blank">
+              <i class="fa fa-github"></i> GitHub Repository
+            </a>
+            <a href="https://discord.gg/vyvztrG" class="btn btn-sm btn-default" target="_blank">
+              <i class="fa fa-discord"></i> Discord Community
+            </a>
+            <a href="https://twitter.com/van1sh_bsidesit" class="btn btn-sm btn-default" target="_blank">
+              <i class="fa fa-twitter"></i> Twitter Updates
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <div class="row">
+            <div class="col-md-8">
+              <h3 class="panel-title">
+                <i class="fa fa-file-text-o"></i> <span id="doc-title">${title}</span>
+              </h3>
+            </div>
+            <div class="col-md-4 text-right">
+              <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" onclick="window.print()">
+                  <i class="fa fa-print"></i> Print
+                </button>
+                <button type="button" class="btn btn-default" id="export-pdf-btn">
+                  <i class="fa fa-file-pdf-o"></i> Export PDF
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="documentation-breadcrumb" style="margin-top:10px;">
+            % for crumb in breadcrumbs:
+              <a href="${crumb['url']}">${crumb['title']}</a>
+              % if not loop.last:
+                &raquo;
+              % endif
+            % endfor
+          </div>
+          <div style="font-size:12px; color:#888; margin-top:5px;">
+            <i class="fa fa-clock-o"></i> Last updated: ${last_updated}
+            &nbsp;|&nbsp;
+            <i class="fa fa-user"></i> Author: ${author}
+          </div>
+        </div>
+        <div class="panel-body" id="doc-content">
+          <div class="markdown-content" id="markdown-content">
+            ${highlight(content, search_query) if search_query else content | n}
+          </div>
+          <div id="doc-feedback" style="margin-top:30px; border-top:1px solid #eee; padding-top:15px;">
+            <strong>Was this page helpful?</strong>
+            <span style="margin-left:10px;">
+              <button class="btn btn-xs btn-success" onclick="rateDoc('yes')"><i class="fa fa-thumbs-up"></i> Yes</button>
+              <button class="btn btn-xs btn-danger" onclick="rateDoc('no')"><i class="fa fa-thumbs-down"></i> No</button>
+            </span>
+            <span id="feedback-msg" style="margin-left:15px; color: #4cae4c; display:none;"></span>
+          </div>
+          % if related:
+          <div id="related-docs" style="margin-top:30px; border-top:1px solid #eee; padding-top:15px;">
+            <strong><i class="fa fa-link"></i> Related Articles</strong>
+            <ul>
+              % for entry in related:
+                <li><a href="/documentation/${entry['file']}"><i class="${entry['icon']}"></i> ${entry['title']}</a></li>
+              % endfor
+            </ul>
+          </div>
+          % endif
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>
-$(document).ready(function() {
-    console.log('Documentation script starting...');
-    
-    try {
-        console.log('Setting up debug information...');
-        
-        // Minimal JavaScript - just basic functionality
-        $('#current-url').text(window.location.href);
-        console.log('Current URL set:', window.location.href);
-        
-        var urlParams = new URLSearchParams(window.location.search);
-        var docParam = urlParams.get('doc') || 'none';
-        $('#doc-param').text(docParam);
-        console.log('Doc parameter set:', docParam);
-          console.log('Setting up click handlers...');
-        
-        // Enhanced click handlers to actually load documentation
-        $('.list-group-item[href]').click(function(e) {
-            try {
-                var href = $(this).attr('href');
-                console.log('Link clicked:', href);
-                
-                if (href && href.indexOf('/docs/') === 0) {
-                    e.preventDefault();
-                    console.log('Loading documentation for:', href);
-                    
-                    var linkText = $(this).text().trim();
-                    var cleanTitle = linkText.replace(/^\s*[\w\-]+\s+/, '').trim();
-                    
-                    // Update title immediately
-                    $('#doc-title').text(cleanTitle);
-                    
-                    // Remove active class from all items and add to current
-                    $('.list-group-item').removeClass('active');
-                    $(this).addClass('active');
-                    
-                    // Show loading message
-                    $('#doc-content').html('<div class="alert alert-info"><i class="fa fa-spinner fa-spin"></i> Loading documentation...</div>');
-                    
-                    // Try to load the actual documentation
-                    loadDocumentationContent(href, cleanTitle);
-                } else {
-                    console.log('External link, allowing default behavior');
-                }
-            } catch (clickError) {
-                console.error('Error in click handler:', clickError);
-                $('#doc-content').html('<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Error loading documentation.</div>');
-            }
-        });
-          // Function to load documentation content
-        function loadDocumentationContent(path, title) {
-            // Make AJAX request to load documentation with proper headers
-            $.ajax({
-                url: '/docs' + path.replace('/docs', ''),
-                method: 'GET',
-                timeout: 10000,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'  // This tells the server it's an AJAX request
-                },
-                success: function(data) {
-                    console.log('Documentation loaded successfully');
-                    // The server should return just the content for AJAX requests
-                    $('#doc-content').html(data);
-                },
-                error: function(xhr, status, error) {
-                    console.log('Failed to load documentation, showing fallback content');
-                    showFallbackContent(path, title);
-                }
-            });
-        }
-        
-        // Function to show fallback content when documentation files don't exist
-        function showFallbackContent(path, title) {
-            var fallbackContent = getFallbackContent(path, title);
-            $('#doc-content').html(fallbackContent);
-        }
-        
-        // Fallback content for different documentation types
-        function getFallbackContent(path, title) {
-            var content = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> ';
-            content += '<strong>' + title + '</strong><br>';
-            content += 'This documentation section is being developed. ';
-            content += 'Please check the <a href="https://github.com/poppopjmp/spiderfoot" target="_blank">GitHub repository</a> for more information.</div>';
-            
-            // Add specific content based on the path
-            if (path.includes('installation')) {
-                content += getInstallationContent();
-            } else if (path.includes('quickstart')) {
-                content += getQuickStartContent();
-            } else if (path.includes('configuration')) {
-                content += getConfigurationContent();
-            } else if (path.includes('modules')) {
-                content += getModulesContent();
-            } else if (path.includes('api')) {
-                content += getAPIContent();
-            }
-            
-            return content;
-        }
-        
-        function getInstallationContent() {
-            return `
-                <div class="panel panel-default">
-                    <div class="panel-heading"><h5><i class="fa fa-download"></i> Installation Guide</h5></div>
-                    <div class="panel-body">
-                        <h4>Quick Installation</h4>
-                        <pre><code># Clone repository
-git clone https://github.com/poppopjmp/spiderfoot.git
-cd spiderfoot
-
-# Install dependencies
-pip3 install -r requirements.txt
-
-# Start SpiderFoot
-python3 ./sf.py -l 127.0.0.1:5001</code></pre>
-                        
-                        <h4>System Requirements</h4>
-                        <ul>
-                            <li>Python 3.7 or higher</li>
-                            <li>512 MB RAM minimum (2 GB+ recommended)</li>
-                            <li>1 GB available disk space</li>
-                            <li>Internet connection</li>
-                        </ul>
-                        
-                        <h4>Docker Installation</h4>
-                        <pre><code># Using Docker
-docker run -p 5001:5001 poppopjmp/spiderfoot
-
-# Using Docker Compose
-docker-compose up</code></pre>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function getQuickStartContent() {
-            return `
-                <div class="panel panel-default">
-                    <div class="panel-heading"><h5><i class="fa fa-flash"></i> Quick Start Guide</h5></div>
-                    <div class="panel-body">
-                        <h4>First Scan</h4>
-                        <ol>
-                            <li>Open http://127.0.0.1:5001 in your browser</li>
-                            <li>Click "New Scan"</li>
-                            <li>Enter a target (e.g., "example.com")</li>
-                            <li>Select "Domain Name" as target type</li>
-                            <li>Choose modules or use "All"</li>
-                            <li>Click "Run Scan Now"</li>
-                        </ol>
-                        
-                        <h4>Command Line Scanning</h4>
-                        <pre><code># Basic domain scan
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl,sfp_whois</code></pre>
-                        
-                        <h4>Workspace Scanning</h4>
-                        <pre><code># Create workspace
-python sfworkflow.py create-workspace "My Assessment"
-
-# Add targets and scan
-python sfworkflow.py add-target ws_abc123 example.com --type DOMAIN_NAME
-python sfworkflow.py multi-scan ws_abc123 --modules sfp_dnsresolve,sfp_ssl</code></pre>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function getConfigurationContent() {
-            return `
-                <div class="panel panel-default">
-                    <div class="panel-heading"><h5><i class="fa fa-cogs"></i> Configuration Guide</h5></div>
-                    <div class="panel-body">
-                        <h4>API Keys Configuration</h4>
-                        <p>Configure API keys through the web interface: <strong>Settings → Module Settings</strong></p>
-                        
-                        <h4>Common API Keys</h4>
-                        <ul>
-                            <li><strong>VirusTotal</strong>: Malware and threat intelligence</li>
-                            <li><strong>Shodan</strong>: Internet device discovery</li>
-                            <li><strong>Hunter.io</strong>: Email discovery</li>
-                            <li><strong>SecurityTrails</strong>: DNS and domain intelligence</li>
-                            <li><strong>Have I Been Pwned</strong>: Breach data</li>
-                        </ul>
-                        
-                        <h4>Configuration File</h4>
-                        <p>Edit <code>spiderfoot.conf</code> for advanced configuration options:</p>
-                        <pre><code># Web interface settings
-[webui]
-host = 127.0.0.1
-port = 5001
-
-# Database settings  
-[database]
-path = spiderfoot.db</code></pre>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function getModulesContent() {
-            return `
-                <div class="panel panel-default">
-                    <div class="panel-heading"><h5><i class="fa fa-puzzle-piece"></i> Modules Guide</h5></div>
-                    <div class="panel-body">
-                        <h4>Popular Modules</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6>DNS & Network</h6>
-                                <ul>
-                                    <li><code>sfp_dnsresolve</code> - DNS resolution</li>
-                                    <li><code>sfp_ssl</code> - SSL certificate analysis</li>
-                                    <li><code>sfp_portscan_tcp</code> - Port scanning</li>
-                                    <li><code>sfp_whois</code> - WHOIS information</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>Threat Intelligence</h6>
-                                <ul>
-                                    <li><code>sfp_virustotal</code> - VirusTotal integration</li>
-                                    <li><code>sfp_shodan</code> - Shodan integration</li>
-                                    <li><code>sfp_threatcrowd</code> - ThreatCrowd data</li>
-                                    <li><code>sfp_maltiverse</code> - Maltiverse data</li>
-                                </ul>
-                            </div>
-                        </div>
-                        
-                        <h4>Module Commands</h4>
-                        <pre><code># List all modules
-python sf.py -M
-
-# Get help for specific module
-python sf.py -M sfp_dnsresolve
-
-# Run scan with specific modules
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl</code></pre>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function getAPIContent() {
-            return `
-                <div class="panel panel-default">
-                    <div class="panel-heading"><h5><i class="fa fa-code"></i> API Reference</h5></div>
-                    <div class="panel-body">
-                        <h4>REST API Endpoints</h4>
-                        <pre><code># Get scan list
-GET /api/scans
-
-# Start new scan
-POST /api/scans
-{
-  "target": "example.com",
-  "type": "DOMAIN_NAME", 
-  "modules": ["sfp_dnsresolve", "sfp_ssl"]
-}
-
-# Get scan results
-GET /api/scans/{scanId}/results</code></pre>
-                        
-                        <h4>Python API Example</h4>
-                        <pre><code>from sflib import SpiderFoot
-from sfscan import startSpiderFootScanner
-
-# Initialize SpiderFoot
-sf = SpiderFoot()
-
-# Start scan
-scanner = startSpiderFootScanner(
-    target="example.com",
-    targetType="DOMAIN_NAME",
-    modules=["sfp_dnsresolve", "sfp_ssl"]
-)</code></pre>
-                    </div>
-                </div>
-            `;
-        }
-        
-        console.log('Documentation script initialization complete');
-        
-    } catch (error) {
-        console.error('Documentation initialization error:', error);
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            name: error.name
-        });
-        
-        // Try to show error in UI
-        try {
-            $('#doc-content').html(
-                '<div class="alert alert-danger">' +
-                '<i class="fa fa-exclamation-triangle"></i> ' +
-                '<strong>JavaScript Error:</strong> ' + error.message + '<br>' +
-                '<small>Check browser console for details</small>' +
-                '</div>'
-            );
-        } catch (uiError) {
-            console.error('Could not update UI with error:', uiError);
-        }
-    }
-});
-
-// Add global error handler
-window.onerror = function(message, source, lineno, colno, error) {
-    console.error('Global JavaScript error:', {
-        message: message,
-        source: source,
-        line: lineno,
-        column: colno,
-        error: error
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: true });
+  setTimeout(function(){
+    document.querySelectorAll('.mermaid').forEach(function(el){
+      try { mermaid.init(undefined, el); } catch(e){}
     });
-    return false;
+  }, 200);
+}
+document.getElementById('export-pdf-btn').onclick = function() {
+  const doc = new window.jspdf.jsPDF({unit: 'pt', format: 'a4'});
+  doc.html(document.getElementById('doc-content'), {
+    callback: function (pdf) {
+      pdf.save(document.getElementById('doc-title').textContent + '.pdf');
+    },
+    x: 20, y: 20, width: 555
+  });
 };
-
-// Add unhandled promise rejection handler
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('Unhandled promise rejection:', event.reason);
-});
-
-    console.log('Documentation template loaded, waiting for DOM ready...');
+function rateDoc(val) {
+  var msg = document.getElementById('feedback-msg');
+  msg.style.display = 'inline';
+  msg.textContent = (val === 'yes') ? 'Thank you for your feedback!' : 'Sorry to hear that. We appreciate your input!';
+  setTimeout(function(){ msg.style.display = 'none'; }, 4000);
+}
+// Copy-to-clipboard for code blocks
+setTimeout(function() {
+  document.querySelectorAll('.copy-btn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      var code = btn.parentElement.querySelector('code');
+      if (code) {
+        var text = code.innerText || code.textContent;
+        navigator.clipboard.writeText(text);
+        btn.title = 'Copied!';
+        btn.querySelector('i').className = 'fa fa-check';
+        setTimeout(function(){
+          btn.title = 'Copy';
+          btn.querySelector('i').className = 'fa fa-clipboard';
+        }, 1500);
+      }
+      e.stopPropagation();
+    };
+    btn.style.cursor = 'pointer';
+    btn.style.float = 'right';
+    btn.style.margin = '2px 0 0 8px';
+    btn.style.color = '#888';
+  });
+}, 100);
+document.getElementById('dark-toggle').onclick = function() {
+  var root = document.getElementById('doc-root');
+  var dark = root.classList.toggle('dark-mode');
+  document.body.classList.toggle('dark-mode', dark);
+  document.getElementById('dark-mode-style').disabled = !dark;
+  localStorage.setItem('doc-dark-mode', dark ? '1' : '0');
+};
+(function(){
+  var dark = localStorage.getItem('doc-dark-mode') === '1';
+  if (dark) {
+    document.getElementById('doc-root').classList.add('dark-mode');
+    document.body.classList.add('dark-mode');
+    document.getElementById('dark-mode-style').disabled = false;
+  }
+})();
 </script>
-
 <%include file="FOOTER.tmpl"/>

@@ -21,6 +21,7 @@ class TestModuleIntegrationToolNmap(unittest.TestCase):
         self.sf.validIpNetwork = lambda x: False
         self.module = sfp_tool_nmap()
         self.module.__name__ = 'sfp_tool_nmap'
+        self.module.debug = print  # Patch debug to print for test output
         # Cross-platform nmap path
         if sys.platform.startswith('win'):
             nmap_path = r'C:\Program Files (x86)\Nmap\nmap.exe'
