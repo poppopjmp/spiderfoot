@@ -1,136 +1,3 @@
-<%
-# Defensive: ensure request has .path and .args
-if not hasattr(request, 'path'):
-    request.path = '/documentation/'
-if not hasattr(request, 'args'):
-    request.args = {}
-if isinstance(request.args, tuple):
-    try:
-        request.args = dict(request.args)
-    except Exception:
-        request.args = {}
-
-# Load documentation index from README.md table
-import re
-import markdown
-import os
-import datetime
-import subprocess
-
-def parse_doc_index():
-    doc_index = []
-    readme_path = os.path.join(docroot, 'documentation', 'README.md')
-    with open(readme_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    # Find all markdown tables
-    tables = re.findall(r'(\|.*\|\n\|[ \-:|]+\|(?:\n\|.*\|)+)', content)
-    for table in tables:
-        lines = [l.strip() for l in table.split('\n') if l.strip()]
-        if len(lines) < 2:
-            continue
-        header = [c.strip().lower() for c in lines[0].strip('|').split('|')]
-        if not (('section' in header[0] and 'icon' in header[-1]) or ('file' in header[1])):
-            continue
-        for line in lines[2:]:  # skip header and separator
-            cols = [c.strip() for c in line.strip('|').split('|')]
-            if len(cols) == 3:
-                file_path = os.path.join(docroot, 'documentation', cols[1])
-                # Debug: log the file path being checked
-                try:
-                    with open('sidebar_debug.log', 'a', encoding='utf-8') as dbg:
-                        dbg.write(f"Checking: {file_path} - Exists: {os.path.isfile(file_path)}\n")
-                except Exception:
-                    pass
-                if os.path.isfile(file_path):
-                    doc_index.append({'title': cols[0], 'file': cols[1], 'icon': cols[2]})
-        if doc_index:
-            break  # Use the first matching table only
-    return doc_index
-
-doc_index = parse_doc_index()
-
-# Determine which doc to show
-import urllib.parse
-req_path = request.path
-selected_file = request.args.get('doc') or req_path.split('/')[-1]
-if not selected_file or selected_file == 'documentation' or selected_file == '':
-    selected_file = 'README.md'
-
-selected_entry = next((e for e in doc_index if e['file'] == selected_file), None)
-title = selected_entry['title'] if selected_entry else 'Documentation'
-content = ''
-try:
-    doc_path = os.path.join(docroot, 'documentation', selected_file)
-    with open(doc_path, 'r', encoding='utf-8') as f:
-        md = f.read()
-    content = markdown.markdown(md, extensions=['extra', 'fenced_code', 'tables'])
-except Exception as e:
-    content = '<div class="alert alert-warning">Documentation not found.</div>'
-
-# Enable Mermaid.js diagrams if code block is marked as mermaid
-if content:
-    content = re.sub(r'<pre><code class="language-mermaid">(.*?)</code></pre>', r'<div class="mermaid">\1</div>', content, flags=re.DOTALL)
-
-# Breadcrumbs
-breadcrumbs = [{'title': 'Documentation', 'url': '/documentation/'}]
-if selected_entry:
-    # If file is in a subfolder, add each folder as a breadcrumb
-    parts = selected_entry['file'].split('/')
-    if len(parts) > 1:
-        path_accum = ''
-        for part in parts[:-1]:
-            path_accum = f"{path_accum}{part}/"
-            breadcrumbs.append({'title': part.replace('_', ' ').title(), 'url': f"/documentation/{path_accum}"})
-    breadcrumbs.append({'title': selected_entry['title'], 'url': f"/documentation/{selected_entry['file']}"})
-
-# Search logic
-search_query = request.args.get('q', '').strip() if hasattr(request.args, 'get') else ''
-search_results = []
-if search_query:
-    for entry in doc_index:
-        doc_path = os.path.join(docroot, 'documentation', entry['file'])
-        try:
-            with open(doc_path, 'r', encoding='utf-8') as f:
-                md = f.read()
-            if search_query.lower() in md.lower() or search_query.lower() in entry['title'].lower():
-                search_results.append(entry)
-        except Exception:
-            continue
-
-def get_last_updated_and_author(path):
-    try:
-        # Get last commit info for the file
-        result = subprocess.run([
-            'git', 'log', '-1', '--format=%an|%ad', '--date=short', '--', path
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-        author, date = result.stdout.strip().split('|')
-        return author, date
-    except Exception:
-        # Fallback to file mtime
-        try:
-            mtime = os.path.getmtime(path)
-            date = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
-            return 'Unknown', date
-        except Exception:
-            return 'Unknown', 'Unknown'
-
-doc_file_path = os.path.join(docroot, 'documentation', selected_file)
-author, last_updated = get_last_updated_and_author(doc_file_path)
-
-# Related docs: suggest up to 3 others with similar words in title
-related = []
-if selected_entry:
-    keywords = set(selected_entry['title'].lower().split())
-    for entry in doc_index:
-        if entry['file'] == selected_file:
-            continue
-        entry_words = set(entry['title'].lower().split())
-        if keywords & entry_words:
-            related.append(entry)
-    if len(related) < 3:
-        # Fill up with others
-        related += [e for e in doc_index if e not in related and e['file'] != selected_file][:3-len(related)]
-%>
 <%include file="HEADER.tmpl"/>
 <style id="dark-mode-style" disabled>
 /* ...existing code... */
@@ -180,13 +47,13 @@ if selected_entry:
           </h4>
         </div>
         <div class="panel-body" style="padding: 0;">
-          % if version_dirs:
+          % if version_dirs and hasattr(version_dirs, '__iter__'):
           <form method="get" action="/documentation/" style="padding: 10px 10px 0 10px;">
             <div class="form-group">
               <label for="version-select"><i class="fa fa-code-fork"></i> Version:</label>
               <select id="version-select" name="ver" class="form-control input-sm" onchange="this.form.submit()">
                 <option value="latest"${' selected' if current_version=='latest' else ''}>Latest</option>
-                % for v in version_dirs:
+                % for v in version_dirs or []:
                   <option value="${v}"${' selected' if v==current_version else ''}>${v}</option>
                 % endfor
               </select>
@@ -205,8 +72,8 @@ if selected_entry:
           </form>
           <div class="list-group" style="margin-bottom: 0;">
             % if search_query:
-              % if search_results:
-                % for entry in search_results:
+              % if search_results and hasattr(search_results, '__iter__'):
+                % for entry in search_results or []:
                   <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==selected_file else ''}">
                     <i class="${entry['icon']}"></i> ${highlight(entry['title'], search_query)}
                   </a>
@@ -215,11 +82,13 @@ if selected_entry:
                 <div class="list-group-item">No results found.</div>
               % endif
             % else:
-              % for entry in doc_index:
-                <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==selected_file else ''}">
-                  <i class="${entry['icon']}"></i> ${entry['title']}
-                </a>
-              % endfor
+              % if doc_index and hasattr(doc_index, '__iter__'):
+                % for entry in doc_index or []:
+                  <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==selected_file else ''}">
+                    <i class="${entry['icon']}"></i> ${entry['title']}
+                  </a>
+                % endfor
+              % endif
             % endif
           </div>
           % if toc_html:
@@ -272,12 +141,14 @@ if selected_entry:
             </div>
           </div>
           <div class="documentation-breadcrumb" style="margin-top:10px;">
-            % for crumb in breadcrumbs:
-              <a href="${crumb['url']}">${crumb['title']}</a>
-              % if not loop.last:
-                &raquo;
-              % endif
-            % endfor
+            % if breadcrumbs and hasattr(breadcrumbs, '__iter__'):
+              % for crumb in breadcrumbs or []:
+                <a href="${crumb['url']}">${crumb['title']}</a>
+                % if not loop.last:
+                  &raquo;
+                % endif
+              % endfor
+            % endif
           </div>
           <div style="font-size:12px; color:#888; margin-top:5px;">
             <i class="fa fa-clock-o"></i> Last updated: ${last_updated}
@@ -297,11 +168,11 @@ if selected_entry:
             </span>
             <span id="feedback-msg" style="margin-left:15px; color: #4cae4c; display:none;"></span>
           </div>
-          % if related:
+          % if related and hasattr(related, '__iter__'):
           <div id="related-docs" style="margin-top:30px; border-top:1px solid #eee; padding-top:15px;">
             <strong><i class="fa fa-link"></i> Related Articles</strong>
             <ul>
-              % for entry in related:
+              % for entry in related or []:
                 <li><a href="/documentation/${entry['file']}"><i class="${entry['icon']}"></i> ${entry['title']}</a></li>
               % endfor
             </ul>

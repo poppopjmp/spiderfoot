@@ -1266,6 +1266,12 @@ class SpiderFootHelpers():
             
         return module
 
+    @staticmethod
+    def get_repo_root() -> str:
+        """Return the absolute path to the repository root directory."""
+        # This assumes this file is in spiderfoot/spiderfoot/helpers.py
+        return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 
 def fix_module_for_tests(module_name):
     """Fix a module to ensure it has the expected class attribute for tests.

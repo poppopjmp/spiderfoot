@@ -2639,9 +2639,8 @@ This is a placeholder MCP report. Integration with actual MCP server required.
     def documentation(self: 'SpiderFootWebUi') -> str:
         """Serve the main documentation page using the documentation/ folder."""
         try:
-            # Use the project root as the base for documentation
-            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-            doc_dir = os.path.join(project_root, 'documentation')
+            # Use the documentation directory relative to this file (spiderfoot/documentation)
+            doc_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),'documentation'))
             readme_path = os.path.join(doc_dir, 'README.md')
             if not os.path.isdir(doc_dir):
                 raise FileNotFoundError(f"Documentation directory not found: {doc_dir}")
