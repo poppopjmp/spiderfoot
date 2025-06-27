@@ -1,0 +1,52 @@
+# .github/workflows/wiki-sync.yml
+
+name: Sync Documentation to GitHub Wiki
+on:
+  push:
+    branches: [master, "docs*"]
+    paths:
+      - 'documentation/**'
+      - '.github/workflows/wiki-sync.yml'          
+  pull_request:
+    branches: [master, "docs*"]
+    paths:
+      - 'documentation/**'
+      - '.github/workflows/wiki-sync.yml'
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Git
+        run: sudo apt-get install git
+
+      - name: Clone Wiki
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git clone https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git wiki
+
+      - name: Sync documentation to wiki
+        run: |
+          rsync -av --delete documentation/ wiki/
+
+      - name: Commit and push changes to Wiki
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd wiki
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "Sync documentation from main repo [skip ci]"
+          git push
