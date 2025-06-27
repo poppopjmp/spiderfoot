@@ -27,10 +27,10 @@ Dockerfile
 Dockerfile.full
 !docker-entrypoint.sh
 .pre-commit-config.yml
-docker-compose-production-files/
+docker-compose-examples/
 THANKYOU
 # README.md - commented out to include README in container
-generate-certificate
+
 .pylintrc
 .ruff_cache
 .pytest_cache
