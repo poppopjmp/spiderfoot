@@ -158,25 +158,6 @@ Comprehensive documentation is available for all aspects of SpiderFoot Enterpris
 
 ---
 
-## Building Documentation
-
-To build the documentation locally:
-
-```bash
-# Install documentation dependencies
-pip install -r requirements-docs.txt
-
-# Build documentation
-python build_docs.py --all
-
-# Serve documentation locally
-python build_docs.py --serve
-```
-
-Visit http://localhost:8000 to view the built documentation.
-
----
-
 ## Uses
 
 SpiderFoot can be used offensively (e.g. in a red team exercise or penetration test) for reconnaissance of your target or defensively to gather information about what you or your organisation might have exposed over the Internet.
