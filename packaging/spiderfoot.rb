@@ -26,7 +26,7 @@ class Spiderfoot < Formula
     (libexec/"spiderfoot").install Dir["spiderfoot/*"]
 
     # Install all sf* and sflib* files from root
-    root_files = Dir["sf*.py", "sflib.py", "sfscan.py", "sfwebui.py", "sfworkflow.py", "test_version.py", "update_version.py", "version_check_hook.py"]
+    root_files = Dir["sf*.py", "sflib.py", "sfscan.py", "sfwebui.py", "sfworkflow.py"]
     (libexec/"root").install root_files
 
     # Optionally install man pages if present

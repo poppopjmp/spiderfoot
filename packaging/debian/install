@@ -8,6 +8,3 @@ sflib.py usr/lib/python3/dist-packages/
 sfscan.py usr/lib/python3/dist-packages/
 sfwebui.py usr/lib/python3/dist-packages/
 sfworkflow.py usr/lib/python3/dist-packages/
-test_version.py usr/lib/python3/dist-packages/
-update_version.py usr/lib/python3/dist-packages/
-version_check_hook.py usr/lib/python3/dist-packages/

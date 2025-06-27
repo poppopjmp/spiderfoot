@@ -40,9 +40,6 @@ cp sflib.py %{buildroot}%{python3_sitelib}/
 cp sfscan.py %{buildroot}%{python3_sitelib}/
 cp sfwebui.py %{buildroot}%{python3_sitelib}/
 cp sfworkflow.py %{buildroot}%{python3_sitelib}/
-cp test_version.py %{buildroot}%{python3_sitelib}/
-cp update_version.py %{buildroot}%{python3_sitelib}/
-cp version_check_hook.py %{buildroot}%{python3_sitelib}/
 
 %files
 %license LICENSE
@@ -58,9 +55,6 @@ cp version_check_hook.py %{buildroot}%{python3_sitelib}/
 %{python3_sitelib}/sfscan.py
 %{python3_sitelib}/sfwebui.py
 %{python3_sitelib}/sfworkflow.py
-%{python3_sitelib}/test_version.py
-%{python3_sitelib}/update_version.py
-%{python3_sitelib}/version_check_hook.py
 
 %changelog
 * Tue Jun 24 2025 SpiderFoot Team <info@van1shland.io> - %{version}-1

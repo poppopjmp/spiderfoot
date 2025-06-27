@@ -17,6 +17,4 @@ parts:
       - sfscan.py
       - sfwebui.py
       - sfworkflow.py
-      - test_version.py
-      - update_version.py
-      - version_check_hook.py
+
