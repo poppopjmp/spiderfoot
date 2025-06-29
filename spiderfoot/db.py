@@ -2054,3 +2054,79 @@ class SpiderFootDb:
             self.conn.commit()
         
         return str(correlationId)
+
+    def get_sources(self, scan_id: str, event_hash: str) -> list:
+        """Return the list of source events for a given event in a scan.
+
+        Args:
+            scan_id (str): The scan instance ID
+            event_hash (str): The hash of the event whose sources to retrieve
+
+        Returns:
+            list: List of dicts with source event details (hash, type, data, module, etc.)
+        """
+        qry = """
+            SELECT s.hash, s.type, s.data, s.module, s.generated, s.source_event_hash
+            FROM tbl_scan_results c
+            JOIN tbl_scan_results s
+              ON c.source_event_hash = s.hash
+            WHERE c.scan_instance_id = ?
+              AND c.hash = ?
+              AND c.source_event_hash != 'ROOT'
+        """
+        qvars = [scan_id, event_hash]
+        with self.dbhLock:
+            try:
+                self.dbh.execute(qry, qvars)
+                rows = self.dbh.fetchall()
+                sources = []
+                for row in rows:
+                    sources.append({
+                        'hash': row[0],
+                        'type': row[1],
+                        'data': row[2],
+                        'module': row[3],
+                        'generated': row[4],
+                        'source_event_hash': row[5]
+                    })
+                return sources
+            except (sqlite3.Error, psycopg2.Error) as e:
+                raise IOError("SQL error encountered when fetching event sources") from e
+
+    def get_entities(self, scan_id: str, event_hash: str) -> list:
+        """Return the list of entity events that are children of a given event in a scan.
+
+        Args:
+            scan_id (str): The scan instance ID
+            event_hash (str): The hash of the event whose child entities to retrieve
+
+        Returns:
+            list: List of dicts with entity event details (hash, type, data, module, etc.)
+        """
+        qry = """
+            SELECT c.hash, c.type, c.data, c.module, c.generated, c.source_event_hash
+            FROM tbl_scan_results c
+            WHERE c.scan_instance_id = ?
+              AND c.source_event_hash = ?
+              AND c.type IN (
+                SELECT event FROM tbl_event_types WHERE event_type = 'ENTITY'
+              )
+        """
+        qvars = [scan_id, event_hash]
+        with self.dbhLock:
+            try:
+                self.dbh.execute(qry, qvars)
+                rows = self.dbh.fetchall()
+                entities = []
+                for row in rows:
+                    entities.append({
+                        'hash': row[0],
+                        'type': row[1],
+                        'data': row[2],
+                        'module': row[3],
+                        'generated': row[4],
+                        'source_event_hash': row[5]
+                    })
+                return entities
+            except (sqlite3.Error, psycopg2.Error) as e:
+                raise IOError("SQL error encountered when fetching entity events") from e

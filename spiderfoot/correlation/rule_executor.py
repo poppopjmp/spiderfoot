@@ -35,7 +35,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
         log.debug(f"Created {len(aggregated_groups)} aggregated groups")
         
         # Step 3: Apply analysis if specified  
-        filtered_groups = self._analyze_groups(aggregated_groups, rule.get('analysis', []))
+        filtered_groups = self._analyze_groups(aggregated_groups, rule.get('analysis', []), rule)
         log.debug(f"Analysis filtered to {len(filtered_groups)} groups")
         
         # Step 4: Create correlation results for valid groups
@@ -200,33 +200,59 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
         
         return event.get(field, '')
     
-    def _analyze_groups(self, groups, analysis_rules):
-        """Apply analysis rules to filter groups."""
-        if not analysis_rules:
+    def _analyze_groups(self, groups, analysis_rules, rule=None):
+        """
+        Apply analysis rules to filter groups. Also enforces multi-scan logic if required.
+
+        Args:
+            groups (dict): Grouped events to analyze.
+            analysis_rules (list): List of analysis rule dicts.
+            rule (dict, optional): The correlation rule being processed.
+
+        Returns:
+            dict: Filtered groups that pass all analysis (and multi-scan) checks.
+        """
+        if not analysis_rules and not (rule and rule.get('meta', {}).get('type') == 'multi-scan'):
             return groups
         
         filtered_groups = {}
-        
         for group_key, events in groups.items():
             keep_group = True
+
+            # Enforce multi-scan: only keep groups with >1 unique scan_id
+            if rule and rule.get('meta', {}).get('type') == 'multi-scan':
+                scan_ids = set(e.get('scan_id') for e in events)
+                if len(scan_ids) <= 1:
+                    keep_group = False
             
-            for analysis_rule in analysis_rules:
-                method = analysis_rule.get('method', '')
-                
-                if method == 'threshold':
-                    minimum = analysis_rule.get('minimum', 1)
-                    if len(events) < minimum:
-                        keep_group = False
-                        break
-                # Add more analysis methods as needed
+            if keep_group:
+                for analysis_rule in analysis_rules or []:
+                    method = analysis_rule.get('method', '')
+                    if method == 'threshold':
+                        minimum = analysis_rule.get('minimum', 1)
+                        if len(events) < minimum:
+                            keep_group = False
+                            break
+                    # Add more analysis methods as needed
             
             if keep_group:
                 filtered_groups[group_key] = events
-        
         return filtered_groups
     
     def _create_correlation_result(self, dbh, rule, scan_ids, group_key, events):
-        """Create a correlation result in the database."""
+        """
+        Create a correlation result in the database.
+
+        Args:
+            dbh: Database handle.
+            rule (dict): The correlation rule being processed.
+            scan_ids (list): List of scan IDs involved.
+            group_key: The key for the group of events.
+            events (list): List of event dicts in the group.
+
+        Returns:
+            str or None: Correlation ID if created, else None.
+        """
         log = logging.getLogger("spiderfoot.correlation.create")
         
         try:
@@ -251,7 +277,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             event_hashes = [event['hash'] for event in events]
             
             # Check if dbh has correlationResultCreate method (production) or if it's a test
-            if hasattr(dbh, 'correlationResultCreate') and callable(getattr(dbh, 'correlationResultCreate')):
+            if hasattr(dbh, 'correlationResultCreate') and callable(dbh.correlationResultCreate):
                 # Create correlation result in database
                 correlation_id = dbh.correlationResultCreate(
                     instanceId=scan_id,
@@ -266,12 +292,11 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                 )
                 log.info(f"Created correlation {correlation_id} for rule {rule_id}: {correlation_title}")
                 return correlation_id
-            else:
-                # For tests, just return a mock correlation ID
-                import uuid
-                correlation_id = str(uuid.uuid4())
-                log.info(f"Test mode: Mock correlation {correlation_id} for rule {rule_id}: {correlation_title}")
-                return correlation_id
+            # For tests, just return a mock correlation ID
+            import uuid
+            correlation_id = str(uuid.uuid4())
+            log.info(f"Test mode: Mock correlation {correlation_id} for rule {rule_id}: {correlation_title}")
+            return correlation_id
             
         except Exception as e:
             log.error(f"Error creating correlation result: {e}", exc_info=True)

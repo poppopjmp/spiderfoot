@@ -303,7 +303,6 @@ SpiderFoot has over 200 modules, most of which *don't require API keys*, and man
 [AbstractAPI](https://app.abstractapi.com/)|Look up domain, phone and IP address information from AbstractAPI.|Tiered API
 [abuse.ch](https://www.abuse.ch)|Check if a host/domain, IP address or netblock is malicious according to Abuse.ch.|Free API
 [AbuseIPDB](https://www.abuseipdb.com)|Check if an IP address is malicious according to AbuseIPDB.com blacklist.|Tiered API
-[Abusix Mail Intelligence](https://abusix.org/)|Check if a netblock or IP address is in the Abusix Mail Intelligence blacklist.|Tiered API
 Account Finder|Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc.|Internal
 [AdBlock Check](https://adblockplus.org/)|Check if linked pages would be blocked by AdBlock Plus.|Tiered API
 [AdGuard DNS](https://adguard.com/)|Check if a host would be blocked by AdGuard DNS.|Free API
@@ -325,7 +324,6 @@ Base64 Decoder|Identify Base64-encoded strings in URLs, often revealing interest
 Binary String Extractor|Attempt to identify strings in binary content.|Internal
 Bitcoin Finder|Identify bitcoin addresses in scraped webpages.|Internal
 [Bitcoin Who's Who](https://bitcoinwhoswho.com/)|Check for Bitcoin addresses against the Bitcoin Who's Who database of suspect/malicious addresses.|Tiered API
-[BitcoinAbuse](https://www.bitcoinabuse.com/)|Check Bitcoin addresses against the bitcoinabuse.com database of suspect/malicious addresses.|Free API
 [Blockchain](https://www.blockchain.com/)|Queries blockchain.info to find the balance of identified bitcoin wallet addresses.|Free API
 [blocklist.de](http://www.blocklist.de/en/index.html)|Check if a netblock or IP is malicious according to blocklist.de.|Free API
 [Bluesky](https://bsky.app/)|Search Bluesky for mentions of the target.|Free API
@@ -344,7 +342,6 @@ Bitcoin Finder|Identify bitcoin addresses in scraped webpages.|Internal
 [Citadel](https://www.citadel.com/)|Search Citadel for threat intelligence.|Free API
 [CleanBrowsing.org](https://cleanbrowsing.org/)|Check if a host would be blocked by CleanBrowsing.org DNS content filters.|Free API
 [CleanTalk Spam List](https://cleantalk.org)|Check if a netblock or IP address is on CleanTalk.org's spam IP list.|Free API
-[Clearbit](https://clearbit.com/)|Check for names, addresses, domains and more based on lookups of e-mail addresses on clearbit.com.|Tiered API
 [CloudFlare DNS](https://www.cloudflare.com/)|Check if a host would be blocked by CloudFlare DNS.|Free API
 [CloudFront](https://aws.amazon.com/cloudfront/)|Check if a host is using CloudFront CDN.|Free API
 [CoinBlocker Lists](https://zerodot1.gitlab.io/CoinBlockerListsWeb/)|Check if a domain appears on CoinBlocker lists.|Free API
@@ -369,7 +366,6 @@ Custom Threat Feed|Check if a host/domain, netblock, ASN or IP is malicious acco
 [Discord](https://discord.com/)|Search Discord for mentions of the target.|Free API
 DNS Brute-forcer|Attempts to identify hostnames through brute-forcing common names and iterations.|Internal
 DNS Common SRV|Attempts to identify hostnames through brute-forcing common DNS SRV records.|Internal
-[DNSDB](https://www.farsightsecurity.com)|Query FarSight's DNSDB for historical and passive DNS data.|Tiered API
 [DNSDumpster](https://dnsdumpster.com/)|Passive subdomain enumeration using HackerTarget's DNSDumpster|Free API
 [DNSGrep](https://opendata.rapid7.com/)|Obtain Passive DNS information from Rapid7 Sonar Project using DNSGrep API.|Free API
 [DNS Neighbor](https://dnsneighbor.com/)|Attempt to reverse-resolve the IP addresses next to your target to see if they are related.|Internal
@@ -475,7 +471,6 @@ Port Scanner - TCP|Scans for commonly open TCP ports on Internet-facing systems.
 [Reddit](https://www.reddit.com/)|Search Reddit for mentions of the target.|Free API
 [ReverseWhois](https://www.reversewhois.io/)|Reverse Whois lookups using reversewhois.io.|Free API
 [RIPE](https://www.ripe.net/)|Queries the RIPE registry (includes ARIN data) to identify netblocks and other info.|Free API
-[RiskIQ](https://community.riskiq.com/)|Obtain information from RiskIQ's (formerly PassiveTotal) Passive DNS and Passive SSL databases.|Tiered API
 [Robtex](https://www.robtex.com/)|Search Robtex.com for hosts sharing the same IP.|Free API
 [Rocket.Chat](https://rocket.chat/)|Search Rocket.Chat for mentions of the target.|Free API
 [RocketReach](https://rocketreach.co/)|Look up email addresses, phone numbers, and social media profiles from RocketReach.|Tiered API
@@ -496,7 +491,6 @@ Social Network Identifier|Identify presence on social media networks such as Lin
 [SpamCop](https://www.spamcop.net/)|Check if a netblock or IP address is in the SpamCop database.|Free API
 [Spamhaus Zen](https://www.spamhaus.org/)|Check if a netblock or IP address is in the Spamhaus Zen database.|Free API
 [spur.us](https://spur.us/)|Obtain information about any malicious activities involving IP addresses found|Commercial API
-[SpyOnWeb](http://spyonweb.com/)|Search SpyOnWeb for hosts sharing the same IP address, Google Analytics code, or Google Adsense code.|Tiered API
 SSL Certificate Analyzer|Gather information about SSL certificates used by the target's HTTPS sites.|Internal
 [StackOverflow](https://www.stackexchange.com)|Search StackOverflow for any mentions of a target domain. Returns potentially related information.|Tiered API
 [Steven Black Hosts](https://github.com/StevenBlack/hosts)|Check if a domain is malicious (malware or adware) according to Steven Black Hosts list.|Free API
@@ -507,7 +501,6 @@ Subdomain Takeover Checker|Check if affiliated subdomains are vulnerable to take
 [Talos Intelligence](https://talosintelligence.com/)|Check if a netblock or IP address is malicious according to TalosIntelligence.|Free API
 [Telegram](https://telegram.org/)|Search Telegram for mentions of the target.|Free API
 [TextMagic](https://www.textmagic.com/)|Obtain phone number type from TextMagic API|Tiered API
-[Threat Jammer](https://threatjammer.com)|Check if an IP address is malicious according to ThreatJammer.com|Tiered API
 [ThreatCrowd](https://www.threatcrowd.org)|Obtain information from ThreatCrowd about identified IP addresses, domains and e-mail addresses.|Free API
 [ThreatFox](https://threatfox.abuse.ch)|Check if an IP address is malicious according to ThreatFox.|Free API
 [ThreatMiner](https://www.threatminer.org/)|Obtain information from ThreatMiner's database for passive DNS and threat intelligence.|Free API
@@ -528,7 +521,6 @@ TLD Searcher|Search all Internet TLDs for domains with the same name as the targ
 [Tool - WhatWeb]([https://github.com/urbanadventurer/whatweb](https://github.com/urbanadventurer/whatweb))|Identify what software is in use on the specified website.|Tool
 [TOR Exit Nodes](https://metrics.torproject.org/)|Check if an IP adddress or netblock appears on the Tor Metrics exit node list.|Free API
 [TORCH](https://torchsearch.wordpress.com/)|Search Tor 'TORCH' search engine for mentions of the target domain.|Free API
-[Trashpanda](https://got-hacked.wtf)|Queries Trashpanda to gather intelligence about mentions of target in pastesites|Tiered API
 [Tron](https://tron.network/)|Search Tron for mentions of the target.|Free API
 [Trumail](https://trumail.io/)|Check whether an email is disposable|Free API
 [Twilio](https://www.twilio.com/)|Obtain information from Twilio about phone numbers. Ensure you have the Caller Name add-on installed in Twilio.|Tiered API

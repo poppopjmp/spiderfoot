@@ -60,7 +60,7 @@ class TestCorrelationEngineUnit(unittest.TestCase):
     def test_rule_executor(self):
         # Mock DB to return events
         self.dbh.get_events_for_scan.return_value = [
-            {'id': 'event1', 'type': 'EMAILADDR', 'data': 'test@example.com'}  # Add 'id' key
+            {'hash': 'event1', 'type': 'EMAILADDR', 'data': 'test@example.com'}  # Use 'hash' key
         ]
         executor = RuleExecutor(self.dbh, self.rules, scan_ids=['scan1'], debug=True)
         results = executor.run()
@@ -69,7 +69,7 @@ class TestCorrelationEngineUnit(unittest.TestCase):
 
     def test_event_enricher(self):
         enricher = EventEnricher(self.dbh)
-        events = [{'id': 'event1', 'type': 'EMAILADDR', 'data': 'test@example.com'}]  # Add 'id' key
+        events = [{'hash': 'event1', 'type': 'EMAILADDR', 'data': 'test@example.com'}]  # Use 'hash' key
         enriched = enricher.enrich_sources('scan1', events)
         self.assertIsInstance(enriched, list)
 
