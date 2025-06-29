@@ -30,6 +30,10 @@ jobs:
       - name: Install Git
         run: sudo apt-get install git
 
+      - name: Remove existing wiki directory if present
+        run: |
+          if [ -d wiki ]; then rm -rf wiki; fi
+
       - name: Clone Wiki
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,7 +42,7 @@ jobs:
 
       - name: Sync documentation to wiki
         run: |
-          rsync -av --delete documentation/ wiki/
+          cp -rf documentation/ wiki/
 
       - name: Commit and push changes to Wiki
         env:
@@ -48,5 +52,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git diff --quiet && git diff --staged --quiet || git commit -m "Sync documentation from main repo [skip ci]"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Sync documentation from main repo"
           git push
