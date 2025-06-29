@@ -107,7 +107,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             except Exception:
                 # Use full production schema
                 base_query = """
-                    SELECT hash, type, data, module, created, source_event_hash 
+                    SELECT hash, type, data, module, generated, source_event_hash 
                     FROM tbl_scan_results 
                     WHERE scan_instance_id = ? AND false_positive = 0
                 """
@@ -130,7 +130,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                     'type': row[1], 
                     'data': row[2],
                     'module': row[3],
-                    'created': row[4],
+                    'created': row[4],  # using generated column as created
                     'source_event_hash': row[5],
                     'scan_id': scan_id
                 }

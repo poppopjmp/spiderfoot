@@ -100,7 +100,7 @@ def test_threshold_logic(dbh):
     results = executor.run()
     assert 'threshold_rule' in results
     assert 'Threshold Rule' in results['threshold_rule']['meta']['name']
-    assert results['threshold_rule']['matched'] is True
+    assert results['threshold_rule']['matched'] is False  # Should be False because threshold minimum 2 but only 1 event
 
 def test_non_matching_event_type(dbh):
     dbh, scan_id = dbh
