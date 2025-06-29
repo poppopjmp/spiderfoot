@@ -47,11 +47,7 @@ python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl,sfp_whois
 
 Workspaces allow you to manage multiple targets and scans:
 
-```sh
-python sfworkflow.py create-workspace "My Assessment"
-python sfworkflow.py add-target ws_abc123 example.com --type DOMAIN_NAME
-python sfworkflow.py multi-scan ws_abc123 --modules sfp_dnsresolve,sfp_ssl
-```
+
 
 - Workspaces are ideal for large projects, recurring assessments, or team collaboration.
 

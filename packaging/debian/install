@@ -7,4 +7,3 @@ sfapi.py usr/lib/python3/dist-packages/
 sflib.py usr/lib/python3/dist-packages/
 sfscan.py usr/lib/python3/dist-packages/
 sfwebui.py usr/lib/python3/dist-packages/
-sfworkflow.py usr/lib/python3/dist-packages/

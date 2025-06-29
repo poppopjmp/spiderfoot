@@ -39,7 +39,7 @@ cp sfapi.py %{buildroot}%{python3_sitelib}/
 cp sflib.py %{buildroot}%{python3_sitelib}/
 cp sfscan.py %{buildroot}%{python3_sitelib}/
 cp sfwebui.py %{buildroot}%{python3_sitelib}/
-cp sfworkflow.py %{buildroot}%{python3_sitelib}/
+
 
 %files
 %license LICENSE
@@ -54,7 +54,7 @@ cp sfworkflow.py %{buildroot}%{python3_sitelib}/
 %{python3_sitelib}/sflib.py
 %{python3_sitelib}/sfscan.py
 %{python3_sitelib}/sfwebui.py
-%{python3_sitelib}/sfworkflow.py
+
 
 %changelog
 * Tue Jun 24 2025 SpiderFoot Team <info@van1shland.io> - %{version}-1

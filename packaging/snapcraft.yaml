@@ -16,5 +16,3 @@ parts:
       - sflib.py
       - sfscan.py
       - sfwebui.py
-      - sfworkflow.py
-
