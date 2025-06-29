@@ -130,6 +130,21 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
                 result = self.webui.scancorrelationsexport('id')
                 self.assertEqual(result, 'csv_data')
 
+    def test_scancorrelations(self):
+        with patch('sfwebui.SpiderFootDb') as mock_db:
+            # Mock scanCorrelationList to return correlation data with required 8 fields
+            mock_db.return_value.scanCorrelationList.return_value = [
+                ['corr_id_1', 'Correlation Title 1', 'rule_name_1', 'HIGH', 'rule_id_1', 'Rule description', 'rule_logic', 5, 'created_time'],
+                ['corr_id_2', 'Correlation Title 2', 'rule_name_2', 'MEDIUM', 'rule_id_2', 'Another rule description', 'rule_logic', 3, 'created_time']
+            ]
+            result = self.webui.scancorrelations('test_scan_id')
+            self.assertIsInstance(result, list)
+            self.assertEqual(len(result), 2)
+            # Verify the structure of returned data
+            self.assertEqual(result[0][0], 'corr_id_1')  # correlation_id
+            self.assertEqual(result[0][1], 'Correlation Title 1')  # correlation title
+            self.assertEqual(result[0][3], 'HIGH')  # rule risk
+
     def test_scaneventresultexport(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
             # Mock data with all required 15 elements (indices 0-14)

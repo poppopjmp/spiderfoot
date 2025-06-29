@@ -45,9 +45,10 @@ def test_correlation_engine_integration(dbh):
     print('DEBUG: correlation engine results:', results)
     assert 'integration_rule' in results
     assert 'meta' in results['integration_rule']
-    assert 'result' in results['integration_rule']
+    assert 'matched' in results['integration_rule']
+    assert results['integration_rule']['matched'] is True
     assert 'Integration Rule' in results['integration_rule']['meta']['name']
-    assert 'integration_scan' in results['integration_rule']['result']
+    assert results['integration_rule']['correlations_created'] > 0
 
 def test_multiple_rules(dbh):
     dbh, scan_id = dbh
@@ -79,8 +80,8 @@ def test_multiple_rules(dbh):
     assert 'no_match_rule' in results
     assert 'Match Rule' in results['match_rule']['meta']['name']
     assert 'No Match Rule' in results['no_match_rule']['meta']['name']
-    assert 'integration_scan' in results['match_rule']['result']
-    assert 'integration_scan' in results['no_match_rule']['result']
+    assert results['match_rule']['matched'] is True
+    assert results['no_match_rule']['matched'] is False
 
 def test_threshold_logic(dbh):
     dbh, scan_id = dbh
@@ -99,7 +100,7 @@ def test_threshold_logic(dbh):
     results = executor.run()
     assert 'threshold_rule' in results
     assert 'Threshold Rule' in results['threshold_rule']['meta']['name']
-    assert 'integration_scan' in results['threshold_rule']['result']
+    assert results['threshold_rule']['matched'] is True
 
 def test_non_matching_event_type(dbh):
     dbh, scan_id = dbh
@@ -118,7 +119,7 @@ def test_non_matching_event_type(dbh):
     results = executor.run()
     assert 'nonmatch_type_rule' in results
     assert 'Nonmatch Type Rule' in results['nonmatch_type_rule']['meta']['name']
-    assert 'integration_scan' in results['nonmatch_type_rule']['result']
+    assert results['nonmatch_type_rule']['matched'] is False
 
 def test_empty_ruleset(dbh):
     dbh, scan_id = dbh
@@ -146,7 +147,7 @@ def test_empty_events(dbh):
     results = executor.run()
     assert 'no_events_rule' in results
     assert 'No Events Rule' in results['no_events_rule']['meta']['name']
-    assert 'integration_scan' in results['no_events_rule']['result']
+    assert results['no_events_rule']['matched'] is False
 
 def test_invalid_rule_format(dbh):
     dbh, scan_id = dbh
@@ -180,7 +181,7 @@ def test_multiple_scans(dbh):
     results = executor.run()
     assert 'multi_scan_rule' in results
     assert 'Multi Scan Rule' in results['multi_scan_rule']['meta']['name']
-    assert 'integration_scan' in results['multi_scan_rule']['result'] or 'integration_scan2' in results['multi_scan_rule']['result']
+    assert results['multi_scan_rule']['matched'] is True
 
 @pytest.mark.parametrize("event_type,threshold,should_match", [
     ("EMAILADDR", 1, True),
@@ -204,8 +205,10 @@ def test_parametrized_threshold_and_type(dbh, event_type, threshold, should_matc
     assert 'param_rule' in results
     if should_match:
         assert 'Param Rule' in results['param_rule']['meta']['name']
+        assert results['param_rule']['matched'] is True
     else:
         assert 'Param Rule' in results['param_rule']['meta']['name']
+        assert results['param_rule']['matched'] is False
         # Could add more checks for non-match if engine supports
 
 def test_cross_scan_correlation(dbh):
@@ -234,7 +237,7 @@ def test_cross_scan_correlation(dbh):
     results = executor.run()
     assert 'cross_scan_rule' in results
     assert 'Cross Scan Rule' in results['cross_scan_rule']['meta']['name']
-    assert 'shared@example.com' in results['cross_scan_rule']['result'] or 'integration_scan' in results['cross_scan_rule']['result']
+    assert results['cross_scan_rule']['matched'] is True
 
 def test_rule_loader_yaml():
     from spiderfoot.correlation.rule_loader import RuleLoader
