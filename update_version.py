@@ -93,13 +93,12 @@ def update_readme():
 def update_docs():
     """Update version references in documentation files."""
     version = get_version()
-    docs_dir = Path(__file__).parent / "docs"
+    docs_dir = Path(__file__).parent / "documentaion"
 
     # Files to update
     files_to_update = [
-        docs_dir / "index.rst",
-        docs_dir / "configuration.md",
-        docs_dir / "conf.py"
+        docs_dir / "configuration.md"
+
     ]
 
     for file_path in files_to_update:
@@ -191,8 +190,16 @@ def update_github_workflows():
         content = f.read()
     original_content = content
     # Update artifact names with version
-    content = re.sub(r'spiderfoot-(\$\{[^}]+\})-(dist|sdist|wheel)', f'spiderfoot-\\1-{version}-\\2', content)
-    content = re.sub(r'spiderfoot-(\$\{ steps.get_version.outputs.version \})-deb', f'spiderfoot-{version}-deb', content)
+    content = re.sub(
+        r'(spiderfoot-\$\{[^}]+\}-)(\d+\.\d+\.\d+)-(dist|sdist|wheel)',
+        lambda m: f"{m.group(1)}{version}-{m.group(3)}",
+        content
+    )
+    content = re.sub(
+        r'(spiderfoot-)\$\{ steps.get_version.outputs.version \}-(deb)',
+        lambda m: f"{m.group(1)}{version}-{m.group(2)}",
+        content
+    )
     if content != original_content:
         with open(workflow_path, 'w', encoding='utf-8') as f:
             f.write(content)
@@ -245,8 +252,19 @@ def update_docker_image_yml():
         return
     with open(docker_image_yml, 'r', encoding='utf-8') as f:
         content = f.read()
-    # Replace the vX.Y.Z tag in the tags: block
-    new_content = re.sub(r'(ghcr\.io/\$\{\{ github\.repository \}\}:)v\d+\.\d+\.\d+', f'\1v{version}', content)
+    # Replace the vX.Y.Z tag in the tags: block (uncomment and update if present)
+    new_content = re.sub(
+        r'(^\s*#*\s*ghcr\.io/\$\{\{ github\.repository \}\}:)v\d+\.\d+\.\d+',
+        lambda m: f"          ghcr.io/${{ github.repository }}:v{version}",
+        content,
+        flags=re.MULTILINE
+    )
+    # Also update any uncommented vX.Y.Z tags
+    new_content = re.sub(
+        r'(ghcr\.io/\$\{\{ github\.repository \}\}:)v\d+\.\d+\.\d+',
+        lambda m: f"ghcr.io/${{ github.repository }}:v{version}",
+        new_content
+    )
     if new_content != content:
         with open(docker_image_yml, 'w', encoding='utf-8') as f:
             f.write(new_content)
@@ -415,7 +433,6 @@ def main():
     
     update_readme()
     update_docs()
-    update_docker_configs()
     update_code_fallback()
     update_debian_control()
     update_github_workflows()

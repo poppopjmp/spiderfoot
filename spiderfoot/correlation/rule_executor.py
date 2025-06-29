@@ -295,12 +295,13 @@ class RuleExecutor:
         if hook_name in cls._event_hooks:
             cls._event_hooks[hook_name].append(func)
 
-    def __init__(self, dbh, rules, scan_ids=None):
+    def __init__(self, dbh, rules, scan_ids=None, debug=False):
         self.log = logging.getLogger("spiderfoot.correlation.executor")
         self.dbh = dbh
         self.rules = rules
         self.scan_ids = scan_ids if scan_ids else []
         self.results = {}
+        self.debug = debug
 
     def run(self):
         for rule in self.rules:
@@ -308,9 +309,13 @@ class RuleExecutor:
                 self.log.info(f"Skipping disabled rule: {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}")
                 continue
             try:
+                if self.debug:
+                    print(f"[DEBUG] Evaluating rule: {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}")
                 for hook in self._event_hooks['pre_rule']:
                     hook(rule, self.scan_ids)
                 rule_result = self.process_rule(rule)
+                if self.debug:
+                    print(f"[DEBUG] Rule result: {rule_result}")
                 for hook in self._event_hooks['post_rule']:
                     hook(rule, rule_result, self.scan_ids)
                 self.results[rule.get('id', rule.get('meta', {}).get('name', 'unknown'))] = rule_result
@@ -321,6 +326,8 @@ class RuleExecutor:
     def process_rule(self, rule):
         rule_type = rule.get('meta', {}).get('type', 'default')
         strategy = self._strategy_registry.get(rule_type, DefaultRuleExecutionStrategy())
+        if self.debug:
+            print(f"[DEBUG] Using strategy: {strategy.__class__.__name__}")
         return strategy.execute(self.dbh, rule, self.scan_ids)
 
 # Example: Register a custom strategy for a new rule type

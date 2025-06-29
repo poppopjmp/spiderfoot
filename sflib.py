@@ -157,10 +157,10 @@ class SpiderFoot:
 
         if val.startswith('@'):
             fname = val.split('@')[1]
-            self.info(f"Loading configuration data from: {fname}")
+            self.info("Loading configuration data from: %s", fname)
 
             try:
-                with open(fname, "r") as f:
+                with open(fname, "r", encoding="utf-8") as f:
                     return f.read()
             except Exception as e:
                 self.error(f"Unable to open option file, {fname}: {e}")
@@ -222,7 +222,7 @@ class SpiderFoot:
         if not self.opts['__logging']:
             return
 
-        self.log.info(f"{message}", extra={'scanId': self._scanId})
+        self.log.info(message, extra={'scanId': self._scanId})
 
     def debug(self, message: str) -> None:
         """Log and print a debug message.
@@ -235,7 +235,7 @@ class SpiderFoot:
         if not self.opts['__logging']:
             return
 
-        self.log.debug(f"{message}", extra={'scanId': self._scanId})
+        self.log.debug(message, extra={'scanId': self._scanId})
 
     def hashstring(self, string: str) -> str:
         """Returns a SHA256 hash of the specified input.
@@ -1437,7 +1437,7 @@ class SpiderFoot:
             return result
 
         try:
-            result['headers'] = dict()
+            result['headers'] = dict(res.headers)
             result['realurl'] = res.url
             result['code'] = str(res.status_code)
 
@@ -1563,7 +1563,7 @@ class SpiderFoot:
                         f"https://cve.circl.lu/api/cve/{cveId}", timeout=5)
 
                 if not ret:
-                    continue
+                    return None
 
                 if not ret['content']:
                     continue

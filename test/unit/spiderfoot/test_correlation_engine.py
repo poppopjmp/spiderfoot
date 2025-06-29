@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from spiderfoot.correlation.rule_loader import RuleLoader
 from spiderfoot.correlation.rule_executor import RuleExecutor
 from spiderfoot.correlation.event_enricher import EventEnricher
@@ -27,6 +27,29 @@ class TestCorrelationEngineUnit(unittest.TestCase):
         }
         self.rules = [self.sample_rule]
 
+        # Define a mock event for use in all tests
+        self.mock_event = {
+            'hash': 'mockhash',
+            'type': 'EMAILADDR',
+            'data': 'test@example.com',
+            'module': 'test_module',
+            'created': 0,
+            'source_event_hash': 'ROOT',
+            'scan_id': 'mockscanid'
+        }
+        # Patch _get_scan_events so the rule engine uses the mock event
+        patcher = patch(
+            'spiderfoot.correlation.rule_executor.DefaultRuleExecutionStrategy._get_scan_events',
+            return_value=[self.mock_event]
+        )
+        self._get_scan_events_patcher = patcher
+        self.mock_get_scan_events = patcher.start()
+
+    def tearDown(self):
+        # Stop the patcher for _get_scan_events
+        if hasattr(self, '_get_scan_events_patcher'):
+            self._get_scan_events_patcher.stop()
+
     def test_rule_loader(self):
         # Simulate loading rules from dict
         loader = RuleLoader(None)
@@ -39,7 +62,7 @@ class TestCorrelationEngineUnit(unittest.TestCase):
         self.dbh.get_events_for_scan.return_value = [
             {'id': 'event1', 'type': 'EMAILADDR', 'data': 'test@example.com'}  # Add 'id' key
         ]
-        executor = RuleExecutor(self.dbh, self.rules, scan_ids=['scan1'])
+        executor = RuleExecutor(self.dbh, self.rules, scan_ids=['scan1'], debug=True)
         results = executor.run()
         self.assertIn('test_rule', results)
         self.assertTrue(results['test_rule'].get('matched', True))  # Use get to avoid KeyError

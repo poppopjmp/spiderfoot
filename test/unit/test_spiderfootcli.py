@@ -301,7 +301,7 @@ class TestSpiderFootCli(SpiderFootTestBase):
             # Second call: modules response 
             # Third call: types response
             mock_request.side_effect = [
-                '["SUCCESS", "5.2.7"]',
+                '["SUCCESS", "5.2.9"]',
                 '[{"name": "test_module", "descr": "Test module"}]',
                 '[["test_type", "Test type description"]]'
             ]
