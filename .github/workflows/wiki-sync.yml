@@ -43,6 +43,7 @@ jobs:
       - name: Sync documentation to wiki
         run: |
           cp -rf documentation/ wiki/
+          mv wiki/README.md wiki/Home.md
 
       - name: Commit and push changes to Wiki
         env:
