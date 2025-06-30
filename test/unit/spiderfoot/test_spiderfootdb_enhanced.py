@@ -584,6 +584,7 @@ class TestSpiderFootDbComprehensive(unittest.TestCase):
         temp_db = SpiderFootDb(temp_opts, init=True)
         temp_db.scanInstanceCreate('test_scan', 'test_scan', 'test_scan')
         temp_db.close()
+        del temp_db
         gc.collect()
         self.assertTrue(os.path.exists(temp_db_path))
         try:
@@ -591,3 +592,102 @@ class TestSpiderFootDbComprehensive(unittest.TestCase):
         except PermissionError:
             time.sleep(0.1)
             os.remove(temp_db_path)
+
+    # ========================================================================
+    # ADDITIONAL EDGE CASE AND FUNCTIONALITY TESTS
+    # ========================================================================
+
+    def test_event_with_special_characters(self):
+        """Test storing and retrieving events with special/unicode characters"""
+        self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_id, self.test_scan_id)
+        root_event = SpiderFootEvent("ROOT", self.test_scan_id, "test_module")
+        self.db.scanEventStore(self.test_scan_id, root_event)
+        special_data = "特殊字符!@#\u20ac\u2603\n\t"
+        event = SpiderFootEvent("RAW_DATA", special_data, "test_module", root_event)
+        self.db.scanEventStore(self.test_scan_id, event)
+        events = self.db.scanResultEvent(self.test_scan_id, eventType="RAW_DATA")
+        self.assertTrue(any(e[1] == special_data for e in events))
+
+    def test_multiple_database_isolation(self):
+        """Test that events in one DB are not visible in another"""
+        import tempfile
+        temp_dir2 = tempfile.mkdtemp()
+        db_path2 = os.path.join(temp_dir2, f'test2_{time.time()}.db')
+        opts2 = {'__database': db_path2, '__dbtype': 'sqlite'}
+        db2 = SpiderFootDb(opts2, init=True)
+        try:
+            self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_id, self.test_scan_id)
+            db2.scanInstanceCreate('other_scan', 'other_scan', 'other_scan')
+            root_event = SpiderFootEvent("ROOT", self.test_scan_id, "test_module")
+            self.db.scanEventStore(self.test_scan_id, root_event)
+            event = SpiderFootEvent("IP_ADDRESS", "1.2.3.4", "test_module", root_event)
+            self.db.scanEventStore(self.test_scan_id, event)
+            # Should not be visible in db2
+            events = db2.scanResultEvent('other_scan', eventType="IP_ADDRESS")
+            self.assertEqual(len(events), 0)
+        finally:
+            db2.close()
+            del db2
+            import gc
+            gc.collect()
+            if os.path.exists(db_path2):
+                os.remove(db_path2)
+            os.rmdir(temp_dir2)
+
+    def test_search_no_results(self):
+        """Test searching for non-existent event types/data returns empty results"""
+        self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_id, self.test_scan_id)
+        root_event = SpiderFootEvent("ROOT", self.test_scan_id, "test_module")
+        self.db.scanEventStore(self.test_scan_id, root_event)
+        results = self.db.search({'scan_id': self.test_scan_id, 'type': 'NON_EXISTENT_TYPE'})
+        self.assertEqual(len(results), 0)
+        results = self.db.search({'scan_id': self.test_scan_id, 'data': 'no_such_data'})
+        self.assertEqual(len(results), 0)
+
+    def test_event_truncation_exact_limit(self):
+        """Test storing event with data exactly at truncation limit"""
+        self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_id, self.test_scan_id)
+        root_event = SpiderFootEvent("ROOT", self.test_scan_id, "test_module")
+        self.db.scanEventStore(self.test_scan_id, root_event)
+        limit = 1000
+        data = 'A' * limit
+        event = SpiderFootEvent('RAW_RIR_DATA', data, 'test_module', root_event)
+        self.db.scanEventStore(self.test_scan_id, event, truncateSize=limit)
+        events = self.db.scanResultEvent(self.test_scan_id, eventType='RAW_RIR_DATA')
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0][1], data)
+
+    def test_search_non_overlapping_date_range(self):
+        """Test searching with a date range that returns no results"""
+        self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_id, self.test_scan_id)
+        root_event = SpiderFootEvent("ROOT", self.test_scan_id, "test_module")
+        self.db.scanEventStore(self.test_scan_id, root_event)
+        event = SpiderFootEvent("IP_ADDRESS", "192.168.1.1", "test_module", root_event)
+        self.db.scanEventStore(self.test_scan_id, event)
+        # Use a date range far in the past
+        criteria = {
+            'scan_id': self.test_scan_id,
+            'start_date': 1000000000,  # 2001-09-09
+            'end_date': 1000000001,
+            'type': 'IP_ADDRESS'
+        }
+        results = self.db.search(criteria)
+        self.assertEqual(len(results), 0)
+
+    def test_database_resource_cleanup_robustness(self):
+        """Test opening and closing DB multiple times, ensuring no errors and file is not locked"""
+        import gc
+        for _ in range(3):
+            temp_db_path = os.path.join(self.temp_dir, f'temp_cleanup_{time.time()}.db')
+            temp_opts = {'__database': temp_db_path, '__dbtype': 'sqlite'}
+            temp_db = SpiderFootDb(temp_opts, init=True)
+            temp_db.scanInstanceCreate('test_scan', 'test_scan', 'test_scan')
+            temp_db.close()
+            del temp_db
+            gc.collect()
+            self.assertTrue(os.path.exists(temp_db_path))
+            try:
+                os.remove(temp_db_path)
+            except PermissionError:
+                time.sleep(0.1)
+                os.remove(temp_db_path)
