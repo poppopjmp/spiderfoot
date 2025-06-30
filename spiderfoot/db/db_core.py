@@ -757,7 +757,9 @@ class DbCore:
                             event_descr = row[1]
                             event_raw = row[2]
                             event_type = row[3]
-                            qry = "INSERT OR IGNORE INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (?, ?, ?, ?)"
+                            ph = get_placeholder(self.db_type)
+                            upsert_clause = get_upsert_clause(self.db_type, 'tbl_event_types', ['event'], ['event_descr', 'event_raw', 'event_type'])
+                            qry = f"INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES ({ph}, {ph}, {ph}, {ph}) {upsert_clause}"
                             try:
                                 self.dbh.execute(qry, (
                                     event, event_descr, event_raw, event_type
@@ -791,7 +793,9 @@ class DbCore:
                             event_descr = row[1]
                             event_raw = row[2]
                             event_type = row[3]
-                            qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (%s, %s, %s, %s) ON CONFLICT (event) DO NOTHING"
+                            ph = get_placeholder(self.db_type)
+                            upsert_clause = get_upsert_clause(self.db_type, 'tbl_event_types', ['event'], ['event_descr', 'event_raw', 'event_type'])
+                            qry = f"INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES ({ph}, {ph}, {ph}, {ph}) {upsert_clause}"
                             try:
                                 self.dbh.execute(qry, (
                                     event, event_descr, event_raw, event_type

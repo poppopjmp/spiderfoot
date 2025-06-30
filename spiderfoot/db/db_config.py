@@ -12,7 +12,7 @@
 """
 Configuration management (global and per-scan) for SpiderFootDb.
 """
-from .db_utils import get_placeholder, is_transient_error
+from .db_utils import get_placeholder, is_transient_error, get_upsert_clause
 import time
 
 class ConfigManager:
@@ -34,7 +34,8 @@ class ConfigManager:
         if not optMap:
             raise ValueError("optMap is empty")
         ph = get_placeholder(self.db_type)
-        qry = f"REPLACE INTO tbl_config (scope, opt, val) VALUES ({ph}, {ph}, {ph})"
+        upsert_clause = get_upsert_clause(self.db_type, 'tbl_config', ['scope', 'opt'], ['val'])
+        qry = f"INSERT INTO tbl_config (scope, opt, val) VALUES ({ph}, {ph}, {ph}) {upsert_clause}"
         with self.dbhLock:
             for opt in list(optMap.keys()):
                 if ":" in opt:
@@ -107,7 +108,8 @@ class ConfigManager:
         if not optMap:
             raise ValueError("optMap is empty")
         ph = get_placeholder(self.db_type)
-        qry = f"REPLACE INTO tbl_scan_config (scan_instance_id, component, opt, val) VALUES ({ph}, {ph}, {ph}, {ph})"
+        upsert_clause = get_upsert_clause(self.db_type, 'tbl_scan_config', ['scan_instance_id', 'component', 'opt'], ['val'])
+        qry = f"INSERT INTO tbl_scan_config (scan_instance_id, component, opt, val) VALUES ({ph}, {ph}, {ph}, {ph}) {upsert_clause}"
         with self.dbhLock:
             for opt in list(optMap.keys()):
                 if ":" in opt:

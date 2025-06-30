@@ -84,7 +84,7 @@
               % endif
             % else:
               % for entry in (doc_index or []):
-                % if entry['file'].lower() != 'home.md':
+                % if '/' not in entry['file'] and entry['file'].lower() != 'home.md':
                   <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==(selected_file or '') else ''}">
                     <i class="${entry['icon']}"></i> ${entry['title']}
                   </a>
@@ -100,6 +100,9 @@
               </div>
             </div>
           % endif
+          <div style="margin:10px 0 0 0;">
+            <button class="btn btn-xs btn-default" onclick="window.history.back()"><i class="fa fa-arrow-left"></i> Back</button>
+          </div>
         </div>
       </div>
       <div class="panel panel-default">

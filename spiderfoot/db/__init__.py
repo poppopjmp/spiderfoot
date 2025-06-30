@@ -67,7 +67,8 @@ def get_schema_queries(db_type):
                 scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
                 component           VARCHAR NOT NULL, \
                 opt                 VARCHAR NOT NULL, \
-                val                 VARCHAR NOT NULL \
+                val                 VARCHAR NOT NULL, \
+                UNIQUE (scan_instance_id, component, opt) \
             )",
             "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
                 scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
@@ -139,7 +140,8 @@ def get_schema_queries(db_type):
                 scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
                 component           VARCHAR NOT NULL, \
                 opt                 VARCHAR NOT NULL, \
-                val                 VARCHAR NOT NULL \
+                val                 VARCHAR NOT NULL, \
+                UNIQUE (scan_instance_id, component, opt) \
             )",
             "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
                 scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
@@ -741,7 +743,8 @@ class SpiderFootDb:
             scan_instance_id    {varchar_type} NOT NULL REFERENCES tbl_scan_instance(guid), \
             component           {varchar_type} NOT NULL, \
             opt                 {varchar_type} NOT NULL, \
-            val                 {varchar_type} NOT NULL \
+            val                 {varchar_type} NOT NULL, \
+            UNIQUE (scan_instance_id, component, opt) \
         )")
         queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_results ( \
             scan_instance_id    {varchar_type} NOT NULL REFERENCES tbl_scan_instance(guid), \
