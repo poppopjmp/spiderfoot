@@ -84,9 +84,11 @@
               % endif
             % else:
               % for entry in (doc_index or []):
-                <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==(selected_file or '') else ''}">
-                  <i class="${entry['icon']}"></i> ${entry['title']}
-                </a>
+                % if entry['file'].lower() != 'home.md':
+                  <a href="/documentation/${entry['file']}" class="list-group-item${' active' if entry['file']==(selected_file or '') else ''}">
+                    <i class="${entry['icon']}"></i> ${entry['title']}
+                  </a>
+                % endif
               % endfor
             % endif
           </div>
@@ -150,13 +152,20 @@
           <div style="font-size:12px; color:#888; margin-top:5px;">
             <i class="fa fa-clock-o"></i> Last updated: ${last_updated or ''}
             &nbsp;|&nbsp;
-            <i class="fa fa-user"></i> Author: ${author or ''}
+            <i class="fa fa-user"></i> Author: ${author or '@poppopjmp'}
           </div>
         </div>
         <div class="panel-body" id="doc-content">
-          <div class="markdown-content" id="markdown-content">
-            ${highlight(content, search_query) if search_query else (content or '') | n}
-          </div>
+          % if (selected_file or '').lower() == 'home.md':
+            <div class="markdown-content" id="markdown-content">
+              <!-- Home.md is ignored for rendering. -->
+              <div class="alert alert-info">This page is intentionally left blank. Please use the main README.md for the documentation home page.</div>
+            </div>
+          % else:
+            <div class="markdown-content" id="markdown-content">
+              ${highlight(content, search_query) if search_query else (content or '') | n}
+            </div>
+          % endif
           <div id="doc-feedback" style="margin-top:30px; border-top:1px solid #eee; padding-top:15px;">
             <strong>Was this page helpful?</strong>
             <span style="margin-left:10px;">
