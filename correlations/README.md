@@ -1,3 +1,13 @@
+# What's New in Correlations (2025 Update)
+
+- **New Correlation Rules:** Added rules for Fofa, RocketReach, and ZoomEye exposed services/contacts, and more.
+- **Advanced Analysis Methods:** The engine now supports additional analysis methods such as `outlier`, `first_collection_only`, and `match_all_to_first_collection`.
+- **Improved Error Handling:** If a rule contains syntax errors, SpiderFoot will now skip the invalid rule and continue loading others, providing detailed error messages at startup.
+- **Rule ID and Filename:** The `id` field in each rule must exactly match the filename (excluding `.yaml`).
+- **Terminology Consistency:** All references to rule components now use consistent terminology (e.g., "collections", "aggregation").
+
+---
+
 ## Background
 
 SpiderFoot’s goal is to automate OSINT collection and analysis to the greatest extent possible. Since its inception, SpiderFoot has heavily focused on automating OSINT collection and entity extraction, but the automation of common analysis tasks -- beyond some reporting and visualisations -- has been left entirely to the user. The meant that the strength of SpiderFoot's data collection capabilities has sometimes been its weakness since with so much data collected, users have often needed to export it and use other tools to weed out data of interest.
@@ -74,7 +84,7 @@ sfp_portscan_tcp    Open TCP Port Banner    SSH-2.0-OpenSSH_7.2p2 Ubuntu-4ubuntu
 ```
 We can see above that a port was found to be open by the `sfp_portscan_tcp` module, and it happens to include a version. The correlation rule `open_port_version` picked this up and reported it. This is also visible in the web interface:
 
-<img src="./docs/images/correlations.png" />
+<img src="./documentation/images/correlations.png" />
 
 **NOTE:** Rules will only succeed if relevant data exists in your scan results in the first place. In other words, correlation rules analyze scan data, they don't collect data from targets.
 
@@ -117,7 +127,7 @@ The rules themselves are broken down into the following components:
 
 ### Creating a rule
 
-To create your own rule, simply copy the `template.yaml` file in the `correlations` folder to a meaningful name that matches the ID you intend to provide it, e.g. `aws_cloud_usage.yaml` and edit the rule to fit your needs. Save it and re-start SpiderFoot for the rule to be loaded. If there are any syntax errors, SpiderFoot will abort at startup and (hopefully) give you enough information to know where the error is.
+To create your own rule, simply copy the `template.yaml` file in the `correlations` folder to a meaningful name that matches the ID you intend to provide it (the `id` field **must** match the filename, excluding `.yaml`). Edit the rule to fit your needs. Save it and re-start SpiderFoot for the rule to be loaded. If there are any syntax errors, SpiderFoot will skip the invalid rule and provide an error message at startup, allowing other valid rules to load.
 
 The `template.yaml` file is also a good next point of reference to better understand the structure of the rules and how to use them. We also recommend taking a look through the actual rules themselves to see the concepts in practice.
 

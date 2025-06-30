@@ -16,5 +16,5 @@ aggregation:
 analysis:
   - method: threshold
     field: data
-    minimum: 2
+    minimum: 3
 headline: "Domain name {data} found in multiple scans"

@@ -19,6 +19,7 @@ Welcome to the SpiderFoot documentation! This wiki provides a structured, up-to-
 | :question: FAQ                | [FAQ](faq)                                            |
 | :wrench: Troubleshooting    | [Troubleshooting](troubleshooting)                      |
 | 🐳 Docker Deployment  | [Docker Deployment](docker_deployment)                  |
+| :mag: Correlations Engine   | [Correlations](correlations/correlation)                      |
 
 ---
 
