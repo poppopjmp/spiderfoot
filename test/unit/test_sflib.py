@@ -12,7 +12,7 @@ import re
 from unittest.mock import Mock, MagicMock, patch, mock_open
 from datetime import datetime
 
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
 
 
@@ -94,7 +94,7 @@ class TestSpiderFootComprehensive(SpiderFootTestBase):
         result = self.sf.optValueToData("@/nonexistent/file.txt")
         self.assertIsNone(result)
 
-    @patch('sflib.SpiderFoot.getSession')
+    @patch('spiderfoot.sflib.network.getSession')
     def test_optValueToData_url_value(self, mock_get_session):
         """Test optValueToData with URL value."""
         mock_response = Mock()
@@ -106,7 +106,7 @@ class TestSpiderFootComprehensive(SpiderFootTestBase):
         result = self.sf.optValueToData("https://example.com/config")
         self.assertEqual(result, "test url content")
 
-    @patch('sflib.SpiderFoot.getSession')
+    @patch('spiderfoot.sflib.network.getSession')
     def test_optValueToData_url_error(self, mock_get_session):
         """Test optValueToData with URL error."""
         mock_session = Mock()

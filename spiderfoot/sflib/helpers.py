@@ -73,15 +73,23 @@ def removeUrlCreds(url: str) -> str:
 def isValidLocalOrLoopbackIp(ip: str) -> bool:
     if not validIP(ip) and not validIP6(ip):
         return False
+    import netaddr
     ip_obj = netaddr.IPAddress(ip)
-    if ip_obj.version == 4:
+    # Try property (new netaddr), then method (old netaddr)
+    is_private = getattr(ip_obj, "is_private", None)
+    if callable(is_private):
         if ip_obj.is_private():
             return True
-    elif ip_obj.version == 6:
-        if ip_obj.is_private():
+    elif is_private is not None:
+        if ip_obj.is_private:
             return True
-    if ip_obj.is_loopback():
-        return True
+    is_loopback = getattr(ip_obj, "is_loopback", None)
+    if callable(is_loopback):
+        if ip_obj.is_loopback():
+            return True
+    elif is_loopback is not None:
+        if ip_obj.is_loopback:
+            return True
     return False
 
 def domainKeyword(domain: str, tldList: list) -> str:

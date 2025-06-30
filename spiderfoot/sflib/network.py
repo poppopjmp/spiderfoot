@@ -38,13 +38,18 @@ def resolveHost(host: str) -> list:
         return []
     return list(set(addrs))
 
-def resolveIP(ipaddr: str) -> list:
+def resolveIP(ipaddr: str) -> tuple:
+    """
+    Return (hostname, [list of IPs]) for the given IP address, or (None, []) on failure.
+    Maintains backward compatibility: if only IPs are needed, use the second element.
+    """
     if not validIP(ipaddr) and not validIP6(ipaddr):
-        return []
+        return (None, [])
     try:
-        return [x[0] for x in socket.gethostbyaddr(ipaddr)[2]]
+        host, _, addrs = socket.gethostbyaddr(ipaddr)
+        return (host, list(addrs))
     except Exception:
-        return []
+        return (None, [])
 
 def resolveHost6(hostname: str) -> list:
     if not hostname:
@@ -139,11 +144,14 @@ def getSession() -> 'requests.sessions.Session':
     session = requests.session()
     return session
 
-def useProxyForUrl(url: str, opts=None) -> bool:
-    # This function may need opts passed in, or be adapted for your use case
+def useProxyForUrl(url: str, opts=None, urlFQDN=None, isValidLocalOrLoopbackIp=None) -> bool:
     if opts is None:
         return False
-    host = opts.get('urlFQDN', lambda u: u)(url).lower()
+    if urlFQDN is None:
+        urlFQDN = lambda u: u
+    if isValidLocalOrLoopbackIp is None:
+        isValidLocalOrLoopbackIp = lambda ip: False
+    host = urlFQDN(url).lower()
     if not opts.get('_socks1type'):
         return False
     proxy_host = opts.get('_socks2addr')
@@ -154,8 +162,15 @@ def useProxyForUrl(url: str, opts=None) -> bool:
         return False
     if host == proxy_host.lower():
         return False
-    if validIP(host):
+    # Localhost and private IPs should not use proxy
+    if host in ("localhost", "127.0.0.1", "::1"):
         return False
+    if isValidLocalOrLoopbackIp(host):
+        return False
+    if validIP(host):
+        # If it's a valid IP, check if it's local/private
+        if isValidLocalOrLoopbackIp(host):
+            return False
     return True
 
 def fetchUrl(url: str, cookies: str = None, timeout: int = 30, useragent: str = "SpiderFoot", headers: dict = None, noLog: bool = False, postData: str = None, disableContentEncoding: bool = False, sizeLimit: int = None, headOnly: bool = False, verify: bool = True) -> dict:

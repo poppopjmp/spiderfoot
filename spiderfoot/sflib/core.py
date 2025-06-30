@@ -81,6 +81,7 @@ class SpiderFoot:
         if val.lower().startswith('http://') or val.lower().startswith('https://'):
             try:
                 self.info(f"Downloading configuration data from: {val}")
+                from .network import getSession  # Import here for patching
                 session = getSession()
                 res = session.get(val)
                 return res.content.decode('utf-8')
@@ -166,7 +167,9 @@ class SpiderFoot:
     def getSession(self):
         return getSession()
     def useProxyForUrl(self, url: str) -> bool:
-        return useProxyForUrl(url, self.opts)
+        # Patch: pass self for urlFQDN resolution and improve local IP detection
+        from .network import useProxyForUrl
+        return useProxyForUrl(url, self.opts, urlFQDN=self.urlFQDN, isValidLocalOrLoopbackIp=self.isValidLocalOrLoopbackIp)
     def fetchUrl(self, url: str, cookies: str = None, timeout: int = 30, useragent: str = "SpiderFoot", headers: dict = None, noLog: bool = False, postData: str = None, disableContentEncoding: bool = False, sizeLimit: int = None, headOnly: bool = False, verify: bool = True) -> dict:
         return fetchUrl(url, cookies, timeout, useragent, headers, noLog, postData, disableContentEncoding, sizeLimit, headOnly, verify)
     def checkDnsWildcard(self, target: str) -> bool:
@@ -311,3 +314,12 @@ class SpiderFoot:
         # Placeholder for module loading logic
         pass
     # configSerialize and configUnserialize are available as module functions
+    def configSerialize(self, opts: dict, filterSystem: bool = True):
+        """Delegate to config.configSerialize."""
+        from .config import configSerialize
+        return configSerialize(opts, filterSystem)
+
+    def configUnserialize(self, opts: dict, referencePoint: dict, filterSystem: bool = True):
+        """Delegate to config.configUnserialize."""
+        from .config import configUnserialize
+        return configUnserialize(opts, referencePoint, filterSystem)
