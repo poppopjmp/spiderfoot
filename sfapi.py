@@ -39,7 +39,7 @@ from pydantic import BaseModel, Field, field_validator
 import uvicorn
 
 # SpiderFoot imports
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import __version__

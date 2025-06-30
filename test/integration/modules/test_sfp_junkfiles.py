@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_junkfiles import sfp_junkfiles
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase  # Add missing import
 

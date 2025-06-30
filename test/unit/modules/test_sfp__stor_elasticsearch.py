@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock, Mock
 import unittest
 import threading
 from elasticsearch import Elasticsearch, ConnectionError
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot.event import SpiderFootEvent
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
 from test.unit.utils.test_base import SpiderFootTestBase

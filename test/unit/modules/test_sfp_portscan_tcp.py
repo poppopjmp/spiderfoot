@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_portscan_tcp import sfp_portscan_tcp
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 

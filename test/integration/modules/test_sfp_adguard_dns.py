@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_adguard_dns import sfp_adguard_dns
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

@@ -4,7 +4,7 @@ from unittest.mock import patch
 import json
 
 from modules.sfp_threatcrowd import sfp_threatcrowd
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 
 

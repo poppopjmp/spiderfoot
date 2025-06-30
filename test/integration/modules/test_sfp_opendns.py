@@ -1,6 +1,6 @@
 import pytest
 from modules.sfp_opendns import sfp_opendns
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from unittest.mock import patch
 

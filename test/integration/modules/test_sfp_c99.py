@@ -4,7 +4,7 @@ import json
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_c99 import sfp_c99
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 
 
 class TestModuleIntegrationC99(unittest.TestCase):

@@ -2,7 +2,7 @@
 import pytest
 import unittest
 
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
 
 

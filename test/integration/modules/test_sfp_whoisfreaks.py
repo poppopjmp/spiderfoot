@@ -1,6 +1,6 @@
 import unittest
 from modules.sfp_whoisfreaks import sfp_whoisfreaks
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 
 

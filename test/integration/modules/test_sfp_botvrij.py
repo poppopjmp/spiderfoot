@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from modules.sfp_botvrij import sfp_botvrij
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

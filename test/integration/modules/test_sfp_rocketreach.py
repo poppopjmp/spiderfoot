@@ -18,7 +18,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 
 try:
     from modules.sfp_rocketreach import sfp_rocketreach

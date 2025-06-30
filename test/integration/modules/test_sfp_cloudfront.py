@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 import os
 
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_cloudfront import sfp_cloudfront
 

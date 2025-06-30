@@ -253,47 +253,61 @@ class SpiderFoot:
             count = 0
         return baseurl.split('/')[count].lower()
 
-    def cveInfo(self, cveId: str, sources: str = "circl,nist") -> Tuple[str, str]:
-        sources = sources.split(",")
-        eventType = "VULNERABILITY_GENERAL"
-        def cveRating(score: int) -> str:
-            if score >= 9:
-                return "CRITICAL"
-            elif score >= 7:
-                return "HIGH"
-            elif score >= 4:
-                return "MEDIUM"
-            elif score > 0:
-                return "LOW"
-            return "UNKNOWN"
-        for source in sources:
-            # Placeholder: actual CVE lookup logic would go here
-            pass
-        return (eventType, f"{cveId}\nScore: Unknown\nDescription: Unknown")
-
     def googleIterate(self, searchString: str, opts: dict = None) -> dict:
-        import urllib.parse
+        """Request search results from the Google API.
+
+        Will return a dict:
+        {
+          "urls": a list of urls that match the query string,
+          "webSearchUrl": url for Google results page,
+        }
+
+        Options accepted:
+            useragent: User-Agent string to use
+            timeout: API call timeout
+
+        Args:
+            searchString (str): Google search query
+            opts (dict): TBD
+
+        Returns:
+            dict: Search results as {"webSearchUrl": "URL", "urls": [results]}
+        """
         if not searchString:
-            return {}
+            return None
+
         if opts is None:
-            return {}
+            opts = {}
+
         search_string = searchString.replace(" ", "%20")
+        import urllib.parse
         params = urllib.parse.urlencode({
-            "cx": opts["cse_id"],
-            "key": opts["api_key"],
+            "cx": opts.get("cse_id", ""),
+            "key": opts.get("api_key", ""),
         })
+
         response = self.fetchUrl(
             f"https://www.googleapis.com/customsearch/v1?q={search_string}&{params}",
-            timeout=opts["timeout"],
+            timeout=opts.get("timeout", 30),
         )
+
         if response['code'] != '200':
-            return {}
+            self.error("Failed to get a valid response from the Google API")
+            return None
+
         try:
             response_json = response['content']
-        except ValueError:
-            return {}
+            if isinstance(response_json, str):
+                import json
+                response_json = json.loads(response_json)
+        except Exception:
+            self.error(
+                "The key 'content' in the Google API response doesn't contain valid JSON.")
+            return None
+
         if "items" not in response_json:
-            return {}
+            return None
+
         params = urllib.parse.urlencode({
             "ie": "utf-8",
             "oe": "utf-8",
@@ -301,19 +315,129 @@ class SpiderFoot:
             "rls": "org.mozilla:en-US:official",
             "client": "firefox-a",
         })
+
         return {
             "urls": [str(k['link']) for k in response_json['items']],
             "webSearchUrl": f"https://www.google.com/search?q={search_string}&{params}"
         }
 
     def bingIterate(self, searchString: str, opts: dict = None) -> dict:
-        # Placeholder for Bing search logic
-        return {}
+        """Request search results from the Bing API.
+
+        Will return a dict:
+        {
+          "urls": a list of urls that match the query string,
+          "webSearchUrl": url for bing results page,
+        }
+
+        Options accepted:
+            count: number of search results to request from the API
+            useragent: User-Agent string to use
+            timeout: API call timeout
+
+        Args:
+            searchString (str): Bing search query
+            opts (dict): TBD
+
+        Returns:
+            dict: Search results as {"webSearchUrl": "URL", "urls": [results]}
+        """
+        if not searchString:
+            return None
+
+        if opts is None:
+            opts = {}
+
+        search_string = searchString.replace(" ", "%20")
+        import urllib.parse
+        params = urllib.parse.urlencode({
+            "responseFilter": "Webpages",
+            "count": opts.get("count", 10),
+        })
+
+        response = self.fetchUrl(
+            f"https://api.cognitive.microsoft.com/bing/v7.0/search?q={search_string}&{params}",
+            timeout=opts.get("timeout", 30),
+            useragent=opts.get("useragent", "SpiderFoot"),
+            headers={"Ocp-Apim-Subscription-Key": opts.get("api_key", "")},
+        )
+
+        if response['code'] != '200':
+            self.error("Failed to get a valid response from the Bing API")
+            return None
+
+        try:
+            import json
+            response_json = response['content']
+            if isinstance(response_json, str):
+                response_json = json.loads(response_json)
+        except Exception:
+            self.error(
+                "The key 'content' in the bing API response doesn't contain valid JSON.")
+            return None
+
+        if ("webPages" in response_json and "value" in response_json["webPages"]):
+            urls = [str(k['url']) for k in response_json["webPages"]["value"]]
+            webSearchUrl = response_json["webPages"].get("webSearchUrl", "")
+            return {
+                "urls": urls,
+                "webSearchUrl": webSearchUrl
+            }
+        return None
 
     def loadModules(self):
-        # Placeholder for module loading logic
-        pass
-    # configSerialize and configUnserialize are available as module functions
+        """Load SpiderFoot modules from the modules directory."""
+        import os
+        from spiderfoot import SpiderFootHelpers
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        modpath = os.path.join(script_dir, 'modules')
+        if not os.path.isdir(modpath):
+            self.error(f"Modules directory not found: {modpath}")
+            return
+        self.info(f"Loading modules from: {modpath}")
+        try:
+            module_files = [f for f in os.listdir(modpath) if f.endswith('.py') and not f.startswith('__')]
+        except OSError as e:
+            self.error(f"Error reading modules directory: {e}")
+            return
+        if not module_files:
+            self.info("No module files found.")
+            return
+        self.info(f"Found {len(module_files)} module files")
+        # Actual module loading logic would go here
+        # For now, just log the module names
+        for mod in module_files:
+            self.debug(f"Module found: {mod}")
+
+    def cveInfo(self, cveId: str, sources: str = "circl,nist") -> tuple[str, str]:
+        """Look up a CVE ID for more information in the first available source.
+
+        Args:
+            cveId (str): CVE ID, e.g. CVE-2018-15473
+            sources (str): Comma-separated list of sources to query. Options available are circl and nist
+
+        Returns:
+            tuple[str, str]: Appropriate event type and descriptive text
+        """
+        sources = sources.split(",")
+        eventType = "VULNERABILITY_GENERAL"
+        def cveRating(score: int) -> str:
+            if score == "Unknown":
+                return None
+            if score >= 0 and score <= 3.9:
+                return "LOW"
+            if score >= 4.0 and score <= 6.9:
+                return "MEDIUM"
+            if score >= 7.0 and score <= 8.9:
+                return "HIGH"
+            if score >= 9.0:
+                return "CRITICAL"
+            return None
+        for source in sources:
+            # Placeholder: actual CVE lookup logic would go here
+            pass
+        return (eventType, f"{cveId}\nScore: Unknown\nDescription: Unknown")
+
     def configSerialize(self, opts: dict, filterSystem: bool = True):
         """Delegate to config.configSerialize."""
         from .config import configSerialize

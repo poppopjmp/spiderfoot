@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_subdomain_takeover import sfp_subdomain_takeover
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

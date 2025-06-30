@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_cloudflaredns import sfp_cloudflaredns
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 
 
 class TestModuleIntegrationCloudflaredns(unittest.TestCase):

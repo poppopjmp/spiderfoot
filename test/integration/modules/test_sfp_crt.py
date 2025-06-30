@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_crt import sfp_crt
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

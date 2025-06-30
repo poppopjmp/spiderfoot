@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_whoisology import sfp_whoisology
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot.event import SpiderFootEvent
 from spiderfoot.target import SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase

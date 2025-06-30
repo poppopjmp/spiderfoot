@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_grep_app import sfp_grep_app
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 

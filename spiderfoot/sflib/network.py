@@ -26,30 +26,33 @@ from .helpers import validIP, validIP6
 from datetime import datetime
 
 def resolveHost(host: str) -> list:
+    """Return a normalised IPv4 resolution of a hostname."""
+    import socket
+    from .helpers import normalizeDNS
     if not host:
         return []
-    addrs = list()
     try:
-        for r in socket.getaddrinfo(host, None, socket.AF_INET):
-            addrs.append(r[4][0])
+        # Use gethostbyname_ex for patching/mocking compatibility in tests
+        addrs = normalizeDNS(socket.gethostbyname_ex(host))
     except Exception:
         return []
     if not addrs:
         return []
     return list(set(addrs))
 
-def resolveIP(ipaddr: str) -> tuple:
-    """
-    Return (hostname, [list of IPs]) for the given IP address, or (None, []) on failure.
-    Maintains backward compatibility: if only IPs are needed, use the second element.
-    """
+def resolveIP(ipaddr: str) -> list:
+    """Return a normalised resolution of an IPv4 or IPv6 address as a flat list (not a tuple)."""
+    import socket
+    from .helpers import normalizeDNS, validIP, validIP6
     if not validIP(ipaddr) and not validIP6(ipaddr):
-        return (None, [])
+        return []
     try:
-        host, _, addrs = socket.gethostbyaddr(ipaddr)
-        return (host, list(addrs))
+        addrs = normalizeDNS(socket.gethostbyaddr(ipaddr))
     except Exception:
-        return (None, [])
+        return []
+    if not addrs:
+        return []
+    return list(set(addrs))
 
 def resolveHost6(hostname: str) -> list:
     if not hostname:

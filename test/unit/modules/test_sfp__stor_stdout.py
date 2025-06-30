@@ -5,7 +5,7 @@ import sys
 from io import StringIO
 
 from modules.sfp__stor_stdout import sfp__stor_stdout
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot.event import SpiderFootEvent
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion

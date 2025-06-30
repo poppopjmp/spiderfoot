@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_ipregistry import sfp_ipregistry
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

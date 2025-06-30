@@ -1,6 +1,6 @@
 # filepath: spiderfoot/test/unit/modules/test_sfp_bambenek.py
 import unittest
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot.event import SpiderFootEvent
 from modules.sfp_bambenek import sfp_bambenek
 from test.unit.utils.test_base import SpiderFootTestBase

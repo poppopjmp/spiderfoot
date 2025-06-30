@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_accounts import sfp_accounts
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 
 
 class TestModuleIntegrationAccounts(unittest.TestCase):

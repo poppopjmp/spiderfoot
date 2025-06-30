@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from modules.sfp_tool_wappalyzer import sfp_tool_wappalyzer
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 @pytest.mark.integration

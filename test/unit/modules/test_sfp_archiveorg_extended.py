@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from modules.sfp_archiveorg import sfp_archiveorg
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 
 class TestModuleArchiveorgExtended(unittest.TestCase):

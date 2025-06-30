@@ -5,7 +5,7 @@ import sys
 import os
 
 from modules.sfp_tool_nmap import sfp_tool_nmap
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 class TestModuleIntegrationToolNmap(unittest.TestCase):

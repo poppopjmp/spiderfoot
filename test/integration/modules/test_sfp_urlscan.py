@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from modules.sfp_urlscan import sfp_urlscan
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

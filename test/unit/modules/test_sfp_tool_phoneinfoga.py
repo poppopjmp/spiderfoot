@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from modules.sfp_tool_phoneinfoga import sfp_tool_phoneinfoga
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 import json
 

@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from modules.sfp_bingsearch import sfp_bingsearch
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

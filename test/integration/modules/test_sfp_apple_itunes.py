@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from modules.sfp_apple_itunes import sfp_apple_itunes
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 

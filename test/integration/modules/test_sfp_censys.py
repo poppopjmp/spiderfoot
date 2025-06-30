@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from modules.sfp_censys import sfp_censys
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

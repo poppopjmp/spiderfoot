@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from modules.sfp_cinsscore import sfp_cinsscore
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

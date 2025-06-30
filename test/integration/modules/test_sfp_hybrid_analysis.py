@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_hybrid_analysis import sfp_hybrid_analysis
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_opencorporates import sfp_opencorporates
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

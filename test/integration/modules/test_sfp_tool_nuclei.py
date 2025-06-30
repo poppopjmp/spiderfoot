@@ -2,7 +2,7 @@ import pytest
 import os
 from unittest.mock import patch, MagicMock
 from modules.sfp_tool_nuclei import sfp_tool_nuclei
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 NUCLEI_JSON = b'{"matched-at": "1.2.3.4:80", "info": {"name": "test", "severity": "high"}, "template-id": "TID", "matcher-name": "default"}\n'

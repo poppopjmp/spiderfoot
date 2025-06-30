@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_robtex import sfp_robtex
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

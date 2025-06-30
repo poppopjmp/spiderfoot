@@ -40,7 +40,7 @@ curl -X POST http://127.0.0.1:5001/api/scans \
 You can also use SpiderFoot as a Python library for custom automation:
 
 ```python
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot.scan_service.scanner import startSpiderFootScanner
 
 sf = SpiderFoot()

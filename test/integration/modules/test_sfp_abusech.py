@@ -5,7 +5,7 @@ import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_abusech import sfp_abusech
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 
 
 class BaseTestModuleIntegration(unittest.TestCase):

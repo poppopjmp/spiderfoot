@@ -20,7 +20,7 @@ import traceback
 
 import dns.resolver
 
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool
 from spiderfoot.logger import logWorkerSetup
 from spiderfoot import SpiderFootDb

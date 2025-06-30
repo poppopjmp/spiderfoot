@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_koodous import sfp_koodous
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

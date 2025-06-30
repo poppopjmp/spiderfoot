@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_fsecure_riddler import sfp_fsecure_riddler
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

@@ -1,7 +1,7 @@
 import pytest
 import unittest
 from modules.sfp_projectdiscovery import sfp_projectdiscovery
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

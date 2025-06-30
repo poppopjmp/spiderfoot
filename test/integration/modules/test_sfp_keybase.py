@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_keybase import sfp_keybase
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

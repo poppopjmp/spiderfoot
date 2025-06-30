@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 from modules.sfp_luminar import sfp_luminar
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion

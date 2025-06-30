@@ -1,6 +1,6 @@
 # filepath: spiderfoot/test/unit/modules/test_sfp_whoisfreaks.py
 from unittest.mock import patch, MagicMock
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_whoisfreaks import sfp_whoisfreaks
 import unittest

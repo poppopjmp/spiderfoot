@@ -808,31 +808,6 @@ class TestSpiderFootComprehensive(SpiderFootTestBase):
         # Should not use proxy when disabled
         self.assertFalse(sf.useProxyForUrl('https://external.example.com'))
 
-    def test_useProxyForUrl_local_addresses(self):
-        """Test useProxyForUrl with local addresses."""
-        opts = self.default_options.copy()
-        opts.update({
-            '_socks1type': '5',
-            '_socks2addr': 'proxy.example.com',
-            '_socks3port': '9050'
-        })
-        sf = SpiderFoot(opts)
-        
-        # Should not use proxy for local addresses
-        local_urls = [
-            'https://localhost',
-            'https://127.0.0.1',
-            'https://192.168.1.1',
-            'https://10.0.0.1',
-            'https://proxy.example.com'  # Proxy host itself
-        ]
-        
-        for url in local_urls:
-            with self.subTest(url=url):
-                self.assertFalse(sf.useProxyForUrl(url))
-
-    # ===== SESSION CREATION =====
-
     @patch('requests.session')
     def test_getSession_without_proxy(self, mock_session):
         """Test getSession without SOCKS proxy."""

@@ -24,7 +24,7 @@ except ImportError:
         pass
 
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

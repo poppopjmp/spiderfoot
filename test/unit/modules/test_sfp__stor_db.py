@@ -5,7 +5,7 @@ import psycopg2
 import time
 
 from modules.sfp__stor_db import sfp__stor_db
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot.event import SpiderFootEvent
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion

@@ -5,7 +5,7 @@ import json
 import tempfile
 
 from modules.sfp_tool_gobuster import sfp_tool_gobuster
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

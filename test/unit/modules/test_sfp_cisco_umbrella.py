@@ -1,6 +1,6 @@
 # filepath: spiderfoot/test/unit/modules/test_sfp_cisco_umbrella.py
 from unittest.mock import patch, MagicMock
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 import unittest
 from test.unit.utils.test_base import SpiderFootTestBase

@@ -1,7 +1,7 @@
 import unittest
 
 from modules.sfp_bgpview import sfp_bgpview
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_archiveorg import sfp_archiveorg
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 

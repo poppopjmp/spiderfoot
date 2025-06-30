@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 from modules.sfp_mandiant_ti import sfp_mandiant_ti
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

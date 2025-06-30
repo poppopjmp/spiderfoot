@@ -1,7 +1,7 @@
 import unittest
 
 from modules.sfp_zoomeye import sfp_zoomeye
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

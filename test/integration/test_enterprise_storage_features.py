@@ -28,7 +28,7 @@ from unittest.mock import patch, MagicMock, Mock
 import psycopg2
 from elasticsearch import Elasticsearch, ConnectionError
 
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot.event import SpiderFootEvent
 from modules.sfp__stor_db import sfp__stor_db
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch

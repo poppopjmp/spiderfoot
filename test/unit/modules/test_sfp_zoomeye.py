@@ -1,6 +1,6 @@
 # filepath: spiderfoot/test/unit/modules/test_sfp_zoomeye.py
 from unittest.mock import patch, MagicMock
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot.event import SpiderFootEvent
 from modules.sfp_zoomeye import sfp_zoomeye
 import unittest

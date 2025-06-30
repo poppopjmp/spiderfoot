@@ -1,6 +1,6 @@
 # filepath: spiderfoot/test/unit/modules/test_sfp_tool_gobuster.py
 from unittest.mock import patch, MagicMock
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_tool_gobuster import sfp_tool_gobuster
 import unittest

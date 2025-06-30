@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_greensnow import sfp_greensnow
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

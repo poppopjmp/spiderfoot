@@ -3,7 +3,7 @@ import time
 import unittest.mock as mock
 
 from modules.sfp_virustotal import sfp_virustotal
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion

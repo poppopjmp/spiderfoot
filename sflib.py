@@ -836,31 +836,47 @@ class SpiderFoot:
                 return False
         return True
 
-    def normalizeDNS(self, res: list) -> list:
+    def normalizeDNS(self, res) -> list:
         """Clean DNS results to be a simple list.
 
         Args:
-            res (list): List of DNS names
+            res (tuple or list): DNS result tuple or list
 
         Returns:
-            list: list of domains
+            list: list of domains or IPs
         """
         ret = list()
 
         if not res:
             return ret
 
-        for addr in res:
-            if isinstance(addr, list):
-                for host in addr:
-                    host = str(host).rstrip(".")
+        # If input is a tuple (as from gethostbyname_ex/gethostbyaddr), flatten all string/list elements
+        if isinstance(res, tuple):
+            for part in res:
+                if isinstance(part, (list, tuple)):
+                    for host in part:
+                        host = str(host).rstrip(".")
+                        if host:
+                            ret.append(host)
+                elif isinstance(part, str):
+                    # Only add the string if it looks like a hostname or IP, not a single character
+                    if part and ('.' in part or part.isalnum()):
+                        host = part.rstrip(".")
+                        if host:
+                            ret.append(host)
+        elif isinstance(res, list):
+            for addr in res:
+                if isinstance(addr, list):
+                    for host in addr:
+                        host = str(host).rstrip(".")
+                        if host:
+                            ret.append(host)
+                else:
+                    host = str(addr).rstrip(".")
                     if host:
                         ret.append(host)
-            else:
-                host = str(addr).rstrip(".")
-                if host:
-                    ret.append(host)
-        return ret
+        # Remove duplicates and return a flat list
+        return list(dict.fromkeys(ret))
 
     def resolveHost(self, host: str) -> list:
         """Return a normalised IPv4 resolution of a hostname.

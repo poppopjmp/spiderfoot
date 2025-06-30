@@ -28,7 +28,7 @@ sys.path.insert(0, project_root)
 try:
     import sys
     sys.path.insert(0, project_root)
-    from sflib import SpiderFoot
+    from spiderfoot.sflib import SpiderFoot
     from spiderfoot import SpiderFootEvent
     IMPORTS_AVAILABLE = True
 except ImportError as e:

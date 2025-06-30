@@ -1,6 +1,6 @@
 # filepath: spiderfoot/test/unit/modules/test_sfp_fofa.py
 from unittest.mock import patch, MagicMock
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_fofa import sfp_fofa
 import unittest

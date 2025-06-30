@@ -2,7 +2,7 @@ import pytest
 import unittest
 
 from modules.sfp_s3bucket import sfp_s3bucket
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 

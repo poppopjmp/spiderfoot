@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 from modules.sfp_criminalip import sfp_criminalip
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
