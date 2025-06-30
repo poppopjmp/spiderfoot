@@ -564,3 +564,90 @@ class TestSpiderFootDbIntegration(SpiderFootTestBase):
             except:
                 pass
         super().tearDown()
+
+
+class TestSpiderFootDbSchemaBackend(SpiderFootTestBase):
+    """Tests for backend-aware schema creation in SpiderFootDb."""
+
+    def setUp(self):
+        super().setUp()
+        self.sqlite_opts = {
+            '__database': f"{SpiderFootHelpers.dataPath()}/test_schema_sqlite_{time.time()}.db",
+            '__dbtype': 'sqlite'
+        }
+        self.pg_opts = {
+            '__database': 'dbname=spiderfoot_test user=postgres password=postgres host=localhost',
+            '__dbtype': 'postgresql'
+        }
+
+    def test_schema_creation_sqlite(self):
+        db = SpiderFootDb(self.sqlite_opts, init=True)
+        db.close()
+        import sqlite3
+        with sqlite3.connect(self.sqlite_opts['__database']) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = [row[0] for row in cursor.fetchall()]
+            for t in [
+                'tbl_event_types', 'tbl_config', 'tbl_scan_instance',
+                'tbl_scan_log', 'tbl_scan_config', 'tbl_scan_results',
+                'tbl_scan_correlation_results', 'tbl_scan_correlation_results_events']:
+                self.assertIn(t, tables)
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='index'")
+            indexes = [row[0] for row in cursor.fetchall()]
+            for idx in [
+                'idx_scan_results_id', 'idx_scan_results_type', 'idx_scan_results_hash',
+                'idx_scan_results_module', 'idx_scan_results_srchash', 'idx_scan_logs',
+                'idx_scan_correlation', 'idx_scan_correlation_events']:
+                self.assertIn(idx, indexes)
+
+    def test_schema_idempotency_sqlite(self):
+        db = SpiderFootDb(self.sqlite_opts, init=True)
+        db.create()  # Should not raise
+        db.create()  # Should not raise
+        db.close()
+
+    def test_schema_type_adaptation_sqlite(self):
+        db = SpiderFootDb(self.sqlite_opts, init=True)
+        db.close()
+        import sqlite3
+        with sqlite3.connect(self.sqlite_opts['__database']) as conn:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(tbl_scan_instance)")
+            columns = {row[1]: row[2] for row in cursor.fetchall()}
+            self.assertEqual(columns['created'], 'INT')
+            self.assertEqual(columns['ended'], 'INT')
+
+    def test_schema_creation_unsupported_backend(self):
+        from spiderfoot.db import get_schema_queries
+        with self.assertRaises(ValueError):
+            get_schema_queries('oracle')
+
+    # PostgreSQL tests are skipped unless a test DB is available
+    def test_schema_creation_postgresql(self):
+        try:
+            db = SpiderFootDb(self.pg_opts, init=True)
+            db.close()
+            import psycopg2
+            conn = psycopg2.connect(self.pg_opts['__database'])
+            cursor = conn.cursor()
+            cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+            tables = [row[0] for row in cursor.fetchall()]
+            for t in [
+                'tbl_event_types', 'tbl_config', 'tbl_scan_instance',
+                'tbl_scan_log', 'tbl_scan_config', 'tbl_scan_results',
+                'tbl_scan_correlation_results', 'tbl_scan_correlation_results_events']:
+                self.assertIn(t, tables)
+            cursor.close()
+            conn.close()
+        except Exception:
+            self.skipTest("PostgreSQL test DB not available or not configured.")
+
+    def tearDown(self):
+        import os
+        if hasattr(self, 'sqlite_opts') and self.sqlite_opts.get('__database'):
+            try:
+                os.remove(self.sqlite_opts['__database'])
+            except Exception:
+                pass
+        super().tearDown()

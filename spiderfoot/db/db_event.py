@@ -1,4 +1,14 @@
-# db_event.py
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------------------
+# Name:         Modular SpiderFoot Database Module
+# Purpose:      Common functions for working with the database back-end.
+#
+# Author:      Agostino Panico @poppopjmp
+#
+# Created:     30/06/2025
+# Copyright:   (c) Agostino Panico 2025
+# Licence:     MIT
+# -------------------------------------------------------------------------------
 """
 Event storage, retrieval, search, and event tree navigation for SpiderFootDb.
 """
@@ -7,6 +17,7 @@ import time
 import sqlite3
 import psycopg2
 from ..event import SpiderFootEvent
+from .db_utils import get_placeholder, is_transient_error
 
 class EventManager:
     def __init__(self, dbh, conn, dbhLock, db_type):
@@ -14,6 +25,12 @@ class EventManager:
         self.conn = conn
         self.dbhLock = dbhLock
         self.db_type = db_type
+
+    def _log_db_error(self, msg, exc):
+        print(f"[DB ERROR] {msg}: {exc}")
+
+    def _is_transient_error(self, exc):
+        return is_transient_error(exc)
 
     def scanLogEvents(self, batch: list) -> bool:
         inserts = []
@@ -45,22 +62,26 @@ class EventManager:
                 (scan_instance_id, generated, component, type, message) \
                 VALUES (%s, %s, %s, %s, %s)"
         with self.dbhLock:
-            try:
-                if not self.conn:
-                    return False
-                self.dbh.executemany(qry, inserts)
-                self.conn.commit()
-                return True
-            except (sqlite3.Error, psycopg2.Error) as e:
-                if "locked" in str(e).lower() or "thread" in str(e).lower():
-                    return False
+            for attempt in range(3):
                 try:
-                    self.conn.rollback()
-                except:
-                    pass
-                return False
-            except Exception:
-                return False
+                    if not self.conn:
+                        return False
+                    self.dbh.executemany(qry, inserts)
+                    self.conn.commit()
+                    return True
+                except (sqlite3.Error, psycopg2.Error) as e:
+                    self._log_db_error("Error in scanLogEvents", e)
+                    if self._is_transient_error(e) and attempt < 2:
+                        time.sleep(0.2 * (attempt + 1))
+                        continue
+                    try:
+                        self.conn.rollback()
+                    except Exception as e2:
+                        self._log_db_error("Rollback failed in scanLogEvents", e2)
+                    return False
+                except Exception as e:
+                    self._log_db_error("Unknown error in scanLogEvents", e)
+                    return False
 
     def scanLogEvent(self, instanceId: str, classification: str, message: str, component: str = None) -> None:
         if not isinstance(instanceId, str):
@@ -71,19 +92,22 @@ class EventManager:
             raise TypeError(f"message is {type(message)}; expected str()")
         if not component:
             component = "SpiderFoot"
-        qry = "INSERT INTO tbl_scan_log \
-            (scan_instance_id, generated, component, type, message) \
-            VALUES (?, ?, ?, ?, ?)"
+        ph = get_placeholder(self.db_type)
+        qry = f"INSERT INTO tbl_scan_log (scan_instance_id, generated, component, type, message) VALUES ({ph}, {ph}, {ph}, {ph}, {ph})"
         with self.dbhLock:
-            try:
-                self.dbh.execute(qry, (
-                    instanceId, time.time() * 1000, component, classification, message
-                ))
-                self.conn.commit()
-            except (sqlite3.Error, psycopg2.Error) as e:
-                if "locked" not in str(e.args[0]) and "thread" not in str(e.args[0]):
-                    raise IOError("Unable to log scan event in database") from e
-                pass
+            for attempt in range(3):
+                try:
+                    self.dbh.execute(qry, (
+                        instanceId, time.time() * 1000, component, classification, message
+                    ))
+                    self.conn.commit()
+                    return
+                except (sqlite3.Error, psycopg2.Error) as e:
+                    self._log_db_error("Error in scanLogEvent", e)
+                    if self._is_transient_error(e) and attempt < 2:
+                        time.sleep(0.2 * (attempt + 1))
+                        continue
+                    raise IOError("Error in scanLogEvent") from e
 
     def scanLogs(self, instanceId: str, limit: int = None, fromRowId: int = 0, reverse: bool = False) -> list:
         if not isinstance(instanceId, str):

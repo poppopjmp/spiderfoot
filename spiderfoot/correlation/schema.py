@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------------------
+# Name:         Modular SpiderFoot Correlation Engine
+# Purpose:      Common functions for enriching events with contextual information.
+#
+# Author:      Agostino Panico @poppopjmp
+#
+# Created:     30/06/2025
+# Copyright:   (c) Agostino Panico 2025
+# Licence:     MIT
+# -------------------------------------------------------------------------------
 # JSON Schema for correlation rules
 RULE_SCHEMA = {
     "type": "object",

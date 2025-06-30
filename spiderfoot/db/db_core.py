@@ -1,4 +1,14 @@
-# db_core.py
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------------------
+# Name:         Modular SpiderFoot Database Module
+# Purpose:      Common functions for working with the database back-end.
+#
+# Author:      Agostino Panico @poppopjmp
+#
+# Created:     30/06/2025
+# Copyright:   (c) Agostino Panico 2025
+# Licence:     MIT
+# -------------------------------------------------------------------------------
 """
 Core DB connection, locking, schema management, and shared resources for SpiderFootDb.
 """
@@ -6,6 +16,11 @@ import threading
 import sqlite3
 import psycopg2
 from pathlib import Path
+import time
+from spiderfoot.db.db_utils import (
+    get_placeholder, get_upsert_clause, get_type_mapping, get_bool_value,
+    get_schema_version_queries, get_index_if_not_exists, check_connection, is_transient_error, normalize_db_type
+)
 
 class DbCore:
     """
@@ -272,7 +287,7 @@ class DbCore:
         ("script_alert", "Script alerts", 110, "text"),
         ("command_alert", "Command alerts", 111, "text"),
         ("control_alert", "Control alerts", 112, "text"),
-        ("data_alert", "Data export alerts", 113, "text"),
+        ("data_alert", "Data exports alerts", 113, "text"),
         ("import_alert", "Data import alerts", 114, "text"),
         ("export_alert", "Data export alerts", 115, "text"),
         ("sync_alert", "Data synchronization alerts", 116, "text"),
@@ -672,6 +687,27 @@ class DbCore:
         ("command_alert", "Command alert", 510, "text"),
         ("control_alert", "Control alert", 511, "text")
     ]
+    schema_version_table_sqlite = """
+        CREATE TABLE IF NOT EXISTS tbl_schema_version (
+            version INTEGER NOT NULL,
+            applied_at INTEGER NOT NULL
+        )
+    """
+    schema_version_table_postgres = """
+        CREATE TABLE IF NOT EXISTS tbl_schema_version (
+            version INTEGER NOT NULL,
+            applied_at BIGINT NOT NULL
+        )
+    """
+    if schema_version_table_sqlite not in createSchemaQueries:
+        createSchemaQueries.insert(0, schema_version_table_sqlite)
+    if schema_version_table_postgres not in createPostgreSQLSchemaQueries:
+        createPostgreSQLSchemaQueries.insert(0, schema_version_table_postgres)
+    SCHEMA_VERSION = 1  # Increment this on every schema change
+
+    def _log_db_error(self, msg, exc):
+        # Placeholder for future logging integration
+        print(f"[DB ERROR] {msg}: {exc}")
 
     def __init__(self, opts: dict, init: bool = False) -> None:
         """
@@ -689,16 +725,17 @@ class DbCore:
             raise ValueError("__database key missing in opts")
         if '__dbtype' not in opts:
             opts['__dbtype'] = 'sqlite'
-        self.db_type = opts['__dbtype']
+        self.db_type = normalize_db_type(opts['__dbtype'])
         database_path = opts['__database']
         if self.db_type == 'sqlite':
             Path(database_path).parent.mkdir(exist_ok=True, parents=True)
             try:
                 dbh = sqlite3.connect(database_path)
             except Exception as e:
+                self._log_db_error(f"Error connecting to internal database {database_path}", e)
                 raise IOError(f"Error connecting to internal database {database_path}") from e
             if dbh is None:
-                raise IOError(f"Could not connect to internal database, and could not create {database_path}") from None
+                raise IOError(f"Could not connect to internal database, and could not create {database_path}")
             dbh.text_factory = str
             self.conn = dbh
             self.dbh = dbh.cursor()
@@ -707,94 +744,131 @@ class DbCore:
                 return re.search(qry, data) is not None
             self.conn.create_function("REGEXP", 2, __dbregex__)
             with self.dbhLock:
-                # Always create schema first
                 try:
                     self.create()
                 except Exception as e:
+                    self._log_db_error("Tried to set up the SpiderFoot database schema, but failed", e)
                     raise IOError("Tried to set up the SpiderFoot database schema, but failed") from e
-                # Only populate event types if the table is empty
-                self.dbh.execute("SELECT COUNT(*) FROM tbl_event_types")
-                if self.dbh.fetchone()[0] == 0:
-                    for row in self.eventDetails:
-                        event = row[0]
-                        event_descr = row[1]
-                        event_raw = row[2]
-                        event_type = row[3]
-                        qry = "INSERT OR IGNORE INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (?, ?, ?, ?)"
-                        try:
-                            self.dbh.execute(qry, (
-                                event, event_descr, event_raw, event_type
-                            ))
-                        except Exception:
-                            continue
-                    self.conn.commit()
+                try:
+                    self.dbh.execute("SELECT COUNT(*) FROM tbl_event_types")
+                    if self.dbh.fetchone()[0] == 0:
+                        for row in self.eventDetails:
+                            event = row[0]
+                            event_descr = row[1]
+                            event_raw = row[2]
+                            event_type = row[3]
+                            qry = "INSERT OR IGNORE INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (?, ?, ?, ?)"
+                            try:
+                                self.dbh.execute(qry, (
+                                    event, event_descr, event_raw, event_type
+                                ))
+                            except Exception as e:
+                                self._log_db_error("Failed to insert event type", e)
+                                continue
+                        self.conn.commit()
+                except Exception as e:
+                    self._log_db_error("Failed to populate event types", e)
+                    raise IOError("Failed to populate event types") from e
         elif self.db_type == 'postgresql':
             try:
                 import psycopg2.extras
                 self.conn = psycopg2.connect(database_path)
                 self.dbh = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             except Exception as e:
+                self._log_db_error(f"Error connecting to PostgreSQL database {database_path}", e)
                 raise IOError(f"Error connecting to PostgreSQL database {database_path}") from e
             with self.dbhLock:
-                # Always create schema first
                 try:
                     self.create()
                 except Exception as e:
+                    self._log_db_error("Tried to set up the SpiderFoot database schema, but failed", e)
                     raise IOError("Tried to set up the SpiderFoot database schema, but failed") from e
-                self.dbh.execute("SELECT COUNT(*) FROM tbl_event_types")
-                if self.dbh.fetchone()[0] == 0:
-                    for row in self.eventDetails:
-                        event = row[0]
-                        event_descr = row[1]
-                        event_raw = row[2]
-                        event_type = row[3]
-                        qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (%s, %s, %s, %s) ON CONFLICT (event) DO NOTHING"
-                        try:
-                            self.dbh.execute(qry, (
-                                event, event_descr, event_raw, event_type
-                            ))
-                        except Exception:
-                            continue
-                    self.conn.commit()
+                try:
+                    self.dbh.execute("SELECT COUNT(*) FROM tbl_event_types")
+                    if self.dbh.fetchone()[0] == 0:
+                        for row in self.eventDetails:
+                            event = row[0]
+                            event_descr = row[1]
+                            event_raw = row[2]
+                            event_type = row[3]
+                            qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (%s, %s, %s, %s) ON CONFLICT (event) DO NOTHING"
+                            try:
+                                self.dbh.execute(qry, (
+                                    event, event_descr, event_raw, event_type
+                                ))
+                            except Exception as e:
+                                self._log_db_error("Failed to insert event type", e)
+                                continue
+                        self.conn.commit()
+                except Exception as e:
+                    self._log_db_error("Failed to populate event types", e)
+                    raise IOError("Failed to populate event types") from e
         else:
             raise ValueError(f"Unsupported database type: {self.db_type}")
+
+    def get_schema_version(self):
+        """Return the current schema version (int) or 0 if not set."""
+        with self.dbhLock:
+            try:
+                queries = get_schema_version_queries(self.db_type)
+                self.dbh.execute(queries['get'])
+                row = self.dbh.fetchone()
+                return int(row[0]) if row else 0
+            except Exception:
+                return 0
+
+    def set_schema_version(self, version=None):
+        """Set the schema version to the given value (or current if None)."""
+        if version is None:
+            version = self.SCHEMA_VERSION
+        now = int(time.time())
+        with self.dbhLock:
+            for attempt in range(3):
+                try:
+                    queries = get_schema_version_queries(self.db_type)
+                    self.dbh.execute(queries['set'], (version, now))
+                    self.conn.commit()
+                    return
+                except Exception as e:
+                    self._log_db_error("Unable to set schema version", e)
+                    if is_transient_error(e) and attempt < 2:
+                        time.sleep(0.2 * (attempt + 1))
+                        continue
+                    raise IOError("Unable to set schema version") from e
 
     def create(self) -> None:
         """
         Create the database and initialize schema.
-
-        Raises:
-            IOError: Database I/O failed
         """
         with self.dbhLock:
-            try:
-                if self.db_type == 'sqlite':
-                    for qry in self.createSchemaQueries:
+            for attempt in range(3):
+                try:
+                    # Use backend-aware schema creation
+                    from spiderfoot.db.__init__ import get_schema_queries
+                    for qry in get_schema_queries(self.db_type):
                         self.dbh.execute(qry)
                     self.conn.commit()
-                    # Only insert event types if the table is empty
+                    if self.get_schema_version() < self.SCHEMA_VERSION:
+                        self.set_schema_version(self.SCHEMA_VERSION)
                     self.dbh.execute("SELECT COUNT(*) FROM tbl_event_types")
                     if self.dbh.fetchone()[0] == 0:
                         for row in self.eventDetails:
                             event, event_descr, event_raw, event_type = row
                             qry = "INSERT OR IGNORE INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (?, ?, ?, ?)"
                             params = (event, event_descr, event_raw, event_type)
-                            self.dbh.execute(qry, params)
+                            try:
+                                self.dbh.execute(qry, params)
+                            except Exception as e:
+                                self._log_db_error("Failed to insert event type", e)
+                                continue
                         self.conn.commit()
-                elif self.db_type == 'postgresql':
-                    for qry in self.createPostgreSQLSchemaQueries:
-                        self.dbh.execute(qry)
-                    self.conn.commit()
-                    self.dbh.execute("SELECT COUNT(*) FROM tbl_event_types")
-                    if self.dbh.fetchone()[0] == 0:
-                        for row in self.eventDetails:
-                            event, event_descr, event_raw, event_type = row
-                            qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (%s, %s, %s, %s) ON CONFLICT (event) DO NOTHING"
-                            params = (event, event_descr, event_raw, event_type)
-                            self.dbh.execute(qry, params)
-                        self.conn.commit()
-            except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when setting up database") from e
+                    return
+                except (sqlite3.Error, psycopg2.Error) as e:
+                    self._log_db_error("SQL error encountered when setting up database", e)
+                    if is_transient_error(e) and attempt < 2:
+                        time.sleep(0.2 * (attempt + 1))
+                        continue
+                    raise IOError("SQL error encountered when setting up database") from e
 
     def close(self) -> None:
         """
@@ -821,13 +895,18 @@ class DbCore:
             IOError: database I/O failed
         """
         with self.dbhLock:
-            try:
-                if ((self.db_type == 'sqlite') or (self.db_type == 'postgresql')):
-                    self.dbh.execute("VACUUM")
-                self.conn.commit()
-                return True
-            except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when vacuuming the database") from e
+            for attempt in range(3):
+                try:
+                    if ((self.db_type == 'sqlite') or (self.db_type == 'postgresql')):
+                        self.dbh.execute("VACUUM")
+                    self.conn.commit()
+                    return True
+                except (sqlite3.Error, psycopg2.Error) as e:
+                    self._log_db_error("SQL error encountered when vacuuming the database", e)
+                    if is_transient_error(e) and attempt < 2:
+                        time.sleep(0.2 * (attempt + 1))
+                        continue
+                    raise IOError("SQL error encountered when vacuuming the database") from e
         return False
 
     def eventTypes(self) -> list:

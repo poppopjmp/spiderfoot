@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
-# Name:         sfdb
+# Name:         Modular SpiderFoot Database Module
 # Purpose:      Common functions for working with the database back-end.
 #
-# Author:      Steve Micallef <steve@binarypool.com>
+# Author:      Agostino Panico @poppopjmp
 #
-# Created:     15/05/2012
-# Copyright:   (c) Steve Micallef 2012
+# Created:     30/06/2025
+# Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
@@ -24,8 +24,161 @@ from spiderfoot.db.db_scan import ScanManager
 from spiderfoot.db.db_event import EventManager
 from spiderfoot.db.db_config import ConfigManager
 from spiderfoot.db.db_correlation import CorrelationManager
-from spiderfoot.db.db_utils import DbUtils
 
+
+
+def get_schema_queries(db_type):
+    """
+    Return a list of schema creation queries appropriate for the backend.
+    """
+    if db_type == 'sqlite':
+        return [
+            "CREATE TABLE IF NOT EXISTS tbl_schema_version (\n    version INTEGER NOT NULL,\n    applied_at INTEGER NOT NULL\n)",
+            "PRAGMA journal_mode=WAL",
+            "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
+                event       VARCHAR NOT NULL PRIMARY KEY, \
+                event_descr VARCHAR NOT NULL, \
+                event_raw   INT NOT NULL DEFAULT 0, \
+                event_type  VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_config ( \
+                scope   VARCHAR NOT NULL, \
+                opt     VARCHAR NOT NULL, \
+                val     VARCHAR NOT NULL, \
+                PRIMARY KEY (scope, opt) \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_instance ( \
+                guid        VARCHAR NOT NULL PRIMARY KEY, \
+                name        VARCHAR NOT NULL, \
+                seed_target VARCHAR NOT NULL, \
+                created     INT DEFAULT 0, \
+                started     INT DEFAULT 0, \
+                ended       INT DEFAULT 0, \
+                status      VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_log ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                generated           INT NOT NULL, \
+                component           VARCHAR, \
+                type                VARCHAR NOT NULL, \
+                message             VARCHAR \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_config ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                component           VARCHAR NOT NULL, \
+                opt                 VARCHAR NOT NULL, \
+                val                 VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                hash                VARCHAR NOT NULL, \
+                type                VARCHAR NOT NULL REFERENCES tbl_event_types(event), \
+                generated           INT NOT NULL, \
+                confidence          INT NOT NULL DEFAULT 100, \
+                visibility          INT NOT NULL DEFAULT 100, \
+                risk                INT NOT NULL DEFAULT 0, \
+                module              VARCHAR NOT NULL, \
+                data                TEXT, \
+                false_positive      INT NOT NULL DEFAULT 0, \
+                source_event_hash  VARCHAR DEFAULT 'ROOT' \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results ( \
+                id                  VARCHAR NOT NULL PRIMARY KEY, \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                title               VARCHAR NOT NULL, \
+                rule_risk           VARCHAR NOT NULL, \
+                rule_id             VARCHAR NOT NULL, \
+                rule_name           VARCHAR NOT NULL, \
+                rule_descr          VARCHAR NOT NULL, \
+                rule_logic          VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
+                correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
+                event_hash          VARCHAR NOT NULL REFERENCES tbl_scan_results(hash) \
+            )",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
+        ]
+    elif db_type == 'postgresql':
+        return [
+            "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
+                event       VARCHAR NOT NULL PRIMARY KEY, \
+                event_descr VARCHAR NOT NULL, \
+                event_raw   INT NOT NULL DEFAULT 0, \
+                event_type  VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_config ( \
+                scope   VARCHAR NOT NULL, \
+                opt     VARCHAR NOT NULL, \
+                val     VARCHAR NOT NULL, \
+                PRIMARY KEY (scope, opt) \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_instance ( \
+                guid        VARCHAR NOT NULL PRIMARY KEY, \
+                name        VARCHAR NOT NULL, \
+                seed_target VARCHAR NOT NULL, \
+                created     BIGINT DEFAULT 0, \
+                started     BIGINT DEFAULT 0, \
+                ended       BIGINT DEFAULT 0, \
+                status      VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_log ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                generated           BIGINT NOT NULL, \
+                component           VARCHAR, \
+                type                VARCHAR NOT NULL, \
+                message             VARCHAR \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_config ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                component           VARCHAR NOT NULL, \
+                opt                 VARCHAR NOT NULL, \
+                val                 VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                hash                VARCHAR NOT NULL, \
+                type                VARCHAR NOT NULL REFERENCES tbl_event_types(event), \
+                generated           BIGINT NOT NULL, \
+                confidence          INT NOT NULL DEFAULT 100, \
+                visibility          INT NOT NULL DEFAULT 100, \
+                risk                INT NOT NULL DEFAULT 0, \
+                module              VARCHAR NOT NULL, \
+                data                TEXT, \
+                false_positive      INT NOT NULL DEFAULT 0, \
+                source_event_hash  VARCHAR DEFAULT 'ROOT' \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results ( \
+                id                  VARCHAR NOT NULL PRIMARY KEY, \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                title               VARCHAR NOT NULL, \
+                rule_risk           VARCHAR NOT NULL, \
+                rule_id             VARCHAR NOT NULL, \
+                rule_name           VARCHAR NOT NULL, \
+                rule_descr          VARCHAR NOT NULL, \
+                rule_logic          VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
+                correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
+                event_hash          VARCHAR NOT NULL REFERENCES tbl_scan_results(hash) \
+            )",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
+        ]
+    else:
+        raise ValueError(f"Unsupported database type: {db_type}")
 
 class SpiderFootDb:
     """SpiderFoot database.
@@ -37,153 +190,6 @@ class SpiderFootDb:
     dbh = None
     conn = None
     dbhLock = threading.RLock()
-    # Queries for creating the SpiderFoot database
-    createSchemaQueries = [
-        "PRAGMA journal_mode=WAL",
-        "CREATE TABLE tbl_event_types ( \
-            event       VARCHAR NOT NULL PRIMARY KEY, \
-            event_descr VARCHAR NOT NULL, \
-            event_raw   INT NOT NULL DEFAULT 0, \
-            event_type  VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE tbl_config ( \
-            scope   VARCHAR NOT NULL, \
-            opt     VARCHAR NOT NULL, \
-            val     VARCHAR NOT NULL, \
-            PRIMARY KEY (scope, opt) \
-        )",
-        "CREATE TABLE tbl_scan_instance ( \
-            guid        VARCHAR NOT NULL PRIMARY KEY, \
-            name        VARCHAR NOT NULL, \
-            seed_target VARCHAR NOT NULL, \
-            created     INT DEFAULT 0, \
-            started     INT DEFAULT 0, \
-            ended       INT DEFAULT 0, \
-            status      VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE tbl_scan_log ( \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            generated           INT NOT NULL, \
-            component           VARCHAR, \
-            type                VARCHAR NOT NULL, \
-            message             VARCHAR \
-        )",
-        "CREATE TABLE tbl_scan_config ( \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            component           VARCHAR NOT NULL, \
-            opt                 VARCHAR NOT NULL, \
-            val                 VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE tbl_scan_results ( \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            hash                VARCHAR NOT NULL, \
-            type                VARCHAR NOT NULL REFERENCES tbl_event_types(event), \
-            generated           INT NOT NULL, \
-            confidence          INT NOT NULL DEFAULT 100, \
-            visibility          INT NOT NULL DEFAULT 100, \
-            risk                INT NOT NULL DEFAULT 0, \
-            module              VARCHAR NOT NULL, \
-            data                TEXT, \
-            false_positive      INT NOT NULL DEFAULT 0, \
-            source_event_hash  VARCHAR DEFAULT 'ROOT' \
-        )",
-        "CREATE TABLE tbl_scan_correlation_results ( \
-            id                  VARCHAR NOT NULL PRIMARY KEY, \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            title               VARCHAR NOT NULL, \
-            rule_risk           VARCHAR NOT NULL, \
-            rule_id             VARCHAR NOT NULL, \
-            rule_name           VARCHAR NOT NULL, \
-            rule_descr          VARCHAR NOT NULL, \
-            rule_logic          VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE tbl_scan_correlation_results_events ( \
-            correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
-            event_hash          VARCHAR NOT NULL REFERENCES tbl_scan_results(hash) \
-        )",
-        "CREATE INDEX idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
-        "CREATE INDEX idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
-        "CREATE INDEX idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)",
-        "CREATE INDEX idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)",
-        "CREATE INDEX idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
-        "CREATE INDEX idx_scan_logs ON tbl_scan_log (scan_instance_id)",
-        "CREATE INDEX idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
-        "CREATE INDEX idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
-    ]
-
-    # PostgreSQL-specific schema queries
-    createPostgreSQLSchemaQueries = [
-        "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
-            event       VARCHAR NOT NULL PRIMARY KEY, \
-            event_descr VARCHAR NOT NULL, \
-            event_raw   INT NOT NULL DEFAULT 0, \
-            event_type  VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_config ( \
-            scope   VARCHAR NOT NULL, \
-            opt     VARCHAR NOT NULL, \
-            val     VARCHAR NOT NULL, \
-            PRIMARY KEY (scope, opt) \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_instance ( \
-            guid        VARCHAR NOT NULL PRIMARY KEY, \
-            name        VARCHAR NOT NULL, \
-            seed_target VARCHAR NOT NULL, \
-            created     BIGINT DEFAULT 0, \
-            started     BIGINT DEFAULT 0, \
-            ended       BIGINT DEFAULT 0, \
-            status      VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_log ( \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            generated           BIGINT NOT NULL, \
-            component           VARCHAR, \
-            type                VARCHAR NOT NULL, \
-            message             VARCHAR \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_config ( \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            component           VARCHAR NOT NULL, \
-            opt                 VARCHAR NOT NULL, \
-            val                 VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            hash                VARCHAR NOT NULL, \
-            type                VARCHAR NOT NULL REFERENCES tbl_event_types(event), \
-            generated           BIGINT NOT NULL, \
-            confidence          INT NOT NULL DEFAULT 100, \
-            visibility          INT NOT NULL DEFAULT 100, \
-            risk                INT NOT NULL DEFAULT 0, \
-            module              VARCHAR NOT NULL, \
-            data                TEXT, \
-            false_positive      INT NOT NULL DEFAULT 0, \
-            source_event_hash  VARCHAR DEFAULT 'ROOT' \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results ( \
-            id                  VARCHAR NOT NULL PRIMARY KEY, \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            title               VARCHAR NOT NULL, \
-            rule_risk           VARCHAR NOT NULL, \
-            rule_id             VARCHAR NOT NULL, \
-            rule_name           VARCHAR NOT NULL, \
-            rule_descr          VARCHAR NOT NULL, \
-            rule_logic          VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
-            correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
-            event_hash          VARCHAR NOT NULL REFERENCES tbl_scan_results(hash) \
-        )",
-        "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
-    ]
-
     eventDetails = [
         ['ROOT', 'Internal SpiderFoot Root event', 1, 'INTERNAL'],
         ['ACCOUNT_EXTERNAL_OWNED', 'Account on External Site', 0, 'ENTITY'],
@@ -449,7 +455,9 @@ class SpiderFootDb:
                 except sqlite3.Error:
                     init = True
                     try:
-                        self.create()
+                        for query in get_schema_queries(self.db_type):
+                            self.dbh.execute(query)
+                        self.conn.commit()
                     except Exception as e:
                         raise IOError(
                             "Tried to set up the SpiderFoot database schema, but failed") from e
@@ -458,7 +466,7 @@ class SpiderFootDb:
                         "SELECT COUNT(*) FROM tbl_scan_correlation_results")
                 except sqlite3.Error:
                     try:
-                        for query in self.createSchemaQueries:
+                        for query in get_schema_queries(self.db_type):
                             if "correlation" in query:
                                 self.dbh.execute(query)
                         self.conn.commit()
@@ -495,7 +503,9 @@ class SpiderFootDb:
                 except psycopg2.Error:
                     init = True
                     try:
-                        self.create()
+                        for query in get_schema_queries(self.db_type):
+                            self.dbh.execute(query)
+                        self.conn.commit()
                     except Exception as e:
                         raise IOError(
                             "Tried to set up the SpiderFoot database schema, but failed") from e
@@ -550,7 +560,7 @@ class SpiderFootDb:
         self.managers['event'] = EventManager(self)
         self.managers['scan'] = ScanManager(self)
         self.managers['correlation'] = CorrelationManager(self)
-        self.managers['utils'] = DbUtils(self)
+        # self.managers['utils'] = DbUtils(self)  # Removed: DbUtils class no longer exists, use get_placeholder instead
 
     def close(self):
         """
@@ -665,3 +675,126 @@ class SpiderFootDb:
         return self._correlation.scanCorrelationSummary(instanceId, by)
     def scanCorrelationList(self, instanceId: str) -> list:
         return self._correlation.scanCorrelationList(instanceId)
+
+    # --- Backend-aware schema generation ---
+    def get_schema_queries(self, db_type):
+        """
+        Generate schema DDL queries for the specified backend.
+        Args:
+            db_type (str): 'sqlite' or 'postgresql'
+        Returns:
+            list: List of DDL queries for schema creation.
+        """
+        # SQLite and PostgreSQL type mapping
+        if db_type == 'sqlite':
+            int_type = 'INT'
+            bigint_type = 'INT'
+            text_type = 'TEXT'
+            varchar_type = 'VARCHAR'
+            pk_autoinc = 'INTEGER PRIMARY KEY AUTOINCREMENT'
+            pragma = ["PRAGMA journal_mode=WAL"]
+            if_not_exists = ''
+            index_if_not_exists = ''
+        elif db_type == 'postgresql':
+            int_type = 'INT'
+            bigint_type = 'BIGINT'
+            text_type = 'TEXT'
+            varchar_type = 'VARCHAR'
+            pk_autoinc = 'SERIAL PRIMARY KEY'
+            pragma = []
+            if_not_exists = 'IF NOT EXISTS '
+            index_if_not_exists = 'IF NOT EXISTS '
+        else:
+            raise ValueError(f"Unsupported db_type: {db_type}")
+
+        queries = []
+        queries.extend(pragma)
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_event_types ( \
+            event       {varchar_type} NOT NULL PRIMARY KEY, \
+            event_descr {varchar_type} NOT NULL, \
+            event_raw   {int_type} NOT NULL DEFAULT 0, \
+            event_type  {varchar_type} NOT NULL \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_config ( \
+            scope   {varchar_type} NOT NULL, \
+            opt     {varchar_type} NOT NULL, \
+            val     {varchar_type} NOT NULL, \
+            PRIMARY KEY (scope, opt) \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_instance ( \
+            guid        {varchar_type} NOT NULL PRIMARY KEY, \
+            name        {varchar_type} NOT NULL, \
+            seed_target {varchar_type} NOT NULL, \
+            created     {bigint_type} DEFAULT 0, \
+            started     {bigint_type} DEFAULT 0, \
+            ended       {bigint_type} DEFAULT 0, \
+            status      {varchar_type} NOT NULL \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_log ( \
+            scan_instance_id    {varchar_type} NOT NULL REFERENCES tbl_scan_instance(guid), \
+            generated           {bigint_type} NOT NULL, \
+            component           {varchar_type}, \
+            type                {varchar_type} NOT NULL, \
+            message             {varchar_type} \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_config ( \
+            scan_instance_id    {varchar_type} NOT NULL REFERENCES tbl_scan_instance(guid), \
+            component           {varchar_type} NOT NULL, \
+            opt                 {varchar_type} NOT NULL, \
+            val                 {varchar_type} NOT NULL \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_results ( \
+            scan_instance_id    {varchar_type} NOT NULL REFERENCES tbl_scan_instance(guid), \
+            hash                {varchar_type} NOT NULL, \
+            type                {varchar_type} NOT NULL REFERENCES tbl_event_types(event), \
+            generated           {bigint_type} NOT NULL, \
+            confidence          {int_type} NOT NULL DEFAULT 100, \
+            visibility          {int_type} NOT NULL DEFAULT 100, \
+            risk                {int_type} NOT NULL DEFAULT 0, \
+            module              {varchar_type} NOT NULL, \
+            data                {text_type}, \
+            false_positive      {int_type} NOT NULL DEFAULT 0, \
+            source_event_hash  {varchar_type} DEFAULT 'ROOT' \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_correlation_results ( \
+            id                  {varchar_type} NOT NULL PRIMARY KEY, \
+            scan_instance_id    {varchar_type} NOT NULL REFERENCES tbl_scan_instance(guid), \
+            title               {varchar_type} NOT NULL, \
+            rule_risk           {varchar_type} NOT NULL, \
+            rule_id             {varchar_type} NOT NULL, \
+            rule_name           {varchar_type} NOT NULL, \
+            rule_descr          {varchar_type} NOT NULL, \
+            rule_logic          {varchar_type} NOT NULL \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_correlation_results_events ( \
+            correlation_id      {varchar_type} NOT NULL REFERENCES tbl_scan_correlation_results(id), \
+            event_hash          {varchar_type} NOT NULL REFERENCES tbl_scan_results(hash) \
+        )")
+        # Indexes
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_results_id ON tbl_scan_results (scan_instance_id)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_logs ON tbl_scan_log (scan_instance_id)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)")
+        return queries
+
+    def create(self):
+        """
+        Create the database schema for the current backend.
+        """
+        queries = self.get_schema_queries(self.db_type)
+        with self.dbhLock:
+            for query in queries:
+                try:
+                    self.dbh.execute(query)
+                except Exception as e:
+                    # Ignore index/table exists errors, raise others
+                    if self.db_type == 'sqlite' and 'already exists' in str(e):
+                        continue
+                    if self.db_type == 'postgresql' and 'already exists' in str(e):
+                        continue
+                    raise
+            self.conn.commit()

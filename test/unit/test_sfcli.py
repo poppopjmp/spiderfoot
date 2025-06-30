@@ -28,7 +28,7 @@ class TestSpiderFootCliEssential(unittest.TestCase):
         self.cli = SpiderFootCli()
         # Disable spool to avoid file issues
         self.cli.ownopts['cli.spool'] = False
-        self.cli.version = "5.2.9"
+        self.cli.version = "5.3.3"
 
     def tearDown(self):
         """Clean up after each test method."""
