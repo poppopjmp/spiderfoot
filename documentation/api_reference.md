@@ -41,7 +41,7 @@ You can also use SpiderFoot as a Python library for custom automation:
 
 ```python
 from sflib import SpiderFoot
-from sfscan import startSpiderFootScanner
+from spiderfoot.scan_service.scanner import startSpiderFootScanner
 
 sf = SpiderFoot()
 scanner = startSpiderFootScanner(

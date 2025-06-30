@@ -3,7 +3,7 @@ import pytest
 import unittest
 import uuid
 
-from sfscan import SpiderFootScanner
+from spiderfoot.scan_service.scanner import SpiderFootScanner
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 
@@ -313,8 +313,9 @@ class TestSpiderFootScanner(SpiderFootTestBase):
             def setTarget(self, t): pass
         sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
         module_list = [mod_name]
-        with self.assertRaises(KeyError):
-            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        # Should not raise KeyError; should load module successfully
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
         del sys.modules['modules.'+mod_name]
 
     def test_module_importerror(self):
@@ -558,6 +559,221 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         t2.join()
         self.assertEqual(results.count("INITIALIZING"), 2)
 
+    def test_module_missing_meta(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_missingmetaonly'
+        opts['__modules__'][mod_name] = {'descr': 'no meta'}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_empty_opts(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_emptyopts'
+        opts['__modules__'][mod_name] = {'descr': 'empty opts', 'opts': {}}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_opts_is_none(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_noneopts'
+        opts['__modules__'][mod_name] = {'descr': 'opts is None', 'opts': None}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        # Should handle None opts gracefully (should not raise, should load module)
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_opts_is_not_dict(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_stropts'
+        opts['__modules__'][mod_name] = {'descr': 'opts is string', 'opts': 'notadict'}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        # Should raise TypeError or handle gracefully
+        with self.assertRaises(Exception):
+            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_missing_meta_and_opts_keys(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_missingall'
+        opts['__modules__'][mod_name] = {}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_config_is_list(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_listcfg'
+        opts['__modules__'][mod_name] = [1, 2, 3]
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        with self.assertRaises(Exception):
+            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_config_is_string(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_strcfg'
+        opts['__modules__'][mod_name] = "notadict"
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        with self.assertRaises(Exception):
+            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_config_opts_is_empty_string(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_stropts'
+        opts['__modules__'][mod_name] = {'opts': ''}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        with self.assertRaises(TypeError):
+            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_config_opts_is_nested_dict(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_nestedopts'
+        opts['__modules__'][mod_name] = {'opts': {'foo': {'bar': 1}}}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
+        del sys.modules['modules.'+mod_name]
+
+    def test_multiple_modules_some_invalid_config(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        valid_mod = 'sfp_valid'
+        invalid_mod = 'sfp_invalid'
+        opts['__modules__'][valid_mod] = {'opts': {}}
+        opts['__modules__'][invalid_mod] = {'opts': 123}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+valid_mod] = types.SimpleNamespace(**{valid_mod: Minimal})
+        sys.modules['modules.'+invalid_mod] = types.SimpleNamespace(**{invalid_mod: Minimal})
+        module_list = [valid_mod, invalid_mod]
+        with self.assertRaises(TypeError):
+            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        del sys.modules['modules.'+valid_mod]
+        del sys.modules['modules.'+invalid_mod]
 
     def setUp(self):
         """Set up before each test."""

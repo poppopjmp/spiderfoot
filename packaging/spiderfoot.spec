@@ -37,7 +37,6 @@ cp sf.py %{buildroot}%{python3_sitelib}/
 cp sfcli.py %{buildroot}%{python3_sitelib}/
 cp sfapi.py %{buildroot}%{python3_sitelib}/
 cp sflib.py %{buildroot}%{python3_sitelib}/
-cp sfscan.py %{buildroot}%{python3_sitelib}/
 cp sfwebui.py %{buildroot}%{python3_sitelib}/
 
 
@@ -52,7 +51,6 @@ cp sfwebui.py %{buildroot}%{python3_sitelib}/
 %{python3_sitelib}/sfcli.py
 %{python3_sitelib}/sfapi.py
 %{python3_sitelib}/sflib.py
-%{python3_sitelib}/sfscan.py
 %{python3_sitelib}/sfwebui.py
 
 

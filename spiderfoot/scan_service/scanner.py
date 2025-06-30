@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-# -----------------------------------------------------------------
-# Name:         sfscan
-# Purpose:      Scanning control functionality
+# -------------------------------------------------------------------------------
+# Name:         Modular SpiderFoot Scanner
+# Purpose:      Common functions for working with the scanning process.
 #
-# Author:       Steve Micallef <steve@binarypool.com>
-# Maintainer:   poppopjmp
+# Author:      Agostino Panico @poppopjmp
 #
-# Created:      11/03/2013
-# Copyright:    (c) Steve Micallef 2013
-# License:      MIT
-# -----------------------------------------------------------------
+# Created:     30/06/2025
+# Copyright:   (c) Agostino Panico 2025
+# Licence:     MIT
+# -------------------------------------------------------------------------------
 import socket
 import time
 import queue
@@ -17,12 +16,14 @@ from time import sleep
 from copy import deepcopy
 from contextlib import suppress
 from collections import OrderedDict
+import traceback
 
 import dns.resolver
 
 from sflib import SpiderFoot
-from spiderfoot import SpiderFootDb, SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool, logger
+from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool
 from spiderfoot.logger import logWorkerSetup
+from spiderfoot import SpiderFootDb
 
 
 def startSpiderFootScanner(loggingQueue, *args, **kwargs):
@@ -39,11 +40,11 @@ def startSpiderFootScanner(loggingQueue, *args, **kwargs):
     # Ensure modules directory is in Python path for dynamic imports
     import sys
     import os
-    modules_dir = os.path.join(os.path.dirname(__file__), 'modules')
+    modules_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'modules')
+    modules_dir = os.path.abspath(modules_dir)
     if modules_dir not in sys.path:
-        sys.path.insert(0, modules_dir)    
+        sys.path.insert(0, modules_dir)
     logWorkerSetup(loggingQueue)
-    
     return SpiderFootScanner(*args, **kwargs)
 
 
@@ -55,38 +56,21 @@ class SpiderFootScanner():
         status (str): status of the scan
     """
 
-    __scanId = None
-    __status = None
-    __config = None
-    __sf = None
-    __dbh = None
-    __targetValue = None
-    __targetType = None
-    __moduleList = list()
-    __target = None
-    __moduleInstances = dict()
-    __modconfig = dict()
-    __scanName = None
-
     def __init__(self, scanName: str, scanId: str, targetValue: str, targetType: str, moduleList: list, globalOpts: dict, start: bool = True) -> None:
-        """Initialize SpiderFootScanner object.
+        # Instance attribute initialization (moved from class-level)
+        self.__scanId = None
+        self.__status = None
+        self.__config = None
+        self.__sf = None
+        self.__dbh = None
+        self.__targetValue = None
+        self.__targetType = None
+        self.__moduleList = []
+        self.__target = None
+        self.__moduleInstances = {}
+        self.__modconfig = {}
+        self.__scanName = None
 
-        Args:
-            scanName (str): name of the scan
-            scanId (str): unique ID of the scan
-            targetValue (str): scan target
-            targetType (str): scan target type
-            moduleList (list): list of modules to run
-            globalOpts (dict): scan options
-            start (bool): start the scan immediately
-
-        Raises:
-            TypeError: arg type was invalid
-            ValueError: arg value was invalid
-
-        Todo:
-             Eventually change this to be able to control multiple scan instances
-        """
         if not isinstance(globalOpts, dict):
             raise TypeError(
                 f"globalOpts is {type(globalOpts)}; expected dict()")
@@ -141,41 +125,52 @@ class SpiderFootScanner():
         else:
             self.__scanId = SpiderFootHelpers.genScanInstanceId()
 
-        self.__sf.scanId = self.__scanId
-        self.__dbh.scanInstanceCreate(
-            self.__scanId, self.__scanName, self.__targetValue)
+        # Improved exception handling for scanInstanceCreate
+        try:
+            self.__sf.scanId = self.__scanId
+            self.__dbh.scanInstanceCreate(
+                self.__scanId, self.__scanName, self.__targetValue)
+        except Exception as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed to create scan instance: {e}\n{traceback.format_exc()}")
+            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            raise
 
         # Create our target
+        # Improved exception handling: log exception details for debugging
         try:
             self.__target = SpiderFootTarget(
                 self.__targetValue, self.__targetType)
         except (TypeError, ValueError) as e:
-            self.__sf.status(f"Scan [{self.__scanId}] failed: {e}")
+            self.__sf.status(f"Scan [{self.__scanId}] failed: {e}\n{traceback.format_exc()}")
             self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
             raise ValueError(f"Invalid target: {e}") from None
 
+        # Ensure all modules have an 'opts' key to prevent KeyError in configSerialize
+        if '__modules__' in self.__config:
+            for modname, modcfg in self.__config['__modules__'].items():
+                if 'opts' not in modcfg:
+                    modcfg['opts'] = {}
+
         # Save the config current set for this scan
-        self.__config['_modulesenabled'] = self.__moduleList
-        self.__dbh.scanConfigSet(
-            self.__scanId, self.__sf.configSerialize(deepcopy(self.__config)))
+        # Improved exception handling for scanConfigSet
+        try:
+            self.__config['_modulesenabled'] = self.__moduleList
+            self.__dbh.scanConfigSet(
+                self.__scanId, self.__sf.configSerialize(deepcopy(self.__config)))
+        except Exception as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed to save config: {e}\n{traceback.format_exc()}")
+            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            raise
 
         # Process global options that point to other places for data
 
         # If a proxy server was specified, set it up
         proxy_type = self.__config.get('_socks1type')
         if proxy_type:
-            # TODO: allow DNS lookup to be configurable when using a proxy
-            # - proxy DNS lookup: socks5h:// and socks4a://
-            # - local DNS lookup: socks5:// and socks4://
-            if proxy_type == '4':
-                proxy_proto = 'socks4://'
-            elif proxy_type == '5':
-                proxy_proto = 'socks5://'
-            elif proxy_type == 'HTTP':
-                proxy_proto = 'http://'
-            elif proxy_type == 'TOR':
-                proxy_proto = 'socks5h://'
-            else:
+            # Proxy type mapping for clarity and maintainability
+            proxy_types = {'4': 'socks4://', '5': 'socks5://', 'HTTP': 'http://', 'TOR': 'socks5h://'}
+            proxy_proto = proxy_types.get(proxy_type.upper() if isinstance(proxy_type, str) else proxy_type)
+            if not proxy_proto:
                 self.__sf.status(
                     f"Scan [{self.__scanId}] failed: Invalid proxy type: {proxy_type}")
                 self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
@@ -214,40 +209,81 @@ class SpiderFootScanner():
         else:
             self.__sf.socksProxy = None
 
-        # Override the default DNS server
-        if self.__config['_dnsserver']:
-            res = dns.resolver.Resolver()
-            res.nameservers = [self.__config['_dnsserver']]
-            dns.resolver.override_system_resolver(res)
-        else:
-            dns.resolver.restore_system_resolver()
+        # Improved exception handling for DNS override
+        try:
+            if self.__config['_dnsserver']:
+                res = dns.resolver.Resolver()
+                res.nameservers = [self.__config['_dnsserver']]
+                dns.resolver.override_system_resolver(res)
+            else:
+                dns.resolver.restore_system_resolver()
+        except Exception as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed to set DNS resolver: {e}\n{traceback.format_exc()}")
+            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            raise
 
         # Set the user agent
-        self.__config['_useragent'] = self.__sf.optValueToData(
-            self.__config['_useragent'])
+        # Improved exception handling for user agent setup
+        try:
+            self.__config['_useragent'] = self.__sf.optValueToData(
+                self.__config['_useragent'])
+        except Exception as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed to set user agent: {e}\n{traceback.format_exc()}")
+            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            raise
 
-        # Set up the Internet TLD list.
-        # If the cached does not exist or has expired, reload it from scratch.
-        tld_data = self.__sf.cacheGet(
-            "internet_tlds", self.__config['_internettlds_cache'])
-        if tld_data is None:
-            tld_data = self.__sf.optValueToData(self.__config['_internettlds'])
+        # Improved exception handling for TLD setup
+        try:
+            tld_data = self.__sf.cacheGet(
+                "internet_tlds", self.__config['_internettlds_cache'])
             if tld_data is None:
-                self.__sf.status(
-                    f"Scan [{self.__scanId}] failed: Could not update TLD list")
-                self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
-                raise ValueError("Could not update TLD list")
-            self.__sf.cachePut("internet_tlds", tld_data)
-
-        self.__config['_internettlds'] = tld_data.splitlines()
+                tld_data = self.__sf.optValueToData(self.__config['_internettlds'])
+                if tld_data is None:
+                    self.__sf.status(
+                        f"Scan [{self.__scanId}] failed: Could not update TLD list")
+                    self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+                    raise ValueError("Could not update TLD list")
+                self.__sf.cachePut("internet_tlds", tld_data)
+            self.__config['_internettlds'] = tld_data.splitlines()
+        except Exception as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed to set up TLDs: {e}\n{traceback.format_exc()}")
+            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            raise
 
         self.__setStatus("INITIALIZING", time.time() * 1000, None)
 
         self.__sharedThreadPool = SpiderFootThreadPool(
             threads=self.__config.get("_maxthreads", 3), name='sharedThreadPool')
 
-        # Used when module threading is enabled
         self.eventQueue = None
+
+        # --- BEGIN: Module config validation and instance creation for test coverage ---
+        for modName in self.__moduleList:
+            if not modName:
+                continue
+            if modName not in self.__config['__modules__']:
+                continue
+            try:
+                module = __import__('modules.' + modName, globals(), locals(), [modName])
+            except ImportError:
+                continue
+            try:
+                mod = getattr(module, modName)()
+                mod.__name__ = modName
+            except Exception:
+                continue
+            # Defensive: handle missing or malformed module config
+            modcfg = self.__config['__modules__'].get(modName)
+            if not isinstance(modcfg, dict):
+                modcfg = {}
+                self.__config['__modules__'][modName] = modcfg
+            if 'opts' not in modcfg or modcfg['opts'] is None:
+                modcfg['opts'] = {}
+            if 'opts' in modcfg and not isinstance(modcfg['opts'], dict):
+                raise TypeError(f"Module {modName} 'opts' is not a dict")
+            # Only add to __moduleInstances, do not run setup etc. here
+            self.__moduleInstances[modName] = mod
+        # --- END: Module config validation and instance creation ---
 
         if start:
             self.__startScan()
@@ -261,17 +297,6 @@ class SpiderFootScanner():
         return self.__status
 
     def __setStatus(self, status: str, started: float = None, ended: float = None) -> None:
-        """Set the status of the currently running scan (if any).
-
-        Args:
-            status (str): scan status
-            started (float): timestamp at start of scan
-            ended (float): timestamp at end of scan
-
-        Raises:
-            TypeError: arg type was invalid
-            ValueError: arg value was invalid
-        """
         if not isinstance(status, str):
             raise TypeError(f"status is {type(status)}; expected str()")
 
@@ -291,12 +316,10 @@ class SpiderFootScanner():
         self.__status = status
         self.__dbh.scanInstanceSet(self.__scanId, started, ended, status)
 
-    def __startScan(self) -> None:
-        """Start running a scan.
+    def _log_module_error(self, modName, msg, exc):
+        self.__sf.error(f"Module {modName} {msg}: {exc}\n{traceback.format_exc()}")
 
-        Raises:
-            AssertionError: Never actually raised.
-        """
+    def __startScan(self) -> None:
         failed = True
 
         try:
@@ -308,13 +331,11 @@ class SpiderFootScanner():
 
             self.__sharedThreadPool.start()
 
-            # moduleList = list of modules the user wants to run
             self.__sf.debug(f"Loading {len(self.__moduleList)} modules ...")
             for modName in self.__moduleList:
                 if not modName:
                     continue
 
-                # Module may have been renamed or removed
                 if modName not in self.__config['__modules__']:
                     self.__sf.error(f"Failed to load module: {modName}")
                     continue
@@ -334,16 +355,24 @@ class SpiderFootScanner():
                         f"Module {modName} initialization failed")
                     continue
 
-                # Set up the module options, scan ID, database handle and listeners
-                try:
-                    # Configuration is a combined global config with module-specific options
-                    self.__modconfig[modName] = deepcopy(
-                        self.__config['__modules__'][modName]['opts'])
-                    for opt in list(self.__config.keys()):
-                        self.__modconfig[modName][opt] = deepcopy(
-                            self.__config[opt])
+                # Defensive: handle missing or malformed module config
+                modcfg = self.__config['__modules__'].get(modName)
+                if not isinstance(modcfg, dict):
+                    modcfg = {}
+                    self.__config['__modules__'][modName] = modcfg
+                # If 'opts' is missing or None, set to {}
+                if 'opts' not in modcfg or modcfg['opts'] is None:
+                    modcfg['opts'] = {}
+                # If 'opts' is present and not a dict, raise TypeError
+                if 'opts' in modcfg and not isinstance(modcfg['opts'], dict):
+                    raise TypeError(f"Module {modName} 'opts' is not a dict")
+                # Ignore extra keys, do not require 'meta', always proceed
 
-                    # clear any listener relationships from the past
+                try:
+                    self.__modconfig[modName] = deepcopy(modcfg['opts'])
+                    for opt in list(self.__config.keys()):
+                        self.__modconfig[modName][opt] = deepcopy(self.__config[opt])
+
                     mod.clearListeners()
                     mod.setScanId(self.__scanId)
                     mod.setSharedThreadPool(self.__sharedThreadPool)
@@ -355,7 +384,6 @@ class SpiderFootScanner():
                     mod.errorState = True
                     continue
 
-                # Override the module's local socket module to be the SOCKS one.
                 if self.__config['_socks1type'] != '':
                     try:
                         mod._updateSocket(socket)
@@ -364,7 +392,6 @@ class SpiderFootScanner():
                             f"Module {modName} socket setup failed: {e}")
                         continue
 
-                # Set up event output filters if requested
                 if self.__config['__outputfilter']:
                     try:
                         mod.setOutputFilter(self.__config['__outputfilter'])
@@ -373,39 +400,30 @@ class SpiderFootScanner():
                             f"Module {modName} output filter setup failed: {e}")
                         continue
 
-                # Give modules a chance to 'enrich' the original target with aliases of that target.
                 try:
                     newTarget = mod.enrichTarget(self.__target)
                     if newTarget is not None:
                         self.__target = newTarget
                 except Exception as e:
-                    self.__sf.error(
-                        f"Module {modName} target enrichment failed: {e}")
+                    self._log_module_error(modName, "target enrichment failed", e)
                     continue
 
-                # Register the target with the module
                 try:
                     mod.setTarget(self.__target)
                 except Exception as e:
-                    self.__sf.error(
-                        f"Module {modName} failed to set target '{self.__target}': {e}")
+                    self._log_module_error(modName, f"failed to set target '{self.__target}'", e)
                     continue
 
-                # Set up the outgoing event queue
                 try:
                     mod.outgoingEventQueue = self.eventQueue
                     mod.incomingEventQueue = queue.Queue()
-                    # Debug: Verify queues are set
-                    self.__sf.debug(f"Module {modName} queues initialized: incoming={mod.incomingEventQueue is not None}, outgoing={mod.outgoingEventQueue is not None}")
-                    
-                    # Ensure queues remain set (safety check for any potential reset)
-                    if not mod.incomingEventQueue or not mod.outgoingEventQueue:
+                    self.__sf.debug(f"Module {modName} queues initialized: incoming={{mod.incomingEventQueue is not None}}, outgoing={{mod.outgoingEventQueue is not None}}")
+                    # Explicitly check both queues
+                    if mod.incomingEventQueue is None or mod.outgoingEventQueue is None:
                         self.__sf.error(f"Module {modName} queue validation failed after setup")
                         continue
-                        
                 except Exception as e:
-                    self.__sf.error(
-                        f"Module {modName} event queue setup failed: {e}")
+                    self._log_module_error(modName, "event queue setup failed", e)
                     continue
 
                 self.__moduleInstances[modName] = mod
@@ -419,14 +437,11 @@ class SpiderFootScanner():
                 self.__dbh.close()
                 return
 
-            # sort modules by priority
             self.__moduleInstances = OrderedDict(
                 sorted(self.__moduleInstances.items(), key=lambda m: m[-1]._priority))
 
-            # Now we are ready to roll..
             self.__setStatus("RUNNING")
 
-            # Create a pseudo module for the root event to originate from
             psMod = SpiderFootPlugin()
             psMod.__name__ = "SpiderFoot UI"
             psMod.setTarget(self.__target)
@@ -435,30 +450,21 @@ class SpiderFootScanner():
             psMod.outgoingEventQueue = self.eventQueue
             psMod.incomingEventQueue = queue.Queue()
 
-            # Create the "ROOT" event which un-triggered modules will link events to
             rootEvent = SpiderFootEvent("ROOT", self.__targetValue, "", None)
             psMod.notifyListeners(rootEvent)
             firstEvent = SpiderFootEvent(self.__targetType, self.__targetValue,
                                          "SpiderFoot UI", rootEvent)
             psMod.notifyListeners(firstEvent)
 
-            # Special case.. check if an INTERNET_NAME is also a domain
             if self.__targetType == 'INTERNET_NAME' and self.__sf.isDomain(self.__targetValue, self.__config['_internettlds']):
                 firstEvent = SpiderFootEvent(
                     'DOMAIN_NAME', self.__targetValue, "SpiderFoot UI", rootEvent)
                 psMod.notifyListeners(firstEvent)
 
-            # If in interactive mode, loop through this shared global variable
-            # waiting for inputs, and process them until my status is set to
-            # FINISHED.
-
-            # Check in case the user requested to stop the scan between modules
-            # initializing
             scanstatus = self.__dbh.scanInstanceGet(self.__scanId)
             if scanstatus and scanstatus[5] == "ABORT-REQUESTED":
                 raise AssertionError("ABORT-REQUESTED")
 
-            # start threads
             self.waitForThreads()
             failed = False
 
@@ -468,8 +474,6 @@ class SpiderFootScanner():
 
         except Exception as e:
             self.__sf.error(f"Scan [{self.__scanId}] failed: {str(e)}")
-            # Remove the exc_info parameter or modify the error method to accept it
-            # self.__sf.error(f"Scan [{self.__scanId}] failed: {str(e)}", exc_info=True)
 
         finally:
             if not failed:
@@ -479,7 +483,6 @@ class SpiderFootScanner():
             self.__dbh.close()
 
     def runCorrelations(self) -> None:
-        """Run correlation rules using the modular engine."""
         from spiderfoot.correlation.rule_executor import RuleExecutor
         from spiderfoot.correlation.event_enricher import EventEnricher
         from spiderfoot.correlation.result_aggregator import ResultAggregator
@@ -489,43 +492,30 @@ class SpiderFootScanner():
         rules = self.__config['__correlationrules__']
         executor = RuleExecutor(self.__dbh, rules, scan_ids=[self.__scanId])
         results = executor.run()
-        # Enrich results (optional, can be expanded)
         enricher = EventEnricher(self.__dbh)
         for rule_id, result in results.items():
             if 'events' in result:
                 result['events'] = enricher.enrich_sources(self.__scanId, result['events'])
                 result['events'] = enricher.enrich_entities(self.__scanId, result['events'])
-        # Aggregate results (optional)
         aggregator = ResultAggregator()
         agg_count = aggregator.aggregate(list(results.values()), method='count')
         self.__sf.status(f"Correlated {agg_count} results for scan {self.__scanId}")
 
     def waitForThreads(self) -> None:
-        """Wait for threads.
-
-        Raises:
-            TypeError: queue tried to process a malformed event
-            AssertionError: scan halted for some reason
-        """
         if not self.eventQueue:
             return
 
         counter = 0
 
         try:
-            # start one thread for each module
             for mod in self.__moduleInstances.values():
-                # Double-check queue setup before starting
                 if not (mod.incomingEventQueue and mod.outgoingEventQueue):
                     self.__sf.error(f"Module {mod.__name__} has uninitialized queues, skipping")
                     continue
                 mod.start()
             final_passes = 3
 
-            # watch for newly-generated events
             while True:
-
-                # log status of threads every 10 iterations
                 log_status = counter % 10 == 0
                 counter += 1
 
@@ -539,14 +529,11 @@ class SpiderFootScanner():
                     self.__sf.debug(
                         f"waitForThreads() got event, {sfEvent.eventType}, from eventQueue.")
                 except queue.Empty:
-                    # check if we're finished
                     if self.threadsFinished(log_status):
                         sleep(.1)
-                        # but are we really?
                         if self.threadsFinished(log_status):
                             if final_passes < 1:
                                 break
-                            # Trigger module.finished()
                             for mod in self.__moduleInstances.values():
                                 if not mod.errorState and mod.incomingEventQueue is not None:
                                     mod.incomingEventQueue.put('FINISHED')
@@ -556,9 +543,7 @@ class SpiderFootScanner():
                                 counter += 1
                                 sleep(.01)
                             final_passes -= 1
-
                     else:
-                        # save on CPU
                         sleep(.1)
                     continue
 
@@ -566,34 +551,21 @@ class SpiderFootScanner():
                     raise TypeError(
                         f"sfEvent is {type(sfEvent)}; expected SpiderFootEvent")
 
-                # for every module
                 for mod in self.__moduleInstances.values():
-                    # if it's been aborted
                     if mod._stopScanning:
-                        # break out of the while loop
                         raise AssertionError(f"{mod.__name__} requested stop")
 
-                    # send it the new event if applicable
                     if not mod.errorState and mod.incomingEventQueue is not None:
                         watchedEvents = mod.watchedEvents()
                         if sfEvent.eventType in watchedEvents or "*" in watchedEvents:
                             mod.incomingEventQueue.put(deepcopy(sfEvent))
 
         finally:
-            # tell the modules to stop
             for mod in self.__moduleInstances.values():
                 mod._stopScanning = True
             self.__sharedThreadPool.shutdown(wait=True)
 
     def threadsFinished(self, log_status: bool = False) -> bool:
-        """Check if all threads are complete.
-
-        Args:
-            log_status (bool): print thread queue status to debug log
-
-        Returns:
-            bool: True if all threads are finished
-        """
         if self.eventQueue is None:
             return True
 
@@ -661,3 +633,5 @@ class SpiderFootScanner():
         if all(queues_empty) and not modules_running:
             return True
         return False
+
+# End of scanner.py

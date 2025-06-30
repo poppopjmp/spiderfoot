@@ -29,7 +29,7 @@ import cherrypy_cors
 from cherrypy.lib import auth_digest
 
 from sflib import SpiderFoot
-from sfscan import startSpiderFootScanner
+from spiderfoot.scan_service.scanner import startSpiderFootScanner
 from sfwebui import SpiderFootWebUi
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import SpiderFootDb

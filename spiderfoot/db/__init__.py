@@ -621,6 +621,23 @@ class SpiderFootDb:
         return self._scan.scanInstanceDelete(*args, **kwargs)
     def scanInstanceList(self):
         return self._scan.scanInstanceList()
+    def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None):
+        """
+        Direct pass-through to the underlying _scan.scanInstanceSet method.
+
+        Args:
+            instanceId (str): The unique identifier of the scan instance.
+            started (int): The timestamp when the scan started.
+            ended (int): The timestamp when the scan ended.
+            status (str): The status of the scan instance.
+
+        Returns:
+            bool: True if the update was successful, False otherwise.
+
+        Note:
+            If additional validation or transformation is needed, implement it here for future maintainability.
+        """
+        return self._scan.scanInstanceSet(instanceId, started, ended, status)
     # --- CONFIGURATION MANAGEMENT ---
     def configSet(self, *args, **kwargs):
         return self._config.configSet(*args, **kwargs)

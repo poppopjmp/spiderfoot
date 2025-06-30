@@ -59,16 +59,20 @@ class ScanManager:
         ph = get_placeholder(self.db_type)
         qvars = []
         qry = "UPDATE tbl_scan_instance SET "
+        set_clauses = []
         if started is not None:
-            qry += f" started = {ph}, "
+            set_clauses.append(f"started = {ph}")
             qvars.append(started)
         if ended is not None:
-            qry += f" ended = {ph}, "
+            set_clauses.append(f"ended = {ph}")
             qvars.append(ended)
         if status is not None:
-            qry += f" status = {ph}, "
+            set_clauses.append(f"status = {ph}")
             qvars.append(status)
-        qry += " guid = guid WHERE guid = {ph}"
+        if not set_clauses:
+            return  # Nothing to update
+        qry += ", ".join(set_clauses)
+        qry += f" WHERE guid = {ph}"
         qvars.append(instanceId)
         with self.dbhLock:
             for attempt in range(3):

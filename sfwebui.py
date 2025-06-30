@@ -34,7 +34,7 @@ from mako.template import Template
 import markdown
 
 from sflib import SpiderFoot
-from sfscan import startSpiderFootScanner
+from spiderfoot.scan_service.scanner import startSpiderFootScanner
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import __version__
@@ -2283,7 +2283,7 @@ class SpiderFootWebUi:
         
         try:
             self.log.debug(f"[MULTISCAN] Importing startSpiderFootScanner...")
-            from sfscan import startSpiderFootScanner
+            from spiderfoot.scan_service.scanner import startSpiderFootScanner
             self.log.debug(f"[MULTISCAN] Import successful")
             
             # Try to load existing workspace, or create a new one if it doesn't exist

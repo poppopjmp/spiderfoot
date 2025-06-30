@@ -14,5 +14,4 @@ parts:
       - sfcli.py
       - sfapi.py
       - sflib.py
-      - sfscan.py
       - sfwebui.py

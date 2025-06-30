@@ -44,7 +44,7 @@ from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import __version__
 from spiderfoot.workspace import SpiderFootWorkspace
-from sfscan import startSpiderFootScanner
+from spiderfoot.scan_service.scanner import startSpiderFootScanner
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
