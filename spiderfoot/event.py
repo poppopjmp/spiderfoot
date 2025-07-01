@@ -69,13 +69,9 @@ class SpiderFootEvent:
         self.__id = f"{self.eventType}{self.generated}{self.module}{random.SystemRandom().randint(0, 99999999)}"
 
     @property
-    def generated(self) -> float:
-        """Event timestamp
-
-        Returns:
-            float: timestamp (seconds since epoch)
-        """
-        return self.__generated / 1000.0  # Convert milliseconds to seconds
+    def generated(self) -> int:
+        """Timestamp of event creation time in ms."""
+        return self._generated
 
     @property
     def generated_ms(self) -> int:
