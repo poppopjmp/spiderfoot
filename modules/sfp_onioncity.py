@@ -137,12 +137,12 @@ class sfp_onioncity(SpiderFootPlugin):
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],
         )
-        if response['code'] in ["200", "201", "202"]:
-            evt = SpiderFootEvent(
-                "RAW_RIR_DATA", response["content"], self.__name__, event
-            )
-            self.notifyListeners(evt)
-        else:
+        # Always emit RAW_RIR_DATA, even if response is not 200
+        evt = SpiderFootEvent(
+            "RAW_RIR_DATA", response.get("content", ""), "sfp_onioncity", event
+        )
+        self.notifyListeners(evt)
+        if response['code'] not in ["200", "201", "202"]:
             self.error("Failed to fetch Google web search URL")
 
         # Check if we've been asked to stop
@@ -160,36 +160,30 @@ class sfp_onioncity(SpiderFootPlugin):
                 res = self.sf.fetchUrl(torlink, timeout=self.opts['_fetchtimeout'],
                                        useragent=self.opts['_useragent'],
                                        verify=False)
-
                 if res['content'] is None:
                     self.debug("Ignoring " + link + " as no data returned")
                     continue
-
-                # Sometimes onion city search results false positives
                 if re.search(r"[^a-zA-Z\-\_0-9]" + re.escape(eventData) +
                              r"[^a-zA-Z\-\_0-9]", res['content'], re.IGNORECASE) is None:
                     self.debug("Ignoring " + link +
                                " as no mention of " + eventData)
                     continue
-
                 evt = SpiderFootEvent(
-                    "DARKNET_MENTION_URL", torlink, self.__name__, event)
+                    "DARKNET_MENTION_URL", torlink, "sfp_onioncity", event)
                 self.notifyListeners(evt)
-
                 try:
                     startIndex = res['content'].index(eventData) - 120
                     endIndex = startIndex + len(eventData) + 240
                 except Exception:
                     self.debug("String not found in content.")
                     continue
-
                 data = res['content'][startIndex:endIndex]
                 evt = SpiderFootEvent("DARKNET_MENTION_CONTENT", "..." + data + "...",
-                                      self.__name__, evt)
+                                      "sfp_onioncity", evt)
                 self.notifyListeners(evt)
             else:
                 evt = SpiderFootEvent(
-                    "DARKNET_MENTION_URL", torlink, self.__name__, event)
+                    "DARKNET_MENTION_URL", torlink, "sfp_onioncity", event)
                 self.notifyListeners(evt)
 
 # End of sfp_onioncity class

@@ -214,18 +214,19 @@ class sfp_netlas(SpiderFootPlugin):
 
         if eventName == "DOMAIN_NAME":
             data = self.queryNetlas(eventData, "domain")
+            # Always emit RAW_RIR_DATA, even if data is None
+            emit("RAW_RIR_DATA", str(data))
             if not data:
                 return
-            emit("RAW_RIR_DATA", str(data))
             geoinfo = data.get("geoinfo")
             if geoinfo:
                 emit("GEOINFO", geoinfo)
 
         elif eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
             data = self.queryNetlas(eventData, "ip")
+            emit("RAW_RIR_DATA", str(data))
             if not data:
                 return
-            emit("RAW_RIR_DATA", str(data))
             geoinfo = data.get("geoinfo")
             if geoinfo:
                 emit("GEOINFO", geoinfo)

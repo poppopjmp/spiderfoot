@@ -32,8 +32,8 @@ class TestModuleIntegrationOnionsearchengine(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
-    @patch('sflib.SpiderFoot.urlFQDN', lambda self, url: 'sometarget.onion')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.urlFQDN', lambda self, url: 'sometarget.onion')
     def test_handleEvent_emits_events_on_domain(self, mock_fetchUrl):
         # Simulate search result page and .onion page
         def fetchUrl_side_effect(url, **kwargs):

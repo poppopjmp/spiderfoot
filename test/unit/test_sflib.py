@@ -204,7 +204,7 @@ class TestSpiderFootComprehensive(SpiderFootTestBase):
         expected = hashlib.sha256(str(test_dict).encode('raw_unicode_escape')).hexdigest()
         self.assertEqual(result, expected)    # ===== CACHING =====
 
-    @patch('sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
     @patch('os.stat')
     @patch('builtins.open', new_callable=mock_open, read_data='cached content')
     def test_cacheGet_valid_cache(self, mock_file, mock_stat, mock_cache_path):
@@ -217,7 +217,7 @@ class TestSpiderFootComprehensive(SpiderFootTestBase):
         result = self.sf.cacheGet("test_label", 24)
         self.assertEqual(result, 'cached content')
 
-    @patch('sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
     @patch('os.stat')
     def test_cacheGet_expired_cache(self, mock_stat, mock_cache_path):
         """Test cacheGet with expired cache."""
@@ -229,7 +229,7 @@ class TestSpiderFootComprehensive(SpiderFootTestBase):
         result = self.sf.cacheGet("test_label", 1)  # 1 hour timeout
         self.assertIsNone(result)
 
-    @patch('sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
     @patch('os.stat')
     def test_cacheGet_nonexistent_file(self, mock_stat, mock_cache_path):
         """Test cacheGet with non-existent cache file."""
@@ -244,7 +244,7 @@ class TestSpiderFootComprehensive(SpiderFootTestBase):
         result = self.sf.cacheGet("", 24)
         self.assertIsNone(result)
 
-    @patch('sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
     @patch('sflib.io.open', new_callable=mock_open)
     def test_cachePut_string_data(self, mock_file, mock_cache_path):
         """Test cachePut with string data."""
@@ -253,7 +253,7 @@ class TestSpiderFootComprehensive(SpiderFootTestBase):
         self.sf.cachePut("test_label", "test data")
         mock_file.assert_called()
 
-    @patch('sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
     @patch('sflib.io.open', new_callable=mock_open)
     def test_cachePut_list_data(self, mock_file, mock_cache_path):
         """Test cachePut with list data."""
@@ -262,7 +262,7 @@ class TestSpiderFootComprehensive(SpiderFootTestBase):
         self.sf.cachePut("test_label", ["line1", "line2"])
         mock_file.assert_called()
 
-    @patch('sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
     @patch('sflib.io.open', new_callable=mock_open)
     def test_cachePut_bytes_data(self, mock_file, mock_cache_path):
         """Test cachePut with bytes data."""

@@ -31,9 +31,9 @@ class TestModuleIntegrationOnioncity(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
-    @patch('sflib.SpiderFoot.googleIterate')
-    @patch('sflib.SpiderFoot.urlFQDN', lambda self, url: url.split('/')[2])
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.googleIterate')
+    @patch('spiderfoot.sflib.SpiderFoot.urlFQDN', lambda self, url: url.split('/')[2])
     def test_handleEvent_emits_events_on_domain(self, mock_googleIterate, mock_fetchUrl):
         # Simulate Google search result with .onion.link URL
         mock_googleIterate.return_value = {

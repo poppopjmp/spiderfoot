@@ -27,8 +27,8 @@ class TestModuleIntegrationThreatcrowd(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
-    @patch('sflib.SpiderFoot.validIP', lambda self, x: True)
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.validIP', lambda self, x: True)
     def test_handleEvent_emits_malicious_ipaddr(self, mock_fetch):
         # Simulate ThreatCrowd API response for a malicious IP
         test_ip = '1.2.3.4'

@@ -3,8 +3,8 @@ from unittest.mock import patch
 import json
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from modules.sfp_c99 import sfp_c99
 from spiderfoot.sflib import SpiderFoot
+from modules.sfp_c99 import sfp_c99
 
 
 class TestModuleIntegrationC99(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestModuleIntegrationC99(unittest.TestCase):
         self.module.__name__ = self.module.__class__.__name__
 
     @patch('modules.sfp_c99.requests.get')
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_malicious_ip(self, mock_fetchUrl, mock_get):
         # Mock a geoip response to trigger RAW_RIR_DATA emission
         mock_geoip_data = {

@@ -35,8 +35,8 @@ class TestModuleIntegrationOnyphe(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
-    @patch('sflib.SpiderFoot.cveInfo', lambda self, cve: ('VULNERABILITY_CVE_CRITICAL', cve))
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.cveInfo', lambda self, cve: ('VULNERABILITY_CVE_CRITICAL', cve))
     def test_handleEvent_emits_events_on_ip(self, mock_fetchUrl):
         # Simulate Onyphe API responses for all endpoints
         def fetchUrl_side_effect(url, **kwargs):

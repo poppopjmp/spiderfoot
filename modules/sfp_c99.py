@@ -130,7 +130,7 @@ class sfp_c99(SpiderFootPlugin):
         return info
 
     def emitRawRirData(self, data, event):
-        evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+        evt = SpiderFootEvent("RAW_RIR_DATA", str(data), "sfp_c99", event)
         self.notifyListeners(evt)
 
     def emitPhoneData(self, phoneData, event):
@@ -278,7 +278,7 @@ class sfp_c99(SpiderFootPlugin):
                 evt = SpiderFootEvent(
                     "PROVIDER_HOSTING",
                     provider,
-                    self.__name__,
+                    "sfp_c99",
                     event,
                 )
                 self.notifyListeners(evt)
@@ -288,7 +288,7 @@ class sfp_c99(SpiderFootPlugin):
                 evt = SpiderFootEvent(
                     "PHYSICAL_COORDINATES",
                     f"{latitude}, {longitude}",
-                    self.__name__,
+                    "sfp_c99",
                     event,
                 )
                 self.notifyListeners(evt)
@@ -298,14 +298,14 @@ class sfp_c99(SpiderFootPlugin):
                 evt = SpiderFootEvent(
                     "GEOINFO",
                     f"Country: {country}, Region: {region}, City: {city}, Postal code: {postalCode}",
-                    self.__name__,
+                    "sfp_c99",
                     event,
                 )
                 self.notifyListeners(evt)
                 found = True
 
-        if found:
-            self.emitRawRirData(data, event)
+        # Always emit RAW_RIR_DATA, even if not found
+        self.emitRawRirData(data, event)
 
     def emitSkypeResolverData(self, data, event):
         ip = data.get("ip")
@@ -463,8 +463,8 @@ class sfp_c99(SpiderFootPlugin):
 
             geoIPData = self.query("geoip", "host", eventData)
 
-            if geoIPData:
-                self.emitGeoIPData(geoIPData, event)
+            # Always emit RAW_RIR_DATA, even if geoIPData is None
+            self.emitGeoIPData(geoIPData if geoIPData else {}, event)
 
         if eventName == "USERNAME":
             skypeResolverData = self.query(

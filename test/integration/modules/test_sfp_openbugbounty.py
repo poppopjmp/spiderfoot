@@ -27,7 +27,7 @@ class TestModuleIntegrationOpenbugbounty(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_emits_vulnerability_disclosure(self, mock_fetch):
         # Simulate HTML response containing a match for the test domain
         test_domain = 'example.com'

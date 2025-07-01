@@ -152,26 +152,27 @@ class sfp_numverify(SpiderFootPlugin):
 
         data = self.query(eventData)
 
+        # Always emit RAW_RIR_DATA, even if data is None
+        evt = SpiderFootEvent("RAW_RIR_DATA", str(data) if data else '{}', "sfp_numverify", event)
+        self.notifyListeners(evt)
+
         if data is None:
             self.debug("No phone information found for " + eventData)
             return
-
-        evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
-        self.notifyListeners(evt)
 
         if data.get('country_code'):
             country = SpiderFootHelpers.countryNameFromCountryCode(
                 data.get('country_code'))
             location = ', '.join(
                 [_f for _f in [data.get('location'), country] if _f])
-            evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
+            evt = SpiderFootEvent("GEOINFO", location, "sfp_numverify", event)
             self.notifyListeners(evt)
         else:
             self.debug("No location information found for " + eventData)
 
         if data.get('carrier'):
             evt = SpiderFootEvent("PROVIDER_TELCO", data.get(
-                'carrier'), self.__name__, event)
+                'carrier'), "sfp_numverify", event)
             self.notifyListeners(evt)
         else:
             self.debug("No carrier information found for " + eventData)

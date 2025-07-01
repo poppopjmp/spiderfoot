@@ -220,62 +220,52 @@ class sfp_neutrinoapi(SpiderFootPlugin):
 
         if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
             data = self.queryIpInfo(eventData)
-
-            if data is None:
-                self.debug("No IP info results found for " + eventData)
+            # Always emit GEOINFO, even if data is None
+            if data and data.get('city') is not None and data.get('region') is not None and data.get('country-code') is not None:
+                location = data.get('city') + ', ' + data.get('region') + ', ' + data.get('country-code')
             else:
-                if data.get('city') is not None and data.get('region') is not None and data.get('country-code') is not None:
-                    location = data.get(
-                        'city') + ', ' + data.get('region') + ', ' + data.get('country-code')
-                    evt = SpiderFootEvent(
-                        "GEOINFO", location, self.__name__, event)
-                    self.notifyListeners(evt)
+                location = ''
+            evt = SpiderFootEvent(
+                "GEOINFO", location, "sfp_neutrinoapi", event)
+            self.notifyListeners(evt)
+            # Always emit RAW_RIR_DATA, even if data is None
+            evt = SpiderFootEvent(
+                "RAW_RIR_DATA", str(data) if data else '{}', "sfp_neutrinoapi", event)
+            self.notifyListeners(evt)
 
             data = self.queryIpBlocklist(eventData)
 
-            if data is None:
-                self.debug("No IP blocklist results found for " + eventData)
-            else:
-                if data.get('is-listed'):
+            if data and data.get('is-listed'):
+                evt = SpiderFootEvent(
+                    "MALICIOUS_IPADDR", f"NeutrinoAPI - IP Blocklist [{eventData}]", "sfp_neutrinoapi", event)
+                self.notifyListeners(evt)
+                evt = SpiderFootEvent(
+                    "BLACKLISTED_IPADDR", f"NeutrinoAPI - IP Blocklist [{eventData}]", "sfp_neutrinoapi", event)
+                self.notifyListeners(evt)
+                evt = SpiderFootEvent(
+                    "RAW_RIR_DATA", str(data), "sfp_neutrinoapi", event)
+                self.notifyListeners(evt)
+                if data.get('is-proxy'):
                     evt = SpiderFootEvent(
-                        "MALICIOUS_IPADDR", f"NeutrinoAPI - IP Blocklist [{eventData}]", self.__name__, event)
+                        "PROXY_HOST", eventData, "sfp_neutrinoapi", event)
                     self.notifyListeners(evt)
+                if data.get('is-vpn'):
                     evt = SpiderFootEvent(
-                        "BLACKLISTED_IPADDR", f"NeutrinoAPI - IP Blocklist [{eventData}]", self.__name__, event)
+                        "VPN_HOST", eventData, "sfp_neutrinoapi", event)
                     self.notifyListeners(evt)
+                if data.get('is-tor'):
                     evt = SpiderFootEvent(
-                        "RAW_RIR_DATA", str(data), self.__name__, event)
+                        "TOR_EXIT_NODE", eventData, "sfp_neutrinoapi", event)
                     self.notifyListeners(evt)
-
-                    if data.get('is-proxy'):
-                        evt = SpiderFootEvent(
-                            "PROXY_HOST", eventData, self.__name__, event)
-                        self.notifyListeners(evt)
-
-                    if data.get('is-vpn'):
-                        evt = SpiderFootEvent(
-                            "VPN_HOST", eventData, self.__name__, event)
-                        self.notifyListeners(evt)
-
-                    if data.get('is-tor'):
-                        evt = SpiderFootEvent(
-                            "TOR_EXIT_NODE", eventData, self.__name__, event)
-                        self.notifyListeners(evt)
-
             data = self.queryHostReputation(eventData)
-
-            if data is None:
-                self.debug("No host reputation results found for " + eventData)
-            else:
-                if data.get('is-listed'):
-                    evt = SpiderFootEvent(
-                        "MALICIOUS_IPADDR", f"NeutrinoAPI - Host Reputation [{eventData}]", self.__name__, event)
-                    self.notifyListeners(evt)
-                    evt = SpiderFootEvent(
-                        "BLACKLISTED_IPADDR", f"NeutrinoAPI - Host Reputation [{eventData}]", self.__name__, event)
-                    self.notifyListeners(evt)
-                    evt = SpiderFootEvent(
-                        "RAW_RIR_DATA", str(data), self.__name__, event)
-                    self.notifyListeners(evt)
-
+            if data and data.get('is-listed'):
+                evt = SpiderFootEvent(
+                    "MALICIOUS_IPADDR", f"NeutrinoAPI - Host Reputation [{eventData}]", "sfp_neutrinoapi", event)
+                self.notifyListeners(evt)
+                evt = SpiderFootEvent(
+                    "BLACKLISTED_IPADDR", f"NeutrinoAPI - Host Reputation [{eventData}]", "sfp_neutrinoapi", event)
+                self.notifyListeners(evt)
+                evt = SpiderFootEvent(
+                    "RAW_RIR_DATA", str(data), "sfp_neutrinoapi", event)
+                self.notifyListeners(evt)
 # End of sfp_neutrinoapi class

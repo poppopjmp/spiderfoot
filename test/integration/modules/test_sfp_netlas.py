@@ -40,7 +40,7 @@ class TestModuleIntegrationNetlas(unittest.TestCase):
                          "DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"])
 
     @patch("modules.sfp_netlas.sfp_netlas.notifyListeners")
-    @patch("sflib.SpiderFoot.fetchUrl")
+    @patch("spiderfoot.sflib.SpiderFoot.fetchUrl")
     def test_handleEvent(self, mock_fetchUrl, mock_notifyListeners):
         self.module.opts['api_key'] = 'test_api_key'
         # Mock Netlas API response

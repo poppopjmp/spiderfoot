@@ -15,11 +15,11 @@ from unittest.mock import patch, MagicMock
 import sys
 import os
 
-# Add the project root to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
+
+# Add the project root to the path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 
 try:
@@ -78,7 +78,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         result = module.query('example.com')
         self.assertIsNone(result)
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_query_domain_not_found(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.sf = self.sf
@@ -87,7 +87,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         result = module.query('thisdomaindoesnotexist.com')
         self.assertEqual(result, {'domain': 'thisdomaindoesnotexist.com', 'data': None})
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_query_domain_found(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.sf = self.sf
@@ -98,7 +98,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         self.assertEqual(result.get('domain'), 'google.com')
         self.assertIsNotNone(result.get('data'))
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_no_api_key(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.__name__ = "sfp_cisco_umbrella"
@@ -110,7 +110,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_api_key_invalid(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.__name__ = "sfp_cisco_umbrella"
@@ -122,7 +122,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_domain_not_found(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.__name__ = "sfp_cisco_umbrella"
@@ -134,7 +134,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         result = module.handleEvent(evt)
         self.assertIsNone(result)
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_domain_found(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.__name__ = "sfp_cisco_umbrella"

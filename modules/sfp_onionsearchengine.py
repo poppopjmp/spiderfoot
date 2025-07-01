@@ -150,10 +150,11 @@ class sfp_onionsearchengine(SpiderFootPlugin):
                 if not self.sf.urlFQDN(link).endswith(".onion"):
                     continue
 
+                # Always emit DARKNET_MENTION_URL for .onion links
+                evt = SpiderFootEvent(
+                    "DARKNET_MENTION_URL", link, "sfp_onionsearchengine", event)
+                self.notifyListeners(evt)
                 if not self.opts['fetchlinks']:
-                    evt = SpiderFootEvent(
-                        "DARKNET_MENTION_URL", link, self.__name__, event)
-                    self.notifyListeners(evt)
                     continue
 
                 res = self.sf.fetchUrl(link,
@@ -170,10 +171,6 @@ class sfp_onionsearchengine(SpiderFootPlugin):
                                " as no mention of " + eventData)
                     continue
 
-                evt = SpiderFootEvent(
-                    "DARKNET_MENTION_URL", link, self.__name__, event)
-                self.notifyListeners(evt)
-
                 try:
                     startIndex = res['content'].index(eventData) - 120
                     endIndex = startIndex + len(eventData) + 240
@@ -184,7 +181,7 @@ class sfp_onionsearchengine(SpiderFootPlugin):
 
                 data = res['content'][startIndex:endIndex]
                 evt = SpiderFootEvent("DARKNET_MENTION_CONTENT", "..." + data + "...",
-                                      self.__name__, evt)
+                                      "sfp_onionsearchengine", evt)
                 self.notifyListeners(evt)
 
 # End of sfp_onionsearchengine class

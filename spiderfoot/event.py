@@ -58,7 +58,7 @@ class SpiderFootEvent:
             module (str): Module from which the event originated
             sourceEvent (SpiderFootEvent): SpiderFootEvent event that triggered this event (optional for ROOT events)
         """
-        self._generated = int(time.time() * 1000)  # store as ms
+        self._generated = float(time.time())  # store as float seconds
         self.data = data
         self.eventType = eventType
         self.module = module
@@ -69,8 +69,8 @@ class SpiderFootEvent:
         self.__id = f"{self.eventType}{self.generated}{self.module}{random.SystemRandom().randint(0, 99999999)}"
 
     @property
-    def generated(self) -> int:
-        """Timestamp of event creation time in ms."""
+    def generated(self) -> float:
+        """Timestamp of event creation time in seconds (float)."""
         return self._generated
 
     @property

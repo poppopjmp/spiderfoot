@@ -177,8 +177,10 @@ def useProxyForUrl(url: str, opts=None, urlFQDN=None, isValidLocalOrLoopbackIp=N
     return True
 
 def fetchUrl(url: str, cookies: str = None, timeout: int = 30, useragent: str = "SpiderFoot", headers: dict = None, noLog: bool = False, postData: str = None, disableContentEncoding: bool = False, sizeLimit: int = None, headOnly: bool = False, verify: bool = True) -> dict:
-    if not url:
-        return {}
+    if not isinstance(url, str):
+        return None
+    if not url or not url.strip():
+        return None
     result = {
         'code': None,
         'status': None,
@@ -209,6 +211,7 @@ def fetchUrl(url: str, cookies: str = None, timeout: int = 30, useragent: str = 
     except Exception:
         pass
     return result
+
 
 def checkDnsWildcard(target: str) -> bool:
     if not target:

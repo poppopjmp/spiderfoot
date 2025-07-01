@@ -28,7 +28,7 @@ class TestModuleIntegrationNumverify(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_emits_events_on_valid_phone(self, mock_fetch):
         # Simulate Numverify API positive response
         mock_fetch.return_value = {
