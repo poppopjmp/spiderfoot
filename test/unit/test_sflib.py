@@ -245,31 +245,43 @@ class TestSpiderFootComprehensive(SpiderFootTestBase):
         self.assertIsNone(result)
 
     @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
-    @patch('sflib.io.open', new_callable=mock_open)
-    def test_cachePut_string_data(self, mock_file, mock_cache_path):
+    @patch('spiderfoot.sflib.io.open', new_callable=mock_open)
+    @patch('builtins.open', new_callable=mock_open)
+    def test_cachePut_string_data(self, mock_builtins_open, mock_io_open, mock_cache_path):
         """Test cachePut with string data."""
         mock_cache_path.return_value = "/tmp/cache"
         
         self.sf.cachePut("test_label", "test data")
-        mock_file.assert_called()
+        self.assertTrue(
+            mock_builtins_open.called or mock_io_open.called,
+            "Expected either builtins.open or spiderfoot.sflib.io.open to have been called."
+        )
 
     @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
-    @patch('sflib.io.open', new_callable=mock_open)
-    def test_cachePut_list_data(self, mock_file, mock_cache_path):
+    @patch('spiderfoot.sflib.io.open', new_callable=mock_open)
+    @patch('builtins.open', new_callable=mock_open)
+    def test_cachePut_list_data(self, mock_builtins_open, mock_io_open, mock_cache_path):
         """Test cachePut with list data."""
         mock_cache_path.return_value = "/tmp/cache"
         
         self.sf.cachePut("test_label", ["line1", "line2"])
-        mock_file.assert_called()
+        self.assertTrue(
+            mock_builtins_open.called or mock_io_open.called,
+            "Expected either builtins.open or spiderfoot.sflib.io.open to have been called."
+        )
 
     @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
-    @patch('sflib.io.open', new_callable=mock_open)
-    def test_cachePut_bytes_data(self, mock_file, mock_cache_path):
+    @patch('spiderfoot.sflib.io.open', new_callable=mock_open)
+    @patch('builtins.open', new_callable=mock_open)
+    def test_cachePut_bytes_data(self, mock_builtins_open, mock_io_open, mock_cache_path):
         """Test cachePut with bytes data."""
         mock_cache_path.return_value = "/tmp/cache"
         
         self.sf.cachePut("test_label", b"test bytes data")
-        mock_file.assert_called()
+        self.assertTrue(
+            mock_builtins_open.called or mock_io_open.called,
+            "Expected either builtins.open or spiderfoot.sflib.io.open to have been called."
+        )
 
     # ===== CONFIGURATION SERIALIZATION =====
 
