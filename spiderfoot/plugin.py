@@ -129,7 +129,7 @@ class SpiderFootPlugin:
         self.__outputFilter__ = None
         self._log = None
         self.__scanId__ = None
-        # self.running = False  # Removed: conflicts with running property
+        self._listenerModules = []  # Initialize _listenerModules attribute
         
     def setup(self, sf, userOpts=dict()):
         """Setup the module with configuration.

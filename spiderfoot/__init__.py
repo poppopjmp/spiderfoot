@@ -114,3 +114,17 @@ class SpiderFootModuleLoader:
 # Install the import hook
 if not any(isinstance(finder, SpiderFootModuleFinder) for finder in sys.meta_path):
     sys.meta_path.insert(0, SpiderFootModuleFinder())
+
+def fetchUrl(self, url, fatal=False, cookies=None, timeout=30,
+             useragent="SpiderFoot", headers=None, noLog=False,
+             postData=None, dontMaskPassword=False, sizeLimit=None,
+             headOnly=False, verify=True):
+    # Check for invalid URL types
+    if not isinstance(url, str):
+        return None
+    
+    # Check for empty URL
+    if not url or not url.strip():
+        return None
+    
+    # ...existing code...

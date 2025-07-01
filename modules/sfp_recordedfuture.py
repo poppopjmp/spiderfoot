@@ -72,34 +72,29 @@ class sfp_recordedfuture(SpiderFootPlugin):
 
     def query(self, qry):
         headers = {
-            'X-RFToken': self.opts['api_key'],
-            'Content-Type': 'application/json',
+            'X-RFToken': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(f'https://api.recordedfuture.com/v2/vulnerability/search?q={qry}',
-                               headers=headers,
-                               useragent=self.opts['_useragent'],
-                               timeout=self.opts['_fetchtimeout'])
+        res = self.sf.fetchUrl(
+            f"https://api.recordedfuture.com/v2/domain/{qry}",
+            headers=headers,
+            timeout=self.opts['_fetchtimeout'],
+            useragent=self.opts['_useragent']
+        )
 
-        if res['code'] in ["400", "401", "403", "500"]:
-            self.error(f"Unexpected HTTP response code {res['code']} from Recorded Future")
-            self.errorState = True
+        if res['code'] == '401':
+            self.error("Invalid Recorded Future API key.")
             return None
 
-        if res['content'] is None:
+        if res['code'] != '200':
+            self.error(f"Unexpected HTTP response code {res['code']} from Recorded Future API.")
             return None
 
         try:
-            data = json.loads(res['content'])
+            return json.loads(res['content'])
         except Exception as e:
-            self.debug(f"Error processing JSON response from Recorded Future: {e}")
+            self.error(f"Error parsing JSON from Recorded Future API: {e}")
             return None
-
-        if not data:
-            self.debug(f"No results found for {qry}")
-            return None
-
-        return data
 
     def handleEvent(self, event):
         eventName = event.eventType

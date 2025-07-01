@@ -82,11 +82,12 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
         if self.errorState:
             return None
 
-        headers = {"Authorization": f"Bearer {self.opts['api_key']}"}
+        api_key = self.opts["api_key"]
+        headers = {"Authorization": f"Bearer {api_key}"}
 
         queryurl = f"https://investigate.api.umbrella.com/domains/categorization/{qry}"
 
-        res = self.sf.fetchUrl(
+        r = self.sf.fetchUrl(
             queryurl,
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",
@@ -95,26 +96,23 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
 
         time.sleep(self.opts["delay"])
 
-        if res["code"] in ["429", "500", "502", "503", "504"]:
+        if r['code'] == '429':
             self.error(
                 "Umbrella Investigate API key seems to have been rejected or you have exceeded usage limits."
             )
             self.errorState = True
             return None
-        if res["code"] == 401:
-            self.error("Umbrella Investigate API key is invalid.")
-            self.errorState = True
+        if r['code'] == '401':
+            self.error("Invalid Cisco Umbrella API key.")
             return None
-
-        if not res["content"]:
-            self.info(f"No Umbrella Investigate info found for {qry}")
+        if r['code'] != '200':
+            self.error(f"Unexpected HTTP response code {r['code']} from Cisco Umbrella API.")
             return None
 
         try:
-            return json.loads(res["content"])
-        except json.JSONDecodeError as e:
-            self.error(
-                f"Error processing JSON response from Umbrella Investigate: {e}")
+            return json.loads(r['content'])
+        except Exception as e:
+            self.error(f"Error parsing JSON from Cisco Umbrella API: {e}")
             return None
 
     def handleEvent(self, event):
@@ -142,46 +140,29 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
 
         if eventName == "DOMAIN_NAME":
             data = self.query(eventData)
-            if data is None:
+            if not data:
                 return
 
-            evt = SpiderFootEvent(
-                "RAW_RIR_DATA", str(data), self.__name__, event)
+            evt = SpiderFootEvent('RAW_RIR_DATA', json.dumps(data), self.__name__, event)
             self.notifyListeners(evt)
 
-            domain = data.get("domain")
-            if domain:
-                evt = SpiderFootEvent(
-                    "DOMAIN_NAME", domain, self.__name__, event)
-                self.notifyListeners(evt)
+            # Extract and notify about found domains
+            if data.get('data'):
+                for item in data['data']:
+                    if 'cohosted_sites' in item:
+                        for site in item['cohosted_sites']:
+                            if self.getTarget().matches(site, includeChildren=True, includeParents=True):
+                                continue
+                            evt = SpiderFootEvent('CO_HOSTED_SITE', site, self.__name__, event)
+                            self.notifyListeners(evt)
 
-            # Fix: Only iterate if data.get("data") is not None
-            results = data.get("data")
-            if results is not None:
-                for result in results:
-                    for category in result.get(
-                        "categories",
-                    ):
-                        evt = SpiderFootEvent(
-                            "RAW_RIR_DATA", category, self.__name__, event
-                        )
-                        self.notifyListeners(evt)
-
-                    for cohosted_site in result.get(
-                        "cohosted_sites",
-                    ):
-                        evt = SpiderFootEvent(
-                            "CO_HOSTED_SITE", cohosted_site, self.__name__, event
-                        )
-                        self.notifyListeners(evt)
-
-                    for geo in result.get(
+                    for geo in item.get(
                         "geos",
                     ):
                         evt = SpiderFootEvent("GEOINFO", geo, self.__name__, event)
                         self.notifyListeners(evt)
 
-                    for ip in result.get(
+                    for ip in item.get(
                         "ips",
                     ):
                         if ":" in ip:
@@ -192,14 +173,14 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
                                 "IP_ADDRESS", ip, self.__name__, event)
                         self.notifyListeners(evt)
 
-                    registrar = result.get("registrar")
+                    registrar = item.get("registrar")
                     if registrar:
                         evt = SpiderFootEvent(
                             "DOMAIN_REGISTRAR", registrar, self.__name__, event
                         )
                         self.notifyListeners(evt)
 
-                    whois = result.get("whois")
+                    whois = item.get("whois")
                     if whois:
                         evt = SpiderFootEvent(
                             "DOMAIN_WHOIS", whois, self.__name__, event)

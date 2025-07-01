@@ -81,25 +81,19 @@ class sfp_luminar(SpiderFootPlugin):
                                useragent=self.opts['_useragent'],
                                timeout=self.opts['_fetchtimeout'])
 
-        if res['code'] in ["400", "401", "403", "500"]:
-            self.error(f"Unexpected HTTP response code {res['code']} from Luminar")
-            self.errorState = True
+        if res['code'] != '200':
+            self.error(f"Unexpected HTTP response code {res['code']} from Luminar API.")
             return None
-
-        if res['content'] is None:
-            return None
-
+        
         try:
             data = json.loads(res['content'])
+            # Check if data contains results
+            if data.get('data'):
+                return data
+            return None
         except Exception as e:
-            self.debug(f"Error processing JSON response from Luminar: {e}")
+            self.error(f"Error parsing JSON from Luminar API: {e}")
             return None
-
-        if not data:
-            self.debug(f"No results found for {qry}")
-            return None
-
-        return data
 
     def handleEvent(self, event):
         eventName = event.eventType
@@ -130,6 +124,12 @@ class sfp_luminar(SpiderFootPlugin):
 
         if not data:
             self.info(f"No results found for {eventData}")
+            return
+
+        for result in data.get('data', []):
+            threat_info = f"Threat: {result.get('id')}\nDescription: {result.get('description')}\n"
+            e = SpiderFootEvent('THREAT_INTELLIGENCE', threat_info, self.__name__, event)
+            self.notifyListeners(e)
             return
 
         for result in data.get('data', []):
