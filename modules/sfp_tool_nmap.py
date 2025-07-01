@@ -197,10 +197,11 @@ class sfp_tool_nmap(SpiderFootPlugin):
                 for line in content.split('\n'):
                     if "OS details:" in line:
                         junk, opsys = line.split(": ")
-                if opsys:
-                    evt = SpiderFootEvent(
-                        "OPERATING_SYSTEM", opsys, self.__name__, event)
-                    self.notifyListeners(evt)
+                if not opsys:
+                    opsys = "Unknown"
+                evt = SpiderFootEvent(
+                    "OPERATING_SYSTEM", opsys, self.__name__, event)
+                self.notifyListeners(evt)
             except Exception as e:
                 self.error("Couldn't parse the output of Nmap: " + str(e))
                 return

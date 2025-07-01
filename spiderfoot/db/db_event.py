@@ -317,10 +317,10 @@ class EventManager:
         storeData = sfEvent.data
         if isinstance(truncateSize, int) and truncateSize > 0:
             storeData = storeData[0:truncateSize]
-        # Always store generated as int (ms)
-        generated_ms = int(sfEvent.generated)
+        # Store generated as float (seconds)
+        generated_val = float(sfEvent.generated)
         qry = "INSERT INTO tbl_scan_results (scan_instance_id, hash, type, generated, confidence, visibility, risk, module, data, source_event_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        qvals = [instanceId, sfEvent.hash, sfEvent.eventType, generated_ms, sfEvent.confidence, sfEvent.visibility, sfEvent.risk, sfEvent.module, storeData, sfEvent.sourceEventHash]
+        qvals = [instanceId, sfEvent.hash, sfEvent.eventType, generated_val, sfEvent.confidence, sfEvent.visibility, sfEvent.risk, sfEvent.module, storeData, sfEvent.sourceEventHash]
         with self.dbhLock:
             try:
                 self.dbh.execute(qry, qvals)
@@ -524,17 +524,11 @@ class EventManager:
         if 'start_date' in criteria and criteria['start_date']:
             qry += " AND generated >= ?"
             start = criteria['start_date']
-            if start > 1000000000000:  # already ms
-                qvars.append(start)
-            else:
-                qvars.append(int(start * 1000))
+            qvars.append(float(start))
         if 'end_date' in criteria and criteria['end_date']:
             qry += " AND generated <= ?"
             end = criteria['end_date']
-            if end > 1000000000000:
-                qvars.append(end)
-            else:
-                qvars.append(int(end * 1000))
+            qvars.append(float(end))
         if filterFp:
             qry += " AND false_positive <> 1"
         qry += " ORDER BY generated DESC"

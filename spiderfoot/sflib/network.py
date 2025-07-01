@@ -192,9 +192,9 @@ def fetchUrl(url: str, cookies: str = None, timeout: int = 30, useragent: str = 
     try:
         parsed_url = urllib.parse.urlparse(url)
     except Exception:
-        return result
+        return None
     if parsed_url.scheme not in ['http', 'https']:
-        return result
+        return None
     session = getSession()
     try:
         if headOnly:
