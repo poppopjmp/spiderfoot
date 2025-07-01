@@ -16,7 +16,7 @@ import sys
 import os
 
 from spiderfoot.sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 # Add the project root to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
@@ -144,6 +144,11 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         mock_fetch.return_value = {'code': 200, 'content': '{"domain": "google.com", "data": [{"categories": ["Search Engine"], "cohosted_sites": ["site1.com"], "geos": ["US"], "ips": ["8.8.8.8"], "registrar": "Registrar Inc.", "whois": "whois data"}] }'}
         # Patch notifyListeners to avoid side effects
         module.notifyListeners = MagicMock()
+        # Set the target to avoid TypeError
+        if hasattr(module, 'setTarget'):
+            module.setTarget(SpiderFootTarget(evt.data, evt.eventType))
+        else:
+            module._currentTarget = SpiderFootTarget(evt.data, evt.eventType)
         result = module.handleEvent(evt)
         self.assertIsNone(result)  # handleEvent() does not return any value
         # Check that notifyListeners was called for each event type
