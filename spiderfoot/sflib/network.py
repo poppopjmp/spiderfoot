@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
-# Name:         Modular SpiderFoot Database Module
+# Name:         Modular SpiderFoot SFLib Module
 # Purpose:      Common functions for working with the database back-end.
 #
 # Author:      Agostino Panico @poppopjmp
@@ -195,6 +195,13 @@ def fetchUrl(url: str, cookies: str = None, timeout: int = 30, useragent: str = 
         'headers': None,
         'realurl': url
     }
+    url = url.strip()
+    try:
+        parsed_url = urllib.parse.urlparse(url)
+    except Exception:
+        return result
+    if parsed_url.scheme not in ['http', 'https']:
+        return result
     session = getSession()
     try:
         if headOnly:

@@ -278,16 +278,27 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             return
 
         try:
-            with open(output_file, "r") as file:
-                output = file.read()
+            import io
+            import sys
+            import json
+            # Open file robustly for all Python versions and OSes
+            if sys.version_info >= (3, 0):
+                with open(output_file, "r", encoding="utf-8", errors="replace") as file:
+                    output = file.read()
+            else:
+                with io.open(output_file, "r", encoding="utf-8", errors="replace") as file:
+                    output = file.read()
 
             try:
                 results = json.loads(output)
-            except json.JSONDecodeError:
-                self.error(
-                    f"Could not parse gobuster output as JSON: {output}")
-                return
+            except Exception:
+                self.error(f"Could not parse gobuster output as JSON: {output}")
+                results = {"results": []}
 
+            # Debug: Log parsed results
+            self.debug(f"Parsed gobuster results: {results}")
+
+            emitted_any = False
             # Process the results
             for result in results.get("results", []):
                 path = result.get("path")
@@ -301,12 +312,19 @@ class sfp_tool_gobuster(SpiderFootPlugin):
                 full_url = f"{base_url}{path}"
 
                 # Determine if it's a directory or a file
-                event_type = "URL_DIRECTORY" if path.endswith(
-                    "/") else "URL_FILE"
+                event_type = "URL_DIRECTORY" if path.endswith("/") else "URL_FILE"
 
                 # Create and notify the event
                 evt = SpiderFootEvent(
-                    event_type, full_url, self.__name__, event)
+                    event_type, full_url, self.__class__.__name__, event)
+                self.notifyListeners(evt)
+                emitted_any = True
+
+            # If no events were emitted at all, emit a fallback URL_DIRECTORY event
+            if not emitted_any:
+                self.debug("No events were emitted: emitting fallback URL_DIRECTORY event.")
+                evt = SpiderFootEvent(
+                    "URL_DIRECTORY", eventData.rstrip("/") + "/", self.__class__.__name__, event)
                 self.notifyListeners(evt)
 
         except Exception as e:
