@@ -19,7 +19,8 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_google_tag_manager(SpiderFootPlugin):
-
+    """SpiderFoot plugin to search Google Tag Manager (GTM) for hosts sharing the same GTM code."""
+    __name__ = "sfp_google_tag_manager"
     meta = {
         'name': "Google Tag Manager",
         'summary': "Search Google Tag Manager (GTM) for hosts sharing the same GTM code.",

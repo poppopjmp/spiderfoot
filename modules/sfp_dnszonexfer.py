@@ -19,7 +19,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dnszonexfer(SpiderFootPlugin):
-
+    """SpiderFoot plugin for attempting a DNS zone transfer."""
     meta = {
         'name': "DNS Zone Transfer",
         'summary': "Attempts to perform a full DNS zone transfer.",

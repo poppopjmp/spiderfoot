@@ -18,7 +18,8 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_gleif(SpiderFootPlugin):
-
+    """SpiderFoot plugin for searching the Global LEI Index."""
+    __name__ = "sfp_gleif"
     meta = {
         'name': "GLEIF",
         'summary': "Look up company information from Global Legal Entity Identifier Foundation (GLEIF).",

@@ -14,7 +14,8 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_fortinet(SpiderFootPlugin):
-
+    """SpiderFoot plugin to check if an IP address is malicious according to FortiGuard Antispam."""
+    __name__ = "sfp_fortinet"
     meta = {
         'name': "FortiGuard Antispam",
         'summary': "Check if an IP address is malicious according to FortiGuard Antispam.",

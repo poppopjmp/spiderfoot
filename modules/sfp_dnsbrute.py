@@ -20,7 +20,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dnsbrute(SpiderFootPlugin):
-
+    """SpiderFoot plugin to brute-force hostnames and sub-domains."""
     meta = {
         'name': "DNS Brute-forcer",
         'summary': "Attempts to identify hostnames through brute-forcing common names and iterations.",

@@ -28,6 +28,7 @@ regexps = dict({
 
 
 class sfp_errors(SpiderFootPlugin):
+    """SpiderFoot plugin to identify common error messages in content like SQL errors, etc."""
     __name__ = "sfp_errors"
 
     meta = {

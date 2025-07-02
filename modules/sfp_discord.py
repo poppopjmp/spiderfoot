@@ -3,6 +3,7 @@ import json
 import requests
 
 class sfp_discord(SpiderFootPlugin):
+    """Discord Channel Monitor"""
     meta = {
         'name': "Discord Channel Monitor",
         'summary': "Monitors specified Discord channels for new messages and emits events.",

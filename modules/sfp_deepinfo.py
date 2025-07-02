@@ -16,6 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_deepinfo(SpiderFootPlugin):
+    """Deepinfo API integration for SpiderFoot"""
     meta = {
         'name': "Deepinfo",
         'summary': "Obtain Passive DNS and other information from Deepinfo",

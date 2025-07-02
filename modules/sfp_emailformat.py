@@ -19,7 +19,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_emailformat(SpiderFootPlugin):
-
+    """EmailFormat plugin for looking up email address formats."""
     meta = {
         'name': "EmailFormat",
         'summary': "Look up e-mail addresses on email-format.com.",

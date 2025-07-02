@@ -26,7 +26,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_filemeta(SpiderFootPlugin):
-
+    """SpiderFoot plugin for extracting file metadata."""
     meta = {
         'name': "File Metadata Extractor",
         'summary': "Extracts meta data from documents and images.",

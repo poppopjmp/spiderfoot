@@ -15,7 +15,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_email(SpiderFootPlugin):
-
+    """SpiderFoot plugin to identify e-mail addresses in scraped webpages."""
     meta = {
         'name': "E-Mail Address Extractor",
         'summary': "Identify e-mail addresses in any obtained data.",

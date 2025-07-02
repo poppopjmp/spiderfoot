@@ -17,6 +17,8 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dehashed(SpiderFootPlugin):
+    """Dehashed API integration for SpiderFoot"""
+
     __name__ = "sfp_dehashed"
 
     meta = {

@@ -22,7 +22,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_flickr(SpiderFootPlugin):
-
+    """SpiderFoot plugin for searching Flickr API for domains, URLs and emails related to the specified domain."""
     meta = {
         'name': "Flickr",
         'summary': "Search Flickr for domains, URLs and emails related to the specified domain.",

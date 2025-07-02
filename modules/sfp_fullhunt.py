@@ -16,7 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_fullhunt(SpiderFootPlugin):
-
+    """SpiderFoot plugin to identify domain attack surface using FullHunt API."""
     meta = {
         'name': "FullHunt",
         'summary': "Identify domain attack surface using FullHunt API.",

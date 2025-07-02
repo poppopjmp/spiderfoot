@@ -17,7 +17,8 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_fullcontact(SpiderFootPlugin):
-
+    """SpiderFoot plugin to gather domain and e-mail information from FullContact.com API."""
+    __name__ = "sfp_fullcontact"
     meta = {
         'name': "FullContact",
         'summary': "Gather domain and e-mail information from FullContact.com API.",

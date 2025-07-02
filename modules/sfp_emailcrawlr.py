@@ -21,7 +21,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_emailcrawlr(SpiderFootPlugin):
-
+    """EmailCrawlr plugin for searching email addresses and phone numbers associated with a domain."""
     meta = {
         'name': "EmailCrawlr",
         'summary': "Search EmailCrawlr for email addresses and phone numbers associated with a domain.",

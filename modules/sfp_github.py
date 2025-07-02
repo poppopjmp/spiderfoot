@@ -17,7 +17,8 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_github(SpiderFootPlugin):
-
+    """SpiderFoot plugin to identify public code repositories in Github associated with your target."""
+    __name__ = "sfp_github"
     meta = {
         'name': "Github",
         'summary': "Identify associated public code repositories on Github.",

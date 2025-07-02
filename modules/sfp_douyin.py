@@ -1,6 +1,7 @@
 from spiderfoot import SpiderFootPlugin, SpiderFootEvent
 
 class sfp_douyin(SpiderFootPlugin):
+    """Douyin plugin for monitoring video uploads."""
     meta = {
         'name': "Douyin Monitor",
         'summary': "Monitors Douyin for new videos and emits events.",

@@ -16,6 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dns_for_family(SpiderFootPlugin):
+    """DNS for Family"""
 
     meta = {
         'name': "DNS for Family",

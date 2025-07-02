@@ -1,6 +1,7 @@
 from spiderfoot import SpiderFootPlugin
 
 class sfp_example(SpiderFootPlugin):
+    """Example SpiderFoot plugin."""
     meta = {
         'name': 'sfp_example',
         'title': 'Example',

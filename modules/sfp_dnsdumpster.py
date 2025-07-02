@@ -19,7 +19,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dnsdumpster(SpiderFootPlugin):
-
+    """SpiderFoot plugin for passive subdomain enumeration using HackerTarget's DNSDumpster."""
     meta = {
         "name": "DNSDumpster",
         "summary": "Passive subdomain enumeration using HackerTarget's DNSDumpster",

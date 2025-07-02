@@ -21,7 +21,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_dnsraw(SpiderFootPlugin):
-
+    """SpiderFoot plugin for collecting raw DNS records such as MX, TXT and others."""
     meta = {
         'name': "DNS Raw Records",
         'summary': "Retrieves raw DNS records such as MX, TXT and others.",

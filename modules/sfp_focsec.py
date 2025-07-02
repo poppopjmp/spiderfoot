@@ -17,7 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_focsec(SpiderFootPlugin):
-
+    """SpiderFoot plugin for looking up IP address information from Focsec."""
     meta = {
         'name': "Focsec",
         'summary': "Look up IP address information from Focsec.",
