@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..dependencies import get_app_config, optional_auth
-from spiderfoot import SpiderFoot
+from spiderfoot.sflib.core import SpiderFoot
 
 router = APIRouter()
 optional_auth_dep = Depends(optional_auth)

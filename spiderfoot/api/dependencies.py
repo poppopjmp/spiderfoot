@@ -3,7 +3,9 @@ Dependencies and helpers for SpiderFoot API
 """
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from spiderfoot import SpiderFootDb, SpiderFoot, SpiderFootHelpers
+from spiderfoot.db import SpiderFootDb
+from spiderfoot.sflib.core import SpiderFoot
+from spiderfoot.helpers import SpiderFootHelpers
 import multiprocessing as mp
 import logging
 

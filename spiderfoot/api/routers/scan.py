@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse, PlainTextResponse, Response
 from typing import List, Optional
-from spiderfoot import SpiderFootDb, SpiderFootHelpers, SpiderFoot, __version__
+from spiderfoot import SpiderFootDb, SpiderFootHelpers, __version__
 from spiderfoot.scan_service.scanner import startSpiderFootScanner
 from ..dependencies import get_app_config, get_api_key, optional_auth
 import csv
@@ -14,6 +14,7 @@ import logging
 from copy import deepcopy
 import multiprocessing as mp
 from fastapi import Body
+from spiderfoot.sflib.core import SpiderFoot
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
