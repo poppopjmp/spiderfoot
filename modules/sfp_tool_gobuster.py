@@ -288,6 +288,10 @@ class sfp_tool_gobuster(SpiderFootPlugin):
                     f"Could not parse gobuster output as JSON: {output}")
                 return
 
+            # Debug: Log parsed results
+            self.debug(f"Parsed gobuster results: {results}")
+
+            found_any = False
             # Process the results
             for result in results.get("results", []):
                 path = result.get("path")
@@ -301,13 +305,16 @@ class sfp_tool_gobuster(SpiderFootPlugin):
                 full_url = f"{base_url}{path}"
 
                 # Determine if it's a directory or a file
-                event_type = "URL_DIRECTORY" if path.endswith(
-                    "/") else "URL_FILE"
+                event_type = "URL_DIRECTORY" if path.endswith("/") else "URL_FILE"
 
                 # Create and notify the event
                 evt = SpiderFootEvent(
                     event_type, full_url, self.__name__, event)
                 self.notifyListeners(evt)
+                found_any = True
+
+            if not found_any:
+                self.debug("No URL_DIRECTORY or URL_FILE events were emitted: no results found in gobuster output.")
 
         except Exception as e:
             self.error(f"Error processing gobuster results: {e}")
