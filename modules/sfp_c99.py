@@ -17,6 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_c99(SpiderFootPlugin):
+    """SpiderFoot plugin to query the C99 API which offers various data (geo location, proxy detection, phone lookup, etc)."""
     meta = {
         "name": "C99",
         "summary": "Queries the C99 API which offers various data (geo location, proxy detection, phone lookup, etc).",

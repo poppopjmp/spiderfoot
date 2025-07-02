@@ -17,6 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_base64(SpiderFootPlugin):
+    """SpiderFoot plugin to identify Base64-encoded strings in URLs."""
     __name__ = "sfp_base64"
 
     meta = {

@@ -17,7 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_comodo(SpiderFootPlugin):
-
+    """SpiderFoot plugin to check if a host would be blocked by Comodo Secure DNS."""
     meta = {
         'name': "Comodo Secure DNS",
         'summary': "Check if a host would be blocked by Comodo Secure DNS.",

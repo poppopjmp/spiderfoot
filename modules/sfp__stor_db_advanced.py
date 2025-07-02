@@ -489,7 +489,7 @@ class AutoScaler:
 
 
 class sfp__stor_db_advanced(SpiderFootPlugin):
-    """Advanced enterprise storage module with Phase 2 features."""
+    """Advanced enterprise storage module Advanced features."""
 
     meta = {
         'name': "Advanced Database Storage (Enterprise)",

@@ -13,7 +13,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_bingsearch(SpiderFootPlugin):
-
+    """SpiderFoot plugin to obtain information from Bing to identify sub-domains and links."""
     meta = {
         'name': "Bing",
         'summary': "Obtain information from bing to identify sub-domains and links.",

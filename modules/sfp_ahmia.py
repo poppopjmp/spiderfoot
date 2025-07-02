@@ -20,7 +20,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_ahmia(SpiderFootPlugin):
-
+    """Search the Tor search engine 'Ahmia' for content related to the target."""
     meta = {
         'name': "Ahmia",
         'flags': ["tor"],

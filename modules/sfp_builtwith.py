@@ -16,7 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_builtwith(SpiderFootPlugin):
-
+    """SpiderFoot plugin to query BuiltWith.com's Domain API for information about your target's web technology stack, e-mail addresses and more."""
     meta = {
         'name': "BuiltWith",
         'summary': "Query BuiltWith.com's Domain API for information about your target's web technology stack, e-mail addresses and more.",

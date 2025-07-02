@@ -16,7 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_bingsharedip(SpiderFootPlugin):
-
+    """SpiderFoot plugin to search Bing for hosts sharing the same IP."""
     meta = {
         'name': "Bing (Shared IPs)",
         'summary': "Search Bing for hosts sharing the same IP.",

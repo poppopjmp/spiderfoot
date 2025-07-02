@@ -18,6 +18,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_criminalip(SpiderFootPlugin):
+    """SpiderFoot plugin to obtain information from CriminalIP."""
     meta = {
         "name": "CriminalIP",
         "summary": "Look up domain, phone and IP address information from CriminalIP.",

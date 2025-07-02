@@ -15,6 +15,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_bambenek(SpiderFootPlugin):
+    """SpiderFoot plugin to check if a host/domain or IP appears in Bambenek Consulting feeds."""
     meta = {
         "name": "Bambenek Consulting",
         "summary": "Check if a host/domain or IP appears in Bambenek Consulting feeds.",

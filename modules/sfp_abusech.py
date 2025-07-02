@@ -18,7 +18,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_abusech(SpiderFootPlugin):
-
+    """SpiderFoot plugin to check if a host/domain, IP address or netblock is malicious according to Abuse.ch."""
     meta = {
         'name': "abuse.ch",
         'summary': "Check if a host/domain, IP address or netblock is malicious according to Abuse.ch.",

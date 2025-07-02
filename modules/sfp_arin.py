@@ -17,6 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_arin(SpiderFootPlugin):
+    """SpiderFoot plugin to query the ARIN internet registry for contact information."""
     meta = {
         "name": "ARIN",
         "summary": "Queries ARIN registry for contact information.",

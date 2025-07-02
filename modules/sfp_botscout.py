@@ -19,7 +19,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_botscout(SpiderFootPlugin):
-
+    """SpiderFoot plugin to search BotScout.com for malicious IPs and email addresses."""
     meta = {
         'name': "BotScout",
         'summary': "Searches BotScout.com's database of spam-bot IP addresses and e-mail addresses.",

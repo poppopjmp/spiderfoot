@@ -1,6 +1,7 @@
 from spiderfoot import SpiderFootPlugin, SpiderFootEvent
 
 class sfp_aparat(SpiderFootPlugin):
+    """Monitors Aparat for new videos and emits events."""
     meta = {
         'name': "Aparat Monitor",
         'summary': "Monitors Aparat for new videos and emits events.",

@@ -16,7 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_blocklistde(SpiderFootPlugin):
-
+    """SpiderFoot plugin to check if a netblock or IP is malicious according to blocklist.de."""
     meta = {
         'name': "blocklist.de",
         'summary': "Check if a netblock or IP is malicious according to blocklist.de.",

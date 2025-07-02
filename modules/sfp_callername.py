@@ -17,6 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_callername(SpiderFootPlugin):
+    """SpiderFoot plugin to lookup US phone number location and reputation information."""
 
     meta = {
         'name': "CallerName",

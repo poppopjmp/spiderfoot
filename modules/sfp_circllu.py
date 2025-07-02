@@ -19,8 +19,8 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_circllu(SpiderFootPlugin):
-
-    meta = {
+    """SpiderFoot plugin to obtain information from CIRCL.LU's Passive DNS and Passive SSL databases."""
+    meta = {    
         'name': "CIRCL.LU",
         'summary': "Obtain information from CIRCL.LU's Passive DNS and Passive SSL databases.",
         'flags': ["apikey"],

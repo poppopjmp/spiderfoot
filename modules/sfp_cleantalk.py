@@ -16,7 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_cleantalk(SpiderFootPlugin):
-
+    """SpiderFoot plugin to check if a netblock or IP address is on CleanTalk.org's spam IP list."""
     meta = {
         'name': "CleanTalk Spam List",
         'summary': "Check if a netblock or IP address is on CleanTalk.org's spam IP list.",

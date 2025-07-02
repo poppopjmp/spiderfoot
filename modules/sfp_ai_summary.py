@@ -2,6 +2,7 @@ from spiderfoot import SpiderFootPlugin, SpiderFootEvent
 import openai
 
 class sfp_ai_summary(SpiderFootPlugin):
+    """Summarizes scan findings using an LLM (e.g., OpenAI's GPT)."""
     meta = {
         'name': "AI Threat Intelligence Summarizer",
         'summary': "Summarizes scan findings using an LLM.",

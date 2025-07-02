@@ -24,6 +24,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_censys(SpiderFootPlugin):
+    """SpiderFoot plugin to obtain host information from Censys.io."""
 
     meta = {
         'name': "Censys",

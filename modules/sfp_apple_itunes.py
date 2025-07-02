@@ -20,7 +20,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_apple_itunes(SpiderFootPlugin):
-
+    """Query Apple iTunes for mobile apps."""
     meta = {
         'name': "Apple iTunes",
         'summary': "Search Apple iTunes for mobile apps.",

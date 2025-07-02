@@ -1,6 +1,7 @@
 from spiderfoot import SpiderFootPlugin, SpiderFootEvent
 
 class sfp_arbitrum(SpiderFootPlugin):
+    """Monitors Arbitrum blockchain for transactions and emits events."""
     meta = {
         'name': "Arbitrum Blockchain Monitor",
         'summary': "Monitors Arbitrum blockchain for transactions and emits events.",

@@ -14,7 +14,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_cybercrimetracker(SpiderFootPlugin):
-
+    """SpiderFoot plugin to check if a host/domain or IP address is malicious according to CyberCrime-Tracker.net."""
     meta = {
         'name': "CyberCrime-Tracker.net",
         'summary': "Check if a host/domain or IP address is malicious according to CyberCrime-Tracker.net.",

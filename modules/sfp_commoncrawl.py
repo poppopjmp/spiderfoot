@@ -18,7 +18,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_commoncrawl(SpiderFootPlugin):
-
+    """SpiderFoot plugin to search CommonCrawl.org for URLs related to the target."""
     meta = {
         'name': "CommonCrawl",
         'summary': "Searches for URLs found through CommonCrawl.org.",

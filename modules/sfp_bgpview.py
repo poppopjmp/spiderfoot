@@ -17,6 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_bgpview(SpiderFootPlugin):
+    """SpiderFoot plugin to obtain network information from BGPView API."""
 
     meta = {
         'name': "BGPView",

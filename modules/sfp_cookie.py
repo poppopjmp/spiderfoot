@@ -16,7 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_cookie(SpiderFootPlugin):
-
+    """SpiderFoot plugin to extract cookies from HTTP headers."""
     meta = {
         'name': "Cookie Extractor",
         'summary': "Extract Cookies from HTTP headers.",

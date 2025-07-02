@@ -19,6 +19,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_binaryedge(SpiderFootPlugin):
+    """SpiderFoot plugin to query BinaryEdge API."""
 
     meta = {
         'name': "BinaryEdge",

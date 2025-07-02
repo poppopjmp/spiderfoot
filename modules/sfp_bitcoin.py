@@ -19,7 +19,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_bitcoin(SpiderFootPlugin):
-
+    """SpiderFoot plugin to identify bitcoin addresses in scraped webpages."""
     meta = {
         'name': "Bitcoin Finder",
         'summary': "Identify bitcoin addresses in scraped webpages.",

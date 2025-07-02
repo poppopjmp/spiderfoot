@@ -3,6 +3,7 @@ import json
 import requests
 
 class sfp_bluesky(SpiderFootPlugin):
+    """SpiderFoot plugin to monitor Bluesky for posts and emit events."""
     meta = {
         'name': "Bluesky Monitor",
         'summary': "Monitors Bluesky for posts and emits events.",

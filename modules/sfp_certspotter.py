@@ -21,6 +21,8 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_certspotter(SpiderFootPlugin):
+    """SpiderFoot plugin to gather information about SSL certificates from SSLMate CertSpotter API."""
+
     meta = {
         'name': "CertSpotter",
         'summary': "Gather information about SSL certificates from SSLMate CertSpotter API.",

@@ -16,7 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
 
 
 class sfp_binstring(SpiderFootPlugin):
-
+    """SpiderFoot plugin to identify strings in binary content."""
     meta = {
         'name': "Binary String Extractor",
         'summary': "Attempt to identify strings in binary content.",

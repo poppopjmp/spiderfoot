@@ -17,7 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_debounce(SpiderFootPlugin):
-
+    """SpiderFoot plugin to check whether an email is disposable using Debounce API."""
     meta = {
         'name': "Debounce",
         'summary': "Check whether an email is disposable",

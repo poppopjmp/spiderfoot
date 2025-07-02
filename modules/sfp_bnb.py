@@ -1,6 +1,7 @@
 from spiderfoot import SpiderFootPlugin, SpiderFootEvent
 
 class sfp_bnb(SpiderFootPlugin):
+    """SpiderFoot plugin to monitor Binance Smart Chain (BNB) for transactions and emit events."""
     meta = {
         'name': "BNB Chain Monitor",
         'summary': "Monitors Binance Smart Chain (BNB) for transactions and emits events.",

@@ -17,7 +17,7 @@ from test.unit.utils.test_base import SpiderFootTestBase
 
 
 class TestSpiderFootComprehensive(SpiderFootTestBase):
-    """Comprehensive test suite for SpiderFoot (sflib.py) class."""
+    """Comprehensive test suite for SpiderFoot (sflib) class Refactored Version."""
 
     def setUp(self):
         """Set up test environment."""

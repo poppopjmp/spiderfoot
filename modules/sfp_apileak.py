@@ -4,6 +4,7 @@ import re
 import base64
 
 class sfp_apileak(SpiderFootPlugin):
+    """Searches for leaked API keys and secrets on GitHub and paste sites."""
     meta = {
         'name': "API Key/Secret Leak Detector",
         'summary': "Searches for leaked API keys and secrets on GitHub and paste sites.",

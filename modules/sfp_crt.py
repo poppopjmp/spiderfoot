@@ -19,7 +19,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_crt(SpiderFootPlugin):
-
+    """SpiderFoot plugin to gather information about SSL certificates from crt.sh."""
     meta = {
         'name': "Certificate Transparency",
         'summary': "Gather hostnames from historical certificates in crt.sh.",

@@ -17,7 +17,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_company(SpiderFootPlugin):
-
+    """SpiderFoot plugin to identify company names in scraped webpages."""
     meta = {
         'name': "Company Name Extractor",
         'summary': "Identify company names in any obtained data.",

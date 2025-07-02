@@ -14,7 +14,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_botvrij(SpiderFootPlugin):
-
+    """SpiderFoot plugin to check if a domain is malicious according to botvrij.eu."""
     meta = {
         'name': "botvrij.eu",
         'summary': "Check if a domain is malicious according to botvrij.eu.",

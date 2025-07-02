@@ -18,7 +18,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_cloudflaredns(SpiderFootPlugin):
-
+    """SpiderFoot plugin to check if a host would be blocked by CloudFlare DNS content filters."""
     meta = {
         'name': "CloudFlare DNS",
         'summary': "Check if a host would be blocked by CloudFlare DNS.",

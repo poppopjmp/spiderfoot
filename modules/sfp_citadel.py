@@ -20,7 +20,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 
 class sfp_citadel(SpiderFootPlugin):
-
+    """SpiderFoot plugin to search Leak-Lookup.com's database of breaches."""
     meta = {
         'name': "Leak-Lookup",
         'summary': "Searches Leak-Lookup.com's database of breaches.",

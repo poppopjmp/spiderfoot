@@ -4,5 +4,4 @@ spiderfoot/* usr/lib/python3/dist-packages/spiderfoot/
 sf.py usr/lib/python3/dist-packages/
 sfcli.py usr/lib/python3/dist-packages/
 sfapi.py usr/lib/python3/dist-packages/
-sflib.py usr/lib/python3/dist-packages/
 sfwebui.py usr/lib/python3/dist-packages/
