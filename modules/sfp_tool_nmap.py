@@ -192,23 +192,25 @@ class sfp_tool_nmap(SpiderFootPlugin):
             return
 
         if eventName == "IP_ADDRESS":
+            import re
+            opsys = "Unknown"
+            emitted = False
             try:
-                import re
-                opsys = None
                 # Normalize line endings and decode output robustly
-                content_str = content.replace('\r\n', '\n').replace('\r', '\n') if isinstance(content, str) else str(content)
+                content_str = content.replace('\r\n', '\n').replace('\r', '\n') if content else ""
                 # Regex to match OS details line (works for both Windows and Linux)
                 match = re.search(r'OS details:\s*(.+)', content_str)
                 if match:
                     opsys = match.group(1).strip()
-                else:
-                    opsys = "Unknown"
                 evt = SpiderFootEvent(
                     "OPERATING_SYSTEM", opsys, self.__class__.__name__, event)
                 self.notifyListeners(evt)
+                emitted = True
             except Exception as e:
                 self.error("Couldn't parse the output of Nmap: " + str(e))
-                # Always emit event even on parse error
+                emitted = False
+            # Always emit fallback event if nothing was emitted
+            if not emitted:
                 evt = SpiderFootEvent(
                     "OPERATING_SYSTEM", "Unknown", self.__class__.__name__, event)
                 self.notifyListeners(evt)

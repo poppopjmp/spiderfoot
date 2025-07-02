@@ -298,7 +298,7 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             # Debug: Log parsed results
             self.debug(f"Parsed gobuster results: {results}")
 
-            found_directory = False
+            emitted_any = False
             # Process the results
             for result in results.get("results", []):
                 path = result.get("path")
@@ -318,12 +318,11 @@ class sfp_tool_gobuster(SpiderFootPlugin):
                 evt = SpiderFootEvent(
                     event_type, full_url, self.__class__.__name__, event)
                 self.notifyListeners(evt)
-                if event_type == "URL_DIRECTORY":
-                    found_directory = True
+                emitted_any = True
 
-            # Always emit at least one URL_DIRECTORY event if none found
-            if not found_directory:
-                self.debug("No URL_DIRECTORY events were emitted: emitting fallback event.")
+            # If no events were emitted at all, emit a fallback URL_DIRECTORY event
+            if not emitted_any:
+                self.debug("No events were emitted: emitting fallback URL_DIRECTORY event.")
                 evt = SpiderFootEvent(
                     "URL_DIRECTORY", eventData.rstrip("/") + "/", self.__class__.__name__, event)
                 self.notifyListeners(evt)
