@@ -284,13 +284,22 @@ class TestSpiderFootDbComprehensive(unittest.TestCase):
         self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_id, self.test_scan_id)
         root_event = SpiderFootEvent("ROOT", self.test_scan_id, "test_module")
         self.db.scanEventStore(self.test_scan_id, root_event)
-        start_time = time.time()
         event1 = SpiderFootEvent("IP_ADDRESS", "192.168.1.1", "test_module", root_event)
         self.db.scanEventStore(self.test_scan_id, event1)
         time.sleep(0.01)
         event2 = SpiderFootEvent("IP_ADDRESS", "192.168.1.2", "test_module", root_event)
         self.db.scanEventStore(self.test_scan_id, event2)
-        end_time = time.time()
+        # Print stored event timestamps for debugging
+        import sqlite3
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT generated, data FROM tbl_scan_results WHERE scan_instance_id = ? AND type = ?", (self.test_scan_id, "IP_ADDRESS"))
+            rows = cursor.fetchall()
+            print("Stored event timestamps:", rows)
+        # Add a buffer to the date range to account for storage rounding
+        start_time = int(event1.generated * 1000) - 100
+        end_time = int(event2.generated * 1000) + 100
+        print(f"Search range: {start_time} to {end_time}")
         criteria = {
             'scan_id': self.test_scan_id,
             'start_date': start_time,
@@ -298,6 +307,7 @@ class TestSpiderFootDbComprehensive(unittest.TestCase):
             'type': 'IP_ADDRESS'
         }
         results = self.db.search(criteria)
+        print("Search results:", results)
         self.assertGreaterEqual(len(results), 2)
     
     # ========================================================================
@@ -659,7 +669,7 @@ class TestSpiderFootDbComprehensive(unittest.TestCase):
 
     def test_search_non_overlapping_date_range(self):
         """Test searching with a date range that returns no results"""
-        self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_id, self.test_scan_id)
+        self.db.scanInstanceCreate(self.test_scan_id, self.test_scan_name, self.test_scan_target)
         root_event = SpiderFootEvent("ROOT", self.test_scan_id, "test_module")
         self.db.scanEventStore(self.test_scan_id, root_event)
         event = SpiderFootEvent("IP_ADDRESS", "192.168.1.1", "test_module", root_event)
