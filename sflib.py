@@ -37,6 +37,13 @@ import urllib3
 from publicsuffixlist import PublicSuffixList
 from spiderfoot import SpiderFootHelpers
 
+# Microservice integration
+try:
+    from services.config_adapter import get_config_adapter
+    _MICROSERVICES_AVAILABLE = True
+except ImportError:
+    _MICROSERVICES_AVAILABLE = False
+
 # For hiding the SSL warnings coming from the requests lib
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # noqa: DUO131
 
@@ -69,6 +76,17 @@ class SpiderFoot:
 
         self.opts = deepcopy(options)
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
+        
+        # Initialize microservice configuration adapter if available
+        self._config_adapter = None
+        if _MICROSERVICES_AVAILABLE:
+            try:
+                self._config_adapter = get_config_adapter()
+                # Load existing options as fallback configuration
+                self._config_adapter.load_fallback_config(self.opts)
+                self.log.info("Microservice configuration adapter initialized")
+            except Exception as e:
+                self.log.warning(f"Failed to initialize microservice configuration: {e}")
 
         # This is ugly but we don't want any fetches to fail - we expect
         # to encounter unverified SSL certs!
@@ -481,6 +499,72 @@ class SpiderFoot:
                                 opts[modName + ":" + opt]).split(",")
 
         return returnOpts
+
+    def configGet(self, key: str = None, scope: str = "global"):
+        """Get configuration from microservice or fallback to local.
+        
+        Args:
+            key: Configuration key (if None, gets all configs)
+            scope: Configuration scope
+            
+        Returns:
+            Configuration value(s)
+        """
+        if self._config_adapter:
+            try:
+                return self._config_adapter.get_config(key, scope)
+            except Exception as e:
+                self.log.warning(f"Failed to get config from microservice: {e}")
+        
+        # Fallback to local configuration
+        if key:
+            return self.opts.get(key)
+        else:
+            return deepcopy(self.opts)
+    
+    def configSet(self, key: str, value, scope: str = "global", description: str = None) -> bool:
+        """Set configuration via microservice or local fallback.
+        
+        Args:
+            key: Configuration key
+            value: Configuration value
+            scope: Configuration scope
+            description: Configuration description
+            
+        Returns:
+            True if successful
+        """
+        # Always update local opts
+        self.opts[key] = value
+        
+        if self._config_adapter:
+            try:
+                return self._config_adapter.set_config(key, value, scope, description)
+            except Exception as e:
+                self.log.warning(f"Failed to set config via microservice: {e}")
+        
+        return True
+    
+    def configUpdate(self, configs: dict, scope: str = "global") -> bool:
+        """Update multiple configurations via microservice or local fallback.
+        
+        Args:
+            configs: Dictionary of configuration key-value pairs
+            scope: Configuration scope
+            
+        Returns:
+            True if successful
+        """
+        # Always update local opts
+        self.opts.update(configs)
+        
+        if self._config_adapter:
+            try:
+                return self._config_adapter.update_configs(configs, scope)
+            except Exception as e:
+                self.log.warning(f"Failed to update configs via microservice: {e}")
+        
+        return True
 
     def modulesProducing(self, events: list) -> list:
         """Return an array of modules that produce the list of types supplied.

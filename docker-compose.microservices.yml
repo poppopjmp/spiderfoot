@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  # Service Discovery
+  service-discovery:
+    build:
+      context: .
+      dockerfile: services/Dockerfile.service-discovery
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - service_discovery_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - spiderfoot-microservices
+
+  # Configuration Service
+  config-service:
+    build:
+      context: .
+      dockerfile: services/Dockerfile.config-service
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_DISCOVERY_URL=http://service-discovery:8000
+    volumes:
+      - config_service_data:/app/data
+    depends_on:
+      - service-discovery
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - spiderfoot-microservices
+
+  # API Gateway (nginx-based)
+  api-gateway:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./services/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - service-discovery
+      - config-service
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - spiderfoot-microservices
+
+  # Monitoring and Metrics (Prometheus + Grafana)
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./services/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - spiderfoot-microservices
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=spiderfoot
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./services/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./services/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - spiderfoot-microservices
+
+  # Legacy SpiderFoot Web UI (for compatibility)
+  spiderfoot-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - PYTHONPATH=/app
+      - SERVICE_DISCOVERY_URL=http://service-discovery:8000
+      - USE_MICROSERVICES=true
+    volumes:
+      - spiderfoot_data:/app/data
+    depends_on:
+      - service-discovery
+      - config-service
+    networks:
+      - spiderfoot-microservices
+
+volumes:
+  service_discovery_data:
+  config_service_data:
+  prometheus_data:
+  grafana_data:
+  spiderfoot_data:
+
+networks:
+  spiderfoot-microservices:
+    driver: bridge
