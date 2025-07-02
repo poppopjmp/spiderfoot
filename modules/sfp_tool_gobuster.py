@@ -278,15 +278,22 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             return
 
         try:
-            with open(output_file, "r") as file:
-                output = file.read()
+            import io
+            import sys
+            # Open file robustly for all Python versions and OSes
+            if sys.version_info >= (3, 0):
+                with open(output_file, "r", encoding="utf-8", errors="replace") as file:
+                    output = file.read()
+            else:
+                with io.open(output_file, "r", encoding="utf-8", errors="replace") as file:
+                    output = file.read()
 
             try:
+                import json
                 results = json.loads(output)
-            except json.JSONDecodeError:
-                self.error(
-                    f"Could not parse gobuster output as JSON: {output}")
-                return
+            except Exception:
+                self.error(f"Could not parse gobuster output as JSON: {output}")
+                results = {"results": []}
 
             # Debug: Log parsed results
             self.debug(f"Parsed gobuster results: {results}")
@@ -309,7 +316,7 @@ class sfp_tool_gobuster(SpiderFootPlugin):
 
                 # Create and notify the event
                 evt = SpiderFootEvent(
-                    event_type, full_url, self.__name__, event)
+                    event_type, full_url, self.__class__.__name__, event)
                 self.notifyListeners(evt)
                 found_any = True
 
