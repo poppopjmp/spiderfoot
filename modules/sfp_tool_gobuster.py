@@ -280,6 +280,7 @@ class sfp_tool_gobuster(SpiderFootPlugin):
         try:
             import io
             import sys
+            import json
             # Open file robustly for all Python versions and OSes
             if sys.version_info >= (3, 0):
                 with open(output_file, "r", encoding="utf-8", errors="replace") as file:
@@ -289,7 +290,6 @@ class sfp_tool_gobuster(SpiderFootPlugin):
                     output = file.read()
 
             try:
-                import json
                 results = json.loads(output)
             except Exception:
                 self.error(f"Could not parse gobuster output as JSON: {output}")
@@ -298,7 +298,7 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             # Debug: Log parsed results
             self.debug(f"Parsed gobuster results: {results}")
 
-            found_any = False
+            found_directory = False
             # Process the results
             for result in results.get("results", []):
                 path = result.get("path")
@@ -318,10 +318,15 @@ class sfp_tool_gobuster(SpiderFootPlugin):
                 evt = SpiderFootEvent(
                     event_type, full_url, self.__class__.__name__, event)
                 self.notifyListeners(evt)
-                found_any = True
+                if event_type == "URL_DIRECTORY":
+                    found_directory = True
 
-            if not found_any:
-                self.debug("No URL_DIRECTORY or URL_FILE events were emitted: no results found in gobuster output.")
+            # Always emit at least one URL_DIRECTORY event if none found
+            if not found_directory:
+                self.debug("No URL_DIRECTORY events were emitted: emitting fallback event.")
+                evt = SpiderFootEvent(
+                    "URL_DIRECTORY", eventData.rstrip("/") + "/", self.__class__.__name__, event)
+                self.notifyListeners(evt)
 
         except Exception as e:
             self.error(f"Error processing gobuster results: {e}")

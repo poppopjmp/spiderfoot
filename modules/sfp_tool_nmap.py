@@ -208,6 +208,10 @@ class sfp_tool_nmap(SpiderFootPlugin):
                 self.notifyListeners(evt)
             except Exception as e:
                 self.error("Couldn't parse the output of Nmap: " + str(e))
+                # Always emit event even on parse error
+                evt = SpiderFootEvent(
+                    "OPERATING_SYSTEM", "Unknown", self.__class__.__name__, event)
+                self.notifyListeners(evt)
                 return
 
         if eventName == "NETBLOCK_OWNER":
