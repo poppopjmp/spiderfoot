@@ -8,6 +8,31 @@
  Settings updated. These will take effect the next time you run a scan.
 </div>
 % endif
+
+<% missing_keys = [] %>
+% if not opts or not isinstance(opts, dict):
+<div class="alert alert-danger">
+ <h4>Error</h4>
+ Processing one or more of your inputs failed. Options data is missing or malformed.
+ % if error_message:
+ <br><small>${error_message}</small>
+ % endif
+</div>
+% else:
+% for k in ['__globaloptdescs__', '__modules__']:
+    % if k not in opts:
+        <% missing_keys.append(k) %>
+    % endif
+% endfor
+% if missing_keys:
+<div class="alert alert-danger">
+ <h4>Error</h4>
+ Processing one or more of your inputs failed. Required option keys missing: ${', '.join(missing_keys)}
+ % if error_message:
+ <br><small>${error_message}</small>
+ % endif
+</div>
+% else:
 <form class="form" action='${docroot}/savesettings' id="savesettingsform" method='POST' enctype="multipart/form-data">
 <div class='text-left'>
     <input type=hidden id='allopts' name='allopts' value=''>
@@ -46,7 +71,7 @@
 <thead><tr> <th>Option</th> <th>Value</th></tr></thead><tbody>
 % for opt in sorted(opts.keys()):
     % if not opt.startswith("__"):
-    <tr><td>${opts['__globaloptdescs__'].get(opt) or "No description available"}</td><td style='vertical-align: middle'>
+    <tr><td>${opts.get('__globaloptdescs__', {}).get(opt) or "No description available"}</td><td style='vertical-align: middle'>
         % if type(opts[opt]) is int:
         <div class='form-group'>
             <input id='${opt}' class='form-control' type=text value="${opts[opt]}">
@@ -203,5 +228,7 @@
 </div>
 </div> <!-- /tabbable tabs-left -->
 </form>
+% endif
+% endif
 <br><br>
 <%include file="FOOTER.tmpl"/>

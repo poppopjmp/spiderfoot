@@ -20,6 +20,7 @@ from .helpers import SpiderFootHelpers
 from .plugin import SpiderFootPlugin
 from .target import SpiderFootTarget
 from .threadpool import SpiderFootThreadPool
+from .sflib import SpiderFoot
 
 # Logger import - assuming it exists in the package
 try:
@@ -36,6 +37,7 @@ __all__ = [
     'SpiderFootPlugin',
     'SpiderFootTarget',
     'SpiderFootThreadPool',
+    'SpiderFoot',
     'logger',
     '__version__'
 ]

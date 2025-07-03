@@ -30,6 +30,10 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
         if hasattr(self, 'module'):
             self.register_event_emitter(self.module)
 
+        # Always return a valid scan instance for any scanId unless overridden in a test
+        self.mock_db = mock_db  # Save the mock for use outside the with block
+        self.mock_db.return_value.scanInstanceGet.return_value = ['scan_name', 'target', '', 0, 0, 'status']
+
     def test_error_page(self):
         with patch('cherrypy.response') as mock_response:
             self.webui.error_page()
@@ -59,6 +63,7 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
     def test_error(self):
         with patch('sfwebui.Template') as mock_template:
             mock_template.return_value.render.return_value = 'Error'
+            self.webui = SpiderFootWebUi(self.web_config, self.config)
             result = self.webui.error('Error')
             self.assertEqual(result, 'Error')
 
@@ -299,9 +304,12 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
                 'scan_name', 'example.com']
             mock_db.return_value.scanConfigGet.return_value = {
                 '_modulesenabled': 'module'}
+            mock_db.return_value.eventTypes.return_value = ['type1', 'type2']  # Patch eventTypes
             with patch('sfwebui.Template') as mock_template, \
                  patch('sfwebui.SpiderFootHelpers.targetTypeFromString', return_value='INTERNET_NAME'):
                 mock_template.return_value.render.return_value = 'clonescan'
+                # Re-instantiate webui inside patch context to ensure patching is effective
+                self.webui = SpiderFootWebUi(self.web_config, self.config)
                 result = self.webui.clonescan('id')
                 self.assertEqual(result, 'clonescan')
 
@@ -317,6 +325,8 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
                 'scan_name', 'target', '', 0, 0, 'status']
             with patch('sfwebui.Template') as mock_template:
                 mock_template.return_value.render.return_value = 'scaninfo'
+                # Patch any other DB methods if needed (e.g., scanConfigGet, eventTypes)
+                self.webui = SpiderFootWebUi(self.web_config, self.config)
                 result = self.webui.scaninfo('id')
                 self.assertEqual(result, 'scaninfo')
 
