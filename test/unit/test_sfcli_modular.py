@@ -1,5 +1,5 @@
 import unittest
-from spiderfoot.sfcli import SpiderFootCli
+from sfcli import SpiderFootCli
 import io
 import sys
 
