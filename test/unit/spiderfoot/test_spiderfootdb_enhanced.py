@@ -64,7 +64,8 @@ class TestSpiderFootDbComprehensive(unittest.TestCase):
         try:
             if os.path.exists(self.db_path):
                 os.remove(self.db_path)
-            os.rmdir(self.temp_dir)
+            import shutil
+            shutil.rmtree(self.temp_dir)
         except:
             pass
     
@@ -642,7 +643,8 @@ class TestSpiderFootDbComprehensive(unittest.TestCase):
             gc.collect()
             if os.path.exists(db_path2):
                 os.remove(db_path2)
-            os.rmdir(temp_dir2)
+            import shutil
+            shutil.rmtree(temp_dir2)
 
     def test_search_no_results(self):
         """Test searching for non-existent event types/data returns empty results"""

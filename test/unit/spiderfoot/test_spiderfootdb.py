@@ -6,6 +6,7 @@ from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 import time
 import os
+import shutil
 
 
 class TestSpiderFootDb(SpiderFootTestBase):
@@ -375,7 +376,8 @@ class TestSpiderFootDb(SpiderFootTestBase):
             gc.collect()
             if os.path.exists(db_path2):
                 os.remove(db_path2)
-            os.rmdir(temp_dir2)
+            import shutil
+            shutil.rmtree(temp_dir2)
 
     def test_database_resource_cleanup_robustness(self):
         import gc
@@ -550,7 +552,8 @@ class TestSpiderFootDbIntegration(SpiderFootTestBase):
             gc.collect()
             if os.path.exists(db_path2):
                 os.remove(db_path2)
-            os.rmdir(temp_dir2)
+            import shutil
+            shutil.rmtree(temp_dir2)
 
     def tearDown(self):
         if hasattr(self, 'db') and self.db:
