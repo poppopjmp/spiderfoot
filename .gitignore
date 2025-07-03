@@ -9,7 +9,6 @@
 passwd
 spiderfoot.crt
 spiderfoot.key
-
 spiderfoot/static/node_modules/*
 
 spiderfoot/static/node_modules/alertifyjs/*
