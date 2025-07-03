@@ -27,7 +27,7 @@ class TestSpiderFootCliEssential(unittest.TestCase):
         """Set up test fixtures before each test method."""
         self.cli = SpiderFootCli()
         # Disable spool to avoid file issues
-        self.cli.ownopts['cli.spool'] = False
+        self.cli.config['cli.spool'] = False
         self.cli.version = "5.3.3"
 
     def tearDown(self):
@@ -42,18 +42,18 @@ class TestSpiderFootCliEssential(unittest.TestCase):
         self.assertIsInstance(cli.types, list)
         self.assertIsInstance(cli.correlationrules, list)
         self.assertEqual(cli.prompt, "sf> ")
-        self.assertIn('cli.color', cli.ownopts)
-        self.assertIn('cli.server_baseurl', cli.ownopts)
+        self.assertIn('cli.color', cli.config)
+        self.assertIn('cli.server_baseurl', cli.config)
 
     def test_default_options_configuration(self):
         """Test default options are properly configured."""
-        self.assertIsInstance(self.cli.ownopts, dict)
-        self.assertEqual(self.cli.ownopts['cli.server_baseurl'], "http://127.0.0.1:5001")
+        # self.assertIsInstance(self.cli.config, dict)  # CLIConfig is dict-like, not a dict
+        self.assertEqual(self.cli.config['cli.server_baseurl'], "http://127.0.0.1:8001")
         # Note: in setUp we disabled spool, but color should be true by default in fresh CLI
         default_cli = SpiderFootCli()
-        self.assertTrue(default_cli.ownopts['cli.color'])
+        self.assertTrue(default_cli.config['cli.color'])
         # CLI has various debug settings, just check that the option exists
-        self.assertIn('cli.debug', default_cli.ownopts)
+        self.assertIn('cli.debug', default_cli.config)
 
     def test_emptyline_handling(self):
         """Test empty line handling returns None."""
@@ -75,7 +75,7 @@ class TestSpiderFootCliEssential(unittest.TestCase):
 
     def test_dprint_with_colors(self):
         """Test dprint with color formatting."""
-        self.cli.ownopts['cli.color'] = True
+        self.cli.config['cli.color'] = True
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             self.cli.dprint("Colored message", color=bcolors.DARKRED)
             output = mock_stdout.getvalue()
@@ -84,7 +84,7 @@ class TestSpiderFootCliEssential(unittest.TestCase):
 
     def test_dprint_silent_mode(self):
         """Test dprint respects silent mode."""
-        self.cli.ownopts['cli.silent'] = True
+        self.cli.config['cli.silent'] = True
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             self.cli.dprint("Silent message")
             output = mock_stdout.getvalue()
@@ -100,7 +100,7 @@ class TestSpiderFootCliEssential(unittest.TestCase):
 
     def test_ddprint_debug_mode(self):
         """Test ddprint debug-specific output."""
-        self.cli.ownopts['cli.debug'] = True
+        self.cli.config['cli.debug'] = True
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             self.cli.ddprint("Debug specific message")
             output = mock_stdout.getvalue()
@@ -177,29 +177,21 @@ class TestSpiderFootCliEssential(unittest.TestCase):
         self.assertIn("IP_ADDRESS", completions)
 
     # Request Method Tests (with proper mocking)
-    @patch('sfcli.requests.get')
-    def test_request_get_success(self, mock_get):
+    @patch('spiderfoot.cli.network.SpiderFootApiClient.request')
+    def test_request_get_success(self, mock_request):
         """Test successful GET request to server."""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.text = '{"status": "ok"}'
-        mock_get.return_value = mock_response
-        
+        mock_request.return_value = '{"status": "ok"}'
         result = self.cli.request("/test")
         self.assertEqual(result, '{"status": "ok"}')
-        mock_get.assert_called_once()
+        mock_request.assert_called_once()
 
-    @patch('sfcli.requests.post')
-    def test_request_post_success(self, mock_post):
+    @patch('spiderfoot.cli.network.SpiderFootApiClient.request')
+    def test_request_post_success(self, mock_request):
         """Test successful POST request to server."""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.text = '{"result": "success"}'
-        mock_post.return_value = mock_response
-        
+        mock_request.return_value = '{"result": "success"}'
         result = self.cli.request("/test", post={"data": "test"})
         self.assertEqual(result, '{"result": "success"}')
-        mock_post.assert_called_once()
+        mock_request.assert_called_once()
 
     def test_request_invalid_url(self):
         """Test request with invalid URL."""
@@ -209,28 +201,24 @@ class TestSpiderFootCliEssential(unittest.TestCase):
         result = self.cli.request(None)
         self.assertIsNone(result)
 
-    @patch('sfcli.requests.get')
-    def test_request_connection_error(self, mock_get):
+    @patch('spiderfoot.cli.network.SpiderFootApiClient.request')
+    def test_request_connection_error(self, mock_request):
         """Test request handling connection errors."""
-        mock_get.side_effect = Exception("Connection failed")
+        mock_request.side_effect = Exception("Connection failed")
         result = self.cli.request("/test")
         self.assertIsNone(result)
 
-    @patch('sfcli.requests.get')
-    def test_request_server_error(self, mock_get):
+    @patch('spiderfoot.cli.network.SpiderFootApiClient.request')
+    def test_request_server_error(self, mock_request):
         """Test request handling server errors."""
-        mock_response = Mock()
-        mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = Exception("Server Error")
-        mock_get.return_value = mock_response
-        
+        mock_request.side_effect = Exception("Server Error")
         result = self.cli.request("/test")
         self.assertIsNone(result)
 
     # Command Shortcut Tests
     def test_do_debug_toggle(self):
         """Test debug command toggles debug mode."""
-        original_debug = self.cli.ownopts['cli.debug']
+        original_debug = self.cli.config['cli.debug']
         with patch.object(self.cli, 'do_set') as mock_set:
             self.cli.do_debug("")
             mock_set.assert_called_once()
@@ -243,7 +231,7 @@ class TestSpiderFootCliEssential(unittest.TestCase):
 
     def test_do_spool_without_file(self):
         """Test spool command without spool file set."""
-        self.cli.ownopts['cli.spool_file'] = ""
+        self.cli.config['cli.spool_file'] = ""
         result = self.cli.do_spool("on")
         self.assertIsNone(result)
 
@@ -261,9 +249,10 @@ class TestSpiderFootCliEssential(unittest.TestCase):
             output = mock_stdout.getvalue()
             self.assertIn("Unknown command", output)
 
-    # Color Configuration Tests    def test_color_disable_functionality(self):
+    # Color Configuration Tests
+    def test_color_disable_functionality(self):
         """Test color output can be disabled."""
-        self.cli.ownopts['cli.color'] = False
+        self.cli.config['cli.color'] = False
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             self.cli.dprint("Test message")  # Don't force color when disabled
             output = mock_stdout.getvalue()
@@ -287,15 +276,15 @@ class TestSpiderFootCliEssential(unittest.TestCase):
             'cli.username', 'cli.password', 'cli.server_baseurl'
         ]
         for option in required_options:
-            self.assertIn(option, self.cli.ownopts)
+            self.assertIn(option, self.cli.config)
 
     def test_server_baseurl_default(self):
         """Test server base URL has correct default."""
-        self.assertEqual(self.cli.ownopts['cli.server_baseurl'], "http://127.0.0.1:5001")
+        self.assertEqual(self.cli.config['cli.server_baseurl'], "http://127.0.0.1:8001")
 
     def test_ssl_verify_default(self):
         """Test SSL verification is enabled by default."""
-        self.assertTrue(self.cli.ownopts['cli.ssl_verify'])
+        self.assertTrue(self.cli.config['cli.ssl_verify'])
 
 
 if __name__ == '__main__':

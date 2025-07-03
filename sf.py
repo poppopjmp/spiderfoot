@@ -237,7 +237,7 @@ def main():
                 f"ERROR: spiderfoot.db file exists in {os.path.dirname(__file__)}")
             print("SpiderFoot no longer supports loading the spiderfoot.db database from the application directory.")
             print(
-                f"The database is now loaded from your home directory: {Path.home()}/.spiderfoot/spiderfoot.db")
+                f"The database is now loaded from your home directory: {SpiderFootHelpers.dataPath()}/spiderfoot.db")
             print(
                 f"This message will go away once you move or remove spiderfoot.db from {os.path.dirname(__file__)}")
             sys.exit(-1)
@@ -247,7 +247,7 @@ def main():
             print(f"ERROR: passwd file exists in {os.path.dirname(__file__)}")
             print("SpiderFoot no longer supports loading credentials from the application directory.")
             print(
-                f"The passwd file is now loaded from your home directory: {Path.home()}/.spiderfoot/passwd")
+                f"The passwd file is now loaded from your home directory: {SpiderFootHelpers.dataPath()}/passwd")
             print(
                 f"This message will go away once you move or remove passwd from {os.path.dirname(__file__)}")
             sys.exit(-1)

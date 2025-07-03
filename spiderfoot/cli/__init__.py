@@ -1,0 +1,1 @@
+# SpiderFoot CLI package
