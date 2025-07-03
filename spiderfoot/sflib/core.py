@@ -447,3 +447,9 @@ class SpiderFoot:
         """Delegate to config.configUnserialize."""
         from .config import configUnserialize
         return configUnserialize(opts, referencePoint, filterSystem)
+
+    def getEventTypes(self):
+        return self.opts.get('__eventtypes__', [])
+
+    def getModules(self):
+        return self.opts.get('__modules__', {})

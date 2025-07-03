@@ -15,6 +15,7 @@ from copy import deepcopy
 import multiprocessing as mp
 from fastapi import Body
 from spiderfoot.sflib.core import SpiderFoot
+from pydantic import BaseModel, Field
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -26,6 +27,14 @@ offset_query = Query(0, ge=0)
 
 scan_metadata_body = Body(...)
 scan_notes_body = Body(...)
+
+# Request body models
+class ScanRequest(BaseModel):
+    name: str = Field(..., description="Name of the scan")
+    target: str = Field(..., description="Target for the scan")
+    modules: Optional[List[str]] = Field(None, description="List of module names to run")
+    type_filter: Optional[List[str]] = Field(None, description="List of event types to include")
+    # Add other fields as necessary for scan configuration
 
 
 # Helper/background task (move from sfapi.py)
@@ -98,12 +107,12 @@ async def list_scans(
 
 
 @router.post("/scans", status_code=201)
-async def create_scan(scan_request, background_tasks: BackgroundTasks, api_key: str = api_key_dep):
+async def create_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks, api_key: str = api_key_dep):
     """
     Create and start a new scan.
 
     Args:
-        scan_request: Scan creation request body.
+        scan_request: Scan creation request body (ScanRequest model).
         background_tasks (BackgroundTasks): FastAPI background tasks.
         api_key (str): API key for authentication.
 
@@ -312,6 +321,12 @@ async def export_scan_event_results(
     """
     config = get_app_config()
     dbh = SpiderFootDb(config.get_config())
+    # Check if scan exists before querying events
+    scan = dbh.scanInstanceGet(scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    if event_type is None:
+        event_type = "ALL"
     data = dbh.scanResultEvent(scan_id, event_type)
     rows = []
     for row in data:

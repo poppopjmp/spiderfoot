@@ -9,6 +9,24 @@ import argparse
 import uvicorn
 from spiderfoot.api.main import app
 
+# Re-export legacy API symbols for test and compatibility
+from spiderfoot.api.dependencies import get_app_config, optional_auth
+from spiderfoot.api.models import ScanRequest, WorkspaceRequest, ScanResponse, WorkspaceResponse
+from spiderfoot.api.search_base import search_base
+from spiderfoot.api.dependencies import app_config
+from spiderfoot.db import SpiderFootDb
+from spiderfoot.sflib.core import SpiderFoot
+from spiderfoot.helpers import SpiderFootHelpers
+from spiderfoot.api.utils import clean_user_input, build_excel
+from spiderfoot.api.routers.websocket import WebSocketManager
+import openpyxl
+import logging
+
+# For test patching and legacy compatibility
+security = optional_auth
+logger = logging.getLogger("sfapi")
+Config = get_app_config().__class__ if get_app_config() else None
+
 def main():
     """Main function to run the FastAPI application (modular)"""
     parser = argparse.ArgumentParser(description='SpiderFoot REST API Server')

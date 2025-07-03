@@ -21,13 +21,15 @@ async def list_entity_types(api_key: str = optional_auth_dep):
     Raises:
         HTTPException: On error.
     """
+    import traceback
     try:
         config = get_app_config()
         sf = SpiderFoot(config.get_config())
         types = sf.getEventTypes()
         return {"entity_types": types}
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to list entity types") from e
+        print("EXCEPTION TRACEBACK:\n", traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to list entity types: {e}") from e
 
 
 @router.get("/data/modules")
@@ -44,13 +46,15 @@ async def list_modules(api_key: str = optional_auth_dep):
     Raises:
         HTTPException: On error.
     """
+    import traceback
     try:
         config = get_app_config()
         sf = SpiderFoot(config.get_config())
         modules = sf.getModules()
         return {"modules": modules}
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to list modules") from e
+        print("EXCEPTION TRACEBACK:\n", traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to list modules: {e}") from e
 
 
 @router.get("/data/sources")

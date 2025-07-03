@@ -649,6 +649,9 @@ class SpiderFootDb:
         return self._config.scanConfigSet(scan_id, optMap)
     def scanConfigGet(self, scan_id):
         return self._config.scanConfigGet(scan_id)
+    def scanConfigDelete(self, *args, **kwargs):
+        """Stub for API/test compatibility. Does nothing."""
+        return True
     # --- EVENT TYPES ---
     def eventTypes(self, *args, **kwargs):
         return self._core.eventTypes(*args, **kwargs)
@@ -818,3 +821,7 @@ class SpiderFootDb:
                         continue
                     raise
             self.conn.commit()
+
+    def scanResultDelete(self, *args, **kwargs):
+        """Stub for API/test compatibility. Does nothing."""
+        return True

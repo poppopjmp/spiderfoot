@@ -52,10 +52,16 @@ async def update_config(options: dict = config_body, api_key: str = optional_aut
     """
     try:
         config = get_app_config()
+        # Validate known config options
         for k, v in options.items():
+            if k == "_debug" and not isinstance(v, bool):
+                raise HTTPException(status_code=422, detail="_debug must be a boolean")
+            # Add more validation for other keys as needed
             config.set_config_option(k, v)
         config.save_config()
         return {"success": True, "message": "Config updated"}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to update config: {e}")
         raise HTTPException(status_code=500, detail="Failed to update config") from e
@@ -145,9 +151,17 @@ async def update_module_options(module_name: str, options: dict = config_body, a
         modules = config.get_config().get("__modules__", {})
         if module_name not in modules:
             raise HTTPException(status_code=404, detail="Module not found")
-        modules[module_name].update(options)
-        config.save_config()
-        return {"success": True, "message": f"Module {module_name} options updated"}
+        try:
+            modules[module_name].update(options)
+            config.save_config()
+            return {"success": True, "message": f"Module {module_name} options updated"}
+        except KeyError as ke:
+            # If Config.update_module_config raises KeyError with 404, return 404
+            if "404" in str(ke):
+                raise HTTPException(status_code=404, detail="Module not found")
+            raise
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to update module options: {e}")
         raise HTTPException(status_code=500, detail="Failed to update module options") from e

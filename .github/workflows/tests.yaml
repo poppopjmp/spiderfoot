@@ -55,7 +55,7 @@ jobs:
         timeout-minutes: 60
         continue-on-error: true
         run: |
-          coverage run -m pytest -n auto --dist loadfile --verbose --durations=5
+          python -m pytest -n auto --dist loadfile --cov-report term --cov=. .
           coverage report -m
           coverage xml
       - uses: codecov/codecov-action@v1
