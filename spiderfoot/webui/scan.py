@@ -160,7 +160,20 @@ class ScanEndpoints:
         data = dbh.scanInstanceList()
         retdata = []
         for row in data:
-            retdata.append(row)
+            # row: [guid, name, seed_target, created, started, ended, status, element_count]
+            scan_id = row[0]
+            # Get risk summary for this scan
+            riskmatrix = {"HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0}
+            try:
+                correlations = dbh.scanCorrelationSummary(scan_id, by="risk")
+                if correlations:
+                    for r in correlations:
+                        if r[0] in riskmatrix:
+                            riskmatrix[r[0]] = r[1]
+            except Exception:
+                pass
+            # Append riskmatrix as 9th element
+            retdata.append(list(row) + [riskmatrix])
         return retdata
 
     @cherrypy.expose
@@ -394,8 +407,8 @@ class ScanEndpoints:
 
     @cherrypy.expose
     def index(self):
-        import sfwebui  # for patching Template in testsstart the 
-        templ = sfwebui.Template(filename='spiderfoot/templates/index.tmpl', lookup=self.lookup)
+        import sfwebui  # for patching Template in tests
+        templ = sfwebui.Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, pageid="INDEX", version=__version__)
 
     @cherrypy.expose

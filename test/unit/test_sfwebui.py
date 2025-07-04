@@ -1,3 +1,6 @@
+import cheroot.test.webtest
+cheroot.test.webtest.getchar = lambda: 'I'
+
 import unittest
 from unittest.mock import patch, MagicMock
 import cherrypy

@@ -114,7 +114,7 @@ class WebUiRoutes(ScanEndpoints, ExportEndpoints, WorkspaceEndpoints, InfoEndpoi
         version_dirs = []
         current_version = 'latest'
         related = []
-        selected_file = doc or 'README.md'
+        selected_file = doc or 'Home.md'
         content = ''
         title = ''
 

@@ -8,6 +8,8 @@ from spiderfoot import SpiderFootHelpers
 from sfwebui import SpiderFootWebUi
 import threading
 import functools
+import cheroot.test.webtest
+cheroot.test.webtest.getchar = lambda: 'I'
 
 
 class TestSpiderFootWebUiRoutes(helper.CPWebCase):
