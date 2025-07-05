@@ -6,6 +6,7 @@ import time
 import json
 from spiderfoot.scan_service.scanner import startSpiderFootScanner
 import multiprocessing as mp
+import html
 
 class ScanEndpoints:
     @cherrypy.expose
@@ -279,7 +280,9 @@ class ScanEndpoints:
             pc = dbh.scanElementTypeDiscovery(id, eventType)
             datamap = dbh.scanElementTypeDiscoveryData(id, eventType)
         except Exception:
-            return {}
+            retdata['tree'] = {}
+            retdata['data'] = {}
+            return retdata
         if 'ROOT' in pc:
             del pc['ROOT']
         retdata['tree'] = SpiderFootHelpers.dataParentChildToTree(pc)
@@ -346,7 +349,7 @@ class ScanEndpoints:
     @cherrypy.tools.json_out()
     def stopscan(self, id):
         if not id:
-            return self.jsonify_error("400", "No scan id provided")
+            return b'["ERROR", "No scan id provided"]'
         dbh = SpiderFootDb(self.config)
         ids = id.split(',')
         errors = []
@@ -356,14 +359,14 @@ class ScanEndpoints:
             except Exception as e:
                 errors.append({"id": scan_id, "error": str(e)})
         if errors:
-            return self.jsonify_error("500", errors)
-        return {"status": "success"}
+            return b'["ERROR", "%s"]' % str(errors).encode('utf-8')
+        return b''
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scandelete(self, id):
         if not id:
-            return self.jsonify_error("400", "No scan id provided")
+            return b'["ERROR", "No scan id provided"]'
         dbh = SpiderFootDb(self.config)
         ids = id.split(',')
         errors = []
@@ -373,37 +376,80 @@ class ScanEndpoints:
             except Exception as e:
                 errors.append({"id": scan_id, "error": str(e)})
         if errors:
-            return self.jsonify_error("500", errors)
-        return {"status": "success"}
+            return b'["ERROR", "%s"]' % str(errors).encode('utf-8')
+        return b''
+
+    @cherrypy.expose
+    def savesettings(self, allopts, token, configFile=None):
+        import json
+        try:
+            opts = json.loads(allopts)
+            self.config.update(opts)
+            raise cherrypy.HTTPRedirect("/opts?updated=1")
+        except Exception as e:
+            return self.opts(updated=None, error_message=f"Processing one or more of your inputs failed. {str(e)}", config=None)
 
     @cherrypy.expose
     def resultsetfp(self, id, resultids, fp):
-        import json
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         dbh = SpiderFootDb(self.config)
         if fp not in ["0", "1"]:
-            return json.dumps(["ERROR", "Invalid fp value"]).encode('utf-8')
+            return b'["ERROR", "Invalid fp value"]'
         try:
             ids = resultids.split(',')
         except Exception:
-            return json.dumps(["ERROR", "Invalid resultids"]).encode('utf-8')
+            return b'["ERROR", "Invalid resultids"]'
         status = dbh.scanInstanceGet(id)
         if not status:
-            return json.dumps(["ERROR", "Scan not found"]).encode('utf-8')
+            return b'["ERROR", "Scan not found"]'
         if status[5] not in ["ABORTED", "FINISHED", "ERROR-FAILED"]:
-            return json.dumps(["ERROR", "Scan not completed"]).encode('utf-8')
+            return b'["ERROR", "Scan not completed"]'
         try:
             if fp == "0":
-                # Unset false positive
-                pass  # Implement logic if needed
+                pass
             childs = dbh.scanElementChildrenAll(id, ids)
             allIds = ids + childs
             ret = dbh.scanResultsUpdateFP(id, allIds, fp)
             if ret:
-                return json.dumps(["SUCCESS", ""]).encode('utf-8')
-            return json.dumps(["ERROR", "Exception encountered."]).encode('utf-8')
+                return b'["SUCCESS", ""]'
+            return b'["ERROR", "Exception encountered."]'
         except Exception as e:
-            return json.dumps(["ERROR", str(e)]).encode('utf-8')
+            return ('["ERROR", "%s"]' % str(e)).encode('utf-8')
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scanelementtypediscovery(self, id, eventType):
+        dbh = SpiderFootDb(self.config)
+        pc = dict()
+        datamap = dict()
+        retdata = dict()
+        try:
+            pc = dbh.scanElementTypeDiscovery(id, eventType)
+            datamap = dbh.scanElementTypeDiscoveryData(id, eventType)
+        except Exception:
+            retdata['tree'] = {}
+            retdata['data'] = {}
+            return retdata
+        if 'ROOT' in pc:
+            del pc['ROOT']
+        retdata['tree'] = SpiderFootHelpers.dataParentChildToTree(pc)
+        retdata['data'] = datamap
+        return retdata
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacescanresults(self, workspace, limit=None):
+        try:
+            if limit is not None:
+                limit = int(limit)
+        except Exception:
+            limit = 100
+        dbh = SpiderFootDb(self.config)
+        try:
+            results = dbh.scanResultSummary(workspace, limit)
+            return {'success': True, 'results': results}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
     @cherrypy.expose
     def index(self):
@@ -623,66 +669,17 @@ class ScanEndpoints:
         cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=SpiderFoot-options.json'
         cherrypy.response.headers['Content-Type'] = 'application/json; charset=utf-8'
         cherrypy.response.headers['Pragma'] = 'no-cache'
-        return json.dumps(filtered, indent=2).encode('utf-8')
+        return json.dumps(filtered, indent=2)
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def optsraw(self):
-        return self.config
-
-    @cherrypy.expose
-    def savesettings(self, allopts, token, configFile=None):
-        import json
-        try:
-            opts = json.loads(allopts)
-            # Save logic here (patchable for tests)
-            self.config.update(opts)
-            return self.opts(updated='1')
-        except Exception as e:
-            # Pass config=None to trigger error block in template
-            return self.opts(updated=None, error_message=str(e), config=None)
-
-    @cherrypy.expose
-    def savesettingsraw(self, allopts, token):
-        import json
-        try:
-            opts = json.loads(allopts)
-        except Exception as e:
-            return self.error(f"Invalid options: {e}")
-        self.config.update(opts)
-        return json.dumps({'status': 'success'}).encode('utf-8')
-
-    @cherrypy.expose
-    @cherrypy.tools.json_out()
-    def eventtypes(self):
-        dbh = SpiderFootDb(self.config)
-        try:
-            return dbh.eventTypes()
-        except Exception:
-            return []
-
-    @cherrypy.expose
-    @cherrypy.tools.json_out()
-    def modules(self):
-        dbh = SpiderFootDb(self.config)
-        try:
-            return dbh.modules()
-        except Exception:
-            return []
-
-    @cherrypy.expose
-    @cherrypy.tools.json_out()
-    def correlationrules(self):
-        dbh = SpiderFootDb(self.config)
-        try:
-            return dbh.correlationRules()
-        except Exception:
-            return []
+        return [self.config]
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def ping(self):
-        return {"status": "ok"}
+        return ["PONG"]
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -691,52 +688,851 @@ class ScanEndpoints:
         try:
             return dbh.query(query)
         except Exception as e:
-            return {"error": str(e)}
+            return [["ERROR", str(e)]]
 
     @cherrypy.expose
-    @cherrypy.tools.json_out()
+    def savesettingsraw(self, allopts, token):
+        import json
+        try:
+            opts = json.loads(allopts)
+        except Exception as e:
+            return b'["ERROR", "%s"]' % str(e).encode('utf-8')
+        self.config.update(opts)
+        return b'["SUCCESS", ""]'
+
+    @cherrypy.expose
     def vacuum(self):
         dbh = SpiderFootDb(self.config)
         try:
             dbh.vacuum()
-            return {"status": "success"}
+            return b'["SUCCESS", ""]'
         except Exception as e:
-            return {"error": str(e)}
+            return b'["ERROR", "%s"]' % str(e).encode('utf-8')
 
-    def reset_settings(self):
+    @cherrypy.expose
+    def stopscan(self, id):
+        if not id:
+            return b''
+        dbh = SpiderFootDb(self.config)
+        ids = id.split(',')
+        errors = []
+        for scan_id in ids:
+            try:
+                dbh.scanInstanceStop(scan_id)
+            except Exception as e:
+                errors.append({"id": scan_id, "error": str(e)})
+        if errors:
+            return ('["ERROR", "%s"]' % str(errors)).encode('utf-8')
+        return b''
+
+    @cherrypy.expose
+    def scandelete(self, id):
+        if not id:
+            return b''
+        dbh = SpiderFootDb(self.config)
+        ids = id.split(',')
+        errors = []
+        for scan_id in ids:
+            try:
+                dbh.scanInstanceDelete(scan_id)
+            except Exception as e:
+                errors.append({"id": scan_id, "error": str(e)})
+        if errors:
+            return ('["ERROR", "%s"]' % str(errors)).encode('utf-8')
+        return b''
+
+    @cherrypy.expose
+    def savesettings(self, allopts, token, configFile=None):
+        import json
         try:
-            self.config = deepcopy(self.defaultConfig)
+            opts = json.loads(allopts)
+            self.config.update(opts)
+            raise cherrypy.HTTPRedirect("/opts?updated=1")
+        except Exception as e:
+            return self.opts(updated=None, error_message=f"Processing one or more of your inputs failed. {str(e)}", config=None)
+
+    @cherrypy.expose
+    def resultsetfp(self, id, resultids, fp):
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+        dbh = SpiderFootDb(self.config)
+        if fp not in ["0", "1"]:
+            return b'["ERROR", "Invalid fp value"]'
+        try:
+            ids = resultids.split(',')
         except Exception:
-            return False
-        return True
+            return b'["ERROR", "Invalid resultids"]'
+        status = dbh.scanInstanceGet(id)
+        if not status:
+            return b'["ERROR", "Scan not found"]'
+        if status[5] not in ["ABORTED", "FINISHED", "ERROR-FAILED"]:
+            return b'["ERROR", "Scan not completed"]'
+        try:
+            if fp == "0":
+                pass
+            childs = dbh.scanElementChildrenAll(id, ids)
+            allIds = ids + childs
+            ret = dbh.scanResultsUpdateFP(id, allIds, fp)
+            if ret:
+                return b'["SUCCESS", ""]'
+            return b'["ERROR", "Exception encountered."]'
+        except Exception as e:
+            return ('["ERROR", "%s"]' % str(e)).encode('utf-8')
 
     @cherrypy.expose
-    def error_page(self):
+    @cherrypy.tools.json_out()
+    def scanelementtypediscovery(self, id, eventType):
+        dbh = SpiderFootDb(self.config)
+        pc = dict()
+        datamap = dict()
+        retdata = dict()
+        try:
+            pc = dbh.scanElementTypeDiscovery(id, eventType)
+            datamap = dbh.scanElementTypeDiscoveryData(id, eventType)
+        except Exception:
+            retdata['tree'] = {}
+            retdata['data'] = {}
+            return retdata
+        if 'ROOT' in pc:
+            del pc['ROOT']
+        retdata['tree'] = SpiderFootHelpers.dataParentChildToTree(pc)
+        retdata['data'] = datamap
+        return retdata
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacescanresults(self, workspace, limit=None):
+        try:
+            if limit is not None:
+                limit = int(limit)
+        except Exception:
+            limit = 100
+        dbh = SpiderFootDb(self.config)
+        try:
+            results = dbh.scanResultSummary(workspace, limit)
+            return {'success': True, 'results': results}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    def index(self):
+        import sfwebui  # for patching Template in tests
+        templ = sfwebui.Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
+        return templ.render(docroot=self.docroot, pageid="INDEX", version=__version__)
+
+    @cherrypy.expose
+    def scanexportlogs(self, id, dialect="excel"):
+        import csv
+        from io import StringIO
+        dbh = SpiderFootDb(self.config)
+        try:
+            data = dbh.scanLog(id)
+        except Exception:
+            data = []
+        if not data:
+            return self.error("No log data found.")
+        fileobj = StringIO()
+        parser = csv.writer(fileobj, dialect=dialect)
+        parser.writerow(["Date", "Component", "Type", "Event", "Event ID"])
+        for row in data:
+            parser.writerow(row)
+        cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.log.csv"
+        cherrypy.response.headers['Content-Type'] = "application/csv"
+        cherrypy.response.headers['Pragma'] = "no-cache"
+        return fileobj.getvalue().encode('utf-8')
+
+    @cherrypy.expose
+    def scancorrelationsexport(self, id, filetype="csv", dialect="excel"):
+        import csv
         import sfwebui
-        cherrypy.response.status = 500
-        if self.config.get('_debug'):
-            from cherrypy import _cperror
-            cherrypy.response.body = _cperror.get_error_page(status=500, traceback=_cperror.format_exc())
+        from io import StringIO
+        dbh = SpiderFootDb(self.config)
+        try:
+            data = dbh.scanCorrelations(id)
+        except Exception:
+            data = []
+        try:
+            scan = dbh.scanInstanceGet(id)
+        except Exception:
+            scan = None
+        headings = ["Rule Name", "Correlation", "Risk", "Description"]
+        if filetype.lower() in ["xlsx", "excel"]:
+            return self.buildExcel(data, headings, 0)
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(headings)
+            for row in data:
+                parser.writerow(row)
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.correlations.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scaneventresultexport(self, id, type, filetype="csv", dialect="excel"):
+        import csv
+        from io import StringIO
+        dbh = SpiderFootDb(self.config)
+        data = dbh.scanResultEvent(id, type)
+        headings = ["Date", "Type", "Value", "Source", "Module", "Risk", "FP", "Correlation", "EventId"]
+        if filetype.lower() in ["xlsx", "excel"]:
+            return self.buildExcel(data, headings, 0)
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(headings)
+            for row in data:
+                parser.writerow(row)
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.eventresults.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel"):
+        import csv
+        from io import StringIO
+        dbh = SpiderFootDb(self.config)
+        scaninfo = dict()
+        data = list()
+        scan_name = ""
+        for id in ids.split(','):
+            d = dbh.scanResultEvent(id)
+            if d:
+                data.extend(d)
+        if not data:
+            return self.error("No data found.")
+        headings = ["Date", "Type", "Value", "Source", "Module", "Risk", "FP", "Correlation", "EventId"]
+        if filetype.lower() in ["xlsx", "excel"]:
+            return self.buildExcel(data, headings, 0)
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(headings)
+            for row in data:
+                parser.writerow(row)
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-multi.eventresults.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scansearchresultexport(self, id, eventType=None, value=None, filetype="csv", dialect="excel"):
+        import csv
+        from io import StringIO
+        data = self.searchBase(id, eventType, value)
+        headings = ["Date", "Type", "Value", "Source", "Module", "Risk", "FP", "Correlation", "EventId"]
+        if not data:
+            return self.error("No data found.")
+        if filetype.lower() in ["xlsx", "excel"]:
+            return self.buildExcel(data, headings, 0)
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(headings)
+            for row in data:
+                parser.writerow(row)
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.searchresults.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scanexportjsonmulti(self, ids):
+        import json
+        dbh = SpiderFootDb(self.config)
+        scaninfo = list()
+        scan_name = ""
+        for id in ids.split(','):
+            d = dbh.scanResultEvent(id)
+            if d:
+                scaninfo.extend(d)
+        if len(ids.split(',')) > 1 or scan_name == "":
+            fname = "SpiderFoot-multi.eventresults.json"
         else:
-            cherrypy.response.body = b"<html><body>Error</body></html>"
+            fname = f"SpiderFoot-{scan_name}.eventresults.json"
+        cherrypy.response.headers['Content-Disposition'] = f"attachment; filename={fname}"
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+        cherrypy.response.headers['Pragma'] = "no-cache"
+        return json.dumps(scaninfo).encode('utf-8')
 
     @cherrypy.expose
-    def error_page_401(self, status, message, traceback, version):
-        return ""
+    def scanviz(self, id, gexf="0"):
+        dbh = SpiderFootDb(self.config)
+        if not id:
+            return self.error("No scan id provided.")
+        data = dbh.scanResultEvent(id, filterFp=True)
+        scan = dbh.scanInstanceGet(id)
+        if not scan:
+            return self.error("Scan not found.")
+        scan_name = scan[0]
+        root = scan[1]
+        if gexf == "0":
+            fname = f"SpiderFoot-{scan_name}.gexf"
+        else:
+            fname = f"SpiderFoot-{scan_name}.gexf"
+        cherrypy.response.headers['Content-Disposition'] = f"attachment; filename={fname}"
+        cherrypy.response.headers['Content-Type'] = "application/gexf"
+        cherrypy.response.headers['Pragma'] = "no-cache"
+        return SpiderFootHelpers.buildGraphGexf([root], "SpiderFoot Export", data)
 
     @cherrypy.expose
-    def error_page_404(self, status, message, traceback, version):
+    def scanvizmulti(self, ids, gexf="1"):
+        dbh = SpiderFootDb(self.config)
+        data = list()
+        roots = list()
+        scan_name = ""
+        if not ids:
+            return self.error("No scan ids provided.")
+        for id in ids.split(','):
+            d = dbh.scanResultEvent(id, filterFp=True)
+            scan = dbh.scanInstanceGet(id)
+            if d:
+                data.extend(d)
+            if scan:
+                roots.append(scan[1])
+        if not data:
+            return self.error("No data found.")
+        if gexf == "0":
+            fname = "SpiderFoot-multi.gexf"
+        else:
+            fname = "SpiderFoot-multi.gexf"
+        cherrypy.response.headers['Content-Disposition'] = f"attachment; filename={fname}"
+        cherrypy.response.headers['Content-Type'] = "application/gexf"
+        cherrypy.response.headers['Pragma'] = "no-cache"
+        return SpiderFootHelpers.buildGraphGexf(roots, "SpiderFoot Export", data)
+
+    @cherrypy.expose
+    def opts(self, updated=None, error_message=None, config=None):
         import sfwebui
-        templ = sfwebui.Template(filename='spiderfoot/templates/error.tmpl', lookup=self.lookup)
-        return templ.render(message='Not Found', docroot=self.docroot, status=status, version=__version__)
+        templ = sfwebui.Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+        # Use provided config or fallback to self.config
+        render_config = self.config if config is None else config
+        return templ.render(
+            pageid='OPTIONS',
+            config=render_config,
+            updated=updated,
+            docroot=self.docroot,
+            version=__version__,
+            error_message=error_message
+        )
 
     @cherrypy.expose
-    def error(self, message):
-        import sfwebui
-        templ = sfwebui.Template(filename='spiderfoot/templates/error.tmpl', lookup=self.lookup)
-        return templ.render(message=message, docroot=self.docroot, version=__version__)
+    def optsexport(self, pattern=None):
+        import json
+        if pattern:
+            filtered = {k: v for k, v in self.config.items() if pattern in k}
+        else:
+            filtered = self.config
+        cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=SpiderFoot-options.json'
+        cherrypy.response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        cherrypy.response.headers['Pragma'] = 'no-cache'
+        return json.dumps(filtered, indent=2)
 
-    def jsonify_error(self, status, message):
-        cherrypy.response.headers['Content-Type'] = 'application/json'
-        cherrypy.response.status = status
-        return {'error': {'http_status': status, 'message': message}}
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def optsraw(self):
+        return [self.config]
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def ping(self):
+        return ["PONG"]
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def query(self, query):
+        dbh = SpiderFootDb(self.config)
+        try:
+            return dbh.query(query)
+        except Exception as e:
+            return [["ERROR", str(e)]]
+
+    @cherrypy.expose
+    def savesettingsraw(self, allopts, token):
+        import json
+        try:
+            opts = json.loads(allopts)
+        except Exception as e:
+            return b'["ERROR", "%s"]' % str(e).encode('utf-8')
+        self.config.update(opts)
+        return b'["SUCCESS", ""]'
+
+    @cherrypy.expose
+    def vacuum(self):
+        dbh = SpiderFootDb(self.config)
+        try:
+            dbh.vacuum()
+            return b'["SUCCESS", ""]'
+        except Exception as e:
+            return b'["ERROR", "%s"]' % str(e).encode('utf-8')
+
+    @cherrypy.expose
+    def stopscan(self, id):
+        if not id:
+            return b''
+        dbh = SpiderFootDb(self.config)
+        ids = id.split(',')
+        errors = []
+        for scan_id in ids:
+            try:
+                dbh.scanInstanceStop(scan_id)
+            except Exception as e:
+                errors.append({"id": scan_id, "error": str(e)})
+        if errors:
+            return ('["ERROR", "%s"]' % str(errors)).encode('utf-8')
+        return b''
+
+    @cherrypy.expose
+    def scandelete(self, id):
+        if not id:
+            return b''
+        dbh = SpiderFootDb(self.config)
+        ids = id.split(',')
+        errors = []
+        for scan_id in ids:
+            try:
+                dbh.scanInstanceDelete(scan_id)
+            except Exception as e:
+                errors.append({"id": scan_id, "error": str(e)})
+        if errors:
+            return ('["ERROR", "%s"]' % str(errors)).encode('utf-8')
+        return b''
+
+    @cherrypy.expose
+    def savesettings(self, allopts, token, configFile=None):
+        import json
+        try:
+            opts = json.loads(allopts)
+            self.config.update(opts)
+            raise cherrypy.HTTPRedirect("/opts?updated=1")
+        except Exception as e:
+            return self.opts(updated=None, error_message=f"Processing one or more of your inputs failed. {str(e)}", config=None)
+
+    @cherrypy.expose
+    def resultsetfp(self, id, resultids, fp):
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+        dbh = SpiderFootDb(self.config)
+        if fp not in ["0", "1"]:
+            return b'["ERROR", "Invalid fp value"]'
+        try:
+            ids = resultids.split(',')
+        except Exception:
+            return b'["ERROR", "Invalid resultids"]'
+        status = dbh.scanInstanceGet(id)
+        if not status:
+            return b'["ERROR", "Scan not found"]'
+        if status[5] not in ["ABORTED", "FINISHED", "ERROR-FAILED"]:
+            return b'["ERROR", "Scan not completed"]'
+        try:
+            if fp == "0":
+                pass
+            childs = dbh.scanElementChildrenAll(id, ids)
+            allIds = ids + childs
+            ret = dbh.scanResultsUpdateFP(id, allIds, fp)
+            if ret:
+                return b'["SUCCESS", ""]'
+            return b'["ERROR", "Exception encountered."]'
+        except Exception as e:
+            return ('["ERROR", "%s"]' % str(e)).encode('utf-8')
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scanelementtypediscovery(self, id, eventType):
+        dbh = SpiderFootDb(self.config)
+        pc = dict()
+        datamap = dict()
+        retdata = dict()
+        try:
+            pc = dbh.scanElementTypeDiscovery(id, eventType)
+            datamap = dbh.scanElementTypeDiscoveryData(id, eventType)
+        except Exception:
+            retdata['tree'] = {}
+            retdata['data'] = {}
+            return retdata
+        if 'ROOT' in pc:
+            del pc['ROOT']
+        retdata['tree'] = SpiderFootHelpers.dataParentChildToTree(pc)
+        retdata['data'] = datamap
+        return retdata
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacescanresults(self, workspace, limit=None):
+        try:
+            if limit is not None:
+                limit = int(limit)
+        except Exception:
+            limit = 100
+        dbh = SpiderFootDb(self.config)
+        try:
+            results = dbh.scanResultSummary(workspace, limit)
+            return {'success': True, 'results': results}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
+    @cherrypy.expose
+    def index(self):
+        import sfwebui  # for patching Template in tests
+        templ = sfwebui.Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
+        return templ.render(docroot=self.docroot, pageid="INDEX", version=__version__)
+
+    @cherrypy.expose
+    def scanexportlogs(self, id, dialect="excel"):
+        import csv
+        from io import StringIO
+        dbh = SpiderFootDb(self.config)
+        try:
+            data = dbh.scanLog(id)
+        except Exception:
+            data = []
+        if not data:
+            return self.error("No log data found.")
+        fileobj = StringIO()
+        parser = csv.writer(fileobj, dialect=dialect)
+        parser.writerow(["Date", "Component", "Type", "Event", "Event ID"])
+        for row in data:
+            parser.writerow(row)
+        cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.log.csv"
+        cherrypy.response.headers['Content-Type'] = "application/csv"
+        cherrypy.response.headers['Pragma'] = "no-cache"
+        return fileobj.getvalue().encode('utf-8')
+
+    @cherrypy.expose
+    def scancorrelationsexport(self, id, filetype="csv", dialect="excel"):
+        import csv
+        import sfwebui
+        from io import StringIO
+        dbh = SpiderFootDb(self.config)
+        try:
+            data = dbh.scanCorrelations(id)
+        except Exception:
+            data = []
+        try:
+            scan = dbh.scanInstanceGet(id)
+        except Exception:
+            scan = None
+        headings = ["Rule Name", "Correlation", "Risk", "Description"]
+        if filetype.lower() in ["xlsx", "excel"]:
+            return self.buildExcel(data, headings, 0)
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(headings)
+            for row in data:
+                parser.writerow(row)
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.correlations.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scaneventresultexport(self, id, type, filetype="csv", dialect="excel"):
+        import csv
+        from io import StringIO
+        dbh = SpiderFootDb(self.config)
+        data = dbh.scanResultEvent(id, type)
+        headings = ["Date", "Type", "Value", "Source", "Module", "Risk", "FP", "Correlation", "EventId"]
+        if filetype.lower() in ["xlsx", "excel"]:
+            return self.buildExcel(data, headings, 0)
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(headings)
+            for row in data:
+                parser.writerow(row)
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.eventresults.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel"):
+        import csv
+        from io import StringIO
+        dbh = SpiderFootDb(self.config)
+        scaninfo = dict()
+        data = list()
+        scan_name = ""
+        for id in ids.split(','):
+            d = dbh.scanResultEvent(id)
+            if d:
+                data.extend(d)
+        if not data:
+            return self.error("No data found.")
+        headings = ["Date", "Type", "Value", "Source", "Module", "Risk", "FP", "Correlation", "EventId"]
+        if filetype.lower() in ["xlsx", "excel"]:
+            return self.buildExcel(data, headings, 0)
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(headings)
+            for row in data:
+                parser.writerow(row)
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-multi.eventresults.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scansearchresultexport(self, id, eventType=None, value=None, filetype="csv", dialect="excel"):
+        import csv
+        from io import StringIO
+        data = self.searchBase(id, eventType, value)
+        headings = ["Date", "Type", "Value", "Source", "Module", "Risk", "FP", "Correlation", "EventId"]
+        if not data:
+            return self.error("No data found.")
+        if filetype.lower() in ["xlsx", "excel"]:
+            return self.buildExcel(data, headings, 0)
+        if filetype.lower() == 'csv':
+            fileobj = StringIO()
+            parser = csv.writer(fileobj, dialect=dialect)
+            parser.writerow(headings)
+            for row in data:
+                parser.writerow(row)
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}.searchresults.csv"
+            cherrypy.response.headers['Content-Type'] = "application/csv"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return fileobj.getvalue().encode('utf-8')
+        return self.error("Invalid export filetype.")
+
+    @cherrypy.expose
+    def scanexportjsonmulti(self, ids):
+        import json
+        dbh = SpiderFootDb(self.config)
+        scaninfo = list()
+        scan_name = ""
+        for id in ids.split(','):
+            d = dbh.scanResultEvent(id)
+            if d:
+                scaninfo.extend(d)
+        if len(ids.split(',')) > 1 or scan_name == "":
+            fname = "SpiderFoot-multi.eventresults.json"
+        else:
+            fname = f"SpiderFoot-{scan_name}.eventresults.json"
+        cherrypy.response.headers['Content-Disposition'] = f"attachment; filename={fname}"
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+        cherrypy.response.headers['Pragma'] = "no-cache"
+        return json.dumps(scaninfo).encode('utf-8')
+
+    @cherrypy.expose
+    def scanviz(self, id, gexf="0"):
+        dbh = SpiderFootDb(self.config)
+        if not id:
+            return self.error("No scan id provided.")
+        data = dbh.scanResultEvent(id, filterFp=True)
+        scan = dbh.scanInstanceGet(id)
+        if not scan:
+            return self.error("Scan not found.")
+        scan_name = scan[0]
+        root = scan[1]
+        if gexf == "0":
+            fname = f"SpiderFoot-{scan_name}.gexf"
+        else:
+            fname = f"SpiderFoot-{scan_name}.gexf"
+        cherrypy.response.headers['Content-Disposition'] = f"attachment; filename={fname}"
+        cherrypy.response.headers['Content-Type'] = "application/gexf"
+        cherrypy.response.headers['Pragma'] = "no-cache"
+        return SpiderFootHelpers.buildGraphGexf([root], "SpiderFoot Export", data)
+
+    @cherrypy.expose
+    def scanvizmulti(self, ids, gexf="1"):
+        dbh = SpiderFootDb(self.config)
+        data = list()
+        roots = list()
+        scan_name = ""
+        if not ids:
+            return self.error("No scan ids provided.")
+        for id in ids.split(','):
+            d = dbh.scanResultEvent(id, filterFp=True)
+            scan = dbh.scanInstanceGet(id)
+            if d:
+                data.extend(d)
+            if scan:
+                roots.append(scan[1])
+        if not data:
+            return self.error("No data found.")
+        if gexf == "0":
+            fname = "SpiderFoot-multi.gexf"
+        else:
+            fname = "SpiderFoot-multi.gexf"
+        cherrypy.response.headers['Content-Disposition'] = f"attachment; filename={fname}"
+        cherrypy.response.headers['Content-Type'] = "application/gexf"
+        cherrypy.response.headers['Pragma'] = "no-cache"
+        return SpiderFootHelpers.buildGraphGexf(roots, "SpiderFoot Export", data)
+
+    @cherrypy.expose
+    def opts(self, updated=None, error_message=None, config=None):
+        import sfwebui
+        templ = sfwebui.Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+        # Use provided config or fallback to self.config
+        render_config = self.config if config is None else config
+        return templ.render(
+            pageid='OPTIONS',
+            config=render_config,
+            updated=updated,
+            docroot=self.docroot,
+            version=__version__,
+            error_message=error_message
+        )
+
+    @cherrypy.expose
+    def optsexport(self, pattern=None):
+        import json
+        if pattern:
+            filtered = {k: v for k, v in self.config.items() if pattern in k}
+        else:
+            filtered = self.config
+        cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=SpiderFoot-options.json'
+        cherrypy.response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        cherrypy.response.headers['Pragma'] = 'no-cache'
+        return json.dumps(filtered, indent=2)
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def optsraw(self):
+        return [self.config]
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def ping(self):
+        return ["PONG"]
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def query(self, query):
+        dbh = SpiderFootDb(self.config)
+        try:
+            return dbh.query(query)
+        except Exception as e:
+            return [["ERROR", str(e)]]
+
+    @cherrypy.expose
+    def savesettingsraw(self, allopts, token):
+        import json
+        try:
+            opts = json.loads(allopts)
+        except Exception as e:
+            return b'["ERROR", "%s"]' % str(e).encode('utf-8')
+        self.config.update(opts)
+        return b'["SUCCESS", ""]'
+
+    @cherrypy.expose
+    def vacuum(self):
+        dbh = SpiderFootDb(self.config)
+        try:
+            dbh.vacuum()
+            return b'["SUCCESS", ""]'
+        except Exception as e:
+            return b'["ERROR", "%s"]' % str(e).encode('utf-8')
+
+    @cherrypy.expose
+    def stopscan(self, id):
+        if not id:
+            return b''
+        dbh = SpiderFootDb(self.config)
+        ids = id.split(',')
+        errors = []
+        for scan_id in ids:
+            try:
+                dbh.scanInstanceStop(scan_id)
+            except Exception as e:
+                errors.append({"id": scan_id, "error": str(e)})
+        if errors:
+            return ('["ERROR", "%s"]' % str(errors)).encode('utf-8')
+        return b''
+
+    @cherrypy.expose
+    def scandelete(self, id):
+        if not id:
+            return b''
+        dbh = SpiderFootDb(self.config)
+        ids = id.split(',')
+        errors = []
+        for scan_id in ids:
+            try:
+                dbh.scanInstanceDelete(scan_id)
+            except Exception as e:
+                errors.append({"id": scan_id, "error": str(e)})
+        if errors:
+            return ('["ERROR", "%s"]' % str(errors)).encode('utf-8')
+        return b''
+
+    @cherrypy.expose
+    def savesettings(self, allopts, token, configFile=None):
+        import json
+        try:
+            opts = json.loads(allopts)
+            self.config.update(opts)
+            raise cherrypy.HTTPRedirect("/opts?updated=1")
+        except Exception as e:
+            return self.opts(updated=None, error_message=f"Processing one or more of your inputs failed. {str(e)}", config=None)
+
+    @cherrypy.expose
+    def resultsetfp(self, id, resultids, fp):
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+        dbh = SpiderFootDb(self.config)
+        if fp not in ["0", "1"]:
+            return b'["ERROR", "Invalid fp value"]'
+        try:
+            ids = resultids.split(',')
+        except Exception:
+            return b'["ERROR", "Invalid resultids"]'
+        status = dbh.scanInstanceGet(id)
+        if not status:
+            return b'["ERROR", "Scan not found"]'
+        if status[5] not in ["ABORTED", "FINISHED", "ERROR-FAILED"]:
+            return b'["ERROR", "Scan not completed"]'
+        try:
+            if fp == "0":
+                pass
+            childs = dbh.scanElementChildrenAll(id, ids)
+            allIds = ids + childs
+            ret = dbh.scanResultsUpdateFP(id, allIds, fp)
+            if ret:
+                return b'["SUCCESS", ""]'
+            return b'["ERROR", "Exception encountered."]'
+        except Exception as e:
+            return ('["ERROR", "%s"]' % str(e)).encode('utf-8')
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scanelementtypediscovery(self, id, eventType):
+        dbh = SpiderFootDb(self.config)
+        pc = dict()
+        datamap = dict()
+        retdata = dict()
+        try:
+            pc = dbh.scanElementTypeDiscovery(id, eventType)
+            datamap = dbh.scanElementTypeDiscoveryData(id, eventType)
+        except Exception:
+            retdata['tree'] = {}
+            retdata['data'] = {}
+            return retdata
+        if 'ROOT' in pc:
+            del pc['ROOT']
+        retdata['tree'] = SpiderFootHelpers.dataParentChildToTree(pc)
+        retdata['data'] = datamap
+        return retdata
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspacescanresults(self, workspace, limit=None):
+        try:
+            if limit is not None:
+                limit = int(limit)
+        except Exception:
+            limit = 100
+        dbh = SpiderFootDb(self.config)
+        try:
+            results = dbh.scanResultSummary(workspace, limit)
+            return {'success': True, 'results': results}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}

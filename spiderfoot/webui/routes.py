@@ -105,6 +105,8 @@ class WebUiRoutes(ScanEndpoints, ExportEndpoints, WorkspaceEndpoints, InfoEndpoi
         from datetime import datetime
         doc_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../documentation'))
         doc_index = []
+        selected_file = doc or 'Home.md'
+        content = ''
         search_results = []
         search_query = q or ''
         toc_html = ''
@@ -114,104 +116,151 @@ class WebUiRoutes(ScanEndpoints, ExportEndpoints, WorkspaceEndpoints, InfoEndpoi
         version_dirs = []
         current_version = 'latest'
         related = []
-        selected_file = doc or 'Home.md'
-        content = ''
         title = ''
 
-        # Helper: List all .md files in documentation (recursively)
-        def list_docs(base_dir):
-            docs = []
-            for root, dirs, files in os.walk(base_dir):
-                for f in files:
-                    if f.lower().endswith('.md'):
-                        rel = os.path.relpath(os.path.join(root, f), base_dir)
-                        docs.append(rel.replace('\\', '/'))
-            return docs
+        def highlight(code, lang=None):
+            # Dummy highlight function for template compatibility
+            return code
 
-        # Helper: Get file title from first heading or filename
-        def get_title(md_path):
+        if not os.path.isdir(doc_dir):
+            self.log.error(f"Documentation directory not found: {doc_dir}")
+            content = '<div class="alert alert-danger">Documentation directory not found.</div>'
+            from sfwebui import Template
+            templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
             try:
-                with open(md_path, encoding='utf-8') as f:
-                    for line in f:
-                        if line.strip().startswith('#'):
-                            return line.strip('#').strip()
-            except Exception:
-                pass
-            return os.path.splitext(os.path.basename(md_path))[0]
+                return templ.render(
+                    doc_index=doc_index,
+                    selected_file=selected_file,
+                    content=content,
+                    search_results=search_results,
+                    search_query=search_query,
+                    toc_html=toc_html,
+                    breadcrumbs=breadcrumbs,
+                    last_updated=last_updated,
+                    author=author,
+                    version_dirs=version_dirs,
+                    current_version=current_version,
+                    related=related,
+                    title=title,
+                    highlight=highlight,
+                    v='',
+                    entry={},
+                    crumb={}
+                )
+            except Exception as te:
+                return f'<pre>Template error: {te}</pre>'
+        try:
+            def list_docs(base_dir):
+                docs = []
+                for root, _dirs, files in os.walk(base_dir):
+                    for f in files:
+                        if f.lower().endswith('.md'):
+                            rel = os.path.relpath(os.path.join(root, f), base_dir)
+                            docs.append(rel.replace('\\', '/'))
+                return docs
 
-        # Build doc index
-        all_docs = list_docs(doc_dir)
-        for f in all_docs:
-            abs_path = os.path.join(doc_dir, f)
-            doc_index.append({
-                'file': f,
-                'title': get_title(abs_path),
-                'icon': 'fa fa-file-text-o',
-            })
+            def get_title(md_path):
+                import contextlib
+                with contextlib.suppress(Exception):
+                    with open(md_path, encoding='utf-8') as f:
+                        for line in f:
+                            if line.strip().startswith('#'):
+                                return line.strip('#').strip()
+                return os.path.splitext(os.path.basename(md_path))[0]
 
-        # Search
-        if search_query:
-            for entry in doc_index:
-                abs_path = os.path.join(doc_dir, entry['file'])
+            all_docs = list_docs(doc_dir)
+            for f in all_docs:
+                abs_path = os.path.join(doc_dir, f)
+                doc_index.append({
+                    'file': f,
+                    'title': get_title(abs_path),
+                    'icon': 'fa fa-file-text-o',
+                })
+            if search_query:
+                for entry in doc_index:
+                    abs_path = os.path.join(doc_dir, entry['file'])
+                    try:
+                        with open(abs_path, encoding='utf-8') as f:
+                            text = f.read()
+                            if search_query.lower() in text.lower() or search_query.lower() in entry['title'].lower():
+                                search_results.append(entry)
+                    except Exception:
+                        continue
+            selected_entry = next((e for e in doc_index if e['file'] == selected_file), None)
+            abs_selected = os.path.join(doc_dir, selected_file) if selected_file else None
+            if selected_entry:
+                title = selected_entry['title']
+            else:
+                title = selected_file
+            if selected_file:
+                parts = selected_file.split('/')
+                path = ''
+                for i, part in enumerate(parts):
+                    path = '/'.join(parts[:i + 1])
+                    breadcrumbs.append({'url': f'/documentation/{path}', 'title': part})
+            if abs_selected and os.path.isfile(abs_selected):
                 try:
-                    with open(abs_path, encoding='utf-8') as f:
-                        text = f.read()
-                        if search_query.lower() in text.lower() or search_query.lower() in entry['title'].lower():
-                            search_results.append(entry)
-                except Exception:
-                    continue
-
-        # Find selected file
-        selected_entry = next((e for e in doc_index if e['file'] == selected_file), None)
-        abs_selected = os.path.join(doc_dir, selected_file) if selected_file else None
-        if selected_entry:
-            title = selected_entry['title']
-        else:
-            title = selected_file
-
-        # Breadcrumbs
-        if selected_file:
-            parts = selected_file.split('/')
-            path = ''
-            for i, part in enumerate(parts):
-                path = '/'.join(parts[:i+1])
-                breadcrumbs.append({'url': f'/documentation/{path}', 'title': part})
-
-        # Render Markdown
-        if abs_selected and os.path.isfile(abs_selected):
+                    with open(abs_selected, encoding='utf-8') as f:
+                        md = f.read()
+                    last_updated = datetime.utcfromtimestamp(os.path.getmtime(abs_selected)).strftime('%Y-%m-%d')
+                    content = markdown.markdown(md, extensions=['toc', 'fenced_code', 'tables'])
+                    if hasattr(markdown, 'toc'):
+                        toc_html = getattr(markdown, 'toc', '')
+                except Exception as e:
+                    self.log.error(f"Error loading documentation file {abs_selected}: {e}")
+                    content = f'<div class="alert alert-danger">Error loading documentation: {e}</div>'
+            else:
+                content = '<div class="alert alert-warning">Documentation file not found.</div>'
+            from sfwebui import Template
+            templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
             try:
-                with open(abs_selected, encoding='utf-8') as f:
-                    md = f.read()
-                # Optionally extract author/last_updated from YAML frontmatter or similar
-                # For now, just use file mtime
-                last_updated = datetime.utcfromtimestamp(os.path.getmtime(abs_selected)).strftime('%Y-%m-%d')
-                content = markdown.markdown(md, extensions=['toc', 'fenced_code', 'tables'])
-                # TOC
-                if hasattr(markdown, 'toc'):
-                    toc_html = getattr(markdown, 'toc', '')
-            except Exception as e:
-                content = f'<div class="alert alert-danger">Error loading documentation: {e}</div>'
-        else:
-            content = '<div class="alert alert-warning">Documentation file not found.</div>'
-
-        # Render template
-        from sfwebui import Template
-        templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
-        return templ.render(
-            doc_index=doc_index,
-            selected_file=selected_file,
-            content=content,
-            search_results=search_results,
-            search_query=search_query,
-            toc_html=toc_html,
-            breadcrumbs=breadcrumbs,
-            last_updated=last_updated,
-            author=author,
-            version_dirs=version_dirs,
-            current_version=current_version,
-            related=related,
-            title=title
-        )
+                return templ.render(
+                    doc_index=doc_index,
+                    selected_file=selected_file,
+                    content=content,
+                    search_results=search_results,
+                    search_query=search_query,
+                    toc_html=toc_html,
+                    breadcrumbs=breadcrumbs,
+                    last_updated=last_updated,
+                    author=author,
+                    version_dirs=version_dirs,
+                    current_version=current_version,
+                    related=related,
+                    title=title,
+                    highlight=highlight,
+                    v='',
+                    entry={},
+                    crumb={}
+                )
+            except Exception as te:
+                return f'<pre>Template error: {te}</pre>'
+        except Exception as e:
+            self.log.error(f"Documentation endpoint error: {e}")
+            from sfwebui import Template
+            templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
+            try:
+                return templ.render(
+                    doc_index=doc_index,
+                    selected_file=selected_file,
+                    content=f'<div class="alert alert-danger">Documentation error: {e}</div>',
+                    search_results=search_results,
+                    search_query=search_query,
+                    toc_html=toc_html,
+                    breadcrumbs=breadcrumbs,
+                    last_updated=last_updated,
+                    author=author,
+                    version_dirs=version_dirs,
+                    current_version=current_version,
+                    related=related,
+                    title=title,
+                    highlight=highlight,
+                    v='',
+                    entry={},
+                    crumb={}
+                )
+            except Exception as te:
+                return f'<pre>Template error: {te}</pre>'
 
     @cherrypy.expose
     def footer(self):
