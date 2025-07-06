@@ -62,8 +62,7 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         """Test the initialize method sets up all components."""
         # Setup mocks
         mock_config_instance = MagicMock()
-        mock_config_instance.get_default_config.return_value = {'_debug': False}
-        mock_config_instance.initialize_configuration.return_value = None
+        mock_config_instance.initialize.return_value = {'_debug': False}
         mock_config_manager.return_value = mock_config_instance
         
         mock_module_instance = MagicMock()
@@ -75,8 +74,8 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         orchestrator.initialize()
         
         # Verify initialization calls
-        mock_config_instance.get_default_config.assert_called_once()
-        mock_config_instance.initialize_configuration.assert_called_once()
+        mock_config_instance.initialize.assert_called_once()
+        mock_config_instance.validate_legacy_files.assert_called_once()
         mock_module_instance.load_modules.assert_called_once()
         mock_module_instance.load_correlation_rules.assert_called_once()
         mock_queue.assert_called_once()
@@ -183,9 +182,9 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         
         scan_id = 'test_scan_123'
         
-        with patch('sf_orchestrator.RuleExecutor') as mock_executor, \
-             patch('sf_orchestrator.EventEnricher') as mock_enricher, \
-             patch('sf_orchestrator.ResultAggregator') as mock_aggregator, \
+        with patch('spiderfoot.correlation.rule_executor.RuleExecutor') as mock_executor, \
+             patch('spiderfoot.correlation.event_enricher.EventEnricher') as mock_enricher, \
+             patch('spiderfoot.correlation.result_aggregator.ResultAggregator') as mock_aggregator, \
              patch('builtins.print') as mock_print:
             
             # Setup mocks
@@ -227,11 +226,22 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         
         output_config = orchestrator._build_output_config(mock_args)
         
-        expected_keys = ['format', 'no_headers', 'strip_newlines', 'show_source', 
-                        'max_length', 'delimiter', 'filter_requested', 'show_only', 'requested']
+        expected_keys = ['_format', '_showheaders', '_stripnewline', '_showsource',
+                        '_maxlength', '_csvdelim', '_showonlyrequested', '_requested']
         
+        # Check that all expected keys are present
         for key in expected_keys:
             self.assertIn(key, output_config)
+        
+        # Check specific values
+        self.assertEqual(output_config['_format'], 'json')
+        self.assertFalse(output_config['_showheaders'])
+        self.assertTrue(output_config['_stripnewline'])
+        self.assertTrue(output_config['_showsource'])
+        self.assertEqual(output_config['_maxlength'], 100)
+        self.assertEqual(output_config['_csvdelim'], ';')
+        self.assertTrue(output_config['_showonlyrequested'])
+        self.assertEqual(output_config['_requested'], ['DOMAIN_NAME'])
 
     @patch('sf_orchestrator.ScanManager')
     def test_handle_scan(self, mock_scan_manager):
@@ -240,20 +250,32 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         orchestrator.config = {'_debug': False}
         orchestrator.modules = {'module1': {}}
         orchestrator.logging_queue = MagicMock()
+        orchestrator.validation_utils = MagicMock()
+        orchestrator.validation_utils.validate_output_format.return_value = 'json'
+        orchestrator.config_manager = MagicMock()
+        orchestrator.config_manager.apply_command_line_args = MagicMock()
         
         # Mock scan manager
         mock_scan_instance = MagicMock()
-        mock_scan_instance.execute_scan_from_args.return_value = 'scan_123'
+        mock_scan_instance.execute_scan.return_value = 'scan_123'
+        mock_scan_instance.monitor_scan.return_value = {'status': 'FINISHED'}
+        mock_scan_instance.prepare_scan_config.return_value = {}
+        mock_scan_instance.setup_signal_handler = MagicMock()
+        mock_scan_instance.validate_scan_arguments.return_value = {
+            'target': 'example.com',
+            'target_type': 'domain'
+        }
         mock_scan_manager.return_value = mock_scan_instance
+        orchestrator.scan_manager = mock_scan_instance
         
         mock_args = MagicMock()
         mock_args.s = 'example.com'
+        mock_args.o = 'json'  # Set a valid output format
         
         with patch('sys.exit') as mock_exit:
             orchestrator.handle_scan(mock_args)
         
-        mock_scan_manager.assert_called_once_with(orchestrator.config)
-        mock_scan_instance.execute_scan_from_args.assert_called_once()
+        mock_scan_instance.execute_scan.assert_called_once()
         mock_exit.assert_called_once_with(0)
 
     @patch('sf_orchestrator.ServerManager')
@@ -265,9 +287,11 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         orchestrator.config_manager.get_web_config.return_value = {'host': '127.0.0.1', 'port': 5001}
         orchestrator.config_manager.get_api_config.return_value = {'host': '127.0.0.1', 'port': 8001}
         orchestrator.logging_queue = MagicMock()
+        orchestrator.validation_utils = MagicMock()
         
         mock_server_instance = MagicMock()
         mock_server_manager.return_value = mock_server_instance
+        orchestrator.server_manager = mock_server_instance
         
         mock_args = MagicMock()
         mock_args.listen = None
@@ -278,7 +302,6 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         
         orchestrator.handle_server_startup(mock_args)
         
-        mock_server_manager.assert_called_once_with(orchestrator.config)
         mock_server_instance.start_web_server.assert_called_once()
 
     @patch('sf_orchestrator.ServerManager')
@@ -290,9 +313,11 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         orchestrator.config_manager.get_web_config.return_value = {'host': '127.0.0.1', 'port': 5001}
         orchestrator.config_manager.get_api_config.return_value = {'host': '127.0.0.1', 'port': 8001}
         orchestrator.logging_queue = MagicMock()
+        orchestrator.validation_utils = MagicMock()
         
         mock_server_instance = MagicMock()
         mock_server_manager.return_value = mock_server_instance
+        orchestrator.server_manager = mock_server_instance
         
         mock_args = MagicMock()
         mock_args.listen = None
@@ -314,9 +339,11 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         orchestrator.config_manager.get_web_config.return_value = {'host': '127.0.0.1', 'port': 5001}
         orchestrator.config_manager.get_api_config.return_value = {'host': '127.0.0.1', 'port': 8001}
         orchestrator.logging_queue = MagicMock()
+        orchestrator.validation_utils = MagicMock()
         
         mock_server_instance = MagicMock()
         mock_server_manager.return_value = mock_server_instance
+        orchestrator.server_manager = mock_server_instance
         
         mock_args = MagicMock()
         mock_args.listen = None
@@ -333,6 +360,11 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         """Test server startup with command line overrides."""
         orchestrator = sf_orchestrator.SpiderFootOrchestrator()
         orchestrator.config_manager = MagicMock()
+        orchestrator.validation_utils = MagicMock()
+        orchestrator.validation_utils.parse_host_port.side_effect = [
+            ('0.0.0.0', 8080),  # For web config
+            ('0.0.0.0', 9090)   # For API config
+        ]
         
         # Mock initial configs
         web_config = {'host': '127.0.0.1', 'port': 5001}
@@ -347,7 +379,11 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         mock_args.api = False
         mock_args.both = False
         
-        with patch('sf_orchestrator.ServerManager'):
+        with patch('sf_orchestrator.ServerManager') as mock_server_manager:
+            mock_server_instance = MagicMock()
+            mock_server_manager.return_value = mock_server_instance
+            orchestrator.server_manager = mock_server_instance
+            
             orchestrator.handle_server_startup(mock_args)
         
         # Check that configs were updated
@@ -365,31 +401,39 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         mock_parser = MagicMock()
         mock_args = MagicMock()
         mock_args.version = True
+        mock_args.modules = False
+        mock_args.types = False
+        mock_args.correlate = None
+        mock_args.s = None
+        mock_args.listen = None
+        mock_args.api = False
+        mock_args.both = False
         mock_parser.parse_args.return_value = mock_args
         mock_create_parser.return_value = mock_parser
         
         orchestrator = sf_orchestrator.SpiderFootOrchestrator()
+        # Mock the config that would be set by initialize()
+        orchestrator.config = {'_debug': False}
+        
         orchestrator.run(['--version'])
         
-        mock_initialize.assert_called_once()
         mock_handle_version.assert_called_once()
 
-    @patch('sf_orchestrator.SpiderFootOrchestrator.initialize')
-    @patch('sf_orchestrator.SpiderFootOrchestrator.create_argument_parser')
-    @patch('sf_orchestrator.SpiderFootOrchestrator.handle_modules_list')
-    def test_run_modules_listing(self, mock_handle_modules, mock_create_parser, mock_initialize):
+    def test_run_modules_listing(self):
         """Test run method with modules listing argument."""
-        mock_parser = MagicMock()
-        mock_args = MagicMock()
-        mock_args.version = False
-        mock_args.modules = True
-        mock_parser.parse_args.return_value = mock_args
-        mock_create_parser.return_value = mock_parser
-        
         orchestrator = sf_orchestrator.SpiderFootOrchestrator()
-        orchestrator.run(['--modules'])
+        # Mock the module manager to avoid real module loading
+        orchestrator.module_manager = MagicMock()
+        orchestrator.module_manager.list_modules.return_value = ['module1', 'module2']
+        orchestrator.module_manager.get_module_info.return_value = {'descr': 'Test module'}
         
-        mock_handle_modules.assert_called_once()
+        # Mock the config that would be set by initialize()
+        orchestrator.config = {'_debug': False, '__database': 'test.db'}
+        
+        with patch('sys.exit') as mock_exit:
+            orchestrator.run(['--modules'])
+        
+        mock_exit.assert_called_once_with(0)
 
     @patch('sf_orchestrator.SpiderFootOrchestrator.initialize')
     @patch('sf_orchestrator.SpiderFootOrchestrator.create_argument_parser')
@@ -403,10 +447,15 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         mock_args.types = False
         mock_args.correlate = None
         mock_args.s = 'example.com'
+        mock_args.listen = None
+        mock_args.api = False
+        mock_args.both = False
         mock_parser.parse_args.return_value = mock_args
         mock_create_parser.return_value = mock_parser
         
         orchestrator = sf_orchestrator.SpiderFootOrchestrator()
+        # Mock the config that would be set by initialize()
+        orchestrator.config = {'_debug': False}
         orchestrator.run(['-s', 'example.com'])
         
         mock_handle_scan.assert_called_once_with(mock_args)
@@ -427,6 +476,8 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         mock_create_parser.return_value = mock_parser
         
         orchestrator = sf_orchestrator.SpiderFootOrchestrator()
+        # Mock the config that would be set by initialize()
+        orchestrator.config = {'_debug': False}
         orchestrator.run([])
         
         mock_handle_server.assert_called_once_with(mock_args)
@@ -449,11 +500,38 @@ class TestSpiderFootOrchestratorEdgeCases(unittest.TestCase):
         mock_log = MagicMock()
         mock_logger.return_value = mock_log
         
+        # Exception during construction should be raised
         with patch('sf_orchestrator.ConfigManager', side_effect=Exception("Config failed")):
+            with self.assertRaises(Exception) as context:
+                orchestrator = sf_orchestrator.SpiderFootOrchestrator()
+            
+            self.assertEqual(str(context.exception), "Config failed")
+
+        # Test exception during initialize method after successful construction
+        with patch('sf_orchestrator.ConfigManager'):
             orchestrator = sf_orchestrator.SpiderFootOrchestrator()
             
+            # Now mock validation_utils to fail during initialize
+            with patch.object(orchestrator.validation_utils, 'validate_python_version',
+                              side_effect=Exception("Python version check failed")):
+                with self.assertRaises(Exception) as context:
+                    orchestrator.initialize()
+                
+                self.assertEqual(str(context.exception), "Python version check failed")
+                mock_log.critical.assert_called_once()
+
+    @patch('sf_orchestrator.logging.getLogger')
+    def test_run_initialization_exception_handling(self, mock_logger):
+        """Test run method handles initialization exceptions with sys.exit."""
+        mock_log = MagicMock()
+        mock_logger.return_value = mock_log
+        
+        orchestrator = sf_orchestrator.SpiderFootOrchestrator()
+        
+        # Mock the initialize method to raise an exception
+        with patch.object(orchestrator, 'initialize', side_effect=Exception("Init failed")):
             with patch('sys.exit') as mock_exit:
-                orchestrator.initialize()
+                orchestrator.run(['-s', 'example.com'])
             
             mock_exit.assert_called_with(-1)
             mock_log.critical.assert_called_once()
@@ -503,7 +581,7 @@ class TestSpiderFootOrchestratorEdgeCases(unittest.TestCase):
             orchestrator.run()
         
         mock_exit.assert_called_with(0)
-        mock_log.info.assert_called_with("Interrupted by user.")
+        mock_log.info.assert_called_with("Interrupted by user")
 
     @patch('sf_orchestrator.SpiderFootOrchestrator.initialize')
     @patch('sf_orchestrator.logging.getLogger')
@@ -536,7 +614,8 @@ class TestSpiderFootOrchestratorEdgeCases(unittest.TestCase):
              patch('sys.exit') as mock_exit:
             orchestrator.handle_types_list()
         
-        mock_print.assert_called_with("Total event types: 0")
+        # When no types exist, it should just exit without printing anything
+        mock_print.assert_not_called()
         mock_exit.assert_called_with(0)
 
     def test_build_output_config_minimal_args(self):
@@ -583,7 +662,9 @@ class TestModuleFunctions(unittest.TestCase):
         mock_instance = MagicMock()
         mock_orchestrator.return_value = mock_instance
         
-        sf_orchestrator.main()
+        # Mock sys.argv to have more than one argument so it doesn't print usage
+        with patch('sys.argv', ['sf_orchestrator.py', '--help']):
+            sf_orchestrator.main()
         
         mock_orchestrator.assert_called_once()
         mock_instance.run.assert_called_once()

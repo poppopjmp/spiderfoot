@@ -310,7 +310,8 @@ class TestSpiderFootWebUiEnhanced(unittest.TestCase):
                 def import_side_effect(name, *args, **kwargs):
                     if name == 'psutil':
                         return mock_psutil
-                    return __import__(name, *args, **kwargs)
+                    # Use the original import to avoid recursion
+                    return __builtins__['__import__'](name, *args, **kwargs)
                 
                 mock_import.side_effect = import_side_effect
                 
