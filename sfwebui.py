@@ -214,7 +214,15 @@ class SpiderFootWebUi(WebUiRoutes):
             Sanitized input
         """
         if isinstance(user_input, list):
-            return [self.cleanUserInput([item])[0] if item else "" for item in user_input]
+            result = []
+            for item in user_input:
+                if item is None:
+                    result.append("")
+                elif isinstance(item, str):
+                    result.append(self.cleanUserInput([item])[0] if item else "")
+                else:
+                    result.append(str(item))
+            return result
         if isinstance(user_input, str):
             return self.cleanUserInput([user_input])[0] if user_input else ""
         return str(user_input) if user_input is not None else ""

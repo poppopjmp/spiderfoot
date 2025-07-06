@@ -4,6 +4,7 @@ from .workspace import WorkspaceEndpoints
 from .info import InfoEndpoints
 from .settings import SettingsEndpoints
 from .helpers import WebUiHelpers
+from .performance import PerformanceEnhancedWebUI
 import logging
 import multiprocessing as mp
 import cherrypy
@@ -16,7 +17,8 @@ except ImportError:
     pass
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 
-class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEndpoints, InfoEndpoints, WebUiHelpers):
+
+class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEndpoints, InfoEndpoints, WebUiHelpers, PerformanceEnhancedWebUI):
     defaultConfig = dict()
     config = dict()
     token = None

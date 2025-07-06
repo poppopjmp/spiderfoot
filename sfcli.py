@@ -72,11 +72,11 @@ class SpiderFootCli(cmd.Cmd):
         """Initialize dynamic completion lists by querying the API."""
         try:
             # Preload modules, types, workspaces, targets, scan IDs
-            self.modules = self._fetch_api_list('/api/v1/modules')
-            self.types = self._fetch_api_list('/api/v1/types')
-            self.workspaces = self._fetch_api_list('/api/v1/workspaces')
-            self.targets = self._fetch_api_list('/api/v1/targets')
-            self.knownscans = self._fetch_api_list('/api/v1/scans')
+            self.modules = self._fetch_api_list('/api/modules')
+            self.types = self._fetch_api_list('/api/types')
+            self.workspaces = self._fetch_api_list('/api/workspaces')
+            self.targets = self._fetch_api_list('/api/targets')
+            self.knownscans = self._fetch_api_list('/api/scans')
         except Exception:
             pass
 

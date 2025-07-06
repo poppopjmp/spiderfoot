@@ -1,3 +1,4 @@
+import contextlib
 import os
 import sys
 import time
@@ -167,10 +168,13 @@ def session_cleanup():
                 # Thread is already started, cannot change daemon status
                 pass
     
-    logging.info("Session cleanup completed")
+    # Use contextlib.suppress to handle potential logging issues during cleanup
+    with contextlib.suppress(ValueError, OSError):
+        logging.info("Session cleanup completed")
+
 
 # Add process-level timeout
-@pytest.fixture(autouse=True, scope="session") 
+@pytest.fixture(autouse=True, scope="session")
 def process_timeout():
     def timeout_process():
         time.sleep(1800)  # 30-minute absolute timeout
