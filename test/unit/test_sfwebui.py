@@ -1005,32 +1005,36 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
         results = []
         errors = []
         
-        def validate_scan():
-            try:
-                # Mock the _get_dbh method directly
-                with patch.object(self.webui, '_get_dbh') as mock_get_dbh:
-                    mock_db = MagicMock()
-                    mock_db.scanInstanceGet.return_value = ['scan', 'target']
-                    mock_get_dbh.return_value = mock_db
+        # Set up the mock outside the threads to ensure it's applied consistently
+        with patch.object(self.webui, '_get_dbh') as mock_get_dbh:
+            mock_db = MagicMock()
+            mock_db.scanInstanceGet.return_value = ['scan', 'target']
+            mock_get_dbh.return_value = mock_db
+            
+            def validate_scan():
+                try:
                     result = self.webui.validate_scan_id('a1b2c3d4e5f6789012345678901234ab')
                     results.append(result)
-            except Exception as e:
-                errors.append(str(e))
-        
-        # Start 10 concurrent validations
-        threads = []
-        for _ in range(10):
-            thread = threading.Thread(target=validate_scan)
-            threads.append(thread)
-            thread.start()
-        
-        # Wait for all threads to complete
-        for thread in threads:
-            thread.join()
+                except Exception as e:
+                    errors.append(str(e))
+            
+            # Start 10 concurrent validations
+            threads = []
+            for _ in range(10):
+                thread = threading.Thread(target=validate_scan)
+                threads.append(thread)
+                thread.start()
+            
+            # Wait for all threads to complete
+            for thread in threads:
+                thread.join()
         
         # All validations should succeed
-        self.assertEqual(len(errors), 0)
+        self.assertEqual(len(errors), 0, f"Errors occurred: {errors}")
         self.assertEqual(len(results), 10)
+        # Debug output to see what we're getting
+        if not all(results):
+            self.fail(f"Some validation results were False. Results: {results}")
         self.assertTrue(all(results))
     
     # =============================================================================

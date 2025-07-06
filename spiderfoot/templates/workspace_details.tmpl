@@ -1229,7 +1229,7 @@ $('a[href="#reports-tab"]').on('shown.bs.tab', function() {
 $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
     var target = $(e.target).attr('href');
     if (target !== '#targets-tab' && target !== '#scans-tab') {
-        $(target + ' .tab-pane').html('<div class="text-center" style="padding: 40px;"><i class="glyphicon glyphicon-refresh"></i> Loading...</div>');
+        $(target).find('.row .col-md-12').html('<div class="text-center" style="padding: 40px;"><i class="glyphicon glyphicon-refresh glyphicon-spin"></i> Loading...</div>');
     }
 });
 
@@ -1244,6 +1244,10 @@ $(document).ready(function() {
                 location.reload(); // Reload page to get updated scan list
             } else if ($('#correlations-tab').hasClass('active')) {
                 loadCorrelations(); // Refresh correlations
+            } else if ($('#schedules-tab').hasClass('active')) {
+                loadPeriodicScans(); // Refresh periodic scans
+            } else if ($('#results-tab').hasClass('active')) {
+                loadResults(); // Refresh results
             }
         } catch (e) {
             console.error('Error during auto-refresh:', e);
