@@ -153,7 +153,8 @@ class TestModuleStor_stdout(SpiderFootTestBase):
                 'IP_ADDRESS': 'IP Address',
                 'ROOT': 'Root'
             },
-            '_showonlyrequested': False
+            '_showonlyrequested': False,
+            '_maxlength': 1000  # Ensure no truncation
         }
         module.setup(self.sf_instance, test_opts)
         module.getScanId = MagicMock(return_value="test_scan_id")
@@ -170,14 +171,29 @@ class TestModuleStor_stdout(SpiderFootTestBase):
         # Check that print was called for each event
         self.assertEqual(len(mock_print.call_args_list), 3)
         
-        # Check that each IP address appears in at least one of the printed outputs
-        all_output = ""
+        # Check that each IP address appears in the printed outputs
+        # The module uses tab-delimited format: module\tevent_type\tdata
+        # Extract and verify each call's content
+        found_ips = set()
         for call in mock_print.call_args_list:
             if call[0]:  # call[0] contains the positional arguments
-                all_output += str(call[0][0])
+                # The first argument is the formatted string
+                formatted_string = str(call[0][0])
+                # Look for IP addresses in the formatted string
+                for i in range(3):
+                    expected_ip = f"192.168.1.{i}"
+                    if expected_ip in formatted_string:
+                        found_ips.add(expected_ip)
         
+        # Verify all IP addresses were found
         for i in range(3):
-            self.assertIn(f"192.168.1.{i}", all_output)
+            expected_ip = f"192.168.1.{i}"
+            self.assertIn(expected_ip, found_ips,
+                          f"Expected IP {expected_ip} not found. Found IPs: {found_ips}. "
+                          f"Print calls: {[str(call[0][0]) if call[0] else 'empty' for call in mock_print.call_args_list]}")
+        
+        # Verify the display name appears at least once
+        all_output = " ".join(str(call[0][0]) if call[0] else "" for call in mock_print.call_args_list)
         self.assertIn("IP Address", all_output)  # Check for display name
 
     @patch('sys.stdout', new_callable=StringIO)
