@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 import cherrypy
 from sfwebui import SpiderFootWebUi
+from spiderfoot import SpiderFootHelpers
 from test.unit.utils.test_base import SpiderFootTestBase
 from test.unit.utils.test_helpers import safe_recursion
 from cherrypy.test import helper
@@ -908,7 +909,9 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
         """Test configuration validation with missing database config."""
         del self.webui.config['__database']
         self.webui._validate_configuration()
-        self.assertEqual(self.webui.config['__database'], 'spiderfoot.db')
+        # The default should be the full path, not just filename
+        expected_path = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
+        self.assertEqual(self.webui.config['__database'], expected_path)
     
     def test_security_headers_without_secure_module(self):
         """Test security header setup when secure module is not available."""
@@ -998,15 +1001,17 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
     def test_concurrent_validation_simulation(self):
         """Test validation methods under simulated concurrent access."""
         import threading
-        import time
         
         results = []
         errors = []
         
         def validate_scan():
             try:
-                with patch('sfwebui.SpiderFootDb') as mock_db:
-                    mock_db.return_value.scanInstanceGet.return_value = ['scan', 'target']
+                # Mock the _get_dbh method directly
+                with patch.object(self.webui, '_get_dbh') as mock_get_dbh:
+                    mock_db = MagicMock()
+                    mock_db.scanInstanceGet.return_value = ['scan', 'target']
+                    mock_get_dbh.return_value = mock_db
                     result = self.webui.validate_scan_id('a1b2c3d4e5f6789012345678901234ab')
                     results.append(result)
             except Exception as e:

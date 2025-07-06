@@ -166,12 +166,19 @@ class TestModuleStor_stdout(SpiderFootTestBase):
             event.visibility = 1
             event.risk = 0
             module.handleEvent(event)
-        output = mock_print.call_args_list
-        # Join all output into a single string for easier assertions
-        output_str = "".join([call[0][0] for call in output])
+        
+        # Check that print was called for each event
+        self.assertEqual(len(mock_print.call_args_list), 3)
+        
+        # Check that each IP address appears in at least one of the printed outputs
+        all_output = ""
+        for call in mock_print.call_args_list:
+            if call[0]:  # call[0] contains the positional arguments
+                all_output += str(call[0][0])
+        
         for i in range(3):
-            self.assertIn(f"192.168.1.{i}", output_str)
-        self.assertIn("IP Address", output_str)  # Check for display name
+            self.assertIn(f"192.168.1.{i}", all_output)
+        self.assertIn("IP Address", all_output)  # Check for display name
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_handle_event_with_special_characters(self, mock_stdout):

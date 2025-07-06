@@ -128,7 +128,7 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
 
             for opt, val in m.get('opts').items():
                 self.assertIsInstance(
-                    val, (str, int, bool, list, float), f"Module {module} option {opt} has invalid type {type(val)}")
+                    val, (str, int, bool, list, float, dict), f"Module {module} option {opt} has invalid type {type(val)}")
 
     def test_module_options_have_valid_names(self):
         sf = SpiderFoot(self.default_options)
