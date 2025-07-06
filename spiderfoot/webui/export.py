@@ -2,11 +2,12 @@ import cherrypy
 import csv
 import json
 from io import StringIO
-from spiderfoot import SpiderFootDb, SpiderFootHelpers, __version__
+from spiderfoot import SpiderFootDb, SpiderFootHelpers
 
 class ExportEndpoints:
     @cherrypy.expose
     def scanexportlogs(self, id, dialect="excel"):
+        from sfwebui import SpiderFootDb
         dbh = SpiderFootDb(self.config)
         try:
             data = dbh.scanLogs(id)
@@ -14,6 +15,7 @@ class ExportEndpoints:
             return json.dumps(self.jsonify_error("404", "Scan ID not found")).encode("utf-8")
         if not data:
             return json.dumps(self.jsonify_error("404", "No scan logs found")).encode("utf-8")
+        from sfwebui import StringIO
         fileobj = StringIO()
         parser = csv.writer(fileobj, dialect=dialect)
         parser.writerow(["Date", "Component", "Type", "Event", "Event ID"])
@@ -26,6 +28,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scancorrelationsexport(self, id, filetype="csv", dialect="excel"):
+        from sfwebui import SpiderFootDb
         dbh = SpiderFootDb(self.config)
         try:
             data = dbh.scanCorrelations(id)
@@ -45,6 +48,7 @@ class ExportEndpoints:
             cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}-correlations.csv"
             cherrypy.response.headers['Content-Type'] = "application/csv"
             cherrypy.response.headers['Pragma'] = "no-cache"
+            from sfwebui import StringIO
             fileobj = StringIO()
             parser = csv.writer(fileobj, dialect=dialect)
             parser.writerow(headings)
@@ -55,6 +59,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scaneventresultexport(self, id, type, filetype="csv", dialect="excel"):
+        from sfwebui import SpiderFootDb
         dbh = SpiderFootDb(self.config)
         data = dbh.scanResultEvent(id, type)
         if filetype.lower() in ["xlsx", "excel"]:
@@ -72,6 +77,7 @@ class ExportEndpoints:
             cherrypy.response.headers['Pragma'] = "no-cache"
             return self.buildExcel(rows, ["Updated", "Type", "Module", "Source", "F/P", "Data"], sheetNameIndex=1)
         if filetype.lower() == 'csv':
+            from sfwebui import StringIO
             fileobj = StringIO()
             parser = csv.writer(fileobj, dialect=dialect)
             parser.writerow(["Updated", "Type", "Module", "Source", "F/P", "Data"])
@@ -91,6 +97,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel"):
+        from sfwebui import SpiderFootDb
         dbh = SpiderFootDb(self.config)
         scaninfo = dict()
         data = list()
@@ -121,6 +128,7 @@ class ExportEndpoints:
             cherrypy.response.headers['Pragma'] = "no-cache"
             return self.buildExcel(rows, ["Scan Name", "Updated", "Type", "Module", "Source", "F/P", "Data"], sheetNameIndex=2)
         if filetype.lower() == 'csv':
+            from sfwebui import StringIO
             fileobj = StringIO()
             parser = csv.writer(fileobj, dialect=dialect)
             parser.writerow(["Scan Name", "Updated", "Type", "Module", "Source", "F/P", "Data"])
@@ -158,6 +166,7 @@ class ExportEndpoints:
             cherrypy.response.headers['Pragma'] = "no-cache"
             return self.buildExcel(rows, ["Updated", "Type", "Module", "Source", "F/P", "Data"], sheetNameIndex=1)
         if filetype.lower() == 'csv':
+            from sfwebui import StringIO
             fileobj = StringIO()
             parser = csv.writer(fileobj, dialect=dialect)
             parser.writerow(["Updated", "Type", "Module", "Source", "F/P", "Data"])

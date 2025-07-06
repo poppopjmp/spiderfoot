@@ -628,7 +628,13 @@
             $("#scanreminder").hide();
             navTo("btn-log");
             refresh = function() { viewScanLog(instanceId); }
-            sf.fetchData('${docroot}/scanlog', {'id': instanceId}, function(data) {
+            sf.fetchData('${docroot}/scanlog', {'scanid': instanceId}, function(data) {
+                            if (!data || data.length === 0) {
+                                $("#loader").fadeOut(500);
+                                $("#mainbody").append("<div id='scanlogs-content' class='alert alert-warning'>No log data available for this scan.</div>");
+                                return;
+                            }
+                            
                             var table = "<table id='scanlogs-content' class='table table-bordered table-striped table-condensed small tablesorter' style='table-layout: fixed'>";
                             table += "<thead><tr><th>Time</th><th>Component</th><th>Type</th><th>Event</th></tr></thead><tbody>";
                             for (var i = 0; i < data.length; i++) {
@@ -637,7 +643,9 @@
                                 } else {
                                   table += "<tr>";
                                 }
-                                table += "<td>" + data[i][0] + "</a></td>";
+                                // Convert timestamp to human-readable format
+                                var timestamp = new Date(data[i][0]).toLocaleString();
+                                table += "<td>" + timestamp + "</td>";
                                 table += "<td>" + data[i][1] + "</td>";
                                 table += "<td>" + data[i][2] + "</td>";
                                 table += "<td>" + data[i][3] + "</td>";
@@ -648,6 +656,7 @@
                             $("#mainbody").append(table);
                             $("#scanlogs-content").tablesorter({widgets: ["filter"], widgetOptions : { filter_searchDelay : 300, filter_hideFilters : false }});
             });
+        }
         }
 
         // Summary of event types and counts for a scan

@@ -23,8 +23,35 @@ class InfoEndpoints:
     def modules(self):
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         modlist = list()
-        for mod in self.config['__modules__']:
-            modlist.append(mod)
+        modules_data = self.config['__modules__']
+        
+        # Handle both dict and list formats for backward compatibility
+        if isinstance(modules_data, dict):
+            # Convert dict to list format expected by frontend
+            for mod_name, mod_obj in modules_data.items():
+                if hasattr(mod_obj, '__doc__') and hasattr(mod_obj, 'opts'):
+                    mod_dict = {
+                        'name': mod_name,
+                        'descr': mod_obj.__doc__ or 'No description available',
+                        'provides': getattr(mod_obj, 'produces', []),
+                        'consumes': getattr(mod_obj, 'watchedEvents', []),
+                        'opts': getattr(mod_obj, 'opts', {})
+                    }
+                    modlist.append(mod_dict)
+                else:
+                    # Fallback for simple string entries
+                    modlist.append({
+                        'name': mod_name,
+                        'descr': 'Module description not available',
+                        'provides': [],
+                        'consumes': [],
+                        'opts': {}
+                    })
+        else:
+            # Handle list format (original)
+            for mod in modules_data:
+                modlist.append(mod)
+        
         return sorted(modlist, key=lambda x: x['name'])
 
     @cherrypy.expose

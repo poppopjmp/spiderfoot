@@ -24,23 +24,25 @@ class sfp__stor_stdout(SpiderFootPlugin):
 
     _priority = 0
 
-    def __init__(self):
-        super().__init__()
-        self.firstEvent = True
-        self.opts = {
-            "_format": "tab",  # tab, csv, json
-            "_requested": [],
-            "_showonlyrequested": False,
-            "_stripnewline": False,
-            "_showsource": False,
-            "_csvdelim": ",",
-            "_maxlength": 0,
-            "_eventtypes": {}  # Changed from [] to {}
-        }
+    # Default options - moved from __init__ to class level
+    opts = {
+        "_format": "tab",  # tab, csv, json
+        "_requested": [],
+        "_showonlyrequested": False,
+        "_stripnewline": False,
+        "_showsource": False,
+        "_csvdelim": ",",
+        "_maxlength": 0,
+        "_eventtypes": {}  # Changed from [] to {}
+    }
 
     # Option descriptions
     optdescs = {
     }
+
+    def __init__(self):
+        super().__init__()
+        self.firstEvent = True
 
     def setup(self, sfc, userOpts=dict()):
         self.sf = sfc

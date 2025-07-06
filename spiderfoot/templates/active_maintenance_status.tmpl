@@ -1,0 +1,37 @@
+## Active Maintenance Status
+<%
+    import time
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Status - SpiderFoot</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .status { padding: 20px; border-radius: 5px; margin: 20px 0; }
+        .maintenance { background-color: #fff3cd; border: 1px solid #ffeaa7; }
+        .normal { background-color: #d4edda; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+    <h1>SpiderFoot Maintenance Status</h1>
+    
+    % if maintenance_mode:
+        <div class="status maintenance">
+            <h2>🔧 System Under Maintenance</h2>
+            <p>SpiderFoot is currently undergoing maintenance. Please check back later.</p>
+            <p>Started: ${maintenance_start_time if 'maintenance_start_time' in locals() else 'Unknown'}</p>
+        </div>
+    % else:
+        <div class="status normal">
+            <h2>✅ System Operational</h2>
+            <p>SpiderFoot is running normally.</p>
+            <p>Last checked: ${time.strftime('%Y-%m-%d %H:%M:%S')}</p>
+        </div>
+    % endif
+    
+    <p><a href="/">← Back to SpiderFoot</a></p>
+</body>
+</html>

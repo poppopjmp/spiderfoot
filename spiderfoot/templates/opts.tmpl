@@ -1,24 +1,20 @@
 <%include file="HEADER.tmpl"/>
     <script type='text/javascript' src='${docroot}/static/js/spiderfoot.opts.js'></script>
     <h2>Settings</h2>
-% if updated:
-<div class="alert alert-success">
- <button type="button" class="close" data-dismiss="alert">&times;</button>
- <h4>Success!</h4>
- Settings updated. These will take effect the next time you run a scan.
+% if error_message:
+<div class="alert alert-danger">
+ <h4>Error</h4>
+ Processing one or more of your inputs failed.
+ <br><small>${error_message}</small>
 </div>
-% endif
-
-<% missing_keys = [] %>
+% else:
 % if not opts or not isinstance(opts, dict):
 <div class="alert alert-danger">
  <h4>Error</h4>
  Processing one or more of your inputs failed. Options data is missing or malformed.
- % if error_message:
- <br><small>${error_message}</small>
- % endif
 </div>
 % else:
+<% missing_keys = [] %>
 % for k in ['__globaloptdescs__', '__modules__']:
     % if k not in opts:
         <% missing_keys.append(k) %>
@@ -28,11 +24,8 @@
 <div class="alert alert-danger">
  <h4>Error</h4>
  Processing one or more of your inputs failed. Required option keys missing: ${', '.join(missing_keys)}
- % if error_message:
- <br><small>${error_message}</small>
- % endif
 </div>
-% else:
+% endif
 <form class="form" action='${docroot}/savesettings' id="savesettingsform" method='POST' enctype="multipart/form-data">
 <div class='text-left'>
     <input type=hidden id='allopts' name='allopts' value=''>

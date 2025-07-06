@@ -3,15 +3,13 @@
 # Name:         sfp_stor_db_advanced
 # Purpose:      Advanced enterprise-grade storage module with Phase 2 features
 #
-# Author:       Enterprise Enhancement Team
-# Created:      2025-01-XX
-# Copyright:    (c) SpiderFoot Enterprise 2025
+# Author:       Agostino Panico poppopjmp
+# Created:      2025-06-20
+# Copyright:    (c) Agostino Panico 2025
 # License:      MIT
 # -------------------------------------------------------------------------------
 
 """
-Phase 2 Enterprise Storage Module
-
 This module implements advanced enterprise features:
 - Advanced query optimization with prepared statements
 - Connection load balancing across multiple databases

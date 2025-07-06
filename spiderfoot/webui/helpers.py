@@ -2,6 +2,7 @@ import html
 import openpyxl
 import string
 import cherrypy
+from mako.template import Template
 from spiderfoot import __version__
 
 class WebUiHelpers:
@@ -61,8 +62,7 @@ class WebUiHelpers:
         }
 
     def error(self, message):
-        import sfwebui
-        templ = sfwebui.Template(
+        templ = Template(
             filename='spiderfoot/templates/error.tmpl', lookup=self.lookup)
         return templ.render(message=message, docroot=self.docroot, version=__version__)
 

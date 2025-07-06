@@ -1,13 +1,13 @@
 import cherrypy
 import random
 import json
+from mako.template import Template
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import __version__
 
 class SettingsEndpoints:
     @cherrypy.expose
     def opts(self, updated=None):
-        from sfwebui import Template
         templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
         self.token = random.SystemRandom().randint(0, 99999999)
         return templ.render(opts=self.config, pageid='SETTINGS', token=self.token, version=__version__, updated=updated, docroot=self.docroot)
@@ -35,7 +35,17 @@ class SettingsEndpoints:
     @cherrypy.expose
     def savesettings(self, allopts, token, configFile=None):
         if str(token) != str(self.token):
-            return self.error("Invalid CSRF token")
+            # Render opts.tmpl with error message for CSRF error
+            templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+            return templ.render(
+                opts=self.config,
+                pageid='SETTINGS',
+                token=self.token,
+                version=__version__,
+                updated=None,
+                docroot=self.docroot,
+                error_message="Invalid CSRF token"
+            )
         from spiderfoot import SpiderFootDb, SpiderFoot
         # Handle file upload
         if configFile and hasattr(configFile, 'file') and configFile.file:
@@ -52,7 +62,17 @@ class SettingsEndpoints:
                 sf = SpiderFoot(self.defaultConfig)
                 self.config = sf.configUnserialize(new_config, self.defaultConfig)
             except Exception as e:
-                return self.error(f"Failed to import config: {e}")
+                from sfwebui import Template
+                templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+                return templ.render(
+                    opts=self.config,
+                    pageid='SETTINGS',
+                    token=self.token,
+                    version=__version__,
+                    updated=None,
+                    docroot=self.docroot,
+                    error_message=f"Processing one or more of your inputs failed. {str(e)}"
+                )
         # Reset config to default
         elif allopts == "RESET":
             self.reset_settings()
@@ -70,7 +90,17 @@ class SettingsEndpoints:
                 sf = SpiderFoot(self.defaultConfig)
                 self.config = sf.configUnserialize(new_config, self.defaultConfig)
             except Exception as e:
-                return self.error(str(e))
+                from sfwebui import Template
+                templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+                return templ.render(
+                    opts=self.config,
+                    pageid='SETTINGS',
+                    token=self.token,
+                    version=__version__,
+                    updated=None,
+                    docroot=self.docroot,
+                    error_message=f"Processing one or more of your inputs failed. {str(e)}"
+                )
         raise cherrypy.HTTPRedirect(f"{self.docroot}/opts?updated=1")
 
     @cherrypy.expose

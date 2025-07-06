@@ -1,5 +1,6 @@
 import cherrypy
 from copy import deepcopy
+from mako.template import Template
 from spiderfoot import SpiderFootDb, SpiderFootHelpers, __version__
 from spiderfoot.sflib import SpiderFoot
 import time
@@ -107,7 +108,7 @@ class ScanEndpoints:
                     waited += 0.1
             except Exception as e:
                 errors.append(f"{scan_id}: {str(e)}")
-        templ = sfwebui.Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
+        templ = Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
         return templ.render(rerunscans=True, docroot=self.docroot, pageid="SCANLIST", version=__version__, errors=errors)
 
     @cherrypy.expose
@@ -115,7 +116,8 @@ class ScanEndpoints:
         import sfwebui  # for patching Template in tests
         dbh = SpiderFootDb(self.config)
         types = dbh.eventTypes()
-        templ = sfwebui.Template(filename='spiderfoot/templates/newscan.tmpl', lookup=self.lookup)
+        
+        templ = Template(filename='spiderfoot/templates/newscan.tmpl', lookup=self.lookup)
         return templ.render(pageid='NEWSCAN', types=types, docroot=self.docroot,
                             modules=self.config['__modules__'], scanname="",
                             selectedmods="", scantarget="", version=__version__)
@@ -139,7 +141,7 @@ class ScanEndpoints:
         if targetType is None:
             return self.error("Invalid target type")
         modlist = scanconfig['_modulesenabled'].split(',')
-        templ = sfwebui.Template(filename='spiderfoot/templates/newscan.tmpl', lookup=self.lookup)
+        templ = Template(filename='spiderfoot/templates/newscan.tmpl', lookup=self.lookup)
         return templ.render(pageid='NEWSCAN', types=types, docroot=self.docroot,
                             modules=self.config['__modules__'], selectedmods=modlist,
                             scanname=str(scanname), scantarget=str(scantarget), version=__version__)
@@ -151,7 +153,7 @@ class ScanEndpoints:
         res = dbh.scanInstanceGet(id)
         if res is None:
             return self.error("Scan not found")
-        templ = sfwebui.Template(filename='spiderfoot/templates/scaninfo.tmpl', lookup=self.lookup, input_encoding='utf-8')
+        templ = Template(filename='spiderfoot/templates/scaninfo.tmpl', lookup=self.lookup, input_encoding='utf-8')
         return templ.render(id=id, name=res[0], status=res[5], docroot=self.docroot, version=__version__, pageid="SCANLIST")
 
     @cherrypy.expose
@@ -163,6 +165,16 @@ class ScanEndpoints:
         for row in data:
             # row: [guid, name, seed_target, created, started, ended, status, element_count]
             scan_id = row[0]
+            # Convert timestamps to human-readable format
+            row_list = list(row)
+            # row[3] = created, row[4] = started, row[5] = ended
+            if row_list[3] and row_list[3] != 0:
+                row_list[3] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row_list[3]))
+            if row_list[4] and row_list[4] != 0:
+                row_list[4] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row_list[4]))
+            if row_list[5] and row_list[5] != 0:
+                row_list[5] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row_list[5]))
+            
             # Get risk summary for this scan
             riskmatrix = {"HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0}
             try:
@@ -174,7 +186,7 @@ class ScanEndpoints:
             except Exception:
                 pass
             # Append riskmatrix as 9th element
-            retdata.append(list(row) + [riskmatrix])
+            retdata.append(row_list + [riskmatrix])
         return retdata
 
     @cherrypy.expose
@@ -200,7 +212,7 @@ class ScanEndpoints:
         retdata = []
         dbh = SpiderFootDb(self.config)
         try:
-            scandata = dbh.scanSummary(id, by)
+            scandata = dbh.scanResultSummary(id, by)
         except Exception:
             return retdata
         try:
@@ -217,7 +229,7 @@ class ScanEndpoints:
         retdata = []
         dbh = SpiderFootDb(self.config)
         try:
-            data = dbh.scanCorrelations(id)
+            data = dbh.scanCorrelationList(id)
             for row in data:
                 retdata.append(row)
         except Exception as e:
@@ -454,7 +466,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def index(self):
         import sfwebui  # for patching Template in tests
-        templ = sfwebui.Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
+        templ = Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, pageid="INDEX", version=__version__)
 
     @cherrypy.expose
@@ -463,7 +475,7 @@ class ScanEndpoints:
         from io import StringIO
         dbh = SpiderFootDb(self.config)
         try:
-            data = dbh.scanLog(id)
+            data = dbh.scanLogs(id)
         except Exception:
             data = []
         if not data:
@@ -647,7 +659,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def opts(self, updated=None, error_message=None, config=None):
         import sfwebui
-        templ = sfwebui.Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+        templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
         # Use provided config or fallback to self.config
         render_config = self.config if config is None else config
         return templ.render(
@@ -816,7 +828,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def index(self):
         import sfwebui  # for patching Template in tests
-        templ = sfwebui.Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
+        templ = Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, pageid="INDEX", version=__version__)
 
     @cherrypy.expose
@@ -825,7 +837,7 @@ class ScanEndpoints:
         from io import StringIO
         dbh = SpiderFootDb(self.config)
         try:
-            data = dbh.scanLog(id)
+            data = dbh.scanLogs(id)
         except Exception:
             data = []
         if not data:
@@ -1009,7 +1021,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def opts(self, updated=None, error_message=None, config=None):
         import sfwebui
-        templ = sfwebui.Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+        templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
         # Use provided config or fallback to self.config
         render_config = self.config if config is None else config
         return templ.render(
@@ -1178,7 +1190,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def index(self):
         import sfwebui  # for patching Template in tests
-        templ = sfwebui.Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
+        templ = Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, pageid="INDEX", version=__version__)
 
     @cherrypy.expose
@@ -1187,7 +1199,7 @@ class ScanEndpoints:
         from io import StringIO
         dbh = SpiderFootDb(self.config)
         try:
-            data = dbh.scanLog(id)
+            data = dbh.scanLogs(id)
         except Exception:
             data = []
         if not data:
@@ -1371,7 +1383,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def opts(self, updated=None, error_message=None, config=None):
         import sfwebui
-        templ = sfwebui.Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+        templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
         # Use provided config or fallback to self.config
         render_config = self.config if config is None else config
         return templ.render(

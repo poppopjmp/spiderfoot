@@ -164,6 +164,305 @@ sf.log = function (message) {
   }
 };
 
+// View scan logs function
+function viewScanLog(scanId) {
+    sf.log("Viewing scan log for: " + scanId);
+    
+    // Set active button
+    navTo("btn-log");
+    $("#modifyactions").hide();
+    $("#customtabview").hide();
+    $("#customvizview").hide();
+    $("#btn-export").hide();
+    $("#btn-download-logs").show();
+    $("#loader").show();
+    
+    // Remove existing content
+    $("#scansummary-content").remove();
+    $("#scanlogs-content").remove();
+    
+    // Load scan logs via AJAX
+    var req = $.ajax({
+        type: "GET",
+        url: docroot + "/scanlog?scanid=" + scanId,
+        cache: false,
+        dataType: "json"
+    });
+    
+    req.done(function(data) {
+        var table = "<div id='scanlogs-content'>";
+        
+        if (data && data.length > 0) {
+            table += "<table class='table table-bordered table-striped small tablesorter'>";
+            table += "<thead><tr><th>Date</th><th>Component</th><th>Type</th><th>Event</th><th>Event ID</th></tr></thead><tbody>";
+            
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                table += "<tr>";
+                table += "<td>" + (row[0] || '') + "</td>";
+                table += "<td>" + (row[1] || '') + "</td>";
+                table += "<td>" + (row[2] || '') + "</td>";
+                table += "<td>" + (row[3] || '') + "</td>";
+                table += "<td>" + (row[4] || '') + "</td>";
+                table += "</tr>";
+            }
+            table += "</tbody></table>";
+        } else {
+            table += "<div class='alert alert-info'>No log entries found.</div>";
+        }
+        
+        table += "</div>";
+        
+        $("#loader").fadeOut(500);
+        $("#mainbody").append(table);
+    });
+    
+    req.fail(function(hr, textStatus, errorThrown) {
+        $("#loader").fadeOut(500);
+        sf.log("Error loading scan log: " + hr.responseText);
+        alertify.error('<i class="glyphicon glyphicon-minus-sign"></i> <b>Error</b><br/>Could not load scan log: ' + textStatus);
+    });
+}
+
+// Scan Summary View function
+function scanSummaryView(scanId) {
+    sf.log("Viewing scan summary for: " + scanId);
+    
+    // Set active button
+    navTo("btn-status");
+    $("#modifyactions").hide();
+    $("#customtabview").hide();
+    $("#customvizview").hide();
+    $("#btn-export").hide();
+    $("#btn-download-logs").hide();
+    $("#loader").show();
+    
+    // Remove existing content
+    $("#scansummary-content").remove();
+    $("#scanlogs-content").remove();
+    
+    // Load scan summary via AJAX
+    var req = $.ajax({
+        type: "GET",
+        url: docroot + "/scansummary?id=" + scanId + "&by=type",
+        cache: false,
+        dataType: "json"
+    });
+    
+    req.done(function(data) {
+        var table = "<div id='scansummary-content'>";
+        
+        if (data && data.length > 0) {
+            table += "<table class='table table-bordered table-striped small tablesorter'>";
+            table += "<thead><tr><th>Event Type</th><th>Count</th></tr></thead><tbody>";
+            
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                table += "<tr>";
+                table += "<td>" + (row[0] || '') + "</td>";
+                table += "<td>" + (row[1] || 0) + "</td>";
+                table += "</tr>";
+            }
+            table += "</tbody></table>";
+        } else {
+            table += "<div class='alert alert-info'>No summary data found.</div>";
+        }
+        
+        table += "</div>";
+        
+        $("#loader").fadeOut(500);
+        $("#mainbody").append(table);
+    });
+    
+    req.fail(function(hr, textStatus, errorThrown) {
+        $("#loader").fadeOut(500);
+        sf.log("Error loading scan summary: " + hr.responseText);
+        alertify.error('<i class="glyphicon glyphicon-minus-sign"></i> <b>Error</b><br/>Could not load scan summary: ' + textStatus);
+    });
+}
+
+// Browse Correlations function
+function browseCorrelations(scanId) {
+    sf.log("Viewing correlations for: " + scanId);
+    
+    // Set active button
+    navTo("btn-correlations");
+    $("#modifyactions").hide();
+    $("#customtabview").hide();
+    $("#customvizview").hide();
+    $("#btn-export").hide();
+    $("#btn-download-logs").hide();
+    $("#loader").show();
+    
+    // Remove existing content
+    $("#scansummary-content").remove();
+    $("#scanlogs-content").remove();
+    
+    // Load correlations via AJAX
+    var req = $.ajax({
+        type: "GET",
+        url: docroot + "/scancorrelations?id=" + scanId,
+        cache: false,
+        dataType: "json"
+    });
+    
+    req.done(function(data) {
+        var table = "<div id='scansummary-content'>";
+        
+        if (data && data.length > 0) {
+            table += "<table class='table table-bordered table-striped small tablesorter'>";
+            table += "<thead><tr><th>Rule Name</th><th>Correlation</th><th>Risk</th><th>Description</th></tr></thead><tbody>";
+            
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                table += "<tr>";
+                table += "<td>" + (row[0] || '') + "</td>";
+                table += "<td>" + (row[1] || '') + "</td>";
+                table += "<td>" + (row[2] || '') + "</td>";
+                table += "<td>" + (row[3] || '') + "</td>";
+                table += "</tr>";
+            }
+            table += "</tbody></table>";
+        } else {
+            table += "<div class='alert alert-info'>No correlations found.</div>";
+        }
+        
+        table += "</div>";
+        
+        $("#loader").fadeOut(500);
+        $("#mainbody").append(table);
+    });
+    
+    req.fail(function(hr, textStatus, errorThrown) {
+        $("#loader").fadeOut(500);
+        sf.log("Error loading correlations: " + hr.responseText);
+        alertify.error('<i class="glyphicon glyphicon-minus-sign"></i> <b>Error</b><br/>Could not load correlations: ' + textStatus);
+    });
+}
+
+// Browse Event List function
+function browseEventList(scanId) {
+    sf.log("Viewing event list for: " + scanId);
+    
+    // Set active button
+    navTo("btn-browse");
+    $("#modifyactions").show();
+    $("#customtabview").show();
+    $("#customvizview").hide();
+    $("#btn-export").show();
+    $("#btn-download-logs").hide();
+    $("#loader").show();
+    
+    // Remove existing content
+    $("#scansummary-content").remove();
+    $("#scanlogs-content").remove();
+    
+    // Load event results via AJAX
+    var req = $.ajax({
+        type: "GET",
+        url: docroot + "/scaneventresults?id=" + scanId,
+        cache: false,
+        dataType: "json"
+    });
+    
+    req.done(function(data) {
+        var table = "<div id='scansummary-content'>";
+        
+        if (data && data.length > 0) {
+            table += "<table class='table table-bordered table-striped small tablesorter'>";
+            table += "<thead><tr><th>Date</th><th>Type</th><th>Value</th><th>Source</th><th>Module</th><th>Risk</th></tr></thead><tbody>";
+            
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                table += "<tr>";
+                table += "<td>" + (row[0] || '') + "</td>";
+                table += "<td>" + (row[1] || '') + "</td>";
+                table += "<td>" + (row[2] || '') + "</td>";
+                table += "<td>" + (row[3] || '') + "</td>";
+                table += "<td>" + (row[4] || '') + "</td>";
+                table += "<td>" + (row[5] || '') + "</td>";
+                table += "</tr>";
+            }
+            table += "</tbody></table>";
+        } else {
+            table += "<div class='alert alert-info'>No event results found.</div>";
+        }
+        
+        table += "</div>";
+        
+        $("#loader").fadeOut(500);
+        $("#mainbody").append(table);
+    });
+    
+    req.fail(function(hr, textStatus, errorThrown) {
+        $("#loader").fadeOut(500);
+        sf.log("Error loading event results: " + hr.responseText);
+        alertify.error('<i class="glyphicon glyphicon-minus-sign"></i> <b>Error</b><br/>Could not load event results: ' + textStatus);
+    });
+}
+
+// Graph Events function
+function graphEvents(scanId) {
+    sf.log("Viewing graph for: " + scanId);
+    
+    // Set active button
+    $(".btn-toolbar .btn").removeClass("active");
+    $("#btn-graph").addClass("active");
+    
+    // For now, show a placeholder
+    var graphHtml = '<div class="container-fluid"><h3>Graph View for ' + scanId + '</h3>';
+    graphHtml += '<div class="alert alert-info"><strong>Info:</strong> Graph visualization is not yet implemented.</div>';
+    graphHtml += '</div>';
+    
+    // Display in the main content area
+    $("#scancontent").html(graphHtml);
+}
+
+// View Scan Config function
+function viewScanConfig(scanId) {
+    sf.log("Viewing scan config for: " + scanId);
+    
+    // Set active button
+    $(".btn-toolbar .btn").removeClass("active");
+    $("#btn-info").addClass("active");
+    
+    // Load scan config via AJAX
+    var req = $.ajax({
+        type: "GET",
+        url: docroot + "/scanopts?id=" + scanId,
+        cache: false,
+        dataType: "json"
+    });
+    
+    req.done(function(data) {
+        var configHtml = '<div class="container-fluid"><h3>Scan Configuration for ' + scanId + '</h3>';
+        
+        if (data && data.meta) {
+            configHtml += '<div class="panel panel-default"><div class="panel-heading"><h4>Scan Information</h4></div>';
+            configHtml += '<div class="panel-body"><table class="table table-striped">';
+            configHtml += '<tr><td><strong>Scan ID:</strong></td><td>' + (data.meta[0] || '') + '</td></tr>';
+            configHtml += '<tr><td><strong>Name:</strong></td><td>' + (data.meta[1] || '') + '</td></tr>';
+            configHtml += '<tr><td><strong>Target:</strong></td><td>' + (data.meta[2] || '') + '</td></tr>';
+            configHtml += '<tr><td><strong>Started:</strong></td><td>' + (data.meta[3] || '') + '</td></tr>';
+            configHtml += '<tr><td><strong>Finished:</strong></td><td>' + (data.meta[4] || '') + '</td></tr>';
+            configHtml += '<tr><td><strong>Status:</strong></td><td>' + (data.meta[5] || '') + '</td></tr>';
+            configHtml += '</table></div></div>';
+        } else {
+            configHtml += '<div class="alert alert-warning">No scan configuration found.</div>';
+        }
+        
+        configHtml += '</div>';
+        
+        // Display in the main content area
+        $("#scancontent").html(configHtml);
+    });
+    
+    req.fail(function(hr, textStatus, errorThrown) {
+        sf.log("Error loading scan config: " + hr.responseText);
+        alertify.error('<i class="glyphicon glyphicon-minus-sign"></i> <b>Error</b><br/>Could not load scan config: ' + textStatus);
+    });
+}
+
 // Responsive design adjustments
 window.addEventListener("resize", () => {
   const width = window.innerWidth;

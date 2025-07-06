@@ -3,9 +3,9 @@
 # Name:         sfp_security_hardening
 # Purpose:      Advanced Security Hardening Module
 #
-# Author:       Security Team
+# Author:       Agostino Panico poppopjmp
 # Created:      2025-06-20
-# Copyright:    (c) SpiderFoot Enterprise 2025
+# Copyright:    (c) Agostino Panico 2025
 # License:      MIT
 # -------------------------------------------------------------------------------
 
@@ -123,6 +123,10 @@ class ThreatIntel:
 
 class EncryptionManager:
     """Advanced encryption management for data protection."""
+    __name__ = "sfp__security_hardening"
+    __version__ = "1.0"
+    __author__ = "poppopjmp"
+    __license__ = "MIT"
     
     def __init__(self):
         self.master_key = None

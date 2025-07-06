@@ -3,9 +3,9 @@
 # Name:         sfp_ai_threat_intel
 # Purpose:      AI-Powered Threat Intelligence Engine
 #
-# Author:       Enhancement Team
+# Author:       Agostino Panico poppopjmp
 # Created:      2025-06-20
-# Copyright:    (c) SpiderFoot Enterprise 2025
+# Copyright:    (c) Agostino Panico 2025
 # License:      MIT
 # -------------------------------------------------------------------------------
 
@@ -130,6 +130,23 @@ class IOCCorrelation:
 
 class PatternRecognitionEngine:
     """Advanced pattern recognition using machine learning."""
+    __name__ = "sfp__ai_threat_intel"  
+    __description__ = "AI-Powered Threat Intelligence Engine"
+    __version__ = "0.0.1"
+    __authors__ = ["Poppopjmp"]
+    __license__ = "MIT"
+    __options__ = {
+        "enable_pattern_recognition": True,
+        "enable_predictive_analytics": True,
+        "enable_ioc_correlation": True,
+        "enable_threat_scoring": True,
+        "enable_nlp_analysis": True,
+        "anomaly_detection_threshold": 0.1,
+        "threat_score_threshold": 70,
+        "correlation_min_strength": 0.3,
+        "prediction_time_horizon": 24,  # hours
+        "ml_model_update_interval": 3600  # seconds
+    }
     
     def __init__(self):
         self.models = {}
