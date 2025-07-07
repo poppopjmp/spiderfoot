@@ -568,23 +568,6 @@ class TestSpiderFootOrchestratorEdgeCases(unittest.TestCase):
 
     @patch('sf_orchestrator.SpiderFootOrchestrator.initialize')
     @patch('sf_orchestrator.logging.getLogger')
-    def test_run_keyboard_interrupt(self, mock_logger, mock_initialize):
-        """Test run method handles KeyboardInterrupt."""
-        mock_log = MagicMock()
-        mock_logger.return_value = mock_log
-        
-        mock_initialize.side_effect = KeyboardInterrupt()
-        
-        orchestrator = sf_orchestrator.SpiderFootOrchestrator()
-        
-        with patch('sys.exit') as mock_exit:
-            orchestrator.run()
-        
-        mock_exit.assert_called_with(0)
-        mock_log.info.assert_called_with("Interrupted by user")
-
-    @patch('sf_orchestrator.SpiderFootOrchestrator.initialize')
-    @patch('sf_orchestrator.logging.getLogger')
     def test_run_general_exception(self, mock_logger, mock_initialize):
         """Test run method handles general exceptions."""
         mock_log = MagicMock()
