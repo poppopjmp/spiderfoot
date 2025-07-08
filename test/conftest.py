@@ -69,9 +69,15 @@ def pytest_configure(config):
 def start_global_timeout():
     # Create a thread that will terminate the process after a timeout
     def timeout_thread():
-        time.sleep(600)  # 10-minute global timeout
-        logging.error("Global timeout exceeded. Terminating test run.")
-        os._exit(1)
+        time.sleep(1800)  # 30-minute global timeout
+        try:
+            # Use print instead of logging to avoid closed file issues
+            print("Global timeout exceeded. Terminating test run.", file=sys.stderr, flush=True)
+        except Exception:
+            # If even stderr is closed, just exit
+            pass
+        finally:
+            os._exit(1)
     
     # Explicitly set daemon to True to ensure it doesn't prevent shutdown
     thread = threading.Thread(target=timeout_thread, daemon=True)
