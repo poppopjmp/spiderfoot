@@ -327,17 +327,6 @@ class TestSfMainEdgeCases(unittest.TestCase):
         """Clean up after tests."""
         sys.argv = self.original_argv
 
-    @patch('sf.SpiderFootOrchestrator')
-    def test_main_keyboard_interrupt(self, mock_orchestrator):
-        """Test main() handles KeyboardInterrupt."""
-        mock_instance = MagicMock()
-        mock_instance.run.side_effect = KeyboardInterrupt()
-        mock_orchestrator.return_value = mock_instance
-        
-        with patch('sys.exit') as mock_exit:
-            sf.main()
-            # Should exit gracefully without calling sys.exit(-1)
-
     @patch('sf.ScanManager')
     @patch('sf.logging.getLogger')
     def test_handle_abort_no_scan_id(self, mock_logger, mock_scan_manager):

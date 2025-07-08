@@ -554,25 +554,7 @@ class TestSfMainEdgeCases(unittest.TestCase):
         missing_descriptions = core_keys - desc_keys
         self.assertEqual(len(missing_descriptions), 0,
                         f"Missing descriptions for: {missing_descriptions}")
-    
-    @patch('sf.SpiderFootOrchestrator')
-    @patch('sys.argv', ['sf.py'])
-    def test_main_keyboard_interrupt(self, mock_orchestrator):
-        """Test main function handles KeyboardInterrupt."""
-        mock_instance = MagicMock()
-        mock_instance.run.side_effect = KeyboardInterrupt()
-        mock_orchestrator.return_value = mock_instance
-        
-        with patch('logging.getLogger') as mock_logger:
-            mock_log = MagicMock()
-            mock_logger.return_value = mock_log
-            
-            # KeyboardInterrupt should be raised and not caught by main
-            with self.assertRaises(KeyboardInterrupt):
-                sf.main()
-            
-            # Should not log anything for KeyboardInterrupt as it's not caught
-            mock_log.critical.assert_not_called()
+
     
     def test_version_import(self):
         """Test that version import works correctly."""

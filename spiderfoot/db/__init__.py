@@ -690,6 +690,19 @@ class SpiderFootDb:
         return self._event.scanResultHistory(instanceId)
     def scanResultsUpdateFP(self, instanceId: str, resultHashes: list, fpFlag: int) -> bool:
         return self._event.scanResultsUpdateFP(instanceId, resultHashes, fpFlag)
+    
+    # --- SCAN ELEMENT METHODS ---
+    def scanElementSourcesDirect(self, instanceId: str, elementIdList: list) -> list:
+        return self._event.scanElementSourcesDirect(instanceId, elementIdList)
+    
+    def scanElementChildrenDirect(self, instanceId: str, elementIdList: list) -> list:
+        return self._event.scanElementChildrenDirect(instanceId, elementIdList)
+    
+    def scanElementSourcesAll(self, instanceId: str, childData: list) -> list:
+        return self._event.scanElementSourcesAll(instanceId, childData)
+    
+    def scanElementChildrenAll(self, instanceId: str, parentIds: list) -> list:
+        return self._event.scanElementChildrenAll(instanceId, parentIds)
     # --- CORRELATION RESULTS ---
     def correlationResultCreate(self, instanceId: str, event_hash: str, ruleId: str, ruleName: str, ruleDescr: str, ruleRisk: str, ruleYaml: str, correlationTitle: str, eventHashes: list) -> str:
         return self._correlation.correlationResultCreate(instanceId, event_hash, ruleId, ruleName, ruleDescr, ruleRisk, ruleYaml, correlationTitle, eventHashes)
@@ -825,3 +838,60 @@ class SpiderFootDb:
     def scanResultDelete(self, *args, **kwargs):
         """Stub for API/test compatibility. Does nothing."""
         return True
+
+    # --- EVENT ENRICHMENT METHODS ---
+    def get_sources(self, scan_id: str, event_hash: str) -> list:
+        """
+        Get source events for a given event hash.
+        
+        Args:
+            scan_id: The scan instance ID
+            event_hash: The event hash to get sources for
+            
+        Returns:
+            list: List of source event dictionaries
+        """
+        return self._event.get_sources(scan_id, event_hash)
+
+    def get_entities(self, scan_id: str, event_hash: str) -> list:
+        """
+        Get entity events for a given event hash.
+        
+        Args:
+            scan_id: The scan instance ID
+            event_hash: The event hash to get entities for
+            
+        Returns:
+            list: List of entity event dictionaries
+        """
+        return self._event.get_entities(scan_id, event_hash)
+
+    def get_children(self, scan_id: str, event_hash: str) -> list:
+        """
+        Get child events for a given event hash.
+        
+        Args:
+            scan_id: The scan instance ID
+            event_hash: The event hash to get children for
+            
+        Returns:
+            list: List of child event dictionaries
+        """
+        # Use existing scanElementChildrenAll method to get children
+        # Return them in the format expected by the enricher
+        children_data = self.scanElementChildrenAll(scan_id, [event_hash])
+        if not children_data:
+            return []
+        
+        # Convert to the expected format
+        children = []
+        for event in children_data:
+            children.append({
+                'hash': event[8],  # hash
+                'type': event[4],  # type
+                'data': event[1],  # data
+                'module': event[3],  # module
+                'generated': event[0],  # generated
+                'source_event_hash': event[9]  # source_event_hash
+            })
+        return children
