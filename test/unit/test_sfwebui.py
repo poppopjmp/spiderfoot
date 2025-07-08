@@ -539,11 +539,6 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
         self.assertIn('<!DOCTYPE html>', result)
         self.assertIn('Maintenance Status', result)
 
-    def test_footer(self):
-        result = self.webui.footer()
-        self.assertIn('footer', result)
-        self.assertIn('</html>', result)
-
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()

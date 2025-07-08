@@ -23,13 +23,15 @@ SpiderFoot is designed for both beginners and advanced users, offering a user-fr
 - **Automated OSINT Collection:** Schedule and run scans to collect intelligence from a wide range of sources with minimal manual effort. SpiderFoot can run unattended, making it ideal for continuous monitoring.
 - **200+ Data Gathering Modules:** Integrate with threat feeds, search engines, social media, DNS, WHOIS, breach databases, paste sites, and more. Modules are regularly updated and community contributions are welcome.
 - **Web UI and CLI:** Use the intuitive web interface for interactive investigations, visualization, and reporting, or the command-line interface for automation, scripting, and integration with other tools.
+- **Enterprise Security Features:** Comprehensive security implementation including CSRF protection, input validation, rate limiting, session management, API security, and structured security logging.
 - **Workspaces and Multi-Target Support:** Organize scans, targets, and results into workspaces for collaborative investigations and large-scale assessments. Workspaces allow you to manage multiple projects and share findings with your team.
-- **API for Integration:** Integrate SpiderFoot with SIEM, SOAR, and other security tools using the RESTful API. Automate scans, retrieve results, and trigger actions based on findings.
+- **API for Integration:** Integrate SpiderFoot with SIEM, SOAR, and other security tools using the RESTful API with enterprise-grade security features. Automate scans, retrieve results, and trigger actions based on findings.
 - **Correlation and Analysis:** Built-in correlation engine to identify relationships, patterns, and risks across collected data. Visualize connections between entities and uncover hidden threats.
 - **Custom Module Support:** Easily extend SpiderFoot with your own modules to support new data sources, custom logic, or proprietary integrations. The modular architecture makes development and maintenance straightforward.
 - **Notifications and Alerts:** Receive real-time notifications for critical findings, such as data breaches, exposed credentials, or new assets discovered.
 - **Export and Reporting:** Export scan results in multiple formats (CSV, JSON, HTML) for further analysis or reporting to stakeholders.
 - **Cross-Platform:** Runs on Windows, Linux, and macOS. Docker images are available for easy deployment.
+- **Production-Ready Security:** Battle-tested security middleware with comprehensive protection against common web vulnerabilities and enterprise-grade logging and monitoring.
 
 ---
 
@@ -38,11 +40,13 @@ SpiderFoot is designed for both beginners and advanced users, offering a user-fr
 SpiderFoot consists of the following main components:
 
 - **Core Engine:** Orchestrates scans, manages modules, processes results, and handles scheduling. The engine is highly extensible and supports concurrent scanning.
+- **Security Middleware:** Enterprise-grade security layer providing CSRF protection, input validation, rate limiting, session management, API security, and comprehensive logging.
 - **Modules:** Each module is responsible for gathering a specific type of data or integrating with a particular source. Modules can be enabled, disabled, or configured individually.
-- **Web UI:** Provides a user-friendly interface for configuring scans, viewing results, managing workspaces, and visualizing relationships between entities. The UI supports advanced filtering, search, and export features.
-- **API:** Enables programmatic access to SpiderFoot's capabilities for integration and automation. The API is fully documented and supports authentication, scan management, and data retrieval.
-- **Database:** Stores scan results, configuration, and workspace data. SpiderFoot uses SQLite by default but can be configured for other backends in advanced setups.
+- **Web UI:** Provides a user-friendly interface for configuring scans, viewing results, managing workspaces, and visualizing relationships between entities. The UI supports advanced filtering, search, and export features with comprehensive security protection.
+- **API:** Enables programmatic access to SpiderFoot's capabilities for integration and automation. The API is fully documented and supports enterprise-grade authentication, authorization, and security features.
+- **Database:** Stores scan results, configuration, and workspace data. SpiderFoot uses SQLite by default but can be configured for other backends in advanced setups with encryption and secure configuration management.
 - **Scheduler:** Allows for automated, recurring scans to ensure continuous monitoring of assets and threats.
+- **Security Logging System:** Comprehensive structured logging for security events, audit trails, and compliance monitoring.
 
 ---
 

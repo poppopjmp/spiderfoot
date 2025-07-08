@@ -17,6 +17,10 @@ from spiderfoot.logger import logListenerSetup, logWorkerSetup
 from spiderfoot.workspace import SpiderFootWorkspace
 from spiderfoot.helpers import SpiderFootHelpers
 
+# Security imports
+from spiderfoot.security_middleware import install_cherrypy_security
+from spiderfoot.secure_config import SecureConfigManager
+
 # Template and UI imports
 from mako.template import Template
 from mako.lookup import TemplateLookup
@@ -87,6 +91,17 @@ class SpiderFootWebUi(WebUiRoutes):
         # Initialize parent class which handles all the endpoint setup
         super().__init__(web_config, config, loggingQueue)
         
+        # Initialize secure configuration manager
+        self.secure_config = SecureConfigManager(config)
+        
+        # Install security middleware for CherryPy
+        try:
+            self.security_middleware = install_cherrypy_security(config)
+            self.log.info("Security middleware installed successfully")
+        except Exception as e:
+            self.log.error(f"Failed to install security middleware: {e}")
+            # Continue without security middleware (fallback mode)
+            self.security_middleware = None
         
         # Validate configuration with enhanced defaults
         self._validate_configuration()

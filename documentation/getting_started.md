@@ -58,8 +58,40 @@ Workspaces allow you to organize and manage multiple scans:
 
 ## 6. Configuration
 
+### Basic Configuration
 - Configure API keys for modules in the web UI under **Settings → Module Settings**.
 - Advanced options can be set in the config file or via environment variables. See the [Configuration Guide](configuration.md).
+
+### Security Configuration (Recommended)
+For production deployments, configure security features:
+
+```bash
+# Set strong secret keys
+export SPIDERFOOT_CSRF_SECRET=$(openssl rand -hex 32)
+export SPIDERFOOT_JWT_SECRET=$(openssl rand -hex 32)
+
+# Enable security logging
+export SPIDERFOOT_SECURITY_LOG_FILE=/var/log/spiderfoot/security.log
+```
+
+Or via configuration file:
+```ini
+[security]
+csrf_enabled = True
+csrf_secret_key = your-strong-secret-key
+rate_limiting_enabled = True
+input_validation_enabled = True
+session_security_enabled = True
+api_security_enabled = True
+security_logging_enabled = True
+```
+
+### Security Validation
+Validate your security setup:
+```bash
+cd spiderfoot
+python security_validator.py .
+```
 
 ## Troubleshooting
 - If you have issues, check the [Troubleshooting Guide](troubleshooting.md).
