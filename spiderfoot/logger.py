@@ -180,7 +180,14 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
         opts = dict()
     doLogging = opts.get("__logging", True)
     debug = opts.get("_debug", False)
-    logLevel = (logging.DEBUG if debug else logging.INFO)
+    
+    # Determine log level - if __logging is False (quiet mode), use WARNING level
+    if not doLogging:
+        logLevel = logging.WARNING
+    elif debug:
+        logLevel = logging.DEBUG
+    else:
+        logLevel = logging.INFO
 
     # Log to terminal
     console_handler = logging.StreamHandler(sys.stderr)

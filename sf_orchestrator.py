@@ -97,6 +97,22 @@ class SpiderFootOrchestrator:
             
             # Set up logging
             self.logging_queue = mp.Queue()
+            
+            # Configure logging level based on any previous settings
+            current_log_level = logging.getLogger().getEffectiveLevel()
+            if current_log_level == logging.WARNING:
+                # Quiet mode - modify config to reflect this
+                self.config['_debug'] = False
+                self.config['__logging'] = False  # Disable verbose logging
+            elif current_log_level == logging.DEBUG:
+                # Debug mode
+                self.config['_debug'] = True
+                self.config['__logging'] = True
+            else:
+                # Normal mode
+                self.config['_debug'] = False
+                self.config['__logging'] = True
+            
             logListenerSetup(self.logging_queue, self.config)
             logWorkerSetup(self.logging_queue)
             
@@ -405,6 +421,9 @@ class SpiderFootOrchestrator:
             if parsed_args.version:
                 self.handle_version()
             
+            # Configure logging based on command line arguments BEFORE initialization
+            self._configure_logging(parsed_args)
+            
             # Initialize if we have any actual operation to perform
             if any([parsed_args.s, parsed_args.modules, parsed_args.types, parsed_args.correlate,
                    parsed_args.listen, parsed_args.api, parsed_args.both, 
@@ -413,11 +432,8 @@ class SpiderFootOrchestrator:
             
             # Apply configuration from command line
             if hasattr(parsed_args, 'debug') and parsed_args.debug:
-                logging.getLogger().setLevel(logging.DEBUG)
-                self.config['_debug'] = True
-            
-            if hasattr(parsed_args, 'q') and parsed_args.q:
-                logging.getLogger().setLevel(logging.CRITICAL)
+                if self.config:
+                    self.config['_debug'] = True
             
             # Handle information requests
             if parsed_args.modules:
@@ -443,6 +459,31 @@ class SpiderFootOrchestrator:
         except Exception as e:
             self.log.critical(f"Unhandled exception in orchestrator: {e}", exc_info=True)
             sys.exit(-1)
+
+    def _configure_logging(self, parsed_args) -> None:
+        """
+        Configure logging based on command line arguments.
+        
+        Args:
+            parsed_args: Parsed command line arguments
+        """
+        log_level = logging.INFO
+        
+        # Handle quiet mode - should suppress INFO and below
+        if hasattr(parsed_args, 'q') and parsed_args.q:
+            log_level = logging.WARNING
+        
+        # Handle debug mode - overrides quiet
+        if hasattr(parsed_args, 'debug') and parsed_args.debug:
+            log_level = logging.DEBUG
+            
+        # Configure root logger
+        logging.getLogger().setLevel(log_level)
+        
+        # Set specific logger levels
+        for logger_name in ['spiderfoot', 'sf_orchestrator', 'scan', 'core', 'rule_executor']:
+            logger = logging.getLogger(logger_name)
+            logger.setLevel(log_level)
 
 
 def main():

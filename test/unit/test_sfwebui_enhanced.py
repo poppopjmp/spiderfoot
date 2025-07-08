@@ -292,10 +292,10 @@ class TestSpiderFootWebUiEnhanced(unittest.TestCase):
             mock_db.conn_path = '/tmp/test.db'
             mock_get_dbh.return_value = mock_db
             
-            # Mock the actual performance metrics function to return expected data
-            with patch('builtins.__import__') as mock_import:
+            # Mock psutil module directly instead of __import__ to avoid recursion
+            with patch.dict('sys.modules', {'psutil': Mock()}) as mock_modules:
                 # Create a mock psutil module
-                mock_psutil = Mock()
+                mock_psutil = mock_modules['psutil']
                 mock_psutil.cpu_percent.return_value = 25.5
                 mock_memory = Mock()
                 mock_memory.percent = 75.0
@@ -306,14 +306,6 @@ class TestSpiderFootWebUiEnhanced(unittest.TestCase):
                 mock_disk.percent = 50.0
                 mock_disk.free = 10 * 1024 * 1024 * 1024
                 mock_psutil.disk_usage.return_value = mock_disk
-                
-                def import_side_effect(name, *args, **kwargs):
-                    if name == 'psutil':
-                        return mock_psutil
-                    # Use the original import to avoid recursion
-                    return __builtins__['__import__'](name, *args, **kwargs)
-                
-                mock_import.side_effect = import_side_effect
                 
                 with patch('os.path.getsize', return_value=1024 * 1024):
                     result = self.webui.get_performance_metrics()
@@ -326,20 +318,22 @@ class TestSpiderFootWebUiEnhanced(unittest.TestCase):
 
     def test_get_performance_metrics_no_psutil(self):
         """Test performance metrics when psutil is not available."""
-        # Mock the import to fail
-        original_import = __builtins__['__import__']
-        
-        def mock_import(name, *args, **kwargs):
-            if name == 'psutil':
-                raise ImportError("No module named 'psutil'")
-            return original_import(name, *args, **kwargs)
-        
-        with patch('builtins.__import__', side_effect=mock_import):
-            result = self.webui.get_performance_metrics()
+        # Mock psutil to not be available by removing it from sys.modules
+        with patch.dict('sys.modules', {'psutil': None}):
+            # Mock import to raise ImportError for psutil
+            original_import = __import__
             
-            self.assertFalse(result['success'])
-            self.assertIn('error', result)
-            self.assertIn('psutil not available', result['error'])
+            def mock_import(name, *args, **kwargs):
+                if name == 'psutil':
+                    raise ImportError("No module named 'psutil'")
+                return original_import(name, *args, **kwargs)
+            
+            with patch('builtins.__import__', side_effect=mock_import):
+                result = self.webui.get_performance_metrics()
+                
+                self.assertFalse(result['success'])
+                self.assertIn('error', result)
+                self.assertIn('psutil not available', result['error'])
 
     # =============================================================================
     # DATABASE OPERATIONS TESTS
