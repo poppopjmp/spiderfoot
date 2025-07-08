@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Web Interface Security Integration for SpiderFoot
-Integrates all security components into the Flask web application.
+CherryPy Web Interface Security Integration for SpiderFoot
+Integrates all security components into the CherryPy web application.
 """
 
-from flask import Flask, request, g, session, jsonify, render_template
+import cherrypy
 from functools import wraps
 import os
 import time
+import secrets
 
 # Import our security modules
 from .csrf_protection import CSRFProtection
@@ -20,15 +21,15 @@ from .security_logging import SecurityLogger, SecurityEventType, SecurityMonitor
 
 
 class SpiderFootSecurityManager:
-    """Main security manager that integrates all security components."""
+    """Main security manager that integrates all security components for CherryPy."""
     
-    def __init__(self, app: Flask = None):
+    def __init__(self, app_config: dict = None):
         """Initialize security manager.
         
         Args:
-            app: Flask application instance
+            app_config: CherryPy application configuration
         """
-        self.app = app
+        self.app_config = app_config or {}
         self.csrf_protection = None
         self.rate_limiter = None
         self.config_manager = None
@@ -38,16 +39,11 @@ class SpiderFootSecurityManager:
         self.security_logger = None
         self.security_monitor = None
         
-        if app:
-            self.init_app(app)
+        # Initialize security components
+        self._init_security_components()
     
-    def init_app(self, app: Flask) -> None:
-        """Initialize security for Flask application.
-        
-        Args:
-            app: Flask application instance
-        """
-        self.app = app
+    def _init_security_components(self) -> None:
+        """Initialize all security components for CherryPy application."""
         
         # Initialize security components
         self._init_security_logging()

@@ -23,31 +23,200 @@ import cherrypy
 from typing import Dict, Any, Optional, Callable
 import json
 
-from .csrf_protection import CSRFProtection
-from .input_validation import InputValidator
+from .csrf_protection import CSRFProtection, init_csrf_protection
+from .input_validation import InputValidator, SecurityHeaders
 from .rate_limiting import RateLimiter
-from .session_security import SessionManager
-from .api_security import APIKeyManager, JWTManager
-from .security_logging import SecurityLogger
+from .session_security import SecureSessionManager
+from .api_security import APISecurityManager, APIKeyManager
+from .security_logging import SecurityLogger, SecurityMonitor
 from .secure_config import SecureConfigManager
 
 
-class SpiderFootSecurityMiddleware:
-    """
-    Comprehensive security middleware for SpiderFoot applications.
+def install_cherrypy_security(app_config: Dict[str, Any]) -> 'SpiderFootSecurityManager':
+    """Install CherryPy security middleware.
     
-    Integrates all security components into a unified middleware system.
-    """
-    
-    def __init__(self, config: Dict[str, Any]):
-        """
-        Initialize security middleware.
+    Args:
+        app_config: Application configuration dictionary
         
-        Args:
-            config: SpiderFoot configuration dictionary
-        """
-        self.config = config
-        self.log = logging.getLogger(__name__)
+    Returns:
+        SpiderFootSecurityManager instance
+    """
+    from .web_security_cherrypy import SpiderFootSecurityManager
+    
+    # Initialize security manager
+    security_manager = SpiderFootSecurityManager(app_config)
+    
+    # Initialize CSRF protection
+    csrf_protection = init_csrf_protection(app_config)
+    
+    # Configure CherryPy security tools
+    cherrypy.config.update({
+        'tools.sessions.on': True,
+        'tools.sessions.timeout': app_config.get('SESSION_TIMEOUT', 60),
+        'tools.sessions.secure': app_config.get('SESSION_SECURE', True),
+        'tools.sessions.httponly': app_config.get('SESSION_HTTPONLY', True),
+        'tools.csrf.on': app_config.get('CSRF_ENABLED', True),
+        'tools.spider_security.on': True,
+        'tools.spider_security_response.on': True,
+    })
+    
+    # SSL Configuration if enabled
+    if app_config.get('SSL_ENABLED', False):
+        cherrypy.config.update({
+            'server.ssl_module': 'pyopenssl',
+            'server.ssl_certificate': app_config.get('SSL_CERT_PATH'),
+            'server.ssl_private_key': app_config.get('SSL_KEY_PATH'),
+            'server.ssl_certificate_chain': app_config.get('SSL_CA_PATH'),
+        })
+    
+    logging.getLogger(__name__).info("CherryPy security middleware installed successfully")
+    return security_manager
+
+
+def install_fastapi_security(app, config: Dict[str, Any]) -> 'FastAPISecurityManager':
+    """Install FastAPI security middleware.
+    
+    Args:
+        app: FastAPI application instance
+        config: Application configuration dictionary
+        
+    Returns:
+        FastAPISecurityManager instance
+    """
+    from .api_security_fastapi import FastAPISecurityManager
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.middleware.trustedhost import TrustedHostMiddleware
+    
+    # Initialize security manager
+    security_manager = FastAPISecurityManager(
+        secret_key=config.get('JWT_SECRET'),
+        token_expiry=config.get('TOKEN_EXPIRY', 3600)
+    )
+    
+    # Add CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=config.get('CORS_ORIGINS', ["https://localhost"]),
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+    )
+    
+    # Add trusted host middleware
+    trusted_hosts = config.get('TRUSTED_HOSTS', ["localhost", "127.0.0.1"])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
+    
+    # Store security manager in app state
+    app.state.security_manager = security_manager
+    
+    logging.getLogger(__name__).info("FastAPI security middleware installed successfully")
+    return security_manager
+
+
+class SecurityConfigDefaults:
+    """Default security configuration values."""
+    
+    WEB_SECURITY = {
+        'CSRF_ENABLED': True,
+        'RATE_LIMITING_ENABLED': True,
+        'SECURE_SESSIONS': True,
+        'AUTHENTICATION_REQUIRED': False,
+        'SESSION_TIMEOUT': 60,
+        'SESSION_SECURE': True,
+        'SESSION_HTTPONLY': True,
+        'SECURITY_LOG_FILE': 'logs/security.log',
+        'SSL_ENABLED': False,
+        'SSL_CERT_PATH': 'ssl/server.crt',
+        'SSL_KEY_PATH': 'ssl/server.key',
+        'SSL_CA_PATH': 'ssl/ca.crt',
+    }
+    
+    API_SECURITY = {
+        'JWT_SECRET': None,  # Must be provided
+        'TOKEN_EXPIRY': 3600,
+        'CORS_ORIGINS': ["https://localhost"],
+        'TRUSTED_HOSTS': ["localhost", "127.0.0.1"],
+        'RATE_LIMITING_ENABLED': True,
+        'API_KEY_ENABLED': True,
+        'SCOPES': ['read', 'write', 'admin', 'scan'],
+    }
+    
+    REDIS_CONFIG = {
+        'host': 'localhost',
+        'port': 6379,
+        'db': 0,
+        'password': None,
+    }
+
+
+def create_security_config(custom_config: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Create security configuration with defaults.
+    
+    Args:
+        custom_config: Custom configuration to override defaults
+        
+    Returns:
+        Complete security configuration dictionary
+    """
+    config = {}
+    config.update(SecurityConfigDefaults.WEB_SECURITY)
+    config.update(SecurityConfigDefaults.API_SECURITY)
+    config['REDIS_CONFIG'] = SecurityConfigDefaults.REDIS_CONFIG.copy()
+    
+    if custom_config:
+        config.update(custom_config)
+        if 'REDIS_CONFIG' in custom_config:
+            config['REDIS_CONFIG'].update(custom_config['REDIS_CONFIG'])
+    
+    return config
+
+
+def validate_security_config(config: Dict[str, Any]) -> bool:
+    """Validate security configuration.
+    
+    Args:
+        config: Security configuration to validate
+        
+    Returns:
+        True if configuration is valid
+        
+    Raises:
+        ValueError: If configuration is invalid
+    """
+    required_keys = ['SECRET_KEY']
+    
+    for key in required_keys:
+        if not config.get(key):
+            raise ValueError(f"Required security configuration key missing: {key}")
+    
+    # Validate JWT secret for API security
+    if config.get('API_SECURITY_ENABLED', True) and not config.get('JWT_SECRET'):
+        raise ValueError("JWT_SECRET is required for API security")
+    
+    # Validate SSL configuration if enabled
+    if config.get('SSL_ENABLED', False):
+        ssl_keys = ['SSL_CERT_PATH', 'SSL_KEY_PATH']
+        for key in ssl_keys:
+            if not config.get(key):
+                raise ValueError(f"SSL configuration key missing: {key}")
+    
+    return True
+
+
+def get_security_status() -> Dict[str, Any]:
+    """Get current security status.
+    
+    Returns:
+        Dictionary with security status information
+    """
+    return {
+        'csrf_protection': hasattr(cherrypy.tools, 'csrf'),
+        'rate_limiting': hasattr(cherrypy.tools, 'rate_limit'),
+        'session_security': cherrypy.config.get('tools.sessions.on', False),
+        'ssl_enabled': cherrypy.config.get('server.ssl_certificate') is not None,
+        'security_logging': True,  # Always enabled
+        'timestamp': time.time()
+    }
         
         # Initialize security components
         self._init_security_components()
