@@ -477,11 +477,22 @@ class SpiderFootOrchestrator:
         if hasattr(parsed_args, 'debug') and parsed_args.debug:
             log_level = logging.DEBUG
             
-        # Configure root logger
-        logging.getLogger().setLevel(log_level)
+        # Configure root logger and all spiderfoot loggers
+        root_logger = logging.getLogger()
+        root_logger.setLevel(log_level)
         
-        # Set specific logger levels
-        for logger_name in ['spiderfoot', 'sf_orchestrator', 'scan', 'core', 'rule_executor']:
+        # Set specific logger levels for all SpiderFoot components
+        spiderfoot_loggers = [
+            'spiderfoot', 'sf_orchestrator', 'scan', 'core', 'rule_executor',
+            'sfwebui', 'routes', 'db', 'modules', 'plugin', 'helpers'
+        ]
+        
+        for logger_name in spiderfoot_loggers:
+            logger = logging.getLogger(logger_name)
+            logger.setLevel(log_level)
+            
+        # Also configure the main module loggers
+        for logger_name in ['__main__', 'sf', 'sfcli', 'sfapi', 'sfwebui']:
             logger = logging.getLogger(logger_name)
             logger.setLevel(log_level)
 
