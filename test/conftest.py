@@ -167,7 +167,14 @@ def session_cleanup():
                 # Thread is already started, cannot change daemon status
                 pass
     
-    logging.info("Session cleanup completed")
+    # Safe logging during cleanup to handle closed file handlers
+    try:
+        logging.info("Session cleanup completed")
+    except (ValueError, OSError):
+        # Handle "I/O operation on closed file" during cleanup
+        # Log to stderr as a fallback
+        import sys
+        print("Session cleanup completed", file=sys.stderr)
 
 # Add process-level timeout
 @pytest.fixture(autouse=True, scope="session") 
