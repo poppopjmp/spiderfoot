@@ -6,7 +6,7 @@ cherrypy-cors==1.7.0
 cryptography>=43.0.5,<46.0.0
 dnspython>=2.6.1,<3.0.0
 elasticsearch==9.0.2
-exifread==3.3.1
+exifread==3.3.2
 ipaddr==2.2.0
 ipwhois>=1.3.0,<2.0.0
 lxml>=5.4.0,<7.0.0
