@@ -5,11 +5,24 @@ Provides protection against abuse and DoS attacks.
 """
 
 import time
-import redis
+import hashlib
 from typing import Dict, Optional, Tuple
 from functools import wraps
-from flask import request, jsonify, g
-import hashlib
+
+# Optional dependencies for enhanced rate limiting
+try:
+    import redis
+    HAS_REDIS = True
+except ImportError:
+    redis = None
+    HAS_REDIS = False
+
+try:
+    from flask import request, jsonify, g
+    HAS_FLASK = True
+except ImportError:
+    request = jsonify = g = None
+    HAS_FLASK = False
 
 
 class RateLimiter:
@@ -24,18 +37,24 @@ class RateLimiter:
             redis_port: Redis server port
             redis_db: Redis database number
         """
+        self.redis = None
+        self._memory_store = {}  # Fallback in-memory store
+        
         if redis_client:
             self.redis = redis_client
-        else:
+        elif HAS_REDIS:
             try:
                 self.redis = redis.Redis(host=redis_host, port=redis_port, db=redis_db, 
                                        decode_responses=True)
                 # Test connection
                 self.redis.ping()
-            except (redis.ConnectionError, redis.RedisError):
+            except (redis.ConnectionError, redis.RedisError, Exception):
                 # Fallback to in-memory rate limiting
                 self.redis = None
-                self._memory_store = {}
+        
+        # If Redis is not available, use memory-based rate limiting
+        if not self.redis:
+            self._memory_store = {}
         
         # Default rate limit configurations
         self.limits = {
@@ -276,28 +295,36 @@ def rate_limit(limit_type: str = 'api'):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            if not HAS_FLASK:
+                # No Flask available, just execute the function
+                return f(*args, **kwargs)
+                
             # Get rate limiter from app context
-            from flask import current_app
-            
-            if not hasattr(current_app, 'rate_limiter'):
-                # Initialize rate limiter if not exists
-                current_app.rate_limiter = RateLimiter()
-            
-            rate_limiter = current_app.rate_limiter
-            allowed, info = rate_limiter.check_rate_limit(limit_type)
-            
-            if not allowed:
-                response = jsonify({
-                    'error': 'Rate limit exceeded',
-                    'message': f'Too many requests. Limit: {info["main_limit"]} per hour, {info["burst_limit"]} per minute',
-                    'retry_after': min(info['main_reset'], info['burst_reset']) - int(time.time())
-                })
-                response.status_code = 429
-                response.headers['Retry-After'] = str(min(info['main_reset'], info['burst_reset']) - int(time.time()))
-                response.headers['X-RateLimit-Limit'] = str(info['main_limit'])
-                response.headers['X-RateLimit-Remaining'] = str(info['main_remaining'])
-                response.headers['X-RateLimit-Reset'] = str(info['main_reset'])
-                return response
+            try:
+                from flask import current_app
+                
+                if not hasattr(current_app, 'rate_limiter'):
+                    # Initialize rate limiter if not exists
+                    current_app.rate_limiter = RateLimiter()
+                
+                rate_limiter = current_app.rate_limiter
+                allowed, info = rate_limiter.check_rate_limit(limit_type)
+                
+                if not allowed:
+                    response = jsonify({
+                        'error': 'Rate limit exceeded',
+                        'message': f'Too many requests. Limit: {info["main_limit"]} per hour, {info["burst_limit"]} per minute',
+                        'retry_after': min(info['main_reset'], info['burst_reset']) - int(time.time())
+                    })
+                    response.status_code = 429
+                    response.headers['Retry-After'] = str(min(info['main_reset'], info['burst_reset']) - int(time.time()))
+                    response.headers['X-RateLimit-Limit'] = str(info['main_limit'])
+                    response.headers['X-RateLimit-Remaining'] = str(info['main_remaining'])
+                    response.headers['X-RateLimit-Reset'] = str(info['main_reset'])
+                    return response
+            except ImportError:
+                # Flask not available, just execute the function
+                pass
             
             # Add rate limit headers to successful responses
             response = f(*args, **kwargs)

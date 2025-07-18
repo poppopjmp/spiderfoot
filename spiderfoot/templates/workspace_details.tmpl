@@ -95,6 +95,172 @@
             </div>
         </div>
 
+        <!-- Workspace Health & Activity Summary -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="pull-right">
+                            <button class="btn btn-xs btn-default" onclick="location.reload()">
+                                <i class="fa fa-refresh"></i> Refresh Status
+                            </button>
+                        </div>
+                        <h4><i class="fa fa-dashboard"></i> Workspace Activity</h4>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h5><i class="fa fa-heartbeat"></i> Health Status</h5>
+                                <div id="workspaceHealth">
+                                    % if scan_details:
+                                        <%
+                                            running_scans = [s for s in scan_details if s.get('status') == 'RUNNING']
+                                            finished_scans = [s for s in scan_details if s.get('status') == 'FINISHED']
+                                            failed_scans = [s for s in scan_details if s.get('status') in ['FAILED', 'ERROR']]
+                                        %>
+                                        % if running_scans:
+                                            <span class="label label-primary">Active Scans: ${len(running_scans)}</span><br>
+                                        % endif
+                                        % if finished_scans:
+                                            <span class="label label-success">Completed: ${len(finished_scans)}</span><br>
+                                        % endif
+                                        % if failed_scans:
+                                            <span class="label label-danger">Failed: ${len(failed_scans)}</span><br>
+                                        % endif
+                                        % if not running_scans and finished_scans:
+                                            <small class="text-success"><i class="fa fa-check"></i> All scans completed</small>
+                                        % endif
+                                    % else:
+                                        <small class="text-muted">No scans yet</small>
+                                    % endif
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <h5><i class="fa fa-calendar"></i> Recent Activity</h5>
+                                % if scan_details:
+                                    <%
+                                        import time
+                                        recent_scans = [s for s in scan_details if s.get('created')]
+                                        if recent_scans:
+                                            latest_scan = max(recent_scans, key=lambda x: int(x.get('created', 0)) if str(x.get('created', 0)).isdigit() else 0)
+                                    %>
+                                    % if recent_scans and latest_scan:
+                                        <small>Latest scan: 
+                                            <script>
+                                                var dateValue = '${latest_scan.get('created', '')}';
+                                                if (!isNaN(dateValue) && dateValue.length > 0) {
+                                                    var timestamp = parseInt(dateValue);
+                                                    if (timestamp < 10000000000) timestamp *= 1000;
+                                                    var scanDate = new Date(timestamp);
+                                                    if (scanDate && !isNaN(scanDate.getTime())) {
+                                                        document.write(scanDate.toLocaleDateString('en-US', {
+                                                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                                                        }));
+                                                    }
+                                                }
+                                            </script>
+                                        </small>
+                                    % endif
+                                % else:
+                                    <small class="text-muted">No activity yet</small>
+                                % endif
+                            </div>
+                            <div class="col-md-3">
+                                <h5><i class="fa fa-clock-o"></i> Scheduled Scans</h5>
+                                <div id="scheduledScansStatus">
+                                    <small class="text-muted">Loading...</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <h5><i class="fa fa-exclamation-triangle"></i> Alerts</h5>
+                                <div id="workspaceAlerts">
+                                    <small class="text-muted">No alerts</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Start Guide (show only if no targets or scans) -->
+        % if not workspace.targets or len(scan_details) == 0:
+        <div class="row" id="quickStartGuide">
+            <div class="col-md-12">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <div class="pull-right">
+                            <button class="btn btn-xs btn-default" onclick="$('#quickStartGuide').hide()">
+                                <i class="fa fa-times"></i> Hide
+                            </button>
+                        </div>
+                        <h4><i class="fa fa-rocket"></i> Quick Start Guide</h4>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            % if not workspace.targets:
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <i class="fa fa-bullseye fa-3x text-primary"></i>
+                                    <h4>1. Add Targets</h4>
+                                    <p>Start by adding domains, IP addresses, or other targets you want to investigate.</p>
+                                    <button class="btn btn-primary" onclick="addTarget('${workspace.workspace_id}')">
+                                        <i class="fa fa-plus"></i> Add Your First Target
+                                    </button>
+                                </div>
+                            </div>
+                            % endif
+                            % if workspace.targets and len(scan_details) == 0:
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <i class="fa fa-search fa-3x text-success"></i>
+                                    <h4>2. Start Scanning</h4>
+                                    <p>Launch scans against your targets using SpiderFoot's comprehensive modules.</p>
+                                    <button class="btn btn-success" onclick="multiTargetScan('${workspace.workspace_id}')">
+                                        <i class="fa fa-play"></i> Start Multi-Target Scan
+                                    </button>
+                                </div>
+                            </div>
+                            % endif
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <i class="fa fa-sitemap fa-3x text-warning"></i>
+                                    <h4>3. Analyze Results</h4>
+                                    <p>Review scan results and discover correlations between different data points.</p>
+                                    <button class="btn btn-warning" onclick="$('a[href=&quot;#correlations-tab&quot;]').tab('show')">
+                                        <i class="fa fa-eye"></i> View Correlations
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-12 text-center">
+                                <h5><i class="fa fa-lightbulb-o"></i> Pro Tips</h5>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <small><strong>Periodic Scans:</strong> Set up automated recurring scans for continuous monitoring</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small><strong>Import Scans:</strong> Add existing scans from other workspaces</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small><strong>Generate Reports:</strong> Export comprehensive reports of your findings</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small><strong>Cross-Correlation:</strong> Find relationships between targets and scan results</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        % endif
+
         <!-- Navigation Tabs -->
         <div class="row">
             <div class="col-md-12">
@@ -302,37 +468,86 @@
 
                     <!-- Correlations Tab -->
                     <div role="tabpanel" class="tab-pane" id="correlations-tab">
-                        <div id="correlations-content">
-                            <div class="text-center">
-                                <i class="fa fa-spinner fa-spin fa-2x"></i>
-                                <p>Loading correlations...</p>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <div class="pull-right">
+                                    <button class="btn btn-sm btn-primary" onclick="runCorrelations('${workspace.workspace_id}')">
+                                        <i class="fa fa-play"></i> Run Correlations
+                                    </button>
+                                    <button class="btn btn-sm btn-default" onclick="loadCorrelations()">
+                                        <i class="fa fa-refresh"></i> Refresh
+                                    </button>
+                                </div>
+                                <h4><i class="fa fa-sitemap"></i> Cross-Scan Correlations</h4>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="panel-body">
+                                <div id="correlations-content">
+                                    <div class="text-center">
+                                        <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                        <p>Loading correlations...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>                    <!-- Results Tab -->
                     <div role="tabpanel" class="tab-pane" id="results-tab">
-                        <div id="results-content">
-                            <div class="text-center">
-                                <i class="fa fa-spinner fa-spin fa-2x"></i>
-                                <p>Loading recent results...</p>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <div class="pull-right">
+                                    <div class="form-inline">
+                                        <select id="resultsFilter" class="form-control input-sm">
+                                            <option value="">All Event Types</option>
+                                            <option value="INTERNET_NAME">Domain Names</option>
+                                            <option value="IP_ADDRESS">IP Addresses</option>
+                                            <option value="EMAILADDR">Email Addresses</option>
+                                            <option value="VULNERABILITY">Vulnerabilities</option>
+                                            <option value="MALICIOUS">Malicious Indicators</option>
+                                        </select>
+                                        <button class="btn btn-sm btn-default" onclick="loadResults()">
+                                            <i class="fa fa-refresh"></i> Refresh
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="exportResults('${workspace.workspace_id}')">
+                                            <i class="fa fa-download"></i> Export
+                                        </button>
+                                    </div>
+                                </div>
+                                <h4><i class="fa fa-table"></i> Recent Scan Results</h4>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="panel-body">
+                                <div id="results-content">
+                                    <div class="text-center">
+                                        <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                        <p>Loading recent results...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Periodic Scans Tab -->
                     <div role="tabpanel" class="tab-pane" id="schedules-tab">
-                        <div class="pull-right" style="margin-bottom: 10px;">
-                            <button class="btn btn-sm btn-primary" onclick="schedulePeriodicScan('${workspace.workspace_id}')">
-                                <i class="fa fa-plus"></i> Schedule New Periodic Scan
-                            </button>
-                            <button class="btn btn-sm btn-default" onclick="loadPeriodicScans()">
-                                <i class="fa fa-refresh"></i> Refresh
-                            </button>
-                        </div>
-                        <div class="clearfix"></div>
-                        <div id="periodic-scans-content">
-                            <div class="text-center">
-                                <i class="fa fa-spinner fa-spin fa-2x"></i>
-                                <p>Loading periodic scans...</p>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <div class="pull-right">
+                                    <button class="btn btn-sm btn-success" onclick="schedulePeriodicScan('${workspace.workspace_id}')">
+                                        <i class="fa fa-plus"></i> New Periodic Scan
+                                    </button>
+                                    <button class="btn btn-sm btn-default" onclick="loadPeriodicScans()">
+                                        <i class="fa fa-refresh"></i> Refresh
+                                    </button>
+                                </div>
+                                <h4><i class="fa fa-clock-o"></i> Scheduled Periodic Scans</h4>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="panel-body">
+                                <div id="periodic-scans-content">
+                                    <div class="text-center">
+                                        <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                        <p>Loading periodic scans...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -794,6 +1009,10 @@ $('a[href="#schedules-tab"]').on('shown.bs.tab', function() {
 // Load correlations on page load
 $(document).ready(function() {
     loadCorrelationCount();
+    updateScheduledScansStatus();
+    
+    // Update scheduled scans status every 5 minutes
+    setInterval(updateScheduledScansStatus, 300000);
     
     // Auto-refresh every 30 seconds to pick up new scans and status changes
     setInterval(function() {
@@ -1841,240 +2060,156 @@ function loadPeriodicCommonModules() {
     displayPeriodicModules(commonModules);
 }
 
-// Helper functions for periodic scan functionality
-function displayPeriodicTargetSelection(targets) {
-    var html = '';
-    targets.forEach(function(target, index) {
-        html += '<div class="checkbox">';
-        html += '<label>';
-        html += '<input type="checkbox" value="' + target.target_id + '" data-target="' + escapeHtml(target.value) + '" data-type="' + escapeHtml(target.type || '') + '"> ';
-        html += escapeHtml(target.value) + ' <small class="text-muted">(' + escapeHtml(target.type || 'Auto-detect') + ')</small>';
-        html += '</label>';
-        html += '</div>';
-    });
-    $('#periodicTargetSelectionList').html(html);
-}
+// Additional workspace management functions
 
-function displayPeriodicModules(modules) {
-    var html = '';
-    var modulesByCategory = {};
-    
-    // Group modules by category
-    modules.forEach(function(module) {
-        var category = 'Other';
-        if (module.group && Array.isArray(module.group) && module.group.length > 0) {
-            category = module.group[0];
-        }
-        
-        if (!modulesByCategory[category]) {
-            modulesByCategory[category] = [];
-        }
-        modulesByCategory[category].push(module);
-    });
-    
-    // Display modules by category (compact format for periodic scans)
-    var sortedCategories = Object.keys(modulesByCategory).sort();
-    sortedCategories.forEach(function(category, index) {
-        if (index > 0) {
-            html += '<hr style="margin: 5px 0;">';
-        }
-        
-        html += '<div style="margin-bottom: 5px;"><strong style="color: #337ab7; font-size: 11px;">' + category + '</strong></div>';
-        
-        modulesByCategory[category].forEach(function(module) {
-            html += '<div class="checkbox" style="margin: 1px 0 1px 10px;">';
-            html += '<label style="font-weight: normal; font-size: 11px;">';
-            html += '<input type="checkbox" value="' + module.name + '"> ';
-            html += module.name + ' <small class="text-muted">- ' + (module.descr || 'No description').substring(0, 50) + '</small>';
-            html += '</label>';
-            html += '</div>';
-        });
-    });
-    
-    $('#periodicModuleSelectionList').html(html);
-}
-
-function setupPeriodicModuleFilters() {
-    // Category filter
-    $('#moduleTypeFilter').on('change', function() {
-        var selectedCategory = $(this).val();
-        var selectedUseCase = $('#moduleUseCaseFilter').val();
-        applyPeriodicModuleFilters(selectedCategory, selectedUseCase);
-    });
-    
-    // Use case filter  
-    $('#moduleUseCaseFilter').on('change', function() {
-        var selectedCategory = $('#moduleTypeFilter').val();
-        var selectedUseCase = $(this).val();
-        applyPeriodicModuleFilters(selectedCategory, selectedUseCase);
-    });
-}
-
-function applyPeriodicModuleFilters(category, useCase) {
-    var filteredModules = allModules;
-    
-    // Filter by category
-    if (category) {
-        filteredModules = filteredModules.filter(function(module) {
-            return module.group && module.group.indexOf(category) !== -1;
-        });
-    }
-    
-    // Filter by use case (based on module characteristics)
-    if (useCase) {
-        filteredModules = filteredModules.filter(function(module) {
-            return isModuleForUseCase(module, useCase);
-        });
-    }
-    
-    displayPeriodicModules(filteredModules);
-}
-
-function schedulePeriodicScan(workspaceId) {
-    $('#periodicWorkspaceId').val(workspaceId);
-    
-    // Load workspace targets
-    $.get('${docroot}/workspaceget', { workspace_id: workspaceId }, function(data) {
-        if (data.success && data.targets && data.targets.length > 0) {
-            displayPeriodicTargetSelection(data.targets);
-            loadPeriodicAvailableModules();
-            
-            // Load any existing periodic scan configuration
-            loadExistingPeriodicConfig(workspaceId);
-            
-            $('#periodicScanModal').modal('show');
-        } else {
-            alertify.confirm(
-                'No Targets Available',
-                'This workspace doesn\'t have any targets yet. Would you like to add targets first?',
-                function() {
-                    addTarget(workspaceId);
-                },
-                function() {
-                    // User clicked Cancel - do nothing
-                }
-            ).set('labels', {ok:'Add Targets', cancel:'Cancel'});
-        }
-    }).fail(function() {
-        alertify.error('Failed to load workspace targets');
-    });
-}
-
-function pausePeriodicScan(scheduleId) {
-    $.post('${docroot}/workspaceperiodicscantoggle', {
-        schedule_id: scheduleId,
-        action: 'pause'
-    }, function(data) {
-        if (data.success) {
-            alertify.success('Periodic scan paused');
-            loadPeriodicScans();
-        } else {
-            alertify.error('Failed to pause periodic scan: ' + (data.error || 'Unknown error'));
-        }
-    }).fail(function() {
-        alertify.error('Failed to pause periodic scan: Server error');
-    });
-}
-
-function resumePeriodicScan(scheduleId) {
-    $.post('${docroot}/workspaceperiodicscantoggle', {
-        schedule_id: scheduleId,
-        action: 'resume'
-    }, function(data) {
-        if (data.success) {
-            alertify.success('Periodic scan resumed');
-            loadPeriodicScans();
-        } else {
-            alertify.error('Failed to resume periodic scan: ' + (data.error || 'Unknown error'));
-        }
-    }).fail(function() {
-        alertify.error('Failed to resume periodic scan: Server error');
-    });
-}
-
-function editPeriodicScan(scheduleId) {
-    // Load the schedule configuration and open the modal with existing data
-    $.get('${docroot}/workspaceperiodicconfig', { schedule_id: scheduleId }, function(data) {
-        if (data.success && data.config) {
-            // Set the schedule ID for editing
-            $('#periodicWorkspaceId').val(data.config.workspace_id);
-            $('#periodicScheduleId').val(scheduleId); // We need to add this hidden field
-            
-            // Open the periodic scan modal with existing data
-            schedulePeriodicScan(data.config.workspace_id);
-            
-            // The loadExistingPeriodicConfig function will populate the form
-        } else {
-            alertify.error('Failed to load periodic scan configuration');
-        }
-    }).fail(function() {
-        alertify.error('Failed to load periodic scan configuration');
-    });
-}
-
-function runPeriodicScanNow(scheduleId) {
+function runCorrelations(workspaceId) {
     alertify.confirm(
-        'Run Periodic Scan Now',
-        'This will start a scan immediately using the configured targets and modules. Continue?',
+        'Run Correlation Analysis',
+        'This will analyze all completed scans in this workspace for cross-scan patterns and relationships. Continue?',
         function() {
-            $.post('${docroot}/workspaceperiodicscannow', {
-                schedule_id: scheduleId
+            $.post('${docroot}/workspaceruncorrelations', {
+                workspace_id: workspaceId
             }, function(data) {
                 if (data.success) {
-                    alertify.success('Periodic scan started! Scan ID: ' + data.scan_id);
-                    // Optionally redirect to scan info
+                    alertify.success('Correlation analysis started. Results will be available shortly.');
                     setTimeout(function() {
-                        window.location.href = '${docroot}/scaninfo?id=' + data.scan_id;
+                        loadCorrelations();
                     }, 2000);
                 } else {
-                    alertify.error('Failed to start periodic scan: ' + (data.error || 'Unknown error'));
+                    alertify.error('Failed to start correlation analysis: ' + (data.error || 'Unknown error'));
                 }
             }).fail(function() {
-                alertify.error('Failed to start periodic scan: Server error');
+                alertify.error('Failed to start correlation analysis: Server error');
             });
         },
         function() {
             // User cancelled
         }
-    ).set('labels', {ok:'Start Scan', cancel:'Cancel'});
+    ).set('labels', {ok:'Run Analysis', cancel:'Cancel'});
 }
 
-function viewPeriodicScanHistory(scheduleId) {
-    // Open a modal or redirect to show the scan history for this schedule
-    window.open('${docroot}/workspaceperiodichistory?schedule_id=' + scheduleId, '_blank');
-}
-
-function deletePeriodicScan(scheduleId) {
+function exportResults(workspaceId) {
+    var filter = $('#resultsFilter').val();
+    
     alertify.confirm(
-        'Delete Periodic Scan',
-        'Are you sure you want to delete this periodic scan schedule? This action cannot be undone.<br><br>' +
-        '<div class="alert alert-warning" style="margin: 10px 0;">' +
-        '<strong>This will:</strong>' +
-        '<ul>' +
-        '<li>Stop all future scheduled scans</li>' +
-        '<li>Remove the schedule configuration</li>' +
-        '<li>Keep existing scan results (they will not be deleted)</li>' +
-        '</ul>' +
-        '</div>',
+        'Export Results',
+        'This will export the recent scan results from this workspace. Choose format:',
         function() {
-            $.post('${docroot}/workspaceperiodicscandelte', {
-                schedule_id: scheduleId
-            }, function(data) {
-                if (data.success) {
-                    alertify.success('Periodic scan schedule deleted');
-                    loadPeriodicScans();
-                } else {
-                    alertify.error('Failed to delete periodic scan: ' + (data.error || 'Unknown error'));
-                }
-            }).fail(function() {
-                alertify.error('Failed to delete periodic scan: Server error');
-            });
+            var format = 'csv'; // Default format
+            var url = '${docroot}/workspaceexportresults?workspace_id=' + workspaceId;
+            if (filter) {
+                url += '&filter=' + encodeURIComponent(filter);
+            }
+            url += '&format=' + format;
+            
+            // Open download link
+            window.open(url, '_blank');
+            alertify.success('Export started. Download should begin shortly.');
         },
         function() {
             // User cancelled
         }
-    ).set('labels', {ok:'Delete Schedule', cancel:'Cancel'})
-     .set('defaultFocus', 'cancel');
+    ).set('labels', {ok:'Export CSV', cancel:'Cancel'});
+}
+
+function loadPeriodicScans() {
+    $.get('${docroot}/workspaceperiodicscans', {workspace_id: '${workspace.workspace_id}'})
+        .done(function(data) {
+            var html = '';
+            if (data.success && data.schedules && data.schedules.length > 0) {
+                html += '<div class="table-responsive">';
+                html += '<table class="table table-striped">';
+                html += '<thead>';
+                html += '<tr>';
+                html += '<th>Scan Name</th>';
+                html += '<th>Frequency</th>';
+                html += '<th>Next Run</th>';
+                html += '<th>Status</th>';
+                html += '<th>Last Run</th>';
+                html += '<th>Actions</th>';
+                html += '</tr>';
+                html += '</thead>';
+                html += '<tbody>';
+                
+                data.schedules.forEach(function(schedule) {
+                    html += '<tr>';
+                    html += '<td><strong>' + escapeHtml(schedule.scan_name) + '</strong></td>';
+                    html += '<td>' + escapeHtml(schedule.frequency_display) + '</td>';
+                    html += '<td>' + escapeHtml(schedule.next_run) + '</td>';
+                    
+                    var statusClass = schedule.status === 'ACTIVE' ? 'success' : 
+                                     schedule.status === 'PAUSED' ? 'warning' : 'danger';
+                    html += '<td><span class="label label-' + statusClass + '">' + schedule.status + '</span></td>';
+                    html += '<td>' + escapeHtml(schedule.last_run || 'Never') + '</td>';
+                    html += '<td>';
+                    
+                    if (schedule.status === 'ACTIVE') {
+                        html += '<button class="btn btn-xs btn-warning" onclick="pausePeriodicScan(\'' + schedule.schedule_id + '\')">';
+                        html += '<i class="fa fa-pause"></i> Pause</button> ';
+                    } else if (schedule.status === 'PAUSED') {
+                        html += '<button class="btn btn-xs btn-success" onclick="resumePeriodicScan(\'' + schedule.schedule_id + '\')">';
+                        html += '<i class="fa fa-play"></i> Resume</button> ';
+                    }
+                    
+                    html += '<button class="btn btn-xs btn-primary" onclick="editPeriodicScan(\'' + schedule.schedule_id + '\')">';
+                    html += '<i class="fa fa-edit"></i> Edit</button> ';
+                    html += '<button class="btn btn-xs btn-info" onclick="runPeriodicScanNow(\'' + schedule.schedule_id + '\')">';
+                    html += '<i class="fa fa-play-circle"></i> Run Now</button> ';
+                    html += '<button class="btn btn-xs btn-default" onclick="viewPeriodicScanHistory(\'' + schedule.schedule_id + '\')">';
+                    html += '<i class="fa fa-history"></i> History</button> ';
+                    html += '<button class="btn btn-xs btn-danger" onclick="deletePeriodicScan(\'' + schedule.schedule_id + '\')">';
+                    html += '<i class="fa fa-trash"></i> Delete</button>';
+                    html += '</td>';
+                    html += '</tr>';
+                });
+                
+                html += '</tbody>';
+                html += '</table>';
+                html += '</div>';
+            } else {
+                html += '<div class="alert alert-info">';
+                html += '<i class="fa fa-info-circle"></i> No periodic scans scheduled yet. ';
+                html += '<button class="btn btn-success btn-sm" onclick="schedulePeriodicScan(\'${workspace.workspace_id}\')">';
+                html += 'Schedule your first periodic scan</button>';
+                html += '</div>';
+            }
+            
+            $('#periodic-scans-content').html(html);
+        })
+        .fail(function() {
+            $('#periodic-scans-content').html('<div class="alert alert-danger">Failed to load periodic scans</div>');
+        });
+}
+
+// Update scheduled scans status in the activity panel
+function updateScheduledScansStatus() {
+    $.get('${docroot}/workspaceperiodicscans', {workspace_id: '${workspace.workspace_id}'})
+        .done(function(data) {
+            var html = '';
+            if (data.success && data.schedules && data.schedules.length > 0) {
+                var activeScans = data.schedules.filter(function(s) { return s.status === 'ACTIVE'; });
+                var pausedScans = data.schedules.filter(function(s) { return s.status === 'PAUSED'; });
+                
+                if (activeScans.length > 0) {
+                    html += '<span class="label label-success">' + activeScans.length + ' Active</span><br>';
+                }
+                if (pausedScans.length > 0) {
+                    html += '<span class="label label-warning">' + pausedScans.length + ' Paused</span><br>';
+                }
+                
+                // Show next scheduled scan
+                var nextScan = activeScans.find(function(s) { return s.next_run; });
+                if (nextScan) {
+                    html += '<small>Next: ' + nextScan.next_run + '</small>';
+                }
+            } else {
+                html = '<small class="text-muted">None scheduled</small>';
+            }
+            $('#scheduledScansStatus').html(html);
+        })
+        .fail(function() {
+            $('#scheduledScansStatus').html('<small class="text-danger">Error loading</small>');
+        });
 }
 </script>
 

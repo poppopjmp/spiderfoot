@@ -55,3 +55,5 @@ flask-limiter>=3.5.0,<4.0.0
 slowapi>=0.1.9,<1.0.0
 email-validator>=2.0.0,<3.0.0
 python-dateutil>=2.8.0,<3.0.0
+# HTML sanitization (optional but recommended for enhanced security)
+bleach>=6.0.0,<7.0.0

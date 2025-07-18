@@ -202,7 +202,8 @@ class SpiderFootOrchestrator:
     def handle_modules_list(self) -> None:
         """Handle module listing."""
         modules = self.module_manager.list_modules()
-        print(f"Total modules: {len(modules)}")
+        print(f"Modules available: {len(modules)} total")
+        print(f"Found {len(modules)} modules:")
         
         for module_name in modules:
             info = self.module_manager.get_module_info(module_name)
@@ -217,7 +218,8 @@ class SpiderFootOrchestrator:
         etypes = dbh.eventTypes()
         
         if etypes:
-            print(f"Total event types: {len(etypes)}")
+            print(f"Event types available: {len(etypes)} total")
+            print(f"Found {len(etypes)} event types:")
             for etype in sorted(etypes, key=lambda x: x[1]):
                 print(f"{etype[1]}")
         
@@ -321,7 +323,11 @@ class SpiderFootOrchestrator:
             sys.exit(0)
             
         except Exception as e:
+            # Log the error
             self.log.error(f"Scan execution failed: {e}")
+            # Also print to stderr for integration tests
+            print(f"ERROR: Scan execution failed: {e}", file=sys.stderr)
+            sys.stderr.flush()
             sys.exit(-1)
     
     def _build_output_config(self, args) -> dict:
@@ -458,6 +464,9 @@ class SpiderFootOrchestrator:
             sys.exit(0)
         except Exception as e:
             self.log.critical(f"Unhandled exception in orchestrator: {e}", exc_info=True)
+            # Also print to stderr for integration tests
+            print(f"CRITICAL: Unhandled exception in orchestrator: {e}", file=sys.stderr)
+            sys.stderr.flush()
             sys.exit(-1)
 
     def _configure_logging(self, parsed_args) -> None:

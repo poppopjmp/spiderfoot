@@ -350,12 +350,11 @@ def process_target(args, log):
 # Maintain backward compatibility
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
-        print("SpiderFoot usage:")
-        print("  Web UI:       python sf.py -l <ip>:<port>")
-        print("  FastAPI:      python sf.py --api [--api-listen <ip>:<port>]")
-        print("  Both servers: python sf.py --both [-l <ip>:<port>] [--api-listen <ip>:<port>]")
-        print("  CLI scan:     python sf.py -s <target> [options]")
-        print("Try --help for full guidance.")
+        usage_text = "SpiderFoot usage:\n  Web UI:       python sf.py -l <ip>:<port>\n  FastAPI:      python sf.py --api [--api-listen <ip>:<port>]\n  Both servers: python sf.py --both [-l <ip>:<port>] [--api-listen <ip>:<port>]\n  CLI scan:     python sf.py -s <target> [options]\nTry --help for full guidance."
+        print(usage_text)
+        print(usage_text, file=sys.stderr)
+        sys.stdout.flush()
+        sys.stderr.flush()
         sys.exit(-1)
 
     main()

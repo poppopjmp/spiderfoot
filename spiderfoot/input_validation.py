@@ -8,7 +8,15 @@ import re
 import html
 import urllib.parse
 from typing import Any, Dict, List, Optional, Union
-import bleach
+
+# Optional dependency for enhanced HTML sanitization
+try:
+    import bleach
+    HAS_BLEACH = True
+except ImportError:
+    bleach = None
+    HAS_BLEACH = False
+    # Note: Using fallback HTML sanitization without bleach
 
 
 class InputValidator:
@@ -46,12 +54,49 @@ class InputValidator:
         if not isinstance(content, str):
             return str(content)
         
-        return bleach.clean(
-            content,
-            tags=cls.ALLOWED_TAGS,
-            attributes=cls.ALLOWED_ATTRIBUTES,
-            strip=True
-        )
+        if HAS_BLEACH:
+            return bleach.clean(
+                content,
+                tags=cls.ALLOWED_TAGS,
+                attributes=cls.ALLOWED_ATTRIBUTES,
+                strip=True
+            )
+        else:
+            # Fallback: basic HTML sanitization when bleach is not available
+            return cls._fallback_sanitize_html(content)
+    
+    @classmethod
+    def _fallback_sanitize_html(cls, content: str) -> str:
+        """Fallback HTML sanitization when bleach is not available.
+        
+        Args:
+            content: Content to sanitize
+            
+        Returns:
+            Sanitized content
+        """
+        # Remove script tags and their content
+        content = re.sub(r'<script[^>]*>.*?</script>', '', content, flags=re.IGNORECASE | re.DOTALL)
+        
+        # Remove dangerous tags and their content
+        dangerous_tags = ['script', 'object', 'embed', 'form', 'input', 'iframe', 'style']
+        for tag in dangerous_tags:
+            content = re.sub(f'<{tag}[^>]*>.*?</{tag}>', '', content, flags=re.IGNORECASE | re.DOTALL)
+            content = re.sub(f'<{tag}[^>]*/?>', '', content, flags=re.IGNORECASE)
+        
+        # Remove on* event handlers
+        content = re.sub(r'\s+on\w+\s*=\s*["\'][^"\']*["\']', '', content, flags=re.IGNORECASE)
+        content = re.sub(r'\s+on\w+\s*=\s*[^>\s]+', '', content, flags=re.IGNORECASE)
+        
+        # Remove javascript: protocol
+        content = re.sub(r'javascript:', '', content, flags=re.IGNORECASE)
+        
+        # If no allowed tags are found, escape everything
+        allowed_pattern = '|'.join(cls.ALLOWED_TAGS)
+        if not re.search(f'<({allowed_pattern})\\b[^>]*>', content, re.IGNORECASE):
+            return cls.escape_html(content)
+        
+        return content
     
     @classmethod
     def escape_html(cls, content: str) -> str:
