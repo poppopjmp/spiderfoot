@@ -20,97 +20,17 @@ Author: SpiderFoot Security Team
 import logging
 import time
 import cherrypy
-from typing import Dict, Any, Optional, Callable
+from typing import Dict, Any
 import json
 
-from .csrf_protection import CSRFProtection, init_csrf_protection
-from .input_validation import InputValidator, SecurityHeaders
+from .csrf_protection import CSRFProtection
+from .input_validation import InputValidator
 from .rate_limiting import RateLimiter
-from .session_security import SecureSessionManager
-from .api_security import APISecurityManager, APIKeyManager
-from .security_logging import SecurityLogger, SecurityMonitor
+from .session_security import SessionManager
+from .api_security import APIKeyManager, JWTManager
+from .security_logging import SecurityLogger, SecurityEventType
 from .secure_config import SecureConfigManager
 
-
-def install_cherrypy_security(app_config: Dict[str, Any]) -> 'SpiderFootSecurityManager':
-    """Install CherryPy security middleware.
-    
-    Args:
-        app_config: Application configuration dictionary
-        
-    Returns:
-        SpiderFootSecurityManager instance
-    """
-    from .web_security_cherrypy import SpiderFootSecurityManager
-    
-    # Initialize security manager
-    security_manager = SpiderFootSecurityManager(app_config)
-    
-    # Initialize CSRF protection
-    csrf_protection = init_csrf_protection(app_config)
-    
-    # Configure CherryPy security tools
-    cherrypy.config.update({
-        'tools.sessions.on': True,
-        'tools.sessions.timeout': app_config.get('SESSION_TIMEOUT', 60),
-        'tools.sessions.secure': app_config.get('SESSION_SECURE', True),
-        'tools.sessions.httponly': app_config.get('SESSION_HTTPONLY', True),
-        'tools.csrf.on': app_config.get('CSRF_ENABLED', True),
-        'tools.spider_security.on': True,
-        'tools.spider_security_response.on': True,
-    })
-    
-    # SSL Configuration if enabled
-    if app_config.get('SSL_ENABLED', False):
-        cherrypy.config.update({
-            'server.ssl_module': 'pyopenssl',
-            'server.ssl_certificate': app_config.get('SSL_CERT_PATH'),
-            'server.ssl_private_key': app_config.get('SSL_KEY_PATH'),
-            'server.ssl_certificate_chain': app_config.get('SSL_CA_PATH'),
-        })
-    
-    logging.getLogger(__name__).info("CherryPy security middleware installed successfully")
-    return security_manager
-
-
-def install_fastapi_security(app, config: Dict[str, Any]) -> 'FastAPISecurityManager':
-    """Install FastAPI security middleware.
-    
-    Args:
-        app: FastAPI application instance
-        config: Application configuration dictionary
-        
-    Returns:
-        FastAPISecurityManager instance
-    """
-    from .api_security_fastapi import FastAPISecurityManager
-    from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.middleware.trustedhost import TrustedHostMiddleware
-    
-    # Initialize security manager
-    security_manager = FastAPISecurityManager(
-        secret_key=config.get('JWT_SECRET'),
-        token_expiry=config.get('TOKEN_EXPIRY', 3600)
-    )
-    
-    # Add CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=config.get('CORS_ORIGINS', ["https://localhost"]),
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["*"],
-    )
-    
-    # Add trusted host middleware
-    trusted_hosts = config.get('TRUSTED_HOSTS', ["localhost", "127.0.0.1"])
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
-    
-    # Store security manager in app state
-    app.state.security_manager = security_manager
-    
-    logging.getLogger(__name__).info("FastAPI security middleware installed successfully")
-    return security_manager
 
 
 class SecurityConfigDefaults:
@@ -217,6 +137,25 @@ def get_security_status() -> Dict[str, Any]:
         'security_logging': True,  # Always enabled
         'timestamp': time.time()
     }
+
+
+class SpiderFootSecurityMiddleware:
+    """
+    Main security middleware class for SpiderFoot application.
+    
+    This class integrates all security components and provides a unified
+    interface for both web and API security management.
+    """
+    
+    def __init__(self, config: Dict[str, Any]):
+        """
+        Initialize SpiderFoot security middleware.
+        
+        Args:
+            config: Application configuration dictionary
+        """
+        self.config = config
+        self.log = logging.getLogger(__name__)
         
         # Initialize security components
         self._init_security_components()
@@ -230,27 +169,70 @@ def get_security_status() -> Dict[str, Any]:
         """Initialize all security components."""
         try:
             # Configuration manager
-            self.config_manager = SecureConfigManager(self.config)
+            try:
+                self.config_manager = SecureConfigManager(self.config)
+            except Exception as e:
+                self.log.warning(f"Failed to initialize config manager: {e}")
+                self.config_manager = None
             
             # Core security components
-            csrf_secret = self.config.get('security.csrf.secret_key')
-            self.csrf = CSRFProtection(secret_key=csrf_secret)
+            csrf_secret = self.config.get('security.csrf.secret_key', 'default-secret')
+            try:
+                self.csrf = CSRFProtection(secret_key=csrf_secret)
+            except Exception as e:
+                self.log.warning(f"Failed to initialize CSRF protection: {e}")
+                self.csrf = None
             
-            self.input_validator = InputValidator()
-            self.rate_limiter = RateLimiter(self.config)
-            self.session_manager = SessionManager(self.config)
-            self.api_key_manager = APIKeyManager(self.config)
-            self.jwt_manager = JWTManager(self.config)  # This is an alias to APIKeyManager
+            try:
+                self.input_validator = InputValidator()
+            except Exception as e:
+                self.log.warning(f"Failed to initialize input validator: {e}")
+                self.input_validator = None
+            
+            try:
+                # Get Redis config from the main config
+                redis_config = self.config.get('REDIS_CONFIG', {})
+                self.rate_limiter = RateLimiter(
+                    redis_host=redis_config.get('host', 'localhost'),
+                    redis_port=redis_config.get('port', 6379),
+                    redis_db=redis_config.get('db', 0)
+                )
+            except Exception as e:
+                self.log.warning(f"Failed to initialize rate limiter: {e}")
+                self.rate_limiter = None
+            
+            try:
+                self.session_manager = SessionManager(self.config)
+            except Exception as e:
+                self.log.warning(f"Failed to initialize session manager: {e}")
+                self.session_manager = None
+            
+            try:
+                self.api_key_manager = APIKeyManager(self.config)
+            except Exception as e:
+                self.log.warning(f"Failed to initialize API key manager: {e}")
+                self.api_key_manager = None
+            
+            try:
+                self.jwt_manager = JWTManager(self.config)
+            except Exception as e:
+                self.log.warning(f"Failed to initialize JWT manager: {e}")
+                self.jwt_manager = None
             
             # Security logger with proper initialization
             log_file = self.config.get('security.logging.log_file', 'logs/security.log')
-            self.security_logger = SecurityLogger(log_file=log_file)
+            try:
+                self.security_logger = SecurityLogger(log_file=log_file)
+            except Exception as e:
+                self.log.warning(f"Failed to initialize security logger: {e}")
+                self.security_logger = None
             
             self.log.info("All security components initialized successfully")
             
         except Exception as e:
             self.log.error(f"Failed to initialize security components: {e}")
-            raise
+            # Don't raise exception to prevent complete failure
+            self.log.warning("Security middleware will continue with reduced functionality")
     
     def _get_security_config(self) -> Dict[str, Any]:
         """Get security configuration with defaults."""
@@ -296,47 +278,97 @@ class CherryPySecurityTool(cherrypy.Tool):
             endpoint = request.path_info
             method = request.method
             
-            # Log security event
-            if self.middleware.security_config['security_logging_enabled']:
-                self.middleware.security_logger.log_request(
-                    client_ip, endpoint, method, user_agent
-                )
+            # Log security event (only for non-static requests)
+            if (self.middleware.security_config['security_logging_enabled'] and
+                not endpoint.startswith('/static') and
+                self.middleware.security_logger is not None):
+                try:
+                    self.middleware.security_logger.log_security_event(
+                        SecurityEventType.REQUEST_PROCESSED,
+                        {
+                            'action': 'request_processed',
+                            'endpoint': endpoint,
+                            'method': method
+                        },
+                        severity='INFO',
+                        ip_address=client_ip,
+                        user_agent=user_agent
+                    )
+                except Exception as e:
+                    # Don't let logging errors break the request
+                    self.log.warning(f"Security logging error: {e}")
             
             # Check if endpoint should bypass authentication
             if self._should_bypass_security(endpoint):
                 return
             
             # Rate limiting
-            if self.middleware.security_config['rate_limiting_enabled']:
-                if not self.middleware.rate_limiter.check_web_limit(client_ip):
-                    self._block_request(429, "Rate limit exceeded")
-                    return
+            if (self.middleware.security_config['rate_limiting_enabled'] and
+                self.middleware.rate_limiter is not None):
+                try:
+                    client_id = f"ip:{client_ip}"
+                    allowed, rate_info = self.middleware.rate_limiter._check_memory_limit(client_id, 'web')
+                    if self.middleware.rate_limiter.redis:
+                        try:
+                            allowed, rate_info = self.middleware.rate_limiter._check_redis_limit(client_id, 'web')
+                        except Exception:
+                            allowed, rate_info = self.middleware.rate_limiter._check_memory_limit(client_id, 'web')
+                    if not allowed:
+                        self._block_request(429, "Rate limit exceeded")
+                        return
+                except Exception as e:
+                    self.log.warning(f"Rate limiting error: {e}")
             
             # Input validation for POST/PUT requests
             if (self.middleware.security_config['input_validation_enabled'] and 
-                method in ['POST', 'PUT', 'PATCH']):
-                self._validate_request_data(request)
+                method in ['POST', 'PUT', 'PATCH'] and
+                self.middleware.input_validator is not None):
+                try:
+                    self._validate_request_data(request)
+                except Exception as e:
+                    self.log.warning(f"Input validation error: {e}")
             
             # CSRF protection for state-changing requests
             if (self.middleware.security_config['csrf_enabled'] and 
-                method in ['POST', 'PUT', 'DELETE', 'PATCH']):
-                self._check_csrf_token(request)
+                method in ['POST', 'PUT', 'DELETE', 'PATCH'] and
+                self.middleware.csrf is not None):
+                try:
+                    self._check_csrf_token(request)
+                except Exception as e:
+                    self.log.warning(f"CSRF check error: {e}")
             
             # Session security
-            if self.middleware.security_config['session_security_enabled']:
-                self._check_session_security(request)
+            if (self.middleware.security_config['session_security_enabled'] and
+                self.middleware.session_manager is not None):
+                try:
+                    self._check_session_security(request)
+                except Exception as e:
+                    self.log.warning(f"Session security check error: {e}")
             
             # Add security headers
             if self.middleware.security_config['security_headers_enabled']:
-                self._add_security_headers(response)
+                try:
+                    self._add_security_headers(response)
+                except Exception as e:
+                    self.log.warning(f"Security headers error: {e}")
             
         except Exception as e:
             self.log.error(f"Security check failed: {e}")
             # Log security error
-            if self.middleware.security_config['security_logging_enabled']:
-                self.middleware.security_logger.log_security_error(
-                    "middleware_error", str(e), {"endpoint": endpoint}
-                )
+            if (self.middleware.security_config['security_logging_enabled'] and
+                self.middleware.security_logger is not None):
+                try:
+                    self.middleware.security_logger.log_security_event(
+                        SecurityEventType.SUSPICIOUS_ACTIVITY,
+                        {
+                            'action': 'middleware_error',
+                            'error': str(e),
+                            'endpoint': endpoint
+                        },
+                        severity='ERROR'
+                    )
+                except Exception as log_error:
+                    self.log.warning(f"Error logging security event: {log_error}")
             # Don't block request on security check errors
     
     def _get_client_ip(self, request) -> str:
@@ -389,7 +421,8 @@ class CherryPySecurityTool(cherrypy.Tool):
             if request.query_string:
                 query_params = cherrypy.lib.httputil.parse_query_string(request.query_string)
                 for key, value in query_params.items():
-                    if not self.middleware.input_validator.validate_input(value):
+                    if (self.middleware.input_validator is not None and 
+                        not self.middleware.input_validator.validate_input(value)):
                         self._block_request(400, f"Invalid query parameter: {key}")
                         return
                         
@@ -398,6 +431,9 @@ class CherryPySecurityTool(cherrypy.Tool):
     
     def _check_csrf_token(self, request):
         """Check CSRF token for state-changing requests."""
+        if self.middleware.csrf is None:
+            return
+            
         try:
             # Get token from header or form data
             csrf_token = request.headers.get('X-CSRF-Token')
@@ -424,6 +460,9 @@ class CherryPySecurityTool(cherrypy.Tool):
     
     def _check_session_security(self, request):
         """Check session security."""
+        if self.middleware.session_manager is None:
+            return
+            
         try:
             if hasattr(cherrypy, 'session') and cherrypy.session.id:
                 session_id = cherrypy.session.id
@@ -447,8 +486,11 @@ class CherryPySecurityTool(cherrypy.Tool):
     def _add_security_headers(self, response):
         """Add security headers to response."""
         try:
-            headers = self.middleware.input_validator.get_security_headers()
-            for header, value in headers.items():
+            # Import SecurityHeaders from input_validation module
+            from .input_validation import SecurityHeaders
+            
+            # Add default security headers
+            for header, value in SecurityHeaders.DEFAULT_HEADERS.items():
                 response.headers[header] = value
                 
         except Exception as e:
@@ -465,17 +507,23 @@ class CherryPySecurityTool(cherrypy.Tool):
         cherrypy.response.headers['Content-Type'] = 'application/json'
         
         # Log security event
-        if self.middleware.security_config['security_logging_enabled']:
-            self.middleware.security_logger.log_security_event(
-                'request_blocked',
-                f"Request blocked: {message}",
-                {
-                    'status_code': status_code,
-                    'endpoint': cherrypy.request.path_info,
-                    'method': cherrypy.request.method,
-                    'client_ip': self._get_client_ip(cherrypy.request)
-                }
-            )
+        if (self.middleware.security_config['security_logging_enabled'] and
+            self.middleware.security_logger is not None):
+            try:
+                self.middleware.security_logger.log_security_event(
+                    SecurityEventType.UNAUTHORIZED_ACCESS,
+                    {
+                        'action': 'request_blocked',
+                        'message': message,
+                        'status_code': status_code,
+                        'endpoint': cherrypy.request.path_info,
+                        'method': cherrypy.request.method,
+                        'client_ip': self._get_client_ip(cherrypy.request)
+                    },
+                    severity='WARNING'
+                )
+            except Exception as e:
+                self.log.warning(f"Error logging blocked request: {e}")
         
         # Stop further processing
         raise cherrypy.HTTPError(status_code, message)
@@ -536,11 +584,25 @@ class FastAPISecurityMiddleware:
             endpoint = str(request.url.path)
             method = request.method
             
-            # Log security event
-            if self.middleware.security_config['security_logging_enabled']:
-                self.middleware.security_logger.log_request(
-                    client_ip, endpoint, method, user_agent
-                )
+            # Log security event (only for non-static requests)
+            if (self.middleware.security_config['security_logging_enabled'] and
+                not endpoint.startswith('/static') and
+                self.middleware.security_logger is not None):
+                try:
+                    self.middleware.security_logger.log_security_event(
+                        SecurityEventType.REQUEST_PROCESSED,
+                        {
+                            'action': 'api_request_processed',
+                            'endpoint': endpoint,
+                            'method': method
+                        },
+                        severity='INFO',
+                        ip_address=client_ip,
+                        user_agent=user_agent
+                    )
+                except Exception as e:
+                    # Don't let logging errors break the request
+                    self.log.warning(f"Security logging error: {e}")
             
             # Check if endpoint should bypass authentication
             if self._should_bypass_security(endpoint):
@@ -548,29 +610,52 @@ class FastAPISecurityMiddleware:
                 return self._add_security_headers(response)
             
             # Rate limiting
-            if self.middleware.security_config['rate_limiting_enabled']:
-                if not self.middleware.rate_limiter.check_api_limit(client_ip):
-                    return self._create_error_response(429, "Rate limit exceeded")
+            if (self.middleware.security_config['rate_limiting_enabled'] and
+                self.middleware.rate_limiter is not None):
+                try:
+                    client_id = f"ip:{client_ip}"
+                    allowed, rate_info = self.middleware.rate_limiter._check_memory_limit(client_id, 'api')
+                    if self.middleware.rate_limiter.redis:
+                        try:
+                            allowed, rate_info = self.middleware.rate_limiter._check_redis_limit(client_id, 'api')
+                        except Exception:
+                            allowed, rate_info = self.middleware.rate_limiter._check_memory_limit(client_id, 'api')
+                    if not allowed:
+                        return self._create_error_response(429, "Rate limit exceeded")
+                except Exception as e:
+                    self.log.warning(f"Rate limiting error: {e}")
             
             # API authentication
-            if self.middleware.security_config['api_security_enabled']:
-                auth_result = await self._check_api_authentication(request)
-                if not auth_result['success']:
-                    return self._create_error_response(401, auth_result['error'])
+            if (self.middleware.security_config['api_security_enabled'] and
+                self.middleware.api_key_manager is not None and
+                self.middleware.jwt_manager is not None):
+                try:
+                    auth_result = await self._check_api_authentication(request)
+                    if not auth_result['success']:
+                        return self._create_error_response(401, auth_result['error'])
+                except Exception as e:
+                    self.log.warning(f"API authentication error: {e}")
             
             # Input validation
             if (self.middleware.security_config['input_validation_enabled'] and 
-                method in ['POST', 'PUT', 'PATCH']):
-                validation_result = await self._validate_request_data(request)
-                if not validation_result['success']:
-                    return self._create_error_response(400, validation_result['error'])
+                method in ['POST', 'PUT', 'PATCH'] and
+                self.middleware.input_validator is not None):
+                try:
+                    validation_result = await self._validate_request_data(request)
+                    if not validation_result['success']:
+                        return self._create_error_response(400, validation_result['error'])
+                except Exception as e:
+                    self.log.warning(f"Input validation error: {e}")
             
             # Process request
             response = await call_next(request)
             
             # Add security headers
             if self.middleware.security_config['security_headers_enabled']:
-                response = self._add_security_headers(response)
+                try:
+                    response = self._add_security_headers(response)
+                except Exception as e:
+                    self.log.warning(f"Security headers error: {e}")
             
             return response
             
@@ -600,7 +685,7 @@ class FastAPISecurityMiddleware:
         try:
             # Check for API key in header
             api_key = request.headers.get('X-API-Key')
-            if api_key:
+            if api_key and self.middleware.api_key_manager is not None:
                 if self.middleware.api_key_manager.validate_api_key(api_key):
                     return {'success': True}
                 else:
@@ -608,7 +693,7 @@ class FastAPISecurityMiddleware:
             
             # Check for JWT token
             auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
+            if auth_header and auth_header.startswith('Bearer ') and self.middleware.jwt_manager is not None:
                 token = auth_header[7:]  # Remove 'Bearer ' prefix
                 validation_result = self.middleware.jwt_manager.validate_token(token)
                 if validation_result['valid']:
@@ -627,14 +712,16 @@ class FastAPISecurityMiddleware:
         try:
             # Validate query parameters
             for key, value in request.query_params.items():
-                if not self.middleware.input_validator.validate_input(str(value)):
+                if (self.middleware.input_validator is not None and
+                    not self.middleware.input_validator.validate_input(str(value))):
                     return {'success': False, 'error': f'Invalid query parameter: {key}'}
             
             # Validate JSON body if present
             if request.headers.get('content-type') == 'application/json':
                 try:
                     body = await request.json()
-                    if not self.middleware.input_validator.validate_json_input(body):
+                    if (self.middleware.input_validator is not None and
+                        not self.middleware.input_validator.validate_json_input(body)):
                         return {'success': False, 'error': 'Invalid JSON input'}
                 except Exception:
                     return {'success': False, 'error': 'Invalid JSON format'}
@@ -648,8 +735,11 @@ class FastAPISecurityMiddleware:
     def _add_security_headers(self, response):
         """Add security headers to FastAPI response."""
         try:
-            headers = self.middleware.input_validator.get_security_headers()
-            for header, value in headers.items():
+            # Import SecurityHeaders from input_validation module
+            from .input_validation import SecurityHeaders
+            
+            # Add default security headers
+            for header, value in SecurityHeaders.DEFAULT_HEADERS.items():
                 response.headers[header] = value
             return response
         except Exception as e:

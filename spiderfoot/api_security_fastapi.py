@@ -231,14 +231,21 @@ class APISecurityManager:
 class APIKeyManager:
     """API key management with database storage for FastAPI."""
     
-    def __init__(self, db_instance):
+    def __init__(self, config):
         """Initialize API key manager.
         
         Args:
-            db_instance: Database instance for storing API keys
+            config: SpiderFoot configuration dictionary
         """
-        self.db = db_instance
-        self._ensure_api_keys_table()
+        # Import here to avoid circular imports
+        from spiderfoot import SpiderFootDb
+        
+        try:
+            self.db = SpiderFootDb(config, init=True)
+            self._ensure_api_keys_table()
+        except Exception as e:
+            print(f"Failed to initialize APIKeyManager database: {e}")
+            self.db = None
     
     def _ensure_api_keys_table(self) -> None:
         """Ensure API keys table exists."""

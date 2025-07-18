@@ -213,17 +213,27 @@ class APISecurityManager:
 class APIKeyManager:
     """API key management with database storage."""
     
-    def __init__(self, db_instance):
+    def __init__(self, config):
         """Initialize API key manager.
         
         Args:
-            db_instance: Database instance
+            config: SpiderFoot configuration dictionary
         """
-        self.db = db_instance
-        self._ensure_api_keys_table()
+        # Import here to avoid circular imports
+        from spiderfoot import SpiderFootDb
+        
+        try:
+            self.db = SpiderFootDb(config, init=True)
+            self._ensure_api_keys_table()
+        except Exception as e:
+            print(f"Failed to initialize APIKeyManager database: {e}")
+            self.db = None
     
     def _ensure_api_keys_table(self) -> None:
         """Ensure API keys table exists."""
+        if not self.db:
+            return
+            
         try:
             with self.db.dbhLock:
                 if self.db.db_type == 'sqlite':
@@ -274,6 +284,9 @@ class APIKeyManager:
         Returns:
             Tuple of (key_id, api_key)
         """
+        if not self.db:
+            raise RuntimeError("Database not available for API key management")
+            
         # Generate API key
         security_manager = APISecurityManager()
         api_key = security_manager.generate_api_key(user_id, scopes, expires_in)
@@ -319,6 +332,9 @@ class APIKeyManager:
         Returns:
             True if key was revoked
         """
+        if not self.db:
+            return False
+            
         try:
             with self.db.dbhLock:
                 if self.db.db_type == 'sqlite':
@@ -350,6 +366,9 @@ class APIKeyManager:
         Args:
             key_hash: Hash of the API key
         """
+        if not self.db:
+            return
+            
         try:
             with self.db.dbhLock:
                 current_time = int(time.time())
@@ -376,6 +395,9 @@ class APIKeyManager:
         Returns:
             List of API key information
         """
+        if not self.db:
+            return []
+            
         try:
             with self.db.dbhLock:
                 if self.db.db_type == 'sqlite':

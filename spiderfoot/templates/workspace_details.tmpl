@@ -1,575 +1,345 @@
 <%include file="HEADER.tmpl"/>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <ol class="breadcrumb">
+                    <li><a href="${docroot}/">Home</a></li>
+                    <li><a href="${docroot}/workspaces">Workspaces</a></li>
+                    <li class="active">${workspace.name}</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="page-header">
+                    <h1>${workspace.name} 
+                        <small>${workspace.description}</small>                        <span class="pull-right">
+                            <button class="btn btn-primary" onclick="editWorkspace('${workspace.workspace_id}')">
+                                <i class="fa fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-success" onclick="addTarget('${workspace.workspace_id}')">
+                                <i class="fa fa-plus"></i> Add Target
+                            </button>
+                            <button class="btn btn-info" onclick="importScans('${workspace.workspace_id}')">
+                                <i class="fa fa-download"></i> Import Scans
+                            </button>                            <button class="btn btn-primary" onclick="multiTargetScan('${workspace.workspace_id}')">
+                                <i class="fa fa-play"></i> Multi-Target Scan
+                            </button>
+                            <button class="btn btn-info" onclick="schedulePeriodicScan('${workspace.workspace_id}')">
+                                <i class="fa fa-clock-o"></i> Schedule Periodic Scan
+                            </button>
+                            <button class="btn btn-warning" onclick="generateReport('${workspace.workspace_id}')">
+                                <i class="fa fa-file-text"></i> Generate Report
+                            </button>
+                        </span>
+                    </h1>
+                </div>
+            </div>
+        </div>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <h2>${workspace.name} 
-                <small>${workspace.description or "No description provided"}</small>
-                <span class="pull-right">
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-primary" onclick="editWorkspace('${workspace.workspace_id}')">
-                            <i class="glyphicon glyphicon-edit"></i> Edit
-                        </button>
-                        <button type="button" class="btn btn-success" onclick="addTarget('${workspace.workspace_id}')">
-                            <i class="glyphicon glyphicon-plus"></i> Add Target
-                        </button>
-                        <button type="button" class="btn btn-info" onclick="multiTargetScan('${workspace.workspace_id}')">
-                            <i class="glyphicon glyphicon-play"></i> Multi-Target Scan
-                        </button>
+        <!-- Workspace Stats -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-bullseye"></i> Targets</h3>
                     </div>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                            <i class="glyphicon glyphicon-cog"></i> More Actions <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-right">
-                            <li><a href="#" onclick="importScans('${workspace.workspace_id}')">
-                                <i class="glyphicon glyphicon-import"></i> Import Scans
-                            </a></li>
-                            <li><a href="#" onclick="schedulePeriodicScan('${workspace.workspace_id}')">
-                                <i class="glyphicon glyphicon-time"></i> Schedule Periodic Scan
-                            </a></li>
-                            <li><a href="#" onclick="generateReport('${workspace.workspace_id}')">
-                                <i class="glyphicon glyphicon-file"></i> Generate Report
-                            </a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a href="#" onclick="exportWorkspace('${workspace.workspace_id}')">
-                                <i class="glyphicon glyphicon-download-alt"></i> Export Workspace
-                            </a></li>
-                            <li><a href="#" onclick="archiveWorkspace('${workspace.workspace_id}')" class="text-warning">
-                                <i class="glyphicon glyphicon-archive"></i> Archive Workspace
-                            </a></li>
-                        </ul>
+                    <div class="panel-body text-center">
+                        <h2>${len(workspace.targets) if workspace.targets else 0}</h2>
+                        <p>Total Targets</p>
                     </div>
-                </span>
-                <img id="loader" src="${docroot}/static/img/loader.gif" style="display: none;">
-            </h2>
-        </div>
-    </div>
-
-    <div class="row" style="margin-bottom: 20px;">
-        <div class="col-md-12">
-            <ol class="breadcrumb">
-                <li><a href="${docroot}/">Home</a></li>
-                <li><a href="${docroot}/workspaces">Workspaces</a></li>
-                <li class="active">${workspace.name}</li>
-            </ol>
-        </div>
-    </div>
-
-    <!-- Workspace Statistics -->
-    <div class="row" style="margin-bottom: 20px;">
-        <div class="col-md-3">
-            <div class="panel panel-primary">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><i class="glyphicon glyphicon-bullseye"></i> Targets</h3>
-                </div>
-                <div class="panel-body text-center">
-                    <h2 style="margin: 10px 0;">${len(workspace.targets) if workspace.targets else 0}</h2>
-                    <p class="text-muted">Total Targets</p>
-                    <button class="btn btn-sm btn-primary" onclick="addTarget('${workspace.workspace_id}')">
-                        <i class="glyphicon glyphicon-plus"></i> Add Target
-                    </button>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="panel panel-success">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><i class="glyphicon glyphicon-search"></i> Scans</h3>
-                </div>
-                <div class="panel-body text-center">
-                    <h2 style="margin: 10px 0;">${len(scan_details) if scan_details else 0}</h2>
-                    <p class="text-muted">Total Scans</p>
-                    <button class="btn btn-sm btn-success" onclick="multiTargetScan('${workspace.workspace_id}')">
-                        <i class="glyphicon glyphicon-play"></i> Start Scan
-                    </button>
+            <div class="col-md-3">
+                <div class="panel panel-success">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-search"></i> Scans</h3>
+                    </div>
+                    <div class="panel-body text-center">
+                        <h2>${len(scan_details)}</h2>
+                        <p>Total Scans</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="panel panel-warning">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><i class="glyphicon glyphicon-link"></i> Correlations</h3>
-                </div>
-                <div class="panel-body text-center">
-                    <h2 id="correlationCount" style="margin: 10px 0;">-</h2>
-                    <p class="text-muted">Cross-Scan Patterns</p>
-                    <button class="btn btn-sm btn-warning" onclick="$('a[href=\"#correlations-tab\"]').tab('show')">
-                        <i class="glyphicon glyphicon-eye-open"></i> View
-                    </button>
+            <div class="col-md-3">
+                <div class="panel panel-warning">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-exclamation-triangle"></i> Correlations</h3>
+                    </div>
+                    <div class="panel-body text-center">
+                        <h2 id="correlationCount">-</h2>
+                        <p>Cross-Scan Patterns</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><i class="glyphicon glyphicon-calendar"></i> Created</h3>
-                </div>
-                <div class="panel-body text-center">
-                    <h4 style="margin: 10px 0;">
-                        <script>
-                            var createdTime = ${workspace.created_time if workspace.created_time else 0};
-                            if (createdTime > 0) {
-                                // Handle both epoch timestamps and milliseconds
-                                if (createdTime < 10000000000) {
-                                    createdTime *= 1000; // Convert to milliseconds
-                                }
-                                document.write(new Date(createdTime).toLocaleDateString('en-US', {
+            <div class="col-md-3">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-calendar"></i> Created</h3>
+                    </div>                    <div class="panel-body text-center">
+                        <h4>
+                            <script>
+                                document.write(new Date(${workspace.created_time} * 1000).toLocaleDateString('en-US', {
                                     year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
                                 }));
-                            } else {
-                                document.write('Unknown');
-                            }
-                        </script>
-                    </h4>
-                    <p class="text-muted">Workspace Created</p>
-                    <small class="text-muted">
-                        ID: <code>${workspace.workspace_id}</code>
-                    </small>
+                            </script>
+                        </h4>
+                        <p>Workspace Created</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Navigation Tabs -->
-    <div class="row">
-        <div class="col-md-12">
-            <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 20px;">
-                <li role="presentation" class="active">
-                    <a href="#targets-tab" aria-controls="targets-tab" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-bullseye"></i> Targets <span class="badge">${len(workspace.targets) if workspace.targets else 0}</span>
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a href="#scans-tab" aria-controls="scans-tab" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-search"></i> Scans <span class="badge">${len(scan_details) if scan_details else 0}</span>
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a href="#correlations-tab" aria-controls="correlations-tab" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-link"></i> Correlations <span class="badge" id="correlationBadge">-</span>
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a href="#results-tab" aria-controls="results-tab" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-th-list"></i> Recent Results
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a href="#schedules-tab" aria-controls="schedules-tab" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-time"></i> Periodic Scans
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a href="#reports-tab" aria-controls="reports-tab" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-file"></i> Reports
-                    </a>
-                </li>
-            </ul>
+        <!-- Navigation Tabs -->
+        <div class="row">
+            <div class="col-md-12">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#targets-tab" aria-controls="targets-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-bullseye"></i> Targets
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#scans-tab" aria-controls="scans-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-search"></i> Scans
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#correlations-tab" aria-controls="correlations-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-sitemap"></i> Correlations
+                        </a>
+                    </li>                    <li role="presentation">
+                        <a href="#results-tab" aria-controls="results-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-table"></i> Recent Results
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#schedules-tab" aria-controls="schedules-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-clock-o"></i> Periodic Scans
+                        </a>
+                    </li>
+                </ul>
 
-            <!-- Tab Content -->
-            <div class="tab-content">
-                <!-- Targets Tab -->
-                <div role="tabpanel" class="tab-pane active" id="targets-tab">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="pull-right" style="margin-bottom: 15px;">
-                                <button type="button" class="btn btn-success" onclick="addTarget('${workspace.workspace_id}')">
-                                    <i class="glyphicon glyphicon-plus"></i> Add Target
-                                </button>
-                                <button type="button" class="btn btn-default" onclick="importTargets('${workspace.workspace_id}')">
-                                    <i class="glyphicon glyphicon-import"></i> Import Targets
-                                </button>
-                            </div>
-                            <div class="clearfix"></div>
-                            
-                            % if workspace.targets:
-                                <div class="panel panel-default">
-                                    <div class="panel-heading">
-                                        <h4 class="panel-title">
-                                            <i class="glyphicon glyphicon-bullseye"></i> Workspace Targets 
-                                            <span class="badge">${len(workspace.targets)}</span>
-                                        </h4>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-striped table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>Target</th>
-                                                    <th>Type</th>
-                                                    <th>Added</th>
-                                                    <th>Last Scanned</th>
-                                                    <th class="text-center">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                % for target in workspace.targets:
-                                                    <tr>
-                                                        <td>
-                                                            <strong>${target['value']}</strong>
-                                                            % if target.get('description'):
-                                                                <br><small class="text-muted">${target['description']}</small>
-                                                            % endif
-                                                        </td>
-                                                        <td>
-                                                            <span class="label label-info">${target.get('type', 'Unknown')}</span>
-                                                        </td>
-                                                        <td>
-                                                            <script>
-                                                                var addedValue = '${target.get('added_time', '')}';
-                                                                if (addedValue && addedValue !== 'Unknown' && addedValue !== '') {
-                                                                    var timestamp = parseInt(addedValue);
-                                                                    if (timestamp < 10000000000) {
-                                                                        timestamp *= 1000;
-                                                                    }
-                                                                    var addedDate = new Date(timestamp);
-                                                                    if (!isNaN(addedDate.getTime())) {
-                                                                        document.write(addedDate.toLocaleDateString('en-US', {
-                                                                            year: 'numeric',
-                                                                            month: 'short',
-                                                                            day: 'numeric',
-                                                                            hour: '2-digit',
-                                                                            minute: '2-digit'
-                                                                        }));
-                                                                    } else {
-                                                                        document.write('<span class="text-muted">Invalid Date</span>');
-                                                                    }
-                                                                } else {
-                                                                    document.write('<span class="text-muted">Unknown</span>');
+                <!-- Tab Content -->
+                <div class="tab-content" style="margin-top: 20px;">
+                    
+                    <!-- Targets Tab -->
+                    <div role="tabpanel" class="tab-pane active" id="targets-tab">
+                        % if workspace.targets:
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Target</th>
+                                            <th>Type</th>
+                                            <th>Added</th>
+                                            <th>Actions</th>                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        % for target in workspace.targets:
+                                            <tr>
+                                                <td><strong>${target['value']}</strong></td>
+                                                <td><span class="label label-info">${target['type']}</span></td>
+                                                <td>
+                                                    <script>
+                                                        // Handle both epoch timestamp and date string formats for target added time
+                                                        var addedValue = '${target.get('added_time', '')}';
+                                                        var addedDate;
+                                                        
+                                                        if (addedValue && addedValue !== 'Unknown' && addedValue !== '') {
+                                                            // Check if it's a numeric timestamp (epoch)
+                                                            if (!isNaN(addedValue) && addedValue.length > 0) {
+                                                                // Convert epoch timestamp to milliseconds if needed
+                                                                var timestamp = parseInt(addedValue);
+                                                                if (timestamp < 10000000000) {
+                                                                    timestamp *= 1000; // Convert to milliseconds
                                                                 }
-                                                            </script>
-                                                        </td>
-                                                        <td>
-                                                            <script>
-                                                                var lastScanned = '${target.get('last_scanned', '')}';
-                                                                if (lastScanned && lastScanned !== 'Never' && lastScanned !== '') {
-                                                                    var timestamp = parseInt(lastScanned);
-                                                                    if (timestamp < 10000000000) {
-                                                                        timestamp *= 1000;
-                                                                    }
-                                                                    var scanDate = new Date(timestamp);
-                                                                    if (!isNaN(scanDate.getTime())) {
-                                                                        document.write(scanDate.toLocaleDateString('en-US', {
-                                                                            year: 'numeric',
-                                                                            month: 'short',
-                                                                            day: 'numeric'
-                                                                        }));
-                                                                    } else {
-                                                                        document.write('<span class="text-muted">Never</span>');
-                                                                    }
-                                                                } else {
-                                                                    document.write('<span class="text-muted">Never</span>');
-                                                                }
-                                                            </script>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <div class="btn-group btn-group-xs">
-                                                                <button type="button" class="btn btn-primary" onclick="scanTarget('${workspace.workspace_id}', '${target['target_id']}')">
-                                                                    <i class="glyphicon glyphicon-play"></i> Scan
-                                                                </button>
-                                                                <button type="button" class="btn btn-default" onclick="editTarget('${workspace.workspace_id}', '${target['target_id']}')">
-                                                                    <i class="glyphicon glyphicon-edit"></i>
-                                                                </button>
-                                                                <button type="button" class="btn btn-danger" onclick="removeTarget('${workspace.workspace_id}', '${target['target_id']}')">
-                                                                    <i class="glyphicon glyphicon-trash"></i>
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                % endfor
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            % else:
-                                <div class="well well-lg text-center">
-                                    <i class="glyphicon glyphicon-bullseye" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
-                                    <h3>No targets added yet</h3>
-                                    <p class="text-muted">Add your first target to start scanning and gathering intelligence.</p>
-                                    <button type="button" class="btn btn-success btn-lg" onclick="addTarget('${workspace.workspace_id}')">
-                                        <i class="glyphicon glyphicon-plus"></i> Add Your First Target
-                                    </button>
-                                </div>
-                            % endif
+                                                                addedDate = new Date(timestamp);
+                                                            } else {
+                                                                // Try to parse as date string
+                                                                addedDate = new Date(addedValue);
+                                                            }
+                                                            
+                                                            // Display formatted date
+                                                            if (addedDate && !isNaN(addedDate.getTime())) {
+                                                                document.write(addedDate.toLocaleDateString('en-US', {
+                                                                    year: 'numeric',
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit'
+                                                                }));
+                                                            } else {
+                                                                document.write('Invalid Date');
+                                                            }
+                                                        } else {
+                                                            document.write('Unknown');
+                                                        }
+                                                    </script>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-xs btn-danger" onclick="removeTarget('${workspace.workspace_id}', '${target['target_id']}')">
+                                                        <i class="fa fa-trash"></i> Remove
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        % endfor
+                                    </tbody>
+                                </table>
+                            </div>
+                        % else:
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i> No targets added yet. 
+                                <button class="btn btn-success btn-sm" onclick="addTarget('${workspace.workspace_id}')">
+                                    Add your first target
+                                </button>
+                            </div>
+                        % endif
+                    </div>                    <!-- Scans Tab -->
+                    <div role="tabpanel" class="tab-pane" id="scans-tab">
+                        <div class="pull-right" style="margin-bottom: 10px;">
+                            <button class="btn btn-sm btn-default" onclick="location.reload()">
+                                <i class="fa fa-refresh"></i> Refresh Scans
+                            </button>
                         </div>
+                        <div class="clearfix"></div>
+                        % if scan_details:
+                            <div class="table-responsive">
+                                <table class="table table-striped">                                    <thead>
+                                        <tr>
+                                            <th>Scan ID</th>
+                                            <th>Scan Name</th>
+                                            <th>Target</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>                                    </thead>
+                                    <tbody>
+                                        % for scan in scan_details:
+                                            <tr>                                                <td>
+                                                    <code style="font-size: 11px; background: #f5f5f5; padding: 2px 4px; cursor: pointer; border: 1px solid #ddd; border-radius: 3px;" 
+                                                          onclick="copyWorkspaceScanId('${scan['scan_id']}')" 
+                                                          title="Click to copy scan ID">${scan['scan_id']} <i class="fa fa-copy" style="font-size: 10px; margin-left: 2px;"></i></code>
+                                                </td>
+                                                <td>
+                                                    <strong>${scan['name']}</strong>
+                                                </td>
+                                                <td>${scan['target']}</td>
+                                                <td>
+                                                    % if scan['status'] == 'FINISHED':
+                                                        <span class="label label-success">${scan['status']}</span>
+                                                    % elif scan['status'] == 'RUNNING':
+                                                        <span class="label label-primary">${scan['status']}</span>
+                                                    % elif scan['status'] == 'STARTING':
+                                                        <span class="label label-info">${scan['status']}</span>
+                                                    % else:
+                                                        <span class="label label-warning">${scan['status']}</span>
+                                                    % endif
+                                                </td>                                                <td>
+                                                    <script>
+                                                        // Handle both epoch timestamp and date string formats
+                                                        var dateValue = '${scan['created']}';
+                                                        var scanDate;
+                                                        
+                                                        // Check if it's a numeric timestamp (epoch)
+                                                        if (!isNaN(dateValue) && dateValue.length > 0) {
+                                                            // Convert epoch timestamp to milliseconds if needed
+                                                            var timestamp = parseInt(dateValue);
+                                                            if (timestamp < 10000000000) {
+                                                                timestamp *= 1000; // Convert to milliseconds
+                                                            }
+                                                            scanDate = new Date(timestamp);
+                                                        } else {
+                                                            // Try to parse as date string
+                                                            scanDate = new Date(dateValue);
+                                                        }
+                                                        
+                                                        // Display formatted date
+                                                        if (scanDate && !isNaN(scanDate.getTime())) {
+                                                            document.write(scanDate.toLocaleDateString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            }));
+                                                        } else {
+                                                            document.write('Invalid Date');
+                                                        }
+                                                    </script>
+                                                </td>
+                                                <td>
+                                                    <a href="${docroot}/scaninfo?id=${scan['scan_id']}" class="btn btn-xs btn-primary">
+                                                        <i class="fa fa-eye"></i> View
+                                                    </a>
+                                                    <button class="btn btn-xs btn-info" onclick="viewScanResults('${scan['scan_id']}')">
+                                                        <i class="fa fa-table"></i> Results
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        % endfor
+                                    </tbody>
+                                </table>
+                            </div>
+                        % else:
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i> No scans in this workspace yet. 
+                                <button class="btn btn-info btn-sm" onclick="importScans('${workspace.workspace_id}')">
+                                    Import existing scans
+                                </button>
+                                or
+                                <button class="btn btn-success btn-sm" onclick="multiTargetScan('${workspace.workspace_id}')">
+                                    Start new scans
+                                </button>
+                            </div>
+                        % endif
                     </div>
-                </div>            <!-- Scans Tab -->
-                <div role="tabpanel" class="tab-pane" id="scans-tab">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="pull-right" style="margin-bottom: 15px;">
-                                <button type="button" class="btn btn-success" onclick="multiTargetScan('${workspace.workspace_id}')">
-                                    <i class="glyphicon glyphicon-play"></i> Start New Scan
-                                </button>
-                                <button type="button" class="btn btn-default" onclick="importScans('${workspace.workspace_id}')">
-                                    <i class="glyphicon glyphicon-import"></i> Import Scans
-                                </button>
-                                <button type="button" class="btn btn-default" onclick="location.reload()">
-                                    <i class="glyphicon glyphicon-refresh"></i> Refresh
-                                </button>
-                            </div>
-                            <div class="clearfix"></div>
-                            
-                            % if scan_details:
-                                <div class="panel panel-default">
-                                    <div class="panel-heading">
-                                        <h4 class="panel-title">
-                                            <i class="glyphicon glyphicon-search"></i> Workspace Scans 
-                                            <span class="badge">${len(scan_details)}</span>
-                                        </h4>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-striped table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>Scan ID</th>
-                                                    <th>Scan Name</th>
-                                                    <th>Target</th>
-                                                    <th>Status</th>
-                                                    <th>Created</th>
-                                                    <th>Duration</th>
-                                                    <th class="text-center">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                % for scan in scan_details:
-                                                    <tr>
-                                                        <td>
-                                                            <code style="font-size: 11px; background: #f5f5f5; padding: 2px 4px; cursor: pointer; border: 1px solid #ddd; border-radius: 3px;" 
-                                                                  onclick="copyWorkspaceScanId('${scan['scan_id']}')" 
-                                                                  title="Click to copy scan ID">
-                                                                ${scan['scan_id'][:8]}...
-                                                                <i class="glyphicon glyphicon-copy" style="font-size: 10px; margin-left: 2px;"></i>
-                                                            </code>
-                                                        </td>
-                                                        <td>
-                                                            <strong>${scan['name']}</strong>
-                                                            % if scan.get('description'):
-                                                                <br><small class="text-muted">${scan['description']}</small>
-                                                            % endif
-                                                        </td>
-                                                        <td>
-                                                            <span class="text-primary">${scan['target']}</span>
-                                                        </td>
-                                                        <td>
-                                                            % if scan['status'] == 'FINISHED':
-                                                                <span class="label label-success">${scan['status']}</span>
-                                                            % elif scan['status'] in ['RUNNING', 'STARTING', 'STARTED']:
-                                                                <span class="label label-primary">${scan['status']}</span>
-                                                            % elif scan['status'] == 'CREATED':
-                                                                <span class="label label-info">${scan['status']}</span>
-                                                            % elif scan['status'].startswith('ERROR'):
-                                                                <span class="label label-danger">${scan['status']}</span>
-                                                            % elif scan['status'].startswith('ABORT'):
-                                                                <span class="label label-warning">${scan['status']}</span>
-                                                            % else:
-                                                                <span class="label label-default">${scan['status']}</span>
-                                                            % endif
-                                                        </td>
-                                                        <td>
-                                                            <script>
-                                                                var dateValue = '${scan['created']}';
-                                                                if (!isNaN(dateValue) && dateValue.length > 0) {
-                                                                    var timestamp = parseInt(dateValue);
-                                                                    if (timestamp < 10000000000) {
-                                                                        timestamp *= 1000;
-                                                                    }
-                                                                    var scanDate = new Date(timestamp);
-                                                                    if (!isNaN(scanDate.getTime())) {
-                                                                        document.write(scanDate.toLocaleDateString('en-US', {
-                                                                            year: 'numeric',
-                                                                            month: 'short',
-                                                                            day: 'numeric',
-                                                                            hour: '2-digit',
-                                                                            minute: '2-digit'
-                                                                        }));
-                                                                    } else {
-                                                                        document.write('<span class="text-muted">Invalid Date</span>');
-                                                                    }
-                                                                } else {
-                                                                    document.write('<span class="text-muted">Unknown</span>');
-                                                                }
-                                                            </script>
-                                                        </td>
-                                                        <td>
-                                                            <script>
-                                                                var startTime = '${scan['created']}';
-                                                                var endTime = '${scan.get('ended', '')}';
-                                                                if (startTime && endTime && !isNaN(startTime) && !isNaN(endTime)) {
-                                                                    var start = parseInt(startTime);
-                                                                    var end = parseInt(endTime);
-                                                                    if (start < 10000000000) start *= 1000;
-                                                                    if (end < 10000000000) end *= 1000;
-                                                                    var duration = end - start;
-                                                                    if (duration > 0) {
-                                                                        var hours = Math.floor(duration / (1000 * 60 * 60));
-                                                                        var minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
-                                                                        if (hours > 0) {
-                                                                            document.write(hours + 'h ' + minutes + 'm');
-                                                                        } else {
-                                                                            document.write(minutes + 'm');
-                                                                        }
-                                                                    } else {
-                                                                        document.write('<span class="text-muted">-</span>');
-                                                                    }
-                                                                } else if ('${scan['status']}' in ['RUNNING', 'STARTING', 'STARTED']) {
-                                                                    document.write('<span class="text-info">Running...</span>');
-                                                                } else {
-                                                                    document.write('<span class="text-muted">-</span>');
-                                                                }
-                                                            </script>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <div class="btn-group btn-group-xs">
-                                                                <a href="${docroot}/scaninfo?id=${scan['scan_id']}" class="btn btn-primary" title="View Details">
-                                                                    <i class="glyphicon glyphicon-eye-open"></i>
-                                                                </a>
-                                                                <button type="button" class="btn btn-info" onclick="viewScanResults('${scan['scan_id']}')" title="View Results">
-                                                                    <i class="glyphicon glyphicon-th-list"></i>
-                                                                </button>
-                                                                % if scan['status'] in ['RUNNING', 'STARTING', 'STARTED']:
-                                                                    <button type="button" class="btn btn-warning" onclick="stopScan('${scan['scan_id']}')" title="Stop Scan">
-                                                                        <i class="glyphicon glyphicon-stop"></i>
-                                                                    </button>
-                                                                % elif scan['status'] in ['FINISHED', 'ABORTED', 'ERROR-FAILED']:
-                                                                    <button type="button" class="btn btn-success" onclick="restartScan('${scan['scan_id']}')" title="Restart Scan">
-                                                                        <i class="glyphicon glyphicon-repeat"></i>
-                                                                    </button>
-                                                                % endif
-                                                                <button type="button" class="btn btn-danger" onclick="deleteScan('${scan['scan_id']}')" title="Delete Scan">
-                                                                    <i class="glyphicon glyphicon-trash"></i>
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                % endfor
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            % else:
-                                <div class="well well-lg text-center">
-                                    <i class="glyphicon glyphicon-search" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
-                                    <h3>No scans in this workspace yet</h3>
-                                    <p class="text-muted">Start scanning your targets to gather intelligence and monitor for changes.</p>
-                                    <div>
-                                        <button type="button" class="btn btn-success btn-lg" onclick="multiTargetScan('${workspace.workspace_id}')">
-                                            <i class="glyphicon glyphicon-play"></i> Start Your First Scan
-                                        </button>
-                                        <button type="button" class="btn btn-default btn-lg" onclick="importScans('${workspace.workspace_id}')">
-                                            <i class="glyphicon glyphicon-import"></i> Import Existing Scans
-                                        </button>
-                                    </div>
-                                </div>
-                            % endif
-                </div>
 
-                <!-- Correlations Tab -->
-                <div role="tabpanel" class="tab-pane" id="correlations-tab">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="pull-right" style="margin-bottom: 15px;">
-                                <button type="button" class="btn btn-default" onclick="loadCorrelations()">
-                                    <i class="glyphicon glyphicon-refresh"></i> Refresh Correlations
-                                </button>
+                    <!-- Correlations Tab -->
+                    <div role="tabpanel" class="tab-pane" id="correlations-tab">
+                        <div id="correlations-content">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                <p>Loading correlations...</p>
                             </div>
-                            <div class="clearfix"></div>
-                            <div id="correlations-content">
-                                <div class="text-center" style="padding: 40px;">
-                                    <i class="glyphicon glyphicon-refresh" style="font-size: 24px; color: #ccc;"></i>
-                                    <p class="text-muted">Loading correlations...</p>
-                                </div>
+                        </div>
+                    </div>                    <!-- Results Tab -->
+                    <div role="tabpanel" class="tab-pane" id="results-tab">
+                        <div id="results-content">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                <p>Loading recent results...</p>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Results Tab -->
-                <div role="tabpanel" class="tab-pane" id="results-tab">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="pull-right" style="margin-bottom: 15px;">
-                                <div class="form-inline">
-                                    <div class="form-group">
-                                        <label for="resultLimit">Show:</label>
-                                        <select class="form-control input-sm" id="resultLimit" onchange="loadResults()">
-                                            <option value="50">50 results</option>
-                                            <option value="100">100 results</option>
-                                            <option value="250">250 results</option>
-                                            <option value="500">500 results</option>
-                                        </select>
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-default" onclick="loadResults()">
-                                        <i class="glyphicon glyphicon-refresh"></i> Refresh
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="clearfix"></div>
-                            <div id="results-content">
-                                <div class="text-center" style="padding: 40px;">
-                                    <i class="glyphicon glyphicon-refresh" style="font-size: 24px; color: #ccc;"></i>
-                                    <p class="text-muted">Loading recent results...</p>
-                                </div>
+                    <!-- Periodic Scans Tab -->
+                    <div role="tabpanel" class="tab-pane" id="schedules-tab">
+                        <div class="pull-right" style="margin-bottom: 10px;">
+                            <button class="btn btn-sm btn-primary" onclick="schedulePeriodicScan('${workspace.workspace_id}')">
+                                <i class="fa fa-plus"></i> Schedule New Periodic Scan
+                            </button>
+                            <button class="btn btn-sm btn-default" onclick="loadPeriodicScans()">
+                                <i class="fa fa-refresh"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div id="periodic-scans-content">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                <p>Loading periodic scans...</p>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Periodic Scans Tab -->
-                <div role="tabpanel" class="tab-pane" id="schedules-tab">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="pull-right" style="margin-bottom: 15px;">
-                                <button type="button" class="btn btn-success" onclick="schedulePeriodicScan('${workspace.workspace_id}')">
-                                    <i class="glyphicon glyphicon-plus"></i> Schedule New Periodic Scan
-                                </button>
-                                <button type="button" class="btn btn-default" onclick="loadPeriodicScans()">
-                                    <i class="glyphicon glyphicon-refresh"></i> Refresh
-                                </button>
-                            </div>
-                            <div class="clearfix"></div>
-                            <div id="periodic-scans-content">
-                                <div class="text-center" style="padding: 40px;">
-                                    <i class="glyphicon glyphicon-refresh" style="font-size: 24px; color: #ccc;"></i>
-                                    <p class="text-muted">Loading periodic scans...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-
-                <!-- Reports Tab -->
-                <div role="tabpanel" class="tab-pane" id="reports-tab">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="pull-right" style="margin-bottom: 15px;">
-                                <button type="button" class="btn btn-primary" onclick="generateReport('${workspace.workspace_id}')">
-                                    <i class="glyphicon glyphicon-file"></i> Generate New Report
-                                </button>
-                                <button type="button" class="btn btn-default" onclick="loadReports()">
-                                    <i class="glyphicon glyphicon-refresh"></i> Refresh
-                                </button>
-                            </div>
-                            <div class="clearfix"></div>
-                            <div id="reports-content">
-                                <div class="well well-lg text-center">
-                                    <i class="glyphicon glyphicon-file" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
-                                    <h3>Workspace Reports</h3>
-                                    <p class="text-muted">Generate comprehensive reports from your workspace scans and correlations.</p>
-                                    <button type="button" class="btn btn-primary btn-lg" onclick="generateReport('${workspace.workspace_id}')">
-                                        <i class="glyphicon glyphicon-file"></i> Generate Your First Report
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>        </div>
-    </div>
-</div>
+            </div>
+        </div>    </div>
 
 <!-- Modals from workspaces.tmpl for workspace actions -->
 
@@ -923,7 +693,7 @@
                 <div class="panel-heading">
                   <h4 class="panel-title">
                     <a data-toggle="collapse" href="#advancedOptions" aria-expanded="false">
-                      Advanced Options <i class="glyphicon glyphicon-chevron-down"></i>
+                      Advanced Options <i class="fa fa-chevron-down"></i>
                     </a>
                   </h4>
                 </div>
@@ -984,7 +754,7 @@
           <div class="row">
             <div class="col-md-12">
               <div class="alert alert-info">
-                <h5><i class="glyphicon glyphicon-info-sign"></i> Schedule Summary</h5>
+                <h5><i class="fa fa-info-circle"></i> Schedule Summary</h5>
                 <div id="schedulePreview">
                   <p><strong>Frequency:</strong> <span id="scheduleFrequency">-</span></p>
                   <p><strong>Next Scan:</strong> <span id="nextScanTime">-</span></p>
@@ -998,7 +768,7 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-primary" id="schedulePeriodicScanBtn">
-          <i class="glyphicon glyphicon-time"></i> Schedule Periodic Scan
+          <i class="fa fa-clock-o"></i> Schedule Periodic Scan
         </button>
       </div>
     </div>
@@ -1006,205 +776,6 @@
 </div>
 
 <script>
-// Utility functions
-function showLoader() {
-    $("#loader").show();
-}
-
-function hideLoader() {
-    $("#loader").hide();
-}
-
-// Enhanced workspace functions with improved error handling and user feedback
-function exportWorkspace(workspaceId) {
-    alertify.confirm(
-        'Export Workspace',
-        'This will export all workspace data including targets, scans, and correlations. Continue?',
-        function() {
-            showLoader();
-            window.location.href = '${docroot}/workspaceexport?workspace_id=' + workspaceId;
-            setTimeout(function() { hideLoader(); }, 2000);
-        },
-        function() {}
-    ).set('labels', {ok:'Export', cancel:'Cancel'});
-}
-
-function archiveWorkspace(workspaceId) {
-    alertify.confirm(
-        'Archive Workspace',
-        'This will archive the workspace and make it read-only. This action can be undone later. Continue?',
-        function() {
-            showLoader();
-            $.post('${docroot}/workspacearchive', {
-                workspace_id: workspaceId
-            }, function(data) {
-                hideLoader();
-                if (data.success) {
-                    alertify.success('Workspace archived successfully!');
-                    setTimeout(function() {
-                        window.location.href = '${docroot}/workspaces';
-                    }, 1500);
-                } else {
-                    alertify.error('Failed to archive workspace: ' + (data.error || 'Unknown error'));
-                }
-            }).fail(function() {
-                hideLoader();
-                alertify.error('Failed to archive workspace: Server error');
-            });
-        },
-        function() {}
-    ).set('labels', {ok:'Archive', cancel:'Cancel'});
-}
-
-function importTargets(workspaceId) {
-    alertify.prompt(
-        'Import Targets',
-        'Enter targets (one per line):',
-        '',
-        function(evt, value) {
-            if (value.trim()) {
-                showLoader();
-                var targets = value.split('\n').map(function(t) { return t.trim(); }).filter(function(t) { return t.length > 0; });
-                $.post('${docroot}/workspaceimporttargets', {
-                    workspace_id: workspaceId,
-                    targets: targets.join('\n')
-                }, function(data) {
-                    hideLoader();
-                    if (data.success) {
-                        alertify.success('Targets imported successfully!');
-                        location.reload();
-                    } else {
-                        alertify.error('Failed to import targets: ' + (data.error || 'Unknown error'));
-                    }
-                }).fail(function() {
-                    hideLoader();
-                    alertify.error('Failed to import targets: Server error');
-                });
-            }
-        },
-        function() {}
-    ).set('labels', {ok:'Import', cancel:'Cancel'});
-}
-
-function editTarget(workspaceId, targetId) {
-    // Get target details and open edit modal
-    $.get('${docroot}/workspacegettarget', { workspace_id: workspaceId, target_id: targetId }, function(data) {
-        if (data.success) {
-            // Implementation would show a modal with target edit form
-            alertify.prompt('Edit Target', 'Update target description:', data.target.description || '', function(evt, value) {
-                showLoader();
-                $.post('${docroot}/workspaceupdatetarget', {
-                    workspace_id: workspaceId,
-                    target_id: targetId,
-                    description: value
-                }, function(updateData) {
-                    hideLoader();
-                    if (updateData.success) {
-                        alertify.success('Target updated successfully!');
-                        location.reload();
-                    } else {
-                        alertify.error('Failed to update target: ' + (updateData.error || 'Unknown error'));
-                    }
-                }).fail(function() {
-                    hideLoader();
-                    alertify.error('Failed to update target: Server error');
-                });
-            });
-        } else {
-            alertify.error('Failed to load target details');
-        }
-    }).fail(function() {
-        alertify.error('Failed to load target details: Server error');
-    });
-}
-
-function scanTarget(workspaceId, targetId) {
-    // Redirect to new scan page with pre-selected target
-    window.location.href = '${docroot}/newscan?workspace_id=' + workspaceId + '&target_id=' + targetId;
-}
-
-function stopScan(scanId) {
-    alertify.confirm(
-        'Stop Scan',
-        'Are you sure you want to stop this scan?',
-        function() {
-            showLoader();
-            $.post('${docroot}/stopscan', { id: scanId }, function(data) {
-                hideLoader();
-                if (data.success) {
-                    alertify.success('Scan stopped successfully!');
-                    location.reload();
-                } else {
-                    alertify.error('Failed to stop scan: ' + (data.error || 'Unknown error'));
-                }
-            }).fail(function() {
-                hideLoader();
-                alertify.error('Failed to stop scan: Server error');
-            });
-        },
-        function() {}
-    ).set('labels', {ok:'Stop Scan', cancel:'Cancel'});
-}
-
-function restartScan(scanId) {
-    alertify.confirm(
-        'Restart Scan',
-        'This will create a new scan with the same configuration. Continue?',
-        function() {
-            showLoader();
-            $.post('${docroot}/restartscan', { id: scanId }, function(data) {
-                hideLoader();
-                if (data.success) {
-                    alertify.success('Scan restarted successfully!');
-                    location.reload();
-                } else {
-                    alertify.error('Failed to restart scan: ' + (data.error || 'Unknown error'));
-                }
-            }).fail(function() {
-                hideLoader();
-                alertify.error('Failed to restart scan: Server error');
-            });
-        },
-        function() {}
-    ).set('labels', {ok:'Restart', cancel:'Cancel'});
-}
-
-function deleteScan(scanId) {
-    alertify.confirm(
-        'Delete Scan',
-        'This will permanently delete the scan and all its data. This action cannot be undone. Continue?',
-        function() {
-            showLoader();
-            $.post('${docroot}/deletescan', { id: scanId }, function(data) {
-                hideLoader();
-                if (data.success) {
-                    alertify.success('Scan deleted successfully!');
-                    location.reload();
-                } else {
-                    alertify.error('Failed to delete scan: ' + (data.error || 'Unknown error'));
-                }
-            }).fail(function() {
-                hideLoader();
-                alertify.error('Failed to delete scan: Server error');
-            });
-        },
-        function() {}
-    ).set('labels', {ok:'Delete', cancel:'Cancel'});
-}
-
-function loadReports() {
-    $('#reports-content').html(`
-        <div class="well well-lg text-center">
-            <i class="glyphicon glyphicon-file" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
-            <h3>Workspace Reports</h3>
-            <p class="text-muted">Generate comprehensive reports from your workspace scans and correlations.</p>
-            <button type="button" class="btn btn-primary btn-lg" onclick="generateReport('${workspace.workspace_id}')">
-                <i class="glyphicon glyphicon-file"></i> Generate Your First Report
-            </button>
-        </div>
-    `);
-}
-
 // Load correlations when tab is clicked
 $('a[href="#correlations-tab"]').on('shown.bs.tab', function() {
     loadCorrelations();
@@ -1220,37 +791,16 @@ $('a[href="#schedules-tab"]').on('shown.bs.tab', function() {
     loadPeriodicScans();
 });
 
-// Load reports when tab is clicked
-$('a[href="#reports-tab"]').on('shown.bs.tab', function() {
-    loadReports();
-});
-
-// Show loading indicator on tab switch
-$('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
-    var target = $(e.target).attr('href');
-    if (target !== '#targets-tab' && target !== '#scans-tab') {
-        $(target).find('.row .col-md-12').html('<div class="text-center" style="padding: 40px;"><i class="glyphicon glyphicon-refresh glyphicon-spin"></i> Loading...</div>');
-    }
-});
-
 // Load correlations on page load
 $(document).ready(function() {
     loadCorrelationCount();
     
     // Auto-refresh every 30 seconds to pick up new scans and status changes
     setInterval(function() {
-        try {
-            if ($('#scans-tab').hasClass('active')) {
-                location.reload(); // Reload page to get updated scan list
-            } else if ($('#correlations-tab').hasClass('active')) {
-                loadCorrelations(); // Refresh correlations
-            } else if ($('#schedules-tab').hasClass('active')) {
-                loadPeriodicScans(); // Refresh periodic scans
-            } else if ($('#results-tab').hasClass('active')) {
-                loadResults(); // Refresh results
-            }
-        } catch (e) {
-            console.error('Error during auto-refresh:', e);
+        if ($('#scans-tab').hasClass('active')) {
+            location.reload(); // Reload page to get updated scan list
+        } else if ($('#correlations-tab').hasClass('active')) {
+            loadCorrelations(); // Refresh correlations
         }
     }, 30000);
 });
@@ -1258,17 +808,12 @@ $(document).ready(function() {
 function loadCorrelationCount() {
     $.get('${docroot}/workspacescancorrelations', {workspace_id: '${workspace.workspace_id}'})
         .done(function(data) {
-            if (data.success && data.total_patterns !== undefined) {
-                $('#correlationCount').text(data.total_patterns);
-                $('#correlationBadge').text(data.total_patterns);
-            } else {
-                $('#correlationCount').text('0');
-                $('#correlationBadge').text('0');
+            if (data.success) {
+                $('#correlationCount').text(data.cross_scan_patterns);
             }
         })
         .fail(function() {
             $('#correlationCount').text('0');
-            $('#correlationBadge').text('0');
         });
 }
 
@@ -1307,16 +852,16 @@ function loadCorrelations() {
                     });
                 } else {
                     if (data.message) {
-                        html = '<div class="alert alert-info"><i class="glyphicon glyphicon-info-sign"></i> ' + data.message + '</div>';
+                        html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> ' + data.message + '</div>';
                         if (data.total_scans > 0 && data.finished_scans < data.total_scans) {
                             html += '<div class="alert alert-warning">';
-                            html += '<i class="glyphicon glyphicon-time"></i> Some scans are still running. Correlations will be available as scans complete.';
+                            html += '<i class="fa fa-clock-o"></i> Some scans are still running. Correlations will be available as scans complete.';
                             html += '<br><button class="btn btn-sm btn-primary" onclick="loadCorrelations()" style="margin-top: 10px;">';
-                            html += '<i class="glyphicon glyphicon-refresh"></i> Refresh</button>';
+                            html += '<i class="fa fa-refresh"></i> Refresh</button>';
                             html += '</div>';
                         }
                     } else {
-                        html = '<div class="alert alert-info"><i class="glyphicon glyphicon-info-sign"></i> No correlations found. Need at least 2 completed scans for cross-correlation analysis.</div>';
+                        html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> No correlations found. Need at least 2 completed scans for cross-correlation analysis.</div>';
                     }
                 }
                 $('#correlations-content').html(html);
@@ -1351,7 +896,7 @@ function loadResults() {
                     html += '</tbody></table></div>';
                     html += '<p class="text-muted">Showing ' + data.results.length + ' of ' + data.total_results + ' results</p>';
                 } else {
-                    html = '<div class="alert alert-info"><i class="glyphicon glyphicon-info-sign"></i> No scan results available yet.</div>';
+                    html = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> No scan results available yet.</div>';
                 }
                 $('#results-content').html(html);
             } else {
@@ -1360,134 +905,6 @@ function loadResults() {
         })
         .fail(function() {
             $('#results-content').html('<div class="alert alert-danger">Failed to load results</div>');        });
-}
-
-function loadPeriodicScans() {
-    $.get('${docroot}/workspaceperiodicscans', {workspace_id: '${workspace.workspace_id}'})
-        .done(function(data) {
-            if (data.success) {
-                var html = '';
-                if (data.schedules && data.schedules.length > 0) {
-                    html += '<div class="table-responsive">';
-                    html += '<table class="table table-striped table-hover">';
-                    html += '<thead>';
-                    html += '<tr>';
-                    html += '<th>Schedule Name</th>';
-                    html += '<th>Frequency</th>';
-                    html += '<th>Next Scan</th>';
-                    html += '<th>Last Run</th>';
-                    html += '<th>Status</th>';
-                    html += '<th class="text-center">Actions</th>';
-                    html += '</tr>';
-                    html += '</thead>';
-                    html += '<tbody>';
-                    
-                    data.schedules.forEach(function(schedule) {
-                        html += '<tr>';
-                        html += '<td>';
-                        html += '<strong>' + escapeHtml(schedule.scan_name) + '</strong>';
-                        if (schedule.description) {
-                            html += '<br><small class="text-muted">' + escapeHtml(schedule.description) + '</small>';
-                        }
-                        html += '</td>';
-                        html += '<td>' + escapeHtml(schedule.frequency_display || schedule.interval) + '</td>';
-                        
-                        // Next scan time
-                        html += '<td>';
-                        if (schedule.next_scan_time) {
-                            var nextScan = new Date(schedule.next_scan_time * 1000);
-                            html += nextScan.toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            });
-                        } else {
-                            html += '<span class="text-muted">Not scheduled</span>';
-                        }
-                        html += '</td>';
-                        
-                        // Last run time
-                        html += '<td>';
-                        if (schedule.last_run_time) {
-                            var lastRun = new Date(schedule.last_run_time * 1000);
-                            html += lastRun.toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                            });
-                        } else {
-                            html += '<span class="text-muted">Never</span>';
-                        }
-                        html += '</td>';
-                        
-                        // Status
-                        html += '<td>';
-                        if (schedule.is_active) {
-                            html += '<span class="label label-success">Active</span>';
-                        } else {
-                            html += '<span class="label label-warning">Paused</span>';
-                        }
-                        html += '</td>';
-                        
-                        // Actions
-                        html += '<td class="text-center">';
-                        html += '<div class="btn-group btn-group-xs">';
-                        
-                        if (schedule.is_active) {
-                            html += '<button type="button" class="btn btn-warning" onclick="pausePeriodicScan(\'' + schedule.schedule_id + '\')" title="Pause Schedule">';
-                            html += '<i class="glyphicon glyphicon-pause"></i>';
-                            html += '</button>';
-                        } else {
-                            html += '<button type="button" class="btn btn-success" onclick="resumePeriodicScan(\'' + schedule.schedule_id + '\')" title="Resume Schedule">';
-                            html += '<i class="glyphicon glyphicon-play"></i>';
-                            html += '</button>';
-                        }
-                        
-                        html += '<button type="button" class="btn btn-primary" onclick="runPeriodicScanNow(\'' + schedule.schedule_id + '\')" title="Run Now">';
-                        html += '<i class="glyphicon glyphicon-flash"></i>';
-                        html += '</button>';
-                        
-                        html += '<button type="button" class="btn btn-info" onclick="viewPeriodicScanHistory(\'' + schedule.schedule_id + '\')" title="View History">';
-                        html += '<i class="glyphicon glyphicon-list"></i>';
-                        html += '</button>';
-                        
-                        html += '<button type="button" class="btn btn-default" onclick="editPeriodicScan(\'' + schedule.schedule_id + '\')" title="Edit Schedule">';
-                        html += '<i class="glyphicon glyphicon-edit"></i>';
-                        html += '</button>';
-                        
-                        html += '<button type="button" class="btn btn-danger" onclick="deletePeriodicScan(\'' + schedule.schedule_id + '\')" title="Delete Schedule">';
-                        html += '<i class="glyphicon glyphicon-trash"></i>';
-                        html += '</button>';
-                        
-                        html += '</div>';
-                        html += '</td>';
-                        html += '</tr>';
-                    });
-                    
-                    html += '</tbody>';
-                    html += '</table>';
-                    html += '</div>';
-                } else {
-                    html = '<div class="well well-lg text-center">';
-                    html += '<i class="glyphicon glyphicon-time" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>';
-                    html += '<h3>No periodic scans scheduled</h3>';
-                    html += '<p class="text-muted">Set up periodic scanning to monitor your targets continuously and detect changes over time.</p>';
-                    html += '<button type="button" class="btn btn-success btn-lg" onclick="schedulePeriodicScan(\'' + '${workspace.workspace_id}' + '\')">';
-                    html += '<i class="glyphicon glyphicon-plus"></i> Schedule Your First Periodic Scan';
-                    html += '</button>';
-                    html += '</div>';
-                }
-                $('#periodic-scans-content').html(html);
-            } else {
-                $('#periodic-scans-content').html('<div class="alert alert-danger">Error loading periodic scans: ' + (data.error || 'Unknown error') + '</div>');
-            }
-        })
-        .fail(function() {
-            $('#periodic-scans-content').html('<div class="alert alert-danger">Failed to load periodic scans</div>');
-        });
-}
 }
 
 // Copy scan ID to clipboard
@@ -1592,28 +1009,21 @@ function multiTargetScan(workspaceId) {
 }
 
 function removeTarget(workspaceId, targetId) {
-    alertify.confirm(
-        'Remove Target',
-        'Are you sure you want to remove this target?',
-        function() {
-            $.post('${docroot}/workspaceremovetarget', {
-                workspace_id: workspaceId,
-                target_id: targetId
-            }, function(data) {
-                if (data.success) {
-                    alertify.success('Target removed successfully');
-                    location.reload(); // Refresh the page to show updated target list
-                } else {
-                    alertify.error('Failed to remove target: ' + data.error);
-                }
-            }).fail(function() {
-                alertify.error('Failed to remove target: Server error');
-            });
-        },
-        function() {
-            alertify.message('Target removal cancelled');
-        }
-    ).set('labels', {ok:'Remove', cancel:'Cancel'});
+    if (confirm('Are you sure you want to remove this target?')) {
+        $.post('${docroot}/workspaceremovetarget', {
+            workspace_id: workspaceId,
+            target_id: targetId
+        }, function(data) {
+            if (data.success) {
+                alertify.success('Target removed successfully');
+                location.reload(); // Refresh the page to show updated target list
+            } else {
+                alertify.error('Failed to remove target: ' + data.error);
+            }
+        }).fail(function() {
+            alertify.error('Failed to remove target: Server error');
+        });
+    }
 }
 
 function viewScanResults(scanId) {
@@ -1882,7 +1292,7 @@ $(document).ready(function() {
         var successMessage = isEditing ? 'Periodic scan updated successfully!' : 'Periodic scan scheduled successfully!';
         
         // Show loading state
-        $('#schedulePeriodicScanBtn').prop('disabled', true).html('<i class="glyphicon glyphicon-refresh"></i> ' + (isEditing ? 'Updating...' : 'Scheduling...'));
+        $('#schedulePeriodicScanBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> ' + (isEditing ? 'Updating...' : 'Scheduling...'));
         
         // Prepare request data
         var requestData = {
@@ -1911,7 +1321,7 @@ $(document).ready(function() {
         
         // Submit the request
         $.post(endpoint, requestData, function(data) {
-            $('#schedulePeriodicScanBtn').prop('disabled', false).html('<i class="glyphicon glyphicon-time"></i> ' + buttonText);
+            $('#schedulePeriodicScanBtn').prop('disabled', false).html('<i class="fa fa-clock-o"></i> ' + buttonText);
             
             if (data.success) {
                 $('#periodicScanModal').modal('hide');
@@ -1933,7 +1343,7 @@ $(document).ready(function() {
                 alertify.error('Failed to ' + (isEditing ? 'update' : 'schedule') + ' periodic scan: ' + (data.error || 'Unknown error'));
             }
         }).fail(function(xhr, status, error) {
-            $('#schedulePeriodicScanBtn').prop('disabled', false).html('<i class="glyphicon glyphicon-time"></i> ' + buttonText);
+            $('#schedulePeriodicScanBtn').prop('disabled', false).html('<i class="fa fa-clock-o"></i> ' + buttonText);
             alertify.error('Failed to ' + (isEditing ? 'update' : 'schedule') + ' periodic scan: Server error (' + status + ')');
         });
     });
@@ -2338,7 +1748,7 @@ function updateSchedulePreview() {
         
         if (timeDiff > 0) {
             var days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-            var hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60));
+            var hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             var minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
             
             if (days > 0) timeUntil += days + 'd ';
@@ -2647,9 +2057,8 @@ function deletePeriodicScan(scheduleId) {
         '</ul>' +
         '</div>',
         function() {
-            $.post('${docroot}/workspaceperiodicscantoggle', {
-                schedule_id: scheduleId,
-                action: 'delete'
+            $.post('${docroot}/workspaceperiodicscandelte', {
+                schedule_id: scheduleId
             }, function(data) {
                 if (data.success) {
                     alertify.success('Periodic scan schedule deleted');

@@ -34,6 +34,7 @@ class SecurityEventType(Enum):
     SQL_INJECTION_ATTEMPT = "sql_injection_attempt"
     XSS_ATTEMPT = "xss_attempt"
     CSRF_VIOLATION = "csrf_violation"
+    REQUEST_PROCESSED = "request_processed"
 
 
 class SecurityLogger:
@@ -55,6 +56,9 @@ class SecurityLogger:
         # Set up logger
         self.logger = logging.getLogger('spiderfoot.security')
         self.logger.setLevel(logging.INFO)
+        
+        # Prevent propagation to avoid duplicate logs
+        self.logger.propagate = False
         
         # Remove existing handlers to avoid duplicates
         self.logger.handlers.clear()
