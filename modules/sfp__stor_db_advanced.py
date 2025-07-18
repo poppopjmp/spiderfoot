@@ -91,6 +91,15 @@ class ConnectionLoadBalancer:
             pool_id = f"pool_{i}"
             try:
                 if config['type'] == 'postgresql':
+                    if not HAS_PSYCOPG2:
+                        raise ImportError("psycopg2 is required for PostgreSQL connections but not installed")
+                    
+                    # Validate required configuration parameters
+                    required_params = ['host', 'port', 'database', 'username', 'password']
+                    missing_params = [param for param in required_params if not config.get(param)]
+                    if missing_params:
+                        raise ValueError(f"Missing required PostgreSQL parameters: {missing_params}")
+                    
                     pool = psycopg2.pool.ThreadedConnectionPool(
                         minconn=config.get('min_connections', 1),
                         maxconn=config.get('max_connections', 10),
@@ -104,9 +113,14 @@ class ConnectionLoadBalancer:
                     self.pools[pool_id] = pool
                     self.metrics[pool_id] = ConnectionMetrics()
                     self.health_status[pool_id] = True
+                else:
+                    raise ValueError(f"Unsupported database type: {config.get('type', 'unknown')}")
                     
             except Exception as e:
-                logging.error(f"Failed to initialize pool {pool_id}: {e}")
+                if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                    self.sf.error(f"Failed to initialize pool {pool_id}: {e}")
+                else:
+                    print(f"Failed to initialize pool {pool_id}: {e}")
                 self.health_status[pool_id] = False
     
     def get_optimal_connection(self, query_type: str = None) -> Tuple[str, Any]:
@@ -130,7 +144,10 @@ class ConnectionLoadBalancer:
                 return best_pool_id, conn
             except Exception as e:
                 self.health_status[best_pool_id] = False
-                logging.error(f"Failed to get connection from {best_pool_id}: {e}")
+                if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                    self.sf.error(f"Failed to get connection from {best_pool_id}: {e}")
+                else:
+                    print(f"Failed to get connection from {best_pool_id}: {e}")
                 # Retry with next best pool
                 return self.get_optimal_connection(query_type)
     
@@ -150,7 +167,10 @@ class ConnectionLoadBalancer:
                 metrics.load_factor = (metrics.total_queries - metrics.successful_queries) / max(metrics.total_queries, 1)
                 
             except Exception as e:
-                logging.error(f"Failed to return connection to {pool_id}: {e}")
+                if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                    self.sf.error(f"Failed to return connection to {pool_id}: {e}")
+                else:
+                    print(f"Failed to return connection to {pool_id}: {e}")
 
 
 class QueryOptimizer:
@@ -313,7 +333,10 @@ class PerformanceMonitor:
             'severity': self._determine_severity(alert_type, details)
         }
         self.alerts.append(alert)
-        logging.warning(f"Performance alert: {alert_type} - {details}")
+        if hasattr(self, 'sf') and hasattr(self.sf, 'warning'):
+            self.sf.warning(f"Performance alert: {alert_type} - {details}")
+        else:
+            print(f"Performance alert: {alert_type} - {details}")
     
     def _determine_severity(self, alert_type: str, details: Dict[str, Any]) -> str:
         """Determine alert severity."""
@@ -332,7 +355,10 @@ class PerformanceMonitor:
                     self._analyze_performance_trends()
                     time.sleep(30)  # Check every 30 seconds
                 except Exception as e:
-                    logging.error(f"Performance monitoring error: {e}")
+                    if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                        self.sf.error(f"Performance monitoring error: {e}")
+                    else:
+                        print(f"Performance monitoring error: {e}")
         
         threading.Thread(target=monitor, daemon=True).start()
     
@@ -417,7 +443,10 @@ class AutoScaler:
                     self._evaluate_scaling_needs()
                     time.sleep(60)  # Check every minute
                 except Exception as e:
-                    logging.error(f"Auto-scaling error: {e}")
+                    if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                        self.sf.error(f"Auto-scaling error: {e}")
+                    else:
+                        print(f"Auto-scaling error: {e}")
         
         threading.Thread(target=scale, daemon=True).start()
     
@@ -444,10 +473,16 @@ class AutoScaler:
                 # Create new pool with increased capacity
                 config = self.load_balancer.configs[int(pool_id.split('_')[1])]
                 self._recreate_pool(pool_id, config, new_max)
-                logging.info(f"Scaled up {pool_id} from {current_max} to {new_max} connections")
+                if hasattr(self, 'sf') and hasattr(self.sf, 'info'):
+                    self.sf.info(f"Scaled up {pool_id} from {current_max} to {new_max} connections")
+                else:
+                    print(f"Scaled up {pool_id} from {current_max} to {new_max} connections")
                 
         except Exception as e:
-            logging.error(f"Failed to scale up {pool_id}: {e}")
+            if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                self.sf.error(f"Failed to scale up {pool_id}: {e}")
+            else:
+                print(f"Failed to scale up {pool_id}: {e}")
     
     def _scale_down(self, pool_id: str):
         """Scale down connections for a pool."""
@@ -460,30 +495,51 @@ class AutoScaler:
             if new_max < current_max:
                 config = self.load_balancer.configs[int(pool_id.split('_')[1])]
                 self._recreate_pool(pool_id, config, new_max)
-                logging.info(f"Scaled down {pool_id} from {current_max} to {new_max} connections")
+                if hasattr(self, 'sf') and hasattr(self.sf, 'info'):
+                    self.sf.info(f"Scaled down {pool_id} from {current_max} to {new_max} connections")
+                else:
+                    print(f"Scaled down {pool_id} from {current_max} to {new_max} connections")
                 
         except Exception as e:
-            logging.error(f"Failed to scale down {pool_id}: {e}")
+            if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                self.sf.error(f"Failed to scale down {pool_id}: {e}")
+            else:
+                print(f"Failed to scale down {pool_id}: {e}")
     
     def _recreate_pool(self, pool_id: str, config: Dict[str, Any], max_connections: int):
         """Recreate pool with new connection limits."""
-        # Close existing pool
-        old_pool = self.load_balancer.pools[pool_id]
-        old_pool.closeall()
-        
-        # Create new pool
-        new_pool = psycopg2.pool.ThreadedConnectionPool(
-            minconn=config.get('min_connections', 1),
-            maxconn=max_connections,
-            host=config['host'],
-            port=config['port'],
-            database=config['database'],
-            user=config['username'],
-            password=config['password'],
-            connect_timeout=config.get('timeout', 30)
-        )
-        
-        self.load_balancer.pools[pool_id] = new_pool
+        try:
+            # Close existing pool
+            old_pool = self.load_balancer.pools[pool_id]
+            old_pool.closeall()
+            
+            # Create new pool only if we have PostgreSQL support
+            if config['type'] == 'postgresql':
+                if not HAS_PSYCOPG2:
+                    raise ImportError("psycopg2 is required for PostgreSQL connections but not installed")
+                
+                new_pool = psycopg2.pool.ThreadedConnectionPool(
+                    minconn=config.get('min_connections', 1),
+                    maxconn=max_connections,
+                    host=config['host'],
+                    port=config['port'],
+                    database=config['database'],
+                    user=config['username'],
+                    password=config['password'],
+                    connect_timeout=config.get('timeout', 30)
+                )
+                
+                self.load_balancer.pools[pool_id] = new_pool
+            else:
+                raise ValueError(f"Unsupported database type: {config.get('type', 'unknown')}")
+                
+        except Exception as e:
+            if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                self.sf.error(f"Failed to recreate pool {pool_id}: {e}")
+            else:
+                print(f"Failed to recreate pool {pool_id}: {e}")
+            # Mark pool as unhealthy
+            self.load_balancer.health_status[pool_id] = False
 
 
 class sfp__stor_db_advanced(SpiderFootPlugin):
@@ -552,7 +608,11 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
         try:
             # Load balancer
             if self.opts['enable_load_balancing'] and self.opts['database_configs']:
-                self.load_balancer = ConnectionLoadBalancer(self.opts['database_configs'])
+                if not HAS_PSYCOPG2:
+                    self.error("Load balancing requires psycopg2 for PostgreSQL connections but it's not installed. Disabling load balancing.")
+                    self.load_balancer = None
+                else:
+                    self.load_balancer = ConnectionLoadBalancer(self.opts['database_configs'])
             else:
                 self.load_balancer = None
             
@@ -579,7 +639,11 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
             
         except Exception as e:
             self.error(f"Failed to initialize enterprise features: {e}")
-            self.errorState = True
+            # Don't set errorState = True, just disable advanced features
+            self.load_balancer = None
+            self.query_optimizer = None
+            self.performance_monitor = None
+            self.auto_scaler = None
 
     def _setup_graceful_shutdown(self):
         """Set up graceful shutdown handlers."""
@@ -648,7 +712,23 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
 
     def _bulk_store_with_load_balancing(self, events: List[Any]):
         """Store events using load-balanced connections."""
-        pool_id, conn = self.load_balancer.get_optimal_connection('bulk_insert')
+        if not HAS_PSYCOPG2:
+            self.error("PostgreSQL bulk storage requires psycopg2 but it's not installed. Falling back to SQLite.")
+            self._bulk_store_sqlite(events)
+            return
+            
+        if not self.load_balancer or not self.load_balancer.pools:
+            self.error("No healthy database connections available. Falling back to SQLite.")
+            self._bulk_store_sqlite(events)
+            return
+            
+        pool_id, conn = None, None
+        try:
+            pool_id, conn = self.load_balancer.get_optimal_connection('bulk_insert')
+        except Exception as e:
+            self.error(f"Failed to get database connection: {e}. Falling back to SQLite.")
+            self._bulk_store_sqlite(events)
+            return
         
         try:
             cursor = conn.cursor()
@@ -703,8 +783,10 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
                     conn.rollback()
                 except:
                     pass
-            self.load_balancer.return_connection(pool_id, conn, False)
-            raise
+            if pool_id and conn:
+                self.load_balancer.return_connection(pool_id, conn, False)
+            # Fall back to SQLite
+            self._bulk_store_sqlite(events)
 
     def _bulk_store_sqlite(self, events: List[Any]):
         """Bulk store events in SQLite."""
@@ -779,14 +861,14 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
                         self._process_event_buffer()
             
             # Stop monitoring and scaling
-            if self.performance_monitor:
+            if hasattr(self, 'performance_monitor') and self.performance_monitor:
                 self.performance_monitor.monitoring_active = False
             
-            if self.auto_scaler:
+            if hasattr(self, 'auto_scaler') and self.auto_scaler:
                 self.auto_scaler.scaling_active = False
             
             # Close all connections
-            if self.load_balancer:
+            if hasattr(self, 'load_balancer') and self.load_balancer:
                 for pool_id, pool in self.load_balancer.pools.items():
                     try:
                         pool.closeall()
