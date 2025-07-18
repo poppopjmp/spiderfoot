@@ -143,7 +143,7 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
             orchestrator.handle_modules_list()
         
         # Should print total count and each module
-        self.assertEqual(mock_print.call_count, 4)  # 1 total + 3 modules
+        self.assertEqual(mock_print.call_count, 5)  # 2 headers + 3 modules
         mock_exit.assert_called_once_with(0)
 
     @patch('sf_orchestrator.SpiderFootDb')
@@ -166,7 +166,7 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
             orchestrator.handle_types_list()
         
         # Should print total count and each type
-        self.assertEqual(mock_print.call_count, 4)  # 1 total + 3 types
+        self.assertEqual(mock_print.call_count, 5)  # 2 headers + 3 types
         mock_exit.assert_called_once_with(0)
 
     @patch('sf_orchestrator.SpiderFootDb')

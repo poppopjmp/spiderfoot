@@ -27,7 +27,11 @@ class TestModuleIntegrationBotvrij(unittest.TestCase):
         self.module.notifyListeners = self.events.append
 
     @patch.object(SpiderFoot, 'fetchUrl')
-    def test_handleEvent_internet_name_blacklisted(self, mock_fetch):
+    @patch.object(SpiderFoot, 'cacheGet')
+    def test_handleEvent_internet_name_blacklisted(self, mock_cache_get, mock_fetch):
+        # Ensure no cached data to force fresh fetch
+        mock_cache_get.return_value = None
+        
         # Simulate blocklist containing 'malicious.com'
         blocklist = 'malicious.com\nbenign.com\n'
         mock_fetch.return_value = {'code': '200', 'content': blocklist}
