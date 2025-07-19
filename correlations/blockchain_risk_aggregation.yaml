@@ -1,5 +1,5 @@
 id: blockchain_risk_aggregation
-version: 1
+version: "1"
 meta:
   name: "High-Risk Cryptocurrency Activity Detection"
   description: "Aggregates blockchain analysis results to identify high-risk cryptocurrency activities"

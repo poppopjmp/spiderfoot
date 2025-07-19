@@ -1,5 +1,5 @@
 id: tiktok_user_correlation
-version: 1
+version: "1"
 meta:
   name: "TikTok User Cross-Platform Correlation"
   description: "Correlates TikTok profiles with other social media accounts and digital footprints"

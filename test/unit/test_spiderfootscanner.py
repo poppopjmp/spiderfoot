@@ -27,71 +27,20 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         """
         Test __init__(self, scanName, scanId, targetValue, targetType, moduleList, globalOpts, start=True)
         """
-        # Ensure any existing threads are stopped before starting new ones
-        import threading
-        import time
-        
-        # Stop any existing scanner threads
-        for thread in threading.enumerate():
-            if hasattr(thread, '_target') and thread._target and 'SpiderFoot' in str(thread._target):
-                if hasattr(thread, 'stop'):
-                    thread.stop()
-                # Wait for thread to finish if it's still alive
-                if thread.is_alive() and thread != threading.current_thread():
-                    thread.join(timeout=1.0)
-        
         opts = self.default_options.copy()
-        # Do not overwrite __modules__ with an empty dict
         scan_id = str(uuid.uuid4())
-        module_list = ['invalid module']
+        module_list = ['invalid_module_that_does_not_exist']
 
-        # Create scanner without starting to avoid immediate thread creation
+        # This test should complete quickly because invalid modules are caught
+        # during the scanning phase and set status to ERROR-FAILED
+        # The logging fixes in sfp__stor_db_advanced.py prevent shutdown issues
         sfscan = SpiderFootScanner(
-            "example scan name", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
-        
-        # Verify initial state
-        self.assertIsInstance(sfscan, SpiderFootScanner)
-        self.assertEqual(sfscan.status, "INITIALIZING")
-        
-        # Now manually trigger the scan logic that would normally run in __init__ with start=True
-        # but in a controlled way to avoid thread daemon issues
-        try:
-            # Simulate the scan start logic without creating problematic threads
-            if hasattr(sfscan, '_SpiderFootScanner__setStatus'):
-                sfscan._SpiderFootScanner__setStatus("ERROR-FAILED")
-            else:
-                # Fallback if the private method name is different
-                sfscan.status = "ERROR-FAILED"
-        except Exception as e:
-            # If we can't set status directly, create a new scanner with start=True
-            # but with additional thread safety measures
-            import threading
-            original_thread_init = threading.Thread.__init__
-            
-            def safe_thread_init(self, *args, **kwargs):
-                # Ensure daemon is set before the thread becomes active
-                result = original_thread_init(self, *args, **kwargs)
-                return result
-            
-            threading.Thread.__init__ = safe_thread_init
-            
-            try:
-                sfscan = SpiderFootScanner(
-                    "example scan name", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=True)
-            finally:
-                # Restore original thread init
-                threading.Thread.__init__ = original_thread_init
-        
-        # Verify final state
-        self.assertEqual(sfscan.status, "ERROR-FAILED")
+            "example scan name", scan_id, "spiderfoot.net", "INTERNET_NAME",
+            module_list, opts, start=True)
 
-        # Ensure any threads created are properly cleaned up
-        if hasattr(sfscan, '_thread') and sfscan._thread:
-            if sfscan._thread.is_alive():
-                # Don't try to set daemon on active thread, just wait for it to finish
-                sfscan._thread.join(timeout=1.0)
-            # Clean up reference
-            sfscan._thread = None
+        # Verify the scanner was created and has expected status
+        self.assertIsInstance(sfscan, SpiderFootScanner)
+        self.assertEqual(sfscan.status, "ERROR-FAILED")
 
     def test_init_argument_scanName_of_invalid_type_should_raise_TypeError(self):
         """Test __init__(self, scanName, scanId, scanTarget, targetType,
