@@ -5,6 +5,14 @@ import uuid
 
 from spiderfoot.scan_service.scanner import SpiderFootScanner
 from test.unit.utils.test_base import SpiderFootTestBase
+
+# Import shared thread pool cleanup
+try:
+    from test.unit.utils.shared_pool_cleanup import enhanced_teardown_with_shared_pool_cleanup
+except ImportError:
+    def enhanced_teardown_with_shared_pool_cleanup():
+        return 0  # Fallback if cleanup utility not available
+
 from test.unit.utils.test_helpers import safe_recursion
 
 
@@ -34,13 +42,15 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         # This test should complete quickly because invalid modules are caught
         # during the scanning phase and set status to ERROR-FAILED
         # The logging fixes in sfp__stor_db_advanced.py prevent shutdown issues
-        sfscan = SpiderFootScanner(
+        
+        # Store the scanner in self for proper cleanup
+        self.scanner = SpiderFootScanner(
             "example scan name", scan_id, "spiderfoot.net", "INTERNET_NAME",
             module_list, opts, start=True)
 
         # Verify the scanner was created and has expected status
-        self.assertIsInstance(sfscan, SpiderFootScanner)
-        self.assertEqual(sfscan.status, "ERROR-FAILED")
+        self.assertIsInstance(self.scanner, SpiderFootScanner)
+        self.assertEqual(self.scanner.status, "ERROR-FAILED")
 
     def test_init_argument_scanName_of_invalid_type_should_raise_TypeError(self):
         """Test __init__(self, scanName, scanId, scanTarget, targetType,
@@ -750,31 +760,148 @@ class TestSpiderFootScanner(SpiderFootTestBase):
             self.register_event_emitter(self.module)
 
     def tearDown(self):
-        """Clean up after each test."""
-        # Ensure any scanner instances are properly cleaned up
-        if hasattr(self, 'scanner'):
-            try:
-                # Stop any running scanner threads
-                if hasattr(self.scanner, '_thread') and self.scanner._thread:
-                    if self.scanner._thread.is_alive():
-                        self.scanner._thread.join(timeout=1.0)
+        """Clean up after each test with comprehensive scanner cleanup."""
+        import threading
+        import gc
+        from contextlib import suppress
+        
+        # COMPREHENSIVE SCANNER CLEANUP - Find and stop ALL scanner instances
+        self._cleanup_all_scanner_instances()
+        
+        # Clean up any remaining SpiderFoot threads - ENHANCED VERSION
+        self._cleanup_spiderfoot_threads()
+        
+        # Force garbage collection to ensure cleanup
+        gc.collect()
+        
+        # Enhanced shared thread pool cleanup
+        enhanced_teardown_with_shared_pool_cleanup()
+        
+        super().tearDown()
+    
+    def _cleanup_all_scanner_instances(self):
+        """Find and cleanup ALL SpiderFootScanner instances, not just self.scanner."""
+        from contextlib import suppress
+        import gc
+        
+        # Method 1: Clean up self.scanner if it exists
+        if hasattr(self, 'scanner') and self.scanner:
+            with suppress(Exception):
+                self._stop_scanner_safely(self.scanner)
                 self.scanner = None
-            except:
+        
+        # Method 2: Find all scanner instances in the current test's local variables
+        # This catches scanners created as local variables like 'sfscan'
+        test_frame = None
+        try:
+            import inspect
+            for frame_info in inspect.stack():
+                if frame_info.function.startswith('test_'):
+                    test_frame = frame_info.frame
+                    break
+            
+            if test_frame:
+                # Check all local variables in the test method
+                for var_name, var_value in test_frame.f_locals.items():
+                    if (hasattr(var_value, '__class__') and 
+                        'SpiderFootScanner' in str(var_value.__class__)):
+                        with suppress(Exception):
+                            self._stop_scanner_safely(var_value)
+        except Exception:
+            pass
+        
+        # Method 3: Use garbage collector to find any remaining scanner instances
+        for obj in gc.get_objects():
+            try:
+                if (hasattr(obj, '__class__') and 
+                    'SpiderFootScanner' in str(obj.__class__) and
+                    hasattr(obj, '_thread')):
+                    with suppress(Exception):
+                        self._stop_scanner_safely(obj)
+            except Exception:
                 pass
-
-        # Clean up any remaining SpiderFoot threads - FIXED VERSION
+    
+    def _stop_scanner_safely(self, scanner):
+        """Safely stop a scanner instance and its threads."""
+        from contextlib import suppress
+        
+        if not scanner:
+            return
+            
+        # Stop any running scanner threads
+        if hasattr(scanner, '_thread') and scanner._thread:
+            with suppress(Exception):
+                if scanner._thread.is_alive():
+                    # Try to stop the scanner gracefully first
+                    if hasattr(scanner, 'stop'):
+                        scanner.stop()
+                    
+                    # Give it a moment to stop gracefully
+                    scanner._thread.join(timeout=1.0)
+                    
+                    # If still alive, force cleanup
+                    if scanner._thread.is_alive():
+                        scanner._thread.join(timeout=0.5)
+        
+        # Clean up scanner state
+        with suppress(Exception):
+            if hasattr(scanner, 'status'):
+                scanner._SpiderFootScanner__setStatus("ABORTED")
+        
+        # Clean up any module instances within the scanner
+        with suppress(Exception):
+            if hasattr(scanner, '_SpiderFootScanner__moduleInstances'):
+                for module_name, module_instance in scanner._SpiderFootScanner__moduleInstances.items():
+                    if module_instance:
+                        with suppress(Exception):
+                            if hasattr(module_instance, 'clearListeners'):
+                                module_instance.clearListeners()
+                            if hasattr(module_instance, 'errorState'):
+                                module_instance.errorState = True
+    
+    def _cleanup_spiderfoot_threads(self):
+        """Enhanced cleanup for SpiderFoot-related threads."""
         import threading
         from contextlib import suppress
+        
+        main_thread = threading.main_thread()
+        current_thread = threading.current_thread()
+        
         for thread in threading.enumerate():
-            if (hasattr(thread, '_target')
-                    and thread._target
-                    and 'SpiderFoot' in str(thread._target)
-                    and thread != threading.current_thread()
-                    and thread.is_alive()):
-                # REMOVED: thread.daemon = True  # This was causing RuntimeError
-                # Only attempt to join alive threads safely
-                with suppress(RuntimeError):
-                    # Thread might already be finished or in an invalid state
-                    thread.join(timeout=0.5)
-
-        super().tearDown()
+            if (thread != main_thread and 
+                thread != current_thread and 
+                thread.is_alive()):
+                
+                # Check if this is a SpiderFoot-related thread
+                thread_name = getattr(thread, 'name', '').lower()
+                thread_target = str(getattr(thread, '_target', '')).lower()
+                
+                is_spiderfoot_thread = any(keyword in thread_name or keyword in thread_target 
+                                         for keyword in ['spiderfoot', 'scanner', 'scan', 'module'])
+                
+                if is_spiderfoot_thread:
+                    with suppress(RuntimeError, OSError):
+                        # Try to join the thread with timeout
+                        thread.join(timeout=0.5)
+                        
+                        # If thread is still alive after join, it might be stuck
+                        if thread.is_alive():
+                            # Log this for debugging (but don't fail the test)
+                            print(f"Warning: Thread {thread.name} still alive after cleanup")
+        
+        # Additional cleanup for any lingering scanner-related resources
+        with suppress(Exception):
+            # Clean up any global scanner references that might exist
+            import sys
+            modules_to_check = [module for module_name, module in sys.modules.items() 
+                              if module and 'spiderfoot' in module_name.lower()]
+            
+            for module in modules_to_check:
+                if hasattr(module, '__dict__'):
+                    for attr_name in list(module.__dict__.keys()):
+                        attr_value = getattr(module, attr_name, None)
+                        if (attr_value and hasattr(attr_value, '__class__') and 
+                            'SpiderFootScanner' in str(attr_value.__class__)):
+                            with suppress(Exception):
+                                self._stop_scanner_safely(attr_value)
+                                setattr(module, attr_name, None)

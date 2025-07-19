@@ -25,65 +25,91 @@ from test.fixtures.network_fixtures import *
 from test.fixtures.event_fixtures import *
 from test.utils import legacy_test_helpers
 
-# Set up logging
+# Set up logging with error suppression for distributed testing
+
+
+class SafeHandler(logging.StreamHandler):
+    """A logging handler that suppresses BrokenPipeError and similar issues during xdist termination."""
+    
+    def emit(self, record):
+        with contextlib.suppress(OSError, ValueError):
+            super().emit(record)
+
+
+class SafeFileHandler(logging.FileHandler):
+    """A file handler that suppresses errors during xdist termination."""
+    
+    def emit(self, record):
+        with contextlib.suppress(OSError, ValueError):
+            super().emit(record)
+
+
+# Configure logging with safe handlers
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
-        logging.FileHandler("pytest-debug.log"),
-        logging.StreamHandler()
+        SafeFileHandler("pytest-debug.log"),
+        SafeHandler()
     ]
 )
 
 # Track test execution and find potential issues
+
+
 @pytest.hookimpl(trylast=True)
 def pytest_runtest_protocol(item, nextitem):
     start_time = time.time()
-    logging.info(f"Starting test: {item.nodeid}")
     
-    # Show active threads at start
-    active_threads = threading.enumerate()
-    logging.info(f"Active threads before test ({len(active_threads)}): {[t.name for t in active_threads]}")
+    # Use safe logging
+    with contextlib.suppress(OSError, ValueError):
+        logging.info(f"Starting test: {item.nodeid}")
+        
+        # Show active threads at start
+        active_threads = threading.enumerate()
+        logging.info(f"Active threads before test ({len(active_threads)}): {[t.name for t in active_threads]}")
     
     # Run the test normally
-    reports = runtestprotocol(item, nextitem=nextitem)
+    runtestprotocol(item, nextitem=nextitem)
     
-    # Show threads after test completion
-    active_threads = threading.enumerate()
-    logging.info(f"Active threads after test ({len(active_threads)}): {[t.name for t in active_threads]}")
-    
-    # Show elapsed time
-    elapsed = time.time() - start_time
-    logging.info(f"Completed test: {item.nodeid} ({elapsed:.2f}s)")
+    # Use safe logging for completion
+    with contextlib.suppress(OSError, ValueError):
+        # Show threads after test completion
+        active_threads = threading.enumerate()
+        logging.info(f"Active threads after test ({len(active_threads)}): {[t.name for t in active_threads]}")
+        
+        # Show elapsed time
+        elapsed = time.time() - start_time
+        logging.info(f"Completed test: {item.nodeid} ({elapsed:.2f}s)")
     
     return True
 
 # Auto-timeout for test session
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config):
-    # Only start timeout if not already configured
-    if not hasattr(config, '_timeout_started'):
+    # Only start timeout if not already configured and not in xdist worker
+    if not hasattr(config, '_timeout_started') and not hasattr(config, 'workerinput'):
         config._timeout_started = True
         start_global_timeout()
-    
+
+
 def start_global_timeout():
-    # Create a thread that will terminate the process after a timeout
+    """Create a global timeout thread with safe error handling."""
     def timeout_thread():
         time.sleep(1800)  # 30-minute global timeout
-        try:
+        with contextlib.suppress(Exception):
             # Use print instead of logging to avoid closed file issues
             print("Global timeout exceeded. Terminating test run.", file=sys.stderr, flush=True)
-        except Exception:
-            # If even stderr is closed, just exit
-            pass
-        finally:
-            os._exit(1)
+        os._exit(1)
     
     # Explicitly set daemon to True to ensure it doesn't prevent shutdown
     thread = threading.Thread(target=timeout_thread, daemon=True)
     thread.start()
-    
+
+
 # Detect tests that don't clean up resources
+
+
 @pytest.fixture(autouse=True)
 def check_resource_leaks():
     # Record initial state
@@ -153,40 +179,33 @@ def default_options(request):
     yield
 
 # Force cleanup of lingering resources
+
+
 @pytest.fixture(autouse=True, scope="session")
 def session_cleanup():
     yield
-    # Force cleanup at end of session
+    # Force cleanup at end of session - suppress all logging errors for xdist compatibility
     import gc
     import threading
-      # Force garbage collection
+    
+    # Force garbage collection
     gc.collect()
     
-    # Clean up threads more safely
+    # Clean up threads safely with proper error handling
     main_thread = threading.main_thread()
+    from contextlib import suppress
+    
     for thread in threading.enumerate():
         if thread != main_thread and thread.is_alive():
-            # Only try to set daemon on threads that allow it
-            try:
-                if not thread.daemon:
-                    thread.daemon = True
-            except RuntimeError:
-                # Thread is already started, cannot change daemon status
-                pass
+            # FIXED: Don't try to set daemon on active threads - this causes RuntimeError
+            # Instead, attempt to join threads safely with timeout
+            with suppress(RuntimeError, OSError):
+                # Only join threads that are SpiderFoot-related or our test threads
+                if (hasattr(thread, '_target') and thread._target
+                        and ('SpiderFoot' in str(thread._target) or 'test' in str(thread._target))):
+                    thread.join(timeout=1.0)
     
     # Use contextlib.suppress to handle potential logging issues during cleanup
-    with contextlib.suppress(ValueError, OSError):
+    # This is essential for xdist compatibility
+    with contextlib.suppress(ValueError, OSError, BrokenPipeError):
         logging.info("Session cleanup completed")
-
-
-# Add process-level timeout
-@pytest.fixture(autouse=True, scope="session")
-def process_timeout():
-    def timeout_process():
-        time.sleep(1800)  # 30-minute absolute timeout
-        logging.error("Process timeout exceeded. Force terminating.")
-        os._exit(2)
-    
-    timeout_thread = threading.Thread(target=timeout_process, daemon=True)
-    timeout_thread.start()
-    yield

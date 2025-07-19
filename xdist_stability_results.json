@@ -1,0 +1,52 @@
+{
+  "SecurityTrails Module Test (Fixed)": {
+    "returncode": 0,
+    "elapsed": 2.0646042823791504,
+    "timeout": false,
+    "issues": [
+      "SUCCESS: Tests completed without errors"
+    ],
+    "stderr_length": 0,
+    "stdout_length": 669
+  },
+  "SecurityTrails Full Module": {
+    "returncode": 0,
+    "elapsed": 2.471550941467285,
+    "timeout": false,
+    "issues": [
+      "SUCCESS: Tests completed without errors"
+    ],
+    "stderr_length": 0,
+    "stdout_length": 1530
+  },
+  "Web UI Lightweight Tests": {
+    "returncode": 0,
+    "elapsed": 7.366616249084473,
+    "timeout": false,
+    "issues": [
+      "SUCCESS: Tests completed without errors"
+    ],
+    "stderr_length": 0,
+    "stdout_length": 1310
+  },
+  "Base Test Utilities": {
+    "returncode": 5,
+    "elapsed": 1.8459477424621582,
+    "timeout": false,
+    "issues": [
+      "FAILURE: Tests failed with return code 5"
+    ],
+    "stderr_length": 0,
+    "stdout_length": 403
+  },
+  "Mixed Module Tests (Sample)": {
+    "returncode": 5,
+    "elapsed": 1.8689343929290771,
+    "timeout": false,
+    "issues": [
+      "FAILURE: Tests failed with return code 5"
+    ],
+    "stderr_length": 0,
+    "stdout_length": 403
+  }
+}
