@@ -761,14 +761,20 @@ class TestSpiderFootScanner(SpiderFootTestBase):
                 self.scanner = None
             except:
                 pass
-        
-        # Clean up any remaining SpiderFoot threads
+
+        # Clean up any remaining SpiderFoot threads - FIXED VERSION
         import threading
+        from contextlib import suppress
         for thread in threading.enumerate():
-            if (hasattr(thread, '_target') and thread._target and 
-                'SpiderFoot' in str(thread._target) and 
-                thread != threading.current_thread()):
-                if thread.is_alive():
+            if (hasattr(thread, '_target')
+                    and thread._target
+                    and 'SpiderFoot' in str(thread._target)
+                    and thread != threading.current_thread()
+                    and thread.is_alive()):
+                # REMOVED: thread.daemon = True  # This was causing RuntimeError
+                # Only attempt to join alive threads safely
+                with suppress(RuntimeError):
+                    # Thread might already be finished or in an invalid state
                     thread.join(timeout=0.5)
-        
+
         super().tearDown()

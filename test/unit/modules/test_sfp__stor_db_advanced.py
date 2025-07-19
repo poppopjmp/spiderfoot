@@ -519,6 +519,23 @@ class TestAdvancedStorageModule(unittest.TestCase):
         # Mock database handle methods
         self.sf.dbh.scanEventStore = Mock()
         
+        # FIXED: Configure the mock to be subscriptable to prevent TypeError
+        mock_handler = Mock()
+        mock_handler.stream = Mock()
+        mock_handler.stream.closed = False
+        
+        # Create a proper mock for _logger with subscriptable handlers
+        self.sf._logger = Mock()
+        # Use MagicMock for handlers so it can be subscriptable
+        mock_handlers = MagicMock()
+        mock_handlers.__getitem__ = Mock(return_value=mock_handler)
+        mock_handlers.__iter__ = Mock(return_value=iter([mock_handler]))
+        mock_handlers.__len__ = Mock(return_value=1)
+        # Allow iteration and indexing
+        mock_handlers.__contains__ = Mock(return_value=True)
+        
+        self.sf._logger.handlers = mock_handlers
+        
         self.module = sfp__stor_db_advanced()
         
         self.test_opts = {
