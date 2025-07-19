@@ -22,12 +22,16 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
         with patch('sfwebui.SpiderFootDb') as mock_db, \
              patch('sfwebui.SpiderFoot') as mock_sf, \
              patch('sfwebui.logListenerSetup'), \
-             patch('sfwebui.logWorkerSetup'):
+             patch('sfwebui.logWorkerSetup'), \
+             patch('cherrypy.engine.start'), \
+             patch('cherrypy.engine.block'), \
+             patch('cherrypy.engine.stop'):
             
             # Configure mocks
             mock_sf.return_value.configUnserialize.return_value = self.config
             mock_db.return_value.configGet.return_value = {}
             
+            # Create a lightweight WebUI instance without starting CherryPy engine
             self.webui = SpiderFootWebUi(self.web_config, self.config)
         
         # Register event emitters if they exist
@@ -527,12 +531,26 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
             self.assertIsInstance(result, list)
 
     def test_scanhistory(self):
-        with patch('sfwebui.SpiderFootDb') as mock_db:
-            mock_db.return_value.scanResultHistory.return_value = [
+        # Mock SpiderFootDb at the module level where it's imported
+        with patch('spiderfoot.webui.scan.SpiderFootDb') as mock_db:
+            # Configure the mock database instance
+            mock_db_instance = MagicMock()
+            mock_db_instance.scanResultHistory.return_value = [
                 ['data', 'type', 'source']
             ]
-            result = self.webui.scanhistory('id')
+            mock_db.return_value = mock_db_instance
+            
+            # Call the method being tested
+            result = self.webui.scanhistory('test_scan_id')
+            
+            # Verify the result
             self.assertIsInstance(result, list)
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result[0], ['data', 'type', 'source'])
+            
+            # Verify that the database was instantiated and the correct method was called
+            mock_db.assert_called_once_with(self.webui.config)
+            mock_db_instance.scanResultHistory.assert_called_once_with('test_scan_id')
 
     def test_active_maintenance_status(self):
         result = self.webui.active_maintenance_status()
@@ -541,6 +559,28 @@ class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
 
     def tearDown(self):
         """Clean up after each test."""
+        # Ensure webui instance is properly cleaned up
+        if hasattr(self, 'webui'):
+            from contextlib import suppress
+            with suppress(Exception):
+                # Stop any running CherryPy components
+                if hasattr(self.webui, 'loggingQueue') and self.webui.loggingQueue:
+                    with suppress(Exception):
+                        # Clean up logging queue if it exists
+                        while not self.webui.loggingQueue.empty():
+                            self.webui.loggingQueue.get_nowait()
+                
+                # Clear the webui instance
+                self.webui = None
+        
+        # Clean up any remaining CherryPy state
+        from contextlib import suppress
+        with suppress(Exception):
+            import cherrypy
+            if hasattr(cherrypy, 'engine') and cherrypy.engine.state != cherrypy.engine.states.STOPPED:
+                cherrypy.engine.stop()
+                cherrypy.engine.wait(states=[cherrypy.engine.states.STOPPED])
+        
         super().tearDown()
 
     def test_workspacescanresults_limit_string_conversion(self):

@@ -277,7 +277,8 @@ class ScanEndpoints:
             return []
         dbh = SpiderFootDb(self.config)
         try:
-            return dbh.scanHistory(id)
+            # Fixed: Use the correct method name scanResultHistory instead of scanHistory
+            return dbh.scanResultHistory(id)
         except Exception:
             return []
 
