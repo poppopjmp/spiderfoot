@@ -157,9 +157,15 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         scan_id = str(uuid.uuid4())
         module_list = ['sfp_example']
 
-        with self.assertRaises(ValueError):
+        # Test should complete quickly and raise ValueError synchronously
+        # The timeout issue was likely caused by logging during __del__
+        # which has been fixed in sfp__stor_db_advanced.py
+        with self.assertRaises(ValueError) as context:
             SpiderFootScanner("example scan name", scan_id, "",
                               "IP_ADDRESS", module_list, self.default_options.copy(), start=False)
+        
+        # Verify the specific error message to ensure we're catching the right exception
+        self.assertIn("targetValue value is blank", str(context.exception))
 
     def test__setStatus_argument_status_of_invalid_type_should_raise_TypeError(self):
         """Test __setStatus(self, status, started=None, ended=None)"""

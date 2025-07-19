@@ -128,6 +128,11 @@ class="nav-item"><a id="nav-link-settings" href="${docroot}/opts" class="nav-lin
 
     <!-- Placed at the end of the document so the pages load faster -->
     <script>var docroot = '${docroot}';</script>
+    % if csrf_token and csrf_token != "disabled":
+    <script>var csrf_token = '${csrf_token}';</script>
+    % else:
+    <script>var csrf_token = null;</script>
+    % endif
     <script src="${docroot}/static/node_modules/jquery/dist/jquery.min.js"></script>
     <script src="${docroot}/static/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="${docroot}/static/node_modules/alertifyjs/build/alertify.min.js"></script>

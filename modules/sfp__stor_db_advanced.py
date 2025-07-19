@@ -851,13 +851,37 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
     def _graceful_shutdown(self):
         """Perform graceful shutdown."""
         try:
-            self.debug("Starting graceful shutdown...")
+            # Check if logging is still available before attempting to log
+            if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
+                try:
+                    # Test if we can actually log by checking handlers
+                    if self.sf._logger.handlers:
+                        test_handler = self.sf._logger.handlers[0]
+                        if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
+                            self.debug("Starting graceful shutdown...")
+                        else:
+                            # Stream is closed, skip logging
+                            pass
+                    else:
+                        # No handlers available, skip logging
+                        pass
+                except (ValueError, AttributeError, OSError):
+                    # Logging system is not available, proceed silently
+                    pass
             
             # Process remaining buffered events
             if hasattr(self, 'event_buffer'):
                 with self.buffer_lock:
                     if self.event_buffer:
-                        self.debug(f"Processing {len(self.event_buffer)} remaining events...")
+                        # Try to log but don't fail if logging is unavailable
+                        try:
+                            if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
+                                if self.sf._logger.handlers:
+                                    test_handler = self.sf._logger.handlers[0]
+                                    if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
+                                        self.debug(f"Processing {len(self.event_buffer)} remaining events...")
+                        except (ValueError, AttributeError, OSError):
+                            pass
                         self._process_event_buffer()
             
             # Stop monitoring and scaling
@@ -872,17 +896,62 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
                 for pool_id, pool in self.load_balancer.pools.items():
                     try:
                         pool.closeall()
-                        self.debug(f"Closed connection pool {pool_id}")
+                        # Try to log but don't fail if logging is unavailable
+                        try:
+                            if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
+                                if self.sf._logger.handlers:
+                                    test_handler = self.sf._logger.handlers[0]
+                                    if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
+                                        self.debug(f"Closed connection pool {pool_id}")
+                        except (ValueError, AttributeError, OSError):
+                            pass
                     except Exception as e:
-                        self.error(f"Error closing pool {pool_id}: {e}")
+                        # Try to log error but don't fail if logging is unavailable
+                        try:
+                            if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
+                                if self.sf._logger.handlers:
+                                    test_handler = self.sf._logger.handlers[0]
+                                    if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
+                                        self.error(f"Error closing pool {pool_id}: {e}")
+                        except (ValueError, AttributeError, OSError):
+                            pass
             
-            self.debug("Graceful shutdown completed")
+            # Try to log completion but don't fail if logging is unavailable
+            try:
+                if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
+                    if self.sf._logger.handlers:
+                        test_handler = self.sf._logger.handlers[0]
+                        if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
+                            self.debug("Graceful shutdown completed")
+            except (ValueError, AttributeError, OSError):
+                pass
+                
         except Exception as e:
-            self.error(f"Error during graceful shutdown: {e}\n{traceback.format_exc()}")
+            # Try to log error but don't fail if logging is unavailable
+            try:
+                if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
+                    if self.sf._logger.handlers:
+                        test_handler = self.sf._logger.handlers[0]
+                        if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
+                            self.error(f"Error during graceful shutdown: {e}\n{traceback.format_exc()}")
+            except (ValueError, AttributeError, OSError):
+                # Complete silent failure - logging system is completely unavailable
+                pass
 
     def __del__(self):
         """Clean up resources."""
-        if hasattr(self, '_graceful_shutdown'):
-            self._graceful_shutdown()
+        # Avoid logging in __del__ to prevent "I/O operation on closed file" errors
+        # during Python interpreter shutdown. Only perform essential cleanup.
+        try:
+            if hasattr(self, '_graceful_shutdown'):
+                # Call graceful shutdown but suppress any logging-related errors
+                self._graceful_shutdown()
+        except (ValueError, AttributeError, OSError):
+            # Silently ignore logging-related errors during shutdown
+            pass
+        except Exception:
+            # Silently ignore all other errors during shutdown to prevent
+            # interference with Python's garbage collection process
+            pass
 
 # End of sfp__stor_db_advanced class

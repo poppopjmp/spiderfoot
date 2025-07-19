@@ -1,0 +1,58 @@
+id: blockchain_risk_aggregation
+version: 1
+meta:
+  name: "High-Risk Cryptocurrency Activity Detection"
+  description: "Aggregates blockchain analysis results to identify high-risk cryptocurrency activities"
+  purpose: "Detect potential money laundering, sanctions violations, or other illicit cryptocurrency activities"
+  risk: "High"
+  type: "Financial Intelligence"
+
+collections:
+  - id: risk_assessments
+    name: "Cryptocurrency Risk Assessments"
+    condition:
+      event_type: "CRYPTOCURRENCY_RISK_ASSESSMENT"
+
+  - id: sanctions_matches
+    name: "Sanctions List Matches"
+    condition:
+      event_type: "SANCTIONS_LIST_MATCH"
+
+  - id: ml_indicators
+    name: "Money Laundering Indicators"
+    condition:
+      event_type: "MONEY_LAUNDERING_INDICATOR"
+
+  - id: exchange_attributions
+    name: "Exchange Attributions"
+    condition:
+      event_type: "CRYPTOCURRENCY_EXCHANGE_ATTRIBUTION"
+
+  - id: wallet_clusters
+    name: "Wallet Clusters"
+    condition:
+      event_type: "WALLET_CLUSTER"
+
+aggregation:
+  - collections: ["risk_assessments", "sanctions_matches", "ml_indicators"]
+    key: "source_event"
+    
+  - collections: ["exchange_attributions", "wallet_clusters"] 
+    key: "data"
+
+analysis:
+  method: "risk_aggregation"
+  conditions:
+    - min_collections: 2
+    - min_events_per_collection: 1
+    - high_risk_threshold: 0.8
+
+headline: "Detected {count} high-risk cryptocurrency activities with potential sanctions violations or money laundering indicators"
+
+extra:
+  severity: "High"
+  tags: ["cryptocurrency", "money-laundering", "sanctions", "blockchain"]
+  references:
+    - "https://www.fincen.gov/resources/statutes-regulations/guidance/application-fincens-regulations-persons-administering"
+    - "https://home.treasury.gov/policy-issues/financial-sanctions/ofac-sanctioned-digital-currency-addresses"
+  remediation: "Report suspicious cryptocurrency activities to relevant financial intelligence units"

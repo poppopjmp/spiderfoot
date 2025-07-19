@@ -1,0 +1,59 @@
+id: tiktok_user_correlation
+version: 1
+meta:
+  name: "TikTok User Cross-Platform Correlation"
+  description: "Correlates TikTok profiles with other social media accounts and digital footprints"
+  purpose: "Identify connections between TikTok users and other online platforms"
+  risk: "Medium"
+  type: "Social Media Intelligence"
+
+collections:
+  - id: tiktok_profiles
+    name: "TikTok Profiles"
+    condition:
+      event_type: "SOCIAL_MEDIA_PROFILE"
+      data_contains: "tiktok.com"
+
+  - id: social_media_profiles  
+    name: "Other Social Media Profiles"
+    condition:
+      event_type: "SOCIAL_MEDIA_PROFILE"
+      data_not_contains: "tiktok.com"
+
+  - id: usernames
+    name: "Discovered Usernames"
+    condition:
+      event_type: "USERNAME"
+
+  - id: human_names
+    name: "Human Names"
+    condition:
+      event_type: "HUMAN_NAME"
+
+  - id: email_addresses
+    name: "Email Addresses" 
+    condition:
+      event_type: "EMAILADDR"
+
+aggregation:
+  - collections: ["tiktok_profiles", "social_media_profiles"]
+    key: "source_event"
+    
+  - collections: ["usernames", "human_names", "email_addresses"]
+    key: "data"
+
+analysis:
+  method: "correlation"
+  conditions:
+    - min_collections: 2
+    - min_events_per_collection: 1
+    - correlation_threshold: 0.7
+
+headline: "Found {count} TikTok profiles correlated with other digital identities: {summary}"
+
+extra:
+  severity: "Medium"
+  tags: ["social-media", "identity-correlation", "tiktok"]
+  references:
+    - "https://www.tiktok.com/community-guidelines"
+  remediation: "Review correlated identities for potential privacy or security concerns"

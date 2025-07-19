@@ -11,7 +11,7 @@ import json
 import sys
 from typing import Dict, Any, Optional, List
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -97,7 +97,7 @@ class SecurityLogger:
             user_agent: User agent string
         """
         event_data = {
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'event_type': event_type.value,
             'severity': severity,
             'user_id': user_id,
@@ -362,7 +362,7 @@ class ErrorHandler:
             'error': True,
             'error_id': error_id,
             'message': message,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }
 
 

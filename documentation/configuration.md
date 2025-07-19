@@ -2,7 +2,7 @@
 
 *Author: poppopjmp*
 
-SpiderFoot can be configured via the web UI, configuration file, and environment variables. Proper configuration ensures you get the most out of all modules and integrations, and helps tailor SpiderFoot to your environment and use case.
+SpiderFoot can be configured via the web UI, configuration file, and environment variables. Proper configuration ensures you get the most out of all 277 modules and integrations, including the enhanced TikTok OSINT, blockchain analytics, AI analysis, and performance optimization features, and helps tailor SpiderFoot to your environment and use case.
 
 ---
 
@@ -17,9 +17,13 @@ Many modules require API keys for external services. Configure these in the web 
   - Hunter.io
   - SecurityTrails
   - Have I Been Pwned
+  - **TikTok Research API** (for enhanced TikTok OSINT)
+  - **BlockCypher API** (for blockchain analytics)
+  - **Etherscan API** (for Ethereum analysis)
+  - **OpenAI API** (for AI threat intelligence summaries)
   - ...and more
 
-> **Tip:** Modules that require API keys will show a warning if not configured. You can run scans without API keys, but results may be limited.
+> **Tip:** Modules that require API keys will show a warning if not configured. You can run scans without API keys, but results may be limited. The enhanced modules provide fallback web scraping when API keys are not available.
 
 ---
 
@@ -263,6 +267,114 @@ This will check:
 - Configuration validity
 - Security feature functionality
 - Performance impact assessment
+
+---
+
+## Enhanced Module Configuration
+
+SpiderFoot v5.3.3 includes new configuration options for enhanced modules:
+
+### Performance Optimization
+
+```ini
+[performance_optimizer]
+# Cache settings
+cache_enabled = True
+cache_ttl_seconds = 3600
+max_cache_size = 50000
+cache_cleanup_interval = 300
+
+# Rate limiting
+rate_limiting_enabled = True
+default_delay_seconds = 1.0
+adaptive_backoff = True
+max_delay_seconds = 60.0
+
+# Resource monitoring
+resource_monitoring_enabled = True
+memory_threshold_mb = 1024
+gc_threshold_percentage = 80.0
+```
+
+### Advanced Correlation
+
+```ini
+[advanced_correlation]
+# Correlation engine settings
+correlation_enabled = True
+confidence_threshold = 0.7
+temporal_window_hours = 24
+max_entities = 10000
+
+# Geospatial clustering
+geospatial_enabled = True
+clustering_distance_km = 10.0
+min_cluster_size = 3
+
+# Entity resolution
+entity_resolution_enabled = True
+similarity_threshold = 0.8
+cross_platform_correlation = True
+```
+
+### Blockchain Analytics
+
+```ini
+[blockchain_analytics]
+# API configuration
+blockcypher_api_key = your_blockcypher_key
+etherscan_api_key = your_etherscan_key
+bitcoin_api_provider = blockcypher
+ethereum_api_provider = etherscan
+
+# Analysis settings
+transaction_depth = 3
+risk_threshold = 0.6
+sanctions_check_enabled = True
+wallet_clustering_enabled = True
+
+# Rate limiting
+api_rate_limit_per_second = 3
+max_concurrent_requests = 5
+```
+
+### TikTok OSINT
+
+```ini
+[tiktok_osint]
+# Data collection settings
+respect_robots_txt = True
+user_agent_rotation = True
+request_delay_seconds = 2.0
+max_retries = 3
+
+# Content analysis
+profile_analysis_enabled = True
+hashtag_extraction_enabled = True
+verification_check_enabled = True
+follower_analysis_enabled = False
+
+# Rate limiting
+requests_per_minute = 30
+burst_allowance = 5
+```
+
+### AI Analysis
+
+```ini
+[ai_summary]
+# OpenAI configuration
+openai_api_key = your_openai_key
+model = gpt-3.5-turbo
+max_tokens = 1000
+temperature = 0.3
+
+# Summary settings
+summary_frequency = on_finish
+max_events_per_summary = 100
+include_confidence_scores = True
+threat_level_analysis = True
+```
 
 ---
 

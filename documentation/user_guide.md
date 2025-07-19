@@ -61,20 +61,40 @@ This guide covers the main features, workflows, and best practices for SpiderFoo
 
 ## Module Categories & Usage Patterns
 
+SpiderFoot v5.3.3 includes 277 modules organized into enhanced categories:
+
+### Core Investigation Modules
 - **DNS/Network**: sfp_dnsresolve, sfp_whois, sfp_ssl, sfp_portscan_tcp, sfp_banner
 - **Threat Intelligence**: sfp_threatcrowd, sfp_virustotal, sfp_alienvault, sfp_malware
 - **Search Engines**: sfp_google, sfp_bing, sfp_duckduckgo, sfp_yandex
-- **Social Media**: sfp_twitter, sfp_github, sfp_linkedin, sfp_instagram
+- **Social Media**: sfp_twitter, sfp_github, sfp_linkedin, sfp_instagram, **sfp_tiktok_osint**
 - **Data Breach**: sfp_haveibeen, sfp_hunter, sfp_emailrep
 
-**Common CLI Patterns:**
+### Enhanced Investigation Modules (New in v5.3.3)
+- **Blockchain Analytics**: sfp_blockchain_analytics (Bitcoin, Ethereum, Litecoin analysis)
+- **Advanced Correlation**: sfp_advanced_correlation (entity resolution, pattern detection)
+- **Performance Optimization**: sfp_performance_optimizer (caching, rate limiting)
+- **AI Analysis**: sfp_ai_summary (threat intelligence summarization)
+
+**Enhanced CLI Patterns:**
 ```bash
-# Domain reconnaissance
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_subdomain_enum,sfp_ssl,sfp_whois,sfp_threatcrowd
-# Network block analysis
-python sf.py -s 192.168.1.0/24 -t NETBLOCK -m sfp_portscan_tcp,sfp_banner,sfp_ssl
-# Email investigation
-python sf.py -s user@example.com -t EMAILADDR -m sfp_hunter,sfp_haveibeen,sfp_emailrep
+# Domain reconnaissance with performance optimization
+python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_subdomain_enum,sfp_ssl,sfp_whois,sfp_threatcrowd,sfp_performance_optimizer
+
+# TikTok OSINT investigation
+python sf.py -s @username -t SOCIAL_MEDIA -m sfp_tiktok_osint,sfp_advanced_correlation
+
+# Cryptocurrency investigation
+python sf.py -s 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa -t BITCOIN_ADDRESS -m sfp_blockchain_analytics,sfp_advanced_correlation
+
+# Network block analysis with AI summary
+python sf.py -s 192.168.1.0/24 -t NETBLOCK -m sfp_portscan_tcp,sfp_banner,sfp_ssl,sfp_ai_summary
+
+# Email investigation with enhanced correlation
+python sf.py -s user@example.com -t EMAILADDR -m sfp_hunter,sfp_haveibeen,sfp_emailrep,sfp_advanced_correlation
+
+# Multi-target investigation with performance optimization
+python sf.py -s multiple_targets.txt -t FILE -m sfp_dnsresolve,sfp_ssl,sfp_blockchain_analytics,sfp_performance_optimizer,sfp_ai_summary
 ```
 
 ---
@@ -89,9 +109,32 @@ python sf.py -s user@example.com -t EMAILADDR -m sfp_hunter,sfp_haveibeen,sfp_em
 
 ## Result Interpretation
 
-- **Event Types:** IP_ADDRESS, DOMAIN_NAME, TCP_PORT_OPEN, SSL_CERTIFICATE_ISSUED, VULNERABILITY, MALICIOUS_DOMAIN, EMAILADDR, SOCIAL_MEDIA, etc.
-- **Risk Levels:** HIGH (critical), MEDIUM (important), LOW (informational), INFO (general)
-- **Common High-Risk Findings:** Open admin ports, expired SSL, known vulnerabilities, threat feed hits, breach exposures
+SpiderFoot v5.3.3 provides enhanced result analysis and interpretation:
+
+### Event Types
+- **Traditional Types**: IP_ADDRESS, DOMAIN_NAME, TCP_PORT_OPEN, SSL_CERTIFICATE_ISSUED, VULNERABILITY, MALICIOUS_DOMAIN, EMAILADDR, SOCIAL_MEDIA
+- **Enhanced Types**: TIKTOK_PROFILE, BLOCKCHAIN_ADDRESS, CRYPTOCURRENCY_TRANSACTION, AI_THREAT_SUMMARY, CORRELATION_MATCH, PERFORMANCE_METRIC
+
+### Risk Levels
+- **HIGH (critical)**: Active threats, known vulnerabilities, sanctions matches
+- **MEDIUM (important)**: Suspicious patterns, potential risks, correlation matches
+- **LOW (informational)**: General information, metadata, social profiles
+- **INFO (general)**: Performance metrics, cache statistics, correlation data
+
+### Enhanced Findings
+- **TikTok Intelligence**: Profile verification, follower analytics, content patterns
+- **Blockchain Analysis**: Transaction flows, risk scores, exchange attribution
+- **Correlation Results**: Cross-platform identity matches, behavioral patterns
+- **Performance Insights**: Cache hit rates, optimization recommendations
+- **AI Analysis**: Automated threat summaries, pattern recognition
+
+### Common High-Risk Findings
+- Open admin ports, expired SSL, known vulnerabilities
+- Threat feed hits, breach exposures
+- **Cryptocurrency sanctions matches**
+- **High-risk blockchain transactions**
+- **Cross-platform identity correlation**
+- **Anomalous behavioral patterns**
 
 ---
 

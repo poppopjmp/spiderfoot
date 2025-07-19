@@ -2,7 +2,7 @@
 
 *Author: poppopjmp*
 
-SpiderFoot includes over 200 modules for data gathering, enrichment, and analysis. Modules can be combined to create powerful OSINT workflows tailored to your needs.
+SpiderFoot includes over **277 modules** for data gathering, enrichment, and analysis. Modules can be combined to create powerful OSINT workflows tailored to your needs.
 
 ---
 
@@ -42,6 +42,20 @@ Modules are plugins that collect, enrich, or analyze data from various sources. 
 - **sfp_github**: GitHub repository discovery
 - **sfp_linkedin**: LinkedIn profile discovery
 - **sfp_instagram**: Instagram account lookup
+- **sfp_tiktok_osint**: TikTok profile analysis and content intelligence
+- **sfp_mastodon**: Mastodon social network analysis
+- **sfp_telegram**: Telegram channel and user analysis
+
+### Blockchain & Cryptocurrency
+- **sfp_bitcoin**: Bitcoin address analysis
+- **sfp_ethereum**: Ethereum address investigation
+- **sfp_blockchain_analytics**: Advanced multi-cryptocurrency investigation
+- **sfp_blockchain**: General blockchain analysis
+
+### AI & Advanced Analytics
+- **sfp_ai_summary**: AI-powered threat intelligence summarization
+- **sfp_advanced_correlation**: Cross-platform entity resolution and pattern analysis
+- **sfp_performance_optimizer**: Intelligent caching and performance optimization
 
 ### Data Breach
 - **sfp_haveibeen**: HaveIBeenPwned integration
@@ -56,8 +70,11 @@ Below is a complete list of all documented modules. Click a module name to view 
 
 | Module | Description |
 |--------|-------------|
+| [sfp_advanced_correlation](modules/sfp_advanced_correlation.md) | Advanced data correlation engine with cross-platform identity resolution, temporal analysis, and geospatial clustering. |
+| [sfp_ai_summary](modules/sfp_ai_summary.md) | AI-powered threat intelligence summarization using OpenAI's GPT models. |
 | [sfp_alienvault](modules/sfp_alienvault.md) | Queries AlienVault OTX for threat intelligence, indicators of compromise, and reputation data. |
 | [sfp_arin](modules/sfp_arin.md) | Queries ARIN for network, ASN, and contact information. |
+| [sfp_blockchain_analytics](modules/sfp_blockchain_analytics.md) | Advanced blockchain and cryptocurrency investigation with multi-chain support and risk assessment. |
 | [sfp_breach](modules/sfp_breach.md) | Checks for data breaches and leaked credentials. |
 | [sfp_btc](modules/sfp_btc.md) | Identifies and analyzes Bitcoin addresses related to the target. |
 | [sfp_certspotter](modules/sfp_certspotter.md) | Queries CertSpotter for certificate transparency logs. |
@@ -70,6 +87,7 @@ Below is a complete list of all documented modules. Click a module name to view 
 | [sfp_hibp](modules/sfp_hibp.md) | Checks HaveIBeenPwned for breaches and exposures. |
 | [sfp_ipinfo](modules/sfp_ipinfo.md) | Queries IPinfo for geolocation, ASN, and network information. |
 | [sfp_pastebin](modules/sfp_pastebin.md) | Searches Pastebin for leaks, credentials, and mentions. |
+| [sfp_performance_optimizer](modules/sfp_performance_optimizer.md) | Performance optimization with intelligent caching, rate limiting, and resource monitoring. |
 | [sfp_portscan_tcp](modules/sfp_portscan_tcp.md) | Performs TCP port scanning on the target host. |
 | [sfp_riskiq](modules/sfp_riskiq.md) | Integrates with RiskIQ (PassiveTotal) for passive DNS, SSL, and threat intelligence. |
 | [sfp_securitytrails](modules/sfp_securitytrails.md) | Integrates with SecurityTrails for passive DNS, WHOIS, and infrastructure data. |
@@ -77,6 +95,7 @@ Below is a complete list of all documented modules. Click a module name to view 
 | [sfp_social](modules/sfp_social.md) | Searches social media platforms for mentions, profiles, and activity. |
 | [sfp_ssl](modules/sfp_ssl.md) | Analyzes SSL/TLS certificates for the target host. |
 | [sfp_threatcrowd](modules/sfp_threatcrowd.md) | Queries ThreatCrowd for information about domains, IPs, and emails. |
+| [sfp_tiktok_osint](modules/sfp_tiktok_osint.md) | Comprehensive TikTok intelligence gathering including user profiles and content analysis. |
 | [sfp_twitter](modules/sfp_twitter.md) | Searches Twitter for profiles, mentions, and activity. |
 | [sfp_username](modules/sfp_username.md) | Searches for usernames related to the target across social media and forums. |
 | [sfp_virustotal](modules/sfp_virustotal.md) | Integrates with VirusTotal to check domains, IPs, and files for malware and reputation. |

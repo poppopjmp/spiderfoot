@@ -151,4 +151,40 @@ A full, detailed description for each module is available in the `documentation/
 
 ---
 
+## Enhanced Module Troubleshooting
+
+SpiderFoot v5.3.3 includes enhanced modules that may require specific troubleshooting approaches:
+
+### TikTok OSINT Module Issues
+- **Rate Limiting**: TikTok has strict rate limits; adjust delay settings in module configuration
+- **User Agent Blocking**: Enable user agent rotation in configuration
+- **Profile Access**: Some profiles may be private or restricted; module will skip these gracefully
+- **API Changes**: TikTok frequently updates their interface; check for module updates
+
+### Blockchain Analytics Module Issues
+- **API Key Errors**: Verify BlockCypher and Etherscan API keys are valid and have sufficient quota
+- **Network Timeouts**: Blockchain APIs can be slow; increase timeout settings
+- **Invalid Addresses**: Ensure cryptocurrency addresses are properly formatted
+- **Rate Limiting**: Blockchain APIs have strict limits; use built-in rate limiting features
+
+### Advanced Correlation Module Issues
+- **High Memory Usage**: Large datasets can consume significant memory; adjust max_entities setting
+- **Slow Processing**: Complex correlations take time; consider increasing confidence thresholds
+- **False Positives**: Adjust similarity thresholds to reduce false correlations
+- **Database Performance**: Large correlation graphs may slow database queries
+
+### Performance Optimizer Module Issues
+- **Cache Not Working**: Verify cache configuration and permissions for cache directory
+- **Memory Leaks**: Monitor memory usage and adjust garbage collection settings
+- **Rate Limit Conflicts**: Ensure rate limiting doesn't conflict with other modules
+- **Performance Degradation**: Check cache hit rates and optimize cache size/TTL settings
+
+### AI Summary Module Issues
+- **API Key Problems**: Verify OpenAI API key is valid and has sufficient credits
+- **High Costs**: Monitor token usage and enable cost optimization features
+- **Poor Summaries**: Adjust model temperature and prompt engineering settings
+- **Rate Limiting**: OpenAI has rate limits; configure appropriate delays
+
+---
+
 Authored by poppopjmp

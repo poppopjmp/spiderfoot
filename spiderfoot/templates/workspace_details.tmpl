@@ -1229,10 +1229,17 @@ function multiTargetScan(workspaceId) {
 
 function removeTarget(workspaceId, targetId) {
     if (confirm('Are you sure you want to remove this target?')) {
-        $.post('${docroot}/workspaceremovetarget', {
+        var requestData = {
             workspace_id: workspaceId,
             target_id: targetId
-        }, function(data) {
+        };
+        
+        // Add CSRF token if available
+        if (window.csrf_token) {
+            requestData.csrf_token = window.csrf_token;
+        }
+        
+        $.post('${docroot}/workspaceremovetarget', requestData, function(data) {
             if (data.success) {
                 alertify.success('Target removed successfully');
                 location.reload(); // Refresh the page to show updated target list
@@ -1262,11 +1269,18 @@ $(document).ready(function() {
             return;
         }
         
-        $.post('${docroot}/workspaceupdate', {
+        var requestData = {
             workspace_id: workspaceId,
             name: name,
             description: description
-        }, function(data) {
+        };
+        
+        // Add CSRF token if available
+        if (window.csrf_token) {
+            requestData.csrf_token = window.csrf_token;
+        }
+        
+        $.post('${docroot}/workspaceupdate', requestData, function(data) {
             if (data.success) {
                 alertify.success('Workspace updated successfully');
                 $('#editWorkspaceModal').modal('hide');
@@ -1290,11 +1304,18 @@ $(document).ready(function() {
             return;
         }
         
-        $.post('${docroot}/workspaceaddtarget', {
+        var requestData = {
             workspace_id: workspaceId,
             target: target,
             target_type: targetType
-        }, function(data) {
+        };
+        
+        // Add CSRF token if available
+        if (window.csrf_token) {
+            requestData.csrf_token = window.csrf_token;
+        }
+        
+        $.post('${docroot}/workspaceaddtarget', requestData, function(data) {
             if (data.success) {
                 alertify.success('Target added successfully');
                 $('#addTargetModal').modal('hide');
@@ -1320,10 +1341,17 @@ $(document).ready(function() {
         // Show loading state
         $('#importScansBtn').prop('disabled', true).text('Importing...');
         
-        $.post('${docroot}/workspaceimportscans', {
+        var requestData = {
             workspace_id: workspaceId,
             scan_ids: scanIds
-        }, function(data) {
+        };
+        
+        // Add CSRF token if available
+        if (window.csrf_token) {
+            requestData.csrf_token = window.csrf_token;
+        }
+        
+        $.post('${docroot}/workspaceimportscans', requestData, function(data) {
             $('#importScansBtn').prop('disabled', false).text('Import Scans');
             if (data.success) {
                 alertify.success('Scans imported successfully');
@@ -1419,13 +1447,20 @@ $(document).ready(function() {
         }
         
         // Start the multi-target scan
-        $.post('${docroot}/workspacemultiscan', {
+        var requestData = {
             workspace_id: workspaceId,
             targets: JSON.stringify(selectedTargets),
             modules: JSON.stringify(selectedModules),
             scan_name_prefix: scanName,
             enable_correlation: enableCorrelation
-        }, function(data) {
+        };
+        
+        // Add CSRF token if available
+        if (window.csrf_token) {
+            requestData.csrf_token = window.csrf_token;
+        }
+        
+        $.post('${docroot}/workspacemultiscan', requestData, function(data) {
             if (data.success) {
                 $('#multiTargetScanModal').modal('hide');
                 $('#multiTargetScanForm')[0].reset();
@@ -1594,6 +1629,39 @@ $(document).ready(function() {
     $('#periodicScanModal').on('shown.bs.modal', function() {
         updateSchedulePreview();
     });
+});
+
+// Helper function to automatically add CSRF token to jQuery AJAX requests
+$(document).ready(function() {
+    // Set up CSRF token for all AJAX requests
+    if (window.csrf_token) {
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (settings.type == 'POST' || settings.type == 'PUT' || settings.type == 'DELETE') {
+                    // Check if data is already an object
+                    if (typeof settings.data === 'string') {
+                        // If data is a string, parse it and add CSRF token
+                        try {
+                            var data = settings.data ? settings.data.split('&').reduce(function(obj, pair) {
+                                var parts = pair.split('=');
+                                obj[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1] || '');
+                                return obj;
+                            }, {}) : {};
+                            data.csrf_token = window.csrf_token;
+                            settings.data = $.param(data);
+                        } catch (e) {
+                            // If parsing fails, just append the token
+                            settings.data += (settings.data ? '&' : '') + 'csrf_token=' + encodeURIComponent(window.csrf_token);
+                        }
+                    } else if (typeof settings.data === 'object') {
+                        // If data is already an object, just add the token
+                        settings.data = settings.data || {};
+                        settings.data.csrf_token = window.csrf_token;
+                    }
+                }
+            }
+        });
+    }
 });
 
 // Helper functions for target and module selection
