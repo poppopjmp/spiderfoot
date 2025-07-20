@@ -13,9 +13,16 @@ import time
 from contextlib import suppress
 from typing import Any, Optional
 
-from .resource_manager import get_test_resource_manager
-from .thread_registry import get_test_thread_registry, cleanup_test_threads
-from .shared_pool_cleanup import cleanup_shared_pools
+try:
+    # Relative imports (when called from package)
+    from .resource_manager import get_test_resource_manager
+    from .thread_registry import get_test_thread_registry, cleanup_test_threads
+    from .shared_pool_cleanup import cleanup_shared_pools
+except ImportError:
+    # Absolute imports (when called directly)
+    from test.unit.utils.resource_manager import get_test_resource_manager
+    from test.unit.utils.thread_registry import get_test_thread_registry, cleanup_test_threads
+    from test.unit.utils.shared_pool_cleanup import cleanup_shared_pools
 
 
 class TestModuleBase(unittest.TestCase):
