@@ -1,12 +1,15 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch
 from spiderfoot.threadpool import SpiderFootThreadPool, ThreadPoolWorker
 import queue
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
+from test.unit.utils.resource_manager import get_test_resource_manager
+from test.unit.utils.thread_registry import get_test_thread_registry
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootThreadPool(SpiderFootTestBase):
+class TestSpiderFootThreadPool(TestModuleBase):
 
     def setUp(self):
         super().setUp()
@@ -117,7 +120,7 @@ class TestSpiderFootThreadPool(SpiderFootTestBase):
             mock_shutdown.assert_called_once()
 
 
-class TestThreadPoolWorker(SpiderFootTestBase):
+class TestThreadPoolWorker(TestModuleBase):
 
     def setUp(self):
         super().setUp()

@@ -14,6 +14,7 @@ This test suite specifically addresses:
 import sys
 import os
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import subprocess
 import tempfile
 import threading
@@ -31,7 +32,7 @@ from spiderfoot.security_logging import SecurityLogger, SecurityEventType
 from spiderfoot.scan_service.scanner import SpiderFootScanner
 
 
-class TestCrossPlatformStability(unittest.TestCase):
+class TestCrossPlatformStability(TestModuleBase):
     """Test cross-platform stability and robustness fixes."""
 
     def setUp(self):
@@ -369,7 +370,7 @@ sys.exit(0)
         self.assertIn("version test", result.stdout)
 
 
-class TestPlatformSpecificBehavior(unittest.TestCase):
+class TestPlatformSpecificBehavior(TestModuleBase):
     """Test platform-specific behavior and edge cases."""
 
     def test_exit_code_consistency(self):

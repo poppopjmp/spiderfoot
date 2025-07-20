@@ -1,8 +1,9 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_matrix import sfp_matrix
 from spiderfoot import SpiderFootEvent
 
-class TestSfpMatrix(unittest.TestCase):
+class TestSfpMatrix(TestModuleBase):
     def setUp(self):
         self.valid_opts = {"access_token": "token", "room_id": "!room:id", "max_messages": 10, "output_format": "summary"}
         self.plugin = sfp_matrix()

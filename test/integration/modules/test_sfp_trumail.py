@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_trumail import sfp_trumail
@@ -8,7 +9,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationTrumail(unittest.TestCase):
+class TestModuleIntegrationTrumail(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({'_fetchtimeout': 5, '_useragent': 'SpiderFootTestAgent'})
         self.module = sfp_trumail()

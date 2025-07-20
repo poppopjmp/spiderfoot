@@ -14,6 +14,7 @@ This test suite covers:
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import sqlite3
 import tempfile
 import os
@@ -34,7 +35,7 @@ from spiderfoot.event import SpiderFootEvent
 from spiderfoot.helpers import SpiderFootHelpers
 
 
-class TestSpiderFootDbComprehensive(unittest.TestCase):
+class TestSpiderFootDbComprehensive(TestModuleBase):
     """Comprehensive test suite for SpiderFootDb class"""
     
     def setUp(self):

@@ -1,9 +1,10 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 from spiderfoot import SpiderFootEvent
 from modules.sfp_4chan import sfp_4chan
 
-class TestSfp4chan(unittest.TestCase):
+class TestSfp4chan(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_4chan()
         self.plugin.setup(MagicMock(), {'boards': 'testboard', 'max_threads': 1})

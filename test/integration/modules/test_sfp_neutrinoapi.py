@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_neutrinoapi import sfp_neutrinoapi
@@ -14,7 +15,7 @@ class DummyEventListener:
     def notifyListeners(self, event):
         self.events.append(event)
 
-class TestModuleIntegrationNeutrinoapi(unittest.TestCase):
+class TestModuleIntegrationNeutrinoapi(TestModuleBase):
     def setUp(self):
         self.options = {
             'user_id': 'dummy_user',

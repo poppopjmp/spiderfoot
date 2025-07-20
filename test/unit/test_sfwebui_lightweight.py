@@ -5,11 +5,14 @@ These tests focus on testing the Web UI logic without the overhead of a full web
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
+from test.unit.utils.resource_manager import get_test_resource_manager
+from test.unit.utils.thread_registry import get_test_thread_registry
 
 
-class TestSpiderFootWebUILightweight(SpiderFootTestBase):
+class TestSpiderFootWebUILightweight(TestModuleBase):
     """Lightweight Web UI tests that bypass CherryPy server initialization."""
     
     def setUp(self):

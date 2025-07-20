@@ -1,9 +1,10 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 from spiderfoot import SpiderFootEvent
 from modules.sfp_discord import sfp_discord
 
-class TestSfpDiscord(unittest.TestCase):
+class TestSfpDiscord(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_discord()
         opts = {

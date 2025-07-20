@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_tool_dnstwist import sfp_tool_dnstwist
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleToolDnstwist(SpiderFootTestBase):
+class TestModuleToolDnstwist(TestModuleBase):
 
     def test_opts(self):
         module = sfp_tool_dnstwist()

@@ -5,12 +5,12 @@ from unittest.mock import patch, MagicMock
 from modules.sfp_tool_nuclei import sfp_tool_nuclei
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 NUCLEI_JSON = b'{"matched-at": "1.2.3.4:80", "info": {"name": "test", "severity": "high"}, "template-id": "TID", "matcher-name": "default"}\n'
 
-class TestModuleToolNucleiRemote(SpiderFootTestBase):
+class TestModuleToolNucleiRemote(TestModuleBase):
     def setUp(self):
         super().setUp()
         self.sf = SpiderFoot(self.default_options)

@@ -1,8 +1,9 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from spiderfoot import SpiderFootEvent
 from modules.sfp_instagram import sfp_instagram
 
-class TestSfpInstagram(unittest.TestCase):
+class TestSfpInstagram(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_instagram()
         self.plugin.setup(None, {})

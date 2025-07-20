@@ -1,15 +1,18 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 from spiderfoot.db import SpiderFootDb
 from spiderfoot import SpiderFootHelpers, SpiderFootEvent
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
+from test.unit.utils.resource_manager import get_test_resource_manager
+from test.unit.utils.thread_registry import get_test_thread_registry
 from test.unit.utils.test_helpers import safe_recursion
 import time
 import os
 import shutil
 
 
-class TestSpiderFootDb(SpiderFootTestBase):
+class TestSpiderFootDb(TestModuleBase):
 
     def setUp(self):
         super().setUp()
@@ -406,7 +409,7 @@ class TestSpiderFootDb(SpiderFootTestBase):
         super().tearDown()
 
 
-class TestSpiderFootDbIntegration(SpiderFootTestBase):
+class TestSpiderFootDbIntegration(TestModuleBase):
     """Integration tests for SpiderFootDb covering full workflows and cross-feature scenarios."""
 
     def setUp(self):
@@ -569,7 +572,7 @@ class TestSpiderFootDbIntegration(SpiderFootTestBase):
         super().tearDown()
 
 
-class TestSpiderFootDbSchemaBackend(SpiderFootTestBase):
+class TestSpiderFootDbSchemaBackend(TestModuleBase):
     """Tests for backend-aware schema creation in SpiderFootDb."""
 
     def setUp(self):

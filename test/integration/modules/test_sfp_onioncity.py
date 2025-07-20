@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_onioncity import sfp_onioncity
@@ -14,7 +15,7 @@ class DummyEventListener:
     def notifyListeners(self, event):
         self.events.append(event)
 
-class TestModuleIntegrationOnioncity(unittest.TestCase):
+class TestModuleIntegrationOnioncity(TestModuleBase):
     def setUp(self):
         self.options = {
             'api_key': 'dummy_key',

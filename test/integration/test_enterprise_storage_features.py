@@ -19,6 +19,7 @@ Created: 2025-01-27
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import time
 import threading
 import tempfile
@@ -35,7 +36,7 @@ from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
 from modules.sfp__stor_stdout import sfp__stor_stdout
 
 
-class TestEnterpriseStorageFeatures(unittest.TestCase):
+class TestEnterpriseStorageFeatures(TestModuleBase):
     """Integration tests for enterprise storage features."""
 
     def setUp(self):

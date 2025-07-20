@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch
 
 from modules.sfp__stor_stdout import sfp__stor_stdout
@@ -7,8 +8,18 @@ from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class BaseTestModuleIntegration(unittest.TestCase):
+class BaseTestModuleIntegration(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     default_options = {
         'enabled': True,
         '_format': 'tab',
@@ -29,6 +40,16 @@ class BaseTestModuleIntegration(unittest.TestCase):
 
 class TestModuleIntegration_stor_stdout(BaseTestModuleIntegration):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_handleEvent(self):
         module = self.setup_module(sfp__stor_stdout)
 

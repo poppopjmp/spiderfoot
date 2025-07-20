@@ -1,12 +1,25 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock, mock_open
 from spiderfoot.helpers import SpiderFootHelpers
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
+from test.unit.utils.resource_manager import get_test_resource_manager
+from test.unit.utils.thread_registry import get_test_thread_registry
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootHelpers(SpiderFootTestBase):
+class TestSpiderFootHelpers(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_dataPath(self):
         with patch('spiderfoot.helpers.os') as mock_os:
             mock_os.path.abspath.return_value = '/home/user/.spiderfoot/data'

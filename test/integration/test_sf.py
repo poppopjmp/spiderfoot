@@ -2,15 +2,26 @@
 import subprocess
 import sys
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import os
 import signal
 import contextlib
 from unittest.mock import patch
 
 
-class TestSf(unittest.TestCase):
+class TestSf(TestModuleBase):
     """Robust integration tests for sf.py CLI."""
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     default_types = [""]
     default_modules = [
         "sfp_base64",

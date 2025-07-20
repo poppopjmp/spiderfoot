@@ -3,12 +3,22 @@ import unittest
 
 from modules.sfp_hybrid_analysis import sfp_hybrid_analysis
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleHybridAnalysis(SpiderFootTestBase):
+class TestModuleHybridAnalysis(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_opts(self):
         module = sfp_hybrid_analysis()
         self.assertEqual(len(module.opts), len(module.optdescs))

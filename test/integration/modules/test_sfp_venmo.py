@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_venmo import sfp_venmo
@@ -14,7 +15,7 @@ class DummyEventListener:
     def notifyListeners(self, event):
         self.events.append(event)
 
-class TestModuleIntegrationVenmo(unittest.TestCase):
+class TestModuleIntegrationVenmo(TestModuleBase):
     def setUp(self):
         self.options = {
             '_fetchtimeout': 5,

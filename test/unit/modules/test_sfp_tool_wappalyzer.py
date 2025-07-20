@@ -1,15 +1,16 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 
 from modules.sfp_tool_wappalyzer import sfp_tool_wappalyzer
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleWappalyzer(SpiderFootTestBase):
+class TestModuleWappalyzer(TestModuleBase):
 
     def test_opts(self):
         module = sfp_tool_wappalyzer()
@@ -64,7 +65,7 @@ class TestModuleWappalyzer(SpiderFootTestBase):
         super().tearDown()
 
 
-class TestModuleWappalyzerAPI(unittest.TestCase):
+class TestModuleWappalyzerAPI(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({})
         self.module = sfp_tool_wappalyzer()

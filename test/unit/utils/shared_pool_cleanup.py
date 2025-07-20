@@ -187,3 +187,20 @@ def get_shared_pool_thread_info():
             shared_threads.append(thread_info)
     
     return shared_threads
+
+
+def cleanup_shared_pools() -> int:
+    """
+    Clean up all shared thread pools.
+    
+    Returns:
+        Number of threads cleaned up
+    """
+    # Try standard cleanup first
+    remaining = cleanup_shared_thread_pool()
+    
+    # If threads remain, use emergency cleanup
+    if remaining > 0:
+        return emergency_shared_pool_cleanup()
+    
+    return remaining

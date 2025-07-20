@@ -9,6 +9,7 @@ tests for the new SpiderFootOrchestrator-based architecture.
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch, call, mock_open
 import sys
 import os
@@ -26,7 +27,7 @@ import sf
 
 
 @unittest.skip("Legacy tests for obsolete module structure - needs updating for new orchestrator architecture")
-class TestSfMain(unittest.TestCase):
+class TestSfMain(TestModuleBase):
     """Test the main sf.py entry point and legacy functions."""
 
     def setUp(self):
@@ -319,7 +320,7 @@ class TestSfMain(unittest.TestCase):
         self.assertIsNone(sf.dbh)
 
 
-class TestSfMainEdgeCases(unittest.TestCase):
+class TestSfMainEdgeCases(TestModuleBase):
     """Test edge cases and error conditions in sf.py."""
 
     def setUp(self):

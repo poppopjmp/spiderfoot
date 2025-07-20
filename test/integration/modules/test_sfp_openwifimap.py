@@ -1,8 +1,9 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_openwifimap import sfp_openwifimap
 from spiderfoot import SpiderFootEvent
 
-class TestSfpOpenWifiMapIntegration(unittest.TestCase):
+class TestSfpOpenWifiMapIntegration(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_openwifimap()
         self.plugin.setup(None, {'search_term': 'test'})

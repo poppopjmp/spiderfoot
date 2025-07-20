@@ -1,10 +1,11 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch
 from modules.sfp_archiveorg import sfp_archiveorg
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 
-class TestModuleArchiveorgExtended(unittest.TestCase):
+class TestModuleArchiveorgExtended(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({})
         self.module = sfp_archiveorg()

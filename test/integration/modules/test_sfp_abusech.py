@@ -1,4 +1,5 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 import requests
 import time
@@ -8,7 +9,7 @@ from modules.sfp_abusech import sfp_abusech
 from spiderfoot.sflib import SpiderFoot
 
 
-class BaseTestModuleIntegration(unittest.TestCase):
+class BaseTestModuleIntegration(TestModuleBase):
     default_options = {"_useragent": "SpiderFootTestAgent"}
 
     def setUp(self):

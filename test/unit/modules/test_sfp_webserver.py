@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_webserver import sfp_webserver
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleWebserver(SpiderFootTestBase):
+class TestModuleWebserver(TestModuleBase):
 
     def test_opts(self):
         module = sfp_webserver()

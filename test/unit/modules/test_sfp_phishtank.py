@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_phishtank import sfp_phishtank
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModulePhishtank(SpiderFootTestBase):
+class TestModulePhishtank(TestModuleBase):
 
     def test_opts(self):
         module = sfp_phishtank()

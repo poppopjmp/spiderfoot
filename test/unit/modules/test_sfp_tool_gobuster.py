@@ -4,11 +4,11 @@ from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_tool_gobuster import sfp_tool_gobuster
 import unittest
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleToolGobuster(SpiderFootTestBase):
+class TestModuleToolGobuster(TestModuleBase):
     """Test Tool Gobuster module."""
 
     def setUp(self):

@@ -1,11 +1,12 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 from modules.sfp_netlas import sfp_netlas
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationNetlas(unittest.TestCase):
+class TestModuleIntegrationNetlas(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

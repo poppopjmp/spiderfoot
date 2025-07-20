@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from modules.sfp_arin import sfp_arin
 from spiderfoot.sflib import SpiderFoot
@@ -7,7 +8,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationarin(unittest.TestCase):
+class TestModuleIntegrationarin(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

@@ -4,12 +4,12 @@ from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_rocketreach import sfp_rocketreach
 import unittest
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 from spiderfoot.target import SpiderFootTarget
 
 
-class TestModuleRocketreach(SpiderFootTestBase):
+class TestModuleRocketreach(TestModuleBase):
     """Test Rocketreach module."""
 
     def setUp(self):

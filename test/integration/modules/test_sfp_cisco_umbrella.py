@@ -11,6 +11,7 @@
 # -------------------------------------------------------------------------------
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 import sys
 import os
@@ -28,7 +29,7 @@ except ImportError:
     raise ImportError("The real 'sfp_cisco_umbrella' module is required for this test. Please ensure it is available.")
 
 
-class TestSFPCiscoUmbrella(unittest.TestCase):
+class TestSFPCiscoUmbrella(TestModuleBase):
     """Test Cisco Umbrella Investigate module."""
 
     @classmethod

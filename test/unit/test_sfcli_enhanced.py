@@ -12,6 +12,7 @@ This comprehensive test suite covers all functionality in sfcli.py including:
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import Mock, patch, MagicMock, call
 import sys
 import os
@@ -25,7 +26,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from sfcli import SpiderFootCli, bcolors
 
 
-class TestSpiderFootCliEnhanced(unittest.TestCase):
+class TestSpiderFootCliEnhanced(TestModuleBase):
     """Enhanced test cases for SpiderFootCli functionality."""
 
     def setUp(self):
@@ -572,7 +573,7 @@ class TestSpiderFootCliEnhanced(unittest.TestCase):
             self.assertIn("Test message", output)
 
 
-class TestSpiderFootCliEdgeCases(unittest.TestCase):
+class TestSpiderFootCliEdgeCases(TestModuleBase):
     """Edge case tests for SpiderFootCli functionality."""
 
     def setUp(self):

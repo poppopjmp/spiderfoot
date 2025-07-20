@@ -5,6 +5,7 @@ Tests the modular orchestrator functionality, argument parsing, and component co
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch, PropertyMock
 import sys
 import os
@@ -20,7 +21,7 @@ if project_root not in sys.path:
 import sf_orchestrator
 
 
-class TestSpiderFootOrchestrator(unittest.TestCase):
+class TestSpiderFootOrchestrator(TestModuleBase):
     """Test the SpiderFootOrchestrator class."""
 
     def setUp(self):
@@ -483,7 +484,7 @@ class TestSpiderFootOrchestrator(unittest.TestCase):
         mock_handle_server.assert_called_once_with(mock_args)
 
 
-class TestSpiderFootOrchestratorEdgeCases(unittest.TestCase):
+class TestSpiderFootOrchestratorEdgeCases(TestModuleBase):
     """Test edge cases and error conditions in sf_orchestrator.py."""
 
     def setUp(self):
@@ -628,7 +629,7 @@ class TestSpiderFootOrchestratorEdgeCases(unittest.TestCase):
                 self.assertFalse(output_config[key] if isinstance(output_config[key], bool) else not output_config[key])
 
 
-class TestModuleFunctions(unittest.TestCase):
+class TestModuleFunctions(TestModuleBase):
     """Test module-level functions in sf_orchestrator.py."""
 
     def setUp(self):

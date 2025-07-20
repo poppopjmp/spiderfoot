@@ -12,6 +12,7 @@ This test suite covers:
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import time
 import threading
 import json
@@ -133,7 +134,7 @@ class MockSpiderFootEvent:
 
 
 @skip_if_no_imports
-class TestConnectionLoadBalancer(unittest.TestCase):
+class TestConnectionLoadBalancer(TestModuleBase):
     """Test suite for Connection Load Balancer."""
     
     def setUp(self):
@@ -261,7 +262,7 @@ class TestConnectionLoadBalancer(unittest.TestCase):
 
 
 @skip_if_no_imports
-class TestQueryOptimizer(unittest.TestCase):
+class TestQueryOptimizer(TestModuleBase):
     """Test suite for Query Optimizer."""
     
     def setUp(self):
@@ -337,7 +338,7 @@ class TestQueryOptimizer(unittest.TestCase):
 
 
 @skip_if_no_imports
-class TestPerformanceMonitor(unittest.TestCase):
+class TestPerformanceMonitor(TestModuleBase):
     """Test suite for Performance Monitor."""
     
     def setUp(self):
@@ -429,7 +430,7 @@ class TestPerformanceMonitor(unittest.TestCase):
 
 
 @skip_if_no_imports
-class TestAutoScaler(unittest.TestCase):
+class TestAutoScaler(TestModuleBase):
     """Test suite for Auto Scaler."""
     
     def setUp(self):
@@ -509,7 +510,7 @@ class TestAutoScaler(unittest.TestCase):
 
 
 @skip_if_no_imports
-class TestAdvancedStorageModule(unittest.TestCase):
+class TestAdvancedStorageModule(TestModuleBase):
     """Test suite for the advanced storage module."""
     
     def setUp(self):
@@ -725,7 +726,7 @@ class TestAdvancedStorageModule(unittest.TestCase):
 
 
 @skip_if_no_imports
-class TestPhase2StorageIntegration(unittest.TestCase):
+class TestPhase2StorageIntegration(TestModuleBase):
     """Integration tests for Phase 2 storage features."""
     
     def setUp(self):

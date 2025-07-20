@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_torch import sfp_torch
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleTorch(SpiderFootTestBase):
+class TestModuleTorch(TestModuleBase):
 
     def test_opts(self):
         module = sfp_torch()

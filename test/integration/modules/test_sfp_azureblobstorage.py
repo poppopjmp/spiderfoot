@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_azureblobstorage import sfp_azureblobstorage
@@ -8,7 +9,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationazureblobstorage(unittest.TestCase):
+class TestModuleIntegrationazureblobstorage(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({})
         self.module = sfp_azureblobstorage()

@@ -7,6 +7,7 @@ providing a solid foundation for coverage improvement.
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import Mock, patch, MagicMock
 import tempfile
 import json
@@ -20,7 +21,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from sfcli import SpiderFootCli, bcolors
 
 
-class TestSpiderFootCliEssential(unittest.TestCase):
+class TestSpiderFootCliEssential(TestModuleBase):
     """Essential test cases for SpiderFootCli functionality."""
 
     def setUp(self):

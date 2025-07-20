@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 import json
 
@@ -9,7 +10,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationVirustotal(unittest.TestCase):
+class TestModuleIntegrationVirustotal(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({
             '_fetchtimeout': 0.1,

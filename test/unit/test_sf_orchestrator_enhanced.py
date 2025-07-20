@@ -12,6 +12,7 @@ This comprehensive test suite covers all functionality in sf_orchestrator.py inc
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import Mock, patch, MagicMock, call
 import sys
 import os
@@ -23,7 +24,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 import sf_orchestrator
 
 
-class TestSpiderFootOrchestratorEnhanced(unittest.TestCase):
+class TestSpiderFootOrchestratorEnhanced(TestModuleBase):
     """Enhanced test cases for SpiderFootOrchestrator."""
 
     def setUp(self):
@@ -694,7 +695,7 @@ class TestSpiderFootOrchestratorEnhanced(unittest.TestCase):
             mock_log.critical.assert_called()
 
 
-class TestSpiderFootOrchestratorEdgeCases(unittest.TestCase):
+class TestSpiderFootOrchestratorEdgeCases(TestModuleBase):
     """Edge case and integration tests for SpiderFootOrchestrator."""
     
     def setUp(self):

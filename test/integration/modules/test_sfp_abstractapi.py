@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_abstractapi import sfp_abstractapi
@@ -7,8 +8,18 @@ from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class BaseTestModuleIntegration(unittest.TestCase):
+class BaseTestModuleIntegration(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     default_options = {
         '_socks1type': '',
         '_socks2addr': '',
@@ -50,6 +61,16 @@ class BaseTestModuleIntegration(unittest.TestCase):
 
 class TestModuleIntegrationAbstractapi(BaseTestModuleIntegration):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_handleEvent(self):
         module = self.setup_module(sfp_abstractapi)
         # Explicitly set API keys in module.opts to ensure they are present

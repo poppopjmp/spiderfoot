@@ -1,8 +1,9 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from spiderfoot import SpiderFootEvent
 from modules.sfp_rubika import sfp_rubika
 
-class TestSfpRubika(unittest.TestCase):
+class TestSfpRubika(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_rubika()
         self.plugin.setup(None, {})

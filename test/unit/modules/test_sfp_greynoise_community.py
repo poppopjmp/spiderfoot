@@ -4,11 +4,11 @@ from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_greynoise_community import sfp_greynoise_community
 import unittest
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleGreynoiseCommunity(SpiderFootTestBase):
+class TestModuleGreynoiseCommunity(TestModuleBase):
     """Test Greynoise Community module."""
 
     def setUp(self):

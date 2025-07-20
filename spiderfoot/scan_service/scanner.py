@@ -21,6 +21,14 @@ import traceback
 import dns.resolver
 
 from spiderfoot.sflib import SpiderFoot
+
+# ThreadReaper infrastructure for automatic resource management
+try:
+    from test.unit.utils.thread_registry import get_test_thread_registry
+    from test.unit.utils.resource_manager import get_test_resource_manager
+    _THREADREAPER_AVAILABLE = True
+except ImportError:
+    _THREADREAPER_AVAILABLE = False
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool
 from spiderfoot.logger import logWorkerSetup
 from spiderfoot import SpiderFootDb

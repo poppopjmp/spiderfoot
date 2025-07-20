@@ -4,11 +4,11 @@ from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_deepinfo import sfp_deepinfo
 import unittest
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleDeepinfo(SpiderFootTestBase):
+class TestModuleDeepinfo(TestModuleBase):
     """Test Deepinfo module."""
 
     def setUp(self):

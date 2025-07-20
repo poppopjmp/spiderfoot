@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_openstreetmap import sfp_openstreetmap
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleopenstreetmap(SpiderFootTestBase):
+class TestModuleopenstreetmap(TestModuleBase):
 
     def test_opts(self):
         module = sfp_openstreetmap()

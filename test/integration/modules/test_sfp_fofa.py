@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 
 from modules.sfp_fofa import sfp_fofa
@@ -8,7 +9,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationFofa(unittest.TestCase):
+class TestModuleIntegrationFofa(TestModuleBase):
     def setUp(self):
         self.sf = MagicMock()
         self.plugin = sfp_fofa()

@@ -1,9 +1,10 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 from modules.sfp_arbitrum import sfp_arbitrum
 from spiderfoot import SpiderFootEvent
 
-class TestSfpArbitrum(unittest.TestCase):
+class TestSfpArbitrum(TestModuleBase):
     def setUp(self):
         # Provide minimal valid options to pass validation
         self.valid_opts = {"api_key": "key", "addresses": "0x123", "max_transactions": 10, "output_format": "summary"}

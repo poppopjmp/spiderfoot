@@ -2,14 +2,25 @@
 import subprocess
 import sys
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import os
 import signal
 import contextlib
 
 
-class TestSfcli(unittest.TestCase):
+class TestSfcli(TestModuleBase):
     """Robust integration test for sfcli.py CLI."""
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def execute(self, command, timeout=30, cwd=None):
         """
         Execute command with timeout and robust process cleanup.

@@ -5,11 +5,11 @@ from unittest.mock import patch, MagicMock
 from modules.sfp_criminalip import sfp_criminalip
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleCriminalip(SpiderFootTestBase):
+class TestModuleCriminalip(TestModuleBase):
     def setUp(self):
         """Set up before each test."""
         super().setUp()

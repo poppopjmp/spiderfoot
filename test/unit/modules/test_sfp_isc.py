@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_isc import sfp_isc
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleisc(SpiderFootTestBase):
+class TestModuleisc(TestModuleBase):
 
     def test_opts(self):
         module = sfp_isc()

@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_onyphe import sfp_onyphe
@@ -15,7 +16,7 @@ class DummyEventListener:
         self.events.append(event)
 
 
-class TestModuleIntegrationOnyphe(unittest.TestCase):
+class TestModuleIntegrationOnyphe(TestModuleBase):
     def setUp(self):
         self.options = {
             'api_key': 'dummy_key',

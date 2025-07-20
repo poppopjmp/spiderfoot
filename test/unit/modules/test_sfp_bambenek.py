@@ -3,11 +3,11 @@ import unittest
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot.event import SpiderFootEvent
 from modules.sfp_bambenek import sfp_bambenek
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleBambenek(SpiderFootTestBase):
+class TestModuleBambenek(TestModuleBase):
     """Test Bambenek module."""
 
     def setUp(self):

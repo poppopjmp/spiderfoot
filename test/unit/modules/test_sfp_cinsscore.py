@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_cinsscore import sfp_cinsscore
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleCinsscore(SpiderFootTestBase):
+class TestModuleCinsscore(TestModuleBase):
 
     def test_opts(self):
         module = sfp_cinsscore()

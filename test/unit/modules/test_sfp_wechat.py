@@ -1,8 +1,9 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from spiderfoot import SpiderFootEvent
 from modules.sfp_wechat import sfp_wechat
 
-class TestSfpWeChat(unittest.TestCase):
+class TestSfpWeChat(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_wechat()
         self.plugin.setup(None, {})

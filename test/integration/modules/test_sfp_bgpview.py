@@ -1,12 +1,23 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from modules.sfp_bgpview import sfp_bgpview
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationBgpview(unittest.TestCase):
+class TestModuleIntegrationBgpview(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_handleEvent(self):
         sf = SpiderFoot(self.default_options)
 

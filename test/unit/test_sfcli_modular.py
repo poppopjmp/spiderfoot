@@ -1,9 +1,10 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from sfcli import SpiderFootCli
 import io
 import sys
 
-class TestSpiderFootCliModular(unittest.TestCase):
+class TestSpiderFootCliModular(TestModuleBase):
     def setUp(self):
         self.cli = SpiderFootCli()
         # Use config for all options

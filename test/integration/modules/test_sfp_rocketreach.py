@@ -11,6 +11,7 @@
 # -------------------------------------------------------------------------------
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import sys
 import os
 
@@ -49,7 +50,7 @@ except ImportError:
             return None
 
 
-class TestSFPRrocketreach(unittest.TestCase):
+class TestSFPRrocketreach(TestModuleBase):
 
     @classmethod
     def setUpClass(cls):

@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 
 from modules.sfp_criminalip import sfp_criminalip
@@ -7,8 +8,18 @@ from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class BaseTestModuleIntegration(unittest.TestCase):
+class BaseTestModuleIntegration(TestModuleBase):
     
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     default_options = {"_useragent": "SpiderFootTestAgent", "api_key": "DUMMYKEY"}
 
     def setup_module(self, module_class, user_opts=None):
@@ -32,6 +43,16 @@ class BaseTestModuleIntegration(unittest.TestCase):
 
 class TestModuleIntegrationCriminalip(BaseTestModuleIntegration):
     
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     @patch('modules.sfp_criminalip.sfp_criminalip.queryCriminalIP')
     def test_handleEvent_domain(self, mock_query):
         module = self.setup_module(sfp_criminalip, {"api_key": "DUMMYKEY", "_useragent": "SpiderFootTestAgent"})

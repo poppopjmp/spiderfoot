@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from modules.sfp_dnsresolve import sfp_dnsresolve
 from spiderfoot.sflib import SpiderFoot
@@ -8,7 +9,17 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 import unittest.mock as mock_mod
 
 
-class TestModuleIntegrationDnsResolve(unittest.TestCase):
+class TestModuleIntegrationDnsResolve(TestModuleBase):
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     default_options = {
         '_internettlds': ['com', 'net', 'org'],
         'validatereverse': True,

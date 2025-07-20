@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 import json
 
@@ -15,7 +16,7 @@ class DummyEventListener:
     def notifyListeners(self, event):
         self.events.append(event)
 
-class TestModuleIntegrationThreatcrowd(unittest.TestCase):
+class TestModuleIntegrationThreatcrowd(TestModuleBase):
     def setUp(self):
         self.options = {
             '_fetchtimeout': 5

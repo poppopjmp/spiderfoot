@@ -4,12 +4,18 @@ import unittest
 from modules.sfp_base64 import sfp_base64
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
-from test.unit.utils.test_helpers import safe_recursion
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleBase64(SpiderFootTestBase):
+class TestModuleBase64(TestModuleBase):
+
+    def setUp(self):
+        super().setUp()
+        # Create module instance for reuse in tests
+        self.module = sfp_base64()
+        # Register the module for cleanup
+        self.register_module(self.module)
 
     def test_opts(self):
         module = sfp_base64()
@@ -27,12 +33,6 @@ class TestModuleBase64(SpiderFootTestBase):
     def test_producedEvents_should_return_list(self):
         module = sfp_base64()
         self.assertIsInstance(module.producedEvents(), list)
-
-    def setUp(self):
-        super().setUp()
-        # Register any event emitters used in the test
-        if hasattr(self, 'module'):
-            self.register_event_emitter(self.module)
     
     @safe_recursion(max_depth=5)
     def test_handleEvent_event_data_url_containing_base64_string_should_return_event(self):
@@ -101,14 +101,3 @@ class TestModuleBase64(SpiderFootTestBase):
         result = module.handleEvent(evt)
 
         self.assertIsNone(result)
-
-    def tearDown(self):
-        """Clean up after each test."""
-        super().tearDown()
-        result = module.handleEvent(evt)
-
-        self.assertIsNone(result)
-
-    def tearDown(self):
-        """Clean up after each test."""
-        super().tearDown()

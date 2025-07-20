@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_s3bucket import sfp_s3bucket
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleS3bucket(SpiderFootTestBase):
+class TestModuleS3bucket(TestModuleBase):
 
     def test_opts(self):
         module = sfp_s3bucket()

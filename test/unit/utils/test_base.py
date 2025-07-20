@@ -1,6 +1,7 @@
 """Base test class with proper resource management to prevent hanging tests."""
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import threading
 import time
 import os
@@ -9,7 +10,7 @@ from unittest.mock import MagicMock
 from spiderfoot import SpiderFootHelpers
 
 
-class SpiderFootTestBase(unittest.TestCase):
+class TestModuleBase(TestModuleBase):
     """Base test class with resource management."""
     
     def setUp(self):

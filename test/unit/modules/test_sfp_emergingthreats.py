@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_emergingthreats import sfp_emergingthreats
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleEmergingthreats(SpiderFootTestBase):
+class TestModuleEmergingthreats(TestModuleBase):
 
     def test_opts(self):
         module = sfp_emergingthreats()

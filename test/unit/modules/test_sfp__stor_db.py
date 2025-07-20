@@ -7,11 +7,11 @@ import time
 from modules.sfp__stor_db import sfp__stor_db
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot.event import SpiderFootEvent
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleStor_db(SpiderFootTestBase):
+class TestModuleStor_db(TestModuleBase):
     """Comprehensive test suite for enhanced database storage module.
     
     Tests all enterprise-grade features including:

@@ -1,11 +1,12 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 from modules.sfp_mandiant_ti import sfp_mandiant_ti
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleMandiantTI(unittest.TestCase):
+class TestModuleMandiantTI(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

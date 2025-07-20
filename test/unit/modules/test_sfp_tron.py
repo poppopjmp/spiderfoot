@@ -1,7 +1,8 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_tron import sfp_tron
 
-class TestSfpTron(unittest.TestCase):
+class TestSfpTron(TestModuleBase):
     def setUp(self):
         self.valid_opts = {"api_key": "key", "addresses": "TXYZ123", "max_transactions": 10, "output_format": "summary"}
         self.plugin = sfp_tron()

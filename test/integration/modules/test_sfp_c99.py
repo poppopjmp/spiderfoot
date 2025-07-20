@@ -1,4 +1,5 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 import json
 
@@ -7,7 +8,7 @@ from spiderfoot.sflib import SpiderFoot
 from modules.sfp_c99 import sfp_c99
 
 
-class TestModuleIntegrationC99(unittest.TestCase):
+class TestModuleIntegrationC99(TestModuleBase):
     def setUp(self):
         self.default_options = {"_useragent": "SpiderFootTestAgent", "api_key": "DUMMYKEY", "_fetchtimeout": 5, "_socks1type": "", "_internettlds": []}
         self.sf = SpiderFoot(self.default_options)

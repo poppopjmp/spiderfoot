@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from modules.sfp_alienvault import sfp_alienvault
 from spiderfoot.sflib import SpiderFoot
@@ -7,7 +8,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationalienvault(unittest.TestCase):
+class TestModuleIntegrationalienvault(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

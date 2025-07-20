@@ -2,16 +2,19 @@ import cheroot.test.webtest
 cheroot.test.webtest.getchar = lambda: 'I'
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 import cherrypy
 from sfwebui import SpiderFootWebUi
 from spiderfoot import SpiderFootHelpers
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
+from test.unit.utils.resource_manager import get_test_resource_manager
+from test.unit.utils.thread_registry import get_test_thread_registry
 from test.unit.utils.test_helpers import safe_recursion
 from cherrypy.test import helper
 
 
-class TestSpiderFootWebUi(helper.CPWebCase, SpiderFootTestBase):
+class TestSpiderFootWebUi(helper.CPWebCase, TestModuleBase):
 
     def setUp(self):
         super().setUp()

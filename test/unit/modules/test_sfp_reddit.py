@@ -1,8 +1,9 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from spiderfoot import SpiderFootEvent
 from modules.sfp_reddit import sfp_reddit
 
-class TestSfpReddit(unittest.TestCase):
+class TestSfpReddit(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_reddit()
         self.plugin.setup(None, {})

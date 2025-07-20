@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_stevenblack_hosts import sfp_stevenblack_hosts
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleStevenblackHosts(SpiderFootTestBase):
+class TestModuleStevenblackHosts(TestModuleBase):
 
     def test_opts(self):
         module = sfp_stevenblack_hosts()

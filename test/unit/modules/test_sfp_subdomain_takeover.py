@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_subdomain_takeover import sfp_subdomain_takeover
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleSubdomain_takeover(SpiderFootTestBase):
+class TestModuleSubdomain_takeover(TestModuleBase):
 
     def test_opts(self):
         module = sfp_subdomain_takeover()

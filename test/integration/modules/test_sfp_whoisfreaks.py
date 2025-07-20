@@ -1,10 +1,11 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_whoisfreaks import sfp_whoisfreaks
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 
 
-class TestModuleIntegrationWhoisfreaks(unittest.TestCase):
+class TestModuleIntegrationWhoisfreaks(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_h1nobbdde import sfp_h1nobbdde
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleH1nobbdde(SpiderFootTestBase):
+class TestModuleH1nobbdde(TestModuleBase):
 
     def test_opts(self):
         module = sfp_h1nobbdde()

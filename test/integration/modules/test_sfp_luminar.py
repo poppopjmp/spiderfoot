@@ -1,11 +1,12 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 from modules.sfp_luminar import sfp_luminar
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleLuminar(unittest.TestCase):
+class TestModuleLuminar(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

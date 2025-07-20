@@ -12,6 +12,7 @@ This comprehensive test suite covers all functionality in sf.py including:
 
 import contextlib
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import Mock, patch, MagicMock, call
 import sys
 import os
@@ -25,7 +26,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 import sf
 
 
-class TestSfMainEnhanced(unittest.TestCase):
+class TestSfMainEnhanced(TestModuleBase):
     """Enhanced test cases for sf.py main functionality."""
 
     def setUp(self):
@@ -476,7 +477,7 @@ class TestSfMainEnhanced(unittest.TestCase):
         self.assertIn("Error stopping scan", str(mock_log.error.call_args))
 
 
-class TestSfMainEdgeCases(unittest.TestCase):
+class TestSfMainEdgeCases(TestModuleBase):
     """Edge case and integration tests for sf.py."""
     
     def setUp(self):

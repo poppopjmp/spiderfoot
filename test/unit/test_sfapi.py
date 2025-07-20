@@ -5,6 +5,7 @@ Focus: Achieving maximum code coverage for the API module
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch, PropertyMock
 import sys
 import os
@@ -21,7 +22,7 @@ os.environ['TESTING_MODE'] = '1'
 import sfapi
 
 
-class TestSpiderFootAPICore(unittest.TestCase):
+class TestSpiderFootAPICore(TestModuleBase):
     """Test core functionality of sfapi.py"""
     
     def setUp(self):

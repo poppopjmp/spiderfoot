@@ -12,6 +12,7 @@ This comprehensive test suite covers all functionality in sfwebui.py including:
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import Mock, patch, MagicMock, call
 import sys
 import os
@@ -26,7 +27,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from sfwebui import SpiderFootWebUi, SpiderFootWebUiApp
 
 
-class TestSpiderFootWebUiEnhanced(unittest.TestCase):
+class TestSpiderFootWebUiEnhanced(TestModuleBase):
     """Enhanced test cases for SpiderFootWebUi functionality."""
 
     def setUp(self):
@@ -490,7 +491,7 @@ class TestSpiderFootWebUiEnhanced(unittest.TestCase):
                 self.fail(f"Security headers setup should not fail without secure module: {e}")
 
 
-class TestSpiderFootWebUiAppEnhanced(unittest.TestCase):
+class TestSpiderFootWebUiAppEnhanced(TestModuleBase):
     """Enhanced test cases for SpiderFootWebUiApp functionality."""
 
     def setUp(self):
@@ -594,7 +595,7 @@ class TestSpiderFootWebUiAppEnhanced(unittest.TestCase):
                 pass
 
 
-class TestSpiderFootWebUiEdgeCases(unittest.TestCase):
+class TestSpiderFootWebUiEdgeCases(TestModuleBase):
     """Edge case and integration tests for SpiderFootWebUi."""
 
     def setUp(self):

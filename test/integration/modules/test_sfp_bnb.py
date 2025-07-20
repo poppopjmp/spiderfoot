@@ -1,8 +1,9 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_bnb import sfp_bnb
 from spiderfoot import SpiderFootEvent
 
-class TestSfpBnbIntegration(unittest.TestCase):
+class TestSfpBnbIntegration(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_bnb()
         self.plugin.setup(None, {})

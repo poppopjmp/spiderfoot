@@ -1,8 +1,9 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_douyin import sfp_douyin
 from spiderfoot import SpiderFootEvent
 
-class TestSfpDouyinIntegration(unittest.TestCase):
+class TestSfpDouyinIntegration(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_douyin()
         self.plugin.setup(None, {

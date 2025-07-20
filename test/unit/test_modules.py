@@ -2,15 +2,16 @@
 import os
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootModuleLoading(unittest.TestCase):
+class TestSpiderFootModuleLoading(TestModuleBase):
     """Test SpiderFoot module loading."""
 
     @staticmethod

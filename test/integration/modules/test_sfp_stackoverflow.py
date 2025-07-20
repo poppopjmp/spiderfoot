@@ -4,11 +4,11 @@ import unittest
 from modules.sfp_stackoverflow import sfp_stackoverflow
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase  # Add missing import
+from test.unit.utils.test_module_base import TestModuleBase  # Add missing import
 
 
 
-class TestModuleIntegrationStackoverflow(SpiderFootTestBase):  # Add inheritance
+class TestModuleIntegrationStackoverflow(TestModuleBase):  # Add inheritance
 
     @unittest.skip("todo")
     def test_handleEvent(self):

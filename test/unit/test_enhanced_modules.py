@@ -12,6 +12,7 @@ Tests the new OSINT modules including:
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import sys
 import os
 from unittest.mock import patch, MagicMock, mock_open
@@ -52,7 +53,7 @@ except ImportError:
 
 
 @unittest.skipIf(not TIKTOK_AVAILABLE, "TikTok OSINT module not available")
-class TestTikTokOSINT(unittest.TestCase):
+class TestTikTokOSINT(TestModuleBase):
     """Test cases for TikTok OSINT module."""
     
     def setUp(self):
@@ -137,7 +138,7 @@ class TestTikTokOSINT(unittest.TestCase):
             self.assertEqual(match.group(1), expected_username)
 
 
-class TestAdvancedCorrelation(unittest.TestCase):
+class TestAdvancedCorrelation(TestModuleBase):
     """Test cases for Advanced Correlation Engine."""
     
     def setUp(self):
@@ -209,7 +210,7 @@ class TestAdvancedCorrelation(unittest.TestCase):
             self.assertIn('confidence', cluster)
 
 
-class TestPerformanceOptimizer(unittest.TestCase):
+class TestPerformanceOptimizer(TestModuleBase):
     """Test cases for Performance Optimizer module."""
     
     def setUp(self):
@@ -284,7 +285,7 @@ class TestPerformanceOptimizer(unittest.TestCase):
         self.assertNotEqual(key1, key3)
 
 
-class TestBlockchainAnalytics(unittest.TestCase):
+class TestBlockchainAnalytics(TestModuleBase):
     """Test cases for Blockchain Analytics module."""
     
     def setUp(self):
@@ -422,7 +423,7 @@ class TestBlockchainAnalytics(unittest.TestCase):
         self.assertIn('hash', transactions[0])
 
 
-class TestNewCorrelationRules(unittest.TestCase):
+class TestNewCorrelationRules(TestModuleBase):
     """Test cases for new correlation rules."""
     
     def test_tiktok_correlation_rule_structure(self):

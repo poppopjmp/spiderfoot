@@ -4,7 +4,7 @@ import unittest
 import uuid
 
 from spiderfoot.scan_service.scanner import SpiderFootScanner
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_scanner_base import TestScannerBase
 
 # Import shared thread pool cleanup
 try:
@@ -16,8 +16,8 @@ except ImportError:
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootScanner(SpiderFootTestBase):
-    """Test SpiderFootScanStatus."""
+class TestSpiderFootScanner(TestScannerBase):
+    """Test SpiderFootScanStatus with ThreadReaper infrastructure."""
 
     def test_init_argument_start_false_should_create_a_scan_without_starting_the_scan(self):
         """Test __init__(self, scanName, scanId, scanTarget, targetType,

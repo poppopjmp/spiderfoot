@@ -5,6 +5,7 @@ Extends existing tests with better coverage for the modular API structure.
 """
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch, mock_open
 import sys
 import os
@@ -22,9 +23,19 @@ os.environ['TESTING_MODE'] = '1'
 import sfapi
 
 
-class TestSfApiMain(unittest.TestCase):
+class TestSfApiMain(TestModuleBase):
     """Test main function and entry point for sfapi.py."""
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     @patch('sfapi.uvicorn.run')
     @patch('sfapi.argparse.ArgumentParser')
     def test_main_function_default_args(self, mock_parser_class, mock_uvicorn):
@@ -94,9 +105,19 @@ class TestSfApiMain(unittest.TestCase):
                 self.assertIn(expected_arg, arg_names)
 
 
-class TestSfApiImports(unittest.TestCase):
+class TestSfApiImports(TestModuleBase):
     """Test import functionality and module re-exports."""
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_legacy_imports_available(self):
         """Test that legacy imports are available for backward compatibility."""
         # Test that important classes/functions are importable
@@ -135,9 +156,19 @@ class TestSfApiImports(unittest.TestCase):
         self.assertTrue(sfapi.Config is None or callable(sfapi.Config))
 
 
-class TestSfApiModularStructure(unittest.TestCase):
+class TestSfApiModularStructure(TestModuleBase):
     """Test the modular structure and delegation to spiderfoot.api.main."""
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     @patch('sfapi.app')
     def test_app_import_delegation(self, mock_app):
         """Test that app is properly imported from spiderfoot.api.main."""
@@ -183,9 +214,19 @@ class TestSfApiModularStructure(unittest.TestCase):
             self.fail(f"WebSocket import failed: {e}")
 
 
-class TestSfApiCompatibility(unittest.TestCase):
+class TestSfApiCompatibility(TestModuleBase):
     """Test backward compatibility features."""
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_clean_user_input_function_exists(self):
         """Test that clean_user_input function is available."""
         self.assertTrue(hasattr(sfapi, 'clean_user_input'))
@@ -216,9 +257,19 @@ class TestSfApiCompatibility(unittest.TestCase):
         self.assertTrue(hasattr(sfapi, 'openpyxl'))
 
 
-class TestSfApiErrorHandling(unittest.TestCase):
+class TestSfApiErrorHandling(TestModuleBase):
     """Test error handling in sfapi.py."""
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     @patch('sfapi.uvicorn.run', side_effect=Exception("Server start failed"))
     @patch('sfapi.argparse.ArgumentParser')
     def test_main_handles_uvicorn_exceptions(self, mock_parser_class, mock_uvicorn):
@@ -248,9 +299,19 @@ class TestSfApiErrorHandling(unittest.TestCase):
         self.assertEqual(str(context.exception), "Parser creation failed")
 
 
-class TestSfApiDocumentation(unittest.TestCase):
+class TestSfApiDocumentation(TestModuleBase):
     """Test documentation and module metadata."""
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_module_docstring(self):
         """Test that module has proper docstring."""
         import sfapi
@@ -265,9 +326,19 @@ class TestSfApiDocumentation(unittest.TestCase):
         self.assertIn("modular", sfapi.main.__doc__)
 
 
-class TestSfApiIntegration(unittest.TestCase):
+class TestSfApiIntegration(TestModuleBase):
     """Test integration aspects of sfapi.py."""
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     @patch('sfapi.uvicorn')
     def test_main_integration_with_uvicorn(self, mock_uvicorn):
         """Test main function properly integrates with uvicorn."""
@@ -304,9 +375,19 @@ class TestSfApiIntegration(unittest.TestCase):
         self.assertIn('main()', source)
 
 
-class TestSfApiEdgeCases(unittest.TestCase):
+class TestSfApiEdgeCases(TestModuleBase):
     """Test edge cases and unusual scenarios."""
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_import_without_dependencies(self):
         """Test behavior when optional dependencies are missing."""
         # This would be tested in an environment where some dependencies aren't installed

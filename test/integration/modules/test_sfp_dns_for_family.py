@@ -1,4 +1,5 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 
 from modules.sfp_dns_for_family import sfp_dns_for_family
@@ -7,7 +8,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationDnsForFamily(unittest.TestCase):
+class TestModuleIntegrationDnsForFamily(TestModuleBase):
 
     def setUp(self):
         self.default_options = {"_useragent": "SpiderFootTestAgent"}

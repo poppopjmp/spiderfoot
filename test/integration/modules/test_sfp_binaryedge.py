@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_binaryedge import sfp_binaryedge
@@ -8,7 +9,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationBinaryedge(unittest.TestCase):
+class TestModuleIntegrationBinaryedge(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({'binaryedge_api_key': 'dummy'})
         self.module = sfp_binaryedge()

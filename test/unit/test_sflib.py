@@ -1,6 +1,7 @@
 # test_sflib_comprehensive.py
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import json
 import os
 import tempfile
@@ -13,10 +14,12 @@ from unittest.mock import Mock, MagicMock, patch, mock_open
 from datetime import datetime
 
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
+from test.unit.utils.resource_manager import get_test_resource_manager
+from test.unit.utils.thread_registry import get_test_thread_registry
 
 
-class TestSpiderFootComprehensive(SpiderFootTestBase):
+class TestSpiderFootComprehensive(TestModuleBase):
     """Comprehensive test suite for SpiderFoot (sflib) class Refactored Version."""
 
     def setUp(self):

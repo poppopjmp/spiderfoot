@@ -1,11 +1,12 @@
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from modules.sfp_ahmia import sfp_ahmia
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationAhmia(unittest.TestCase):
+class TestModuleIntegrationAhmia(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

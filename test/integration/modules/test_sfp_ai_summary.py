@@ -2,9 +2,19 @@ import unittest
 from unittest.mock import patch, MagicMock
 from modules.sfp_ai_summary import sfp_ai_summary
 from spiderfoot import SpiderFootEvent
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 
-class IntegrationTestAISummary(SpiderFootTestBase):
+class IntegrationTestAISummary(TestModuleBase):
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     @patch("openai.ChatCompletion.create")
     def test_integration_summary(self, mock_create):
         mock_create.return_value = MagicMock(choices=[MagicMock(message={"content": "Integration summary."})])

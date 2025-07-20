@@ -3,11 +3,11 @@ import unittest
 
 from modules.sfp_alienvaultiprep import sfp_alienvaultiprep
 from spiderfoot.sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleAlienvaultiprep(SpiderFootTestBase):
+class TestModuleAlienvaultiprep(TestModuleBase):
 
     def test_opts(self):
         module = sfp_alienvaultiprep()

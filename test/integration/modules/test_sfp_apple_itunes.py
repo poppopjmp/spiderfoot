@@ -5,11 +5,21 @@ from unittest.mock import patch
 from modules.sfp_apple_itunes import sfp_apple_itunes
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 
 
-class TestModuleIntegrationAppleItunes(SpiderFootTestBase):
+class TestModuleIntegrationAppleItunes(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_handleEvent(self):
         sf = SpiderFoot(self.default_options)
         module = sfp_apple_itunes()
