@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 
 import httpx
@@ -351,7 +351,7 @@ class SpiderFootMCPClient:
             'workspace_id': workspace.workspace_id,
             'report_type': report_type,
             'template_used': template['name'],
-            'generated_time': datetime.utcnow().isoformat(),
+            'generated_time': datetime.now(timezone.utc).isoformat(),
             'metadata': {
                 'target_count': len(workspace.targets),
                 'scan_count': len(workspace.scans),

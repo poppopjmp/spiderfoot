@@ -20,6 +20,7 @@ from typing import Dict, List, Any
 import tempfile
 import os
 import sys
+from contextlib import suppress
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -519,22 +520,13 @@ class TestAdvancedStorageModule(unittest.TestCase):
         # Mock database handle methods
         self.sf.dbh.scanEventStore = Mock()
         
-        # FIXED: Configure the mock to be subscriptable to prevent TypeError
-        mock_handler = Mock()
-        mock_handler.stream = Mock()
+        # FIXED: Configure proper mock logger to prevent TypeError
+        self.sf._logger = MagicMock()
+        # Create mock handler with stream that's not closed
+        mock_handler = MagicMock()
         mock_handler.stream.closed = False
-        
-        # Create a proper mock for _logger with subscriptable handlers
-        self.sf._logger = Mock()
-        # Use MagicMock for handlers so it can be subscriptable
-        mock_handlers = MagicMock()
-        mock_handlers.__getitem__ = Mock(return_value=mock_handler)
-        mock_handlers.__iter__ = Mock(return_value=iter([mock_handler]))
-        mock_handlers.__len__ = Mock(return_value=1)
-        # Allow iteration and indexing
-        mock_handlers.__contains__ = Mock(return_value=True)
-        
-        self.sf._logger.handlers = mock_handlers
+        # Make handlers behave like a list for subscriptable access
+        self.sf._logger.handlers = [mock_handler]
         
         self.module = sfp__stor_db_advanced()
         
@@ -717,6 +709,19 @@ class TestAdvancedStorageModule(unittest.TestCase):
         
         # Verify no crash occurred
         self.assertIsNotNone(self.module)
+
+    def tearDown(self):
+        """Clean up test environment with explicit module shutdown."""
+        # Explicitly call _graceful_shutdown to prevent resource leaks
+        if hasattr(self, 'module') and self.module:
+            with suppress(Exception):
+                self.module._graceful_shutdown()
+        
+        # Clear references to prevent memory leaks
+        if hasattr(self, 'sf'):
+            self.sf = None
+        if hasattr(self, 'module'):
+            self.module = None
 
 
 @skip_if_no_imports

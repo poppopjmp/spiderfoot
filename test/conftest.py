@@ -184,7 +184,7 @@ def default_options(request):
 @pytest.fixture(autouse=True, scope="session")
 def session_cleanup():
     yield
-    # Force cleanup at end of session - suppress all logging errors for xdist compatibility
+    # Force cleanup at end of session - critical to prevent xdist communication errors
     import gc
     import threading
     
@@ -205,7 +205,20 @@ def session_cleanup():
                         and ('SpiderFoot' in str(thread._target) or 'test' in str(thread._target))):
                     thread.join(timeout=1.0)
     
-    # Use contextlib.suppress to handle potential logging issues during cleanup
-    # This is essential for xdist compatibility
-    with contextlib.suppress(ValueError, OSError, BrokenPipeError):
-        logging.info("Session cleanup completed")
+    # CRITICAL: Shutdown logging system BEFORE xdist tries to close communication pipes
+    # This prevents BrokenPipeError and "I/O operation on closed file" errors
+    with contextlib.suppress(Exception):
+        # First, try to log completion if logging is still available
+        with contextlib.suppress(ValueError, OSError, BrokenPipeError):
+            # Only log if we can safely write to handlers
+            root_logger = logging.getLogger()
+            if root_logger.handlers:
+                for handler in root_logger.handlers[:]:  # Copy list to avoid modification during iteration
+                    with contextlib.suppress(ValueError, OSError, AttributeError):
+                        if hasattr(handler, 'stream') and not handler.stream.closed:
+                            logging.info("Session cleanup completed")
+                        break  # Only log once if we can
+    
+    # Now shutdown the logging system to clean up handlers and streams
+    with contextlib.suppress(Exception):
+        logging.shutdown()

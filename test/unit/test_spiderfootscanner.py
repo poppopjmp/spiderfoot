@@ -822,12 +822,28 @@ class TestSpiderFootScanner(SpiderFootTestBase):
                 pass
     
     def _stop_scanner_safely(self, scanner):
-        """Safely stop a scanner instance and its threads."""
+        """Safely stop a scanner instance using the new shutdown method."""
         from contextlib import suppress
         
         if not scanner:
             return
             
+        # Use the new explicit shutdown method for comprehensive cleanup
+        with suppress(Exception):
+            if hasattr(scanner, 'shutdown'):
+                scanner.shutdown()
+            else:
+                # Fallback to old method if shutdown doesn't exist yet
+                self._legacy_stop_scanner(scanner)
+    
+    def _legacy_stop_scanner(self, scanner):
+        """Legacy scanner stopping method for backwards compatibility.
+        
+        Args:
+            scanner: The SpiderFootScanner instance to stop
+        """
+        from contextlib import suppress
+        
         # Stop any running scanner threads
         if hasattr(scanner, '_thread') and scanner._thread:
             with suppress(Exception):
@@ -851,7 +867,7 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         # Clean up any module instances within the scanner
         with suppress(Exception):
             if hasattr(scanner, '_SpiderFootScanner__moduleInstances'):
-                for module_name, module_instance in scanner._SpiderFootScanner__moduleInstances.items():
+                for _, module_instance in scanner._SpiderFootScanner__moduleInstances.items():
                     if module_instance:
                         with suppress(Exception):
                             if hasattr(module_instance, 'clearListeners'):

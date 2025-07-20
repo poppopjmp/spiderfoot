@@ -22,15 +22,13 @@ import os
 import time
 import json
 import threading
+import signal
 from typing import Dict, List, Optional, Any, Tuple
 from collections import defaultdict, deque
 from dataclasses import dataclass
 import hashlib
 import logging
-from contextlib import contextmanager
-import queue
-import signal
-import traceback
+from contextlib import contextmanager, suppress
 
 try:
     import psycopg2
@@ -849,109 +847,35 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
         return status
 
     def _graceful_shutdown(self):
-        """Perform graceful shutdown."""
-        try:
-            # Check if logging is still available before attempting to log
-            if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
-                try:
-                    # Test if we can actually log by checking handlers
-                    if self.sf._logger.handlers:
-                        test_handler = self.sf._logger.handlers[0]
-                        if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
-                            self.debug("Starting graceful shutdown...")
-                        else:
-                            # Stream is closed, skip logging
-                            pass
-                    else:
-                        # No handlers available, skip logging
-                        pass
-                except (ValueError, AttributeError, OSError):
-                    # Logging system is not available, proceed silently
-                    pass
-            
-            # Process remaining buffered events
-            if hasattr(self, 'event_buffer'):
-                with self.buffer_lock:
-                    if self.event_buffer:
-                        # Try to log but don't fail if logging is unavailable
-                        try:
-                            if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
-                                if self.sf._logger.handlers:
-                                    test_handler = self.sf._logger.handlers[0]
-                                    if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
-                                        self.debug(f"Processing {len(self.event_buffer)} remaining events...")
-                        except (ValueError, AttributeError, OSError):
-                            pass
+        """Perform graceful shutdown without any logging to prevent I/O errors during interpreter shutdown."""
+        with suppress(Exception):
+            # Process remaining buffered events silently
+            if hasattr(self, 'event_buffer') and hasattr(self, 'buffer_lock'):
+                with suppress(Exception), self.buffer_lock:
+                    if hasattr(self, 'event_buffer') and self.event_buffer:
                         self._process_event_buffer()
             
             # Stop monitoring and scaling
             if hasattr(self, 'performance_monitor') and self.performance_monitor:
-                self.performance_monitor.monitoring_active = False
+                with suppress(Exception):
+                    self.performance_monitor.monitoring_active = False
             
             if hasattr(self, 'auto_scaler') and self.auto_scaler:
-                self.auto_scaler.scaling_active = False
+                with suppress(Exception):
+                    self.auto_scaler.scaling_active = False
             
-            # Close all connections
+            # Close all connections silently
             if hasattr(self, 'load_balancer') and self.load_balancer:
-                for pool_id, pool in self.load_balancer.pools.items():
-                    try:
-                        pool.closeall()
-                        # Try to log but don't fail if logging is unavailable
-                        try:
-                            if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
-                                if self.sf._logger.handlers:
-                                    test_handler = self.sf._logger.handlers[0]
-                                    if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
-                                        self.debug(f"Closed connection pool {pool_id}")
-                        except (ValueError, AttributeError, OSError):
-                            pass
-                    except Exception as e:
-                        # Try to log error but don't fail if logging is unavailable
-                        try:
-                            if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
-                                if self.sf._logger.handlers:
-                                    test_handler = self.sf._logger.handlers[0]
-                                    if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
-                                        self.error(f"Error closing pool {pool_id}: {e}")
-                        except (ValueError, AttributeError, OSError):
-                            pass
-            
-            # Try to log completion but don't fail if logging is unavailable
-            try:
-                if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
-                    if self.sf._logger.handlers:
-                        test_handler = self.sf._logger.handlers[0]
-                        if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
-                            self.debug("Graceful shutdown completed")
-            except (ValueError, AttributeError, OSError):
-                pass
-                
-        except Exception as e:
-            # Try to log error but don't fail if logging is unavailable
-            try:
-                if hasattr(self, 'sf') and self.sf and hasattr(self.sf, '_logger') and self.sf._logger:
-                    if self.sf._logger.handlers:
-                        test_handler = self.sf._logger.handlers[0]
-                        if hasattr(test_handler, 'stream') and not test_handler.stream.closed:
-                            self.error(f"Error during graceful shutdown: {e}\n{traceback.format_exc()}")
-            except (ValueError, AttributeError, OSError):
-                # Complete silent failure - logging system is completely unavailable
-                pass
+                with suppress(Exception):
+                    for _, pool in self.load_balancer.pools.items():
+                        with suppress(Exception):
+                            pool.closeall()
 
     def __del__(self):
-        """Clean up resources."""
-        # Avoid logging in __del__ to prevent "I/O operation on closed file" errors
-        # during Python interpreter shutdown. Only perform essential cleanup.
-        try:
+        """Clean up resources without any I/O operations to prevent interpreter shutdown errors."""
+        with suppress(Exception):
+            # Only perform essential cleanup without any logging
             if hasattr(self, '_graceful_shutdown'):
-                # Call graceful shutdown but suppress any logging-related errors
                 self._graceful_shutdown()
-        except (ValueError, AttributeError, OSError):
-            # Silently ignore logging-related errors during shutdown
-            pass
-        except Exception:
-            # Silently ignore all other errors during shutdown to prevent
-            # interference with Python's garbage collection process
-            pass
 
 # End of sfp__stor_db_advanced class

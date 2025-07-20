@@ -31,7 +31,7 @@ import secrets
 import threading
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import logging
 import ipaddress
@@ -325,8 +325,8 @@ class AuthenticationManager:
             'username': user.username,
             'security_level': user.security_level.value,
             'permissions': [p.value for p in user.permissions],
-            'exp': datetime.utcnow() + timedelta(seconds=self.session_timeout),
-            'iat': datetime.utcnow()
+            'exp': datetime.now(timezone.utc) + timedelta(seconds=self.session_timeout),
+            'iat': datetime.now(timezone.utc)
         }
         
         # Use a secret key for JWT

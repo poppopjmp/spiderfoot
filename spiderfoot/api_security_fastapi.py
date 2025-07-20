@@ -15,7 +15,7 @@ from fastapi import HTTPException, Depends, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 class APISecurityManager:
@@ -63,13 +63,13 @@ class APISecurityManager:
             JWT token string
         """
         expires_in = expires_in or self.token_expiry
-        expiry = datetime.utcnow() + timedelta(seconds=expires_in)
+        expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
         
         payload = {
             'user_id': user_id,
             'scopes': scopes or [],
             'exp': expiry,
-            'iat': datetime.utcnow(),
+            'iat': datetime.now(timezone.utc),
             'iss': 'spiderfoot-api'
         }
         
@@ -88,7 +88,7 @@ class APISecurityManager:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
             
             # Check if token is expired
-            if datetime.utcnow() > datetime.fromtimestamp(payload['exp']):
+            if datetime.now(timezone.utc) > datetime.fromtimestamp(payload['exp'], tz=timezone.utc):
                 return None
             
             return payload
@@ -294,7 +294,7 @@ class APIKeyManager:
         
         expires_at = None
         if expires_in:
-            expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
+            expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
         
         if self.db:
             try:

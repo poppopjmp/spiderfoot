@@ -23,7 +23,7 @@ import inspect
 from cryptography.hazmat.backends.openssl import backend
 from spiderfoot import SpiderFootHelpers
 from .helpers import validIP, validIP6
-from datetime import datetime
+from datetime import datetime, timezone
 
 def resolveHost(host: str) -> list:
     """Return a normalised IPv4 resolution of a hostname."""
@@ -118,7 +118,7 @@ def parseCert(rawcert: str, fqdn: str = None, expiringdays: int = 30) -> dict:
     # Expiry info
     try:
         not_after = cert.not_valid_after
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if not_after < now:
             ret['expired'] = True
         elif (not_after - now).days < expiringdays:
