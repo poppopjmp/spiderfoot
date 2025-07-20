@@ -1,20 +1,50 @@
 import cheroot.test.webtest
 cheroot.test.webtest.getchar = lambda: 'I'
 
-import unittest
-from test.unit.utils.test_module_base import TestModuleBase
-from unittest.mock import patch, MagicMock
+import threading
 import cherrypy
+from unittest.mock import patch, MagicMock
 from sfwebui import SpiderFootWebUi
 from spiderfoot import SpiderFootHelpers
-from test.unit.utils.test_base import TestModuleBase
-from test.unit.utils.resource_manager import get_test_resource_manager
-from test.unit.utils.thread_registry import get_test_thread_registry
-from test.unit.utils.test_helpers import safe_recursion
-from cherrypy.test import helper
+from test.unit.utils.test_webui_base import EnhancedWebUITestBase, with_timeout
 
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    psutil = None
+    HAS_PSUTIL = False
 
-class TestSpiderFootWebUi(helper.CPWebCase, TestModuleBase):
+def log_system_state(test_name):
+    """Log detailed system state for debugging timeouts.
+    
+    Args:
+        test_name (str): Name of the test for logging context
+    """
+    print(f"\n{'='*60}")
+    print(f"DIAGNOSTIC: {test_name} - System State")
+    print(f"{'='*60}")
+    # Thread information
+    threads = threading.enumerate()
+    print(f"Active threads: {len(threads)}")
+    for thread in threads:
+        print(f"  - {thread.name} (daemon={thread.daemon}, alive={thread.is_alive()})")
+    # Process information
+    if HAS_PSUTIL:
+        process = psutil.Process()
+        print("\nProcess info:")
+        print(f"  - Open files: {len(process.open_files())}")
+        print(f"  - Open connections: {len(process.connections())}")
+        print(f"  - Threads: {process.num_threads()}")
+        # Port binding check
+        for conn in process.connections():
+            if conn.status == 'LISTEN':
+                print(f"  - Listening on: {conn.laddr}")
+    else:
+        print("\nProcess info: (psutil not available)")
+    print(f"{'='*60}\n")
+
+class TestSpiderFootWebUi(EnhancedWebUITestBase):
 
     def setUp(self):
         super().setUp()
@@ -241,7 +271,9 @@ class TestSpiderFootWebUi(helper.CPWebCase, TestModuleBase):
                 result = self.webui.scanviz('id')
                 self.assertEqual(result, 'graph_json')
 
+    @with_timeout(30)
     def test_scanvizmulti(self):
+        log_system_state("test_scanvizmulti - START")
         with patch('sfwebui.SpiderFootDb') as mock_db:
             # Mock data with all required elements
             mock_db.return_value.scanResultEvent.return_value = [
@@ -254,6 +286,8 @@ class TestSpiderFootWebUi(helper.CPWebCase, TestModuleBase):
                 mock_graph.return_value = 'gexf_data'
                 result = self.webui.scanvizmulti('id')
                 self.assertEqual(result, 'gexf_data')
+        log_system_state("test_scanvizmulti - END")
+        log_system_state("test_scanvizmulti - END")
 
     def test_scanopts(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
@@ -456,13 +490,16 @@ class TestSpiderFootWebUi(helper.CPWebCase, TestModuleBase):
             result = self.webui.vacuum()
             self.assertEqual(result, b'["SUCCESS", ""]')
 
+    @with_timeout(30)
     def test_scanlog(self):
+        log_system_state("test_scanlog - START")
         with patch('sfwebui.SpiderFootDb') as mock_db:
             mock_db.return_value.scanLogs.return_value = [
                 [1627846261000, 'component', 'type', 'event', 'event_id']
             ]
             result = self.webui.scanlog('id')
             self.assertIsInstance(result, list)
+        log_system_state("test_scanlog - END")
 
     def test_scanerrors(self):
         with patch('sfwebui.SpiderFootDb') as mock_db:
@@ -533,7 +570,9 @@ class TestSpiderFootWebUi(helper.CPWebCase, TestModuleBase):
             result = self.webui.search('id', 'eventType', 'value')
             self.assertIsInstance(result, list)
 
+    @with_timeout(30)
     def test_scanhistory(self):
+        log_system_state("test_scanhistory - START")
         # Mock SpiderFootDb at the module level where it's imported
         with patch('spiderfoot.webui.scan.SpiderFootDb') as mock_db:
             # Configure the mock database instance
@@ -542,18 +581,16 @@ class TestSpiderFootWebUi(helper.CPWebCase, TestModuleBase):
                 ['data', 'type', 'source']
             ]
             mock_db.return_value = mock_db_instance
-            
             # Call the method being tested
             result = self.webui.scanhistory('test_scan_id')
-            
             # Verify the result
             self.assertIsInstance(result, list)
             self.assertEqual(len(result), 1)
             self.assertEqual(result[0], ['data', 'type', 'source'])
-            
             # Verify that the database was instantiated and the correct method was called
             mock_db.assert_called_once_with(self.webui.config)
             mock_db_instance.scanResultHistory.assert_called_once_with('test_scan_id')
+        log_system_state("test_scanhistory - END")
 
     def test_active_maintenance_status(self):
         result = self.webui.active_maintenance_status()
