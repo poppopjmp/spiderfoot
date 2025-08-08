@@ -16,6 +16,6 @@ pytest-cov==6.2.1
 pytest-mock==3.14.1
 pytest-xdist==3.8.0
 pycodestyle==2.14.0
-responses==0.25.7
+responses==0.25.8
 telethon
 openai
