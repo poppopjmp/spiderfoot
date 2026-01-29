@@ -1,16 +1,16 @@
 # Spiderfoot OSINT Automation Platform
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/0x31i/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.2.9-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.2.9)
-[![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
-[![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
-[![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
-[![Docker CI Build](https://github.com/poppopjmp/spiderfoot/workflows/Docker%20Image%20CI/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Docker%20Image%20CI")
-[![Code QL](https://github.com/poppopjmp/spiderfoot/workflows/CodeQL/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"CodeQL")
-[![Last Commit](https://img.shields.io/github/last-commit/poppopjmp/spiderfoot)](https://github.com/poppopjmp/spiderfoot/commits/master)
-[![codecov](https://codecov.io/github/poppopjmp/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/poppopjmp/spiderfoot)
-[![Codacy Security Scan](https://github.com/poppopjmp/spiderfoot/actions/workflows/codacy.yml/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions/workflows/codacy.yml)
+[![Stable Release](https://img.shields.io/badge/version-5.2.9-blue.svg)](https://github.com/0x31i/spiderfoot/releases/tag/v5.2.9)
+[![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/0x31i/spiderfoot)
+[![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/0x31i/spiderfoot)
+[![CI status](https://github.com/0x31i/spiderfoot/workflows/Tests/badge.svg)](https://github.com/0x31i/spiderfoot/actions?query=workflow%3A"Tests")
+[![Docker CI Build](https://github.com/0x31i/spiderfoot/workflows/Docker%20Image%20CI/badge.svg)](https://github.com/0x31i/spiderfoot/actions?query=workflow%3A"Docker%20Image%20CI")
+[![Code QL](https://github.com/0x31i/spiderfoot/workflows/CodeQL/badge.svg)](https://github.com/0x31i/spiderfoot/actions?query=workflow%3A"CodeQL")
+[![Last Commit](https://img.shields.io/github/last-commit/0x31i/spiderfoot)](https://github.com/0x31i/spiderfoot/commits/master)
+[![codecov](https://codecov.io/github/0x31i/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/0x31i/spiderfoot)
+[![Codacy Security Scan](https://github.com/0x31i/spiderfoot/actions/workflows/codacy.yml/badge.svg)](https://github.com/0x31i/spiderfoot/actions/workflows/codacy.yml)
 [![Discord](https://img.shields.io/discord/770524432464216074)](https://discord.gg/vyvztrG)
 ![Active Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)
 
@@ -205,7 +205,7 @@ SpiderFoot Enterprise is production-ready and designed for enterprise environmen
 **Standard Installation:**
 
 ```bash
-git clone https://github.com/poppopjmp/spiderfoot.git
+git clone https://github.com/0x31i/spiderfoot.git
 cd spiderfoot
 pip3 install -r requirements.txt
 python3 ./sf.py -l 127.0.0.1:5001
@@ -307,7 +307,7 @@ Account Finder|Look for possible associated accounts on over 500 social and othe
 [AdBlock Check](https://adblockplus.org/)|Check if linked pages would be blocked by AdBlock Plus.|Tiered API
 [AdGuard DNS](https://adguard.com/)|Check if a host would be blocked by AdGuard DNS.|Free API
 [Ahmia](https://ahmia.fi/)|Search Tor 'Ahmia' search engine for mentions of the target.|Free API
-[AI Summary](https://github.com/poppopjmp/spiderfoot)|Generate AI-powered summaries of discovered data.|Internal
+[AI Summary](https://github.com/0x31i/spiderfoot)|Generate AI-powered summaries of discovered data.|Internal
 [AlienVault IP Reputation](https://cybersecurity.att.com/)|Check if an IP or netblock is malicious according to the AlienVault IP Reputation database.|Free API
 [AlienVault OTX](https://otx.alienvault.com/)|Obtain information from AlienVault Open Threat Exchange (OTX)|Tiered API
 [Aparat](https://www.aparat.com/)|Search Aparat for videos related to the target.|Free API
@@ -559,7 +559,7 @@ Whois|Perform a WHOIS look-up on domain names and owned netblocks.|Internal
 
 ## Documentation
 
-Read more at the [project website](https://github.com/poppopjmp/spiderfoot/wiki), including more complete documentation, blog posts with tutorials/guides.
+Read more at the [project website](https://github.com/0x31i/spiderfoot/wiki), including more complete documentation, blog posts with tutorials/guides.
 
 ---
 
