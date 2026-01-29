@@ -40,6 +40,7 @@ from spiderfoot import SpiderFootHelpers
 from spiderfoot import __version__
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 from spiderfoot.workspace import SpiderFootWorkspace
+from spiderfoot.event_type_mapping import translate_event_type
 
 mp.set_start_method("spawn", force=True)
 
@@ -437,7 +438,8 @@ class SpiderFootWebUi:
                     "%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
-                rows.append([lastseen, str(row[4]), str(row[3]),
+                event_type = translate_event_type(str(row[4]))
+                rows.append([lastseen, event_type, str(row[3]),
                             str(row[2]), row[13], datafield])
 
             fname = "SpiderFoot.xlsx"
@@ -460,7 +462,8 @@ class SpiderFootWebUi:
                     "%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
-                parser.writerow([lastseen, str(row[4]), str(
+                event_type = translate_event_type(str(row[4]))
+                parser.writerow([lastseen, event_type, str(
                     row[3]), str(row[2]), row[13], datafield])
 
             fname = "SpiderFoot.csv"
@@ -509,7 +512,8 @@ class SpiderFootWebUi:
                     "%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
-                rows.append([scaninfo[row[12]][0], lastseen, str(row[4]), str(row[3]),
+                event_type = translate_event_type(str(row[4]))
+                rows.append([scaninfo[row[12]][0], lastseen, event_type, str(row[3]),
                             str(row[2]), row[13], datafield])
 
             if len(ids.split(',')) > 1 or scan_name == "":
@@ -536,7 +540,8 @@ class SpiderFootWebUi:
                     "%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
-                parser.writerow([scaninfo[row[12]][0], lastseen, str(row[4]), str(row[3]),
+                event_type = translate_event_type(str(row[4]))
+                parser.writerow([scaninfo[row[12]][0], lastseen, event_type, str(row[3]),
                                 str(row[2]), row[13], datafield])
 
             if len(ids.split(',')) > 1 or scan_name == "":
@@ -578,7 +583,8 @@ class SpiderFootWebUi:
                     continue
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
-                rows.append([row[0], str(row[10]), str(row[3]),
+                event_type = translate_event_type(str(row[10]))
+                rows.append([row[0], event_type, str(row[3]),
                             str(row[2]), row[11], datafield])
             cherrypy.response.headers['Content-Disposition'] = "attachment; filename=SpiderFoot.xlsx"
             cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -596,7 +602,8 @@ class SpiderFootWebUi:
                     continue
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
-                parser.writerow([row[0], str(row[10]), str(
+                event_type = translate_event_type(str(row[10]))
+                parser.writerow([row[0], event_type, str(
                     row[3]), str(row[2]), row[11], datafield])
 
             cherrypy.response.headers['Content-Disposition'] = "attachment; filename=SpiderFoot.csv"
