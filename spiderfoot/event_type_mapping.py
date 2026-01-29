@@ -12,20 +12,20 @@ their legacy equivalents so existing reporting tools continue to work.
 # Format: 'NEW_TYPE': 'LEGACY_TYPE'
 EVENT_TYPE_LEGACY_MAPPING = {
     # =========================================================================
-    # VULNERABILITY TYPES -> Map to legacy vulnerability categories
+    # VULNERABILITY TYPES -> Map to VULNERABILITY_DISCLOSURE (real type)
     # =========================================================================
-    'VULNERABILITY_CVE_CRITICAL': 'WEBAPP_VULNERABILITIES',
-    'VULNERABILITY_CVE_HIGH': 'WEBAPP_VULNERABILITIES',
-    'VULNERABILITY_CVE_MEDIUM': 'WEBAPP_VULNERABILITIES',
-    'VULNERABILITY_CVE_LOW': 'WEBAPP_VULNERABILITIES',
-    'VULNERABILITY_GENERAL': 'EXTERNAL_VULNERABILITIES',
+    'VULNERABILITY_CVE_CRITICAL': 'VULNERABILITY_DISCLOSURE',
+    'VULNERABILITY_CVE_HIGH': 'VULNERABILITY_DISCLOSURE',
+    'VULNERABILITY_CVE_MEDIUM': 'VULNERABILITY_DISCLOSURE',
+    'VULNERABILITY_CVE_LOW': 'VULNERABILITY_DISCLOSURE',
+    'VULNERABILITY_GENERAL': 'VULNERABILITY_DISCLOSURE',
 
     # =========================================================================
-    # COMPROMISED/BREACHED DATA -> Map to breach and leak types
+    # COMPROMISED/BREACHED DATA -> Map to appropriate real types
     # =========================================================================
     'ACCOUNT_EXTERNAL_OWNED_COMPROMISED': 'ACCOUNT_EXTERNAL_OWNED',
     'ACCOUNT_EXTERNAL_USER_SHARED_COMPROMISED': 'ACCOUNT_EXTERNAL_OWNED',
-    'PASSWORD_COMPROMISED': 'BREACHED_CREDENTIALS',
+    'PASSWORD_COMPROMISED': 'HASH',
     'HASH_COMPROMISED': 'HASH',
     'PHONE_NUMBER_COMPROMISED': 'PHONE_NUMBER',
     'LEAKSITE_CONTENT': 'LEAKSITE_URL',
@@ -133,14 +133,9 @@ EVENT_TYPE_LEGACY_MAPPING = {
     'MALICIOUS_PHONE_NUMBER': 'PHONE_NUMBER',
 }
 
-# Legacy types that need to be present in the mapping target
-# (these are the types your Excel pivot tables expect)
+# Legacy types that are valid SpiderFoot event types
+# (these are the actual types that exist in the SpiderFoot database)
 LEGACY_EVENT_TYPES = {
-    'WEBAPP_VULNERABILITIES',
-    'EXTERNAL_VULNERABILITIES',
-    'WAYBACK_FOOTPRINTING',
-    'BREACHED_CREDENTIALS',
-    'TARGET_ACCOUNTS',
     'ACCOUNT_EXTERNAL_OWNED',
     'AFFILIATE_COMPANY_NAME',
     'AFFILIATE_DESCRIPTION_ABSTRACT',
