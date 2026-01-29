@@ -60,8 +60,11 @@
         <div id='modifyactions' role="group" class="btn-group pull-right">
             <a id='btn-setfp' rel="tooltip" data-title="Set/Unset False Positive flag" class="btn-warning btn btn-default dropdown-toggle" data-toggle="dropdown"><i class='glyphicon glyphicon-ban-circle glyphicon glyphicon-white'></i></a>
             <ul class="dropdown-menu">
-                <li><a href='#' class='link' onClick='setFp(1)'>Set False Positive flag</a></li>
-                <li><a href='#' class='link' onClick='setFp(0)'>Unset False Positive flag</a></li>
+                <li><a href='#' class='link' onClick='setFp(1, 0)'>Set False Positive (this scan only)</a></li>
+                <li><a href='#' class='link' onClick='setFp(1, 1)'>Set False Positive (apply to future scans)</a></li>
+                <li class="divider"></li>
+                <li><a href='#' class='link' onClick='setFp(0, 0)'>Unset False Positive (this scan only)</a></li>
+                <li><a href='#' class='link' onClick='setFp(0, 1)'>Unset False Positive (remove from future scans)</a></li>
             </ul>
         </div>
   </div>
@@ -106,7 +109,7 @@
             return ids;
         }
 
-        function setFp(flag) {
+        function setFp(flag, persist) {
             sel = getSelected();
             if (sel.length == 0) {
                 alertify.error("You need to select at least one record.");
@@ -114,9 +117,20 @@
             }
             data = JSON.stringify(sel);
             $("#loader").show();
-            sf.fetchData('${docroot}/resultsetfp', {'id': '${id}', 'fp': flag, 'resultids': data }, function(ret) {
+            // Use the persist endpoint if persistence is requested
+            var endpoint = persist ? '${docroot}/resultsetfppersist' : '${docroot}/resultsetfp';
+            var params = {'id': '${id}', 'fp': flag, 'resultids': data };
+            if (persist) {
+                params['persist'] = persist;
+            }
+            sf.fetchData(endpoint, params, function(ret) {
                 $("#loader").hide();
                 if (ret[0] == "SUCCESS") {
+                    if (persist && flag == 1) {
+                        alertify.success("False positive set and will be applied to future scans of this target.");
+                    } else if (persist && flag == 0) {
+                        alertify.success("False positive removed from future scans of this target.");
+                    }
                     refresh();
                     return;
                 }
@@ -718,10 +732,15 @@
                 sf.fetchData('${docroot}/scaneventresults', {'id': instanceId, 'eventType': eventType }, function(data) {
                             totalcount = 0;
                             fpcount = 0;
+                            targetfpcount = 0;
                             for (var i = 0; i < data.length; i++) {
                                 totalcount++;
                                 if (data[i][8] == "1") {
                                     fpcount++;
+                                }
+                                // Count results matching target-level FPs that aren't already marked
+                                if (data[i][11] == 1 && data[i][8] != "1") {
+                                    targetfpcount++;
                                 }
                             }
                             var crumbs = " <ul class='breadcrumb' id='breadcrumbs'> <li><a class='link' onClick='browseEventList(\"" + instanceId + "\");'>Browse</a>";
@@ -729,19 +748,26 @@
                             crumbs += "'browseEventData(\"" + instanceId + "\",\"" + eventTypeLabel + "\",\"" + eventType + "\",\"";
                             crumbs += format + "\", " + filterFP + ");'>";
                             crumbs += unescape(eventTypeLabel) + "</a></li>";
-                            if (fpcount > 0) {
-                                crumbs += "<div class='pull-right text-center'><i class='glyphicon glyphicon-ban-circle'></i>&nbsp;&nbsp;Hide " + fpcount + " False Positives: ";
-                                crumbs += "<input class='vertical-align-top' type='checkbox' ";
-                                crumbs += "onClick=\"browseEventData('" + instanceId + "', '" + eventTypeLabel +"', '" + eventType + "'";
-                                crumbs += ",'" + format + "', ";
-                                if (!filterFP) {
-                                    fp = 1;
-                                    ch = "";
-                                } else {
-                                    fp = 0;
-                                    ch = "checked";
+                            if (fpcount > 0 || targetfpcount > 0) {
+                                crumbs += "<div class='pull-right text-center'>";
+                                if (fpcount > 0) {
+                                    crumbs += "<i class='glyphicon glyphicon-ban-circle'></i>&nbsp;&nbsp;Hide " + fpcount + " False Positives: ";
+                                    crumbs += "<input class='vertical-align-top' type='checkbox' ";
+                                    crumbs += "onClick=\"browseEventData('" + instanceId + "', '" + eventTypeLabel +"', '" + eventType + "'";
+                                    crumbs += ",'" + format + "', ";
+                                    if (!filterFP) {
+                                        fp = 1;
+                                        ch = "";
+                                    } else {
+                                        fp = 0;
+                                        ch = "checked";
+                                    }
+                                    crumbs += fp + ")\" " + ch + "></input>";
                                 }
-                                crumbs += fp + ")\" " + ch + "></input></div>";
+                                if (targetfpcount > 0) {
+                                    crumbs += "&nbsp;&nbsp;<i class='glyphicon glyphicon-repeat text-warning'></i>&nbsp;" + targetfpcount + " match saved FPs";
+                                }
+                                crumbs += "</div>";
                             }
                             crumbs += "</ul>";
 
@@ -761,7 +787,13 @@
                                 table += "<tr>";
                                 table += "<td class='text-center'><input type='checkbox' id='cb_" + data[i][7] + "'>";
                                 if (data[i][8] == "1") {
-                                    table += "<br /><i class='glyphicon glyphicon-ban-circle' class='vertical-align-bottom' />";
+                                    table += "<br /><i class='glyphicon glyphicon-ban-circle' class='vertical-align-bottom' title='Marked as false positive' />";
+                                }
+                                // Show indicator for target-level false positive (data[11])
+                                if (data[i][11] == 1 && data[i][8] != "1") {
+                                    table += "<br /><i class='glyphicon glyphicon-repeat text-warning' title='Matches a saved false positive for this target' />";
+                                } else if (data[i][11] == 1 && data[i][8] == "1") {
+                                    table += "<i class='glyphicon glyphicon-repeat text-warning' title='Saved as false positive for future scans' />";
                                 }
                                 table += "</td>";
                                 table += "<td><pre class='table-border-bg-inherit'>";

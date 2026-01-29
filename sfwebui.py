@@ -1326,6 +1326,179 @@ class SpiderFootWebUi:
         return json.dumps(["ERROR", "Exception encountered."]).encode('utf-8')
 
     @cherrypy.expose
+    def resultsetfppersist(self: 'SpiderFootWebUi', id: str, resultids: str, fp: str, persist: str = "0") -> str:
+        """Set results as false positive with optional target-level persistence.
+
+        This extends resultsetfp to optionally persist false positives at the target level,
+        so they will be recognized in future scans of the same target.
+
+        Args:
+            id (str): scan ID
+            resultids (str): comma separated list of result IDs
+            fp (str): 0 or 1
+            persist (str): 0 or 1 - whether to persist at target level
+
+        Returns:
+            str: set false positive status as JSON
+        """
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+
+        dbh = SpiderFootDb(self.config)
+
+        if fp not in ["0", "1"]:
+            return json.dumps(["ERROR", "No FP flag set or not set correctly."]).encode('utf-8')
+
+        try:
+            ids = json.loads(resultids)
+        except Exception:
+            return json.dumps(["ERROR", "No IDs supplied."]).encode('utf-8')
+
+        # Cannot set FPs if a scan is not completed
+        status = dbh.scanInstanceGet(id)
+        if not status:
+            return self.error(f"Invalid scan ID: {id}")
+
+        if status[5] not in ["ABORTED", "FINISHED", "ERROR-FAILED"]:
+            return json.dumps([
+                "WARNING",
+                "Scan must be in a finished state when setting False Positives."
+            ]).encode('utf-8')
+
+        target = status[1]  # seed_target
+
+        # Make sure the user doesn't set something as non-FP when the
+        # parent is set as an FP.
+        if fp == "0":
+            data = dbh.scanElementSourcesDirect(id, ids)
+            for row in data:
+                if str(row[14]) == "1":
+                    return json.dumps([
+                        "WARNING",
+                        f"Cannot unset element {id} as False Positive if a parent element is still False Positive."
+                    ]).encode('utf-8')
+
+        # Set all the children as FPs too.. it's only logical afterall, right?
+        childs = dbh.scanElementChildrenAll(id, ids)
+        allIds = ids + childs
+
+        ret = dbh.scanResultsUpdateFP(id, allIds, fp)
+
+        # Handle target-level persistence
+        if ret and persist == "1":
+            # Get the event details for each ID to persist at target level
+            events = dbh.scanResultEvent(id)
+            eventMap = {row[8]: row for row in events}  # hash -> event data
+
+            for resultId in allIds:
+                if resultId in eventMap:
+                    eventData = eventMap[resultId]
+                    eventType = eventData[4]  # type
+                    data = eventData[1]  # data
+
+                    if fp == "1":
+                        dbh.targetFalsePositiveAdd(target, eventType, data)
+                    else:
+                        dbh.targetFalsePositiveRemove(target, eventType, data)
+
+        if ret:
+            return json.dumps(["SUCCESS", ""]).encode('utf-8')
+
+        return json.dumps(["ERROR", "Exception encountered."]).encode('utf-8')
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def targetfplist(self: 'SpiderFootWebUi', target: str = None) -> list:
+        """List target-level false positives.
+
+        Args:
+            target (str): optional target to filter by
+
+        Returns:
+            list: list of target-level false positives
+        """
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+
+        dbh = SpiderFootDb(self.config)
+
+        fps = dbh.targetFalsePositiveList(target)
+
+        ret = []
+        for fp in fps:
+            ret.append({
+                'id': fp[0],
+                'target': fp[1],
+                'event_type': fp[2],
+                'event_data': fp[3],
+                'date_added': fp[4],
+                'notes': fp[5]
+            })
+
+        return ret
+
+    @cherrypy.expose
+    def targetfpadd(self: 'SpiderFootWebUi', target: str, event_type: str, event_data: str, notes: str = None) -> str:
+        """Add a target-level false positive.
+
+        Args:
+            target (str): target value
+            event_type (str): event type
+            event_data (str): event data
+            notes (str): optional notes
+
+        Returns:
+            str: JSON status
+        """
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+
+        dbh = SpiderFootDb(self.config)
+
+        if not target or not event_type or not event_data:
+            return json.dumps(["ERROR", "Missing required parameters."]).encode('utf-8')
+
+        try:
+            ret = dbh.targetFalsePositiveAdd(target, event_type, event_data, notes)
+            if ret:
+                return json.dumps(["SUCCESS", ""]).encode('utf-8')
+        except Exception as e:
+            return json.dumps(["ERROR", str(e)]).encode('utf-8')
+
+        return json.dumps(["ERROR", "Exception encountered."]).encode('utf-8')
+
+    @cherrypy.expose
+    def targetfpremove(self: 'SpiderFootWebUi', id: str = None, target: str = None, event_type: str = None, event_data: str = None) -> str:
+        """Remove a target-level false positive.
+
+        Can be removed by ID or by target/event_type/event_data combination.
+
+        Args:
+            id (str): false positive entry ID
+            target (str): target value
+            event_type (str): event type
+            event_data (str): event data
+
+        Returns:
+            str: JSON status
+        """
+        cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+
+        dbh = SpiderFootDb(self.config)
+
+        try:
+            if id:
+                ret = dbh.targetFalsePositiveRemoveById(int(id))
+            elif target and event_type and event_data:
+                ret = dbh.targetFalsePositiveRemove(target, event_type, event_data)
+            else:
+                return json.dumps(["ERROR", "Must provide either ID or target/event_type/event_data."]).encode('utf-8')
+
+            if ret:
+                return json.dumps(["SUCCESS", ""]).encode('utf-8')
+        except Exception as e:
+            return json.dumps(["ERROR", str(e)]).encode('utf-8')
+
+        return json.dumps(["ERROR", "Exception encountered."]).encode('utf-8')
+
+    @cherrypy.expose
     @cherrypy.tools.json_out()
     def eventtypes(self: 'SpiderFootWebUi') -> list:
         """List all event types.
@@ -1842,7 +2015,7 @@ class SpiderFootWebUi:
             correlationId (str): filter by events associated with a correlation
 
         Returns:
-            list: scan results
+            list: scan results with target-level FP status
         """
         retdata = []
 
@@ -1857,9 +2030,27 @@ class SpiderFootWebUi:
         except Exception:
             return retdata
 
+        # Get the target for this scan to check target-level FPs
+        scanInfo = dbh.scanInstanceGet(id)
+        target = scanInfo[1] if scanInfo else None
+
+        # Get all target-level false positives for fast lookup
+        targetFps = set()
+        if target:
+            try:
+                targetFps = dbh.targetFalsePositivesForTarget(target)
+            except Exception:
+                pass  # Table may not exist in older databases
+
         for row in data:
             lastseen = time.strftime(
                 "%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
+            eventDataRaw = row[1]
+            eventTypeRaw = row[4]
+
+            # Check if this result matches a target-level false positive
+            isTargetFp = 1 if (eventTypeRaw, eventDataRaw) in targetFps else 0
+
             retdata.append([
                 lastseen,
                 html.escape(row[1]),
@@ -1871,7 +2062,8 @@ class SpiderFootWebUi:
                 row[8],
                 row[13],
                 row[14],
-                row[4]
+                row[4],
+                isTargetFp  # Index 11: target-level false positive flag
             ])
 
         return retdata
