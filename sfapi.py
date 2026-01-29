@@ -44,6 +44,7 @@ from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
 from spiderfoot import __version__
 from spiderfoot.workspace import SpiderFootWorkspace
+from spiderfoot.event_type_mapping import translate_event_type
 from sfscan import startSpiderFootScanner
 
 # Configure logging
@@ -636,16 +637,17 @@ async def export_scan(
             output = StringIO()
             writer = csv.writer(output)
             writer.writerow(['Time', 'Event Type', 'Module', 'Data', 'Source', 'Confidence', 'Visibility', 'Risk'])
-            
+
             for event in events:
+                event_type = translate_event_type(str(event[4]))
                 writer.writerow([
-                    event[0], event[4], event[3], event[1], 
+                    event[0], event_type, event[3], event[1],
                     event[2], event[6], event[7], event[8]
                 ])
-            
+
             csv_content = output.getvalue()
             output.close()
-            
+
             return StreamingResponse(
                 BytesIO(csv_content.encode('utf-8')),
                 media_type="text/csv",
@@ -655,12 +657,13 @@ async def export_scan(
             # Basic XML export
             xml_content = f"<?xml version='1.0' encoding='UTF-8'?>\n<scan id='{scan_id}'>\n"
             for event in events:
-                xml_content += f"  <event type='{event[4]}' module='{event[3]}' time='{event[0]}'>\n"
+                event_type = translate_event_type(str(event[4]))
+                xml_content += f"  <event type='{event_type}' module='{event[3]}' time='{event[0]}'>\n"
                 xml_content += f"    <data>{html.escape(str(event[1]))}</data>\n"
                 xml_content += f"    <confidence>{event[6]}</confidence>\n"
                 xml_content += f"  </event>\n"
             xml_content += "</scan>"
-            
+
             return PlainTextResponse(
                 xml_content,
                 media_type="application/xml",
@@ -670,12 +673,13 @@ async def export_scan(
             # JSON format
             events_list = []
             for event in events:
+                event_type = translate_event_type(str(event[4]))
                 events_list.append({
                     "time": event[0],
                     "data": event[1],
                     "source": event[2],
                     "module": event[3],
-                    "type": event[4],
+                    "type": event_type,
                     "confidence": event[6],
                     "visibility": event[7],
                     "risk": event[8]
