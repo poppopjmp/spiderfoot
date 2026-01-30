@@ -511,23 +511,41 @@
             $("#btn-random").addClass("active");
 
             sigma.renderers.def = sigma.renderers.canvas
-            sigma.parsers.json("${docroot}/scanviz?id=" + instanceId + "&gexf=0", {
-                container: 'graph-container'
-            }, function(s) { 
-                if (s.renderers[0].nodesOnScreen.length == 0) {
-                    $("#graph-container").append("<div class='alert alert-danger'>Insufficient data to produce a graph.</div>");
+
+            // Use jQuery AJAX for better error handling
+            $.ajax({
+                url: "${docroot}/scanviz?id=" + instanceId + "&gexf=0",
+                dataType: 'json',
+                success: function(graphData) {
+                    if (!graphData || !graphData.nodes || graphData.nodes.length == 0) {
+                        $("#graph-container").append("<div class='alert alert-danger'>Insufficient data to produce a graph.</div>");
+                        $("#loader").hide();
+                        return;
+                    }
+
+                    var s = new sigma({
+                        graph: graphData,
+                        container: 'graph-container',
+                        renderer: {
+                            container: document.getElementById('graph-container'),
+                            type: 'canvas'
+                        }
+                    });
+
+                    sharedSigma = s;
+                    s.settings({
+                        edgeColor: 'default',
+                        defaultEdgeColor: '#aaa',
+                        maxNodeSize: 5
+                    });
+                    sigma.plugins.dragNodes(s, s.renderers[0]);
+                    s.refresh();
                     $("#loader").hide();
-                    return;
+                },
+                error: function(xhr, status, error) {
+                    $("#graph-container").append("<div class='alert alert-danger'>Error loading graph: " + (error || status || 'Unknown error') + "</div>");
+                    $("#loader").hide();
                 }
-                sharedSigma = s;
-                s.settings({
-                    edgeColor: 'default',
-                    defaultEdgeColor: '#aaa',
-                    maxNodeSize: 5
-                });
-                sigma.plugins.dragNodes(s, s.renderers[0])
-                s.refresh()
-                $("#loader").hide();
             });
         }
 
