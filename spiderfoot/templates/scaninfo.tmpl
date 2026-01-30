@@ -65,6 +65,11 @@
                 <li class="divider"></li>
                 <li><a href='#' class='link' onClick='setFp(0, 0)'>Unset False Positive (this scan only)</a></li>
                 <li><a href='#' class='link' onClick='setFp(0, 1)'>Unset False Positive (remove from future scans)</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Bulk Actions</li>
+                <li><a href='#' class='link' onClick='selectMatchingFps()'>Select All Matching Saved FPs</a></li>
+                <li><a href='#' class='link' onClick='markAllMatchingFps()'>Mark All Matching as FP (future scans)</a></li>
+                <li><a href='#' class='link' onClick='selectAllVisible()'>Select All Visible</a></li>
             </ul>
         </div>
   </div>
@@ -96,6 +101,56 @@
             } else {
                 $("input[id*=cb_]").prop('checked', true);
             }
+        }
+
+        // Store data for bulk FP operations
+        var currentViewData = [];
+
+        // Select all visible checkboxes
+        function selectAllVisible() {
+            $("input[id*=cb_]").prop('checked', true);
+            $("#checkall").prop('checked', true);
+            var count = $("input[id*=cb_]:checked").length;
+            alertify.success("Selected " + count + " items");
+        }
+
+        // Select only items that match saved target-level FPs
+        function selectMatchingFps() {
+            $("input[id*=cb_]").prop('checked', false);
+            $("#checkall").prop('checked', false);
+            var count = 0;
+            // Find rows with the warning icon (matching saved FPs)
+            $("tr").each(function() {
+                var row = $(this);
+                if (row.find(".glyphicon-repeat.text-warning").length > 0) {
+                    row.find("input[id*=cb_]").prop('checked', true);
+                    count++;
+                }
+            });
+            if (count > 0) {
+                alertify.success("Selected " + count + " items matching saved FPs");
+            } else {
+                alertify.warning("No items match saved FPs in current view");
+            }
+        }
+
+        // One-click: select all matching FPs and mark them
+        function markAllMatchingFps() {
+            selectMatchingFps();
+            var sel = getSelected();
+            if (sel.length == 0) {
+                alertify.warning("No items match saved FPs to mark");
+                return;
+            }
+            // Confirm before bulk marking
+            alertify.confirm("Mark " + sel.length + " items as False Positive?<br/><small>These will also be applied to future scans of this target.</small>",
+                function() {
+                    setFp(1, 1);
+                },
+                function() {
+                    alertify.warning("Cancelled");
+                }
+            ).setHeader("Confirm Bulk FP");
         }
 
         function getSelected() {
@@ -827,6 +882,15 @@
                                 }
 
                                 lastChecked = this;
+                            });
+
+                            // Make clicking anywhere in first cell toggle checkbox
+                            $("#scansummary-content td:first-child").click(function(e) {
+                                // Only toggle if not clicking directly on checkbox
+                                if (e.target.type !== 'checkbox') {
+                                    var cb = $(this).find("input[type='checkbox']");
+                                    cb.prop('checked', !cb.prop('checked'));
+                                }
                             });
 
                 });

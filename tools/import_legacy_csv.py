@@ -110,6 +110,7 @@ def import_csv(csv_path: str, scan_name: str = None, target: str = None, dry_run
         'rows_read': 0,
         'rows_imported': 0,
         'rows_skipped': 0,
+        'fps_imported': 0,
         'errors': [],
         'scan_id': None,
         'event_types': set(),
@@ -212,6 +213,20 @@ def import_csv(csv_path: str, scan_name: str = None, target: str = None, dry_run
 
             db.dbh.execute(qry, qvals)
 
+            # If marked as FP, also save to target-level false positives table
+            # so it persists for future scans of this target
+            if fp == 1:
+                try:
+                    fp_qry = """INSERT OR IGNORE INTO tbl_target_false_positives
+                        (target, event_type, event_data, date_added, notes)
+                        VALUES (?, ?, ?, ?, ?)"""
+                    fp_qvals = [target, event_type, data, int(time.time() * 1000),
+                               f"Imported from legacy CSV: {Path(csv_path).name}"]
+                    db.dbh.execute(fp_qry, fp_qvals)
+                    stats['fps_imported'] += 1
+                except Exception:
+                    pass  # Ignore duplicate FP entries
+
             stats['event_types'].add(event_type)
             stats['rows_imported'] += 1
 
@@ -233,6 +248,7 @@ def import_csv(csv_path: str, scan_name: str = None, target: str = None, dry_run
     print(f"  Scan ID: {scan_id}")
     print(f"  Rows imported: {stats['rows_imported']}")
     print(f"  Rows skipped: {stats['rows_skipped']}")
+    print(f"  False positives saved: {stats['fps_imported']}")
     print(f"  Unique event types: {len(stats['event_types'])}")
 
     if stats['errors']:

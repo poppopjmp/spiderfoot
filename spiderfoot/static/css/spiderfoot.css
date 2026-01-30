@@ -226,3 +226,44 @@ input:checked + .slider:before {
     font-size: 0.6rem;
   }
 }
+
+/* ============================================
+   Improved Checkbox Styling for Bulk Selection
+   ============================================ */
+
+/* Make checkbox cells easier to click */
+#scansummary-content td:first-child {
+  cursor: pointer;
+  min-width: 40px;
+  padding: 8px !important;
+}
+
+/* Larger checkboxes */
+#scansummary-content input[type="checkbox"],
+#checkall {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  margin: 0 auto;
+}
+
+/* Make entire first cell clickable for checkbox toggle */
+#scansummary-content td:first-child:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Highlight rows with matching saved FPs */
+#scansummary-content tr:has(.glyphicon-repeat.text-warning) {
+  background-color: rgba(255, 193, 7, 0.08);
+}
+
+/* Selected row highlighting */
+#scansummary-content tr:has(input[type="checkbox"]:checked) {
+  background-color: rgba(0, 123, 255, 0.15) !important;
+}
+
+/* Header checkbox styling */
+#scansummary-content thead th:first-child {
+  min-width: 40px;
+  text-align: center;
+}
