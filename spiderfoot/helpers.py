@@ -645,6 +645,10 @@ class SpiderFootHelpers():
 
             ret: typing.List[str] = list()
 
+            # Guard against missing keys - parent may not exist in the data
+            if item not in parents:
+                return ret
+
             for [parent, entity_id] in parents[item]:
                 if entity_id in pids:
                     continue
