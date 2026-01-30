@@ -1083,3 +1083,82 @@ pre.table-border-bg-inherit {
   background: var(--bg-tertiary) !important;
   color: var(--text-secondary) !important;
 }
+
+/* ============================================
+   Scan Detail Navigation Tabs - Gradient Style
+   ============================================ */
+.btn-toolbar .btn-group > .btn.btn-default {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  padding: 10px 16px;
+  transition: all var(--transition-fast);
+}
+
+.btn-toolbar .btn-group > .btn.btn-default:hover {
+  background: linear-gradient(135deg, var(--bg-elevated), var(--bg-tertiary)) !important;
+  color: var(--text-primary) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+.btn-toolbar .btn-group > .btn.btn-default.active {
+  background: linear-gradient(135deg, #3b82f6, #60a5fa) !important;
+  color: white !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Glyphicon colors in active state */
+.btn-toolbar .btn-group > .btn.btn-default.active .glyphicon {
+  color: white;
+}
+
+/* ============================================
+   Secondary Button - For labels/badges
+   ============================================ */
+.btn-secondary {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-tertiary) !important;
+}
+
+.btn-secondary.disabled,
+.btn-secondary:disabled {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  opacity: 1;
+}
+
+/* ============================================
+   Workspace/Table Action Buttons - Consistent filled style
+   ============================================ */
+/* Make btn-info filled instead of outlined */
+.btn-group .btn-info,
+.table .btn-info {
+  background: var(--accent-blue) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-group .btn-info:hover,
+.table .btn-info:hover {
+  background: var(--accent-blue-light) !important;
+}
+
+/* Make btn-primary filled in button groups */
+.btn-group .btn-primary,
+.table .btn-primary {
+  background: var(--accent-purple) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-group .btn-primary:hover,
+.table .btn-primary:hover {
+  background: #a78bfa !important;
+}
