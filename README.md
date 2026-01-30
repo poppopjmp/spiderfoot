@@ -202,14 +202,28 @@ SpiderFoot Enterprise is production-ready and designed for enterprise environmen
 
 ### Quick Production Deployment
 
-**Standard Installation:**
+**Standard Installation (Recommended for Kali/Debian/Ubuntu):**
 
 ```bash
 git clone https://github.com/0x31i/spiderfoot.git
 cd spiderfoot
+python3 -m venv venv
+source venv/bin/activate
 pip3 install -r requirements.txt
 python3 ./sf.py -l 127.0.0.1:5001
 ```
+
+**Update Existing Installation:**
+
+```bash
+cd spiderfoot
+git pull origin master
+source venv/bin/activate  # If using virtual environment
+pip3 install -r requirements.txt
+python3 ./sf.py -l 127.0.0.1:5001
+```
+
+> **Note for Kali/Debian 12+ users:** These systems use "externally managed" Python environments. You must use a virtual environment (`python3 -m venv venv`) to install packages with pip. The commands above handle this automatically.
 
 **Docker Production Deployment:**
 
