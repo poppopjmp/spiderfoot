@@ -269,167 +269,242 @@ input:checked + .slider:before {
 }
 
 /* ============================================
-   Selection Toolbar Styling - Fixed Floating
+   Selection Toolbar - Modern Floating Design
    ============================================ */
 
 #selection-toolbar {
   display: none;
   position: fixed;
-  bottom: 20px;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1050;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 2px solid #17a2b8;
-  border-radius: 12px;
-  padding: 15px 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-  max-width: 90%;
-  min-width: 400px;
+
+  /* Dark semi-transparent background with blur */
+  background: rgba(33, 37, 41, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  /* Soft rounded corners */
+  border-radius: 16px;
+
+  /* Large soft shadow */
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+
+  /* Horizontal layout padding */
+  padding: 16px 24px;
+
+  /* Ensure it doesn't get too wide */
+  max-width: 95%;
 }
 
-#selection-toolbar .toolbar-header {
+/* Main horizontal container */
+#selection-toolbar .toolbar-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #dee2e6;
+  gap: 20px;
+  flex-wrap: nowrap;
 }
 
+/* Selection count badge */
 #selection-toolbar .selection-count-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 700;
-  font-size: 16px;
-  color: #17a2b8;
+  font-size: 15px;
+  color: #ffffff;
+  white-space: nowrap;
+  padding-right: 16px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-#selection-toolbar .close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #6c757d;
-  padding: 0 5px;
+#selection-toolbar .selection-count-display .count-number {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  min-width: 30px;
+  text-align: center;
 }
 
-#selection-toolbar .close-btn:hover {
-  color: #dc3545;
-}
-
+/* Match section - horizontal */
 #selection-toolbar .match-section {
-  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 #selection-toolbar .match-section label {
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 8px;
-  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+  white-space: nowrap;
 }
 
+/* Match buttons container */
 #selection-toolbar .match-buttons {
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
 }
 
 #selection-toolbar .match-btn-wrapper {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
 }
 
+/* Base button styles - larger and more prominent */
 #selection-toolbar .btn {
-  font-size: 13px;
-  padding: 8px 14px;
-  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
 }
 
+#selection-toolbar .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#selection-toolbar .btn:active {
+  transform: translateY(0);
+}
+
+/* Data Element button - Cyan/Teal */
 #selection-toolbar .btn-data-match {
-  background-color: #17a2b8;
-  border-color: #17a2b8;
+  background: linear-gradient(135deg, #17a2b8, #0dcaf0);
   color: white;
 }
 
 #selection-toolbar .btn-data-match:hover {
-  background-color: #138496;
-  border-color: #117a8b;
+  background: linear-gradient(135deg, #138496, #17a2b8);
 }
 
+/* Source Element button - Purple */
 #selection-toolbar .btn-source-match {
-  background-color: #6f42c1;
-  border-color: #6f42c1;
+  background: linear-gradient(135deg, #6f42c1, #9461fb);
   color: white;
 }
 
 #selection-toolbar .btn-source-match:hover {
-  background-color: #5a32a3;
-  border-color: #4e2a91;
+  background: linear-gradient(135deg, #5a32a3, #6f42c1);
 }
 
+/* Match count badge */
+#selection-toolbar .match-count-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Preview text */
 #selection-toolbar .match-preview {
-  font-size: 11px;
-  color: #6c757d;
-  max-width: 250px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-#selection-toolbar .match-count-badge {
-  font-size: 11px;
-  background-color: #e9ecef;
-  color: #495057;
-  padding: 2px 8px;
-  border-radius: 10px;
-  margin-left: 5px;
-}
-
+/* Divider before actions */
 #selection-toolbar .toolbar-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
-  justify-content: flex-end;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid #dee2e6;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Mark as FP button - Orange/Warning */
 #selection-toolbar .btn-fp-action {
-  background-color: #ffc107;
-  border-color: #ffc107;
+  background: linear-gradient(135deg, #fd7e14, #ffc107);
   color: #212529;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 #selection-toolbar .btn-fp-action:hover {
-  background-color: #e0a800;
-  border-color: #d39e00;
+  background: linear-gradient(135deg, #e96b02, #fd7e14);
 }
 
+/* Clear button - subtle */
 #selection-toolbar .btn-clear {
-  background-color: #6c757d;
-  border-color: #6c757d;
-  color: white;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 #selection-toolbar .btn-clear:hover {
-  background-color: #5a6268;
-  border-color: #545b62;
+  background: rgba(255, 255, 255, 0.25);
 }
 
-/* Responsive adjustments for toolbar */
-@media (max-width: 768px) {
+/* Close button */
+#selection-toolbar .close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+#selection-toolbar .close-btn:hover {
+  background: rgba(220, 53, 69, 0.8);
+  color: white;
+}
+
+/* Hide the old header structure - we'll use inline layout */
+#selection-toolbar .toolbar-header {
+  display: none;
+}
+
+/* Responsive - stack on smaller screens */
+@media (max-width: 900px) {
   #selection-toolbar {
-    min-width: 300px;
-    padding: 12px 15px;
-    bottom: 10px;
+    padding: 14px 18px;
+    bottom: 15px;
   }
 
-  #selection-toolbar .match-buttons {
-    flex-direction: column;
+  #selection-toolbar .toolbar-content {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  #selection-toolbar .selection-count-display {
+    border-right: none;
+    padding-right: 0;
   }
 
   #selection-toolbar .toolbar-actions {
+    border-left: none;
+    padding-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  #selection-toolbar .match-section {
     flex-wrap: wrap;
   }
 }

@@ -74,38 +74,49 @@
         </div>
   </div>
 
-  <!-- Floating Selection Toolbar - appears when items are selected in full data view only -->
+  <!-- Floating Selection Toolbar - Modern horizontal design -->
   <div id="selection-toolbar" style="display: none !important;">
-    <div class="toolbar-header">
-      <span class="selection-count-display"><span id="selection-count">0</span> selected</span>
-      <button type="button" class="close-btn" onclick="clearSelection()">&times;</button>
-    </div>
-    <div class="match-section">
-      <label>Select all matching:</label>
-      <div class="match-buttons">
-        <div id="match-data-element" class="match-btn-wrapper" style="display: none;">
-          <button class="btn btn-data-match" onclick="selectAllMatchingDataElements()">
-            <i class="glyphicon glyphicon-plus"></i> Data Element
-            <span id="data-match-count" class="match-count-badge">0</span>
-          </button>
-          <span id="match-data-preview" class="match-preview"></span>
-        </div>
-        <div id="match-source-element" class="match-btn-wrapper" style="display: none;">
-          <button class="btn btn-source-match" onclick="selectAllMatchingSourceElements()">
-            <i class="glyphicon glyphicon-plus"></i> Source Element
-            <span id="source-match-count" class="match-count-badge">0</span>
-          </button>
-          <span id="match-source-preview" class="match-preview"></span>
+    <div class="toolbar-content">
+      <!-- Selection count -->
+      <div class="selection-count-display">
+        <span class="count-number" id="selection-count">0</span>
+        <span>selected</span>
+      </div>
+
+      <!-- Match buttons section -->
+      <div class="match-section">
+        <label>Select matching:</label>
+        <div class="match-buttons">
+          <div id="match-data-element" class="match-btn-wrapper" style="display: none;">
+            <button class="btn btn-data-match" onclick="selectAllMatchingDataElements()">
+              <i class="glyphicon glyphicon-plus"></i>
+              Data Element
+              <span id="data-match-count" class="match-count-badge">0</span>
+            </button>
+          </div>
+          <div id="match-source-element" class="match-btn-wrapper" style="display: none;">
+            <button class="btn btn-source-match" onclick="selectAllMatchingSourceElements()">
+              <i class="glyphicon glyphicon-plus"></i>
+              Source Element
+              <span id="source-match-count" class="match-count-badge">0</span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="toolbar-actions">
-      <button class="btn btn-fp-action" onclick="setFp(1, 1)">
-        <i class="glyphicon glyphicon-ban-circle"></i> Mark as FP
-      </button>
-      <button class="btn btn-clear" onclick="clearSelection()">
-        Clear
-      </button>
+
+      <!-- Action buttons -->
+      <div class="toolbar-actions">
+        <button class="btn btn-fp-action" onclick="setFp(1, 1)">
+          <i class="glyphicon glyphicon-ban-circle"></i>
+          Mark as FP
+        </button>
+        <button class="btn btn-clear" onclick="clearSelection()">
+          Clear
+        </button>
+      </div>
+
+      <!-- Close button -->
+      <button type="button" class="close-btn" onclick="clearSelection()">&times;</button>
     </div>
   </div>
     <script src="${docroot}/static/node_modules/sigma/build/sigma.min.js"></script>
