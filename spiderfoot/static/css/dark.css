@@ -856,3 +856,201 @@ pre {
     padding: 12px 15px !important;
   }
 }
+
+/* ============================================
+   Scan ID Badges - Fix dark mode visibility
+   ============================================ */
+#scanlist code {
+  background: var(--bg-tertiary) !important;
+  color: var(--accent-cyan-light) !important;
+  border: 1px solid var(--bg-elevated) !important;
+  padding: 4px 8px !important;
+  font-size: 11px;
+  border-radius: var(--radius-sm);
+}
+
+#scanlist code:hover {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ============================================
+   TableSorter Pager - Dark theme styling
+   ============================================ */
+.ts-pager {
+  background: var(--bg-tertiary) !important;
+  padding: 10px 15px !important;
+}
+
+.ts-pager .btn-group .btn,
+.ts-pager .btn-default,
+.ts-pager .btn {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--glass-border) !important;
+  padding: 6px 10px;
+}
+
+.ts-pager .btn-group .btn:hover,
+.ts-pager .btn-default:hover,
+.ts-pager .btn:hover {
+  background: var(--accent-cyan) !important;
+  color: white !important;
+  border-color: var(--accent-cyan) !important;
+}
+
+.ts-pager select.pagesize,
+.ts-pager select.pagenum,
+.ts-pager .form-control {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--bg-elevated) !important;
+  padding: 6px 10px;
+  height: auto;
+}
+
+.ts-pager .pagedisplay {
+  color: var(--text-secondary) !important;
+  font-size: 13px;
+}
+
+/* ============================================
+   Workspace Action Buttons - Prevent wrapping
+   ============================================ */
+.table td .btn-group {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+
+.table td .btn-group .btn-sm,
+.table td .btn-sm {
+  padding: 5px 8px !important;
+  font-size: 12px;
+}
+
+/* ============================================
+   Badge Contrast Improvements
+   ============================================ */
+.badge {
+  font-weight: 600;
+}
+
+.badge.alert-success {
+  background: var(--accent-green) !important;
+  color: white !important;
+}
+
+.badge.alert-info {
+  background: var(--accent-cyan) !important;
+  color: white !important;
+}
+
+.badge.alert-warning {
+  background: var(--accent-orange) !important;
+  color: #1a1a1a !important;
+}
+
+.badge.alert-danger {
+  background: var(--accent-red) !important;
+  color: white !important;
+}
+
+/* Correlation count badges in scan list */
+#scanlist .badge {
+  min-width: 24px;
+  padding: 4px 8px;
+  font-size: 11px;
+  margin: 1px;
+}
+
+/* ============================================
+   View Toggle Buttons (Browse page)
+   ============================================ */
+#customtabview .btn-default {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--bg-elevated) !important;
+}
+
+#customtabview .btn-default:hover {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+}
+
+#customtabview .btn-default.active {
+  background: var(--accent-cyan) !important;
+  color: white !important;
+  border-color: var(--accent-cyan) !important;
+}
+
+/* ============================================
+   Additional Table Improvements
+   ============================================ */
+/* Ensure all table text is readable */
+.table > tbody > tr > td {
+  color: var(--text-primary) !important;
+}
+
+/* Pre elements in tables */
+.table pre,
+pre.table-border-bg-inherit {
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Source data element cells - improve contrast */
+.table td pre {
+  color: var(--text-primary) !important;
+}
+
+/* ============================================
+   Glyphicon improvements
+   ============================================ */
+.glyphicon {
+  color: inherit;
+}
+
+.text-muted .glyphicon,
+.glyphicon.text-muted {
+  color: var(--text-muted);
+}
+
+.text-warning .glyphicon,
+.glyphicon.text-warning {
+  color: var(--accent-orange);
+}
+
+/* ============================================
+   Action icons in tables
+   ============================================ */
+.table .btn-link {
+  color: var(--text-secondary);
+}
+
+.table .btn-link:hover {
+  color: var(--accent-cyan-light);
+}
+
+/* Delete/trash icons */
+.table .glyphicon-trash {
+  color: var(--text-muted);
+}
+
+.table .glyphicon-trash:hover {
+  color: var(--accent-red);
+}
+
+/* Refresh icons */
+.table .glyphicon-refresh {
+  color: var(--text-muted);
+}
+
+.table .glyphicon-refresh:hover {
+  color: var(--accent-cyan);
+}
