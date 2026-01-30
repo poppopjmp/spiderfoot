@@ -727,6 +727,29 @@ class SpiderFootWebUi:
         Returns:
             str: GEXF data
         """
+        import json
+
+        # For JSON requests, always return valid JSON
+        if gexf == "0":
+            cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
+
+            if not id:
+                return json.dumps({'nodes': [], 'edges': []})
+
+            try:
+                dbh = SpiderFootDb(self.config)
+                data = dbh.scanResultEvent(id, filterFp=True)
+                scan = dbh.scanInstanceGet(id)
+
+                if not scan:
+                    return json.dumps({'nodes': [], 'edges': []})
+
+                root = scan[1]
+                return SpiderFootHelpers.buildGraphJson([root], data)
+            except Exception:
+                return json.dumps({'nodes': [], 'edges': []})
+
+        # For GEXF requests, handle errors differently
         if not id:
             return None
 
@@ -738,12 +761,7 @@ class SpiderFootWebUi:
             return None
 
         scan_name = scan[0]
-
         root = scan[1]
-
-        if gexf == "0":
-            cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-            return SpiderFootHelpers.buildGraphJson([root], data)
 
         if not scan_name:
             fname = "SpiderFoot.gexf"
