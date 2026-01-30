@@ -738,6 +738,17 @@ class SpiderFootWebUi:
                 data = dbh.scanResultEvent(id, filterFp=True)
                 scan = dbh.scanInstanceGet(id)
 
+                # DEBUG: Log data retrieval info
+                self.log.info(f"scanviz: Retrieved {len(data) if data else 0} rows for scan {id}")
+                if data and len(data) > 0:
+                    # Check event_type distribution (row[11] is t.event_type from tbl_event_types)
+                    type_counts = {}
+                    for row in data:
+                        if len(row) >= 12:
+                            event_type = row[11]
+                            type_counts[event_type] = type_counts.get(event_type, 0) + 1
+                    self.log.info(f"scanviz: Event type distribution: {type_counts}")
+
                 if not scan:
                     return json.dumps({'nodes': [], 'edges': []}).encode('utf-8')
 

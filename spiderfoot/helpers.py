@@ -608,8 +608,10 @@ class SpiderFootHelpers():
                 })
 
             return json.dumps(ret)
-        except Exception:
-            # Return valid empty graph JSON on any error
+        except Exception as e:
+            # Log the error so we can debug graph issues
+            import logging
+            logging.getLogger("spiderfoot").error(f"buildGraphJson error: {e}")
             return json.dumps({'nodes': [], 'edges': []})
 
     @staticmethod
