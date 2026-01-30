@@ -624,25 +624,36 @@ async def export_scan(
     try:
         config = get_app_config()
         db = SpiderFootDb(config.get_config())
-        
+
         # Check if scan exists
         scan_info = db.scanInstanceGet(scan_id)
         if not scan_info:
             raise HTTPException(status_code=404, detail="Scan not found")
-        
+
+        # Get target-level false positives for this scan
+        target = scan_info[1] if scan_info else None
+        targetFps = set()
+        if target:
+            try:
+                targetFps = db.targetFalsePositivesForTarget(target)
+            except Exception:
+                pass  # Table may not exist in older databases
+
         # Get all events
         events = db.scanResultEvent(scan_id, ['ALL'])
-        
+
         if format == "csv":
             output = StringIO()
             writer = csv.writer(output)
-            writer.writerow(['Time', 'Event Type', 'Module', 'Data', 'Source', 'Confidence', 'Visibility', 'Risk'])
+            writer.writerow(['Time', 'Event Type', 'Module', 'Data', 'Source', 'F/P', 'Confidence', 'Visibility', 'Risk'])
 
             for event in events:
                 event_type = translate_event_type(str(event[4]))
+                # Check both per-event FP flag (event[13]) and target-level FPs
+                fp_flag = 1 if event[13] or (event[4], event[1]) in targetFps else 0
                 writer.writerow([
                     event[0], event_type, event[3], event[1],
-                    event[2], event[6], event[7], event[8]
+                    event[2], fp_flag, event[6], event[7], event[8]
                 ])
 
             csv_content = output.getvalue()
@@ -658,7 +669,9 @@ async def export_scan(
             xml_content = f"<?xml version='1.0' encoding='UTF-8'?>\n<scan id='{scan_id}'>\n"
             for event in events:
                 event_type = translate_event_type(str(event[4]))
-                xml_content += f"  <event type='{event_type}' module='{event[3]}' time='{event[0]}'>\n"
+                # Check both per-event FP flag and target-level FPs
+                fp_flag = 1 if event[13] or (event[4], event[1]) in targetFps else 0
+                xml_content += f"  <event type='{event_type}' module='{event[3]}' time='{event[0]}' fp='{fp_flag}'>\n"
                 xml_content += f"    <data>{html.escape(str(event[1]))}</data>\n"
                 xml_content += f"    <confidence>{event[6]}</confidence>\n"
                 xml_content += f"  </event>\n"
@@ -674,19 +687,22 @@ async def export_scan(
             events_list = []
             for event in events:
                 event_type = translate_event_type(str(event[4]))
+                # Check both per-event FP flag and target-level FPs
+                fp_flag = 1 if event[13] or (event[4], event[1]) in targetFps else 0
                 events_list.append({
                     "time": event[0],
                     "data": event[1],
                     "source": event[2],
                     "module": event[3],
                     "type": event_type,
+                    "false_positive": fp_flag,
                     "confidence": event[6],
                     "visibility": event[7],
                     "risk": event[8]
                 })
-            
+
             return {"scan_id": scan_id, "events": events_list}
-            
+
     except HTTPException:
         raise
     except Exception as e:
