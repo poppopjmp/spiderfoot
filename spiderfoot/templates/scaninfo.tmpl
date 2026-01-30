@@ -74,8 +74,8 @@
         </div>
   </div>
 
-  <!-- Floating Selection Toolbar - appears when items are selected -->
-  <div id="selection-toolbar">
+  <!-- Floating Selection Toolbar - appears when items are selected in full data view only -->
+  <div id="selection-toolbar" style="display: none !important;">
     <div class="toolbar-header">
       <span class="selection-count-display"><span id="selection-count">0</span> selected</span>
       <button type="button" class="close-btn" onclick="clearSelection()">&times;</button>
@@ -201,11 +201,19 @@
 
         // Update the selection toolbar based on current selections
         function updateSelectionToolbar() {
+            // Only operate if we're on a page with FP checkboxes
+            var hasCheckboxes = $("input[id*=cb_]").length > 0;
+            if (!hasCheckboxes) {
+                $("#selection-toolbar").attr('style', 'display: none !important;');
+                return;
+            }
+
             var selectedCount = $("input[id*=cb_]:checked").length;
             $("#selection-count").text(selectedCount);
 
             if (selectedCount > 0) {
-                $("#selection-toolbar").fadeIn(200);
+                // Remove the !important and show with fixed positioning
+                $("#selection-toolbar").attr('style', 'display: block; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1050;');
 
                 // Collect ALL unique Data Elements and Source Elements from ALL selected rows
                 selectedDataElements = [];
@@ -265,7 +273,7 @@
                     $("#match-source-element").hide();
                 }
             } else {
-                $("#selection-toolbar").fadeOut(200);
+                $("#selection-toolbar").attr('style', 'display: none !important;');
             }
         }
 
@@ -397,6 +405,8 @@
             $("#customtabview").hide();
             $("#customvizview").hide();
             $("#modifyactions").hide();
+            // Hide selection toolbar when navigating away
+            $("#selection-toolbar").attr('style', 'display: none !important;');
             currentSection = target
             dataloaders = []
         }
