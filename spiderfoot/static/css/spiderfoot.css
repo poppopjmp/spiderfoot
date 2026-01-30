@@ -267,3 +267,121 @@ input:checked + .slider:before {
   min-width: 40px;
   text-align: center;
 }
+
+/* ============================================
+   Selection Toolbar Styling
+   ============================================ */
+
+#selection-toolbar {
+  display: none;
+  position: sticky;
+  top: 60px;
+  z-index: 1000;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#selection-toolbar .toolbar-content {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+#selection-toolbar .selection-info {
+  font-weight: 600;
+  color: #495057;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+#selection-toolbar .selection-info .badge {
+  font-size: 14px;
+  padding: 4px 10px;
+  margin-left: 6px;
+}
+
+#selection-toolbar .match-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+
+#selection-toolbar .btn {
+  font-size: 12px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+#selection-toolbar .btn-match {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+  color: white;
+}
+
+#selection-toolbar .btn-match:hover {
+  background-color: #138496;
+  border-color: #117a8b;
+}
+
+#selection-toolbar .match-preview {
+  font-size: 11px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
+  opacity: 0.9;
+}
+
+#selection-toolbar .toolbar-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+#selection-toolbar .btn-fp-quick {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
+}
+
+#selection-toolbar .btn-fp-quick:hover {
+  background-color: #e0a800;
+  border-color: #d39e00;
+}
+
+#selection-toolbar .btn-clear {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: white;
+}
+
+#selection-toolbar .btn-clear:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
+/* Responsive adjustments for toolbar */
+@media (max-width: 992px) {
+  #selection-toolbar .toolbar-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #selection-toolbar .toolbar-actions {
+    margin-left: 0;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  #selection-toolbar .match-buttons {
+    width: 100%;
+  }
+}

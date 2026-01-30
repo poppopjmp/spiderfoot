@@ -73,6 +73,39 @@
             </ul>
         </div>
   </div>
+
+  <!-- Floating Selection Toolbar - appears when items are selected -->
+  <div id="selection-toolbar" class="selection-toolbar" style="display: none;">
+    <div class="selection-toolbar-header">
+      <span id="selection-count">0</span> selected
+      <button type="button" class="close" onclick="clearSelection()">&times;</button>
+    </div>
+    <div class="selection-toolbar-body">
+      <div class="selection-match-section">
+        <label>Select all matching:</label>
+        <div id="match-data-element" class="match-option" style="display: none;">
+          <button class="btn btn-sm btn-info" onclick="selectAllMatchingDataElement()">
+            <i class="glyphicon glyphicon-plus"></i> Data Element
+          </button>
+          <span id="match-data-preview" class="match-preview"></span>
+        </div>
+        <div id="match-source-element" class="match-option" style="display: none;">
+          <button class="btn btn-sm btn-info" onclick="selectAllMatchingSourceElement()">
+            <i class="glyphicon glyphicon-plus"></i> Source Element
+          </button>
+          <span id="match-source-preview" class="match-preview"></span>
+        </div>
+      </div>
+      <div class="selection-toolbar-actions">
+        <button class="btn btn-sm btn-warning" onclick="setFp(1, 1)">
+          <i class="glyphicon glyphicon-ban-circle"></i> Mark as FP
+        </button>
+        <button class="btn btn-sm btn-default" onclick="clearSelection()">
+          Clear
+        </button>
+      </div>
+    </div>
+  </div>
     <script src="${docroot}/static/node_modules/sigma/build/sigma.min.js"></script>
     <script src="${docroot}/static/node_modules/sigma/build/plugins/sigma.parsers.json.min.js"></script>
     <script src="${docroot}/static/node_modules/sigma/build/plugins/sigma.plugins.dragNodes.min.js"></script>
@@ -151,6 +184,98 @@
                     alertify.warning("Cancelled");
                 }
             ).setHeader("Confirm Bulk FP");
+        }
+
+        // Variables for selection toolbar
+        var lastSelectedDataElement = "";
+        var lastSelectedSourceElement = "";
+
+        // Clear all selections
+        function clearSelection() {
+            $("input[id*=cb_]").prop('checked', false);
+            $("#checkall").prop('checked', false);
+            updateSelectionToolbar();
+        }
+
+        // Update the selection toolbar based on current selections
+        function updateSelectionToolbar() {
+            var selectedCount = $("input[id*=cb_]:checked").length;
+            $("#selection-count").text(selectedCount);
+
+            if (selectedCount > 0) {
+                $("#selection-toolbar").slideDown(200);
+
+                // Get the first selected row's data
+                var firstChecked = $("input[id*=cb_]:checked").first();
+                var row = firstChecked.closest("tr");
+                var cells = row.find("td");
+
+                // Data Element is in 2nd column (index 1), Source is in 3rd column (index 2)
+                if (cells.length >= 3) {
+                    lastSelectedDataElement = cells.eq(1).text().trim();
+                    lastSelectedSourceElement = cells.eq(2).text().trim();
+
+                    // Show data element match option
+                    if (lastSelectedDataElement) {
+                        var preview = lastSelectedDataElement.substring(0, 50);
+                        if (lastSelectedDataElement.length > 50) preview += "...";
+                        $("#match-data-preview").text('"' + preview + '"');
+                        $("#match-data-element").show();
+                    } else {
+                        $("#match-data-element").hide();
+                    }
+
+                    // Show source element match option
+                    if (lastSelectedSourceElement) {
+                        var preview = lastSelectedSourceElement.substring(0, 50);
+                        if (lastSelectedSourceElement.length > 50) preview += "...";
+                        $("#match-source-preview").text('"' + preview + '"');
+                        $("#match-source-element").show();
+                    } else {
+                        $("#match-source-element").hide();
+                    }
+                }
+            } else {
+                $("#selection-toolbar").slideUp(200);
+            }
+        }
+
+        // Select all rows with matching Data Element
+        function selectAllMatchingDataElement() {
+            if (!lastSelectedDataElement) return;
+
+            var count = 0;
+            $("#scansummary-content tbody tr").each(function() {
+                var cells = $(this).find("td");
+                if (cells.length >= 2) {
+                    var dataElement = cells.eq(1).text().trim();
+                    if (dataElement === lastSelectedDataElement) {
+                        $(this).find("input[id*=cb_]").prop('checked', true);
+                        count++;
+                    }
+                }
+            });
+            alertify.success("Selected " + count + " rows with matching Data Element");
+            updateSelectionToolbar();
+        }
+
+        // Select all rows with matching Source Data Element
+        function selectAllMatchingSourceElement() {
+            if (!lastSelectedSourceElement) return;
+
+            var count = 0;
+            $("#scansummary-content tbody tr").each(function() {
+                var cells = $(this).find("td");
+                if (cells.length >= 3) {
+                    var sourceElement = cells.eq(2).text().trim();
+                    if (sourceElement === lastSelectedSourceElement) {
+                        $(this).find("input[id*=cb_]").prop('checked', true);
+                        count++;
+                    }
+                }
+            });
+            alertify.success("Selected " + count + " rows with matching Source Element");
+            updateSelectionToolbar();
         }
 
         function getSelected() {
@@ -890,7 +1015,18 @@
                                 if (e.target.type !== 'checkbox') {
                                     var cb = $(this).find("input[type='checkbox']");
                                     cb.prop('checked', !cb.prop('checked'));
+                                    updateSelectionToolbar();
                                 }
+                            });
+
+                            // Update toolbar when any checkbox changes
+                            $("input[id*=cb_]").change(function() {
+                                updateSelectionToolbar();
+                            });
+
+                            // Update toolbar when "select all" checkbox changes
+                            $("#checkall").change(function() {
+                                updateSelectionToolbar();
                             });
 
                 });
