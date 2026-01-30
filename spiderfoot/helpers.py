@@ -540,71 +540,77 @@ class SpiderFootHelpers():
         Returns:
             str: TBD
         """
+        if not flt:
+            flt = []
+
+        # Handle empty data gracefully
+        if not data:
+            return json.dumps({'nodes': [], 'edges': []})
+
         try:
-            if not flt:
-                flt = []
-
             mapping = SpiderFootHelpers.buildGraphData(data, flt)
-            ret: _Graph = {}
-            ret['nodes'] = list()
-            ret['edges'] = list()
+        except (ValueError, TypeError):
+            # Return empty graph if data is invalid
+            return json.dumps({'nodes': [], 'edges': []})
 
-            nodelist: typing.Dict[str, int] = dict()
-            ecounter = 0
-            ncounter = 0
-            for pair in mapping:
-                (dst, src) = pair
-                col = "#000"
+        ret: _Graph = {}
+        ret['nodes'] = list()
+        ret['edges'] = list()
 
-                # Leave out this special case
-                if dst == "ROOT" or src == "ROOT":
-                    continue
+        nodelist: typing.Dict[str, int] = dict()
+        ecounter = 0
+        ncounter = 0
+        for pair in mapping:
+            (dst, src) = pair
+            col = "#000"
 
-                if dst not in nodelist:
-                    ncounter = ncounter + 1
+            # Leave out this special case
+            if dst == "ROOT" or src == "ROOT":
+                continue
 
-                    if dst in root:
-                        col = "#f00"
+            if dst not in nodelist:
+                ncounter = ncounter + 1
 
-                    ret['nodes'].append({
-                        'id': str(ncounter),
-                        'label': str(dst),
-                        'x': random.SystemRandom().randint(1, 1000),
-                        'y': random.SystemRandom().randint(1, 1000),
-                        'size': "1",
-                        'color': col
-                    })
+                if dst in root:
+                    col = "#f00"
 
-                    nodelist[dst] = ncounter
-
-                if src not in nodelist:
-                    ncounter = ncounter + 1
-
-                    if src in root:
-                        col = "#f00"
-
-                    ret['nodes'].append({
-                        'id': str(ncounter),
-                        'label': str(src),
-                        'x': random.SystemRandom().randint(1, 1000),
-                        'y': random.SystemRandom().randint(1, 1000),
-                        'size': "1",
-                        'color': col
-                    })
-
-                    nodelist[src] = ncounter
-
-                ecounter = ecounter + 1
-
-                ret['edges'].append({
-                    'id': str(ecounter),
-                    'source': str(nodelist[src]),
-                    'target': str(nodelist[dst])
+                ret['nodes'].append({
+                    'id': str(ncounter),
+                    'label': str(dst),
+                    'x': random.SystemRandom().randint(1, 1000),
+                    'y': random.SystemRandom().randint(1, 1000),
+                    'size': "1",
+                    'color': col
                 })
 
-            return json.dumps(ret)
-        except Exception:
-            return "{}"
+                nodelist[dst] = ncounter
+
+            if src not in nodelist:
+                ncounter = ncounter + 1
+
+                if src in root:
+                    col = "#f00"
+
+                ret['nodes'].append({
+                    'id': str(ncounter),
+                    'label': str(src),
+                    'x': random.SystemRandom().randint(1, 1000),
+                    'y': random.SystemRandom().randint(1, 1000),
+                    'size': "1",
+                    'color': col
+                })
+
+                nodelist[src] = ncounter
+
+            ecounter = ecounter + 1
+
+            ret['edges'].append({
+                'id': str(ecounter),
+                'source': str(nodelist[src]),
+                'target': str(nodelist[dst])
+            })
+
+        return json.dumps(ret)
 
     @staticmethod
     def buildGraphData(data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> typing.Set[typing.Tuple[str, str]]:

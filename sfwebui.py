@@ -742,6 +742,7 @@ class SpiderFootWebUi:
         root = scan[1]
 
         if gexf == "0":
+            cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
             return SpiderFootHelpers.buildGraphJson([root], data)
 
         if not scan_name:
