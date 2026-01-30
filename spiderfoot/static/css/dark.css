@@ -1,55 +1,64 @@
 /* ============================================
-   SpiderFoot Modern Dark Theme
-   A sleek, professional dark theme with glass-morphism effects
+   SpiderFoot Dark Theme - ProjectDiscovery Style
+   Clean, minimal, professional dark aesthetic
    ============================================ */
+
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ============================================
-   CSS Variables for consistent theming
+   CSS Variables
    ============================================ */
 :root {
-  /* Base colors */
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --bg-elevated: #30363d;
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Monaco', 'Consolas', monospace;
 
-  /* Glass effect backgrounds */
-  --glass-bg: rgba(22, 27, 34, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  /* Base colors - near black, minimal */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-tertiary: #1a1a1a;
+  --bg-elevated: #262626;
 
-  /* Text colors */
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #6e7681;
+  /* No glass effects - clean flat */
+  --glass-bg: #111111;
+  --glass-border: rgba(255, 255, 255, 0.08);
 
-  /* Accent colors */
-  --accent-cyan: #17a2b8;
-  --accent-cyan-light: #0dcaf0;
-  --accent-purple: #6f42c1;
-  --accent-purple-light: #9461fb;
-  --accent-orange: #fd7e14;
-  --accent-orange-light: #ffc107;
-  --accent-green: #238636;
-  --accent-green-light: #2ea043;
-  --accent-red: #da3633;
-  --accent-blue: #58a6ff;
+  /* Text - crisp white */
+  --text-primary: #fafafa;
+  --text-secondary: #a3a3a3;
+  --text-muted: #737373;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
+  /* Accent colors - severity based */
+  --accent-green: #22c55e;
+  --accent-green-light: #4ade80;
+  --accent-yellow: #f59e0b;
+  --accent-orange: #f97316;
+  --accent-red: #ef4444;
+  --accent-red-dark: #dc2626;
+  --accent-blue: #3b82f6;
+  --accent-blue-light: #60a5fa;
+  --accent-purple: #8b5cf6;
 
-  /* Border radius */
+  /* Keep cyan for compatibility - map to green */
+  --accent-cyan: #22c55e;
+  --accent-cyan-light: #4ade80;
+
+  /* Minimal shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
+
+  /* Smaller, cleaner radius */
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
 
-  /* Transitions */
+  /* Simple transitions */
   --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s ease;
-  --transition-slow: 0.4s ease;
+  --transition-normal: 0.2s ease;
 }
 
 /* ============================================
@@ -57,11 +66,8 @@
    ============================================ */
 body {
   background: var(--bg-primary);
-  background-image:
-    radial-gradient(ellipse at top, rgba(23, 162, 184, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom right, rgba(111, 66, 193, 0.06) 0%, transparent 50%);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
 }
 
@@ -79,29 +85,29 @@ a {
 }
 
 a:hover {
-  color: var(--accent-cyan-light);
+  color: var(--accent-blue-light);
   text-decoration: none;
 }
 
 /* ============================================
-   Navigation Bar
+   Navigation Bar - Flat Dark
    ============================================ */
 .navbar-default {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-secondary) !important;
   border: none !important;
   border-bottom: 1px solid var(--glass-border) !important;
-  box-shadow: var(--shadow-md);
+  box-shadow: none;
 }
 
 .navbar-default .navbar-brand {
   color: var(--text-primary) !important;
+  font-family: var(--font-sans);
 }
 
 .navbar-default .navbar-nav > li > a {
   color: var(--text-secondary) !important;
   font-weight: 500;
+  font-family: var(--font-sans);
   padding: 15px 18px;
   border-radius: var(--radius-sm);
   margin: 5px 2px;
@@ -110,21 +116,20 @@ a:hover {
 
 .navbar-default .navbar-nav > li > a:hover {
   color: var(--text-primary) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: var(--bg-tertiary) !important;
 }
 
 .navbar-default .navbar-nav > li.active > a,
 .navbar-default .navbar-nav > li.active > a:hover,
 .navbar-default .navbar-nav > li.active > a:focus {
   color: var(--text-primary) !important;
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)) !important;
-  box-shadow: var(--shadow-sm);
+  background: var(--bg-tertiary) !important;
 }
 
 .navbar-default .navbar-nav > .open > a,
 .navbar-default .navbar-nav > .open > a:hover,
 .navbar-default .navbar-nav > .open > a:focus {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
 }
 
@@ -139,7 +144,7 @@ a:hover {
 
 .navbar-default .navbar-toggle:hover,
 .navbar-default .navbar-toggle:focus {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-tertiary);
 }
 
 /* Theme toggler */
@@ -160,81 +165,92 @@ a:hover {
 }
 
 /* ============================================
-   Buttons - Modern Gradient Style
+   Buttons - Outlined Style
    ============================================ */
 .btn {
-  font-weight: 600;
-  padding: 10px 20px;
-  border-radius: var(--radius-md);
-  border: none;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
   transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
 }
 
 .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: none;
 }
 
 .btn:active {
-  transform: translateY(0);
+  transform: none;
 }
 
-/* Primary button - Cyan gradient */
+/* Primary/Default button - Outlined */
 .btn-primary,
 .btn-default {
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-cyan-light)) !important;
-  color: white !important;
-  border: none !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--glass-border) !important;
 }
 
 .btn-primary:hover,
-.btn-default:hover {
-  background: linear-gradient(135deg, #138496, var(--accent-cyan)) !important;
+.btn-default:hover,
+.btn-primary:focus,
+.btn-default:focus {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--text-muted) !important;
+  color: var(--text-primary) !important;
 }
 
-/* Success button - Green gradient */
+/* Success button - Green filled */
 .btn-success {
-  background: linear-gradient(135deg, var(--accent-green), var(--accent-green-light)) !important;
-  color: white !important;
+  background: var(--accent-green) !important;
+  color: #000 !important;
   border: none !important;
 }
 
-.btn-success:hover {
-  background: linear-gradient(135deg, #1a7f29, var(--accent-green)) !important;
+.btn-success:hover,
+.btn-success:focus {
+  background: var(--accent-green-light) !important;
+  color: #000 !important;
 }
 
-/* Warning button - Orange gradient */
+/* Warning button - Amber */
 .btn-warning {
-  background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-light)) !important;
-  color: #1a1a1a !important;
+  background: var(--accent-yellow) !important;
+  color: #000 !important;
   border: none !important;
 }
 
-.btn-warning:hover {
-  background: linear-gradient(135deg, #e96b02, var(--accent-orange)) !important;
+.btn-warning:hover,
+.btn-warning:focus {
+  background: var(--accent-orange) !important;
+  color: #000 !important;
 }
 
-/* Danger button - Red gradient */
+/* Danger button - Red */
 .btn-danger {
-  background: linear-gradient(135deg, var(--accent-red), #f85149) !important;
+  background: var(--accent-red) !important;
   color: white !important;
   border: none !important;
 }
 
-.btn-danger:hover {
-  background: linear-gradient(135deg, #b62324, var(--accent-red)) !important;
+.btn-danger:hover,
+.btn-danger:focus {
+  background: var(--accent-red-dark) !important;
+  color: white !important;
 }
 
-/* Info button - Purple gradient */
+/* Info button - Blue outlined */
 .btn-info {
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-purple-light)) !important;
-  color: white !important;
-  border: none !important;
+  background: transparent !important;
+  color: var(--accent-blue) !important;
+  border: 1px solid var(--accent-blue) !important;
 }
 
-.btn-info:hover {
-  background: linear-gradient(135deg, #5a32a3, var(--accent-purple)) !important;
+.btn-info:hover,
+.btn-info:focus {
+  background: var(--accent-blue) !important;
+  color: white !important;
 }
 
 /* Button groups */
@@ -243,34 +259,35 @@ a:hover {
 }
 
 .btn-group > .btn:first-child {
-  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 }
 
 .btn-group > .btn:last-child,
 .btn-group > .dropdown-toggle {
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .btn-group > .btn + .btn,
 .btn-group > .btn + .dropdown-toggle {
-  border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-left: 1px solid var(--glass-border) !important;
 }
 
 /* ============================================
    Forms & Inputs
    ============================================ */
 .form-control {
-  background: var(--bg-tertiary) !important;
-  border: 1px solid var(--bg-elevated) !important;
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--glass-border) !important;
   border-radius: var(--radius-sm) !important;
   color: var(--text-primary) !important;
+  font-family: var(--font-sans);
   padding: 10px 14px;
   transition: all var(--transition-fast);
 }
 
 .form-control:focus {
-  border-color: var(--accent-cyan) !important;
-  box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.25) !important;
+  border-color: var(--text-muted) !important;
+  box-shadow: none !important;
   outline: none;
 }
 
@@ -285,28 +302,29 @@ input[type="number"],
 input[type="search"],
 textarea,
 select {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--bg-elevated);
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
+  font-family: var(--font-sans);
   padding: 10px 14px;
 }
 
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.25);
+  border-color: var(--text-muted);
+  box-shadow: none;
   outline: none;
 }
 
 /* Checkboxes */
 input[type="checkbox"] {
-  accent-color: var(--accent-cyan);
+  accent-color: var(--accent-green);
 }
 
 /* ============================================
-   Tables
+   Tables - Clean Minimal
    ============================================ */
 .table {
   background: transparent;
@@ -315,48 +333,50 @@ input[type="checkbox"] {
 }
 
 .table > thead > tr > th {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
-  font-weight: 600;
-  border-bottom: 2px solid var(--bg-elevated) !important;
-  padding: 14px 12px;
+  background: var(--bg-secondary) !important;
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  border-bottom: 1px solid var(--glass-border) !important;
+  padding: 12px;
 }
 
 .table > tbody > tr {
-  background: var(--bg-secondary) !important;
+  background: transparent !important;
   transition: background var(--transition-fast);
-}
-
-.table > tbody > tr:nth-child(even) {
-  background: var(--bg-tertiary) !important;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .table > tbody > tr:hover {
-  background: rgba(23, 162, 184, 0.1) !important;
+  background: var(--bg-tertiary) !important;
 }
 
 .table > tbody > tr > td {
-  border-color: var(--bg-elevated) !important;
+  border-color: var(--glass-border) !important;
+  border-top: none !important;
   color: var(--text-primary);
   padding: 12px;
   vertical-align: middle;
 }
 
-.table-striped > tbody > tr:nth-of-type(odd) {
-  background: var(--bg-secondary) !important;
+/* Remove striping for cleaner look */
+.table-striped > tbody > tr:nth-of-type(odd),
+.table-striped > tbody > tr:nth-of-type(even) {
+  background: transparent !important;
 }
 
-.table-striped > tbody > tr:nth-of-type(even) {
+.table-striped > tbody > tr:hover {
   background: var(--bg-tertiary) !important;
 }
 
 .table-bordered {
-  border: 1px solid var(--bg-elevated) !important;
+  border: 1px solid var(--glass-border) !important;
 }
 
 .table-bordered > thead > tr > th,
 .table-bordered > tbody > tr > td {
-  border: 1px solid var(--bg-elevated) !important;
+  border: 1px solid var(--glass-border) !important;
 }
 
 /* Table inside code/pre */
@@ -367,7 +387,7 @@ input[type="checkbox"] {
 
 /* Danger rows (errors) */
 tr.danger {
-  background: rgba(218, 54, 51, 0.2) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
   color: var(--text-primary) !important;
 }
 
@@ -376,28 +396,28 @@ tr.danger td {
 }
 
 /* ============================================
-   Panels & Cards
+   Panels & Cards - Clean Flat
    ============================================ */
 .panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--bg-secondary);
   border: 1px solid var(--glass-border) !important;
-  border-radius: var(--radius-lg) !important;
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-md) !important;
+  box-shadow: none;
 }
 
 .panel-default {
-  background: var(--glass-bg) !important;
+  background: var(--bg-secondary) !important;
   border-color: var(--glass-border) !important;
 }
 
 .panel-default > .panel-heading {
-  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-elevated)) !important;
+  background: var(--bg-tertiary) !important;
   border-color: var(--glass-border) !important;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
   color: var(--text-primary) !important;
-  font-weight: 600;
+  font-weight: 500;
+  font-family: var(--font-sans);
   padding: 14px 18px;
 }
 
@@ -406,66 +426,101 @@ tr.danger td {
 }
 
 /* ============================================
-   Alerts & Badges
+   Alerts
    ============================================ */
 .alert {
   border-radius: var(--radius-md);
   border: none;
   padding: 16px 20px;
+  font-family: var(--font-sans);
 }
 
 .alert-info {
-  background: rgba(23, 162, 184, 0.15) !important;
-  border-left: 4px solid var(--accent-cyan) !important;
+  background: rgba(59, 130, 246, 0.15) !important;
+  border-left: 4px solid var(--accent-blue) !important;
   color: var(--text-primary) !important;
 }
 
 .alert-success {
-  background: rgba(35, 134, 54, 0.15) !important;
+  background: rgba(34, 197, 94, 0.15) !important;
   border-left: 4px solid var(--accent-green) !important;
   color: var(--text-primary) !important;
 }
 
 .alert-warning {
-  background: rgba(253, 126, 20, 0.15) !important;
-  border-left: 4px solid var(--accent-orange) !important;
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-left: 4px solid var(--accent-yellow) !important;
   color: var(--text-primary) !important;
 }
 
 .alert-danger {
-  background: rgba(218, 54, 51, 0.15) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
   border-left: 4px solid var(--accent-red) !important;
   color: var(--text-primary) !important;
 }
 
+/* ============================================
+   Badges - Pill Style
+   ============================================ */
 .badge {
-  padding: 5px 10px;
-  border-radius: var(--radius-xl);
-  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge.alert-success {
+  background: var(--accent-green) !important;
+  color: #000 !important;
+}
+
+.badge.alert-info {
+  background: var(--accent-blue) !important;
+  color: white !important;
+}
+
+.badge.alert-warning {
+  background: var(--accent-yellow) !important;
+  color: #000 !important;
+}
+
+.badge.alert-danger {
+  background: var(--accent-red) !important;
+  color: white !important;
+}
+
+/* Correlation count badges in scan list */
+#scanlist .badge {
+  min-width: 24px;
+  padding: 4px 8px;
+  font-size: 11px;
+  margin: 1px;
 }
 
 /* ============================================
-   Dropdowns
+   Dropdowns - Clean Dark
    ============================================ */
 .dropdown-menu {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-secondary) !important;
   border: 1px solid var(--glass-border) !important;
   border-radius: var(--radius-md) !important;
   box-shadow: var(--shadow-lg) !important;
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
 .dropdown-menu > li > a {
   color: var(--text-secondary) !important;
-  padding: 10px 18px;
+  font-family: var(--font-sans);
+  padding: 8px 16px;
   transition: all var(--transition-fast);
 }
 
 .dropdown-menu > li > a:hover,
 .dropdown-menu > li > a:focus {
-  background: rgba(23, 162, 184, 0.2) !important;
+  background: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
 }
 
@@ -477,26 +532,24 @@ tr.danger td {
 .dropdown-header {
   color: var(--text-muted) !important;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 8px 18px;
+  padding: 8px 16px;
 }
 
 /* ============================================
    Modals
    ============================================ */
 .modal-content {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-secondary) !important;
   border: 1px solid var(--glass-border) !important;
   border-radius: var(--radius-lg) !important;
   box-shadow: var(--shadow-xl) !important;
 }
 
 .modal-header {
-  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-elevated));
+  background: var(--bg-tertiary);
   border-bottom: 1px solid var(--glass-border) !important;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: 18px 24px;
@@ -515,6 +568,7 @@ tr.danger td {
 .modal-title {
   color: var(--text-primary) !important;
   font-weight: 600;
+  font-family: var(--font-sans);
 }
 
 .modal-body {
@@ -539,16 +593,14 @@ tr.danger td {
 }
 
 .ajs-dialog {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-secondary) !important;
   border: 1px solid var(--glass-border) !important;
   border-radius: var(--radius-lg) !important;
   box-shadow: var(--shadow-xl) !important;
 }
 
 .ajs-header {
-  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-elevated)) !important;
+  background: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
 }
@@ -589,11 +641,12 @@ tr.danger td {
    Tabs
    ============================================ */
 .nav-tabs {
-  border-bottom: 2px solid var(--bg-elevated);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .nav-tabs > li > a {
   color: var(--text-secondary);
+  font-family: var(--font-sans);
   border: none;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   padding: 12px 20px;
@@ -601,7 +654,7 @@ tr.danger td {
 }
 
 .nav-tabs > li > a:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-tertiary);
   border-color: transparent;
   color: var(--text-primary);
 }
@@ -611,7 +664,7 @@ tr.danger td {
 .nav-tabs > li.active > a:focus {
   background: var(--bg-tertiary);
   border: none;
-  border-bottom: 2px solid var(--accent-cyan);
+  border-bottom: 2px solid var(--accent-blue);
   color: var(--text-primary);
 }
 
@@ -619,9 +672,7 @@ tr.danger td {
    Popovers & Tooltips
    ============================================ */
 .popover {
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-secondary);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
@@ -639,7 +690,7 @@ tr.danger td {
 }
 
 .popover.bottom > .arrow:after {
-  border-bottom-color: var(--glass-bg);
+  border-bottom-color: var(--bg-secondary);
 }
 
 .tooltip-inner {
@@ -659,7 +710,7 @@ tr.danger td {
 }
 
 .progress-bar {
-  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+  background: var(--accent-blue);
   border-radius: var(--radius-xl);
 }
 
@@ -677,11 +728,11 @@ svg text {
 }
 
 .bar {
-  fill: var(--accent-cyan);
+  fill: var(--accent-blue);
 }
 
 .bar:hover {
-  fill: var(--accent-cyan-light);
+  fill: var(--accent-blue-light);
 }
 
 /* ============================================
@@ -689,7 +740,7 @@ svg text {
    ============================================ */
 #scanlist .alert-info {
   background: var(--bg-secondary) !important;
-  border-left: 4px solid var(--accent-cyan);
+  border-left: 4px solid var(--accent-blue);
 }
 
 /* Counter badges in scan summary */
@@ -705,18 +756,19 @@ svg text {
    ============================================ */
 .well {
   background: var(--bg-secondary);
-  border: 1px solid var(--bg-elevated);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
 }
 
 /* ============================================
    Labels
    ============================================ */
 .label {
-  border-radius: var(--radius-sm);
-  font-weight: 600;
+  border-radius: 9999px;
+  font-weight: 500;
   padding: 4px 10px;
+  font-family: var(--font-sans);
 }
 
 .label-default {
@@ -724,16 +776,17 @@ svg text {
 }
 
 .label-primary {
-  background: var(--accent-cyan);
+  background: var(--accent-blue);
 }
 
 .label-success {
   background: var(--accent-green);
+  color: #000;
 }
 
 .label-warning {
-  background: var(--accent-orange);
-  color: #1a1a1a;
+  background: var(--accent-yellow);
+  color: #000;
 }
 
 .label-danger {
@@ -745,21 +798,24 @@ svg text {
 }
 
 /* ============================================
-   Code & Pre
+   Code & Pre - Monospace
    ============================================ */
 code {
   background: var(--bg-tertiary);
-  border: 1px solid var(--bg-elevated);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
-  color: var(--accent-cyan-light);
+  color: var(--text-primary);
   padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
 
 pre {
   background: var(--bg-tertiary) !important;
-  border: 1px solid var(--bg-elevated) !important;
+  border: 1px solid var(--glass-border) !important;
   border-radius: var(--radius-sm);
   color: var(--text-primary) !important;
+  font-family: var(--font-mono);
   padding: 12px 16px;
 }
 
@@ -804,7 +860,7 @@ pre {
    ============================================ */
 .graph-container {
   background: var(--bg-secondary);
-  border: 1px solid var(--bg-elevated);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
 }
 
@@ -817,25 +873,26 @@ pre {
 
 .tablesorter-default th,
 .tablesorter-default thead td {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
+  background: var(--bg-secondary) !important;
+  color: var(--text-secondary) !important;
+  font-weight: 500;
 }
 
 .tablesorter-default .header,
 .tablesorter-default .tablesorter-header {
-  background-color: var(--bg-tertiary);
+  background-color: var(--bg-secondary);
   background-image: url(data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==);
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
 .tablesorter-default td {
-  border-color: var(--bg-elevated) !important;
+  border-color: var(--glass-border) !important;
 }
 
 .tablesorter-default input.tablesorter-filter,
 .tablesorter-default select.tablesorter-filter {
   background-color: var(--bg-tertiary);
-  border: 1px solid var(--bg-elevated);
+  border: 1px solid var(--glass-border);
   color: var(--text-primary);
 }
 
@@ -844,9 +901,7 @@ pre {
    ============================================ */
 @media (max-width: 768px) {
   .navbar-collapse {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: var(--bg-secondary);
     border-radius: 0 0 var(--radius-md) var(--radius-md);
     margin-top: 10px;
     padding: 10px;
@@ -858,14 +913,15 @@ pre {
 }
 
 /* ============================================
-   Scan ID Badges - Fix dark mode visibility
+   Scan ID Badges - Technical data styling
    ============================================ */
 #scanlist code {
   background: var(--bg-tertiary) !important;
-  color: var(--accent-cyan-light) !important;
-  border: 1px solid var(--bg-elevated) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--glass-border) !important;
   padding: 4px 8px !important;
   font-size: 11px;
+  font-family: var(--font-mono);
   border-radius: var(--radius-sm);
 }
 
@@ -875,7 +931,7 @@ pre {
 }
 
 /* ============================================
-   TableSorter Pager - Dark theme styling
+   TableSorter Pager
    ============================================ */
 .ts-pager {
   background: var(--bg-tertiary) !important;
@@ -894,9 +950,9 @@ pre {
 .ts-pager .btn-group .btn:hover,
 .ts-pager .btn-default:hover,
 .ts-pager .btn:hover {
-  background: var(--accent-cyan) !important;
+  background: var(--accent-blue) !important;
   color: white !important;
-  border-color: var(--accent-cyan) !important;
+  border-color: var(--accent-blue) !important;
 }
 
 .ts-pager select.pagesize,
@@ -904,7 +960,7 @@ pre {
 .ts-pager .form-control {
   background: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
-  border: 1px solid var(--bg-elevated) !important;
+  border: 1px solid var(--glass-border) !important;
   padding: 6px 10px;
   height: auto;
 }
@@ -915,7 +971,7 @@ pre {
 }
 
 /* ============================================
-   Workspace Action Buttons - Prevent wrapping
+   Workspace Action Buttons
    ============================================ */
 .table td .btn-group {
   display: inline-flex;
@@ -930,47 +986,12 @@ pre {
 }
 
 /* ============================================
-   Badge Contrast Improvements
-   ============================================ */
-.badge {
-  font-weight: 600;
-}
-
-.badge.alert-success {
-  background: var(--accent-green) !important;
-  color: white !important;
-}
-
-.badge.alert-info {
-  background: var(--accent-cyan) !important;
-  color: white !important;
-}
-
-.badge.alert-warning {
-  background: var(--accent-orange) !important;
-  color: #1a1a1a !important;
-}
-
-.badge.alert-danger {
-  background: var(--accent-red) !important;
-  color: white !important;
-}
-
-/* Correlation count badges in scan list */
-#scanlist .badge {
-  min-width: 24px;
-  padding: 4px 8px;
-  font-size: 11px;
-  margin: 1px;
-}
-
-/* ============================================
    View Toggle Buttons (Browse page)
    ============================================ */
 #customtabview .btn-default {
   background: var(--bg-tertiary) !important;
   color: var(--text-secondary) !important;
-  border: 1px solid var(--bg-elevated) !important;
+  border: 1px solid var(--glass-border) !important;
 }
 
 #customtabview .btn-default:hover {
@@ -979,15 +1000,14 @@ pre {
 }
 
 #customtabview .btn-default.active {
-  background: var(--accent-cyan) !important;
+  background: var(--accent-blue) !important;
   color: white !important;
-  border-color: var(--accent-cyan) !important;
+  border-color: var(--accent-blue) !important;
 }
 
 /* ============================================
    Additional Table Improvements
    ============================================ */
-/* Ensure all table text is readable */
 .table > tbody > tr > td {
   color: var(--text-primary) !important;
 }
@@ -1004,7 +1024,7 @@ pre.table-border-bg-inherit {
   word-break: break-word;
 }
 
-/* Source data element cells - improve contrast */
+/* Source data element cells */
 .table td pre {
   color: var(--text-primary) !important;
 }
@@ -1023,7 +1043,7 @@ pre.table-border-bg-inherit {
 
 .text-warning .glyphicon,
 .glyphicon.text-warning {
-  color: var(--accent-orange);
+  color: var(--accent-yellow);
 }
 
 /* ============================================
@@ -1034,7 +1054,7 @@ pre.table-border-bg-inherit {
 }
 
 .table .btn-link:hover {
-  color: var(--accent-cyan-light);
+  color: var(--accent-blue-light);
 }
 
 /* Delete/trash icons */
@@ -1052,5 +1072,14 @@ pre.table-border-bg-inherit {
 }
 
 .table .glyphicon-refresh:hover {
-  color: var(--accent-cyan);
+  color: var(--accent-blue);
+}
+
+/* ============================================
+   Technical Data - Monospace styling
+   ============================================ */
+.technical-data {
+  font-family: var(--font-mono);
+  background: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
 }
