@@ -725,18 +725,15 @@ class SpiderFootWebUi:
             gexf (str): TBD
 
         Returns:
-            str: GEXF data
+            str: GEXF data or JSON
         """
-        import json
-
         # For JSON requests, always return valid JSON
         if gexf == "0":
             cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-
-            if not id:
-                return json.dumps({'nodes': [], 'edges': []})
-
             try:
+                if not id:
+                    return json.dumps({'nodes': [], 'edges': []})
+
                 dbh = SpiderFootDb(self.config)
                 data = dbh.scanResultEvent(id, filterFp=True)
                 scan = dbh.scanInstanceGet(id)
@@ -746,33 +743,33 @@ class SpiderFootWebUi:
 
                 root = scan[1]
                 return SpiderFootHelpers.buildGraphJson([root], data)
-            except Exception:
+            except Exception as e:
+                self.log.error(f"scanviz JSON error: {e}")
                 return json.dumps({'nodes': [], 'edges': []})
 
-        # For GEXF requests, handle errors differently
-        if not id:
-            return None
+        # For GEXF requests
+        try:
+            if not id:
+                return ""
 
-        dbh = SpiderFootDb(self.config)
-        data = dbh.scanResultEvent(id, filterFp=True)
-        scan = dbh.scanInstanceGet(id)
+            dbh = SpiderFootDb(self.config)
+            data = dbh.scanResultEvent(id, filterFp=True)
+            scan = dbh.scanInstanceGet(id)
 
-        if not scan:
-            return None
+            if not scan:
+                return ""
 
-        scan_name = scan[0]
-        root = scan[1]
+            scan_name = scan[0]
+            root = scan[1]
+            fname = f"{scan_name}SpiderFoot.gexf" if scan_name else "SpiderFoot.gexf"
 
-        if not scan_name:
-            fname = "SpiderFoot.gexf"
-        else:
-            fname = scan_name + "SpiderFoot.gexf"
-
-        cherrypy.response.headers[
-            'Content-Disposition'] = f"attachment; filename={fname}"
-        cherrypy.response.headers['Content-Type'] = "application/gexf"
-        cherrypy.response.headers['Pragma'] = "no-cache"
-        return SpiderFootHelpers.buildGraphGexf([root], "SpiderFoot Export", data)
+            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename={fname}"
+            cherrypy.response.headers['Content-Type'] = "application/gexf"
+            cherrypy.response.headers['Pragma'] = "no-cache"
+            return SpiderFootHelpers.buildGraphGexf([root], "SpiderFoot Export", data)
+        except Exception as e:
+            self.log.error(f"scanviz GEXF error: {e}")
+            return ""
 
     @cherrypy.expose
     def scanvizmulti(self: 'SpiderFootWebUi', ids: str, gexf: str = "1") -> str:
