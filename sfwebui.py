@@ -429,6 +429,16 @@ class SpiderFootWebUi:
         dbh = SpiderFootDb(self.config)
         data = dbh.scanResultEvent(id, type)
 
+        # Get target-level false positives for this scan
+        scanInfo = dbh.scanInstanceGet(id)
+        target = scanInfo[1] if scanInfo else None
+        targetFps = set()
+        if target:
+            try:
+                targetFps = dbh.targetFalsePositivesForTarget(target)
+            except Exception:
+                pass  # Table may not exist in older databases
+
         if filetype.lower() in ["xlsx", "excel"]:
             rows = []
             for row in data:
@@ -439,8 +449,10 @@ class SpiderFootWebUi:
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
                 event_type = translate_event_type(str(row[4]))
+                # Check both per-event FP flag and target-level FPs
+                fp_flag = 1 if row[13] or (row[4], row[1]) in targetFps else 0
                 rows.append([lastseen, event_type, str(row[3]),
-                            str(row[2]), row[13], datafield])
+                            str(row[2]), fp_flag, datafield])
 
             fname = "SpiderFoot.xlsx"
             cherrypy.response.headers[
@@ -463,8 +475,10 @@ class SpiderFootWebUi:
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
                 event_type = translate_event_type(str(row[4]))
+                # Check both per-event FP flag and target-level FPs
+                fp_flag = 1 if row[13] or (row[4], row[1]) in targetFps else 0
                 parser.writerow([lastseen, event_type, str(
-                    row[3]), str(row[2]), row[13], datafield])
+                    row[3]), str(row[2]), fp_flag, datafield])
 
             fname = "SpiderFoot.csv"
             cherrypy.response.headers[
@@ -490,6 +504,7 @@ class SpiderFootWebUi:
         """
         dbh = SpiderFootDb(self.config)
         scaninfo = dict()
+        targetFpsPerScan = dict()  # Store target FPs per scan ID
         data = list()
         scan_name = ""
 
@@ -498,6 +513,14 @@ class SpiderFootWebUi:
             if scaninfo[id] is None:
                 continue
             scan_name = scaninfo[id][0]
+            # Get target-level false positives for this scan
+            target = scaninfo[id][1] if scaninfo[id] else None
+            targetFpsPerScan[id] = set()
+            if target:
+                try:
+                    targetFpsPerScan[id] = dbh.targetFalsePositivesForTarget(target)
+                except Exception:
+                    pass  # Table may not exist in older databases
             data = data + dbh.scanResultEvent(id)
 
         if not data:
@@ -513,8 +536,12 @@ class SpiderFootWebUi:
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
                 event_type = translate_event_type(str(row[4]))
+                # Check both per-event FP flag and target-level FPs
+                scan_id = row[12]
+                targetFps = targetFpsPerScan.get(scan_id, set())
+                fp_flag = 1 if row[13] or (row[4], row[1]) in targetFps else 0
                 rows.append([scaninfo[row[12]][0], lastseen, event_type, str(row[3]),
-                            str(row[2]), row[13], datafield])
+                            str(row[2]), fp_flag, datafield])
 
             if len(ids.split(',')) > 1 or scan_name == "":
                 fname = "SpiderFoot.xlsx"
@@ -541,8 +568,12 @@ class SpiderFootWebUi:
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
                 event_type = translate_event_type(str(row[4]))
+                # Check both per-event FP flag and target-level FPs
+                scan_id = row[12]
+                targetFps = targetFpsPerScan.get(scan_id, set())
+                fp_flag = 1 if row[13] or (row[4], row[1]) in targetFps else 0
                 parser.writerow([scaninfo[row[12]][0], lastseen, event_type, str(row[3]),
-                                str(row[2]), row[13], datafield])
+                                str(row[2]), fp_flag, datafield])
 
             if len(ids.split(',')) > 1 or scan_name == "":
                 fname = "SpiderFoot.csv"
@@ -576,6 +607,17 @@ class SpiderFootWebUi:
         if not data:
             return None
 
+        # Get target-level false positives for this scan
+        dbh = SpiderFootDb(self.config)
+        scanInfo = dbh.scanInstanceGet(id)
+        target = scanInfo[1] if scanInfo else None
+        targetFps = set()
+        if target:
+            try:
+                targetFps = dbh.targetFalsePositivesForTarget(target)
+            except Exception:
+                pass  # Table may not exist in older databases
+
         if filetype.lower() in ["xlsx", "excel"]:
             rows = []
             for row in data:
@@ -584,8 +626,10 @@ class SpiderFootWebUi:
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
                 event_type = translate_event_type(str(row[10]))
+                # Check both per-event FP flag and target-level FPs
+                fp_flag = 1 if row[11] or (row[10], row[1]) in targetFps else 0
                 rows.append([row[0], event_type, str(row[3]),
-                            str(row[2]), row[11], datafield])
+                            str(row[2]), fp_flag, datafield])
             cherrypy.response.headers['Content-Disposition'] = "attachment; filename=SpiderFoot.xlsx"
             cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             cherrypy.response.headers['Pragma'] = "no-cache"
@@ -603,8 +647,10 @@ class SpiderFootWebUi:
                 datafield = str(row[1]).replace(
                     "<SFURL>", "").replace("</SFURL>", "")
                 event_type = translate_event_type(str(row[10]))
+                # Check both per-event FP flag and target-level FPs
+                fp_flag = 1 if row[11] or (row[10], row[1]) in targetFps else 0
                 parser.writerow([row[0], event_type, str(
-                    row[3]), str(row[2]), row[11], datafield])
+                    row[3]), str(row[2]), fp_flag, datafield])
 
             cherrypy.response.headers['Content-Disposition'] = "attachment; filename=SpiderFoot.csv"
             cherrypy.response.headers['Content-Type'] = "application/csv"
