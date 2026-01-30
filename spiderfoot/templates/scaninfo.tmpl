@@ -75,35 +75,37 @@
   </div>
 
   <!-- Floating Selection Toolbar - appears when items are selected -->
-  <div id="selection-toolbar" class="selection-toolbar" style="display: none;">
-    <div class="selection-toolbar-header">
-      <span id="selection-count">0</span> selected
-      <button type="button" class="close" onclick="clearSelection()">&times;</button>
+  <div id="selection-toolbar">
+    <div class="toolbar-header">
+      <span class="selection-count-display"><span id="selection-count">0</span> selected</span>
+      <button type="button" class="close-btn" onclick="clearSelection()">&times;</button>
     </div>
-    <div class="selection-toolbar-body">
-      <div class="selection-match-section">
-        <label>Select all matching:</label>
-        <div id="match-data-element" class="match-option" style="display: none;">
-          <button class="btn btn-sm btn-info" onclick="selectAllMatchingDataElement()">
+    <div class="match-section">
+      <label>Select all matching:</label>
+      <div class="match-buttons">
+        <div id="match-data-element" class="match-btn-wrapper" style="display: none;">
+          <button class="btn btn-data-match" onclick="selectAllMatchingDataElements()">
             <i class="glyphicon glyphicon-plus"></i> Data Element
+            <span id="data-match-count" class="match-count-badge">0</span>
           </button>
           <span id="match-data-preview" class="match-preview"></span>
         </div>
-        <div id="match-source-element" class="match-option" style="display: none;">
-          <button class="btn btn-sm btn-info" onclick="selectAllMatchingSourceElement()">
+        <div id="match-source-element" class="match-btn-wrapper" style="display: none;">
+          <button class="btn btn-source-match" onclick="selectAllMatchingSourceElements()">
             <i class="glyphicon glyphicon-plus"></i> Source Element
+            <span id="source-match-count" class="match-count-badge">0</span>
           </button>
           <span id="match-source-preview" class="match-preview"></span>
         </div>
       </div>
-      <div class="selection-toolbar-actions">
-        <button class="btn btn-sm btn-warning" onclick="setFp(1, 1)">
-          <i class="glyphicon glyphicon-ban-circle"></i> Mark as FP
-        </button>
-        <button class="btn btn-sm btn-default" onclick="clearSelection()">
-          Clear
-        </button>
-      </div>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-fp-action" onclick="setFp(1, 1)">
+        <i class="glyphicon glyphicon-ban-circle"></i> Mark as FP
+      </button>
+      <button class="btn btn-clear" onclick="clearSelection()">
+        Clear
+      </button>
     </div>
   </div>
     <script src="${docroot}/static/node_modules/sigma/build/sigma.min.js"></script>
@@ -186,9 +188,9 @@
             ).setHeader("Confirm Bulk FP");
         }
 
-        // Variables for selection toolbar
-        var lastSelectedDataElement = "";
-        var lastSelectedSourceElement = "";
+        // Variables for selection toolbar - now storing arrays for multiple selection support
+        var selectedDataElements = [];
+        var selectedSourceElements = [];
 
         // Clear all selections
         function clearSelection() {
@@ -203,78 +205,133 @@
             $("#selection-count").text(selectedCount);
 
             if (selectedCount > 0) {
-                $("#selection-toolbar").slideDown(200);
+                $("#selection-toolbar").fadeIn(200);
 
-                // Get the first selected row's data
-                var firstChecked = $("input[id*=cb_]:checked").first();
-                var row = firstChecked.closest("tr");
-                var cells = row.find("td");
+                // Collect ALL unique Data Elements and Source Elements from ALL selected rows
+                selectedDataElements = [];
+                selectedSourceElements = [];
+                var dataElementSet = {};
+                var sourceElementSet = {};
 
-                // Data Element is in 2nd column (index 1), Source is in 3rd column (index 2)
-                if (cells.length >= 3) {
-                    lastSelectedDataElement = cells.eq(1).text().trim();
-                    lastSelectedSourceElement = cells.eq(2).text().trim();
+                $("input[id*=cb_]:checked").each(function() {
+                    var row = $(this).closest("tr");
+                    var cells = row.find("td");
 
-                    // Show data element match option
-                    if (lastSelectedDataElement) {
-                        var preview = lastSelectedDataElement.substring(0, 50);
-                        if (lastSelectedDataElement.length > 50) preview += "...";
-                        $("#match-data-preview").text('"' + preview + '"');
-                        $("#match-data-element").show();
-                    } else {
-                        $("#match-data-element").hide();
+                    if (cells.length >= 3) {
+                        var dataEl = cells.eq(1).text().trim();
+                        var sourceEl = cells.eq(2).text().trim();
+
+                        // Add to unique sets
+                        if (dataEl && !dataElementSet[dataEl]) {
+                            dataElementSet[dataEl] = true;
+                            selectedDataElements.push(dataEl);
+                        }
+                        if (sourceEl && !sourceElementSet[sourceEl]) {
+                            sourceElementSet[sourceEl] = true;
+                            selectedSourceElements.push(sourceEl);
+                        }
                     }
+                });
 
-                    // Show source element match option
-                    if (lastSelectedSourceElement) {
-                        var preview = lastSelectedSourceElement.substring(0, 50);
-                        if (lastSelectedSourceElement.length > 50) preview += "...";
-                        $("#match-source-preview").text('"' + preview + '"');
-                        $("#match-source-element").show();
+                // Show data element match option with count
+                if (selectedDataElements.length > 0) {
+                    var preview = "";
+                    if (selectedDataElements.length === 1) {
+                        preview = '"' + selectedDataElements[0].substring(0, 40) + '"';
+                        if (selectedDataElements[0].length > 40) preview = preview.slice(0, -1) + '..."';
                     } else {
-                        $("#match-source-element").hide();
+                        preview = selectedDataElements.length + " unique values";
                     }
+                    $("#match-data-preview").text(preview);
+                    $("#data-match-count").text(selectedDataElements.length);
+                    $("#match-data-element").show();
+                } else {
+                    $("#match-data-element").hide();
+                }
+
+                // Show source element match option with count
+                if (selectedSourceElements.length > 0) {
+                    var preview = "";
+                    if (selectedSourceElements.length === 1) {
+                        preview = '"' + selectedSourceElements[0].substring(0, 40) + '"';
+                        if (selectedSourceElements[0].length > 40) preview = preview.slice(0, -1) + '..."';
+                    } else {
+                        preview = selectedSourceElements.length + " unique values";
+                    }
+                    $("#match-source-preview").text(preview);
+                    $("#source-match-count").text(selectedSourceElements.length);
+                    $("#match-source-element").show();
+                } else {
+                    $("#match-source-element").hide();
                 }
             } else {
-                $("#selection-toolbar").slideUp(200);
+                $("#selection-toolbar").fadeOut(200);
             }
         }
 
-        // Select all rows with matching Data Element
-        function selectAllMatchingDataElement() {
-            if (!lastSelectedDataElement) return;
+        // Select all rows matching ANY of the selected Data Elements
+        function selectAllMatchingDataElements() {
+            if (selectedDataElements.length === 0) return;
 
-            var count = 0;
+            // Create a lookup set for fast matching
+            var matchSet = {};
+            for (var i = 0; i < selectedDataElements.length; i++) {
+                matchSet[selectedDataElements[i]] = true;
+            }
+
+            var newSelections = 0;
             $("#scansummary-content tbody tr").each(function() {
                 var cells = $(this).find("td");
                 if (cells.length >= 2) {
                     var dataElement = cells.eq(1).text().trim();
-                    if (dataElement === lastSelectedDataElement) {
-                        $(this).find("input[id*=cb_]").prop('checked', true);
-                        count++;
+                    if (matchSet[dataElement]) {
+                        var cb = $(this).find("input[id*=cb_]");
+                        if (!cb.prop('checked')) {
+                            cb.prop('checked', true);
+                            newSelections++;
+                        }
                     }
                 }
             });
-            alertify.success("Selected " + count + " rows with matching Data Element");
+
+            if (newSelections > 0) {
+                alertify.success("Selected " + newSelections + " additional rows matching " + selectedDataElements.length + " Data Element(s)");
+            } else {
+                alertify.info("All matching rows are already selected");
+            }
             updateSelectionToolbar();
         }
 
-        // Select all rows with matching Source Data Element
-        function selectAllMatchingSourceElement() {
-            if (!lastSelectedSourceElement) return;
+        // Select all rows matching ANY of the selected Source Data Elements
+        function selectAllMatchingSourceElements() {
+            if (selectedSourceElements.length === 0) return;
 
-            var count = 0;
+            // Create a lookup set for fast matching
+            var matchSet = {};
+            for (var i = 0; i < selectedSourceElements.length; i++) {
+                matchSet[selectedSourceElements[i]] = true;
+            }
+
+            var newSelections = 0;
             $("#scansummary-content tbody tr").each(function() {
                 var cells = $(this).find("td");
                 if (cells.length >= 3) {
                     var sourceElement = cells.eq(2).text().trim();
-                    if (sourceElement === lastSelectedSourceElement) {
-                        $(this).find("input[id*=cb_]").prop('checked', true);
-                        count++;
+                    if (matchSet[sourceElement]) {
+                        var cb = $(this).find("input[id*=cb_]");
+                        if (!cb.prop('checked')) {
+                            cb.prop('checked', true);
+                            newSelections++;
+                        }
                     }
                 }
             });
-            alertify.success("Selected " + count + " rows with matching Source Element");
+
+            if (newSelections > 0) {
+                alertify.success("Selected " + newSelections + " additional rows matching " + selectedSourceElements.length + " Source Element(s)");
+            } else {
+                alertify.info("All matching rows are already selected");
+            }
             updateSelectionToolbar();
         }
 

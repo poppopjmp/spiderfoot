@@ -269,89 +269,139 @@ input:checked + .slider:before {
 }
 
 /* ============================================
-   Selection Toolbar Styling
+   Selection Toolbar Styling - Fixed Floating
    ============================================ */
 
 #selection-toolbar {
   display: none;
-  position: sticky;
-  top: 60px;
-  z-index: 1000;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1050;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 2px solid #17a2b8;
+  border-radius: 12px;
+  padding: 15px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  max-width: 90%;
+  min-width: 400px;
 }
 
-#selection-toolbar .toolbar-content {
+#selection-toolbar .toolbar-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dee2e6;
 }
 
-#selection-toolbar .selection-info {
+#selection-toolbar .selection-count-display {
+  font-weight: 700;
+  font-size: 16px;
+  color: #17a2b8;
+}
+
+#selection-toolbar .close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0 5px;
+}
+
+#selection-toolbar .close-btn:hover {
+  color: #dc3545;
+}
+
+#selection-toolbar .match-section {
+  margin-bottom: 12px;
+}
+
+#selection-toolbar .match-section label {
   font-weight: 600;
   color: #495057;
-  margin-right: 8px;
-  white-space: nowrap;
-}
-
-#selection-toolbar .selection-info .badge {
-  font-size: 14px;
-  padding: 4px 10px;
-  margin-left: 6px;
+  margin-bottom: 8px;
+  display: block;
 }
 
 #selection-toolbar .match-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  flex: 1;
+  gap: 10px;
+}
+
+#selection-toolbar .match-btn-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 #selection-toolbar .btn {
-  font-size: 12px;
-  padding: 6px 12px;
-  white-space: nowrap;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 6px;
 }
 
-#selection-toolbar .btn-match {
+#selection-toolbar .btn-data-match {
   background-color: #17a2b8;
   border-color: #17a2b8;
   color: white;
 }
 
-#selection-toolbar .btn-match:hover {
+#selection-toolbar .btn-data-match:hover {
   background-color: #138496;
   border-color: #117a8b;
 }
 
+#selection-toolbar .btn-source-match {
+  background-color: #6f42c1;
+  border-color: #6f42c1;
+  color: white;
+}
+
+#selection-toolbar .btn-source-match:hover {
+  background-color: #5a32a3;
+  border-color: #4e2a91;
+}
+
 #selection-toolbar .match-preview {
   font-size: 11px;
-  max-width: 200px;
+  color: #6c757d;
+  max-width: 250px;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: inline-block;
-  vertical-align: middle;
-  opacity: 0.9;
+  white-space: nowrap;
+}
+
+#selection-toolbar .match-count-badge {
+  font-size: 11px;
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 5px;
 }
 
 #selection-toolbar .toolbar-actions {
   display: flex;
-  gap: 8px;
-  margin-left: auto;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #dee2e6;
 }
 
-#selection-toolbar .btn-fp-quick {
+#selection-toolbar .btn-fp-action {
   background-color: #ffc107;
   border-color: #ffc107;
   color: #212529;
+  font-weight: 600;
 }
 
-#selection-toolbar .btn-fp-quick:hover {
+#selection-toolbar .btn-fp-action:hover {
   background-color: #e0a800;
   border-color: #d39e00;
 }
@@ -368,20 +418,18 @@ input:checked + .slider:before {
 }
 
 /* Responsive adjustments for toolbar */
-@media (max-width: 992px) {
-  #selection-toolbar .toolbar-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  #selection-toolbar .toolbar-actions {
-    margin-left: 0;
-    margin-top: 8px;
-    width: 100%;
-    justify-content: flex-start;
+@media (max-width: 768px) {
+  #selection-toolbar {
+    min-width: 300px;
+    padding: 12px 15px;
+    bottom: 10px;
   }
 
   #selection-toolbar .match-buttons {
-    width: 100%;
+    flex-direction: column;
+  }
+
+  #selection-toolbar .toolbar-actions {
+    flex-wrap: wrap;
   }
 }
