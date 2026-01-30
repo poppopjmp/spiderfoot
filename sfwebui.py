@@ -727,25 +727,25 @@ class SpiderFootWebUi:
         Returns:
             str: GEXF data or JSON
         """
-        # For JSON requests, always return valid JSON
+        # For JSON requests, always return valid JSON (as bytes for CherryPy)
         if gexf == "0":
             cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
             try:
                 if not id:
-                    return json.dumps({'nodes': [], 'edges': []})
+                    return json.dumps({'nodes': [], 'edges': []}).encode('utf-8')
 
                 dbh = SpiderFootDb(self.config)
                 data = dbh.scanResultEvent(id, filterFp=True)
                 scan = dbh.scanInstanceGet(id)
 
                 if not scan:
-                    return json.dumps({'nodes': [], 'edges': []})
+                    return json.dumps({'nodes': [], 'edges': []}).encode('utf-8')
 
                 root = scan[1]
-                return SpiderFootHelpers.buildGraphJson([root], data)
+                return SpiderFootHelpers.buildGraphJson([root], data).encode('utf-8')
             except Exception as e:
                 self.log.error(f"scanviz JSON error: {e}")
-                return json.dumps({'nodes': [], 'edges': []})
+                return json.dumps({'nodes': [], 'edges': []}).encode('utf-8')
 
         # For GEXF requests
         try:
