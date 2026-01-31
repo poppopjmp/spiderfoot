@@ -367,12 +367,14 @@ input[type="checkbox"] {
 
 .table > thead > tr > th {
   background: var(--bg-secondary) !important;
-  color: var(--text-secondary) !important;
-  font-weight: 500;
-  font-size: 12px;
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  font-size: 14px;
   font-family: var(--font-sans);
   border-bottom: 1px solid var(--glass-border) !important;
-  padding: 12px;
+  padding: 14px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .table > tbody > tr {
@@ -418,6 +420,51 @@ input[type="checkbox"] {
 .table-border-bg-inherit {
   color: var(--text-primary) !important;
   background: transparent !important;
+}
+
+/* ============================================
+   Nested/Child Tables (Expandable Rows)
+   ============================================ */
+.table .table,
+table table,
+td > table,
+tr > td > table,
+.child-table,
+.nested-table {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-sm);
+  margin: 8px 0;
+}
+
+.table .table thead th,
+table table thead th,
+td > table thead th {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px;
+}
+
+.table .table tbody tr,
+table table tbody tr,
+td > table tbody tr {
+  background: var(--bg-tertiary) !important;
+}
+
+.table .table tbody tr:hover,
+table table tbody tr:hover,
+td > table tbody tr:hover {
+  background: var(--bg-elevated) !important;
+}
+
+.table .table tbody td,
+table table tbody td,
+td > table tbody td {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  border-color: var(--glass-border) !important;
 }
 
 /* Danger rows (errors) */
