@@ -578,12 +578,11 @@
 <div class="row">
   <div class="col-md-12">
     <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Workspace Management
-          <button class="btn btn-primary btn-sm pull-right" data-toggle="modal" data-target="#createWorkspaceModal">
-            <i class="glyphicon glyphicon-plus"></i> Create Workspace
-          </button>
-        </h3>
+      <div class="panel-heading workspace-panel-heading">
+        <h3 class="panel-title">Workspace Management</h3>
+        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createWorkspaceModal">
+          <i class="glyphicon glyphicon-plus"></i> Create Workspace
+        </button>
       </div>
       <div class="panel-body">
         <div id="workspaceList">
@@ -597,6 +596,33 @@
 </div>
 
 <style>
+/* Workspace panel heading - flexbox for proper button alignment */
+.workspace-panel-heading {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.workspace-panel-heading .panel-title {
+    margin: 0;
+    flex-grow: 1;
+}
+
+/* Workspace table delete button - ensure red fill with glow */
+#workspaceList .btn-danger,
+#workspaceList .btn-group .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5) !important;
+}
+
+#workspaceList .btn-danger:hover,
+#workspaceList .btn-group .btn-danger:hover {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%) !important;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6) !important;
+}
+
 /* Custom styling for workspace delete confirmation dialog */
 .alertify .ajs-dialog .ajs-content .alert {
     margin: 10px 0 !important;
