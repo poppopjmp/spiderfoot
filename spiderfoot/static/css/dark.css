@@ -84,17 +84,18 @@ body {
 .light { display: none !important; }
 
 /* ============================================
-   Links
+   Links - Bright Neon Cyan
    ============================================ */
 a {
-  color: var(--accent-blue);
+  color: var(--accent-cyan);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--accent-blue-light);
+  color: var(--accent-cyan-light);
   text-decoration: none;
+  text-shadow: 0 0 8px var(--glow-cyan);
 }
 
 /* ============================================
@@ -1319,13 +1320,6 @@ input[type="checkbox"]:checked {
 }
 
 /* ============================================
-   Link Glow on Hover
-   ============================================ */
-a:hover {
-  text-shadow: 0 0 8px var(--glow-blue);
-}
-
-/* ============================================
    Form Input Glow on Focus
    ============================================ */
 .form-control:focus,
@@ -1358,9 +1352,107 @@ select:focus {
    Search Button Glow
    ============================================ */
 .input-group-btn .btn {
-  box-shadow: 0 0 10px var(--glow-blue);
+  box-shadow: 0 0 10px var(--glow-purple);
 }
 
 .input-group-btn .btn:hover {
-  box-shadow: 0 0 18px var(--glow-blue);
+  box-shadow: 0 0 18px var(--glow-purple);
+}
+
+/* ============================================
+   False Positive Button - Orange with Glow
+   ============================================ */
+#btn-setfp,
+.btn-fp-action {
+  background: linear-gradient(135deg, var(--accent-orange) 0%, #ea580c 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 0 15px var(--glow-orange);
+}
+
+#btn-setfp:hover,
+.btn-fp-action:hover {
+  background: linear-gradient(135deg, #fb923c 0%, var(--accent-orange) 100%) !important;
+  box-shadow: 0 0 25px var(--glow-orange);
+}
+
+/* ============================================
+   Refresh Button - Green with Glow
+   ============================================ */
+#btn-refresh {
+  background: linear-gradient(135deg, var(--accent-green) 0%, #16a34a 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 0 15px var(--glow-green);
+}
+
+#btn-refresh:hover {
+  background: linear-gradient(135deg, var(--accent-green-light) 0%, var(--accent-green) 100%) !important;
+  box-shadow: 0 0 25px var(--glow-green);
+}
+
+/* ============================================
+   Secondary Toolbar Container (Search/Download/Refresh)
+   ============================================ */
+.btn-toolbar > .btn-group.pull-right {
+  background: linear-gradient(180deg, #1e1e1e 0%, #151515 100%);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  margin-left: 8px;
+}
+
+/* Search input container toolbar styling */
+#btn-search {
+  background: linear-gradient(180deg, #1e1e1e 0%, #151515 100%);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+#btn-search .form-control {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px 0 0 6px !important;
+}
+
+/* Search button - purple */
+.input-group-btn .btn-primary {
+  background: linear-gradient(135deg, var(--accent-purple) 0%, #7c3aed 100%) !important;
+  box-shadow: 0 0 12px var(--glow-purple);
+  border-radius: 0 6px 6px 0 !important;
+}
+
+/* Download buttons styling */
+.download-button {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ============================================
+   View Toggle Toolbar Container
+   ============================================ */
+#customtabview {
+  background: linear-gradient(180deg, #1e1e1e 0%, #151515 100%);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+#customtabview .btn-default {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e0e0e0 !important;
+}
+
+#customtabview .btn-default:hover {
+  background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%) !important;
+  color: #ffffff !important;
+}
+
+#customtabview .btn-default.active {
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%) !important;
+  color: white !important;
+  border-color: var(--accent-blue) !important;
+  box-shadow: 0 0 15px var(--glow-blue);
 }
