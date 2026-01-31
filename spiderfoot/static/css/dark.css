@@ -1228,7 +1228,7 @@ pre.table-border-bg-inherit {
 /* Toolbar flex layout for proper alignment */
 .btn-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
 }
@@ -1239,19 +1239,21 @@ pre.table-border-bg-inherit {
   justify-content: flex-start;
 }
 
-/* FP button should align with view toggle - push to right */
+/* FP button styling */
 #btn-setfp {
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  margin-left: auto;
-  margin-right: 8px;
 }
 
-/* View toggle toolbar - stays on right after FP */
+/* View toggle toolbar */
 #customtabview {
   display: inline-flex;
   align-items: center;
+}
+
+/* Push search bar to right side */
+.search-group {
   margin-left: auto;
 }
 
@@ -1268,7 +1270,7 @@ pre.table-border-bg-inherit {
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #e0e0e0 !important;
   font-weight: 600;
-  padding: 10px 18px;
+  padding: 6px 12px;
   transition: all 0.2s ease;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }

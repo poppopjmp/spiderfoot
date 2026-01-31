@@ -23,41 +23,7 @@
       <a id='btn-info' class="btn btn-default" onClick='viewScanConfig("${id}")'><i class='glyphicon glyphicon-cog'></i>&nbsp;Scan Settings</a>
       <a id='btn-log' class="btn btn-default" onClick='viewScanLog("${id}")'><i class='glyphicon glyphicon-book'></i>&nbsp;Log</a>
     </div>
-    <div class='btn-group pull-right'>
-        <div id='btn-search' class='input-group pull-right'>
-          <input class='form-control' id='searchvalue' type='text' placeholder='Search...' data-toggle='popover' data-html='true' data-animation='true' data-title='Usage' data-content="Supply a regular expression encapsulated in '/', e.g. <i>/searchregex/</i> or a simple wildcard search, e.g. <i>*string*</i> or an exact value, e.g. <i>string</i>.<br /><br /><b>Note</b> that the current scope is what's searched.">
-            <div class='input-group-btn' style='width: 0px'> <!-- Chrome fix -->
-              <button class='btn btn-primary' id='searchbutton' type='button' onClick="$('#btn-search').popover('toggle');searchDirector('${id}')">
-                <i class='glyphicon glyphicon-search glyphicon glyphicon-white'></i>
-              </button>
-            </div>
-        </div>
-    </div>
-        <div class="btn-group pull-right" role="group">
-            <button id='btn-refresh' rel="tooltip" title="Refresh" class="btn btn-success btn-default" onClick='refresh()'><i class='glyphicon glyphicon-refresh glyphicon glyphicon-white'></i></button>
-            <button id='btn-download-logs' rel="tooltip" data-title="Download Scan Logs" class="btn btn-default download-button" onClick='downloadLogs("${id}")'><i class='glyphicon glyphicon-download-alt glyphicon glyphicon-white'></i></button>
-            <a id='btn-export' rel="tooltip" data-title="Export Data" class="btn btn-default dropdown-toggle download-button" data-toggle="dropdown"><i class='glyphicon glyphicon-download-alt glyphicon glyphicon-white'></i></a>
-            <ul class="dropdown-menu">
-              <li><a class='link' onClick='exportEventData("${id}", currentType, "csv")'>CSV</a></li>
-              <li><a class='link' onClick='exportEventData("${id}", currentType, "excel")'>Excel</a></li>
-            </ul>
-        </div> 
-        <div id='customtabview' role="group" class="btn-group pull-right">
-         <a id='btn-fullview' rel="tooltip" data-title="Full Data View" class="btn btn-default active" onClick='browseUpdate("full")'><i class='glyphicon glyphicon-th glyphicon glyphicon-white'></i></a>
-         <a id='btn-uniqueview' rel="tooltip" data-title="Unique Data View" class="btn btn-default" onClick='browseUpdate("unique")'><i class='glyphicon glyphicon-align-justify glyphicon glyphicon-white'></i></a>
-         <a id='btn-vizview' rel="tooltip" data-title="Visualize" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class='glyphicon glyphicon-picture glyphicon glyphicon-white'></i></a>
-         <ul class="dropdown-menu">
-            <li><a class='link' onClick='browseUpdate("viz-bubble-data")'>Bubble (Data Element)</a></li>
-            <li><a class='link' onClick='browseUpdate("viz-bubble-source")'>Bubble (Source Data Element)</a></li>
-            <li><a class='link' onClick='browseUpdate("viz-dendro")'>Discovery Path</a></li>
-         </ul>
-        </div>
-        <div id='customvizview' class="btn-group pull-right">
-         <a id='btn-random' rel="tooltip" data-title="Random Layout" class="btn btn-default active" onClick='vizUpdate("random")'><b>R</b></a>
-         <a id='btn-forceatlas' rel="tooltip" data-title="Force Layout" class="btn btn-default" onClick='vizUpdate("force")'><b>F</b></a>
-         <a id='btn-saveimage' rel="tooltip" data-title="Save Image" class="btn btn-default dropdown-toggle" onClick='vizUpdate("download")'><i class='glyphicon glyphicon-picture glyphicon glyphicon-white'></i></a>
-        </div>
-        <div id='modifyactions' role="group" class="btn-group pull-right">
+        <div id='modifyactions' role="group" class="btn-group">
             <a id='btn-setfp' rel="tooltip" data-title="Set/Unset False Positive flag" class="btn-warning btn btn-default dropdown-toggle" data-toggle="dropdown"><i class='glyphicon glyphicon-ban-circle glyphicon glyphicon-white'></i></a>
             <ul class="dropdown-menu">
                 <li><a href='#' class='link' onClick='setFp(1, 0)'>Set False Positive (this scan only)</a></li>
@@ -72,6 +38,39 @@
                 <li><a href='#' class='link' onClick='selectAllVisible()'>Select All Visible</a></li>
             </ul>
         </div>
+        <div id='customtabview' role="group" class="btn-group">
+         <a id='btn-fullview' rel="tooltip" data-title="Full Data View" class="btn btn-default active" onClick='browseUpdate("full")'><i class='glyphicon glyphicon-th glyphicon glyphicon-white'></i></a>
+         <a id='btn-uniqueview' rel="tooltip" data-title="Unique Data View" class="btn btn-default" onClick='browseUpdate("unique")'><i class='glyphicon glyphicon-align-justify glyphicon glyphicon-white'></i></a>
+         <a id='btn-vizview' rel="tooltip" data-title="Visualize" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class='glyphicon glyphicon-picture glyphicon glyphicon-white'></i></a>
+         <ul class="dropdown-menu">
+            <li><a class='link' onClick='browseUpdate("viz-bubble-data")'>Bubble (Data Element)</a></li>
+            <li><a class='link' onClick='browseUpdate("viz-bubble-source")'>Bubble (Source Data Element)</a></li>
+            <li><a class='link' onClick='browseUpdate("viz-dendro")'>Discovery Path</a></li>
+         </ul>
+        </div>
+        <div id='customvizview' class="btn-group">
+         <a id='btn-random' rel="tooltip" data-title="Random Layout" class="btn btn-default active" onClick='vizUpdate("random")'><b>R</b></a>
+         <a id='btn-forceatlas' rel="tooltip" data-title="Force Layout" class="btn btn-default" onClick='vizUpdate("force")'><b>F</b></a>
+         <a id='btn-saveimage' rel="tooltip" data-title="Save Image" class="btn btn-default dropdown-toggle" onClick='vizUpdate("download")'><i class='glyphicon glyphicon-picture glyphicon glyphicon-white'></i></a>
+        </div>
+        <div class="btn-group" role="group">
+            <button id='btn-refresh' rel="tooltip" title="Refresh" class="btn btn-success btn-default" onClick='refresh()'><i class='glyphicon glyphicon-refresh glyphicon glyphicon-white'></i></button>
+            <a id='btn-export' rel="tooltip" data-title="Export Data" class="btn btn-default dropdown-toggle download-button" data-toggle="dropdown"><i class='glyphicon glyphicon-download-alt glyphicon glyphicon-white'></i></a>
+            <ul class="dropdown-menu">
+              <li><a class='link' onClick='exportEventData("${id}", currentType, "csv")'>CSV</a></li>
+              <li><a class='link' onClick='exportEventData("${id}", currentType, "excel")'>Excel</a></li>
+            </ul>
+        </div>
+    <div class='btn-group search-group'>
+        <div id='btn-search' class='input-group'>
+          <input class='form-control' id='searchvalue' type='text' placeholder='Search...' data-toggle='popover' data-html='true' data-animation='true' data-title='Usage' data-content="Supply a regular expression encapsulated in '/', e.g. <i>/searchregex/</i> or a simple wildcard search, e.g. <i>*string*</i> or an exact value, e.g. <i>string</i>.<br /><br /><b>Note</b> that the current scope is what's searched.">
+            <div class='input-group-btn' style='width: 0px'> <!-- Chrome fix -->
+              <button class='btn btn-primary' id='searchbutton' type='button' onClick="$('#btn-search').popover('toggle');searchDirector('${id}')">
+                <i class='glyphicon glyphicon-search glyphicon glyphicon-white'></i>
+              </button>
+            </div>
+        </div>
+    </div>
   </div>
 
   <!-- Floating Selection Toolbar - Modern horizontal design -->
