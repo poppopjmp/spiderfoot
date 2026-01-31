@@ -1,6 +1,6 @@
 /* ============================================
-   SpiderFoot Dark Theme - ProjectDiscovery Style
-   Clean, minimal, professional dark aesthetic
+   SpiderFoot Dark Theme - Modern Glow Aesthetic
+   Grey/blue-black with glow effects everywhere
    ============================================ */
 
 /* Google Fonts Import */
@@ -14,22 +14,22 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Monaco', 'Consolas', monospace;
 
-  /* Base colors - near black, minimal */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #111111;
-  --bg-tertiary: #1a1a1a;
-  --bg-elevated: #262626;
+  /* Base colors - grey/blue-black like toolbar */
+  --bg-primary: #0c0c0c;
+  --bg-secondary: #151515;
+  --bg-tertiary: #1e1e1e;
+  --bg-elevated: #2a2a2a;
 
-  /* No glass effects - clean flat */
-  --glass-bg: #111111;
-  --glass-border: rgba(255, 255, 255, 0.08);
+  /* Glass effects */
+  --glass-bg: #151515;
+  --glass-border: rgba(255, 255, 255, 0.1);
 
   /* Text - crisp white */
   --text-primary: #fafafa;
   --text-secondary: #a3a3a3;
   --text-muted: #737373;
 
-  /* Accent colors - severity based */
+  /* Accent colors - vibrant */
   --accent-green: #22c55e;
   --accent-green-light: #4ade80;
   --accent-yellow: #f59e0b;
@@ -39,12 +39,20 @@
   --accent-blue: #3b82f6;
   --accent-blue-light: #60a5fa;
   --accent-purple: #8b5cf6;
+  --accent-purple-light: #a78bfa;
+  --accent-cyan: #22d3ee;
+  --accent-cyan-light: #67e8f9;
 
-  /* Keep cyan for compatibility - map to green */
-  --accent-cyan: #22c55e;
-  --accent-cyan-light: #4ade80;
+  /* Glow colors */
+  --glow-green: rgba(34, 197, 94, 0.5);
+  --glow-blue: rgba(59, 130, 246, 0.5);
+  --glow-purple: rgba(139, 92, 246, 0.5);
+  --glow-yellow: rgba(245, 158, 11, 0.5);
+  --glow-red: rgba(239, 68, 68, 0.5);
+  --glow-cyan: rgba(34, 211, 238, 0.5);
+  --glow-orange: rgba(249, 115, 22, 0.5);
 
-  /* Minimal shadows */
+  /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
@@ -165,92 +173,108 @@ a:hover {
 }
 
 /* ============================================
-   Buttons - Outlined Style
+   Buttons - Colorful with Glow Effects
    ============================================ */
 .btn {
-  font-weight: 500;
+  font-weight: 600;
   font-family: var(--font-sans);
   padding: 8px 16px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
-  transition: all var(--transition-fast);
+  border: none;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .btn:hover {
-  transform: none;
+  transform: translateY(-1px);
 }
 
 .btn:active {
-  transform: none;
+  transform: translateY(0);
 }
 
-/* Primary/Default button - Outlined */
-.btn-primary,
-.btn-default {
-  background: transparent !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--glass-border) !important;
+/* Primary button - Cyan gradient with glow */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, #06b6d4 100%) !important;
+  color: #000 !important;
+  border: none !important;
+  box-shadow: 0 0 15px var(--glow-cyan);
 }
 
 .btn-primary:hover,
-.btn-default:hover,
-.btn-primary:focus,
-.btn-default:focus {
-  background: var(--bg-tertiary) !important;
-  border-color: var(--text-muted) !important;
-  color: var(--text-primary) !important;
+.btn-primary:focus {
+  background: linear-gradient(135deg, var(--accent-cyan-light) 0%, var(--accent-cyan) 100%) !important;
+  box-shadow: 0 0 25px var(--glow-cyan), 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Success button - Green filled */
+/* Default button - Subtle gradient */
+.btn-default {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.btn-default:hover,
+.btn-default:focus {
+  background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Success button - Green gradient with glow */
 .btn-success {
-  background: var(--accent-green) !important;
+  background: linear-gradient(135deg, var(--accent-green) 0%, #16a34a 100%) !important;
   color: #000 !important;
   border: none !important;
+  box-shadow: 0 0 15px var(--glow-green);
 }
 
 .btn-success:hover,
 .btn-success:focus {
-  background: var(--accent-green-light) !important;
-  color: #000 !important;
+  background: linear-gradient(135deg, var(--accent-green-light) 0%, var(--accent-green) 100%) !important;
+  box-shadow: 0 0 25px var(--glow-green), 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Warning button - Amber */
+/* Warning button - Orange gradient with glow */
 .btn-warning {
-  background: var(--accent-yellow) !important;
+  background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%) !important;
   color: #000 !important;
   border: none !important;
+  box-shadow: 0 0 15px var(--glow-yellow);
 }
 
 .btn-warning:hover,
 .btn-warning:focus {
-  background: var(--accent-orange) !important;
-  color: #000 !important;
+  background: linear-gradient(135deg, #fbbf24 0%, var(--accent-yellow) 100%) !important;
+  box-shadow: 0 0 25px var(--glow-orange), 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Danger button - Red */
+/* Danger button - Red gradient with glow */
 .btn-danger {
-  background: var(--accent-red) !important;
+  background: linear-gradient(135deg, var(--accent-red) 0%, var(--accent-red-dark) 100%) !important;
   color: white !important;
   border: none !important;
+  box-shadow: 0 0 15px var(--glow-red);
 }
 
 .btn-danger:hover,
 .btn-danger:focus {
-  background: var(--accent-red-dark) !important;
-  color: white !important;
+  background: linear-gradient(135deg, #f87171 0%, var(--accent-red) 100%) !important;
+  box-shadow: 0 0 25px var(--glow-red), 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Info button - Blue outlined */
+/* Info button - Blue gradient with glow */
 .btn-info {
-  background: transparent !important;
-  color: var(--accent-blue) !important;
-  border: 1px solid var(--accent-blue) !important;
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 0 15px var(--glow-blue);
 }
 
 .btn-info:hover,
 .btn-info:focus {
-  background: var(--accent-blue) !important;
-  color: white !important;
+  background: linear-gradient(135deg, var(--accent-blue-light) 0%, var(--accent-blue) 100%) !important;
+  box-shadow: 0 0 25px var(--glow-blue), 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* Button groups */
@@ -1155,30 +1179,188 @@ pre.table-border-bg-inherit {
 }
 
 /* ============================================
-   Workspace/Table Action Buttons - Consistent filled style
+   Workspace/Table Action Buttons - With Glow
    ============================================ */
-/* Make btn-info filled instead of outlined */
 .btn-group .btn-info,
 .table .btn-info {
-  background: var(--accent-blue) !important;
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%) !important;
   color: white !important;
   border: none !important;
+  box-shadow: 0 0 12px var(--glow-blue);
 }
 
 .btn-group .btn-info:hover,
 .table .btn-info:hover {
-  background: var(--accent-blue-light) !important;
+  background: linear-gradient(135deg, var(--accent-blue-light) 0%, var(--accent-blue) 100%) !important;
+  box-shadow: 0 0 20px var(--glow-blue);
 }
 
-/* Make btn-primary filled in button groups */
 .btn-group .btn-primary,
 .table .btn-primary {
-  background: var(--accent-purple) !important;
+  background: linear-gradient(135deg, var(--accent-purple) 0%, #7c3aed 100%) !important;
   color: white !important;
   border: none !important;
+  box-shadow: 0 0 12px var(--glow-purple);
 }
 
 .btn-group .btn-primary:hover,
 .table .btn-primary:hover {
-  background: #a78bfa !important;
+  background: linear-gradient(135deg, var(--accent-purple-light) 0%, var(--accent-purple) 100%) !important;
+  box-shadow: 0 0 20px var(--glow-purple);
+}
+
+.btn-group .btn-success,
+.table .btn-success {
+  box-shadow: 0 0 12px var(--glow-green);
+}
+
+.btn-group .btn-success:hover,
+.table .btn-success:hover {
+  box-shadow: 0 0 20px var(--glow-green);
+}
+
+.btn-group .btn-warning,
+.table .btn-warning {
+  box-shadow: 0 0 12px var(--glow-yellow);
+}
+
+.btn-group .btn-warning:hover,
+.table .btn-warning:hover {
+  box-shadow: 0 0 20px var(--glow-orange);
+}
+
+.btn-group .btn-danger,
+.table .btn-danger {
+  box-shadow: 0 0 12px var(--glow-red);
+}
+
+.btn-group .btn-danger:hover,
+.table .btn-danger:hover {
+  box-shadow: 0 0 20px var(--glow-red);
+}
+
+/* ============================================
+   Checkbox Glow Effects
+   ============================================ */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-green);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+input[type="checkbox"]:checked {
+  box-shadow: 0 0 12px var(--glow-green), 0 0 4px var(--glow-green);
+}
+
+.table input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+
+.table input[type="checkbox"]:checked {
+  box-shadow: 0 0 15px var(--glow-green), 0 0 6px var(--glow-green);
+}
+
+/* ============================================
+   Badge Glow Effects
+   ============================================ */
+.badge.alert-success {
+  background: var(--accent-green) !important;
+  color: #000 !important;
+  box-shadow: 0 0 12px var(--glow-green);
+}
+
+.badge.alert-info {
+  background: var(--accent-blue) !important;
+  color: white !important;
+  box-shadow: 0 0 12px var(--glow-blue);
+}
+
+.badge.alert-warning {
+  background: var(--accent-yellow) !important;
+  color: #000 !important;
+  box-shadow: 0 0 12px var(--glow-yellow);
+}
+
+.badge.alert-danger {
+  background: var(--accent-red) !important;
+  color: white !important;
+  box-shadow: 0 0 12px var(--glow-red);
+}
+
+/* ============================================
+   Label Glow Effects
+   ============================================ */
+.label-success {
+  background: var(--accent-green) !important;
+  box-shadow: 0 0 10px var(--glow-green);
+}
+
+.label-primary {
+  background: var(--accent-blue) !important;
+  box-shadow: 0 0 10px var(--glow-blue);
+}
+
+.label-info {
+  background: var(--accent-purple) !important;
+  box-shadow: 0 0 10px var(--glow-purple);
+}
+
+.label-warning {
+  background: var(--accent-yellow) !important;
+  box-shadow: 0 0 10px var(--glow-yellow);
+}
+
+.label-danger {
+  background: var(--accent-red) !important;
+  box-shadow: 0 0 10px var(--glow-red);
+}
+
+/* ============================================
+   Link Glow on Hover
+   ============================================ */
+a:hover {
+  text-shadow: 0 0 8px var(--glow-blue);
+}
+
+/* ============================================
+   Form Input Glow on Focus
+   ============================================ */
+.form-control:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent-blue) !important;
+  box-shadow: 0 0 12px var(--glow-blue) !important;
+  outline: none;
+}
+
+/* ============================================
+   Progress Bar Glow
+   ============================================ */
+.progress-bar {
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)) !important;
+  box-shadow: 0 0 10px var(--glow-blue);
+}
+
+/* ============================================
+   Selected Row Glow
+   ============================================ */
+.table > tbody > tr.selected,
+.table > tbody > tr:has(input[type="checkbox"]:checked) {
+  background: rgba(34, 197, 94, 0.08) !important;
+  box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.1);
+}
+
+/* ============================================
+   Search Button Glow
+   ============================================ */
+.input-group-btn .btn {
+  box-shadow: 0 0 10px var(--glow-blue);
+}
+
+.input-group-btn .btn:hover {
+  box-shadow: 0 0 18px var(--glow-blue);
 }
