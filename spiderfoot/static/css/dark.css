@@ -1233,6 +1233,13 @@ pre.table-border-bg-inherit {
   gap: 8px;
 }
 
+/* Prevent all button groups from wrapping internally */
+.btn-toolbar .btn-group {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
 /* Secondary toolbar row - FP and view toggle on right */
 .btn-toolbar:not(:first-child),
 .btn-toolbar + .btn-toolbar {
