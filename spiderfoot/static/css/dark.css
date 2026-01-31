@@ -1230,7 +1230,7 @@ pre.table-border-bg-inherit {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 /* Prevent all button groups from wrapping internally */
@@ -1259,9 +1259,12 @@ pre.table-border-bg-inherit {
   align-items: center;
 }
 
-/* Push search bar to right side */
+/* Push search bar to right side and constrain width */
 .search-group {
   margin-left: auto;
+  flex-shrink: 1;
+  min-width: 150px;
+  max-width: 200px;
 }
 
 /* Container for the nav tabs - toolbar-like background */
@@ -1659,12 +1662,14 @@ tr.active td {
   border-radius: 12px;
   padding: 6px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  width: 100%;
 }
 
 #btn-search .form-control {
   background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 6px 0 0 6px !important;
+  width: 120px;
 }
 
 /* Search button - purple */
