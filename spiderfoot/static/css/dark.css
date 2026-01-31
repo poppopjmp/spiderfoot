@@ -80,11 +80,27 @@ body {
 }
 
 /* ============================================
-   Scan Title (h1) - White Glow Effect
+   Scan Title (h1) - Uppercase, Code Font, Bold, Prominent Glow
    ============================================ */
 h1 {
   color: var(--text-primary);
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(255, 255, 255, 0.1);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.5),
+    0 0 20px rgba(255, 255, 255, 0.4),
+    0 0 40px rgba(255, 255, 255, 0.3),
+    0 0 60px rgba(255, 255, 255, 0.2);
+}
+
+/* Scan target/directory text - Neon Green */
+h1 .label,
+h1 small,
+h1 span.target {
+  color: var(--accent-green) !important;
+  text-shadow: 0 0 10px var(--glow-green), 0 0 20px var(--glow-green);
 }
 
 /* Show dark logo, hide light */
@@ -375,6 +391,14 @@ input[type="checkbox"] {
   padding: 14px 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Widen columns that tend to wrap */
+.table th:nth-child(1),
+.table th:nth-child(2) {
+  min-width: 160px;
 }
 
 .table > tbody > tr {
@@ -1169,6 +1193,28 @@ pre.table-border-bg-inherit {
 /* ============================================
    Scan Detail Navigation Tabs - Modern Toolbar Style
    ============================================ */
+/* Toolbar flex layout for proper alignment */
+.btn-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* FP button should align with view toggle */
+#btn-setfp {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-right: 0;
+}
+
+/* View toggle toolbar */
+#customtabview {
+  display: inline-flex;
+  align-items: center;
+}
+
 /* Container for the nav tabs - toolbar-like background */
 .btn-toolbar > .btn-group:first-child {
   background: linear-gradient(180deg, #1e1e1e 0%, #151515 100%);
