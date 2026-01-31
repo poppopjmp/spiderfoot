@@ -1514,6 +1514,82 @@ tr.info:hover,
 }
 
 /* ============================================
+   Remove All Blue Hover/Focus Effects
+   ============================================ */
+/* TableSorter row highlights - neutral grey */
+.tablesorter-default tbody tr.odd:hover,
+.tablesorter-default tbody tr.even:hover,
+.tablesorter-default tbody > tr:hover,
+.tablesorter-default tbody > tr:hover > td,
+.tablesorter .filtered,
+.tablesorter tr.filtered {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.tablesorter-default .tablesorter-filter-row td {
+  background: var(--bg-secondary) !important;
+}
+
+/* Remove focus outlines and blue states globally */
+*:focus {
+  outline: none !important;
+}
+
+a:focus,
+a:active,
+td a:focus,
+td a:active,
+.table a:focus,
+.table a:active {
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Table cells - no focus background */
+td:focus,
+td:active,
+tr:focus,
+tr:active,
+.table td:focus,
+.table tr:focus {
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* Bootstrap table-hover override */
+.table-hover > tbody > tr:hover,
+.table-hover > tbody > tr:hover > td,
+.table-hover > tbody > tr:hover > th {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Text selection - neutral instead of blue */
+::selection {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+}
+
+::-moz-selection {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+}
+
+/* Any remaining active states */
+.table > tbody > tr.active,
+.table > tbody > tr.active > td,
+.table > tbody > tr.active > th,
+tr.active,
+tr.active td {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Force table cell backgrounds to inherit */
+.table tbody tr td {
+  background: inherit !important;
+}
+
+/* ============================================
    Search Button Glow
    ============================================ */
 .input-group-btn .btn {
