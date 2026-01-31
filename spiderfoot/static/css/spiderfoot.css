@@ -249,7 +249,7 @@ input:checked + .slider:before {
 
 /* Make entire first cell clickable for checkbox toggle */
 #scansummary-content td:first-child:hover {
-  background-color: rgba(0, 123, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Highlight rows with matching saved FPs */
@@ -259,7 +259,7 @@ input:checked + .slider:before {
 
 /* Selected row highlighting */
 #scansummary-content tr:has(input[type="checkbox"]:checked) {
-  background-color: rgba(0, 123, 255, 0.15) !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Header checkbox styling */
