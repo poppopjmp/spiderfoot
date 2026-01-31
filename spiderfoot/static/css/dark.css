@@ -80,9 +80,9 @@ body {
 }
 
 /* ============================================
-   Scan Title (h1) - Uppercase, Code Font, Bold, Prominent Glow
+   Scan Title (h1, h2) - Uppercase, Code Font, Bold, Prominent Glow
    ============================================ */
-h1 {
+h1, h2 {
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-weight: 700;
@@ -96,11 +96,36 @@ h1 {
 }
 
 /* Scan target/directory text - Neon Green */
-h1 .label,
-h1 small,
-h1 span.target {
+h1 .label, h2 .label,
+h1 small, h2 small,
+h1 span.target, h2 span.target {
   color: var(--accent-green) !important;
   text-shadow: 0 0 10px var(--glow-green), 0 0 20px var(--glow-green);
+}
+
+/* Section titles (h3, h4, h5) - Larger and consistent */
+h3 {
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 22px;
+  margin-bottom: 15px;
+}
+
+h4 {
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+h5 {
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 10px;
 }
 
 /* Show dark logo, hide light */
@@ -408,7 +433,7 @@ input[type="checkbox"] {
 }
 
 .table > tbody > tr:hover {
-  background: var(--bg-tertiary) !important;
+  background: rgba(34, 197, 94, 0.08) !important;  /* Subtle green tint */
 }
 
 .table > tbody > tr > td {
@@ -428,7 +453,7 @@ input[type="checkbox"] {
 }
 
 .table-striped > tbody > tr:hover {
-  background: var(--bg-tertiary) !important;
+  background: rgba(34, 197, 94, 0.08) !important;  /* Subtle green tint */
 }
 
 .table-bordered {
@@ -480,7 +505,7 @@ td > table tbody tr {
 .table .table tbody tr:hover,
 table table tbody tr:hover,
 td > table tbody tr:hover {
-  background: var(--bg-elevated) !important;
+  background: rgba(34, 197, 94, 0.12) !important;  /* Slightly stronger green for nested */
 }
 
 .table .table tbody td,
@@ -735,12 +760,19 @@ tr.danger td {
   color: var(--text-muted);
 }
 
+/* Breadcrumb links and text - neon green */
+.breadcrumb > li,
 .breadcrumb > li > a {
-  color: var(--accent-blue);
+  color: var(--accent-green) !important;
+}
+
+.breadcrumb > li > a:hover {
+  color: var(--accent-green-light) !important;
+  text-shadow: 0 0 8px var(--glow-green);
 }
 
 .breadcrumb > .active {
-  color: var(--text-secondary);
+  color: var(--accent-green) !important;
 }
 
 /* ============================================
@@ -1201,15 +1233,22 @@ pre.table-border-bg-inherit {
   gap: 8px;
 }
 
-/* FP button should align with view toggle */
+/* Secondary toolbar row - FP and view toggle on right */
+.btn-toolbar:not(:first-child),
+.btn-toolbar + .btn-toolbar {
+  justify-content: flex-start;
+}
+
+/* FP button should align with view toggle - push to right */
 #btn-setfp {
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  margin-right: 0;
+  margin-left: auto;
+  margin-right: 8px;
 }
 
-/* View toggle toolbar */
+/* View toggle toolbar - stays on right after FP */
 #customtabview {
   display: inline-flex;
   align-items: center;
