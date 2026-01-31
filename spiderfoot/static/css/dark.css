@@ -1497,8 +1497,20 @@ select:focus {
    ============================================ */
 .table > tbody > tr.selected,
 .table > tbody > tr:has(input[type="checkbox"]:checked) {
-  background: rgba(34, 197, 94, 0.08) !important;
-  box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.1);
+  background: rgba(255, 255, 255, 0.08) !important;  /* Neutral grey */
+  box-shadow: none;
+}
+
+/* Info/highlight rows - neutral grey instead of blue */
+tr.info,
+.table > tbody > tr.info,
+.table-striped > tbody > tr.info {
+  background: rgba(255, 255, 255, 0.08) !important;  /* Neutral grey */
+}
+
+tr.info:hover,
+.table > tbody > tr.info:hover {
+  background: rgba(255, 255, 255, 0.12) !important;  /* Slightly brighter on hover */
 }
 
 /* ============================================
