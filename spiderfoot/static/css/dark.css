@@ -433,7 +433,7 @@ input[type="checkbox"] {
 }
 
 .table > tbody > tr:hover {
-  background: rgba(34, 197, 94, 0.08) !important;  /* Subtle green tint */
+  background: rgba(255, 255, 255, 0.05) !important;  /* Neutral brighter grey */
 }
 
 .table > tbody > tr > td {
@@ -453,7 +453,7 @@ input[type="checkbox"] {
 }
 
 .table-striped > tbody > tr:hover {
-  background: rgba(34, 197, 94, 0.08) !important;  /* Subtle green tint */
+  background: rgba(255, 255, 255, 0.05) !important;  /* Neutral brighter grey */
 }
 
 .table-bordered {
@@ -505,7 +505,7 @@ td > table tbody tr {
 .table .table tbody tr:hover,
 table table tbody tr:hover,
 td > table tbody tr:hover {
-  background: rgba(34, 197, 94, 0.12) !important;  /* Slightly stronger green for nested */
+  background: rgba(255, 255, 255, 0.08) !important;  /* Brighter grey for nested */
 }
 
 .table .table tbody td,
@@ -1608,4 +1608,56 @@ select:focus {
   color: white !important;
   border-color: var(--accent-blue) !important;
   box-shadow: 0 0 15px var(--glow-blue);
+}
+
+/* ============================================
+   Correlation Severity Buttons - Count Buttons
+   ============================================ */
+/* The count buttons next to severity (High, Medium, Low, Info) */
+.btn-group > .btn-secondary,
+.btn-group > .btn-default:not(:first-child),
+.panel-body .btn-group > .btn:last-child {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+/* Correlation panel btn-groups */
+.panel-body .btn-group {
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.panel-body .btn-group > .btn {
+  padding: 8px 16px;
+  font-weight: 600;
+}
+
+/* Ensure severity buttons have proper colors and glow */
+.panel-body .btn-group > .btn-danger {
+  background: linear-gradient(135deg, var(--accent-red) 0%, var(--accent-red-dark) 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 0 12px var(--glow-red);
+}
+
+.panel-body .btn-group > .btn-warning {
+  background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%) !important;
+  color: #000 !important;
+  border: none !important;
+  box-shadow: 0 0 12px var(--glow-yellow);
+}
+
+.panel-body .btn-group > .btn-info {
+  background: linear-gradient(135deg, var(--accent-purple) 0%, #7c3aed 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 0 12px var(--glow-purple);
+}
+
+.panel-body .btn-group > .btn-success {
+  background: linear-gradient(135deg, var(--accent-green) 0%, #16a34a 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 0 12px var(--glow-green);
 }
