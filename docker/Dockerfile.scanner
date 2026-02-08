@@ -1,0 +1,21 @@
+#
+# SpiderFoot Scanner Service
+# Runs scan execution via ScanScheduler + WorkerPool
+#
+FROM spiderfoot-base:latest
+
+LABEL service="scanner"
+LABEL description="SpiderFoot scan execution engine"
+
+ENV SF_SERVICE=scanner \
+    SF_SCANNER_MAX_SCANS=3 \
+    SF_SCANNER_POLL_INTERVAL=5.0 \
+    SF_WORKER_MAX=8 \
+    SF_WORKER_STRATEGY=thread
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:5003/health || exit 1
+
+EXPOSE 5003
+
+CMD ["python", "-m", "spiderfoot.service_runner", "--service", "scanner", "--port", "5003"]

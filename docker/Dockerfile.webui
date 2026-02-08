@@ -1,0 +1,22 @@
+#
+# SpiderFoot Web UI Service
+# Runs the CherryPy web interface
+#
+FROM spiderfoot-base:latest
+
+LABEL service="webui"
+LABEL description="SpiderFoot web interface"
+
+ENV SF_SERVICE=webui \
+    SF_WEB_HOST=0.0.0.0 \
+    SF_WEB_PORT=5001
+
+# Copy static assets (templates, JS, CSS)
+# These are already in the base image via COPY . .
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:5001/ping || exit 1
+
+EXPOSE 5001
+
+CMD ["python", "-m", "spiderfoot.service_runner", "--service", "webui", "--port", "5001"]

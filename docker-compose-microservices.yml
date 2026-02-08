@@ -1,0 +1,253 @@
+# =============================================================================
+# SpiderFoot Microservices Docker Compose
+# Decomposes SpiderFoot into individual services:
+#   - scanner   : scan execution engine (ScanScheduler + WorkerPool)
+#   - api       : FastAPI REST API
+#   - webui     : CherryPy web interface
+#   - vector    : Vector.dev log/event pipeline
+#   - redis     : event bus + cache backend
+#   - postgres  : persistent data store
+#   - nginx     : reverse proxy / API gateway
+#
+# Usage:
+#   docker compose -f docker-compose-microservices.yml up -d
+#
+# Build base image first:
+#   docker build -f docker/Dockerfile.base -t spiderfoot-base:latest .
+# =============================================================================
+
+version: "3.9"
+
+networks:
+  sf-frontend:
+    driver: bridge
+  sf-backend:
+    driver: bridge
+    internal: true
+  sf-events:
+    driver: bridge
+    internal: true
+
+services:
+  # ---------------------------------------------------------------------------
+  # Infrastructure Services
+  # ---------------------------------------------------------------------------
+
+  redis:
+    image: redis:7-alpine
+    container_name: sf-redis
+    restart: unless-stopped
+    networks:
+      - sf-backend
+      - sf-events
+    command: >
+      redis-server
+        --appendonly yes
+        --maxmemory 512mb
+        --maxmemory-policy allkeys-lru
+        --tcp-keepalive 60
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: sf-postgres
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-spiderfoot}
+      POSTGRES_USER: ${POSTGRES_USER:-spiderfoot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spiderfoot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Vector.dev — unified log/event/metric pipeline
+  # ---------------------------------------------------------------------------
+
+  vector:
+    image: timberio/vector:0.40.0-alpine
+    container_name: sf-vector
+    restart: unless-stopped
+    networks:
+      - sf-events
+      - sf-backend
+    volumes:
+      - ./config/vector.toml:/etc/vector/vector.toml:ro
+      - vector-data:/var/lib/vector
+    ports:
+      - "8686:8686"    # HTTP source for SpiderFoot events
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8686/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # SpiderFoot Scanner Service
+  # ---------------------------------------------------------------------------
+
+  scanner:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.scanner
+    image: spiderfoot-scanner:latest
+    container_name: sf-scanner
+    restart: unless-stopped
+    networks:
+      - sf-backend
+      - sf-events
+    environment:
+      SF_SERVICE: scanner
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://spiderfoot:${POSTGRES_PASSWORD:-changeme}@postgres:5432/spiderfoot
+      SF_VECTOR_ENDPOINT: http://vector:8686
+      SF_SCANNER_MAX_SCANS: ${SF_SCANNER_MAX_SCANS:-3}
+      SF_WORKER_MAX: ${SF_WORKER_MAX:-8}
+      SF_WORKER_STRATEGY: thread
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - scanner-data:/app/data
+      - scanner-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${SCANNER_CPUS:-4.0}"
+          memory: "${SCANNER_MEMORY:-4G}"
+
+  # ---------------------------------------------------------------------------
+  # SpiderFoot API Service (FastAPI)
+  # ---------------------------------------------------------------------------
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    image: spiderfoot-api:latest
+    container_name: sf-api
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+      - sf-events
+    environment:
+      SF_SERVICE: api
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://spiderfoot:${POSTGRES_PASSWORD:-changeme}@postgres:5432/spiderfoot
+      SF_VECTOR_ENDPOINT: http://vector:8686
+      SF_API_HOST: "0.0.0.0"
+      SF_API_PORT: "8001"
+      SF_API_WORKERS: ${SF_API_WORKERS:-4}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_API_KEY: ${SF_API_KEY:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${API_CPUS:-2.0}"
+          memory: "${API_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
+  # SpiderFoot Web UI Service (CherryPy)
+  # ---------------------------------------------------------------------------
+
+  webui:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.webui
+    image: spiderfoot-webui:latest
+    container_name: sf-webui
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+      - sf-events
+    environment:
+      SF_SERVICE: webui
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://spiderfoot:${POSTGRES_PASSWORD:-changeme}@postgres:5432/spiderfoot
+      SF_VECTOR_ENDPOINT: http://vector:8686
+      SF_WEB_HOST: "0.0.0.0"
+      SF_WEB_PORT: "5001"
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${WEBUI_CPUS:-1.0}"
+          memory: "${WEBUI_MEMORY:-1G}"
+
+  # ---------------------------------------------------------------------------
+  # Nginx Reverse Proxy / API Gateway
+  # ---------------------------------------------------------------------------
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: sf-nginx
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+    ports:
+      - "${SF_HTTP_PORT:-80}:80"
+      - "${SF_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./docker/nginx-microservices.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - webui
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/nginx-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis-data:
+  postgres-data:
+  vector-data:
+  scanner-data:
+  scanner-logs:
