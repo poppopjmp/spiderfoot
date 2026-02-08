@@ -2,7 +2,7 @@
 
 ## Overview
 
-SpiderFoot v5.10+ implements a modular microservices architecture that can run
+SpiderFoot v5.21+ implements a modular microservices architecture that can run
 in two modes:
 
 - **Monolith mode**: All services run in a single process (default, backward-compatible)
@@ -240,7 +240,7 @@ class sfp_example(SpiderFootModernPlugin):
 See [MODULE_MIGRATION_GUIDE.md](MODULE_MIGRATION_GUIDE.md) for step-by-step
 migration instructions.
 
-## Version History (v5.4.0 – v5.10.0)
+## Version History (v5.4.0 – v5.21.0)
 
 | Version | Change |
 |---|---|
@@ -263,3 +263,75 @@ migration instructions.
 | 5.9.1 | API Gateway with circuit breaker |
 | 5.9.2 | Correlation Service (standalone) |
 | 5.10.0 | Module migration samples + guide |
+| 5.10.1 | Architecture docs + README overhaul |
+| 5.10.2 | K8s health checks (liveness/readiness/startup) |
+| 5.11.0 | Modern CLI with subcommands |
+| 5.11.1 | Auth middleware (JWT/API-key/Basic + RBAC) |
+| 5.12.0 | Export Service (JSON/CSV/STIX/SARIF) |
+| 5.12.1 | Module dependency graph + visualization |
+| 5.12.2 | Event schema validation (70+ schemas) |
+| 5.13.0 | WebSocket real-time event streaming |
+| 5.13.1 | Scan profiles/templates (10 built-in) |
+| 5.13.2 | Module hot-reload |
+| 5.14.0 | Retry/recovery framework + dead-letter queue |
+| 5.15.0 | Kubernetes Helm chart |
+| 5.15.1 | Plugin marketplace registry |
+| 5.15.2 | Rate limiter service (token-bucket/sliding-window) |
+| 5.16.0 | CI/CD pipelines (4 GitHub Actions workflows) |
+| 5.16.1 | Notification service (Slack/Webhook/Email) |
+| 5.16.2 | Audit logging (immutable trail) |
+| 5.17.0 | Scan diff/comparison |
+| 5.17.1 | Data retention policies |
+| 5.17.2 | OpenAPI 3.1 spec generator |
+| 5.18.0 | Plugin testing framework |
+| 5.18.1 | Distributed scan coordinator |
+| 5.18.2 | Performance benchmarking suite |
+| 5.19.0 | Secret management (encrypted file backend) |
+| 5.19.1 | API versioning framework |
+| 5.19.2 | Error telemetry (fingerprinting + alerting) |
+| 5.20.0 | Scan queue with backpressure |
+| 5.20.1 | Module dependency resolver |
+| 5.21.0 | Database migration framework |
+
+### Additional Services (v5.10.1 – v5.21.0)
+
+#### Auth Middleware (`spiderfoot/auth.py`)
+JWT, API key, and Basic authentication with role-based access control
+(ADMIN, ANALYST, VIEWER, API roles). Pluggable into any ASGI/WSGI app.
+
+#### Export Service (`spiderfoot/export_service.py`)
+Multi-format scan result export: JSON, CSV, STIX 2.1 bundles, and
+SARIF for integration with CI/CD security tooling.
+
+#### WebSocket Service (`spiderfoot/websocket_service.py`)
+Real-time scan event streaming over WebSocket with channel-based
+subscriptions per scan, module, or event type.
+
+#### Notification Service (`spiderfoot/notification_service.py`)
+Multi-channel alerting with wildcard topic subscriptions, supporting
+Slack webhooks, generic webhooks, SMTP email, and log output.
+
+#### Secret Manager (`spiderfoot/secret_manager.py`)
+Secure API key and credential storage with four backends: in-memory,
+environment variables, plain JSON file, and encrypted file (PBKDF2 + XOR).
+Includes rotation tracking, access auditing, and config injection.
+
+#### Error Telemetry (`spiderfoot/error_telemetry.py`)
+Centralised error capture with fingerprint-based deduplication,
+automatic classification (network/auth/parse/timeout/etc.), sliding-window
+rate tracking, and configurable alert thresholds with callbacks.
+
+#### Scan Queue (`spiderfoot/scan_queue.py`)
+Bounded priority queue (HIGH/NORMAL/LOW) with backpressure support.
+Three overflow strategies (BLOCK/REJECT/DROP_OLDEST), batch dequeue,
+retry tracking with dead-letter queue.
+
+#### Module Resolver (`spiderfoot/module_resolver.py`)
+Runtime dependency resolution for modules.  Given desired output event
+types, walks backwards through the event dependency chain to compute the
+minimal module set and topological load order.
+
+#### Database Migration (`spiderfoot/db_migrate.py`)
+Version-controlled schema evolution with numbered migration files,
+upgrade/downgrade functions, dry-run mode, and checksum validation.
+Supports SQLite and PostgreSQL dialects.

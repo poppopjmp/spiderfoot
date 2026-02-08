@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.10.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.10.0)
+[![Stable Release](https://img.shields.io/badge/version-5.21.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.21.0)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -22,7 +22,7 @@ SpiderFoot features an embedded web-server for providing a clean and intuitive w
 
 ## Platform Architecture
 
-SpiderFoot v5.10+ features a fully modular microservices architecture. Each service
+SpiderFoot v5.21+ features a fully modular microservices architecture. Each service
 can run standalone or together in a single process (monolith mode).
 
 ```mermaid
@@ -60,11 +60,37 @@ graph TD;
 | **ServiceRegistry** | `spiderfoot/service_registry.py` | Dependency injection container |
 | **WorkerPool** | `spiderfoot/worker_pool.py` | Thread/process pool for module execution |
 | **ScanScheduler** | `spiderfoot/scan_scheduler.py` | Priority-queue scan lifecycle management |
+| **ScanCoordinator** | `spiderfoot/scan_coordinator.py` | Distributed scan work across nodes |
+| **ScanQueue** | `spiderfoot/scan_queue.py` | Bounded priority queue with backpressure |
 | **CorrelationService** | `spiderfoot/correlation_service.py` | Standalone correlation with EventBus triggers |
 | **API Gateway** | `spiderfoot/api_gateway.py` | Request routing, circuit breaker, rate limiting |
+| **API Versioning** | `spiderfoot/api_versioning.py` | Multi-strategy version negotiation & lifecycle |
+| **Auth** | `spiderfoot/auth.py` | JWT/API-key/Basic auth with RBAC |
 | **Metrics** | `spiderfoot/metrics.py` | Zero-dependency Prometheus-compatible metrics |
 | **Vector.dev Sink** | `spiderfoot/vector_sink.py` | Event/log/metric pipeline to Elasticsearch/S3 |
 | **gRPC/HTTP RPC** | `spiderfoot/grpc_service.py` | Inter-service communication with fallback |
+| **Health** | `spiderfoot/health.py` | K8s liveness/readiness/startup probes |
+| **WebSocket** | `spiderfoot/websocket_service.py` | Real-time scan event streaming |
+| **Notification** | `spiderfoot/notification_service.py` | Slack/Webhook/Email/Log notifications |
+| **Export** | `spiderfoot/export_service.py` | JSON/CSV/STIX/SARIF export |
+| **Audit Log** | `spiderfoot/audit_log.py` | Immutable audit trail |
+| **Error Telemetry** | `spiderfoot/error_telemetry.py` | Error capture, fingerprinting, rate tracking |
+| **Secret Manager** | `spiderfoot/secret_manager.py` | Encrypted credential management |
+| **Scan Diff** | `spiderfoot/scan_diff.py` | Scan result change detection |
+| **Data Retention** | `spiderfoot/data_retention.py` | Automated data lifecycle policies |
+| **Rate Limiter** | `spiderfoot/rate_limiter.py` | Token-bucket/sliding-window per-module rate limiting |
+| **Retry** | `spiderfoot/retry.py` | Retry with backoff and dead-letter queue |
+| **Hot Reload** | `spiderfoot/hot_reload.py` | Module hot-reload on file change |
+| **Scan Profiles** | `spiderfoot/scan_profile.py` | Pre-built scan templates |
+| **Plugin Registry** | `spiderfoot/plugin_registry.py` | Module marketplace and management |
+| **Plugin Test** | `spiderfoot/plugin_test.py` | Drop-in test harness for modules |
+| **Module Graph** | `spiderfoot/module_graph.py` | Module dependency visualization |
+| **Module Resolver** | `spiderfoot/module_resolver.py` | Runtime dependency resolution and load ordering |
+| **Event Schema** | `spiderfoot/event_schema.py` | Declarative event type validation |
+| **OpenAPI** | `spiderfoot/openapi_spec.py` | OpenAPI 3.1 spec generation |
+| **Benchmarks** | `spiderfoot/benchmark.py` | Performance benchmarking suite |
+| **DB Migrate** | `spiderfoot/db_migrate.py` | Version-controlled schema migrations |
+| **CLI** | `spiderfoot/cli_service.py` | Modern CLI with subcommands |
 
 ---
 
