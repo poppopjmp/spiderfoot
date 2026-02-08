@@ -1,0 +1,291 @@
+// SpiderFoot Service Protocol
+// Defines gRPC service interfaces for microservice communication.
+// Scanner, DataService, and ScanControl services.
+
+syntax = "proto3";
+
+package spiderfoot.v1;
+
+option python_generic_services = true;
+
+// ============================================================================
+// Common types
+// ============================================================================
+
+message Empty {}
+
+message Timestamp {
+    int64 seconds = 1;
+    int32 nanos = 2;
+}
+
+message KeyValue {
+    string key = 1;
+    string value = 2;
+}
+
+// ============================================================================
+// Scan Service — submit, control, and monitor scans
+// ============================================================================
+
+service ScanService {
+    // Submit a new scan request
+    rpc SubmitScan (SubmitScanRequest) returns (SubmitScanResponse);
+
+    // Abort a running scan
+    rpc AbortScan (ScanIdRequest) returns (ScanControlResponse);
+
+    // Pause a running scan
+    rpc PauseScan (ScanIdRequest) returns (ScanControlResponse);
+
+    // Resume a paused scan
+    rpc ResumeScan (ScanIdRequest) returns (ScanControlResponse);
+
+    // Get status of a specific scan
+    rpc GetScanStatus (ScanIdRequest) returns (ScanStatusResponse);
+
+    // List all scans (with optional filters)
+    rpc ListScans (ListScansRequest) returns (ListScansResponse);
+
+    // Stream real-time scan events
+    rpc StreamScanEvents (ScanIdRequest) returns (stream ScanEvent);
+}
+
+enum ScanState {
+    SCAN_STATE_UNKNOWN = 0;
+    SCAN_STATE_CREATED = 1;
+    SCAN_STATE_STARTING = 2;
+    SCAN_STATE_RUNNING = 3;
+    SCAN_STATE_PAUSED = 4;
+    SCAN_STATE_ABORT_REQUESTED = 5;
+    SCAN_STATE_ABORTED = 6;
+    SCAN_STATE_FINISHED = 7;
+    SCAN_STATE_ERROR = 8;
+}
+
+enum ScanPriority {
+    SCAN_PRIORITY_LOW = 0;
+    SCAN_PRIORITY_NORMAL = 1;
+    SCAN_PRIORITY_HIGH = 2;
+    SCAN_PRIORITY_CRITICAL = 3;
+}
+
+message SubmitScanRequest {
+    string scan_name = 1;
+    string target = 2;
+    repeated string modules = 3;
+    map<string, string> config = 4;
+    ScanPriority priority = 5;
+    int32 max_duration_seconds = 6;
+    repeated string tags = 7;
+}
+
+message SubmitScanResponse {
+    string scan_id = 1;
+    ScanState state = 2;
+    string message = 3;
+}
+
+message ScanIdRequest {
+    string scan_id = 1;
+}
+
+message ScanControlResponse {
+    bool success = 1;
+    string message = 2;
+    ScanState new_state = 3;
+}
+
+message ScanStatusResponse {
+    string scan_id = 1;
+    string scan_name = 2;
+    string target = 3;
+    ScanState state = 4;
+    float progress = 5;           // 0.0 to 100.0
+    int32 modules_total = 6;
+    int32 modules_running = 7;
+    int32 modules_finished = 8;
+    int64 events_produced = 9;
+    float duration_seconds = 10;
+    string error_message = 11;
+    Timestamp started_at = 12;
+    Timestamp finished_at = 13;
+}
+
+message ListScansRequest {
+    ScanState state_filter = 1;   // 0 = all
+    int32 limit = 2;
+    int32 offset = 3;
+}
+
+message ListScansResponse {
+    repeated ScanStatusResponse scans = 1;
+    int32 total_count = 2;
+}
+
+message ScanEvent {
+    string scan_id = 1;
+    string event_type = 2;
+    string data = 3;
+    string module = 4;
+    string source_event_hash = 5;
+    Timestamp timestamp = 6;
+}
+
+// ============================================================================
+// Data Service — CRUD operations for scan data
+// ============================================================================
+
+service DataService {
+    // Scan instance CRUD
+    rpc CreateScan (CreateScanRequest) returns (CreateScanResponse);
+    rpc GetScan (ScanIdRequest) returns (ScanRecord);
+    rpc ListScanInstances (ListScansRequest) returns (ListScanRecordsResponse);
+    rpc DeleteScan (ScanIdRequest) returns (DeleteResponse);
+
+    // Event storage
+    rpc StoreEvent (StoreEventRequest) returns (StoreEventResponse);
+    rpc GetEvents (GetEventsRequest) returns (GetEventsResponse);
+    rpc GetUniqueEventTypes (ScanIdRequest) returns (EventTypesResponse);
+
+    // Scan logs
+    rpc LogScanEvent (LogEventRequest) returns (Empty);
+    rpc GetScanLogs (GetScanLogsRequest) returns (GetScanLogsResponse);
+
+    // Configuration
+    rpc SetConfig (SetConfigRequest) returns (Empty);
+    rpc GetConfig (GetConfigRequest) returns (GetConfigResponse);
+}
+
+message CreateScanRequest {
+    string scan_name = 1;
+    string target = 2;
+    string scan_id = 3;  // optional; auto-generated if empty
+}
+
+message CreateScanResponse {
+    string scan_id = 1;
+}
+
+message ScanRecord {
+    string scan_id = 1;
+    string scan_name = 2;
+    string target = 3;
+    string status = 4;
+    Timestamp created_at = 5;
+    Timestamp started_at = 6;
+    Timestamp finished_at = 7;
+}
+
+message ListScanRecordsResponse {
+    repeated ScanRecord scans = 1;
+}
+
+message DeleteResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message StoreEventRequest {
+    string scan_id = 1;
+    string event_type = 2;
+    string data = 3;
+    string module = 4;
+    string source_event_hash = 5;
+    int32 confidence = 6;
+    int32 visibility = 7;
+    int32 risk = 8;
+}
+
+message StoreEventResponse {
+    string event_hash = 1;
+}
+
+message GetEventsRequest {
+    string scan_id = 1;
+    string event_type = 2;  // optional filter
+    int32 limit = 3;
+    int32 offset = 4;
+}
+
+message GetEventsResponse {
+    repeated EventRecord events = 1;
+    int32 total_count = 2;
+}
+
+message EventRecord {
+    string event_hash = 1;
+    string scan_id = 2;
+    string event_type = 3;
+    string data = 4;
+    string module = 5;
+    string source_event_hash = 6;
+    int32 confidence = 7;
+    Timestamp timestamp = 8;
+}
+
+message EventTypesResponse {
+    repeated string event_types = 1;
+}
+
+message LogEventRequest {
+    string scan_id = 1;
+    string component = 2;
+    string log_type = 3;
+    string message = 4;
+}
+
+message GetScanLogsRequest {
+    string scan_id = 1;
+    int32 limit = 2;
+    int32 offset = 3;
+}
+
+message GetScanLogsResponse {
+    repeated LogRecord logs = 1;
+}
+
+message LogRecord {
+    string scan_id = 1;
+    string component = 2;
+    string log_type = 3;
+    string message = 4;
+    Timestamp timestamp = 5;
+}
+
+message SetConfigRequest {
+    repeated KeyValue config = 1;
+}
+
+message GetConfigRequest {
+    repeated string keys = 1;  // empty = get all
+}
+
+message GetConfigResponse {
+    repeated KeyValue config = 1;
+}
+
+// ============================================================================
+// Health Service — universal health check for all services
+// ============================================================================
+
+service HealthService {
+    rpc Check (HealthCheckRequest) returns (HealthCheckResponse);
+    rpc Watch (HealthCheckRequest) returns (stream HealthCheckResponse);
+}
+
+message HealthCheckRequest {
+    string service = 1;
+}
+
+message HealthCheckResponse {
+    enum ServingStatus {
+        UNKNOWN = 0;
+        SERVING = 1;
+        NOT_SERVING = 2;
+        SERVICE_UNKNOWN = 3;
+    }
+    ServingStatus status = 1;
+    string message = 2;
+    map<string, string> details = 3;
+}
