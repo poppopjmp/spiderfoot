@@ -38,7 +38,7 @@ class sfp_apileak(SpiderFootModernPlugin):
         "max_results": "Max search results per query."
     }
 
-    def setup(self, sfc, userOpts: dict = dict()) -> None:
+    def setup(self, sfc, userOpts: dict = None) -> None:
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         # Support multiple patterns (comma-separated or list)

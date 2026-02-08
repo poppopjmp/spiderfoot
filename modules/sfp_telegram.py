@@ -1,5 +1,5 @@
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugin import SpiderFootPlugin
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 import time
 import threading
 
