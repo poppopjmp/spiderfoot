@@ -80,6 +80,19 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
         self._data_service = None
         self._event_bus = None
         self._metrics_imported = False
+        self._log = None
+
+    # ------------------------------------------------------------------
+    # Logging
+    # ------------------------------------------------------------------
+
+    @property
+    def log(self):
+        """Module-specific logger."""
+        if self._log is None:
+            name = getattr(self, "__name__", None) or self.__class__.__name__
+            self._log = logging.getLogger(f"spiderfoot.module.{name}")
+        return self._log
 
     # ------------------------------------------------------------------
     # Setup (called by scan engine)
@@ -94,8 +107,10 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
         if userOpts is None:
             userOpts = {}
 
-        # Legacy setup — sets self.sf
-        super().setup(sfc, userOpts)
+        # Set self.sf and merge user opts (legacy parent setup is a no-op)
+        self.sf = sfc
+        for opt in list(userOpts.keys()):
+            self.opts[opt] = userOpts[opt]
 
         # Try to attach to the service registry
         try:
@@ -179,6 +194,9 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                   **kwargs) -> Optional[Dict]:
         """Fetch a URL using HttpService (or fallback to self.sf.fetchUrl).
 
+        Accepts all legacy fetchUrl kwargs (useragent, postData, etc.)
+        and passes them through automatically.
+
         Returns a dict with keys: content, code, headers, realurl, status
         """
         t0 = time.monotonic()
@@ -191,18 +209,20 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 self._record_http_metric(method, result.get("code", 0), t0)
                 return result
 
-            # Fallback to legacy
+            # Fallback to legacy — translate modern kwargs to legacy API
             if hasattr(self, "sf") and self.sf:
-                result = self.sf.fetchUrl(
-                    url, timeout=timeout,
-                    postData=data,
-                    headOnly=(method == "HEAD"),
-                )
+                legacy_kwargs = dict(kwargs)
+                legacy_kwargs["timeout"] = timeout
+                if data is not None:
+                    legacy_kwargs["postData"] = data
+                if method == "HEAD":
+                    legacy_kwargs["headOnly"] = True
+                result = self.sf.fetchUrl(url, **legacy_kwargs)
                 self._record_http_metric(method, 200, t0)
                 return result
 
         except Exception as e:
-            self.error(f"fetch_url error: {e}")
+            self.log.error(f"fetch_url error: {e}")
             self._record_http_metric(method, 0, t0)
 
         return None
@@ -217,7 +237,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 return self.sf.resolveHost(hostname) or []
 
         except Exception as e:
-            self.error(f"resolve_host error: {e}")
+            self.log.error(f"resolve_host error: {e}")
 
         return []
 
@@ -231,7 +251,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 return self.sf.resolveHost6(hostname) or []
 
         except Exception as e:
-            self.error(f"resolve_host6 error: {e}")
+            self.log.error(f"resolve_host6 error: {e}")
 
         return []
 
@@ -245,7 +265,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 return self.sf.resolveIP(ip_address) or []
 
         except Exception as e:
-            self.error(f"reverse_resolve error: {e}")
+            self.log.error(f"reverse_resolve error: {e}")
 
         return []
 
@@ -294,7 +314,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
 
             # Legacy: scan engine handles storage
         except Exception as e:
-            self.error(f"store_event error: {e}")
+            self.log.error(f"store_event error: {e}")
 
     def publish_event(self, topic: str, data: Any) -> None:
         """Publish an event to the event bus."""
@@ -406,7 +426,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 self.handleEvent(sfEvent)
                 self._record_module_duration(time.monotonic() - t0)
             except Exception as e:
-                self.error(f"Module {self.__name__} failed: {e}")
+                self.log.error(f"Module {self.__name__} failed: {e}")
                 self._record_module_error(type(e).__name__)
                 self.errorState = True
 
