@@ -1,0 +1,218 @@
+# SpiderFoot Helm Chart - Default Values
+# Override these in your values-production.yaml
+
+# -- Global settings
+replicaCount: 1
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: spiderfoot/spiderfoot
+  tag: "5.14.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# -- Service Account
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# -- Pod Security
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsUser: 1000
+  runAsGroup: 1000
+  capabilities:
+    drop:
+      - ALL
+
+# -- SpiderFoot Web UI Service
+webui:
+  enabled: true
+  replicaCount: 1
+  port: 5001
+  service:
+    type: ClusterIP
+    port: 5001
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env: []
+
+# -- SpiderFoot API Service
+api:
+  enabled: true
+  replicaCount: 1
+  port: 8001
+  service:
+    type: ClusterIP
+    port: 8001
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env: []
+
+# -- SpiderFoot Scanner Workers
+scanner:
+  enabled: true
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  env: []
+
+# -- PostgreSQL (sub-chart or external)
+postgresql:
+  enabled: true
+  auth:
+    database: spiderfoot
+    username: spiderfoot
+    password: ""  # Set via --set or secrets
+    existingSecret: ""
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""
+
+# -- Redis
+redis:
+  enabled: true
+  auth:
+    enabled: false
+    password: ""
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+      storageClass: ""
+
+# -- Vector.dev sidecar
+vector:
+  enabled: false
+  image:
+    repository: timberio/vector
+    tag: "0.40.0-alpine"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  config: {}
+
+# -- Ingress
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+    # kubernetes.io/tls-secretName: spiderfoot-tls
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: spiderfoot.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: webui
+        - path: /api
+          pathType: Prefix
+          service: api
+  tls: []
+  #  - secretName: spiderfoot-tls
+  #    hosts:
+  #      - spiderfoot.example.com
+
+# -- Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# -- Persistence (shared scan data)
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  storageClass: ""
+  annotations: {}
+
+# -- Health checks
+healthCheck:
+  liveness:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /health/ready
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 3
+  startup:
+    path: /health/startup
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 30
+
+# -- Prometheus monitoring
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    labels: {}
+  port: 9090
+
+# -- Network Policy
+networkPolicy:
+  enabled: false
+
+# -- Pod Disruption Budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# -- Node scheduling
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# -- SpiderFoot configuration
+config:
+  # Auth
+  authMethod: "none"  # none, api_key, basic, jwt
+  jwtSecret: ""
+  apiKeys: ""
+
+  # Logging
+  logLevel: "INFO"
+  structuredLogging: true
+
+  # Event Bus
+  eventBusBackend: "redis"  # memory, redis, nats
+
+  # Cache
+  cacheBackend: "redis"  # memory, file, redis

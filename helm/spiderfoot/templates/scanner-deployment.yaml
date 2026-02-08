@@ -1,0 +1,67 @@
+{{- if .Values.scanner.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-scanner
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: scanner
+spec:
+  replicas: {{ .Values.scanner.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "spiderfoot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: scanner
+  template:
+    metadata:
+      labels:
+        {{- include "spiderfoot.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: scanner
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "spiderfoot.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: scanner
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python", "-m", "spiderfoot.service_runner", "--service", "scanner"]
+          env:
+            {{- include "spiderfoot.env" . | nindent 12 }}
+            - name: SF_SERVICE
+              value: "scanner"
+            {{- with .Values.scanner.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.scanner.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: scan-data
+              mountPath: /var/lib/spiderfoot
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: scan-data
+          persistentVolumeClaim:
+            claimName: {{ include "spiderfoot.fullname" . }}-data
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
