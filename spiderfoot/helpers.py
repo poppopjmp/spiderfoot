@@ -232,11 +232,14 @@ class SpiderFootHelpers():
                         mod_class = getattr(module, module_name)
                     else:
                         # Second try: look for any class that inherits from SpiderFootPlugin
+                        # or SpiderFootModernPlugin
                         for attr_name in dir(module):
                             attr = getattr(module, attr_name)
                             if (isinstance(attr, type) and 
                                 hasattr(attr, '__bases__') and
-                                any('SpiderFootPlugin' in str(base) for base in attr.__bases__)):
+                                any('SpiderFootPlugin' in str(base)
+                                    or 'SpiderFootModernPlugin' in str(base)
+                                    for base in attr.__mro__)):
                                 mod_class = attr
                                 # Set the expected attribute name for tests
                                 setattr(module, module_name, mod_class)
@@ -246,7 +249,15 @@ class SpiderFootHelpers():
                         # Ensure the class has __name__ attribute
                         if not hasattr(mod_class, '__name__'):
                             setattr(mod_class, '__name__', module_name)
-                            
+
+                        # Detect if this is a modern plugin
+                        is_modern = False
+                        try:
+                            from spiderfoot.modern_plugin import SpiderFootModernPlugin
+                            is_modern = issubclass(mod_class, SpiderFootModernPlugin)
+                        except ImportError:
+                            pass
+
                         modules[module_name] = {
                             'name': getattr(mod_class, 'meta', {}).get('name', module_name),
                             'descr': getattr(mod_class, '__doc__', ''),
@@ -257,7 +268,9 @@ class SpiderFootHelpers():
                             'opts': getattr(mod_class, 'opts', {}),
                             'optdescs': getattr(mod_class, 'optdescs', {}),
                             'meta': getattr(mod_class, 'meta', {}),
-                            'group': getattr(mod_class, 'meta', {}).get('useCases', [])                        }
+                            'group': getattr(mod_class, 'meta', {}).get('useCases', []),
+                            'modern': is_modern,
+                        }
             except Exception:
                 continue
         

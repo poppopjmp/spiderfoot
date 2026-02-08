@@ -62,15 +62,31 @@ class TestSpiderFootHelpers(TestModuleBase):
             SpiderFootHelpers.loadModulesAsDict('invalid_path')
 
     def test_loadModulesAsDict(self):
-        with patch('spiderfoot.helpers.os') as mock_os, patch('builtins.__import__') as mock_import:
-            mock_os.path.isdir.return_value = True
-            mock_os.listdir.return_value = ['sfp_test.py']
-            mock_module = MagicMock()
-            mock_module.sfp_test.asdict.return_value = {
-                'cats': ['Content Analysis']}
-            mock_import.return_value = mock_module
-            modules = SpiderFootHelpers.loadModulesAsDict('path')
+        """Test loadModulesAsDict with a real temp module file."""
+        import tempfile
+        import os
+        with tempfile.TemporaryDirectory() as tmpdir:
+            mod_path = os.path.join(tmpdir, 'sfp_test.py')
+            with open(mod_path, 'w') as f:
+                f.write(
+                    "from spiderfoot.modern_plugin import SpiderFootModernPlugin\n"
+                    "class sfp_test(SpiderFootModernPlugin):\n"
+                    "    meta = {'name': 'Test Module'}\n"
+                    "    opts = {'opt1': 'val1'}\n"
+                    "    optdescs = {'opt1': 'desc1'}\n"
+                    "    def setup(self, sfc, userOpts=None):\n"
+                    "        super().setup(sfc, userOpts or {})\n"
+                    "    def watchedEvents(self):\n"
+                    "        return ['IP_ADDRESS']\n"
+                    "    def producedEvents(self):\n"
+                    "        return ['RAW_RIR_DATA']\n"
+                    "    def handleEvent(self, event):\n"
+                    "        pass\n"
+                )
+            modules = SpiderFootHelpers.loadModulesAsDict(tmpdir)
             self.assertIn('sfp_test', modules)
+            self.assertEqual(modules['sfp_test']['name'], 'Test Module')
+            self.assertTrue(modules['sfp_test'].get('modern', False))
 
     def test_loadCorrelationRulesRaw_invalid_ignore_files_type(self):
         with self.assertRaises(TypeError):
