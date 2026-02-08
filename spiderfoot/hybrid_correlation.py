@@ -500,8 +500,6 @@ class HybridCorrelator:
                 query=query or f"scan:{scan_id}",
                 strategy=CorrelationStrategy.SIMILARITY,
                 scan_id=scan_id,
-                top_k=self.config.vector_top_k,
-                threshold=self.config.vector_threshold,
             )
             findings = _normalize_vector_result(result)
         except Exception as exc:
