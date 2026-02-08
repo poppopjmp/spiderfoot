@@ -1,0 +1,430 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------------------
+# Name:         modern_plugin
+# Purpose:      Modernized SpiderFootPlugin base class that integrates the
+#               extracted service layer (HttpService, DnsService, CacheService,
+#               DataService, EventBus, Metrics) via ServiceMixin.
+#
+#               Existing modules continue to work unchanged via self.sf.
+#               New/migrated modules can use self.http, self.dns, self.cache, etc.
+#
+# Author:       SpiderFoot Team
+# Created:      2025-07-08
+# Copyright:    (c) SpiderFoot Team 2025
+# Licence:      MIT
+# -------------------------------------------------------------------------------
+
+"""
+SpiderFoot Modern Plugin Base
+
+Extends SpiderFootPlugin with direct service access and metrics instrumentation.
+
+Usage (new-style module)::
+
+    from spiderfoot.modern_plugin import SpiderFootModernPlugin
+
+    class sfp_example(SpiderFootModernPlugin):
+        meta = { ... }
+
+        def setup(self, sfc, userOpts=dict()):
+            super().setup(sfc, userOpts)
+            # self.http, self.dns, self.cache, self.event_bus now available
+
+        def handleEvent(self, event):
+            # Option A: modern service API
+            result = self.fetch_url("https://api.example.com/lookup")
+
+            # Option B: legacy (still works)
+            result = self.sf.fetchUrl("https://api.example.com/lookup")
+
+Backward Compatibility:
+    - Inherits from SpiderFootPlugin, so all legacy methods work
+    - self.sf is still injected by setup()
+    - Services are lazily resolved from ServiceRegistry
+    - If no registry is configured, gracefully falls back to self.sf
+"""
+
+import logging
+import time
+from typing import Any, Dict, List, Optional
+
+from spiderfoot.plugin import SpiderFootPlugin
+
+
+log = logging.getLogger("spiderfoot.modern_plugin")
+
+
+class SpiderFootModernPlugin(SpiderFootPlugin):
+    """
+    Enhanced SpiderFootPlugin with first-class service integration.
+
+    Provides:
+        - self.http → HttpService (extracted HTTP client)
+        - self.dns  → DnsService (extracted DNS resolver)
+        - self.cache → CacheService (extracted cache layer)
+        - self.data  → DataService (extracted DB layer)
+        - self.event_bus → EventBus (publish/subscribe)
+        - self.emit_metric() → Prometheus metrics
+    """
+
+    # Override in subclass to disable auto-metrics
+    _enable_metrics = True
+
+    def __init__(self):
+        super().__init__()
+        self._registry = None
+        self._http_service = None
+        self._dns_service = None
+        self._cache_service = None
+        self._data_service = None
+        self._event_bus = None
+        self._metrics_imported = False
+
+    # ------------------------------------------------------------------
+    # Setup (called by scan engine)
+    # ------------------------------------------------------------------
+
+    def setup(self, sfc, userOpts=None):
+        """Initialize the module with SpiderFoot facade and user options.
+
+        Extends the legacy setup to also resolve services from the registry
+        if available.
+        """
+        if userOpts is None:
+            userOpts = {}
+
+        # Legacy setup — sets self.sf
+        super().setup(sfc, userOpts)
+
+        # Try to attach to the service registry
+        try:
+            from spiderfoot.service_registry import get_registry
+            self._registry = get_registry()
+        except ImportError:
+            self._registry = None
+
+    # ------------------------------------------------------------------
+    # Service accessors (lazy resolution)
+    # ------------------------------------------------------------------
+
+    @property
+    def http(self):
+        """Access the HttpService."""
+        if self._http_service is None:
+            self._http_service = self._get_service("http")
+        return self._http_service
+
+    @property
+    def dns(self):
+        """Access the DnsService."""
+        if self._dns_service is None:
+            self._dns_service = self._get_service("dns")
+        return self._dns_service
+
+    @property
+    def cache(self):
+        """Access the CacheService."""
+        if self._cache_service is None:
+            self._cache_service = self._get_service("cache")
+        return self._cache_service
+
+    @property
+    def data(self):
+        """Access the DataService."""
+        if self._data_service is None:
+            self._data_service = self._get_service("data")
+        return self._data_service
+
+    @property
+    def event_bus(self):
+        """Access the EventBus."""
+        if self._event_bus is None:
+            self._event_bus = self._get_service("event_bus")
+        return self._event_bus
+
+    def _get_service(self, name: str):
+        """Resolve a service from the registry, returning None if unavailable."""
+        if self._registry is None:
+            return None
+        try:
+            from spiderfoot.service_registry import (
+                SERVICE_HTTP, SERVICE_DNS, SERVICE_CACHE,
+                SERVICE_DATA, SERVICE_EVENT_BUS,
+            )
+            mapping = {
+                "http": SERVICE_HTTP,
+                "dns": SERVICE_DNS,
+                "cache": SERVICE_CACHE,
+                "data": SERVICE_DATA,
+                "event_bus": SERVICE_EVENT_BUS,
+            }
+            svc_name = mapping.get(name)
+            if svc_name and self._registry.has(svc_name):
+                return self._registry.get(svc_name)
+        except Exception:
+            pass
+        return None
+
+    # ------------------------------------------------------------------
+    # Modern convenience methods (delegate to services or fallback)
+    # ------------------------------------------------------------------
+
+    def fetch_url(self, url: str, method: str = "GET",
+                  headers: Optional[Dict] = None,
+                  data: Optional[Any] = None,
+                  timeout: int = 30,
+                  use_cache: bool = True,
+                  cache_ttl: int = 3600,
+                  **kwargs) -> Optional[Dict]:
+        """Fetch a URL using HttpService (or fallback to self.sf.fetchUrl).
+
+        Returns a dict with keys: content, code, headers, realurl, status
+        """
+        t0 = time.monotonic()
+        try:
+            if self.http is not None:
+                result = self.http.fetch_url(
+                    url, method=method, headers=headers,
+                    data=data, timeout=timeout, **kwargs
+                )
+                self._record_http_metric(method, result.get("code", 0), t0)
+                return result
+
+            # Fallback to legacy
+            if hasattr(self, "sf") and self.sf:
+                result = self.sf.fetchUrl(
+                    url, timeout=timeout,
+                    postData=data,
+                    headOnly=(method == "HEAD"),
+                )
+                self._record_http_metric(method, 200, t0)
+                return result
+
+        except Exception as e:
+            self.error(f"fetch_url error: {e}")
+            self._record_http_metric(method, 0, t0)
+
+        return None
+
+    def resolve_host(self, hostname: str) -> List[str]:
+        """Resolve a hostname to IPv4 addresses."""
+        try:
+            if self.dns is not None:
+                return self.dns.resolve_host(hostname)
+
+            if hasattr(self, "sf") and self.sf:
+                return self.sf.resolveHost(hostname) or []
+
+        except Exception as e:
+            self.error(f"resolve_host error: {e}")
+
+        return []
+
+    def resolve_host6(self, hostname: str) -> List[str]:
+        """Resolve a hostname to IPv6 addresses."""
+        try:
+            if self.dns is not None:
+                return self.dns.resolve_host6(hostname)
+
+            if hasattr(self, "sf") and self.sf:
+                return self.sf.resolveHost6(hostname) or []
+
+        except Exception as e:
+            self.error(f"resolve_host6 error: {e}")
+
+        return []
+
+    def reverse_resolve(self, ip_address: str) -> List[str]:
+        """Reverse-resolve an IP address."""
+        try:
+            if self.dns is not None:
+                return self.dns.reverse_resolve(ip_address)
+
+            if hasattr(self, "sf") and self.sf:
+                return self.sf.resolveIP(ip_address) or []
+
+        except Exception as e:
+            self.error(f"reverse_resolve error: {e}")
+
+        return []
+
+    def cache_get(self, key: str) -> Optional[Any]:
+        """Get a value from the cache."""
+        try:
+            if self.cache is not None:
+                return self.cache.get(key)
+
+            if hasattr(self, "sf") and self.sf:
+                return self.sf.cacheGet(key, 24)
+
+        except Exception:
+            pass
+
+        return None
+
+    def cache_put(self, key: str, value: Any, ttl: int = 3600) -> bool:
+        """Put a value into the cache."""
+        try:
+            if self.cache is not None:
+                self.cache.put(key, value, ttl=ttl)
+                return True
+
+            if hasattr(self, "sf") and self.sf:
+                self.sf.cachePut(key, value)
+                return True
+
+        except Exception:
+            pass
+
+        return False
+
+    def store_event(self, event) -> None:
+        """Store an event to the data service."""
+        try:
+            if self.data is not None:
+                self.data.event_store({
+                    "scan_id": self.getScanId(),
+                    "event_type": event.eventType,
+                    "data": event.data,
+                    "module": self.__name__,
+                    "source_event": getattr(event, "sourceEventHash", ""),
+                })
+                return
+
+            # Legacy: scan engine handles storage
+        except Exception as e:
+            self.error(f"store_event error: {e}")
+
+    def publish_event(self, topic: str, data: Any) -> None:
+        """Publish an event to the event bus."""
+        try:
+            if self.event_bus is not None:
+                self.event_bus.publish(topic, data)
+        except Exception:
+            pass
+
+    # ------------------------------------------------------------------
+    # Enhanced event dispatch with metrics
+    # ------------------------------------------------------------------
+
+    def notifyListeners(self, sfEvent) -> None:
+        """Override to add metrics instrumentation."""
+        # Record event production metric
+        self._record_event_produced(sfEvent.eventType)
+
+        # Delegate to parent implementation
+        super().notifyListeners(sfEvent)
+
+    def sendEvent(self, eventType, eventData, parentEvent,
+                  confidenceLevel=100) -> None:
+        """Enhanced sendEvent with metrics."""
+        self._record_event_produced(eventType)
+        super().sendEvent(eventType, eventData, parentEvent, confidenceLevel)
+
+    # ------------------------------------------------------------------
+    # Metrics helpers
+    # ------------------------------------------------------------------
+
+    def _record_http_metric(self, method: str, status_code: int,
+                            start_time: float) -> None:
+        """Record HTTP request metric."""
+        if not self._enable_metrics:
+            return
+        try:
+            from spiderfoot.metrics import HTTP_REQUESTS, HTTP_DURATION
+            HTTP_REQUESTS.labels(
+                method=method, status_code=str(status_code)
+            ).inc()
+            HTTP_DURATION.observe(time.monotonic() - start_time)
+        except ImportError:
+            pass
+
+    def _record_event_produced(self, event_type: str) -> None:
+        """Record event production metric."""
+        if not self._enable_metrics:
+            return
+        try:
+            from spiderfoot.metrics import EVENTS_PRODUCED
+            EVENTS_PRODUCED.labels(event_type=event_type).inc()
+        except ImportError:
+            pass
+
+    def _record_module_duration(self, duration: float) -> None:
+        """Record module handleEvent duration."""
+        if not self._enable_metrics:
+            return
+        try:
+            from spiderfoot.metrics import MODULE_DURATION, EVENTS_PROCESSED
+            MODULE_DURATION.observe(duration)
+            EVENTS_PROCESSED.labels(module=self.__name__).inc()
+        except ImportError:
+            pass
+
+    def _record_module_error(self, error_type: str) -> None:
+        """Record module error metric."""
+        if not self._enable_metrics:
+            return
+        try:
+            from spiderfoot.metrics import MODULE_ERRORS
+            MODULE_ERRORS.labels(
+                module=self.__name__, error_type=error_type
+            ).inc()
+        except ImportError:
+            pass
+
+    # ------------------------------------------------------------------
+    # Instrumented handleEvent wrapper
+    # ------------------------------------------------------------------
+
+    def threadWorker(self) -> None:
+        """Override threadWorker to instrument handleEvent with metrics.
+
+        This wraps each handleEvent call with timing and error tracking.
+        """
+        if not self._enable_metrics:
+            super().threadWorker()
+            return
+
+        while True:
+            if self.checkForStop():
+                break
+
+            try:
+                sfEvent = self.incomingEventQueue.get(timeout=1)
+            except Exception:
+                continue
+
+            if sfEvent is None:
+                # Poison pill
+                break
+
+            self._currentEvent = sfEvent
+
+            try:
+                t0 = time.monotonic()
+                self.handleEvent(sfEvent)
+                self._record_module_duration(time.monotonic() - t0)
+            except Exception as e:
+                self.error(f"Module {self.__name__} failed: {e}")
+                self._record_module_error(type(e).__name__)
+                self.errorState = True
+
+            self.incomingEventQueue.task_done()
+
+    # ------------------------------------------------------------------
+    # Module info
+    # ------------------------------------------------------------------
+
+    def asdict(self) -> dict:
+        """Enhanced module serialization with service status."""
+        d = super().asdict()
+        d["modern_plugin"] = True
+        d["services"] = {
+            "http": self.http is not None,
+            "dns": self.dns is not None,
+            "cache": self.cache is not None,
+            "data": self.data is not None,
+            "event_bus": self.event_bus is not None,
+        }
+        return d
