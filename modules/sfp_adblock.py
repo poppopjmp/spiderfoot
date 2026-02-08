@@ -80,7 +80,7 @@ class sfp_adblock(SpiderFootModernPlugin):
         if not blocklist_url:
             return None
 
-        blocklist = self.sf.cacheGet(f"adblock_{blocklist_url}", 24)
+        blocklist = self.cache_get(f"adblock_{blocklist_url}", 24)
 
         if blocklist is not None:
             return self.setBlocklistRules(blocklist)
@@ -99,7 +99,7 @@ class sfp_adblock(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut(f"adblock_{blocklist_url}", res['content'])
+        self.cache_put(f"adblock_{blocklist_url}", res['content'])
 
         return self.setBlocklistRules(res['content'])
 

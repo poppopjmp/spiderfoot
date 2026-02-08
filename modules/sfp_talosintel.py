@@ -109,7 +109,7 @@ class sfp_talosintel(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('talosintel', 24)
+        blacklist = self.cache_get('talosintel', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -133,7 +133,7 @@ class sfp_talosintel(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("talosintel", res['content'])
+        self.cache_put("talosintel", res['content'])
 
         return self.parseBlacklist(res['content'])
 

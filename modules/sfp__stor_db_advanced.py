@@ -116,7 +116,7 @@ class ConnectionLoadBalancer:
                     
             except Exception as e:
                 if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
-                    self.sf.error(f"Failed to initialize pool {pool_id}: {e}")
+                    self.log.error(f"Failed to initialize pool {pool_id}: {e}")
                 else:
                     print(f"Failed to initialize pool {pool_id}: {e}")
                 self.health_status[pool_id] = False
@@ -143,7 +143,7 @@ class ConnectionLoadBalancer:
             except Exception as e:
                 self.health_status[best_pool_id] = False
                 if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
-                    self.sf.error(f"Failed to get connection from {best_pool_id}: {e}")
+                    self.log.error(f"Failed to get connection from {best_pool_id}: {e}")
                 else:
                     print(f"Failed to get connection from {best_pool_id}: {e}")
                 # Retry with next best pool
@@ -166,7 +166,7 @@ class ConnectionLoadBalancer:
                 
             except Exception as e:
                 if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
-                    self.sf.error(f"Failed to return connection to {pool_id}: {e}")
+                    self.log.error(f"Failed to return connection to {pool_id}: {e}")
                 else:
                     print(f"Failed to return connection to {pool_id}: {e}")
 
@@ -332,7 +332,7 @@ class PerformanceMonitor:
         }
         self.alerts.append(alert)
         if hasattr(self, 'sf') and hasattr(self.sf, 'warning'):
-            self.sf.warning(f"Performance alert: {alert_type} - {details}")
+            self.log.warning(f"Performance alert: {alert_type} - {details}")
         else:
             print(f"Performance alert: {alert_type} - {details}")
     
@@ -354,7 +354,7 @@ class PerformanceMonitor:
                     time.sleep(30)  # Check every 30 seconds
                 except Exception as e:
                     if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
-                        self.sf.error(f"Performance monitoring error: {e}")
+                        self.log.error(f"Performance monitoring error: {e}")
                     else:
                         print(f"Performance monitoring error: {e}")
         
@@ -442,7 +442,7 @@ class AutoScaler:
                     time.sleep(60)  # Check every minute
                 except Exception as e:
                     if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
-                        self.sf.error(f"Auto-scaling error: {e}")
+                        self.log.error(f"Auto-scaling error: {e}")
                     else:
                         print(f"Auto-scaling error: {e}")
         
@@ -472,13 +472,13 @@ class AutoScaler:
                 config = self.load_balancer.configs[int(pool_id.split('_')[1])]
                 self._recreate_pool(pool_id, config, new_max)
                 if hasattr(self, 'sf') and hasattr(self.sf, 'info'):
-                    self.sf.info(f"Scaled up {pool_id} from {current_max} to {new_max} connections")
+                    self.log.info(f"Scaled up {pool_id} from {current_max} to {new_max} connections")
                 else:
                     print(f"Scaled up {pool_id} from {current_max} to {new_max} connections")
                 
         except Exception as e:
             if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
-                self.sf.error(f"Failed to scale up {pool_id}: {e}")
+                self.log.error(f"Failed to scale up {pool_id}: {e}")
             else:
                 print(f"Failed to scale up {pool_id}: {e}")
     
@@ -494,13 +494,13 @@ class AutoScaler:
                 config = self.load_balancer.configs[int(pool_id.split('_')[1])]
                 self._recreate_pool(pool_id, config, new_max)
                 if hasattr(self, 'sf') and hasattr(self.sf, 'info'):
-                    self.sf.info(f"Scaled down {pool_id} from {current_max} to {new_max} connections")
+                    self.log.info(f"Scaled down {pool_id} from {current_max} to {new_max} connections")
                 else:
                     print(f"Scaled down {pool_id} from {current_max} to {new_max} connections")
                 
         except Exception as e:
             if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
-                self.sf.error(f"Failed to scale down {pool_id}: {e}")
+                self.log.error(f"Failed to scale down {pool_id}: {e}")
             else:
                 print(f"Failed to scale down {pool_id}: {e}")
     
@@ -533,7 +533,7 @@ class AutoScaler:
                 
         except Exception as e:
             if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
-                self.sf.error(f"Failed to recreate pool {pool_id}: {e}")
+                self.log.error(f"Failed to recreate pool {pool_id}: {e}")
             else:
                 print(f"Failed to recreate pool {pool_id}: {e}")
             # Mark pool as unhealthy

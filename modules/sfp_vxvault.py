@@ -94,7 +94,7 @@ class sfp_vxvault(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('vxvault', 24)
+        blacklist = self.cache_get('vxvault', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -116,7 +116,7 @@ class sfp_vxvault(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("vxvault", res['content'])
+        self.cache_put("vxvault", res['content'])
 
         return self.parseBlacklist(res['content'])
 

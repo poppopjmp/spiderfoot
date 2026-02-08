@@ -82,7 +82,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('botvrij', 24)
+        blacklist = self.cache_get('botvrij', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -104,7 +104,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("botvrij", res['content'])
+        self.cache_put("botvrij", res['content'])
 
         return self.parseBlacklist(res['content'])
 

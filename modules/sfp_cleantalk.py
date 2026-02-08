@@ -94,7 +94,7 @@ class sfp_cleantalk(SpiderFootModernPlugin):
         url = "https://iplists.firehol.org/files/cleantalk_7d.ipset"
 
         data = dict()
-        data["content"] = self.sf.cacheGet(
+        data["content"] = self.cache_get(
             "sfmal_" + cid, self.opts.get('cacheperiod', 0))
 
         if data["content"] is None:
@@ -111,7 +111,7 @@ class sfp_cleantalk(SpiderFootModernPlugin):
                 self.errorState = True
                 return None
 
-            self.sf.cachePut("sfmal_" + cid, data['content'])
+            self.cache_put("sfmal_" + cid, data['content'])
 
         for line in data["content"].split('\n'):
             ip = line.strip().lower()

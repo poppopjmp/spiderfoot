@@ -91,7 +91,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
         Returns:
             list: List of parsed items from the feed.
         """
-        data = self.sf.cacheGet("bambenek_" + url, self.opts["cacheperiod"])
+        data = self.cache_get("bambenek_" + url, self.opts["cacheperiod"])
         if data:
             self.debug(f"Using cached data from Bambenek feed: {url}")
             return self.parseData(data)
@@ -109,7 +109,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
             return []
 
         try:
-            self.sf.cachePut(
+            self.cache_put(
                 "bambenek_" + url, res["content"], self.opts["cacheperiod"]
             )
             return self.parseData(res["content"])

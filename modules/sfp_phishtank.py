@@ -87,7 +87,7 @@ class sfp_phishtank(SpiderFootModernPlugin):
         return None
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('phishtank', 24)
+        blacklist = self.cache_get('phishtank', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -109,7 +109,7 @@ class sfp_phishtank(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("phishtank", res['content'])
+        self.cache_put("phishtank", res['content'])
 
         return self.parseBlacklist(res['content'])
 

@@ -88,7 +88,7 @@ class sfp_coinblocker(SpiderFootModernPlugin):
         return False
 
     def retrieveBlocklist(self):
-        blocklist = self.sf.cacheGet(
+        blocklist = self.cache_get(
             'coinblocker', self.opts.get('cacheperiod', 24))
 
         if blocklist is not None:
@@ -112,7 +112,7 @@ class sfp_coinblocker(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("coinblocker", res['content'])
+        self.cache_put("coinblocker", res['content'])
 
         return self.parseBlocklist(res['content'])
 

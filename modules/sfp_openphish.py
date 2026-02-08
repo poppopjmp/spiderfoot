@@ -87,7 +87,7 @@ class sfp_openphish(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('openphish', 24)
+        blacklist = self.cache_get('openphish', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -109,7 +109,7 @@ class sfp_openphish(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("openphish", res['content'])
+        self.cache_put("openphish", res['content'])
 
         return self.parseBlacklist(res['content'])
 

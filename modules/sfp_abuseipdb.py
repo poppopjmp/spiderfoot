@@ -93,7 +93,7 @@ class sfp_abuseipdb(SpiderFootModernPlugin):
         ]
 
     def queryBlacklist(self):
-        blacklist = self.sf.cacheGet('abuseipdb', 24)
+        blacklist = self.cache_get('abuseipdb', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -139,7 +139,7 @@ class sfp_abuseipdb(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("abuseipdb", res['content'])
+        self.cache_put("abuseipdb", res['content'])
 
         return self.parseBlacklist(res['content'])
 

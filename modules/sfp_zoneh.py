@@ -134,7 +134,7 @@ class sfp_zoneh(SpiderFootModernPlugin):
             return
 
         url = "https://www.zone-h.org/rss/specialdefacements"
-        content = self.sf.cacheGet("sfzoneh", 48)
+        content = self.cache_get("sfzoneh", 48)
         if content is None:
             data = self.fetch_url(url, useragent=self.opts['_useragent'])
             if data['content'] is None:
@@ -142,7 +142,7 @@ class sfp_zoneh(SpiderFootModernPlugin):
                 self.errorState = True
                 return
 
-            self.sf.cachePut("sfzoneh", data['content'])
+            self.cache_put("sfzoneh", data['content'])
             content = data['content']
 
         ret = self.lookupItem(eventData, content)

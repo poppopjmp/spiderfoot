@@ -56,7 +56,7 @@ class sfp_hosting(SpiderFootModernPlugin):
         data = dict()
         url = "https://raw.githubusercontent.com/client9/ipcat/master/datacenters.csv"
 
-        data['content'] = self.sf.cacheGet("sfipcat", 48)
+        data['content'] = self.cache_get("sfipcat", 48)
         if data['content'] is None:
             data = self.fetch_url(url, useragent=self.opts['_useragent'])
 
@@ -64,7 +64,7 @@ class sfp_hosting(SpiderFootModernPlugin):
                 self.error("Unable to fetch " + url)
                 return None
 
-            self.sf.cachePut("sfipcat", data['content'])
+            self.cache_put("sfipcat", data['content'])
 
         for line in data['content'].split('\n'):
             if "," not in line:

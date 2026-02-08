@@ -102,7 +102,7 @@ class sfp_voipbl(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('voipbl', 24)
+        blacklist = self.cache_get('voipbl', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -124,7 +124,7 @@ class sfp_voipbl(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("voipbl", res['content'])
+        self.cache_put("voipbl", res['content'])
 
         return self.parseBlacklist(res['content'])
 

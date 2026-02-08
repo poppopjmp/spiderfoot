@@ -81,7 +81,7 @@ class sfp_stevenblack_hosts(SpiderFootModernPlugin):
         return False
 
     def retrieveBlocklist(self):
-        blocklist = self.sf.cacheGet('stevenblack_hosts', 24)
+        blocklist = self.cache_get('stevenblack_hosts', 24)
 
         if blocklist is not None:
             return self.parseBlocklist(blocklist)
@@ -104,7 +104,7 @@ class sfp_stevenblack_hosts(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("stevenblack_hosts", res['content'])
+        self.cache_put("stevenblack_hosts", res['content'])
 
         return self.parseBlocklist(res['content'])
 

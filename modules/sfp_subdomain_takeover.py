@@ -45,7 +45,7 @@ class sfp_subdomain_takeover(SpiderFootModernPlugin):
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-        content = self.sf.cacheGet("subjack-fingerprints", 48)
+        content = self.cache_get("subjack-fingerprints", 48)
         if content is None:
             url = "https://raw.githubusercontent.com/haccer/subjack/master/fingerprints.json"
             res = self.fetch_url(url, useragent="SpiderFoot")
@@ -55,7 +55,7 @@ class sfp_subdomain_takeover(SpiderFootModernPlugin):
                 self.errorState = True
                 return
 
-            self.sf.cachePut("subjack-fingerprints", res['content'])
+            self.cache_put("subjack-fingerprints", res['content'])
             content = res['content']
 
         try:

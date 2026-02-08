@@ -94,7 +94,7 @@ class sfp_cybercrimetracker(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('cybercrime-tracker', 24)
+        blacklist = self.cache_get('cybercrime-tracker', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -116,7 +116,7 @@ class sfp_cybercrimetracker(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("cybercrime-tracker", res['content'])
+        self.cache_put("cybercrime-tracker", res['content'])
 
         return self.parseBlacklist(res['content'])
 

@@ -110,7 +110,7 @@ class sfp_blocklistde(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('blocklistde', 24)
+        blacklist = self.cache_get('blocklistde', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -132,7 +132,7 @@ class sfp_blocklistde(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("blocklistde", res['content'])
+        self.cache_put("blocklistde", res['content'])
 
         return self.parseBlacklist(res['content'])
 

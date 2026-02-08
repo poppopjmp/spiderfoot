@@ -94,7 +94,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
             url = self.opts['url']
             if replaceme_id == cid:
                 data = dict()
-                data['content'] = self.sf.cacheGet(
+                data['content'] = self.cache_get(
                     "sfmal_" + cid, self.opts.get('cacheperiod', 0))
                 if data['content'] is None:
                     data = self.fetch_url(
@@ -102,7 +102,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
                     if data['content'] is None:
                         self.error("Unable to fetch " + url)
                         return None
-                    self.sf.cachePut("sfmal_" + cid, data['content'])
+                    self.cache_put("sfmal_" + cid, data['content'])
 
                 # If we're looking at netblocks
                 if targetType == "netblock":

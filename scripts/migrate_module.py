@@ -141,6 +141,34 @@ def migrate_content(content: str, result: MigrationResult) -> str:
     if n > 0:
         result.add_change(f"resolveIP -> reverse_resolve ({n} calls)")
 
+    # 8. self.sf.cacheGet -> self.cache_get
+    content, n = re.subn(
+        r'self\.sf\.cacheGet\b',
+        'self.cache_get',
+        content,
+    )
+    if n > 0:
+        result.add_change(f"cacheGet -> cache_get ({n} calls)")
+
+    # 9. self.sf.cachePut -> self.cache_put
+    content, n = re.subn(
+        r'self\.sf\.cachePut\b',
+        'self.cache_put',
+        content,
+    )
+    if n > 0:
+        result.add_change(f"cachePut -> cache_put ({n} calls)")
+
+    # 10. Logging methods: self.sf.error/info/debug/warning -> self.log.error/info/debug/warning
+    for level in ("error", "info", "debug", "warning"):
+        content, n = re.subn(
+            rf'self\.sf\.{level}\b',
+            f'self.log.{level}',
+            content,
+        )
+        if n > 0:
+            result.add_change(f"self.sf.{level} -> self.log.{level} ({n} calls)")
+
     result.migrated = content != original
     return content
 

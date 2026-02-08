@@ -90,7 +90,7 @@ class sfp_torexits(SpiderFootModernPlugin):
         return False
 
     def retrieveExitNodes(self):
-        exit_addresses = self.sf.cacheGet(
+        exit_addresses = self.cache_get(
             'torexitnodes', self.opts.get('cacheperiod', 1))
 
         if exit_addresses is not None:
@@ -113,7 +113,7 @@ class sfp_torexits(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("torexitnodes", res['content'])
+        self.cache_put("torexitnodes", res['content'])
 
         return self.parseExitNodes(res['content'])
 

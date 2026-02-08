@@ -60,9 +60,9 @@ class sfp_4chan(SpiderFootModernPlugin):
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
                 return resp.json()
-            self.sf.error(f"Failed to fetch catalog for board {board}: {resp.status_code}")
+            self.log.error(f"Failed to fetch catalog for board {board}: {resp.status_code}")
         except Exception as e:
-            self.sf.error(f"Exception fetching catalog for board {board}: {e}")
+            self.log.error(f"Exception fetching catalog for board {board}: {e}")
         return None
 
     def _fetch_thread(self, board: str, thread_id: int) -> Optional[Dict]:
@@ -71,9 +71,9 @@ class sfp_4chan(SpiderFootModernPlugin):
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
                 return resp.json()
-            self.sf.error(f"Failed to fetch thread {thread_id} on board {board}: {resp.status_code}")
+            self.log.error(f"Failed to fetch thread {thread_id} on board {board}: {resp.status_code}")
         except Exception as e:
-            self.sf.error(f"Exception fetching thread {thread_id} on board {board}: {e}")
+            self.log.error(f"Exception fetching thread {thread_id} on board {board}: {e}")
         return None
 
     def handleEvent(self, event):
@@ -84,9 +84,9 @@ class sfp_4chan(SpiderFootModernPlugin):
         boards = [b.strip() for b in self.opts.get("boards", "").split(",") if b.strip()]
         max_threads = int(self.opts.get("max_threads", 10))
         if not boards:
-            self.sf.error("No 4chan boards specified in options.")
+            self.log.error("No 4chan boards specified in options.")
             return
-        self.sf.info(f"Monitoring 4chan boards: {', '.join(boards)} (max_threads={max_threads})")
+        self.log.info(f"Monitoring 4chan boards: {', '.join(boards)} (max_threads={max_threads})")
         for board in boards:
             catalog = self._fetch_catalog(board)
             if not catalog:
@@ -120,7 +120,7 @@ class sfp_4chan(SpiderFootModernPlugin):
                         "ext": post.get("ext"),
                         "rest": post
                     }
-                    self.sf.debug(f"Emitting FOURCHAN_POST event: {post_info}")
+                    self.log.debug(f"Emitting FOURCHAN_POST event: {post_info}")
                     post_event = SpiderFootEvent(
                         "FOURCHAN_POST",
                         str(post_info),

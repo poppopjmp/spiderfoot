@@ -106,7 +106,7 @@ class sfp_alienvaultiprep(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('alienvaultiprep', 24)
+        blacklist = self.cache_get('alienvaultiprep', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -129,7 +129,7 @@ class sfp_alienvaultiprep(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("alienvaultiprep", res['content'])
+        self.cache_put("alienvaultiprep", res['content'])
 
         return self.parseBlacklist(res['content'])
 

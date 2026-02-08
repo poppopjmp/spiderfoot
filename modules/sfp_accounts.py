@@ -73,7 +73,7 @@ class sfp_accounts(SpiderFootModernPlugin):
         self.commonNames = SpiderFootHelpers.humanNamesFromWordlists()
         self.words = SpiderFootHelpers.dictionaryWordsFromWordlists()
 
-        content = self.sf.cacheGet("sfaccountsv2", 48)
+        content = self.cache_get("sfaccountsv2", 48)
         if content is None:
             url = "https://raw.githubusercontent.com/WebBreacher/WhatsMyName/main/wmn-data.json"
             data = self.fetch_url(url, useragent="SpiderFoot")
@@ -84,7 +84,7 @@ class sfp_accounts(SpiderFootModernPlugin):
                 return
 
             content = data['content']
-            self.sf.cachePut("sfaccountsv2", content)
+            self.cache_put("sfaccountsv2", content)
 
         try:
             self.sites = [site for site in json.loads(
@@ -314,7 +314,7 @@ class sfp_accounts(SpiderFootModernPlugin):
         # sites are by attempting to fetch a garbage user.
         if not self.distrustedChecked:
             # Check if a state cache exists first, to not have to do this all the time
-            content = self.sf.cacheGet("sfaccounts_state_v3", 72)
+            content = self.cache_get("sfaccounts_state_v3", 72)
             if content:
                 if content != "None":  # "None" is written to the cached file when no sites are distrusted
                     delsites = list()
@@ -340,7 +340,7 @@ class sfp_accounts(SpiderFootModernPlugin):
                 else:
                     # The caching code needs *some* content
                     delsites = "None"
-                self.sf.cachePut("sfaccounts_state_v3", delsites)
+                self.cache_put("sfaccounts_state_v3", delsites)
 
             self.distrustedChecked = True
 
