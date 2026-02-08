@@ -329,11 +329,22 @@ class SpiderFootScanner():
 
     def __startScan(self) -> None:
         failed = True
+        self.__scanStartTime = time.time()
 
         try:
             self.__setStatus("STARTING", time.time() * 1000, None)
             self.__sf.status(
                 f"Scan [{self.__scanId}] for '{self.__target.targetValue}' initiated.")
+
+            # Wire new service layer into this scan
+            try:
+                from spiderfoot.service_integration import (
+                    integrate_services, wire_scan_services,
+                )
+                integrate_services(self.__config)
+                wire_scan_services(self, self.__scanId)
+            except Exception as e:
+                self.__sf.debug(f"Service integration skipped: {e}")
 
             self.eventQueue = queue.Queue()
 
@@ -386,6 +397,13 @@ class SpiderFootScanner():
                     mod.setSharedThreadPool(self.__sharedThreadPool)
                     mod.setDbh(self.__dbh)
                     mod.setup(self.__sf, self.__modconfig[modName])
+
+                    # Wire new services into module (no-op for legacy modules)
+                    try:
+                        from spiderfoot.service_integration import wire_module_services
+                        wire_module_services(mod, self.__config)
+                    except Exception:
+                        pass
                 except Exception:
                     self.__sf.error(
                         f"Module {modName} setup failed")
@@ -484,10 +502,21 @@ class SpiderFootScanner():
             self.__sf.error(f"Scan [{self.__scanId}] failed: {str(e)}")
 
         finally:
+            scan_end_time = time.time()
             if not failed:
-                self.__setStatus("FINISHED", None, time.time() * 1000)
+                self.__setStatus("FINISHED", None, scan_end_time * 1000)
                 self.runCorrelations()
                 self.__sf.status(f"Scan [{self.__scanId}] completed.")
+
+            # Record scan completion in metrics / event bus / vector
+            try:
+                from spiderfoot.service_integration import complete_scan_services
+                status = "FINISHED" if not failed else "ERROR"
+                duration = scan_end_time - (self.__scanStartTime or scan_end_time)
+                complete_scan_services(self.__scanId, status, duration)
+            except Exception:
+                pass
+
             self.__dbh.close()
 
     def runCorrelations(self) -> None:
