@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.3.3-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.3.3)
+[![Stable Release](https://img.shields.io/badge/version-5.10.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.10.0)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -22,19 +22,49 @@ SpiderFoot features an embedded web-server for providing a clean and intuitive w
 
 ## Platform Architecture
 
+SpiderFoot v5.10+ features a fully modular microservices architecture. Each service
+can run standalone or together in a single process (monolith mode).
+
 ```mermaid
 graph TD;
-    A[User] -->|Web UI| B[SpiderFoot Core Engine];
-    A -->|CLI| B;
-    B --> C[Modules];
-    B --> D[Database];
-    B --> E[API];
-    C --> F[External Data Sources];
-    E --> G[SIEM/SOAR/Integrations];
-    B --> H[Scheduler];
-    B --> I[Correlation Engine];
-    B --> J[Reporting & Export];
+    A[User] -->|Web UI / CLI| N[Nginx Gateway];
+    N --> W[WebUI Service :5001];
+    N --> E[API Service :8001];
+    N --> GW[API Gateway];
+    GW --> S[Scanner Service];
+    GW --> CS[Correlation Service];
+    S -->|EventBus| EB[Event Bus - Memory/Redis/NATS];
+    S --> DS[Data Service];
+    CS --> DS;
+    DS --> DB[(PostgreSQL / SQLite)];
+    S --> HS[HTTP Service];
+    S --> DNS[DNS Service];
+    S --> CA[Cache Service - Memory/File/Redis];
+    EB --> VS[Vector.dev Sink];
+    VS --> ES[(Elasticsearch / S3)];
+    S --> M[Prometheus Metrics];
+    S --> SL[Structured Logging - JSON];
+    S --> SR[Service Registry - DI Container];
 ```
+
+### Service Layer Components
+
+| Service | Module | Purpose |
+|---|---|---|
+| **EventBus** | `spiderfoot/eventbus/` | Pub/sub messaging (Memory, Redis Streams, NATS JetStream) |
+| **DataService** | `spiderfoot/data_service/` | DB abstraction (SQLite, PostgreSQL, remote gRPC) |
+| **HttpService** | `spiderfoot/http_service.py` | Connection-pooled HTTP client with proxy support |
+| **DnsService** | `spiderfoot/dns_service.py` | DNS resolution with built-in TTL cache |
+| **CacheService** | `spiderfoot/cache_service.py` | Memory/File/Redis caching with LRU eviction |
+| **ConfigService** | `spiderfoot/config_service.py` | Centralized config with env-var overrides |
+| **ServiceRegistry** | `spiderfoot/service_registry.py` | Dependency injection container |
+| **WorkerPool** | `spiderfoot/worker_pool.py` | Thread/process pool for module execution |
+| **ScanScheduler** | `spiderfoot/scan_scheduler.py` | Priority-queue scan lifecycle management |
+| **CorrelationService** | `spiderfoot/correlation_service.py` | Standalone correlation with EventBus triggers |
+| **API Gateway** | `spiderfoot/api_gateway.py` | Request routing, circuit breaker, rate limiting |
+| **Metrics** | `spiderfoot/metrics.py` | Zero-dependency Prometheus-compatible metrics |
+| **Vector.dev Sink** | `spiderfoot/vector_sink.py` | Event/log/metric pipeline to Elasticsearch/S3 |
+| **gRPC/HTTP RPC** | `spiderfoot/grpc_service.py` | Inter-service communication with fallback |
 
 ---
 
@@ -131,15 +161,57 @@ graph LR;
 
 ## Deployment Overview
 
+SpiderFoot supports three deployment modes:
+
 ```mermaid
-graph TD;
-    A[User/Analyst] -->|Web UI/CLI| B[SpiderFoot Container];
-    B --> C[Persistent Storage];
-    B --> D[Network];
-    B --> E[External APIs];
-    B --> F[SIEM/SOAR];
-    B --> G[Monitoring];
+graph LR;
+    subgraph Monolith
+        M1[sf.py] --> M2[All Services In-Process];
+    end
+    subgraph Docker Compose
+        D1[docker-compose.yml] --> D2[Scanner];
+        D1 --> D3[API];
+        D1 --> D4[WebUI];
+        D1 --> D5[PostgreSQL];
+        D1 --> D6[Redis];
+        D1 --> D7[Vector.dev];
+        D1 --> D8[Nginx];
+    end
+    subgraph Kubernetes
+        K1[Helm Chart] --> K2[Service Pods];
+    end
 ```
+
+### Monolith Mode (default)
+
+```bash
+python3 ./sf.py -l 127.0.0.1:5001
+```
+
+### Docker Microservices Mode
+
+```bash
+# Build all service images
+cd docker && bash build.sh
+
+# Start the full stack
+docker-compose -f docker-compose-microservices.yml up -d
+```
+
+Services started: Scanner, API, WebUI, PostgreSQL, Redis, Vector.dev, Nginx
+
+### Configuration via Environment Variables
+
+All services can be configured via environment variables (see `docker/env.example`):
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `SF_DEPLOYMENT_MODE` | `monolith` or `microservices` | `monolith` |
+| `SF_DATABASE_URL` | PostgreSQL connection string | SQLite |
+| `SF_REDIS_URL` | Redis URL for EventBus/Cache | None |
+| `SF_EVENTBUS_BACKEND` | `memory`, `redis`, or `nats` | `memory` |
+| `SF_VECTOR_ENDPOINT` | Vector.dev HTTP endpoint | None |
+| `SF_LOG_FORMAT` | `json` or `text` | `text` |
 
 ---
 
@@ -155,6 +227,8 @@ Comprehensive documentation is available for all aspects of SpiderFoot Enterpris
 - **[CLI Reference](documentation/user_guide.md)** - Command-line interface guide
 - **[API Documentation](documentation/api_reference.md)** - REST API reference
 - **[Module Guide](documentation/modules.md)** - Understanding modules
+- **[Module Migration Guide](documentation/MODULE_MIGRATION_GUIDE.md)** - Migrating to SpiderFootModernPlugin
+- **[Architecture Guide](documentation/ARCHITECTURE.md)** - Microservices architecture overview
 
 ---
 
