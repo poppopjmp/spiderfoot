@@ -16,10 +16,11 @@ import random
 import threading
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsbrute(SpiderFootPlugin):
+class sfp_dnsbrute(SpiderFootModernPlugin):
     """SpiderFoot plugin to brute-force hostnames and sub-domains."""
     meta = {
         'name': "DNS Brute-forcer",
@@ -55,16 +56,12 @@ class sfp_dnsbrute(SpiderFootPlugin):
     sublist = None
     lock = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.sublist = self.tempStorage()
         self.events = self.tempStorage()
         self.__dataSource__ = "DNS"
         self.lock = threading.Lock()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         if self.opts['commons']:
             from importlib.resources import files
             with (files('spiderfoot.dicts') / 'subdomains.txt').open('r') as f:
@@ -94,7 +91,7 @@ class sfp_dnsbrute(SpiderFootPlugin):
 
     def tryHost(self, name):
         try:
-            if self.sf.resolveHost(name) or self.sf.resolveHost6(name):
+            if self.resolve_host(name) or self.resolve_host6(name):
                 with self.lock:
                     self.hostResults[name] = True
         except Exception:

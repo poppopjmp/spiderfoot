@@ -17,10 +17,11 @@ import dns.query
 import dns.rdatatype
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsraw(SpiderFootPlugin):
+class sfp_dnsraw(SpiderFootModernPlugin):
     """SpiderFoot plugin for collecting raw DNS records such as MX, TXT and others."""
     meta = {
         'name': "DNS Raw Records",
@@ -43,15 +44,11 @@ class sfp_dnsraw(SpiderFootPlugin):
     events = None
     checked = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.checked = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['INTERNET_NAME', 'DOMAIN_NAME', 'DOMAIN_NAME_PARENT']
@@ -177,7 +174,7 @@ class sfp_dnsraw(SpiderFootPlugin):
             else:
                 evt_type = 'AFFILIATE_INTERNET_NAME'
 
-            if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+            if self.opts['verify'] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                 self.debug(f"Host {domain} could not be resolved")
                 evt_type += '_UNRESOLVED'
 

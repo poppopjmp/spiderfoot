@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_soroush(SpiderFootPlugin):
+class sfp_soroush(SpiderFootModernPlugin):
     meta = {
         'name': "Soroush Monitor",
         'summary': "Monitors Soroush for new messages and emits events.",
@@ -28,8 +29,8 @@ class sfp_soroush(SpiderFootPlugin):
         "max_messages": "Maximum number of messages to fetch per channel."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):

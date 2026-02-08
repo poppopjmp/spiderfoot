@@ -16,10 +16,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_jsonwhoiscom(SpiderFootPlugin):
+class sfp_jsonwhoiscom(SpiderFootModernPlugin):
 
     meta = {
         'name': "JsonWHOIS.com",
@@ -64,14 +65,10 @@ class sfp_jsonwhoiscom(SpiderFootPlugin):
     errorState = False
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME", "AFFILIATE_DOMAIN_NAME"]
@@ -93,7 +90,7 @@ class sfp_jsonwhoiscom(SpiderFootPlugin):
             "Authorization": "Token token=" + self.opts["api_key"]
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://jsonwhois.com/api/v1/whois?{urllib.parse.urlencode(params)}",
             headers=headers,
             timeout=15,

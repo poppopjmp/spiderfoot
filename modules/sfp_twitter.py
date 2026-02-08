@@ -11,10 +11,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_twitter(SpiderFootPlugin):
+class sfp_twitter(SpiderFootModernPlugin):
 
     meta = {
         'name': "Twitter",
@@ -42,14 +43,10 @@ class sfp_twitter(SpiderFootPlugin):
     optdescs = {
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.__dataSource__ = "Twitter"
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["SOCIAL_MEDIA"]
@@ -85,7 +82,7 @@ class sfp_twitter(SpiderFootPlugin):
                 f"Skipping social network profile, {url}, as not a Twitter profile")
             return
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+        res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                useragent="SpiderFoot")
 
         if res['content'] is None:

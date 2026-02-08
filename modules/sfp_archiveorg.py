@@ -14,10 +14,11 @@
 import datetime
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_archiveorg(SpiderFootPlugin):
+class sfp_archiveorg(SpiderFootModernPlugin):
     """
     SpiderFoot plugin to query archive.org (Wayback Machine) for historic versions of certain pages/files.
     Emits events for historic versions found, based on input event types and configuration.
@@ -87,7 +88,7 @@ class sfp_archiveorg(SpiderFootPlugin):
     foundDates = list()
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -95,14 +96,10 @@ class sfp_archiveorg(SpiderFootPlugin):
             sfc (SpiderFoot): The SpiderFoot context object.
             userOpts (dict): User-supplied options for the module.
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.foundDates = list()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         """
         Return a list of event types this module is interested in.
@@ -182,7 +179,7 @@ class sfp_archiveorg(SpiderFootPlugin):
             maxDate = newDate.strftime("%Y%m%d")
 
             url = f"https://archive.org/wayback/available?url={eventData}&timestamp={maxDate}"
-            res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
+            res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
             if res['content'] is None:
                 self.error(f"Unable to fetch {url}")

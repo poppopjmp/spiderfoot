@@ -16,10 +16,11 @@ import urllib
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsresolve(SpiderFootPlugin):
+class sfp_dnsresolve(SpiderFootModernPlugin):
     """SpiderFoot plugin for resolving DNS records."""
     meta = {
         "name": "DNS Resolver",
@@ -51,16 +52,12 @@ class sfp_dnsresolve(SpiderFootPlugin):
     domresults = None
     hostresults = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.domresults = self.tempStorage()
         self.hostresults = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def enrichTarget(self, target):
         ret = list()
         # If it's an IP, get the hostname it reverse resolves to
@@ -114,15 +111,15 @@ class sfp_dnsresolve(SpiderFootPlugin):
         v = target.targetValue
 
         if t in ["IP_ADDRESS", "IPV6_ADDRESS"]:
-            r = self.sf.resolveIP(v)
+            r = self.reverse_resolve(v)
             if r:
                 ret.extend(r)
         if t == "INTERNET_NAME":
             ret.append(v)  # Always include the original domain name
-            r = self.sf.resolveHost(v)
+            r = self.resolve_host(v)
             if r:
                 ret.extend(r)
-            r = self.sf.resolveHost6(v)
+            r = self.resolve_host6(v)
             if r:
                 ret.extend(r)
         if t == "NETBLOCK_OWNER":
@@ -147,7 +144,7 @@ class sfp_dnsresolve(SpiderFootPlugin):
                 ret.append(ipaddr)
 
                 # Add the reverse-resolved hostnames as aliases too
-                names = self.sf.resolveIP(ipaddr)
+                names = self.reverse_resolve(ipaddr)
                 if not names:
                     continue
 
@@ -156,7 +153,7 @@ class sfp_dnsresolve(SpiderFootPlugin):
                     continue
 
                 for host in names:
-                    chk = self.sf.resolveHost(host)
+                    chk = self.resolve_host(host)
                     if chk and ipaddr in chk:
                         ret.append(host)
         if t == "NETBLOCKV6_OWNER":
@@ -176,7 +173,7 @@ class sfp_dnsresolve(SpiderFootPlugin):
                 ret.append(ipaddr)
 
                 # Add the reverse-resolved hostnames as aliases too
-                names = self.sf.resolveIP(ipaddr)
+                names = self.reverse_resolve(ipaddr)
                 if not names:
                     continue
 
@@ -185,7 +182,7 @@ class sfp_dnsresolve(SpiderFootPlugin):
                     continue
 
                 for host in names:
-                    chk = self.sf.resolveHost6(host)
+                    chk = self.resolve_host6(host)
                     if chk and ipaddr in chk:
                         ret.append(host)
 
@@ -327,8 +324,8 @@ class sfp_dnsresolve(SpiderFootPlugin):
         # Resolve host names
         if eventName in ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME"]:
             addrs = list()
-            addrs.extend(self.sf.resolveHost(eventData))
-            addrs.extend(self.sf.resolveHost6(eventData))
+            addrs.extend(self.resolve_host(eventData))
+            addrs.extend(self.resolve_host6(eventData))
 
             if not addrs:
                 return
@@ -357,7 +354,7 @@ class sfp_dnsresolve(SpiderFootPlugin):
             "AFFILIATE_IPADDR",
             "AFFILIATE_IPV6_ADDRESS",
         ]:
-            addrs = self.sf.resolveIP(eventData)
+            addrs = self.reverse_resolve(eventData)
 
             if not addrs:
                 return
@@ -408,7 +405,7 @@ class sfp_dnsresolve(SpiderFootPlugin):
                     if "255" in ipaddr.split("."):
                         continue
 
-                addrs = self.sf.resolveIP(ipaddr)
+                addrs = self.reverse_resolve(ipaddr)
                 if not addrs:
                     continue
 
@@ -502,13 +499,13 @@ class sfp_dnsresolve(SpiderFootPlugin):
             # If the IP the host resolves to is in our
             # list of aliases,
             if not self.sf.validIP(host):
-                hostips = self.sf.resolveHost(host)
+                hostips = self.resolve_host(host)
                 if hostips:
                     for hostip in hostips:
                         if self.getTarget().matches(hostip):
                             affil = False
                             break
-                hostips6 = self.sf.resolveHost6(host)
+                hostips6 = self.resolve_host6(host)
                 if hostips6:
                     for hostip6 in hostips6:
                         if self.getTarget().matches(hostip6):
@@ -537,7 +534,7 @@ class sfp_dnsresolve(SpiderFootPlugin):
                 htype = "INTERNET_NAME"
 
         if htype in ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME"]:
-            if not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+            if not self.resolve_host(host) and not self.resolve_host6(host):
                 evt = SpiderFootEvent(
                     f"{htype}_UNRESOLVED", host, self.__name__, parentEvent
                 )
@@ -557,7 +554,7 @@ class sfp_dnsresolve(SpiderFootPlugin):
                 self.processDomain(dom, evt, False, host)
 
             # Try obtain the IPv6 address
-            ip6s = self.sf.resolveHost6(host)
+            ip6s = self.resolve_host6(host)
             if not ip6s:
                 return
             for ip6 in ip6s:

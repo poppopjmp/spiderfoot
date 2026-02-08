@@ -12,10 +12,11 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_cloudfront(SpiderFootPlugin):
+class sfp_cloudfront(SpiderFootModernPlugin):
     """SpiderFoot plugin to identify domains using Amazon CloudFront CDN."""
     meta = {
         "name": "Amazon CloudFront Detector",
@@ -57,13 +58,9 @@ class sfp_cloudfront(SpiderFootPlugin):
     # CloudFront specific HTTP headers
     CLOUDFRONT_HEADERS = ["X-Amz-Cf-Id", "Via"]
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME", "INTERNET_NAME", "AFFILIATE_INTERNET_NAME"]
@@ -95,7 +92,7 @@ class sfp_cloudfront(SpiderFootPlugin):
     def checkHeaders(self, domain):
         """Check if domain's HTTP headers indicate CloudFront usage."""
         url = f"https://{domain}"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],

@@ -12,10 +12,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_venmo(SpiderFootPlugin):
+class sfp_venmo(SpiderFootModernPlugin):
 
     meta = {
         'name': "Venmo",
@@ -43,13 +44,9 @@ class sfp_venmo(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['USERNAME']
@@ -60,7 +57,7 @@ class sfp_venmo(SpiderFootPlugin):
 
     # Query Venmo API
     def query(self, qry):
-        res = self.sf.fetchUrl('https://api.venmo.com/v1/users/' + qry,
+        res = self.fetch_url('https://api.venmo.com/v1/users/' + qry,
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'])
 

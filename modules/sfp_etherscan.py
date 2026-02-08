@@ -14,10 +14,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_etherscan(SpiderFootPlugin):
+class sfp_etherscan(SpiderFootModernPlugin):
     """SpiderFoot plugin for querying Etherscan API."""
     meta = {
         'name': "Etherscan",
@@ -59,13 +60,9 @@ class sfp_etherscan(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -84,7 +81,7 @@ class sfp_etherscan(SpiderFootPlugin):
     def query(self, qry):
         queryString = f"https://api.etherscan.io/api?module=account&action=balance&address={qry}&tag=latest&apikey={self.opts['api_key']}"
         # Wallet balance
-        res = self.sf.fetchUrl(queryString,
+        res = self.fetch_url(queryString,
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'])
 

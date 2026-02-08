@@ -1,7 +1,8 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 import openai
 
-class sfp_ai_summary(SpiderFootPlugin):
+class sfp_ai_summary(SpiderFootModernPlugin):
     """Summarizes scan findings using an LLM (e.g., OpenAI's GPT)."""
     meta = {
         'name': "AI Threat Intelligence Summarizer",
@@ -36,8 +37,8 @@ class sfp_ai_summary(SpiderFootPlugin):
         "max_events": "Max events to include in the summary."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.event_buffer = []
 

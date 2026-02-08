@@ -17,10 +17,10 @@ try:
 except ImportError:
     HAS_PSYCOPG2 = False
 
-from spiderfoot import SpiderFootPlugin
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp__stor_db(SpiderFootPlugin):
+class sfp__stor_db(SpiderFootModernPlugin):
     """SpiderFoot plug-in for storing events to the configured database
     backend.
 
@@ -81,14 +81,14 @@ class sfp__stor_db(SpiderFootPlugin):
         'collect_metrics': "Enable metrics collection (enterprise feature)"
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """Set up the module with user options.
 
         Args:
             sfc: SpiderFoot instance
             userOpts (dict): User options
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.pg_conn = None
         
@@ -99,10 +99,6 @@ class sfp__stor_db(SpiderFootPlugin):
             return
             
         self.__sfdb__ = self.sf.dbh
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         # Validate configuration
         if not self._validateConfig():
             self.errorState = True

@@ -16,10 +16,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_wigle(SpiderFootPlugin):
+class sfp_wigle(SpiderFootModernPlugin):
 
     meta = {
         'name': "WiGLE",
@@ -70,17 +71,13 @@ class sfp_wigle(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["PHYSICAL_COORDINATES"]
@@ -112,7 +109,7 @@ class sfp_wigle(SpiderFootPlugin):
             "Authorization": "Basic " + self.opts['api_key_encoded']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://api.wigle.net/api/v2/network/search?" +
             urllib.parse.urlencode(params),
             timeout=30,

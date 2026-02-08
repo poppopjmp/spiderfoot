@@ -13,10 +13,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_cisco_umbrella(SpiderFootPlugin):
+class sfp_cisco_umbrella(SpiderFootModernPlugin):
     """SpiderFoot plugin to query Cisco Umbrella Investigate API for domain information."""
     meta = {
         "name": "Cisco Umbrella Investigate",
@@ -56,14 +57,10 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["DOMAIN_NAME"]
 
@@ -86,7 +83,7 @@ class sfp_cisco_umbrella(SpiderFootPlugin):
         api_key = self.opts["api_key"]
         headers = {"Authorization": f"Bearer {api_key}"}
         queryurl = f"https://investigate.api.umbrella.com/domains/categorization/{qry}"
-        r = self.sf.fetchUrl(
+        r = self.fetch_url(
             queryurl,
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",

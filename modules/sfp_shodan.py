@@ -18,10 +18,11 @@ import urllib.request
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_shodan(SpiderFootPlugin):
+class sfp_shodan(SpiderFootModernPlugin):
 
     meta = {
         'name': "SHODAN",
@@ -68,13 +69,9 @@ class sfp_shodan(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["IP_ADDRESS", "NETBLOCK_OWNER", "DOMAIN_NAME", "WEB_ANALYTICS_ID"]
@@ -89,7 +86,7 @@ class sfp_shodan(SpiderFootPlugin):
                 'VULNERABILITY_CVE_LOW', 'VULNERABILITY_GENERAL']
 
     def queryHost(self, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.shodan.io/shodan/host/{qry}?key={self.opts['api_key']}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"
@@ -124,7 +121,7 @@ class sfp_shodan(SpiderFootPlugin):
             'key': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.shodan.io/shodan/host/search?{urllib.parse.urlencode(params)}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"
@@ -159,7 +156,7 @@ class sfp_shodan(SpiderFootPlugin):
             'key': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.shodan.io/shodan/host/search?{urllib.parse.urlencode(params)}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"

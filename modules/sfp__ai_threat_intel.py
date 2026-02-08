@@ -85,7 +85,8 @@ try:
 except ImportError:
     HAS_NLTK = False
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 @dataclass
@@ -1053,7 +1054,7 @@ class NLPThreatAnalyzer:
         return list(set(iocs))  # Remove duplicates
 
 
-class sfp__ai_threat_intel(SpiderFootPlugin):
+class sfp__ai_threat_intel(SpiderFootModernPlugin):
     """AI-Powered Threat Intelligence Engine."""
 
     meta = {
@@ -1092,14 +1093,10 @@ class sfp__ai_threat_intel(SpiderFootPlugin):
         'ml_model_update_interval': "Interval for ML model updates (seconds)"
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """Set up the AI threat intelligence module."""
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         # Check for required libraries
         if not HAS_ML_LIBS:
             self.error("Required ML libraries (tensorflow, sklearn, pandas, numpy) not available")

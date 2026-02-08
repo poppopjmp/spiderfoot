@@ -9,10 +9,11 @@
 # Copyright:   (c) Steve Micallef 2013
 # Licence:     MIT
 # -------------------------------------------------------------------------------
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_bingsearch(SpiderFootPlugin):
+class sfp_bingsearch(SpiderFootModernPlugin):
     """SpiderFoot plugin to obtain information from Bing to identify sub-domains and links."""
     meta = {
         'name': "Bing",
@@ -54,14 +55,10 @@ class sfp_bingsearch(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["INTERNET_NAME"]

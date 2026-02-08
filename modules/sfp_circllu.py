@@ -15,10 +15,11 @@ import json
 import re
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_circllu(SpiderFootPlugin):
+class sfp_circllu(SpiderFootModernPlugin):
     """SpiderFoot plugin to obtain information from CIRCL.LU's Passive DNS and Passive SSL databases."""
     meta = {    
         'name': "CIRCL.LU",
@@ -79,17 +80,13 @@ class sfp_circllu(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["INTERNET_NAME", "NETBLOCK_OWNER", "IP_ADDRESS", "DOMAIN_NAME"]
@@ -115,7 +112,7 @@ class sfp_circllu(SpiderFootPlugin):
         }
 
         # Be more forgiving with the timeout as some queries for subnets can be slow
-        res = self.sf.fetchUrl(url, timeout=30,
+        res = self.fetch_url(url, timeout=30,
                                useragent="SpiderFoot", headers=headers)
 
         if res['code'] not in ["200", "201"]:

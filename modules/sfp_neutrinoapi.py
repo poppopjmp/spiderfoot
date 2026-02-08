@@ -13,10 +13,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_neutrinoapi(SpiderFootPlugin):
+class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     meta = {
         'name': "NeutrinoAPI",
@@ -64,15 +65,11 @@ class sfp_neutrinoapi(SpiderFootPlugin):
     errorState = False
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.__dataSource__ = "NeutrinoAPI"
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['IP_ADDRESS', 'IPV6_ADDRESS', 'PHONE_NUMBER']
@@ -92,7 +89,7 @@ class sfp_neutrinoapi(SpiderFootPlugin):
     # Query the phone-validate REST API
     # https://www.neutrinoapi.com/api/phone-validate/
     def queryPhoneValidate(self, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://neutrinoapi.com/phone-validate',
             postData={"output-format": "json", "number": qry,
                       "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
@@ -105,7 +102,7 @@ class sfp_neutrinoapi(SpiderFootPlugin):
     # Query the ip-info REST API
     # https://www.neutrinoapi.com/api/ip-info/
     def queryIpInfo(self, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://neutrinoapi.com/ip-info",
             postData={"output-format": "json", "ip": qry,
                       "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
@@ -118,7 +115,7 @@ class sfp_neutrinoapi(SpiderFootPlugin):
     # Query the ip-blocklist REST API
     # https://www.neutrinoapi.com/api/ip-blocklist/
     def queryIpBlocklist(self, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://neutrinoapi.com/ip-blocklist",
             postData={"output-format": "json", "ip": qry, "vpn-lookup": True,
                       "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},
@@ -131,7 +128,7 @@ class sfp_neutrinoapi(SpiderFootPlugin):
     # Query the host-reputation REST API
     # https://www.neutrinoapi.com/api/host-reputation/
     def queryHostReputation(self, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://neutrinoapi.com/host-reputation",
             postData={"output-format": "json", "host": qry,
                       "user-id": self.opts['user_id'], "api-key": self.opts['api_key']},

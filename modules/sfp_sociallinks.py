@@ -13,10 +13,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_sociallinks(SpiderFootPlugin):
+class sfp_sociallinks(SpiderFootModernPlugin):
 
     meta = {
         'name': "Social Links",
@@ -53,13 +54,9 @@ class sfp_sociallinks(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -89,7 +86,7 @@ class sfp_sociallinks(SpiderFootPlugin):
             'Authorization': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             queryString,
             headers=headers,
             timeout=60,

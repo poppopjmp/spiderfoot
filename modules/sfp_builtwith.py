@@ -12,10 +12,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_builtwith(SpiderFootPlugin):
+class sfp_builtwith(SpiderFootModernPlugin):
     """SpiderFoot plugin to query BuiltWith.com's Domain API for information about your target's web technology stack, e-mail addresses and more."""
     meta = {
         'name': "BuiltWith",
@@ -67,17 +68,13 @@ class sfp_builtwith(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME"]
@@ -91,7 +88,7 @@ class sfp_builtwith(SpiderFootPlugin):
     def queryRelationships(self, t):
         url = f"https://api.builtwith.com/rv1/api.json?LOOKUP={t}&KEY={self.opts['api_key']}"
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
 
         if res['code'] == "404":
@@ -111,7 +108,7 @@ class sfp_builtwith(SpiderFootPlugin):
     def queryDomainInfo(self, t):
         url = f"https://api.builtwith.com/rv1/api.json?LOOKUP={t}&KEY={self.opts['api_key']}"
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
 
         if res['code'] == "404":

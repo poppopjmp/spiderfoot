@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_instagram(SpiderFootPlugin):
+class sfp_instagram(SpiderFootModernPlugin):
     meta = {
         'name': "Instagram Monitor",
         'summary': "Monitors Instagram for new posts or stories and emits events.",
@@ -31,8 +32,8 @@ class sfp_instagram(SpiderFootPlugin):
         "max_items": "Maximum number of posts/stories to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):

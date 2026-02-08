@@ -14,10 +14,11 @@
 import dns.resolver
 import socket
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_cloudflaredns(SpiderFootPlugin):
+class sfp_cloudflaredns(SpiderFootModernPlugin):
     """SpiderFoot plugin to check if a host would be blocked by CloudFlare DNS content filters."""
     meta = {
         'name': "CloudFlare DNS",
@@ -48,13 +49,9 @@ class sfp_cloudflaredns(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "INTERNET_NAME",

@@ -13,11 +13,12 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 import requests
 
 
-class sfp_rocketreach(SpiderFootPlugin):
+class sfp_rocketreach(SpiderFootModernPlugin):
     meta = {
         "name": "RocketReach (Official API)",
         "summary": "Look up contact information from RocketReach using the official API.",
@@ -58,14 +59,10 @@ class sfp_rocketreach(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["DOMAIN_NAME", "EMAILADDR"]
 

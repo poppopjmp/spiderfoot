@@ -1,9 +1,10 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 import re
 import json
 
 
-class sfp_dideo(SpiderFootPlugin):
+class sfp_dideo(SpiderFootModernPlugin):
     
     meta = {
         'name': "Dideo.ir Monitor",
@@ -45,7 +46,7 @@ class sfp_dideo(SpiderFootPlugin):
         """
         if userOpts is None:
             userOpts = {}
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):
@@ -74,7 +75,7 @@ class sfp_dideo(SpiderFootPlugin):
         for keyword in [k.strip() for k in keywords.split(",") if k.strip()]:
             url = f"https://www.dideo.ir/search/{self.sf.urlFuzz(keyword)}"
             self.debug(f"Searching Dideo.ir for keyword: {keyword} (URL: {url})")
-            res = self.sf.fetchUrl(url, timeout=15, useragent=self.opts.get('_useragent', 'SpiderFoot'))
+            res = self.fetch_url(url, timeout=15, useragent=self.opts.get('_useragent', 'SpiderFoot'))
             if not res or not res.get('content'):
                 self.error(f"No response from Dideo.ir for keyword: {keyword}")
                 continue

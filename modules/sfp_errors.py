@@ -12,7 +12,8 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 # Taken from Google Dorks on exploit-db.com
 regexps = dict({
@@ -27,7 +28,7 @@ regexps = dict({
 })
 
 
-class sfp_errors(SpiderFootPlugin):
+class sfp_errors(SpiderFootModernPlugin):
     """SpiderFoot plugin to identify common error messages in content like SQL errors, etc."""
     __name__ = "sfp_errors"
 
@@ -52,14 +53,10 @@ class sfp_errors(SpiderFootPlugin):
     # Target
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # * = be notified about all events.
     def watchedEvents(self):

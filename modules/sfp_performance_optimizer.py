@@ -33,7 +33,8 @@ from typing import Dict, List, Optional, Any, Callable
 import weakref
 import resource
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class TTLCache:
@@ -289,7 +290,7 @@ class RequestBatcher:
                 pass
 
 
-class sfp_performance_optimizer(SpiderFootPlugin):
+class sfp_performance_optimizer(SpiderFootModernPlugin):
     """Performance optimization and caching system for SpiderFoot."""
 
     meta = {
@@ -335,8 +336,8 @@ class sfp_performance_optimizer(SpiderFootPlugin):
         'auto_gc_enabled': "Enable automatic garbage collection"
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         
         # Initialize optimization components
@@ -369,10 +370,6 @@ class sfp_performance_optimizer(SpiderFootPlugin):
             self.start_monitoring_thread()
         else:
             self.resource_monitor = None
-        
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["*"]
 

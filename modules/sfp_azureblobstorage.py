@@ -15,10 +15,11 @@ import random
 import threading
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_azureblobstorage(SpiderFootPlugin):
+class sfp_azureblobstorage(SpiderFootModernPlugin):
     """Search for potential Azure blobs associated with the target and attempt to list their contents."""
     meta = {
         "name": "Azure Blob Finder",
@@ -55,13 +56,11 @@ class sfp_azureblobstorage(SpiderFootPlugin):
         super().__init__()
         self.lock = threading.Lock()
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         # Debug: print options to ensure suffixes is set
         print("DEBUG sfp_azureblobstorage opts:", self.opts)
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
         print("DEBUG sfp_azureblobstorage opts after userOpts:", self.opts)
 
     # What events is this module interested in for input
@@ -75,7 +74,7 @@ class sfp_azureblobstorage(SpiderFootPlugin):
         return ["CLOUD_STORAGE_BUCKET"]
 
     def checkSite(self, url):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
 
         if res["code"]:

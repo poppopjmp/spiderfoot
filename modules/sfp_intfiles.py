@@ -10,10 +10,11 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_intfiles(SpiderFootPlugin):
+class sfp_intfiles(SpiderFootModernPlugin):
     __name__ = "sfp_intfiles"
 
     meta = {
@@ -36,14 +37,10 @@ class sfp_intfiles(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["LINKED_URL_INTERNAL"]

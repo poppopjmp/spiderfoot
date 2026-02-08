@@ -13,10 +13,11 @@
 import json
 import urllib.parse
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ipregistry(SpiderFootPlugin):
+class sfp_ipregistry(SpiderFootModernPlugin):
     meta = {
         "name": "ipregistry",
         "summary": "Query the ipregistry.co database for reputation and geo-location.",
@@ -55,7 +56,7 @@ class sfp_ipregistry(SpiderFootPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         if userOpts:
@@ -69,7 +70,7 @@ class sfp_ipregistry(SpiderFootPlugin):
 
     def query(self, qry):
         qs = urllib.parse.urlencode({"key": self.opts["api_key"]})
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.ipregistry.co/{qry}?{qs}",
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",

@@ -13,10 +13,10 @@
 from elasticsearch import Elasticsearch
 import threading
 import time
-from spiderfoot import SpiderFootPlugin
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp__stor_elasticsearch(SpiderFootPlugin):
+class sfp__stor_elasticsearch(SpiderFootModernPlugin):
     """SpiderFoot plug-in for storing events to an ElasticSearch instance.
 
     This module sends scan results to an external ElasticSearch instance
@@ -60,24 +60,20 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
         'timeout': "Connection timeout in seconds"
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """Set up the module with user options.
 
         Args:
             sfc: SpiderFoot instance
             userOpts (dict): User options
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.es = None
         self.buffer = []  # Buffer for bulk insertion
         self.buffer_lock = threading.Lock()  # Thread safety for buffer
         self.errorState = False
         self.connection_retries = 0
         self.max_connection_retries = 3
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         if not self.opts['enabled']:
             self.debug("ElasticSearch storage module not enabled")
             return        # Set up ElasticSearch connection with retry logic

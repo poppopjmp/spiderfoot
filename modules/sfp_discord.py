@@ -1,8 +1,9 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 import json
 import requests
 
-class sfp_discord(SpiderFootPlugin):
+class sfp_discord(SpiderFootModernPlugin):
     """Discord Channel Monitor"""
     meta = {
         'name': "Discord Channel Monitor",
@@ -35,8 +36,8 @@ class sfp_discord(SpiderFootPlugin):
         "max_messages": "Maximum number of messages to fetch per channel."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         # Option validation
         if not self.opts.get("bot_token"):

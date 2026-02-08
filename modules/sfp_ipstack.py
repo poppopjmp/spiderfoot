@@ -13,10 +13,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ipstack(SpiderFootPlugin):
+class sfp_ipstack(SpiderFootModernPlugin):
 
     meta = {
         'name': "ipstack",
@@ -55,14 +56,10 @@ class sfp_ipstack(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['IP_ADDRESS']
@@ -96,7 +93,7 @@ class sfp_ipstack(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        res = self.sf.fetchUrl("http://api.ipstack.com/" + eventData + "?access_key=" + self.opts['api_key'],
+        res = self.fetch_url("http://api.ipstack.com/" + eventData + "?access_key=" + self.opts['api_key'],
                                timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
         if res['content'] is None:
             self.info("No GeoIP info found for " + eventData)

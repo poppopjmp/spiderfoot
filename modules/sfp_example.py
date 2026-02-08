@@ -1,6 +1,6 @@
-from spiderfoot import SpiderFootPlugin
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_example(SpiderFootPlugin):
+class sfp_example(SpiderFootModernPlugin):
     """Example SpiderFoot plugin."""
     meta = {
         'name': 'sfp_example',

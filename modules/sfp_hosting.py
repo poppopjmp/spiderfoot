@@ -13,10 +13,11 @@
 
 from netaddr import IPAddress
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_hosting(SpiderFootPlugin):
+class sfp_hosting(SpiderFootModernPlugin):
 
     meta = {
         'name': "Hosting Provider Identifier",
@@ -37,14 +38,10 @@ class sfp_hosting(SpiderFootPlugin):
     # Target
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['IP_ADDRESS']
@@ -61,7 +58,7 @@ class sfp_hosting(SpiderFootPlugin):
 
         data['content'] = self.sf.cacheGet("sfipcat", 48)
         if data['content'] is None:
-            data = self.sf.fetchUrl(url, useragent=self.opts['_useragent'])
+            data = self.fetch_url(url, useragent=self.opts['_useragent'])
 
             if data['content'] is None:
                 self.error("Unable to fetch " + url)

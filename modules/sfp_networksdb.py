@@ -17,10 +17,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_networksdb(SpiderFootPlugin):
+class sfp_networksdb(SpiderFootModernPlugin):
 
     meta = {
         'name': "NetworksDB",
@@ -70,15 +71,11 @@ class sfp_networksdb(SpiderFootPlugin):
     errorState = False
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["IP_ADDRESS", "IPV6_ADDRESS", "INTERNET_NAME", "DOMAIN_NAME"]
@@ -99,7 +96,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/ip-info',
+        res = self.fetch_url('https://networksdb.io/api/ip-info',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -120,7 +117,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/ip-geo',
+        res = self.fetch_url('https://networksdb.io/api/ip-geo',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -141,7 +138,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/reverse-dns',
+        res = self.fetch_url('https://networksdb.io/api/reverse-dns',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -162,7 +159,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/dns',
+        res = self.fetch_url('https://networksdb.io/api/dns',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -184,7 +181,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/asn',
+        res = self.fetch_url('https://networksdb.io/api/asn',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -206,7 +203,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/asn-networks',
+        res = self.fetch_url('https://networksdb.io/api/asn-networks',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,

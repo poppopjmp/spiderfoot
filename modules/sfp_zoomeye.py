@@ -14,10 +14,11 @@ import time
 import json
 import requests
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_zoomeye(SpiderFootPlugin):
+class sfp_zoomeye(SpiderFootModernPlugin):
     meta = {
         "name": "ZoomEye",
         "summary": "Look up domain, IP address, and other information from ZoomEye.",
@@ -57,14 +58,10 @@ class sfp_zoomeye(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         if not self.opts["api_key"]:
             self.error("ZoomEye API key is required.")
             self.errorState = True
@@ -156,7 +153,7 @@ class sfp_zoomeye(SpiderFootPlugin):
         }
         
         try:
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 f"https://api.zoomeye.org/host/search?query={qry}&page={page}&pageSize={pageSize}",
                 timeout=self.opts['_fetchtimeout'],
                 useragent="SpiderFoot",

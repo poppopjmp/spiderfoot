@@ -12,10 +12,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_duckduckgo(SpiderFootPlugin):
+class sfp_duckduckgo(SpiderFootModernPlugin):
     """DuckDuckGo plugin for querying DuckDuckGo's API."""
     meta = {
         'name': "DuckDuckGo",
@@ -50,13 +51,9 @@ class sfp_duckduckgo(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME", "DOMAIN_NAME_PARENT",
@@ -87,7 +84,7 @@ class sfp_duckduckgo(SpiderFootPlugin):
         self.results[eventData] = True
 
         url = "https://api.duckduckgo.com/?q=" + eventData + "&format=json&pretty=1"
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+        res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                useragent="SpiderFoot")
 
         if res['content'] is None:

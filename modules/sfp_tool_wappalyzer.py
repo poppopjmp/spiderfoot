@@ -13,10 +13,11 @@
 import sys
 import json
 import requests
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_wappalyzer(SpiderFootPlugin):
+class sfp_tool_wappalyzer(SpiderFootModernPlugin):
     meta = {
         "name": "Tool - Wappalyzer (API)",
         "summary": "Wappalyzer identifies technologies on websites using the official API.",
@@ -53,12 +54,9 @@ class sfp_tool_wappalyzer(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["INTERNET_NAME"]
 

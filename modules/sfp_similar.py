@@ -11,7 +11,8 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 nearchars = {
     'a': ['4', 's'],
@@ -58,7 +59,7 @@ pairs = {
 }
 
 
-class sfp_similar(SpiderFootPlugin):
+class sfp_similar(SpiderFootModernPlugin):
 
     meta = {
         'name': "Similar Domain Finder",
@@ -81,14 +82,10 @@ class sfp_similar(SpiderFootPlugin):
     # Internal results tracking
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME"]
@@ -153,7 +150,7 @@ class sfp_similar(SpiderFootPlugin):
         for d in domlist:
             try:
                 for domain in [f"{d}{tld}", f"www.{d}{tld}"]:
-                    if self.sf.resolveHost(domain) or self.sf.resolveHost6(domain):
+                    if self.resolve_host(domain) or self.resolve_host6(domain):
                         self.debug(f"Resolved {domain}")
                         evt = SpiderFootEvent(
                             "SIMILARDOMAIN", f"{d}{tld}", self.__name__, event)

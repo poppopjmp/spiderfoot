@@ -13,10 +13,11 @@
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_surbl(SpiderFootPlugin):
+class sfp_surbl(SpiderFootModernPlugin):
 
     meta = {
         'name': "SURBL",
@@ -58,14 +59,10 @@ class sfp_surbl(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'IP_ADDRESS',
@@ -119,7 +116,7 @@ class sfp_surbl(SpiderFootPlugin):
         self.debug(f"Checking SURBL blacklist: {lookup}")
 
         try:
-            return self.sf.resolveHost(lookup)
+            return self.resolve_host(lookup)
         except Exception as e:
             self.debug(f"SURBL did not resolve {qaddr} / {lookup}: {e}")
 

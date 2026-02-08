@@ -14,10 +14,11 @@
 import json
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ripe(SpiderFootPlugin):
+class sfp_ripe(SpiderFootModernPlugin):
 
     meta = {
         'name': "RIPE",
@@ -55,17 +56,13 @@ class sfp_ripe(SpiderFootPlugin):
     keywords = None
     lastContent = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.memCache = self.tempStorage()
         self.currentEventSrc = None
         self.nbreported = self.tempStorage()
         self.lastContent = None
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -96,7 +93,7 @@ class sfp_ripe(SpiderFootPlugin):
         if url in self.memCache:
             return self.memCache[url]
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+        res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'])
         if res['content'] is not None:
             self.memCache[url] = res

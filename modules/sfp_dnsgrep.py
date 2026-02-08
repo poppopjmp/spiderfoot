@@ -19,10 +19,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsgrep(SpiderFootPlugin):
+class sfp_dnsgrep(SpiderFootModernPlugin):
     """SpiderFoot plugin for retrieving domain names from Rapid7 Sonar Project data sets using DNSGrep API."""
     meta = {
         'name': "DNSGrep",
@@ -66,13 +67,9 @@ class sfp_dnsgrep(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME"]
@@ -87,7 +84,7 @@ class sfp_dnsgrep(SpiderFootPlugin):
             'q': '.' + qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
         }
 
-        res = self.sf.fetchUrl('https://dns.bufferover.run/dns?' + urllib.parse.urlencode(params),
+        res = self.fetch_url('https://dns.bufferover.run/dns?' + urllib.parse.urlencode(params),
                                timeout=self.opts['timeout'],
                                useragent=self.opts['_useragent'])
 
@@ -160,7 +157,7 @@ class sfp_dnsgrep(SpiderFootPlugin):
 
             evt_type = "INTERNET_NAME"
 
-            if self.opts["dns_resolve"] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+            if self.opts["dns_resolve"] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                 self.debug(f"Host {domain} could not be resolved")
                 evt_type += "_UNRESOLVED"
 

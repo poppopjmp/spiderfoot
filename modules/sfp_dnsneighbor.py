@@ -13,10 +13,11 @@
 
 import ipaddress
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsneighbor(SpiderFootPlugin):
+class sfp_dnsneighbor(SpiderFootModernPlugin):
     """SpiderFoot plugin for gathering IP addresses from sub-domains and hostnames identified, and optionally affiliates."""
     meta = {
         'name': "DNS Look-aside",
@@ -42,16 +43,12 @@ class sfp_dnsneighbor(SpiderFootPlugin):
     domresults = None
     hostresults = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.domresults = self.tempStorage()
         self.hostresults = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['IP_ADDRESS']
@@ -101,7 +98,7 @@ class sfp_dnsneighbor(SpiderFootPlugin):
             if sip in self.hostresults or sip == eventData:
                 continue
 
-            addrs = self.sf.resolveIP(sip)
+            addrs = self.reverse_resolve(sip)
             if not addrs:
                 self.debug("Look-aside resolve for " + sip + " failed.")
                 continue
@@ -166,13 +163,13 @@ class sfp_dnsneighbor(SpiderFootPlugin):
                 # If the IP the host resolves to is in our
                 # list of aliases,
                 if not self.sf.validIP(host) and not self.sf.validIP6(host):
-                    hostips = self.sf.resolveHost(host)
+                    hostips = self.resolve_host(host)
                     if hostips:
                         for hostip in hostips:
                             if self.getTarget().matches(hostip):
                                 affil = False
                                 break
-                    hostips6 = self.sf.resolveHost6(host)
+                    hostips6 = self.resolve_host6(host)
                     if hostips6:
                         for hostip in hostips6:
                             if self.getTarget().matches(hostip):

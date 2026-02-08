@@ -13,10 +13,11 @@ import base64
 import re
 import urllib.parse
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_base64(SpiderFootPlugin):
+class sfp_base64(SpiderFootModernPlugin):
     """SpiderFoot plugin to identify Base64-encoded strings in URLs."""
     __name__ = "sfp_base64"
 
@@ -38,13 +39,9 @@ class sfp_base64(SpiderFootPlugin):
         'minlength': "The minimum length a string that looks like a base64-encoded string needs to be."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["LINKED_URL_INTERNAL"]

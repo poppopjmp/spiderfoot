@@ -11,10 +11,11 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_hashes(SpiderFootPlugin):
+class sfp_hashes(SpiderFootModernPlugin):
 
     meta = {
         'name': "Hash Extractor",
@@ -33,12 +34,8 @@ class sfp_hashes(SpiderFootPlugin):
     optdescs = {
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["TARGET_WEB_CONTENT", "BASE64_DATA",

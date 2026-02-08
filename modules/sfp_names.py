@@ -12,10 +12,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_names(SpiderFootPlugin):
+class sfp_names(SpiderFootModernPlugin):
     __name__ = "sfp_names"
 
     meta = {
@@ -44,15 +45,11 @@ class sfp_names(SpiderFootPlugin):
     d = None
     n = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.d = SpiderFootHelpers.dictionaryWordsFromWordlists()
         self.n = SpiderFootHelpers.humanNamesFromWordlists()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["TARGET_WEB_CONTENT", "EMAILADDR",

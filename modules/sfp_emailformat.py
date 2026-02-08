@@ -15,10 +15,11 @@ import re
 
 from bs4 import BeautifulSoup
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_emailformat(SpiderFootPlugin):
+class sfp_emailformat(SpiderFootModernPlugin):
     """EmailFormat plugin for looking up email address formats."""
     meta = {
         'name': "EmailFormat",
@@ -48,13 +49,9 @@ class sfp_emailformat(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['INTERNET_NAME', "DOMAIN_NAME"]
 
@@ -74,7 +71,7 @@ class sfp_emailformat(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         # Get e-mail addresses on this domain
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://www.email-format.com/d/{eventData}/", timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
         if res['content'] is None:

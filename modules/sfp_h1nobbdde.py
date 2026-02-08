@@ -11,10 +11,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_h1nobbdde(SpiderFootPlugin):
+class sfp_h1nobbdde(SpiderFootModernPlugin):
 
     meta = {
         'name': "HackerOne (Unofficial)",
@@ -48,16 +49,12 @@ class sfp_h1nobbdde(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["DOMAIN_NAME"]
 
@@ -69,7 +66,7 @@ class sfp_h1nobbdde(SpiderFootPlugin):
     def queryOBB(self, qry):
         ret = list()
         url = "http://h1.nobbd.de/search.php?q=" + qry
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=30, useragent=self.opts['_useragent'])
 
         if res['content'] is None:

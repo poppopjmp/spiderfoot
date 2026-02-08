@@ -11,10 +11,11 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_email(SpiderFootPlugin):
+class sfp_email(SpiderFootModernPlugin):
     """SpiderFoot plugin to identify e-mail addresses in scraped webpages."""
     meta = {
         'name': "E-Mail Address Extractor",
@@ -29,12 +30,8 @@ class sfp_email(SpiderFootPlugin):
     optdescs = {
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["TARGET_WEB_CONTENT", "BASE64_DATA", "AFFILIATE_DOMAIN_WHOIS",

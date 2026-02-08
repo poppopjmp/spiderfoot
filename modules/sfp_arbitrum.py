@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_arbitrum(SpiderFootPlugin):
+class sfp_arbitrum(SpiderFootModernPlugin):
     """Monitors Arbitrum blockchain for transactions and emits events."""
     meta = {
         'name': "Arbitrum Blockchain Monitor",
@@ -41,8 +42,8 @@ class sfp_arbitrum(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug("[setup] Options: {}".format(self.opts))
         # Option validation

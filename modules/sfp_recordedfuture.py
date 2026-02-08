@@ -14,10 +14,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_recordedfuture(SpiderFootPlugin):
+class sfp_recordedfuture(SpiderFootModernPlugin):
 
     meta = {
         'name': "Recorded Future",
@@ -57,13 +58,9 @@ class sfp_recordedfuture(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['DOMAIN_NAME', 'INTERNET_NAME', 'IP_ADDRESS']
 
@@ -75,7 +72,7 @@ class sfp_recordedfuture(SpiderFootPlugin):
             'X-RFToken': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.recordedfuture.com/v2/domain/{qry}",
             headers=headers,
             timeout=self.opts['_fetchtimeout'],

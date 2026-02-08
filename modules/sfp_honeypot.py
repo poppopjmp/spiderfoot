@@ -13,10 +13,11 @@
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_honeypot(SpiderFootPlugin):
+class sfp_honeypot(SpiderFootModernPlugin):
 
     meta = {
         'name': "Project Honey Pot",
@@ -91,13 +92,9 @@ class sfp_honeypot(SpiderFootPlugin):
         "10": "Unknown (10)"
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -144,7 +141,7 @@ class sfp_honeypot(SpiderFootPlugin):
             lookup = f"{self.opts['api_key']}.{self.reverseAddr(qaddr)}.dnsbl.httpbl.org"
 
             self.debug(f"Checking ProjectHoneyPot: {lookup}")
-            addrs = self.sf.resolveHost(lookup)
+            addrs = self.resolve_host(lookup)
             if not addrs:
                 return
 

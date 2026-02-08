@@ -12,10 +12,11 @@
 
 import random
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_junkfiles(SpiderFootPlugin):
+class sfp_junkfiles(SpiderFootModernPlugin):
 
     meta = {
         'name': "Junk File Finder",
@@ -47,17 +48,13 @@ class sfp_junkfiles(SpiderFootPlugin):
     skiphosts = None
     bases = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.hosts = self.tempStorage()
         self.skiphosts = self.tempStorage()
         self.bases = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["LINKED_URL_INTERNAL"]
@@ -72,7 +69,7 @@ class sfp_junkfiles(SpiderFootPlugin):
     def checkValidity(self, junkUrl):
         # Try and fetch an obviously missing version of the junk file
         fetch = junkUrl + str(random.SystemRandom().randint(0, 99999999))
-        res = self.sf.fetchUrl(fetch, headOnly=True,
+        res = self.fetch_url(fetch, headOnly=True,
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'],
                                verify=False)
@@ -123,7 +120,7 @@ class sfp_junkfiles(SpiderFootPlugin):
 
                     self.results[fetch] = True
 
-                    res = self.sf.fetchUrl(fetch, headOnly=True,
+                    res = self.fetch_url(fetch, headOnly=True,
                                            timeout=self.opts['_fetchtimeout'],
                                            useragent=self.opts['_useragent'],
                                            sizeLimit=10000000,
@@ -164,7 +161,7 @@ class sfp_junkfiles(SpiderFootPlugin):
 
             self.results[fetch] = True
 
-            res = self.sf.fetchUrl(fetch, headOnly=True,
+            res = self.fetch_url(fetch, headOnly=True,
                                    timeout=self.opts['_fetchtimeout'],
                                    useragent=self.opts['_useragent'],
                                    verify=False)
@@ -206,7 +203,7 @@ class sfp_junkfiles(SpiderFootPlugin):
 
             self.results[fetch] = True
 
-            res = self.sf.fetchUrl(fetch, headOnly=True,
+            res = self.fetch_url(fetch, headOnly=True,
                                    timeout=self.opts['_fetchtimeout'],
                                    useragent=self.opts['_useragent'],
                                    verify=False)

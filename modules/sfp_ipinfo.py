@@ -13,10 +13,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ipinfo(SpiderFootPlugin):
+class sfp_ipinfo(SpiderFootModernPlugin):
 
     meta = {
         'name': "IPInfo.io",
@@ -55,14 +56,10 @@ class sfp_ipinfo(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['IP_ADDRESS', 'IPV6_ADDRESS']
@@ -78,7 +75,7 @@ class sfp_ipinfo(SpiderFootPlugin):
         headers = {
             'Authorization': "Bearer " + self.opts['api_key']
         }
-        res = self.sf.fetchUrl("https://ipinfo.io/" + ip + "/json",
+        res = self.fetch_url("https://ipinfo.io/" + ip + "/json",
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'],
                                headers=headers)

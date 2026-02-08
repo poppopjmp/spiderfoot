@@ -14,10 +14,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_subdomain_takeover(SpiderFootPlugin):
+class sfp_subdomain_takeover(SpiderFootModernPlugin):
 
     meta = {
         'name': "Subdomain Takeover Checker",
@@ -40,18 +41,14 @@ class sfp_subdomain_takeover(SpiderFootPlugin):
     fingerprints = dict()
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
         content = self.sf.cacheGet("subjack-fingerprints", 48)
         if content is None:
             url = "https://raw.githubusercontent.com/haccer/subjack/master/fingerprints.json"
-            res = self.sf.fetchUrl(url, useragent="SpiderFoot")
+            res = self.fetch_url(url, useragent="SpiderFoot")
 
             if res['content'] is None:
                 self.error(f"Unable to fetch {url}")
@@ -108,7 +105,7 @@ class sfp_subdomain_takeover(SpiderFootPlugin):
                         continue
 
                     for proto in ["https", "http"]:
-                        res = self.sf.fetchUrl(
+                        res = self.fetch_url(
                             f"{proto}://{eventData}/",
                             timeout=15,
                             useragent=self.opts['_useragent'],

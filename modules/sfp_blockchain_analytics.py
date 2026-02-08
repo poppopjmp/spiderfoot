@@ -31,7 +31,8 @@ import requests
 from typing import Dict, List, Optional, Any, Set
 from collections import defaultdict
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class BlockchainAnalyzer:
@@ -299,7 +300,7 @@ class BlockchainAnalyzer:
         return decreasing_count / (len(transactions) - 1) > 0.7
 
 
-class sfp_blockchain_analytics(SpiderFootPlugin):
+class sfp_blockchain_analytics(SpiderFootModernPlugin):
     """Advanced blockchain and cryptocurrency investigation module."""
 
     meta = {
@@ -351,8 +352,8 @@ class sfp_blockchain_analytics(SpiderFootPlugin):
         'clustering_depth': "Depth for address clustering analysis"
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         
         # Initialize blockchain analyzer
@@ -363,10 +364,6 @@ class sfp_blockchain_analytics(SpiderFootPlugin):
         }
         
         self.analyzer = BlockchainAnalyzer(api_keys)
-        
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "BITCOIN_ADDRESS",

@@ -14,10 +14,11 @@ import json
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_threatcrowd(SpiderFootPlugin):
+class sfp_threatcrowd(SpiderFootModernPlugin):
 
     meta = {
         'name': "ThreatCrowd",
@@ -65,17 +66,13 @@ class sfp_threatcrowd(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["IP_ADDRESS", "AFFILIATE_IPADDR", "INTERNET_NAME",
@@ -101,7 +98,7 @@ class sfp_threatcrowd(SpiderFootPlugin):
         if not url:
             url = "https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=" + qry
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
 
         if res['content'] is None:

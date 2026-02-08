@@ -13,10 +13,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_securitytrails(SpiderFootPlugin):
+class sfp_securitytrails(SpiderFootModernPlugin):
 
     meta = {
         'name': "SecurityTrails",
@@ -69,17 +70,13 @@ class sfp_securitytrails(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["IP_ADDRESS", "IPV6_ADDRESS", "DOMAIN_NAME",
@@ -109,7 +106,7 @@ class sfp_securitytrails(SpiderFootPlugin):
             request = '{"filter": { "' + querytype + '": "' + qry + '" } }'
             headers['Content-Type'] = 'application/json'
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+        res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                useragent="SpiderFoot", headers=headers,
                                postData=request)
 

@@ -14,10 +14,11 @@
 import re
 from urllib.parse import urlencode
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_torch(SpiderFootPlugin):
+class sfp_torch(SpiderFootModernPlugin):
 
     meta = {
         'name': "TORCH",
@@ -51,13 +52,9 @@ class sfp_torch(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "DOMAIN_NAME",
@@ -84,7 +81,7 @@ class sfp_torch(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        formpage = self.sf.fetchUrl(
+        formpage = self.fetch_url(
             "http://torchdeedp3i2jigzjdmfpn5ttjhthh5wbmda2rr3jvqjg5p77c54dqd.onion/",
             useragent=self.opts['_useragent'],
             timeout=60)
@@ -110,7 +107,7 @@ class sfp_torch(SpiderFootPlugin):
             pagecount += 1
 
             qry = urlencode(params)
-            data = self.sf.fetchUrl(
+            data = self.fetch_url(
                 f"http://torchdeedp3i2jigzjdmfpn5ttjhthh5wbmda2rr3jvqjg5p77c54dqd.onion/search?{qry}",
                 useragent=self.opts['_useragent'],
                 timeout=60)
@@ -133,7 +130,7 @@ class sfp_torch(SpiderFootPlugin):
                     if self.checkForStop():
                         return
                     if self.opts['fetchlinks']:
-                        res = self.sf.fetchUrl(link, timeout=self.opts['_fetchtimeout'],
+                        res = self.fetch_url(link, timeout=self.opts['_fetchtimeout'],
                                                useragent=self.opts['_useragent'])
 
                         if res['content'] is None:

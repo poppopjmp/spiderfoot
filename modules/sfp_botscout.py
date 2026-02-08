@@ -15,10 +15,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_botscout(SpiderFootPlugin):
+class sfp_botscout(SpiderFootModernPlugin):
     """SpiderFoot plugin to search BotScout.com for malicious IPs and email addresses."""
     meta = {
         'name': "BotScout",
@@ -61,13 +62,9 @@ class sfp_botscout(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['IP_ADDRESS', 'EMAILADDR']
 
@@ -83,7 +80,7 @@ class sfp_botscout(SpiderFootPlugin):
             'key': self.opts['api_key'],
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://botscout.com/test/?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -100,7 +97,7 @@ class sfp_botscout(SpiderFootPlugin):
             'key': self.opts['api_key'],
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://botscout.com/test/?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],

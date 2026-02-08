@@ -1,9 +1,10 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 import requests
 import time
 from typing import Optional, List, Dict
 
-class sfp_4chan(SpiderFootPlugin):
+class sfp_4chan(SpiderFootModernPlugin):
     """
     SpiderFoot plugin to monitor 4chan boards for new posts and emit events.
     """
@@ -35,13 +36,13 @@ class sfp_4chan(SpiderFootPlugin):
         "max_threads": "Maximum number of threads to fetch per board."
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """
         Setup plugin with SpiderFoot context and user options.
         :param sfc: SpiderFoot context
         :param userOpts: User options
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self._seen_posts = set()
 

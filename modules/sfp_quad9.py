@@ -13,10 +13,11 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_quad9(SpiderFootPlugin):
+class sfp_quad9(SpiderFootModernPlugin):
 
     meta = {
         'name': "Quad9",
@@ -50,13 +51,9 @@ class sfp_quad9(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "INTERNET_NAME",
@@ -116,7 +113,7 @@ class sfp_quad9(SpiderFootPlugin):
 
         # Check that it resolves first, as it becomes a valid
         # malicious host only if NOT resolved by Quad9.
-        if not self.sf.resolveHost(eventData) and not self.sf.resolveHost6(eventData):
+        if not self.resolve_host(eventData) and not self.resolve_host6(eventData):
             return
 
         found = self.query(eventData)

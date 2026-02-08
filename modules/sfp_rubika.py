@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_rubika(SpiderFootPlugin):
+class sfp_rubika(SpiderFootModernPlugin):
     meta = {
         'name': "Rubika Monitor",
         'summary': "Monitors Rubika for new messages and emits events.",
@@ -28,8 +29,8 @@ class sfp_rubika(SpiderFootPlugin):
         "max_messages": "Maximum number of messages to fetch per channel."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):

@@ -12,10 +12,11 @@ import json
 import time
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_netlas(SpiderFootPlugin):
+class sfp_netlas(SpiderFootModernPlugin):
     """SpiderFoot plug-in for searching Netlas API for domain, IP address, and
     other information.
 
@@ -60,20 +61,16 @@ class sfp_netlas(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """Set up the module with user options.
 
         Args:
             sfc: SpiderFoot instance
             userOpts (dict): User options
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         """Define the events this module is interested in for input.
 
@@ -114,7 +111,7 @@ class sfp_netlas(SpiderFootPlugin):
             }
         )
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.netlas.io/v1/search?{params}",
             useragent=self.opts["_useragent"],
         )

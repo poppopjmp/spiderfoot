@@ -12,10 +12,11 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_pgp(SpiderFootPlugin):
+class sfp_pgp(SpiderFootModernPlugin):
 
     meta = {
         'name': "PGP Key Servers",
@@ -50,14 +51,10 @@ class sfp_pgp(SpiderFootPlugin):
         'keyserver_fetch2': "Backup PGP public key server URL to find the public key for an e-mail address. Email address will get appended."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['INTERNET_NAME', "EMAILADDR", "DOMAIN_NAME"]
 
@@ -65,7 +62,7 @@ class sfp_pgp(SpiderFootPlugin):
         return ["EMAILADDR", "EMAILADDR_GENERIC", "AFFILIATE_EMAILADDR", "PGP_KEY"]
 
     def queryDomain(self, keyserver_search_url, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             keyserver_search_url + qry,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']
@@ -83,7 +80,7 @@ class sfp_pgp(SpiderFootPlugin):
         return res
 
     def queryEmail(self, keyserver_fetch_url, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             keyserver_fetch_url + qry,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']

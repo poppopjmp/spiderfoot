@@ -15,10 +15,11 @@ import json
 import time
 from datetime import datetime
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_onyphe(SpiderFootPlugin):
+class sfp_onyphe(SpiderFootModernPlugin):
 
     meta = {
         "name": "Onyphe",
@@ -73,13 +74,9 @@ class sfp_onyphe(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["IP_ADDRESS", "IPV6_ADDRESS"]
@@ -108,7 +105,7 @@ class sfp_onyphe(SpiderFootPlugin):
             "Content-Type": "application/json",
             "Authorization": f"apikey {self.opts['api_key']}",
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://www.onyphe.io/api/v2/simple/{endpoint}/{ip}?page={page}",
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],
@@ -199,7 +196,7 @@ class sfp_onyphe(SpiderFootPlugin):
         for domain in domains:
             if self.getTarget().matches(domain):
                 if self.opts['verify']:
-                    if self.sf.resolveHost(domain) or self.sf.resolveHost6(domain):
+                    if self.resolve_host(domain) or self.resolve_host6(domain):
                         evt = SpiderFootEvent(
                             'INTERNET_NAME', domain, self.__name__, event)
                     else:

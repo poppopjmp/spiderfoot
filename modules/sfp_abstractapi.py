@@ -14,10 +14,11 @@ import json
 import time
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_abstractapi(SpiderFootPlugin):
+class sfp_abstractapi(SpiderFootModernPlugin):
     """Look up domain, phone and IP address information from AbstractAPI."""
 
     meta = {
@@ -60,14 +61,10 @@ class sfp_abstractapi(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["DOMAIN_NAME", "PHONE_NUMBER", "IP_ADDRESS", "IPV6_ADDRESS"]
 
@@ -147,7 +144,7 @@ class sfp_abstractapi(SpiderFootPlugin):
             }
         )
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://companyenrichment.abstractapi.com/v1/?{params}",
             useragent=self.opts["_useragent"],
         )
@@ -185,7 +182,7 @@ class sfp_abstractapi(SpiderFootPlugin):
             }
         )
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://phonevalidation.abstractapi.com/v1/?{params}",
             useragent=self.opts["_useragent"],
         )
@@ -222,7 +219,7 @@ class sfp_abstractapi(SpiderFootPlugin):
             }
         )
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://ipgeolocation.abstractapi.com/v1/?{params}",
             useragent=self.opts["_useragent"],
         )

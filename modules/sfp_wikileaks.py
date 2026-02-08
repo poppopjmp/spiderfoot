@@ -13,10 +13,11 @@
 import datetime
 from urllib.parse import urlparse
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_wikileaks(SpiderFootPlugin):
+class sfp_wikileaks(SpiderFootModernPlugin):
 
     meta = {
         'name': "Wikileaks",
@@ -53,13 +54,9 @@ class sfp_wikileaks(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME", "EMAILADDR", "HUMAN_NAME"]
@@ -101,7 +98,7 @@ class sfp_wikileaks(SpiderFootPlugin):
             "&include_external_sources=" + external + \
                 "&new_search=True&order_by=most_relevant#results"
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://search.wikileaks.org/?" + wlurl
         )
         if res['content'] is None:
@@ -159,7 +156,7 @@ class sfp_wikileaks(SpiderFootPlugin):
                         "&released_date_start=" + maxDate + "&include_external_sources=" + \
                         external + "&new_search=True&order_by=most_relevant&page=" + \
                         str(page) + "#results"
-                res = self.sf.fetchUrl(wlurl)
+                res = self.fetch_url(wlurl)
                 if not res:
                     break
                 if not res['content']:

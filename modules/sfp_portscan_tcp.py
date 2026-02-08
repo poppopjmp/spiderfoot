@@ -17,10 +17,11 @@ import time
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_portscan_tcp(SpiderFootPlugin):
+class sfp_portscan_tcp(SpiderFootModernPlugin):
 
     meta = {
         'name': "Port Scanner - TCP",
@@ -62,15 +63,11 @@ class sfp_portscan_tcp(SpiderFootPlugin):
     lock = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Network"
         self.lock = threading.Lock()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         portlist = list()
         if self.opts['ports'][0].startswith("http://") or \
                 self.opts['ports'][0].startswith("https://") or \

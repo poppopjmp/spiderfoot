@@ -14,10 +14,11 @@ import json
 import time
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_criminalip(SpiderFootPlugin):
+class sfp_criminalip(SpiderFootModernPlugin):
     """SpiderFoot plugin to obtain information from CriminalIP."""
     meta = {
         "name": "CriminalIP",
@@ -54,14 +55,10 @@ class sfp_criminalip(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["DOMAIN_NAME", "PHONE_NUMBER", "IP_ADDRESS", "IPV6_ADDRESS"]
 
@@ -142,7 +139,7 @@ class sfp_criminalip(SpiderFootPlugin):
             }
         )
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.criminalip.io/{endpoint}?{params}",
             useragent=self.opts["_useragent"],
         )

@@ -15,10 +15,11 @@ import json
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_torexits(SpiderFootPlugin):
+class sfp_torexits(SpiderFootModernPlugin):
 
     meta = {
         'name': "TOR Exit Nodes",
@@ -53,15 +54,11 @@ class sfp_torexits(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
         self.__dataSource__ = "torproject.org"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -99,7 +96,7 @@ class sfp_torexits(SpiderFootPlugin):
         if exit_addresses is not None:
             return self.parseExitNodes(exit_addresses)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://onionoo.torproject.org/details?search=flag:exit",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],

@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_rocketchat(SpiderFootPlugin):
+class sfp_rocketchat(SpiderFootModernPlugin):
     meta = {
         'name': "Rocket.Chat Server Monitor",
         'summary': "Monitors Rocket.Chat servers for messages and emits events.",
@@ -38,8 +39,8 @@ class sfp_rocketchat(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation

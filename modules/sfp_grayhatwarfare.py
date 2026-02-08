@@ -13,10 +13,11 @@ import json
 import time
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_grayhatwarfare(SpiderFootPlugin):
+class sfp_grayhatwarfare(SpiderFootModernPlugin):
 
     meta = {
         'name': "Grayhat Warfare",
@@ -63,13 +64,9 @@ class sfp_grayhatwarfare(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -95,7 +92,7 @@ class sfp_grayhatwarfare(SpiderFootPlugin):
             'Accept': 'application/json',
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://buckets.grayhatwarfare.com/api/v1/buckets/{start}/{self.opts['per_page']}?{params}",
             headers=headers,
             timeout=15,

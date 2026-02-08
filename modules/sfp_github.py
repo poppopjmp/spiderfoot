@@ -13,10 +13,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_github(SpiderFootPlugin):
+class sfp_github(SpiderFootModernPlugin):
     """SpiderFoot plugin to identify public code repositories in Github associated with your target."""
     __name__ = "sfp_github"
     meta = {
@@ -48,13 +49,9 @@ class sfp_github(SpiderFootPlugin):
         'namesonly': "Match repositories by name only, not by their descriptions. Helps reduce false positives."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME", "USERNAME", "SOCIAL_MEDIA"]
@@ -120,7 +117,7 @@ class sfp_github(SpiderFootPlugin):
                 self.debug(f"Couldn't get a username out of {url}")
                 return
 
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 f"https://api.github.com/users/{username}",
                 timeout=self.opts['_fetchtimeout'],
                 useragent=self.opts['_useragent']
@@ -178,7 +175,7 @@ class sfp_github(SpiderFootPlugin):
         # Get all the repositories based on direct matches with the
         # name identified
         url = f"https://api.github.com/search/repositories?q={username}"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']
@@ -219,7 +216,7 @@ class sfp_github(SpiderFootPlugin):
         # Now look for users matching the name found
         failed = False
         url = f"https://api.github.com/search/users?q={username}"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']
@@ -255,7 +252,7 @@ class sfp_github(SpiderFootPlugin):
                     continue
 
                 url = item['repos_url']
-                res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+                res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                        useragent=self.opts['_useragent'])
 
                 if res['content'] is None:

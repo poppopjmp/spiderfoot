@@ -17,10 +17,11 @@ import os
 from subprocess import PIPE, Popen, TimeoutExpired
 from urllib.parse import urlparse
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_trufflehog(SpiderFootPlugin):
+class sfp_tool_trufflehog(SpiderFootModernPlugin):
 
     meta = {
         'name': "Tool - TruffleHog",
@@ -53,15 +54,11 @@ class sfp_tool_trufflehog(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = dict()
         self.errorState = False
         self.__dataSource__ = "Target Website"
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['SOCIAL_MEDIA', 'PUBLIC_CODE_REPO']
 

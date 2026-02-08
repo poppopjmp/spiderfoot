@@ -16,10 +16,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_snov(SpiderFootPlugin):
+class sfp_snov(SpiderFootModernPlugin):
 
     meta = {
         'name': "Snov",
@@ -64,13 +65,9 @@ class sfp_snov(SpiderFootPlugin):
     # More than 100 per response is not supported by Snov API
     limit = 100
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # For a list of all events, check sfdb.py.
     def watchedEvents(self):
@@ -92,7 +89,7 @@ class sfp_snov(SpiderFootPlugin):
             'Accept': "application/json",
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://api.snov.io/v1/oauth/access_token?' +
             urllib.parse.urlencode(params),
             headers=headers,
@@ -136,7 +133,7 @@ class sfp_snov(SpiderFootPlugin):
             'Accept': "application/json",
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://api.snov.io/v2/domain-emails-with-info?' +
             urllib.parse.urlencode(params),
             headers=headers,

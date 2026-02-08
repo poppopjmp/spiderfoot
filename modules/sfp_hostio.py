@@ -11,10 +11,11 @@
 # -------------------------------------------------------------------------------
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_hostio(SpiderFootPlugin):
+class sfp_hostio(SpiderFootModernPlugin):
 
     meta = {
         "name": "Host.io",
@@ -55,7 +56,7 @@ class sfp_hostio(SpiderFootPlugin):
     def setup(self, sfc, userOpts=None):
         if userOpts is None:
             userOpts = {}
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
@@ -96,7 +97,7 @@ class sfp_hostio(SpiderFootPlugin):
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
     def query(self, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://host.io/api/full/{qry}",
             headers={"Authorization": f"Bearer {self.opts['api_key']}"},
             timeout=self.opts["_fetchtimeout"],

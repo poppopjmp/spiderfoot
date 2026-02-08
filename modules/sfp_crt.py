@@ -15,10 +15,11 @@ import json
 import time
 import urllib.parse
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_crt(SpiderFootPlugin):
+class sfp_crt(SpiderFootModernPlugin):
     """SpiderFoot plugin to gather information about SSL certificates from crt.sh."""
     meta = {
         'name': "Certificate Transparency",
@@ -53,15 +54,11 @@ class sfp_crt(SpiderFootPlugin):
     cert_ids = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
         self.cert_ids = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['DOMAIN_NAME', 'INTERNET_NAME']
 
@@ -82,7 +79,7 @@ class sfp_crt(SpiderFootPlugin):
             'output': 'json'
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://crt.sh/?" + urllib.parse.urlencode(params),
             timeout=30,
             useragent=self.opts['_useragent']
@@ -193,7 +190,7 @@ class sfp_crt(SpiderFootPlugin):
                 'd': str(cert_id)
             }
 
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 'https://crt.sh/?' + urllib.parse.urlencode(params),
                 timeout=30,
                 useragent=self.opts['_useragent']
@@ -241,7 +238,7 @@ class sfp_crt(SpiderFootPlugin):
 
             if self.getTarget().matches(domain, includeChildren=True, includeParents=True):
                 evt_type = 'INTERNET_NAME'
-                if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+                if self.opts['verify'] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                     self.debug(f"Host {domain} could not be resolved")
                     evt_type += '_UNRESOLVED'
             else:

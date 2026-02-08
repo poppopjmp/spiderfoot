@@ -12,10 +12,11 @@
 # -------------------------------------------------------------------------------
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ipqualityscore(SpiderFootPlugin):
+class sfp_ipqualityscore(SpiderFootModernPlugin):
 
     meta = {
         "name": "IPQualityScore",
@@ -61,7 +62,7 @@ class sfp_ipqualityscore(SpiderFootPlugin):
     def setup(self, sfc, userOpts=None):
         if userOpts is None:
             userOpts = {}
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
@@ -111,7 +112,7 @@ class sfp_ipqualityscore(SpiderFootPlugin):
         elif eventName in ['IP_ADDRESS', 'DOMAIN_NAME']:
             queryString = f"https://ipqualityscore.com/api/json/ip/{self.opts['api_key']}/{qry}?strictness={self.opts['strictness']}"
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             queryString,
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",

@@ -16,10 +16,11 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_maltiverse(SpiderFootPlugin):
+class sfp_maltiverse(SpiderFootModernPlugin):
 
     meta = {
         'name': "Maltiverse",
@@ -64,13 +65,9 @@ class sfp_maltiverse(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # For a list of all events, check sfdb.py.
     def watchedEvents(self):
@@ -90,7 +87,7 @@ class sfp_maltiverse(SpiderFootPlugin):
             'Accept': "application/json",
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://api.maltiverse.com/ip/' + str(qry),
             headers=headers,
             timeout=15,

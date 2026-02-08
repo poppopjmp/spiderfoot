@@ -12,10 +12,11 @@
 # -------------------------------------------------------------------------------
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_textmagic(SpiderFootPlugin):
+class sfp_textmagic(SpiderFootModernPlugin):
 
     meta = {
         "name": "TextMagic",
@@ -58,7 +59,7 @@ class sfp_textmagic(SpiderFootPlugin):
     def setup(self, sfc, userOpts=None):
         if userOpts is None:
             userOpts = {}
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
@@ -95,7 +96,7 @@ class sfp_textmagic(SpiderFootPlugin):
             'X-TM-Key': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://rest.textmagic.com/api/v2/lookups/{qry}",
             headers=headers,
             timeout=self.opts["_fetchtimeout"],

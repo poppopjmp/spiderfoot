@@ -17,10 +17,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_koodous(SpiderFootPlugin):
+class sfp_koodous(SpiderFootModernPlugin):
 
     meta = {
         'name': "Koodous",
@@ -59,14 +60,10 @@ class sfp_koodous(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'DOMAIN_NAME'
@@ -87,7 +84,7 @@ class sfp_koodous(SpiderFootPlugin):
             'search': f"package:{package_name}.*"
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://developer.koodous.com/apks/?{params}",
             headers={"Authorization": f"Token {self.opts['api_key']}"},
             useragent=self.opts['_useragent'],

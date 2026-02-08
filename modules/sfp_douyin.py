@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_douyin(SpiderFootPlugin):
+class sfp_douyin(SpiderFootModernPlugin):
     """Douyin plugin for monitoring video uploads."""
     meta = {
         'name': "Douyin Monitor",
@@ -29,8 +30,8 @@ class sfp_douyin(SpiderFootPlugin):
         "max_videos": "Maximum number of videos to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):

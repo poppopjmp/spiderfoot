@@ -15,10 +15,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_viewdns(SpiderFootPlugin):
+class sfp_viewdns(SpiderFootModernPlugin):
 
     meta = {
         'name': "ViewDNS.info",
@@ -64,15 +65,11 @@ class sfp_viewdns(SpiderFootPlugin):
     accum = list()
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.accum = list()
         self.cohostcount = 0
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "EMAILADDR",
@@ -110,7 +107,7 @@ class sfp_viewdns(SpiderFootPlugin):
             'output': 'json',
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.viewdns.info/{querytype}/?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"

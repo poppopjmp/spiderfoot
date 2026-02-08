@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_bnb(SpiderFootPlugin):
+class sfp_bnb(SpiderFootModernPlugin):
     """SpiderFoot plugin to monitor Binance Smart Chain (BNB) for transactions and emit events."""
     meta = {
         'name': "BNB Chain Monitor",
@@ -42,8 +43,8 @@ class sfp_bnb(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         # Option validation
         if not self.opts.get("api_key"):

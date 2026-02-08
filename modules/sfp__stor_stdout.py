@@ -12,10 +12,10 @@
 
 import json
 
-from spiderfoot import SpiderFootPlugin
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp__stor_stdout(SpiderFootPlugin):
+class sfp__stor_stdout(SpiderFootModernPlugin):
 
     meta = {
         'name': "Command-line output",
@@ -44,11 +44,9 @@ class sfp__stor_stdout(SpiderFootPlugin):
         super().__init__()
         self.firstEvent = True
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         # Always start with a fresh opts dict for this instance
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
         # Also allow 'enabled' to be set via userOpts
         if 'enabled' in userOpts:
             self.opts['enabled'] = userOpts['enabled']

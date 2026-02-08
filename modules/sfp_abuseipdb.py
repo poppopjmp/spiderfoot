@@ -17,10 +17,11 @@ import urllib.parse
 import urllib.request
 import requests
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_abuseipdb(SpiderFootPlugin):
+class sfp_abuseipdb(SpiderFootModernPlugin):
     """SpiderFoot plugin to check if an IP address is malicious according to AbuseIPDB.com."""
     meta = {
         'name': "AbuseIPDB",
@@ -72,13 +73,9 @@ class sfp_abuseipdb(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -112,7 +109,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
             'plaintext': '1'
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.abuseipdb.com/api/v2/blacklist?{params}",
             # retrieving 10,000 results (default) or more can sometimes take a while
             timeout=60,
@@ -192,7 +189,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
             'maxAgeInDays': 30,
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.abuseipdb.com/api/v2/check?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -246,7 +243,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
             'maxAgeInDays': 30,
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.abuseipdb.com/api/v2/check-block?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],

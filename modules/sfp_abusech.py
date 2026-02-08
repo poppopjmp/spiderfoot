@@ -14,10 +14,11 @@
 import requests
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_abusech(SpiderFootPlugin):
+class sfp_abusech(SpiderFootModernPlugin):
     """SpiderFoot plugin to check if a host/domain, IP address or netblock is malicious according to Abuse.ch."""
     meta = {
         'name': "abuse.ch",
@@ -80,14 +81,10 @@ class sfp_abusech(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -139,7 +136,7 @@ class sfp_abusech(SpiderFootPlugin):
         if blacklist is not None:
             return self.parseFeodoTrackerBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://feodotracker.abuse.ch/downloads/ipblocklist.txt",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -213,7 +210,7 @@ class sfp_abusech(SpiderFootPlugin):
         if blacklist is not None:
             return self.parseSslBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://sslbl.abuse.ch/blacklist/sslipblacklist.csv",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -296,7 +293,7 @@ class sfp_abusech(SpiderFootPlugin):
         if blacklist is not None:
             return self.parseUrlHausBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://urlhaus.abuse.ch/downloads/csv_recent/",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],

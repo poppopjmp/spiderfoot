@@ -13,10 +13,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_nameapi(SpiderFootPlugin):
+class sfp_nameapi(SpiderFootModernPlugin):
 
     meta = {
         'name': "NameAPI",
@@ -56,13 +57,9 @@ class sfp_nameapi(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "EMAILADDR"
@@ -75,7 +72,7 @@ class sfp_nameapi(SpiderFootPlugin):
         ]
 
     def queryEmailAddr(self, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"http://api.nameapi.org/rest/v5.3/email/disposableemailaddressdetector?apiKey={self.opts['api_key']}&emailAddress={qry}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"

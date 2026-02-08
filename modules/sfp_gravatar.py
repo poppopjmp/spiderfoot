@@ -15,10 +15,11 @@ import hashlib
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_gravatar(SpiderFootPlugin):
+class sfp_gravatar(SpiderFootModernPlugin):
 
     meta = {
         'name': "Gravatar",
@@ -52,14 +53,10 @@ class sfp_gravatar(SpiderFootPlugin):
     results = None
     reportedUsers = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.reportedUsers = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['EMAILADDR']
@@ -77,7 +74,7 @@ class sfp_gravatar(SpiderFootPlugin):
         email_hash = hashlib.md5(qry.encode('utf-8', errors='replace').lower()).hexdigest()  # noqa: DUO130
         output = 'json'
 
-        res = self.sf.fetchUrl("https://secure.gravatar.com/" + email_hash + '.' + output,
+        res = self.fetch_url("https://secure.gravatar.com/" + email_hash + '.' + output,
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'])
 

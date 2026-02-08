@@ -11,10 +11,11 @@
 # -------------------------------------------------------------------------------
 
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_bambenek(SpiderFootPlugin):
+class sfp_bambenek(SpiderFootModernPlugin):
     """SpiderFoot plugin to check if a host/domain or IP appears in Bambenek Consulting feeds."""
     meta = {
         "name": "Bambenek Consulting",
@@ -56,7 +57,7 @@ class sfp_bambenek(SpiderFootPlugin):
 
     # Be sure to completely clear any class variables in setup()
     # or you risk data persisting between scan runs.
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -64,7 +65,7 @@ class sfp_bambenek(SpiderFootPlugin):
             sfc (SpiderFoot): The SpiderFoot context object.
             userOpts (dict): User-supplied options for the module.
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
@@ -96,7 +97,7 @@ class sfp_bambenek(SpiderFootPlugin):
             return self.parseData(data)
 
         self.debug(f"Fetching data from Bambenek feed: {url}")
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts["_fetchtimeout"], useragent=self.opts["_useragent"]
         )
         if res["code"] != "200":

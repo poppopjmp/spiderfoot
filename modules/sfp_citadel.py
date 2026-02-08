@@ -16,10 +16,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_citadel(SpiderFootPlugin):
+class sfp_citadel(SpiderFootModernPlugin):
     """SpiderFoot plugin to search Leak-Lookup.com's database of breaches."""
     meta = {
         'name': "Leak-Lookup",
@@ -68,15 +69,11 @@ class sfp_citadel(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
         self.__dataSource__ = "Leak-Lookup.com"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['EMAILADDR']
@@ -102,7 +99,7 @@ class sfp_citadel(SpiderFootPlugin):
             'key': apikey
         }
 
-        res = self.sf.fetchUrl("https://leak-lookup.com/api/search",
+        res = self.fetch_url("https://leak-lookup.com/api/search",
                                postData=urllib.parse.urlencode(params),
                                timeout=self.opts['timeout'],
                                useragent=self.opts['_useragent'])

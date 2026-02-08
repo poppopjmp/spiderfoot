@@ -16,10 +16,11 @@ import phonenumbers
 from phonenumbers import carrier
 
 # from phonenumbers import geocoder
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_phone(SpiderFootPlugin):
+class sfp_phone(SpiderFootModernPlugin):
 
     meta = {
         'name': "Phone Number Extractor",
@@ -34,13 +35,9 @@ class sfp_phone(SpiderFootPlugin):
     results = None
     optdescs = {}
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['TARGET_WEB_CONTENT', 'DOMAIN_WHOIS', 'NETBLOCK_WHOIS', 'PHONE_NUMBER']
 

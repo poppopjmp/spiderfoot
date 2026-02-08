@@ -18,10 +18,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_keybase(SpiderFootPlugin):
+class sfp_keybase(SpiderFootModernPlugin):
 
     meta = {
         'name': "Keybase",
@@ -51,13 +52,9 @@ class sfp_keybase(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["USERNAME", "LINKED_URL_EXTERNAL", "DOMAIN_NAME"]
 
@@ -92,7 +89,7 @@ class sfp_keybase(SpiderFootPlugin):
             'Accept': "application/json"
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://keybase.io/_/api/1.0/user/lookup.json?' +
             urllib.parse.urlencode(params),
             headers=headers,

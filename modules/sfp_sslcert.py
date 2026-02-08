@@ -12,10 +12,12 @@
 
 from urllib.parse import urlparse
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent
+from spiderfoot import SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_sslcert(SpiderFootPlugin):
+class sfp_sslcert(SpiderFootModernPlugin):
 
     meta = {
         'name': "SSL Certificate Analyzer",
@@ -46,16 +48,12 @@ class sfp_sslcert(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # * = be notified about all events.
     def watchedEvents(self):
@@ -151,7 +149,7 @@ class sfp_sslcert(SpiderFootPlugin):
 
             if self.getTarget().matches(domain, includeChildren=True):
                 evt_type = 'INTERNET_NAME'
-                if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+                if self.opts['verify'] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                     self.debug(f"Host {domain} could not be resolved")
                     evt_type += '_UNRESOLVED'
             else:

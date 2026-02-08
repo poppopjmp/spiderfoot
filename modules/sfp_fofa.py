@@ -15,10 +15,11 @@ import time
 import urllib.parse
 import base64
 from typing import Optional, Dict, Any
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_fofa(SpiderFootPlugin):
+class sfp_fofa(SpiderFootModernPlugin):
     """SpiderFoot plugin for querying Fofa API to look up domain, IP address, and other information."""
     meta = {
         'name': "Fofa",
@@ -67,12 +68,9 @@ class sfp_fofa(SpiderFootPlugin):
         """
         if userOpts is None:
             userOpts = {}
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-        for opt in userOpts:
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         """Return a list of event types this module watches."""
         return ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"]
@@ -105,7 +103,7 @@ class sfp_fofa(SpiderFootPlugin):
                 'time': f'-{max_age_days}d',
             })
             url = f"https://fofa.info/api/v1/search/all?{params}"
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 url,
                 useragent=self.opts.get('_useragent', 'SpiderFoot')
             )

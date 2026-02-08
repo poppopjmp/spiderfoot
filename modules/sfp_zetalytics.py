@@ -13,10 +13,11 @@
 import json
 from urllib.parse import urlencode
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_zetalytics(SpiderFootPlugin):
+class sfp_zetalytics(SpiderFootModernPlugin):
     BASE_URL = "https://zonecruncher.com/api/v1"
     meta = {
         "name": "Zetalytics",
@@ -49,7 +50,7 @@ class sfp_zetalytics(SpiderFootPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         if userOpts:
             self.opts.update(userOpts)
@@ -74,7 +75,7 @@ class sfp_zetalytics(SpiderFootPlugin):
         if not self.getTarget().matches(hostname):
             return False
 
-        if self.opts["verify"] and not self.sf.resolveHost(hostname) and not self.sf.resolveHost6(hostname):
+        if self.opts["verify"] and not self.resolve_host(hostname) and not self.resolve_host6(hostname):
             self.debug(f"Host {hostname} could not be resolved")
             self.emit("INTERNET_NAME_UNRESOLVED", hostname, pevent)
             return True
@@ -88,7 +89,7 @@ class sfp_zetalytics(SpiderFootPlugin):
     def request(self, path, params):
         params = {**params, "token": self.opts["api_key"]}
         qs = urlencode(params)
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"{self.BASE_URL}{path}/?{qs}",
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",

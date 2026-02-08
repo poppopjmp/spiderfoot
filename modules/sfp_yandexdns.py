@@ -13,10 +13,11 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_yandexdns(SpiderFootPlugin):
+class sfp_yandexdns(SpiderFootModernPlugin):
 
     meta = {
         'name': "Yandex DNS",
@@ -54,13 +55,9 @@ class sfp_yandexdns(SpiderFootPlugin):
         "93.158.134.250": "Yandex - Adult",
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "INTERNET_NAME",

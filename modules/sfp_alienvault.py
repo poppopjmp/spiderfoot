@@ -19,10 +19,11 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_alienvault(SpiderFootPlugin):
+class sfp_alienvault(SpiderFootModernPlugin):
     """SpiderFoot plug-in to obtain information from AlienVault Open Threat Exchange (OTX)."""
     meta = {
         'name': "AlienVault OTX",
@@ -103,15 +104,11 @@ class sfp_alienvault(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -187,7 +184,7 @@ class sfp_alienvault(SpiderFootPlugin):
             'X-OTX-API-KEY': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://otx.alienvault.com/api/v1/indicators/{target_type}/{qry}/reputation",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -209,7 +206,7 @@ class sfp_alienvault(SpiderFootPlugin):
             'X-OTX-API-KEY': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://otx.alienvault.com/api/v1/indicators/{target_type}/{qry}/passive_dns",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -227,7 +224,7 @@ class sfp_alienvault(SpiderFootPlugin):
             'Accept': 'application/json',
             'X-OTX-API-KEY': self.opts['api_key']
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://otx.alienvault.com/api/v1/indicators/domain/{qry}/url_list?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -245,7 +242,7 @@ class sfp_alienvault(SpiderFootPlugin):
             'Accept': 'application/json',
             'X-OTX-API-KEY': self.opts['api_key']
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://otx.alienvault.com/api/v1/indicators/hostname/{qry}/url_list?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -400,7 +397,7 @@ class sfp_alienvault(SpiderFootPlugin):
 
                         if self.getTarget().matches(host, includeParents=True):
                             evtType = "INTERNET_NAME"
-                            if not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                            if not self.resolve_host(host) and not self.resolve_host6(host):
                                 evtType = "INTERNET_NAME_UNRESOVLED"
                             evt = SpiderFootEvent(
                                 evtType, host, self.__class__.__name__, event)

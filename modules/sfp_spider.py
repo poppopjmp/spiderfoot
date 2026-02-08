@@ -14,10 +14,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_spider(SpiderFootPlugin):
+class sfp_spider(SpiderFootModernPlugin):
 
     meta = {
         'name': "Web Spider",
@@ -73,16 +74,12 @@ class sfp_spider(SpiderFootPlugin):
     # Tracked cookies per site
     siteCookies = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.fetchedPages = self.tempStorage()
         self.urlEvents = self.tempStorage()
         self.siteCookies = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # Search engines and DNS lookups provide INTERNET_NAME.
     def watchedEvents(self):
         return ["LINKED_URL_INTERNAL", "INTERNET_NAME"]
@@ -121,7 +118,7 @@ class sfp_spider(SpiderFootPlugin):
             cookies = self.siteCookies[site]
 
         # Fetch the contents of the supplied URL
-        fetched = self.sf.fetchUrl(
+        fetched = self.fetch_url(
             url,
             cookies=cookies,
             timeout=self.opts['_fetchtimeout'],
@@ -330,7 +327,7 @@ class sfp_spider(SpiderFootPlugin):
         # Determine where to start spidering from if it's a INTERNET_NAME event
         if eventName == "INTERNET_NAME":
             for prefix in self.opts['start']:
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     prefix + eventData,
                     timeout=self.opts['_fetchtimeout'],
                     useragent=self.opts['_useragent'],
@@ -371,7 +368,7 @@ class sfp_spider(SpiderFootPlugin):
         if self.opts['robotsonly']:
             targetBase = SpiderFootHelpers.urlBaseUrl(startingPoint)
             if targetBase not in self.robotsRules:
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     targetBase + '/robots.txt',
                     timeout=self.opts['_fetchtimeout'],
                     useragent=self.opts['_useragent'],

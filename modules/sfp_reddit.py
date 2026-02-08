@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_reddit(SpiderFootPlugin):
+class sfp_reddit(SpiderFootModernPlugin):
     meta = {
         'name': "Reddit Monitor",
         'summary': "Monitors specified subreddits for new posts and emits events.",
@@ -34,8 +35,8 @@ class sfp_reddit(SpiderFootPlugin):
         "max_posts": "Maximum number of posts to fetch per subreddit."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):

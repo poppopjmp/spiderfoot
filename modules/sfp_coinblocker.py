@@ -10,10 +10,11 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_coinblocker(SpiderFootPlugin):
+class sfp_coinblocker(SpiderFootModernPlugin):
     """SpiderFoot plugin to check if a domain appears on CoinBlocker lists."""
     meta = {
         'name': "CoinBlocker Lists",
@@ -53,14 +54,10 @@ class sfp_coinblocker(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "INTERNET_NAME",
@@ -98,7 +95,7 @@ class sfp_coinblocker(SpiderFootPlugin):
             return self.parseBlocklist(blocklist)
 
         url = "https://zerodot1.gitlab.io/CoinBlockerLists/list.txt"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],

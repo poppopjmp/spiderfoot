@@ -16,10 +16,11 @@ import re
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_country_code
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_countryname(SpiderFootPlugin):
+class sfp_countryname(SpiderFootModernPlugin):
     """SpiderFoot plugin to identify country names in any obtained data."""
     meta = {
         'name': "Country Name Extractor",
@@ -45,16 +46,12 @@ class sfp_countryname(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     def detectCountryFromPhone(self, srcPhoneNumber: str) -> str:
         """Lookup name of country from phone number region code.
 

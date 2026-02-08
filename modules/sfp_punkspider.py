@@ -12,10 +12,11 @@
 import hashlib
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_punkspider(SpiderFootPlugin):
+class sfp_punkspider(SpiderFootModernPlugin):
 
     meta = {
         'name': "PunkSpider",
@@ -46,16 +47,12 @@ class sfp_punkspider(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["INTERNET_NAME"]
@@ -67,7 +64,7 @@ class sfp_punkspider(SpiderFootPlugin):
     def query(self, domain: str):
         domain_hash = hashlib.md5(domain.encode('utf-8', errors='replace').lower()).hexdigest()  # noqa: DUO130
         url = f"https://api.punkspider.org/api/partial-hash/{domain_hash}"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=30, useragent=self.opts['_useragent'])
 
         return self.parseApiResponse(res)

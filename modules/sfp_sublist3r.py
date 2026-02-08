@@ -13,10 +13,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_sublist3r(SpiderFootPlugin):
+class sfp_sublist3r(SpiderFootModernPlugin):
 
     meta = {
         "name": "Sublist3r PassiveDNS",
@@ -38,8 +39,8 @@ class sfp_sublist3r(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.debug("Setting up sfp_sublist3r")
         self.results = self.tempStorage()
         self.opts.update(userOpts)
@@ -53,7 +54,7 @@ class sfp_sublist3r(SpiderFootPlugin):
     def query(self, domain):
         url = f"https://api.sublist3r.com/search.php?domain={domain}"
         ret = []
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             useragent=self.opts.get("_useragent", "Spiderfoot"),
             # mirror sublist3r's headers
@@ -77,7 +78,7 @@ class sfp_sublist3r(SpiderFootPlugin):
         return list(set(ret))
 
     def sendEvent(self, source, host):
-        if self.sf.resolveHost(host) or self.sf.resolveHost6(host):
+        if self.resolve_host(host) or self.resolve_host6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)
         else:
             e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED",

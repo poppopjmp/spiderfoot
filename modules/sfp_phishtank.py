@@ -10,10 +10,11 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_phishtank(SpiderFootPlugin):
+class sfp_phishtank(SpiderFootModernPlugin):
 
     meta = {
         'name': "PhishTank",
@@ -48,14 +49,10 @@ class sfp_phishtank(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "INTERNET_NAME",
@@ -95,7 +92,7 @@ class sfp_phishtank(SpiderFootPlugin):
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://data.phishtank.com/data/online-valid.csv",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",

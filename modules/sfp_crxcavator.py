@@ -16,10 +16,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_crxcavator(SpiderFootPlugin):
+class sfp_crxcavator(SpiderFootModernPlugin):
     """SpiderFoot plugin to query CRXcavator for Chrome extensions."""
     meta = {
         'name': "CRXcavator",
@@ -49,13 +50,9 @@ class sfp_crxcavator(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'DOMAIN_NAME'
@@ -78,7 +75,7 @@ class sfp_crxcavator(SpiderFootPlugin):
             'q': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.crxcavator.io/v1/search?{params}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']
@@ -102,7 +99,7 @@ class sfp_crxcavator(SpiderFootPlugin):
         return data
 
     def queryExtension(self, extension_id):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.crxcavator.io/v1/report/{extension_id}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']
@@ -276,7 +273,7 @@ class sfp_crxcavator(SpiderFootPlugin):
             else:
                 evt_type = 'AFFILIATE_INTERNET_NAME'
 
-            if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+            if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                 self.debug(f"Host {host} could not be resolved")
                 evt_type += '_UNRESOLVED'
 

@@ -14,10 +14,11 @@
 import json
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_opencorporates(SpiderFootPlugin):
+class sfp_opencorporates(SpiderFootModernPlugin):
 
     meta = {
         'name': "OpenCorporates",
@@ -60,13 +61,9 @@ class sfp_opencorporates(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["COMPANY_NAME"]
 
@@ -96,7 +93,7 @@ class sfp_opencorporates(SpiderFootPlugin):
             'confidence': self.opts['confidence']
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.opencorporates.com/v{version}/companies/search?{params}{apiparam}",
             timeout=60,  # High timeouts as they can sometimes take a while
             useragent=self.opts['_useragent']
@@ -127,7 +124,7 @@ class sfp_opencorporates(SpiderFootPlugin):
         if self.opts['api_key']:
             url += "?api_token=" + self.opts['api_key']
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']

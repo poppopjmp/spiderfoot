@@ -18,10 +18,11 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_xforce(SpiderFootPlugin):
+class sfp_xforce(SpiderFootModernPlugin):
 
     meta = {
         'name': "XForce Exchange",
@@ -90,14 +91,10 @@ class sfp_xforce(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'IP_ADDRESS',
@@ -146,7 +143,7 @@ class sfp_xforce(SpiderFootPlugin):
             'Authorization': "Basic " + token.decode('utf-8')
         }
         url = xforce_url + "/" + querytype + "/" + qry
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot", headers=headers)
 
         return self.parseApiResponse(res)
@@ -433,7 +430,7 @@ class sfp_xforce(SpiderFootPlugin):
 
                     if not self.opts["cohostsamedomain"]:
                         if self.getTarget().matches(host, includeParents=True):
-                            if self.sf.resolveHost(host) or self.sf.resolveHost6(host):
+                            if self.resolve_host(host) or self.resolve_host6(host):
                                 e = SpiderFootEvent(
                                     "INTERNET_NAME", host, self.__name__, event)
                             else:

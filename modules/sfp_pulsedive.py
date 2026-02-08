@@ -19,10 +19,11 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_pulsedive(SpiderFootPlugin):
+class sfp_pulsedive(SpiderFootModernPlugin):
 
     meta = {
         'name': "Pulsedive",
@@ -82,13 +83,9 @@ class sfp_pulsedive(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -118,7 +115,7 @@ class sfp_pulsedive(SpiderFootPlugin):
 
         url = 'https://pulsedive.com/api/info.php?' + \
             urllib.parse.urlencode(params)
-        res = self.sf.fetchUrl(url, timeout=30, useragent="SpiderFoot")
+        res = self.fetch_url(url, timeout=30, useragent="SpiderFoot")
 
         time.sleep(self.opts['delay'])
 

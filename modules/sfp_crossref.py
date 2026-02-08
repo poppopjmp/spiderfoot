@@ -15,10 +15,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_crossref(SpiderFootPlugin):
+class sfp_crossref(SpiderFootModernPlugin):
     """SpiderFoot plugin to identify potential affiliate domains."""
     meta = {
         'name': "Cross-Referencer",
@@ -38,13 +39,9 @@ class sfp_crossref(SpiderFootPlugin):
 
     fetched = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.fetched = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'LINKED_URL_EXTERNAL',
@@ -86,7 +83,7 @@ class sfp_crossref(SpiderFootPlugin):
             self.debug(f"Ignoring {url} as already tested")
             return
 
-        if not self.sf.resolveHost(fqdn) and not self.sf.resolveHost6(fqdn):
+        if not self.resolve_host(fqdn) and not self.resolve_host6(fqdn):
             self.debug(f"Ignoring {url} as {fqdn} does not resolve")
             return
 
@@ -94,7 +91,7 @@ class sfp_crossref(SpiderFootPlugin):
 
         self.debug(f"Testing URL for affiliation: {url}")
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -130,7 +127,7 @@ class sfp_crossref(SpiderFootPlugin):
 
                 self.fetched[url] = True
 
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     url,
                     timeout=self.opts['_fetchtimeout'],
                     useragent=self.opts['_useragent'],

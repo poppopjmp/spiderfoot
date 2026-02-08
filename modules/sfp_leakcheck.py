@@ -13,10 +13,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_leakcheck(SpiderFootPlugin):
+class sfp_leakcheck(SpiderFootModernPlugin):
     meta = {
         "name": "LeakCheck.io",
         "summary": "Gather breach data from LeakCheck API.",
@@ -51,13 +52,9 @@ class sfp_leakcheck(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -97,7 +94,7 @@ class sfp_leakcheck(SpiderFootPlugin):
         headers = {"Accept": "application/json",
                    "X-API-Key": self.opts["api_key"]}
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             queryString,
             headers=headers,
             timeout=15,
@@ -122,7 +119,7 @@ class sfp_leakcheck(SpiderFootPlugin):
                 "Too many requests performed in a short time. Please wait before trying again."
             )
             time.sleep(5)
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 queryString,
                 headers=headers,
                 timeout=15,

@@ -22,10 +22,11 @@ import exifread
 
 import pptx
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_filemeta(SpiderFootPlugin):
+class sfp_filemeta(SpiderFootModernPlugin):
     """SpiderFoot plugin for extracting file metadata."""
     meta = {
         'name': "File Metadata Extractor",
@@ -49,14 +50,10 @@ class sfp_filemeta(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["LINKED_URL_INTERNAL", "INTERESTING_FILE"]
@@ -87,7 +84,7 @@ class sfp_filemeta(SpiderFootPlugin):
             if "." + fileExt.lower() in eventData.lower():
                 # Fetch the file, allow much more time given that these files are
                 # typically large.
-                ret = self.sf.fetchUrl(eventData, timeout=self.opts['timeout'],
+                ret = self.fetch_url(eventData, timeout=self.opts['timeout'],
                                        useragent=self.opts['_useragent'], disableContentEncoding=True,
                                        sizeLimit=10000000,
                                        verify=False)

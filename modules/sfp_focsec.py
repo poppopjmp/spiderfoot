@@ -13,10 +13,11 @@
 import json
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_focsec(SpiderFootPlugin):
+class sfp_focsec(SpiderFootModernPlugin):
     """SpiderFoot plugin for looking up IP address information from Focsec."""
     meta = {
         'name': "Focsec",
@@ -53,14 +54,10 @@ class sfp_focsec(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -91,7 +88,7 @@ class sfp_focsec(SpiderFootPlugin):
             'api_key': self.opts["api_key"],
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.focsec.com/v1/ip/{qry}?{params}",
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts['_useragent']

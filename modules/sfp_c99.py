@@ -13,10 +13,11 @@
 import json
 import requests
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_c99(SpiderFootPlugin):
+class sfp_c99(SpiderFootModernPlugin):
     """SpiderFoot plugin to query the C99 API which offers various data (geo location, proxy detection, phone lookup, etc)."""
     meta = {
         "name": "C99",
@@ -62,14 +63,10 @@ class sfp_c99(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "DOMAIN_NAME",
@@ -98,7 +95,7 @@ class sfp_c99(SpiderFootPlugin):
         ]
 
     def query(self, path, queryParam, queryData):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.c99.nl/{path}?key={self.opts['api_key']}&{queryParam}={queryData}&json",
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",
@@ -357,7 +354,7 @@ class sfp_c99(SpiderFootPlugin):
         if not self.sf.validHost(data, self.opts['_internettlds']):
             return
 
-        if self.opts["verify"] and not self.sf.resolveHost(data) and not self.sf.resolveHost6(data):
+        if self.opts["verify"] and not self.resolve_host(data) and not self.resolve_host6(data):
             self.debug(f"Host {data} could not be resolved.")
             if self.getTarget().matches(data):
                 evt = SpiderFootEvent(

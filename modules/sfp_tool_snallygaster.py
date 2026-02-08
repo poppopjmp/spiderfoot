@@ -16,10 +16,11 @@ import json
 import os.path
 from subprocess import PIPE, Popen, TimeoutExpired
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_snallygaster(SpiderFootPlugin):
+class sfp_tool_snallygaster(SpiderFootModernPlugin):
 
     meta = {
         "name": "Tool - snallygaster",
@@ -51,15 +52,11 @@ class sfp_tool_snallygaster(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = dict()
         self.errorState = False
         self.__dataSource__ = "Target Website"
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['INTERNET_NAME']
 

@@ -15,7 +15,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 sites = {
     # Search string to use, domain name the profile will sit on within
@@ -44,7 +45,7 @@ sites = {
 }
 
 
-class sfp_socialprofiles(SpiderFootPlugin):
+class sfp_socialprofiles(SpiderFootModernPlugin):
 
     meta = {
         'name': "Social Media Profile Finder",
@@ -106,15 +107,11 @@ class sfp_socialprofiles(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.keywords = None
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["HUMAN_NAME"]
@@ -235,7 +232,7 @@ class sfp_socialprofiles(SpiderFootPlugin):
                             "Tightening results to look for " +
                             str(self.keywords)
                         )
-                        pres = self.sf.fetchUrl(
+                        pres = self.fetch_url(
                             match,
                             timeout=self.opts["_fetchtimeout"],
                             useragent=self.opts["_useragent"],

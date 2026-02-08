@@ -12,10 +12,11 @@
 
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_blocklistde(SpiderFootPlugin):
+class sfp_blocklistde(SpiderFootModernPlugin):
     """SpiderFoot plugin to check if a netblock or IP is malicious according to blocklist.de."""
     meta = {
         'name': "blocklist.de",
@@ -59,14 +60,10 @@ class sfp_blocklistde(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -118,7 +115,7 @@ class sfp_blocklistde(SpiderFootPlugin):
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://lists.blocklist.de/lists/all.txt",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],

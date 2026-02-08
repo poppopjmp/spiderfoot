@@ -14,10 +14,11 @@
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dronebl(SpiderFootPlugin):
+class sfp_dronebl(SpiderFootModernPlugin):
     """DroneBL plugin for querying the DroneBL database."""
     meta = {
         'name': "DroneBL",
@@ -79,13 +80,9 @@ class sfp_dronebl(SpiderFootPlugin):
         "127.0.0.255": "dronebl.org - Unknown"
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'IP_ADDRESS',
@@ -131,7 +128,7 @@ class sfp_dronebl(SpiderFootPlugin):
         try:
             lookup = self.reverseAddr(qaddr) + '.dnsbl.dronebl.org'
             self.debug(f"Checking DroneBL blacklist: {lookup}")
-            return self.sf.resolveHost(lookup)
+            return self.resolve_host(lookup)
         except Exception as e:
             self.debug(f"DroneBL did not resolve {qaddr} / {lookup}: {e}")
 

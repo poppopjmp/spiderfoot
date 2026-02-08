@@ -13,10 +13,11 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_adguard_dns(SpiderFootPlugin):
+class sfp_adguard_dns(SpiderFootModernPlugin):
     """SpiderFoot plug-in for looking up whether hosts are blocked by AdGuard DNS servers."""
     meta = {
         'name': "AdGuard DNS",
@@ -46,13 +47,9 @@ class sfp_adguard_dns(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "INTERNET_NAME",

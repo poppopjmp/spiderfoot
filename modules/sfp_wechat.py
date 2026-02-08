@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_wechat(SpiderFootPlugin):
+class sfp_wechat(SpiderFootModernPlugin):
     meta = {
         'name': "WeChat Monitor",
         'summary': "Monitors WeChat for new messages and emits events.",
@@ -31,8 +32,8 @@ class sfp_wechat(SpiderFootPlugin):
         "max_messages": "Maximum number of messages to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):

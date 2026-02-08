@@ -17,10 +17,11 @@ import tempfile
 import paramiko
 import io
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_gobuster(SpiderFootPlugin):
+class sfp_tool_gobuster(SpiderFootModernPlugin):
     meta = {
         "name": "Tools - Gobuster",
         "summary": "Identify web paths on target websites using the Gobuster tool.",
@@ -81,13 +82,9 @@ class sfp_tool_gobuster(SpiderFootPlugin):
     # Target
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["URL"]

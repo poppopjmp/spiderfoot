@@ -13,10 +13,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_debounce(SpiderFootPlugin):
+class sfp_debounce(SpiderFootModernPlugin):
     """SpiderFoot plugin to check whether an email is disposable using Debounce API."""
     meta = {
         'name': "Debounce",
@@ -48,13 +49,9 @@ class sfp_debounce(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "EMAILADDR"
@@ -67,7 +64,7 @@ class sfp_debounce(SpiderFootPlugin):
         ]
 
     def queryEmailAddr(self, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://disposable.debounce.io?email={qry}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"

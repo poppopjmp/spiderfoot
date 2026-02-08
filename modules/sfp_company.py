@@ -13,10 +13,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_company(SpiderFootPlugin):
+class sfp_company(SpiderFootModernPlugin):
     """SpiderFoot plugin to identify company names in scraped webpages."""
     meta = {
         'name': "Company Name Extractor",
@@ -34,12 +35,8 @@ class sfp_company(SpiderFootPlugin):
         'filterjscss': "Filter out company names that originated from CSS/JS content. Enabling this avoids detection of popular Javascript and web framework author company names."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["TARGET_WEB_CONTENT", "SSL_CERTIFICATE_ISSUED",

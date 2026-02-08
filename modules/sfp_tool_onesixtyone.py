@@ -17,10 +17,11 @@ import tempfile
 from netaddr import IPNetwork
 from subprocess import PIPE, Popen, TimeoutExpired
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_onesixtyone(SpiderFootPlugin):
+class sfp_tool_onesixtyone(SpiderFootModernPlugin):
 
     meta = {
         "name": "Tool - onesixtyone",
@@ -54,15 +55,11 @@ class sfp_tool_onesixtyone(SpiderFootPlugin):
     errorState = False
     communitiesFile = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = dict()
         self.errorState = False
         self.__dataSource__ = "Target Website"
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
         # Write communities to file for use later on
         try:
             _, self.communitiesFile = tempfile.mkstemp("communities")

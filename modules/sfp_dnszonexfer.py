@@ -15,10 +15,11 @@ import re
 import dns.query
 import dns.zone
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnszonexfer(SpiderFootPlugin):
+class sfp_dnszonexfer(SpiderFootModernPlugin):
     """SpiderFoot plugin for attempting a DNS zone transfer."""
     meta = {
         'name': "DNS Zone Transfer",
@@ -38,14 +39,10 @@ class sfp_dnszonexfer(SpiderFootPlugin):
 
     events = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['PROVIDER_DNS']
 
@@ -79,7 +76,7 @@ class sfp_dnszonexfer(SpiderFootPlugin):
         # when attempting to resolve the name server during
         # the zone transfer.
         if not self.sf.validIP(eventData) and not self.sf.validIP6(eventData):
-            nsips = self.sf.resolveHost(eventData)
+            nsips = self.resolve_host(eventData)
             if not nsips:
                 return
 

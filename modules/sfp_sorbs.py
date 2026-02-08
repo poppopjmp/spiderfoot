@@ -14,10 +14,11 @@
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_sorbs(SpiderFootPlugin):
+class sfp_sorbs(SpiderFootModernPlugin):
 
     meta = {
         'name': "SORBS",
@@ -95,13 +96,9 @@ class sfp_sorbs(SpiderFootPlugin):
         "127.0.0.14": "SORBS - Network does not contain servers",
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'IP_ADDRESS',
@@ -146,7 +143,7 @@ class sfp_sorbs(SpiderFootPlugin):
         try:
             lookup = self.reverseAddr(qaddr) + '.dnsbl.sorbs.net'
             self.debug(f"Checking SORBS blacklist: {lookup}")
-            return self.sf.resolveHost(lookup)
+            return self.resolve_host(lookup)
         except Exception as e:
             self.debug(f"SORBS did not resolve {qaddr} / {lookup}: {e}")
 

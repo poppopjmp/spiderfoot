@@ -11,10 +11,11 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_creditcard(SpiderFootPlugin):
+class sfp_creditcard(SpiderFootModernPlugin):
     """SpiderFoot plugin to identify credit card numbers in scraped webpages."""
     meta = {
         'name': "Credit Card Number Extractor",
@@ -32,16 +33,12 @@ class sfp_creditcard(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Override datasource for sfp_creditcard module
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DARKNET_MENTION_CONTENT", "LEAKSITE_CONTENT"]

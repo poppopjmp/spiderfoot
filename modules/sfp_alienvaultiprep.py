@@ -13,10 +13,11 @@
 
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_alienvaultiprep(SpiderFootPlugin):
+class sfp_alienvaultiprep(SpiderFootModernPlugin):
     """Check if an IP or netblock is malicious according to the AlienVault IP Reputation database."""
     meta = {
         'name': "AlienVault IP Reputation",
@@ -59,14 +60,10 @@ class sfp_alienvaultiprep(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -114,7 +111,7 @@ class sfp_alienvaultiprep(SpiderFootPlugin):
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://reputation.alienvault.com/reputation.generic",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],

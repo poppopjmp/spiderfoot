@@ -13,10 +13,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_bgpview(SpiderFootPlugin):
+class sfp_bgpview(SpiderFootModernPlugin):
     """SpiderFoot plugin to obtain network information from BGPView API."""
 
     meta = {
@@ -47,7 +48,7 @@ class sfp_bgpview(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -55,12 +56,8 @@ class sfp_bgpview(SpiderFootPlugin):
             sfc (SpiderFoot): The SpiderFoot context object.
             userOpts (dict): User-supplied options for the module.
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         """
         Return a list of event types this module is interested in.
@@ -100,7 +97,7 @@ class sfp_bgpview(SpiderFootPlugin):
         Returns:
             dict or None: ASN data or None if not found.
         """
-        res = self.sf.fetchUrl("https://api.bgpview.io/asn/" + qry.replace('AS', ''),
+        res = self.fetch_url("https://api.bgpview.io/asn/" + qry.replace('AS', ''),
                                useragent=self.opts['_useragent'],
                                timeout=self.opts['_fetchtimeout'])
 
@@ -136,7 +133,7 @@ class sfp_bgpview(SpiderFootPlugin):
         Returns:
             dict or None: IP data or None if not found.
         """
-        res = self.sf.fetchUrl("https://api.bgpview.io/ip/" + qry,
+        res = self.fetch_url("https://api.bgpview.io/ip/" + qry,
                                useragent=self.opts['_useragent'],
                                timeout=self.opts['_fetchtimeout'])
 
@@ -172,7 +169,7 @@ class sfp_bgpview(SpiderFootPlugin):
         Returns:
             dict or None: Netblock data or None if not found.
         """
-        res = self.sf.fetchUrl("https://api.bgpview.io/prefix/" + qry,
+        res = self.fetch_url("https://api.bgpview.io/prefix/" + qry,
                                useragent=self.opts['_useragent'],
                                timeout=self.opts['_fetchtimeout'])
 

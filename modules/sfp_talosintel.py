@@ -13,10 +13,11 @@
 
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_talosintel(SpiderFootPlugin):
+class sfp_talosintel(SpiderFootModernPlugin):
 
     meta = {
         'name': "Talos Intelligence",
@@ -60,14 +61,10 @@ class sfp_talosintel(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -119,7 +116,7 @@ class sfp_talosintel(SpiderFootPlugin):
 
         # https://talosintelligence.com/documents/ip-blacklist redirects to:
         # https://snort.org/downloads/ip-block-list
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://snort.org/downloads/ip-block-list",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],

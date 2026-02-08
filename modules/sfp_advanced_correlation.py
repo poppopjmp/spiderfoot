@@ -31,7 +31,8 @@ from typing import Dict, List, Optional, Any, Tuple, Set
 import hashlib
 import logging
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class AdvancedCorrelationEngine:
@@ -178,7 +179,7 @@ class AdvancedCorrelationEngine:
         return max_distance
 
 
-class sfp_advanced_correlation(SpiderFootPlugin):
+class sfp_advanced_correlation(SpiderFootModernPlugin):
     """Advanced correlation and entity resolution module."""
 
     meta = {
@@ -218,16 +219,12 @@ class sfp_advanced_correlation(SpiderFootPlugin):
         'min_pattern_strength': "Minimum number of events to form a pattern"
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.correlation_engine = AdvancedCorrelationEngine()
         self.collected_events = []
         self.entity_cache = {}
-        
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["*"]
 

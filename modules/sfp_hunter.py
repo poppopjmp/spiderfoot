@@ -14,10 +14,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_hunter(SpiderFootPlugin):
+class sfp_hunter(SpiderFootModernPlugin):
 
     meta = {
         'name': "Hunter.io",
@@ -63,17 +64,13 @@ class sfp_hunter(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME", "INTERNET_NAME"]
@@ -92,7 +89,7 @@ class sfp_hunter(SpiderFootPlugin):
 
         url = f"https://api.hunter.io/v2/domain-search?{urllib.parse.urlencode(params)}"
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
 
         if res['code'] == "404":

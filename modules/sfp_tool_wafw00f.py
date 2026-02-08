@@ -15,10 +15,12 @@ import json
 import os.path
 from subprocess import PIPE, Popen, TimeoutExpired
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent
+from spiderfoot import SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_wafw00f(SpiderFootPlugin):
+class sfp_tool_wafw00f(SpiderFootModernPlugin):
     meta = {
         'name': "Tool - WAFW00F",
         'summary': "Identify what web application firewall (WAF) is in use on the specified website.",
@@ -46,15 +48,11 @@ class sfp_tool_wafw00f(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = dict()
         self.errorState = False
         self.__dataSource__ = "Target Website"
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['INTERNET_NAME']
 

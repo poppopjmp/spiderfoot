@@ -16,10 +16,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_whatcms(SpiderFootPlugin):
+class sfp_whatcms(SpiderFootModernPlugin):
 
     meta = {
         'name': "WhatCMS",
@@ -69,14 +70,10 @@ class sfp_whatcms(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['DOMAIN_NAME']
@@ -93,7 +90,7 @@ class sfp_whatcms(SpiderFootPlugin):
             'key': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl('https://whatcms.org/APIEndpoint/Detect?' + urllib.parse.urlencode(params),
+        res = self.fetch_url('https://whatcms.org/APIEndpoint/Detect?' + urllib.parse.urlencode(params),
                                timeout=self.opts['timeout'],
                                useragent=self.opts['_useragent'])
 
@@ -109,7 +106,7 @@ class sfp_whatcms(SpiderFootPlugin):
             'key': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl('https://whatcms.org/APIEndpoint/Technology?' + urllib.parse.urlencode(params),
+        res = self.fetch_url('https://whatcms.org/APIEndpoint/Technology?' + urllib.parse.urlencode(params),
                                timeout=self.opts['timeout'],
                                useragent=self.opts['_useragent'])
 

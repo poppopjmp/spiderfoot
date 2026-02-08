@@ -15,7 +15,8 @@ import re
 
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 malchecks = {
     'Custom Threat Data': {
@@ -26,7 +27,7 @@ malchecks = {
 }
 
 
-class sfp_customfeed(SpiderFootPlugin):
+class sfp_customfeed(SpiderFootModernPlugin):
     """SpiderFoot plugin to check if a host/domain, netblock, ASN or IP is malicious according to your custom feed."""
     meta = {
         'name': "Custom Threat Feed",
@@ -58,17 +59,13 @@ class sfp_customfeed(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # * = be notified about all events.
     def watchedEvents(self):
@@ -100,7 +97,7 @@ class sfp_customfeed(SpiderFootPlugin):
                 data['content'] = self.sf.cacheGet(
                     "sfmal_" + cid, self.opts.get('cacheperiod', 0))
                 if data['content'] is None:
-                    data = self.sf.fetchUrl(
+                    data = self.fetch_url(
                         url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
                     if data['content'] is None:
                         self.error("Unable to fetch " + url)

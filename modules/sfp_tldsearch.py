@@ -17,10 +17,11 @@ import time
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tldsearch(SpiderFootPlugin):
+class sfp_tldsearch(SpiderFootModernPlugin):
 
     meta = {
         'name': "TLD Searcher",
@@ -52,15 +53,11 @@ class sfp_tldsearch(SpiderFootPlugin):
     tldResults = dict()
     lock = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "DNS"
         self.lock = threading.Lock()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["INTERNET_NAME"]
@@ -83,7 +80,7 @@ class sfp_tldsearch(SpiderFootPlugin):
             return
 
         try:
-            if not self.sf.resolveHost(target) and not self.sf.resolveHost6(target):
+            if not self.resolve_host(target) and not self.resolve_host6(target):
                 with self.lock:
                     self.tldResults[target] = False
             else:
@@ -136,7 +133,7 @@ class sfp_tldsearch(SpiderFootPlugin):
             if self.checkForStop():
                 return
 
-            pageContent = self.sf.fetchUrl('http://' + result,
+            pageContent = self.fetch_url('http://' + result,
                                            timeout=self.opts['_fetchtimeout'],
                                            useragent=self.opts['_useragent'],
                                            noLog=True,

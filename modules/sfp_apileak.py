@@ -1,9 +1,10 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 import requests
 import re
 import base64
 
-class sfp_apileak(SpiderFootPlugin):
+class sfp_apileak(SpiderFootModernPlugin):
     """Searches for leaked API keys and secrets on GitHub and paste sites."""
     meta = {
         'name': "API Key/Secret Leak Detector",
@@ -38,7 +39,7 @@ class sfp_apileak(SpiderFootPlugin):
     }
 
     def setup(self, sfc, userOpts: dict = dict()) -> None:
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         # Support multiple patterns (comma-separated or list)
         patterns = self.opts["search_patterns"]

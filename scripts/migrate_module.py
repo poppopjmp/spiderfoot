@@ -200,35 +200,26 @@ def _migrate_setup(content: str, result: MigrationResult) -> str:
     if n > 0:
         result.add_change(f"setup() default arg: {{}} -> None ({n})")
 
-    # Replace `self.sf = sfc` (typically the first line in setup)
-    # and manual opts merge with super().setup()
-    # Pattern: self.sf = sfc followed by optional __dataSource__ and opts loop
-    setup_body_pattern = re.compile(
-        r'(def setup\(self, sfc, userOpts=None\):.*?\n)'
-        r'(\s+)self\.sf\s*=\s*sfc\s*\n'
-        r'(?:(\s+)self\.__dataSource__\s*=\s*["\']([^"\']*?)["\']\s*\n)?'
-        r'(?:\s+self\.results\s*=\s*self\.tempStorage\(\)\s*\n)?'
-        r'(?:\s+(?:for\s+opt\s+in\s+(?:list\()?userOpts(?:\.keys\(\))?(?:\))?:\s*\n\s+self\.opts\[opt\]\s*=\s*userOpts\[opt\]\s*\n))?',
-        re.DOTALL,
+    # Replace `self.sf = sfc` with super().setup() call
+    # This is a simpler, more reliable approach than trying to match the whole block
+    content, n = re.subn(
+        r'^(\s+)self\.sf\s*=\s*sfc\s*$',
+        r'\1super().setup(sfc, userOpts or {})',
+        content,
+        flags=re.MULTILINE,
     )
+    if n > 0:
+        result.add_change(f"setup() body: self.sf=sfc -> super().setup() ({n})")
 
-    def _rewrite_setup(m: re.Match) -> str:
-        sig = m.group(1)
-        indent = m.group(2)
-        data_source = m.group(4) if m.group(4) else None
-
-        lines = [sig]
-        lines.append(f"{indent}super().setup(sfc, userOpts or {{}})")
-        lines.append(f"{indent}self.results = self.tempStorage()")
-        if data_source:
-            lines.append(f'{indent}self.__dataSource__ = "{data_source}"')
-        lines.append("")
-        return "\n".join(lines)
-
-    new_content = setup_body_pattern.sub(_rewrite_setup, content)
-    if new_content != content:
-        result.add_change("setup() body: replaced manual init with super().setup()")
-        content = new_content
+    # Remove the manual opts merge loop (several patterns)
+    # Pattern 1: for opt in list(userOpts.keys()): self.opts[opt] = userOpts[opt]
+    content, n = re.subn(
+        r'\n\s+for\s+opt\s+in\s+(?:list\()?userOpts(?:\.keys\(\))?(?:\))?\s*:\s*\n\s+self\.opts\[opt\]\s*=\s*userOpts\[opt\]\s*\n',
+        '\n',
+        content,
+    )
+    if n > 0:
+        result.add_change(f"setup() body: removed manual opts merge loop ({n})")
 
     return content
 

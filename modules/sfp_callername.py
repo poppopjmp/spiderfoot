@@ -13,10 +13,11 @@
 import re
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_callername(SpiderFootPlugin):
+class sfp_callername(SpiderFootModernPlugin):
     """SpiderFoot plugin to lookup US phone number location and reputation information."""
 
     meta = {
@@ -53,14 +54,10 @@ class sfp_callername(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['PHONE_NUMBER']
@@ -100,7 +97,7 @@ class sfp_callername(SpiderFootPlugin):
 
         # Query CallerName.com for the specified phone number
         url = f"https://callername.com/{number}"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
         time.sleep(1)

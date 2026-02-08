@@ -15,10 +15,11 @@ import codecs
 import re
 from hashlib import sha256
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_bitcoin(SpiderFootPlugin):
+class sfp_bitcoin(SpiderFootModernPlugin):
     """SpiderFoot plugin to identify bitcoin addresses in scraped webpages."""
     meta = {
         'name': "Bitcoin Finder",
@@ -33,13 +34,9 @@ class sfp_bitcoin(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["TARGET_WEB_CONTENT"]
 

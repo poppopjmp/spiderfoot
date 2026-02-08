@@ -16,10 +16,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_apple_itunes(SpiderFootPlugin):
+class sfp_apple_itunes(SpiderFootModernPlugin):
     """Query Apple iTunes for mobile apps."""
     meta = {
         'name': "Apple iTunes",
@@ -45,13 +46,9 @@ class sfp_apple_itunes(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'DOMAIN_NAME'
@@ -74,7 +71,7 @@ class sfp_apple_itunes(SpiderFootPlugin):
             'term': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://itunes.apple.com/search?{params}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']

@@ -14,10 +14,11 @@ import json
 import re
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_stackoverflow(SpiderFootPlugin):
+class sfp_stackoverflow(SpiderFootModernPlugin):
 
     meta = {
         'name': "StackOverflow",
@@ -61,14 +62,10 @@ class sfp_stackoverflow(SpiderFootPlugin):
     # Tracking the error state of the module
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME"]
@@ -89,7 +86,7 @@ class sfp_stackoverflow(SpiderFootPlugin):
         # The StackOverflow excerpts endpoint will search the site for mentions of a keyword and returns a snippet of relevant results
         if qryType == "excerpts":
             try:
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     f"https://api.stackexchange.com/2.3/search/excerpts?order=desc&q={qry}&site=stackoverflow",
                     timeout=self.opts['_fetchtimeout'],
                     useragent="SpiderFoot"
@@ -103,7 +100,7 @@ class sfp_stackoverflow(SpiderFootPlugin):
         # Questions profile endpoint, used to return displayname
         elif qryType == "questions":
             try:
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     f"https://api.stackexchange.com/2.3/questions/{qry}?order=desc&sort=activity&site=stackoverflow",
                     timeout=self.opts['_fetchtimeout'],
                     useragent="SpiderFoot"

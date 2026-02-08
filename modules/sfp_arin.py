@@ -13,10 +13,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_arin(SpiderFootPlugin):
+class sfp_arin(SpiderFootModernPlugin):
     """SpiderFoot plugin to query the ARIN internet registry for contact information."""
     meta = {
         "name": "ARIN",
@@ -55,7 +56,7 @@ class sfp_arin(SpiderFootPlugin):
     currentEventSrc = None
     keywords = None
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -63,12 +64,9 @@ class sfp_arin(SpiderFootPlugin):
             sfc (SpiderFoot): The SpiderFoot context object.
             userOpts (dict): User-supplied options for the module.
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.currentEventSrc = None
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         """
         Return a list of event types this module is interested in.
@@ -98,7 +96,7 @@ class sfp_arin(SpiderFootPlugin):
             dict or None: The response dict or None if not found.
         """
         head = {"Accept": "application/json"}
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],

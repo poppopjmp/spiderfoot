@@ -17,10 +17,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_mnemonic(SpiderFootPlugin):
+class sfp_mnemonic(SpiderFootModernPlugin):
 
     meta = {
         'name': "Mnemonic PassiveDNS",
@@ -71,15 +72,11 @@ class sfp_mnemonic(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'IP_ADDRESS',
@@ -115,7 +112,7 @@ class sfp_mnemonic(SpiderFootPlugin):
             'offset': offset
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.mnemonic.no/pdns/v3/{qry}?{params}",
             timeout=self.opts['timeout'],
             useragent=self.opts['_useragent']
@@ -279,7 +276,7 @@ class sfp_mnemonic(SpiderFootPlugin):
                 continue
 
             if self.getTarget().matches(co, includeParents=True):
-                if self.opts['verify'] and not self.sf.resolveHost(co) and not self.sf.resolveHost6(co):
+                if self.opts['verify'] and not self.resolve_host(co) and not self.resolve_host6(co):
                     self.debug(f"Host {co} could not be resolved")
                     evt = SpiderFootEvent(
                         "INTERNET_NAME_UNRESOLVED", co, self.__name__, event)

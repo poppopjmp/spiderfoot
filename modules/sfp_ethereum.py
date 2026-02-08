@@ -13,10 +13,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ethereum(SpiderFootPlugin):
+class sfp_ethereum(SpiderFootModernPlugin):
     """SpiderFoot plugin for extracting Ethereum addresses."""
     meta = {
         'name': "Ethereum Address Extractor",
@@ -60,8 +61,8 @@ class sfp_ethereum(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
         self.debug("[setup] Options: {}".format(self.opts))

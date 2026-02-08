@@ -54,7 +54,8 @@ try:
 except ImportError:
     HAS_AUTH_LIBS = False
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class SecurityLevel(Enum):
@@ -737,7 +738,7 @@ class ZeroTrustController:
             }
 
 
-class sfp__security_hardening(SpiderFootPlugin):
+class sfp__security_hardening(SpiderFootModernPlugin):
     """Advanced Security Hardening Module."""
 
     meta = {
@@ -776,14 +777,10 @@ class sfp__security_hardening(SpiderFootPlugin):
         'suspicious_activity_threshold': "Threshold for suspicious activity detection"
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """Set up the security hardening module."""
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         # Check for required libraries
         if self.opts['enable_encryption'] and not HAS_CRYPTOGRAPHY:
             self.error("Cryptography library required for encryption features")

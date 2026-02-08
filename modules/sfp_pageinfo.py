@@ -14,7 +14,8 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 # Indentify pages that use Javascript libs, handle passwords, have forms,
 # permit file uploads and more to come.
@@ -28,7 +29,7 @@ regexps = dict({
 })
 
 
-class sfp_pageinfo(SpiderFootPlugin):
+class sfp_pageinfo(SpiderFootModernPlugin):
 
     meta = {
         'name': "Page Information",
@@ -44,14 +45,10 @@ class sfp_pageinfo(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["TARGET_WEB_CONTENT"]

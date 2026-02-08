@@ -14,10 +14,11 @@
 import json
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_googlemaps(SpiderFootPlugin):
+class sfp_googlemaps(SpiderFootModernPlugin):
 
     meta = {
         'name': "Google Maps",
@@ -59,14 +60,10 @@ class sfp_googlemaps(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['DOMAIN_NAME', 'PHYSICAL_ADDRESS']
 
@@ -79,7 +76,7 @@ class sfp_googlemaps(SpiderFootPlugin):
             'address': address.encode('raw_unicode_escape').decode("ascii", errors='replace')
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://maps.googleapis.com/maps/api/geocode/json?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']

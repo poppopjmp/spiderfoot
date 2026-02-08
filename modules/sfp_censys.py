@@ -20,10 +20,11 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_censys(SpiderFootPlugin):
+class sfp_censys(SpiderFootModernPlugin):
     """SpiderFoot plugin to obtain host information from Censys.io."""
 
     meta = {
@@ -79,13 +80,9 @@ class sfp_censys(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -118,7 +115,7 @@ class sfp_censys(SpiderFootPlugin):
             'Authorization': f"Basic {auth}"
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://search.censys.io/api/v2/hosts/{qry}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -143,7 +140,7 @@ class sfp_censys(SpiderFootPlugin):
             'q': qry,
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://search.censys.io/api/v2/hosts/search/?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",

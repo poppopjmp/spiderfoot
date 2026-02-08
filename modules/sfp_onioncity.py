@@ -13,10 +13,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_onioncity(SpiderFootPlugin):
+class sfp_onioncity(SpiderFootModernPlugin):
 
     meta = {
         'name': "Onion.link",
@@ -65,14 +66,10 @@ class sfp_onioncity(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["INTERNET_NAME", "DOMAIN_NAME"]
@@ -132,7 +129,7 @@ class sfp_onioncity(SpiderFootPlugin):
 
         # Submit the Google results for analysis
         googlesearch_url = res["webSearchUrl"]
-        response = self.sf.fetchUrl(
+        response = self.fetch_url(
             googlesearch_url,
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],
@@ -157,7 +154,7 @@ class sfp_onioncity(SpiderFootPlugin):
             self.debug("Found a darknet mention: " + link)
             torlink = link.replace(".onion.link", ".onion")
             if self.opts['fetchlinks']:
-                res = self.sf.fetchUrl(torlink, timeout=self.opts['_fetchtimeout'],
+                res = self.fetch_url(torlink, timeout=self.opts['_fetchtimeout'],
                                        useragent=self.opts['_useragent'],
                                        verify=False)
                 if res['content'] is None:

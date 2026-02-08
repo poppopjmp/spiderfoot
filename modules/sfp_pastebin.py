@@ -13,10 +13,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_pastebin(SpiderFootPlugin):
+class sfp_pastebin(SpiderFootModernPlugin):
 
     meta = {
         'name': "PasteBin",
@@ -66,14 +67,10 @@ class sfp_pastebin(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME", "INTERNET_NAME", "EMAILADDR"]
@@ -134,7 +131,7 @@ class sfp_pastebin(SpiderFootPlugin):
                 if self.checkForStop():
                     return
 
-                res = self.sf.fetchUrl(link, timeout=self.opts['_fetchtimeout'],
+                res = self.fetch_url(link, timeout=self.opts['_fetchtimeout'],
                                        useragent=self.opts['_useragent'])
 
                 if res['content'] is None:

@@ -13,7 +13,8 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 # Standard headers, taken from http://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 headers = [
@@ -79,7 +80,7 @@ headers = [
 ]
 
 
-class sfp_strangeheaders(SpiderFootPlugin):
+class sfp_strangeheaders(SpiderFootModernPlugin):
     __name__ = "sfp_strangeheaders"
 
     meta = {
@@ -95,14 +96,10 @@ class sfp_strangeheaders(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["WEBSERVER_HTTPHEADERS"]

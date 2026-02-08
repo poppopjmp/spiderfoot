@@ -13,10 +13,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_metadefender(SpiderFootPlugin):
+class sfp_metadefender(SpiderFootModernPlugin):
 
     meta = {
         'name': "MetaDefender",
@@ -62,14 +63,10 @@ class sfp_metadefender(SpiderFootPlugin):
     errorState = False
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['IP_ADDRESS', 'INTERNET_NAME']
@@ -91,7 +88,7 @@ class sfp_metadefender(SpiderFootPlugin):
             'Accept': 'application/json',
             'apikey': self.opts['api_key']
         }
-        res = self.sf.fetchUrl('https://api.metadefender.com/v4/domain/' + qry,
+        res = self.fetch_url('https://api.metadefender.com/v4/domain/' + qry,
                                headers=headers,
                                timeout=15,
                                useragent=self.opts['_useragent'])
@@ -107,7 +104,7 @@ class sfp_metadefender(SpiderFootPlugin):
             'Accept': 'application/json',
             'apikey': self.opts['api_key']
         }
-        res = self.sf.fetchUrl('https://api.metadefender.com/v4/ip/' + qry,
+        res = self.fetch_url('https://api.metadefender.com/v4/ip/' + qry,
                                headers=headers,
                                timeout=15,
                                useragent=self.opts['_useragent'])

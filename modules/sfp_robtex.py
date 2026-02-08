@@ -15,10 +15,11 @@ import time
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_robtex(SpiderFootPlugin):
+class sfp_robtex(SpiderFootModernPlugin):
 
     meta = {
         'name': "Robtex",
@@ -71,15 +72,11 @@ class sfp_robtex(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
         self.cohostcount = 0
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -162,7 +159,7 @@ class sfp_robtex(SpiderFootPlugin):
                 if self.checkForStop():
                     return
 
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     "https://freeapi.robtex.com/ipquery/" + ip, timeout=self.opts['_fetchtimeout'])
 
                 if res['code'] == "200":

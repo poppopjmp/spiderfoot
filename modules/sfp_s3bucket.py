@@ -16,10 +16,11 @@ import threading
 import time
 
 from urllib.parse import urlparse
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_s3bucket(SpiderFootPlugin):
+class sfp_s3bucket(SpiderFootModernPlugin):
     meta = {
         "name": "Amazon S3 Bucket Finder",
         "summary": "Search for potential Amazon S3 buckets associated with the target and attempt to list their contents.",
@@ -54,15 +55,11 @@ class sfp_s3bucket(SpiderFootPlugin):
     s3results = dict()
     lock = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.s3results = dict()
         self.results = self.tempStorage()
         self.lock = threading.Lock()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME", "LINKED_URL_EXTERNAL"]
@@ -72,7 +69,7 @@ class sfp_s3bucket(SpiderFootPlugin):
         return ["CLOUD_STORAGE_BUCKET", "CLOUD_STORAGE_BUCKET_OPEN"]
 
     def checkSite(self, url):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
 
         if not res["content"]:

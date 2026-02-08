@@ -20,10 +20,11 @@ import urllib.request
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_hackertarget(SpiderFootPlugin):
+class sfp_hackertarget(SpiderFootModernPlugin):
 
     meta = {
         'name': "HackerTarget",
@@ -70,15 +71,11 @@ class sfp_hackertarget(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -113,7 +110,7 @@ class sfp_hackertarget(SpiderFootPlugin):
             'q': ip
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.hackertarget.com/httpheaders/?{params}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']
@@ -157,7 +154,7 @@ class sfp_hackertarget(SpiderFootPlugin):
             'q': ip
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.hackertarget.com/zonetransfer/?{params}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']
@@ -197,7 +194,7 @@ class sfp_hackertarget(SpiderFootPlugin):
             'q': ip
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.hackertarget.com/reverseiplookup/?{params}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']
@@ -285,7 +282,7 @@ class sfp_hackertarget(SpiderFootPlugin):
                     else:
                         evt_type = 'AFFILIATE_INTERNET_NAME'
 
-                    if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                    if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                         self.debug(f"Host {host} could not be resolved")
                         evt_type += '_UNRESOLVED'
 

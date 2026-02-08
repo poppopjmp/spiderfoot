@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_whatsapp(SpiderFootPlugin):
+class sfp_whatsapp(SpiderFootModernPlugin):
     meta = {
         'name': "WhatsApp Monitor",
         'summary': "Monitors WhatsApp for new messages and emits events.",
@@ -31,8 +32,8 @@ class sfp_whatsapp(SpiderFootPlugin):
         "max_messages": "Maximum number of messages to fetch per number."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):

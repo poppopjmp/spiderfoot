@@ -18,10 +18,11 @@ import time
 from queue import Empty as QueueEmpty
 from queue import Queue
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_accounts(SpiderFootPlugin):
+class sfp_accounts(SpiderFootModernPlugin):
     """Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc."""
     meta = {
         'name': "Account Finder",
@@ -60,8 +61,8 @@ class sfp_accounts(SpiderFootPlugin):
     distrustedChecked = False
     lock = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.commonNames = list()
         self.reportedUsers = list()
@@ -69,17 +70,13 @@ class sfp_accounts(SpiderFootPlugin):
         self.distrustedChecked = False
         self.__dataSource__ = "Social Media"
         self.lock = threading.Lock()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         self.commonNames = SpiderFootHelpers.humanNamesFromWordlists()
         self.words = SpiderFootHelpers.dictionaryWordsFromWordlists()
 
         content = self.sf.cacheGet("sfaccountsv2", 48)
         if content is None:
             url = "https://raw.githubusercontent.com/WebBreacher/WhatsMyName/main/wmn-data.json"
-            data = self.sf.fetchUrl(url, useragent="SpiderFoot")
+            data = self.fetch_url(url, useragent="SpiderFoot")
 
             if data['content'] is None:
                 self.error(f"Unable to fetch {url}")
@@ -119,7 +116,7 @@ class sfp_accounts(SpiderFootPlugin):
         if site.get('post_body'):
             post = site['post_body']
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             postData=post,
             timeout=self.opts['_fetchtimeout'],

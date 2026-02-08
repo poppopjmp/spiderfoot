@@ -13,10 +13,11 @@ import base64
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dehashed(SpiderFootPlugin):
+class sfp_dehashed(SpiderFootModernPlugin):
     """Dehashed API integration for SpiderFoot"""
 
     __name__ = "sfp_dehashed"
@@ -71,13 +72,9 @@ class sfp_dehashed(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -109,7 +106,7 @@ class sfp_dehashed(SpiderFootPlugin):
             'Authorization': f'Basic {token}'
         }
 
-        res = self.sf.fetchUrl(queryString,
+        res = self.fetch_url(queryString,
                                headers=headers,
                                timeout=15,
                                useragent=self.opts['_useragent'],
@@ -121,7 +118,7 @@ class sfp_dehashed(SpiderFootPlugin):
             self.error(
                 "Too many requests were performed in a small amount of time. Please wait a bit before querying the API.")
             time.sleep(5)
-            res = self.sf.fetchUrl(queryString, headers=headers, timeout=15,
+            res = self.fetch_url(queryString, headers=headers, timeout=15,
                                    useragent=self.opts['_useragent'], verify=True)
 
         if res['code'] == "401":

@@ -14,10 +14,11 @@ import re
 
 from bs4 import BeautifulSoup
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_reversewhois(SpiderFootPlugin):
+class sfp_reversewhois(SpiderFootModernPlugin):
 
     meta = {
         "name": "ReverseWhois",
@@ -45,17 +46,13 @@ class sfp_reversewhois(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME"]
@@ -68,7 +65,7 @@ class sfp_reversewhois(SpiderFootPlugin):
     def query(self, qry):
         url = f"https://reversewhois.io?searchterm={qry}"
 
-        res = self.sf.fetchUrl(url, timeout=self.opts.get("_fetchtimeout", 30))
+        res = self.fetch_url(url, timeout=self.opts.get("_fetchtimeout", 30))
 
         if res["code"] not in ["200"]:
             self.error("You may have exceeded ReverseWhois usage limits.")

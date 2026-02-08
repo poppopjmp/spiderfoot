@@ -16,10 +16,11 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_threatminer(SpiderFootPlugin):
+class sfp_threatminer(SpiderFootModernPlugin):
 
     meta = {
         'name': "ThreatMiner",
@@ -73,8 +74,8 @@ class sfp_threatminer(SpiderFootPlugin):
     reportedhosts = None
     checkedips = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.reportedhosts = self.tempStorage()
         self.checkedips = self.tempStorage()
@@ -82,10 +83,6 @@ class sfp_threatminer(SpiderFootPlugin):
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["IP_ADDRESS", "DOMAIN_NAME", "NETBLOCK_OWNER",
@@ -108,7 +105,7 @@ class sfp_threatminer(SpiderFootPlugin):
 
         threatminerurl = "https://api.threatminer.org"
         url = threatminerurl + queryurl.format(qry)
-        res = self.sf.fetchUrl(url, timeout=10, useragent="SpiderFoot")
+        res = self.fetch_url(url, timeout=10, useragent="SpiderFoot")
 
         if res['content'] is None:
             self.info("No ThreatMiner info found for " + qry)
@@ -198,7 +195,7 @@ class sfp_threatminer(SpiderFootPlugin):
                 if host == eventData:
                     continue
                 if self.getTarget().matches(host, includeParents=True):
-                    if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                    if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                         evt = SpiderFootEvent(
                             "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
                     else:
@@ -232,7 +229,7 @@ class sfp_threatminer(SpiderFootPlugin):
 
                 self.reportedhosts[host] = True
 
-                if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                     evt = SpiderFootEvent(
                         "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
                 else:

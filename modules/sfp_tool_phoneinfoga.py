@@ -4,9 +4,10 @@ SpiderFoot plug-in for using the PhoneInfoga tool (https://github.com/sundowndev
 """
 import json
 import time
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_tool_phoneinfoga(SpiderFootPlugin):
+class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
     meta = {
         "name": "Tools - PhoneInfoga",
         "summary": "Gather phone number intelligence using PhoneInfoga.",
@@ -66,12 +67,9 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["PHONE_NUMBER"]
 
@@ -152,7 +150,7 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
         delay = int(self.opts.get("retry_delay", 2))
         for attempt in range(retries + 1):
             try:
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     url,
                     postData=data,
                     headers=headers,

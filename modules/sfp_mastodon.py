@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_mastodon(SpiderFootPlugin):
+class sfp_mastodon(SpiderFootModernPlugin):
     meta = {
         'name': "Mastodon Monitor",
         'summary': "Monitors Mastodon for posts and emits events.",
@@ -38,8 +39,8 @@ class sfp_mastodon(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation

@@ -17,10 +17,11 @@ import shutil
 import tempfile
 from subprocess import Popen, PIPE, TimeoutExpired
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_retirejs(SpiderFootPlugin):
+class sfp_tool_retirejs(SpiderFootModernPlugin):
 
     meta = {
         "name": "Tool - Retire.js",
@@ -50,13 +51,9 @@ class sfp_tool_retirejs(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["LINKED_URL_INTERNAL", "LINKED_URL_EXTERNAL"]
 
@@ -106,7 +103,7 @@ class sfp_tool_retirejs(SpiderFootPlugin):
 
         # Store the javascript file being analyzed somewhere temporary
         tmpdirname = tempfile.mkdtemp()
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             eventData,
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],

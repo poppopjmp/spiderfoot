@@ -26,10 +26,11 @@ import re
 import time
 from typing import Dict, List, Optional, Any
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tiktok_osint(SpiderFootPlugin):
+class sfp_tiktok_osint(SpiderFootModernPlugin):
     """TikTok OSINT intelligence gathering module."""
 
     meta = {
@@ -85,14 +86,10 @@ class sfp_tiktok_osint(SpiderFootPlugin):
     results = None
     errorState = False
     
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-        
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "SOCIAL_MEDIA_PROFILE_URL",
@@ -209,7 +206,7 @@ class sfp_tiktok_osint(SpiderFootPlugin):
         # Respect rate limiting
         time.sleep(self.opts['rate_limit_delay'])
         
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             profile_url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']

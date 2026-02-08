@@ -14,10 +14,11 @@
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_uceprotect(SpiderFootPlugin):
+class sfp_uceprotect(SpiderFootModernPlugin):
 
     meta = {
         'name': "UCEPROTECT",
@@ -57,13 +58,9 @@ class sfp_uceprotect(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'IP_ADDRESS',
@@ -104,7 +101,7 @@ class sfp_uceprotect(SpiderFootPlugin):
         try:
             lookup = self.reverseAddr(qaddr) + '.dnsbl-1.uceprotect.net'
             self.debug(f"Checking UCEPROTECT blacklist: {lookup}")
-            return self.sf.resolveHost(lookup)
+            return self.resolve_host(lookup)
         except Exception as e:
             self.debug(f"UCEPROTECT did not resolve {qaddr} / {lookup}: {e}")
 
@@ -126,7 +123,7 @@ class sfp_uceprotect(SpiderFootPlugin):
         try:
             lookup = self.reverseAddr(qaddr) + '.dnsbl-2.uceprotect.net'
             self.debug(f"Checking UCEPROTECT blacklist: {lookup}")
-            return self.sf.resolveHost(lookup)
+            return self.resolve_host(lookup)
         except Exception as e:
             self.debug(f"UCEPROTECT did not resolve {qaddr} / {lookup}: {e}")
 

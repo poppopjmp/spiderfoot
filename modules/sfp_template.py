@@ -14,10 +14,11 @@ import json
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_template(SpiderFootPlugin):
+class sfp_template(SpiderFootModernPlugin):
     # The module descriptor dictionary contains all the meta data about a module necessary
     # for users to understand...
     meta = {
@@ -181,8 +182,8 @@ class sfp_template(SpiderFootPlugin):
     # has failed and you don't wish to process any more events.
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         # self.tempStorage() basically returns a dict(), but we use self.tempStorage()
         # instead since on SpiderFoot HX, different mechanisms are used to persist
         # data for load distribution, avoiding excess memory consumption and fault
@@ -198,10 +199,6 @@ class sfp_template(SpiderFootPlugin):
         # data itself, you can do so with the following. Note that this is only
         # utilised in SpiderFoot  and not the open source version.
         self.__dataSource__ = "Some Data Source"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # For a list of all events, check spiderfoot/db.py.
     def watchedEvents(self):
@@ -233,7 +230,7 @@ class sfp_template(SpiderFootPlugin):
         # from global config), and the user agent is SpiderFoot so that the
         # provider knows the request comes from the tool. Many third parties
         # request that, so best to just be consistent anyway.
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.shodan.io/shodan/host/{qry}?key={self.opts['api_key']}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"

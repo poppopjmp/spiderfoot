@@ -13,10 +13,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_fsecure_riddler(SpiderFootPlugin):
+class sfp_fsecure_riddler(SpiderFootModernPlugin):
     """SpiderFoot plugin for querying F-Secure Riddler.io API."""
     __name__ = "sfp_fsecure_riddler"
     meta = {
@@ -63,13 +64,9 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
     token = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['DOMAIN_NAME', 'INTERNET_NAME',
                 'INTERNET_NAME_UNRESOLVED', 'IP_ADDRESS']
@@ -91,7 +88,7 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
             'Content-Type': 'application/json',
         }
 
-        res = self.sf.fetchUrl('https://riddler.io/auth/login',
+        res = self.fetch_url('https://riddler.io/auth/login',
                                postData=json.dumps(params),
                                headers=headers,
                                useragent=self.opts['_useragent'],
@@ -132,7 +129,7 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
             'Content-Type': 'application/json',
         }
 
-        res = self.sf.fetchUrl('https://riddler.io/api/search',
+        res = self.fetch_url('https://riddler.io/api/search',
                                postData=json.dumps(params),
                                headers=headers,
                                useragent=self.opts['_useragent'],
@@ -244,7 +241,7 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
             else:
                 evt_type = 'AFFILIATE_INTERNET_NAME'
 
-            if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+            if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                 self.debug(f"Host {host} could not be resolved")
                 evt_type += '_UNRESOLVED'
 

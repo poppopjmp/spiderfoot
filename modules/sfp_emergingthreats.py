@@ -13,10 +13,11 @@
 
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_emergingthreats(SpiderFootPlugin):
+class sfp_emergingthreats(SpiderFootModernPlugin):
     """SpiderFoot plugin for checking IP addresses against EmergingThreats.net."""
     meta = {
         'name': "Emerging Threats",
@@ -58,14 +59,10 @@ class sfp_emergingthreats(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -95,7 +92,7 @@ class sfp_emergingthreats(SpiderFootPlugin):
             "sfmal_" + cid, self.opts.get('cacheperiod', 0))
 
         if data["content"] is None:
-            data = self.sf.fetchUrl(
+            data = self.fetch_url(
                 url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
             if data["code"] != "200":

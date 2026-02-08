@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_xiaohongshu(SpiderFootPlugin):
+class sfp_xiaohongshu(SpiderFootModernPlugin):
     meta = {
         'name': "Xiaohongshu (Little Red Book) Monitor",
         'summary': "Monitors Xiaohongshu for new posts and emits events.",
@@ -28,8 +29,8 @@ class sfp_xiaohongshu(SpiderFootPlugin):
         "max_posts": "Maximum number of posts to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):

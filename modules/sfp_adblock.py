@@ -13,10 +13,11 @@
 
 import adblockparser
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_adblock(SpiderFootPlugin):
+class sfp_adblock(SpiderFootModernPlugin):
     """SpiderFoot plug-in to test if external/internally linked pages
     would be blocked by AdBlock Plus."""
     meta = {
@@ -62,15 +63,11 @@ class sfp_adblock(SpiderFootPlugin):
     rules = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.rules = None
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["LINKED_URL_INTERNAL", "LINKED_URL_EXTERNAL", "PROVIDER_JAVASCRIPT"]
@@ -88,7 +85,7 @@ class sfp_adblock(SpiderFootPlugin):
         if blocklist is not None:
             return self.setBlocklistRules(blocklist)
 
-        res = self.sf.fetchUrl(blocklist_url, timeout=30)
+        res = self.fetch_url(blocklist_url, timeout=30)
 
         if res['code'] != "200":
             self.error(

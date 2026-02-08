@@ -15,10 +15,11 @@ import re
 
 from bs4 import BeautifulSoup
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsdumpster(SpiderFootPlugin):
+class sfp_dnsdumpster(SpiderFootModernPlugin):
     """SpiderFoot plugin for passive subdomain enumeration using HackerTarget's DNSDumpster."""
     meta = {
         "name": "DNSDumpster",
@@ -38,8 +39,8 @@ class sfp_dnsdumpster(SpiderFootPlugin):
     # Option descriptions
     optdescs = {}
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.debug("Setting up sfp_dnsdumpster")
         self.results = self.tempStorage()
         self.opts.update(userOpts)
@@ -54,7 +55,7 @@ class sfp_dnsdumpster(SpiderFootPlugin):
         ret = []
         # first, get the CSRF tokens
         url = "https://dnsdumpster.com"
-        res1 = self.sf.fetchUrl(
+        res1 = self.fetch_url(
             url,
             useragent=self.opts.get("_useragent", "Spiderfoot")
         )
@@ -88,7 +89,7 @@ class sfp_dnsdumpster(SpiderFootPlugin):
         # Otherwise, do the needful
         url = "https://dnsdumpster.com/"
         subdomains = set()
-        res2 = self.sf.fetchUrl(
+        res2 = self.fetch_url(
             url,
             cookies={
                 "csrftoken": csrftoken
@@ -118,7 +119,7 @@ class sfp_dnsdumpster(SpiderFootPlugin):
         return list(subdomains)
 
     def sendEvent(self, source, host):
-        if self.sf.resolveHost(host) or self.sf.resolveHost6(host):
+        if self.resolve_host(host) or self.resolve_host6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)
         else:
             e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED",

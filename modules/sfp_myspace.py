@@ -11,10 +11,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_myspace(SpiderFootPlugin):
+class sfp_myspace(SpiderFootModernPlugin):
 
     meta = {
         'name': "MySpace",
@@ -46,14 +47,10 @@ class sfp_myspace(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.__dataSource__ = "MySpace.com"
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["EMAILADDR", "SOCIAL_MEDIA"]
 
@@ -75,7 +72,7 @@ class sfp_myspace(SpiderFootPlugin):
         # Search by email address
         if eventName == "EMAILADDR":
             email = eventData
-            res = self.sf.fetchUrl("https://myspace.com/search/people?q=" + email,
+            res = self.fetch_url("https://myspace.com/search/people?q=" + email,
                                    timeout=self.opts['_fetchtimeout'],
                                    useragent=self.opts['_useragent'])
 
@@ -130,7 +127,7 @@ class sfp_myspace(SpiderFootPlugin):
                     f"Skipping social network profile, {url}, as not a MySpace profile")
                 return
 
-            res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+            res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                    useragent=self.opts['_useragent'])
 
             if res['content'] is None:

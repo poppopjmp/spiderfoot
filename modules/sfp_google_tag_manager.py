@@ -15,10 +15,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_google_tag_manager(SpiderFootPlugin):
+class sfp_google_tag_manager(SpiderFootModernPlugin):
     """SpiderFoot plugin to search Google Tag Manager (GTM) for hosts sharing the same GTM code."""
     __name__ = "sfp_google_tag_manager"
     meta = {
@@ -53,13 +54,9 @@ class sfp_google_tag_manager(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['WEB_ANALYTICS_ID']
 
@@ -90,7 +87,7 @@ class sfp_google_tag_manager(SpiderFootPlugin):
             'id': tag_id,
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://googletagmanager.com/gtm.js?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']
@@ -161,7 +158,7 @@ class sfp_google_tag_manager(SpiderFootPlugin):
 
         for host in hosts:
             # we ignore unresolved hosts due to large number of false positives
-            if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+            if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                 self.debug(
                     f"Potential host name '{host}' could not be resolved")
                 continue

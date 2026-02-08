@@ -18,10 +18,11 @@ import urllib.request
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_virustotal(SpiderFootPlugin):
+class sfp_virustotal(SpiderFootModernPlugin):
 
     meta = {
         'name': "VirusTotal",
@@ -81,13 +82,9 @@ class sfp_virustotal(SpiderFootPlugin):
     def __init__(self):
         super().__init__()
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -119,7 +116,7 @@ class sfp_virustotal(SpiderFootPlugin):
             'apikey': self.opts['api_key'],
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://www.virustotal.com/vtapi/v2/ip-address/report?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"
@@ -147,7 +144,7 @@ class sfp_virustotal(SpiderFootPlugin):
             'apikey': self.opts['api_key'],
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://www.virustotal.com/vtapi/v2/domain/report?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"
@@ -300,7 +297,7 @@ class sfp_virustotal(SpiderFootPlugin):
                 else:
                     evt_type = 'AFFILIATE_INTERNET_NAME'
 
-                if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+                if self.opts['verify'] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                     self.debug(f"Host {domain} could not be resolved")
                     evt_type += '_UNRESOLVED'
 

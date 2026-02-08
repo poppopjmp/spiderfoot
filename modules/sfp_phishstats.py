@@ -18,10 +18,11 @@ import urllib.request
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_phishstats(SpiderFootPlugin):
+class sfp_phishstats(SpiderFootModernPlugin):
 
     meta = {
         'name': "PhishStats",
@@ -59,14 +60,10 @@ class sfp_phishstats(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'IP_ADDRESS',
@@ -100,7 +97,7 @@ class sfp_phishstats(SpiderFootPlugin):
             'Accept': "application/json",
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://phishstats.info:2096/api/phishing?' +
             urllib.parse.urlencode(params),
             headers=headers,

@@ -14,10 +14,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_luminar(SpiderFootPlugin):
+class sfp_luminar(SpiderFootModernPlugin):
 
     meta = {
         'name': "Luminar",
@@ -57,13 +58,9 @@ class sfp_luminar(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['DOMAIN_NAME', 'INTERNET_NAME', 'IP_ADDRESS']
 
@@ -76,7 +73,7 @@ class sfp_luminar(SpiderFootPlugin):
             'Content-Type': 'application/json',
         }
 
-        res = self.sf.fetchUrl(f'https://api.luminar.com/v4/threats?q={qry}',
+        res = self.fetch_url(f'https://api.luminar.com/v4/threats?q={qry}',
                                headers=headers,
                                useragent=self.opts['_useragent'],
                                timeout=self.opts['_fetchtimeout'])

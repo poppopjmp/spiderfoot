@@ -12,10 +12,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_whoisfreaks(SpiderFootPlugin):
+class sfp_whoisfreaks(SpiderFootModernPlugin):
     meta = {
         'name': "WhoisFreaks",
         'summary': "Reverse Whois Lookup by owner email or name or company name",
@@ -60,13 +61,9 @@ class sfp_whoisfreaks(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -89,7 +86,7 @@ class sfp_whoisfreaks(SpiderFootPlugin):
             self.opts['api_key']
         url += "&" + querytype + "=" + qry + "&page=" + str(page)
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+        res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                useragent="SpiderFoot")
 
         if res['code'] in ["401", "429", "413", "412"]:

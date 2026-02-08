@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_unwiredlabs(SpiderFootPlugin):
+class sfp_unwiredlabs(SpiderFootModernPlugin):
     meta = {
         'name': "UnwiredLabs Geolocation API",
         'summary': "Queries UnwiredLabs for geolocation data based on cell towers, WiFi, or IP.",
@@ -38,8 +39,8 @@ class sfp_unwiredlabs(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation

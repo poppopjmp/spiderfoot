@@ -45,7 +45,7 @@ try:
 except ImportError:
     HAS_ELASTICSEARCH = False
 
-from spiderfoot import SpiderFootPlugin
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 @dataclass
@@ -540,7 +540,7 @@ class AutoScaler:
             self.load_balancer.health_status[pool_id] = False
 
 
-class sfp__stor_db_advanced(SpiderFootPlugin):
+class sfp__stor_db_advanced(SpiderFootModernPlugin):
     """Advanced enterprise storage module Advanced features."""
 
     meta = {
@@ -577,9 +577,9 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
         'database_configs': "List of database configurations for load balancing"
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         """Set up the advanced storage module."""
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.event_buffer = []
         self.buffer_lock = threading.Lock()
@@ -591,10 +591,6 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
             return
             
         self.__sfdb__ = self.sf.dbh
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         # Initialize enterprise components
         self._initialize_enterprise_features()
         

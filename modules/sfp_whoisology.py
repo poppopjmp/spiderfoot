@@ -12,10 +12,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_whoisology(SpiderFootPlugin):
+class sfp_whoisology(SpiderFootModernPlugin):
 
     meta = {
         'name': "Whoisology",
@@ -61,16 +62,12 @@ class sfp_whoisology(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["EMAILADDR"]
@@ -86,7 +83,7 @@ class sfp_whoisology(SpiderFootPlugin):
         url += "&field=" + querytype + "&value=" + qry + \
             "&level=Registrant|Admin|Tec|Billing|Other"
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+        res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                useragent="SpiderFoot")
 
         if res['code'] in ["400", "429", "500", "403"]:

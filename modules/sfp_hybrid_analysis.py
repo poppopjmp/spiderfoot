@@ -13,10 +13,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_hybrid_analysis(SpiderFootPlugin):
+class sfp_hybrid_analysis(SpiderFootModernPlugin):
 
     meta = {
         'name': "Hybrid Analysis",
@@ -62,14 +63,10 @@ class sfp_hybrid_analysis(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["IP_ADDRESS", "DOMAIN_NAME"]
 
@@ -93,7 +90,7 @@ class sfp_hybrid_analysis(SpiderFootPlugin):
             "Accept": "application/json",
             'api-key': self.opts['api_key']
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://www.hybrid-analysis.com/api/v2/search/terms',
             headers=headers,
             timeout=15,
@@ -122,7 +119,7 @@ class sfp_hybrid_analysis(SpiderFootPlugin):
             "Accept": "application/json",
             'api-key': self.opts['api_key']
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://www.hybrid-analysis.com/api/v2/search/terms',
             headers=headers,
             timeout=15,
@@ -151,7 +148,7 @@ class sfp_hybrid_analysis(SpiderFootPlugin):
             "Accept": "application/json",
             'api-key': self.opts['api_key']
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://www.hybrid-analysis.com/api/v2/search/hash',
             headers=headers,
             timeout=15,
@@ -307,7 +304,7 @@ class sfp_hybrid_analysis(SpiderFootPlugin):
             if not self.getTarget().matches(domain, includeChildren=True, includeParents=True):
                 continue
 
-            if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+            if self.opts['verify'] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                 self.debug(f"Host {domain} could not be resolved")
                 evt = SpiderFootEvent(
                     "INTERNET_NAME_UNRESOLVED", domain, self.__name__, event)

@@ -8,7 +8,7 @@ try:
 except ImportError:
     TelegramClient = None
 
-class sfp_telegram(SpiderFootPlugin):
+class sfp_telegram(SpiderFootModernPlugin):
     meta = {
         'name': "Telegram Channel Monitor",
         'summary': "Monitors specified Telegram channels for new messages and emits events.",
@@ -46,7 +46,7 @@ class sfp_telegram(SpiderFootPlugin):
         self._last_message_ids = {}
         self._emitted_message_ids = set()  # For deduplication
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc, userOpts=None):
         super().setup(sfc, userOpts)
         if not TelegramClient:
             self.error("telethon library is not installed. Please add it to requirements.txt.")

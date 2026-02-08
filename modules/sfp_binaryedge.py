@@ -15,10 +15,11 @@ import time
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_binaryedge(SpiderFootPlugin):
+class sfp_binaryedge(SpiderFootModernPlugin):
     """SpiderFoot plugin to query BinaryEdge API."""
 
     meta = {
@@ -85,17 +86,13 @@ class sfp_binaryedge(SpiderFootPlugin):
     reportedhosts = None
     checkedips = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.reportedhosts = self.tempStorage()
         self.checkedips = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "IP_ADDRESS",
@@ -149,7 +146,7 @@ class sfp_binaryedge(SpiderFootPlugin):
             'X-Key': self.opts['binaryedge_api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.binaryedge.io/v2/query/{queryurl}/{qry}?page={page}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -274,7 +271,7 @@ class sfp_binaryedge(SpiderFootPlugin):
                         continue
 
                     if self.getTarget().matches(host, includeParents=True):
-                        if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                        if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                             continue
 
                         evt = SpiderFootEvent(
@@ -312,7 +309,7 @@ class sfp_binaryedge(SpiderFootPlugin):
 
                     self.reportedhosts[rec] = True
 
-                    if self.opts['verify'] and not self.sf.resolveHost(rec) and not self.sf.resolveHost6(rec):
+                    if self.opts['verify'] and not self.resolve_host(rec) and not self.resolve_host6(rec):
                         self.debug(f"Couldn't resolve {rec}, so skipping.")
                         continue
 

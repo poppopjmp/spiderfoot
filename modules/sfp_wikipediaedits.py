@@ -18,10 +18,11 @@ import urllib.parse
 import urllib.request
 from html.parser import HTMLParser
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_wikipediaedits(SpiderFootPlugin):
+class sfp_wikipediaedits(SpiderFootModernPlugin):
 
     meta = {
         'name': "Wikipedia Edits",
@@ -54,14 +55,10 @@ class sfp_wikipediaedits(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Wikipedia"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["IP_ADDRESS", "USERNAME"]
 
@@ -80,7 +77,7 @@ class sfp_wikipediaedits(SpiderFootPlugin):
             params["year"] = dt.strftime("%Y")
             params["month"] = dt.strftime("%m")
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://en.wikipedia.org/w/api.php?{urllib.parse.urlencode(params)}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"

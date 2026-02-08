@@ -11,10 +11,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_openbugbounty(SpiderFootPlugin):
+class sfp_openbugbounty(SpiderFootModernPlugin):
 
     meta = {
         'name': "Open Bug Bounty",
@@ -53,16 +54,12 @@ class sfp_openbugbounty(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["INTERNET_NAME"]
@@ -76,7 +73,7 @@ class sfp_openbugbounty(SpiderFootPlugin):
         ret = list()
         base = "https://www.openbugbounty.org"
         url = "https://www.openbugbounty.org/search/?search=" + qry
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=30, useragent=self.opts['_useragent'])
 
         if res['content'] is None:

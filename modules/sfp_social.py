@@ -12,7 +12,8 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 regexps = dict({
     "LinkedIn (Individual)": list(['.*linkedin.com/in/([a-zA-Z0-9_]+$)']),
@@ -33,7 +34,7 @@ regexps = dict({
 })
 
 
-class sfp_social(SpiderFootPlugin):
+class sfp_social(SpiderFootModernPlugin):
     __name__ = "sfp_social"
 
     meta = {
@@ -51,14 +52,10 @@ class sfp_social(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["LINKED_URL_EXTERNAL"]
 

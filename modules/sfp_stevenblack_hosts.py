@@ -11,10 +11,11 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_stevenblack_hosts(SpiderFootPlugin):
+class sfp_stevenblack_hosts(SpiderFootModernPlugin):
 
     meta = {
         'name': "Steven Black Hosts",
@@ -45,14 +46,10 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "INTERNET_NAME",
@@ -90,7 +87,7 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
             return self.parseBlocklist(blocklist)
 
         url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],

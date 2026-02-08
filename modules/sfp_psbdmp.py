@@ -12,10 +12,11 @@
 import json
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_psbdmp(SpiderFootPlugin):
+class sfp_psbdmp(SpiderFootModernPlugin):
 
     meta = {
         'name': "Psbdmp",
@@ -43,13 +44,9 @@ class sfp_psbdmp(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["EMAILADDR", "DOMAIN_NAME", "INTERNET_NAME"]
 
@@ -64,7 +61,7 @@ class sfp_psbdmp(SpiderFootPlugin):
         else:
             url = "https://psbdmp.cc/api/search/domain/" + qry
 
-        res = self.sf.fetchUrl(url, timeout=15, useragent="SpiderFoot")
+        res = self.fetch_url(url, timeout=15, useragent="SpiderFoot")
 
         if res['code'] == "403" or res['content'] is None:
             self.info("Unable to fetch data from psbdmp.cc right now.")
@@ -109,7 +106,7 @@ class sfp_psbdmp(SpiderFootPlugin):
             e = SpiderFootEvent("LEAKSITE_URL", n, self.__name__, event)
             self.notifyListeners(e)
 
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 n,
                 timeout=self.opts['_fetchtimeout'],
                 useragent=self.opts['_useragent']

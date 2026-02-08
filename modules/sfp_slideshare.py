@@ -11,10 +11,11 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_slideshare(SpiderFootPlugin):
+class sfp_slideshare(SpiderFootModernPlugin):
 
     meta = {
         'name': "SlideShare",
@@ -47,13 +48,9 @@ class sfp_slideshare(SpiderFootPlugin):
     optdescs = {
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["SOCIAL_MEDIA"]
@@ -93,7 +90,7 @@ class sfp_slideshare(SpiderFootPlugin):
                 f"Skipping social network profile, {url}, as not a SlideShare profile")
             return
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']

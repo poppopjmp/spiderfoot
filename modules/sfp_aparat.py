@@ -1,6 +1,7 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
-class sfp_aparat(SpiderFootPlugin):
+class sfp_aparat(SpiderFootModernPlugin):
     """Monitors Aparat for new videos and emits events."""
     meta = {
         'name': "Aparat Monitor",
@@ -29,8 +30,8 @@ class sfp_aparat(SpiderFootPlugin):
         "max_videos": "Maximum number of videos to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):
@@ -63,7 +64,7 @@ class sfp_aparat(SpiderFootPlugin):
             url = f"https://www.aparat.com/{username}/videos"
             self.debug(f"Fetching Aparat videos for user: {username} from {url}")
             try:
-                res = self.sf.fetchUrl(url, timeout=15)
+                res = self.fetch_url(url, timeout=15)
                 if not res or res.get('code') != '200' or not res.get('content'):
                     self.error(f"Failed to fetch Aparat videos for user {username}. HTTP code: {res.get('code') if res else 'None'}")
                     continue

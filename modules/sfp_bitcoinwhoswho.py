@@ -13,10 +13,11 @@
 import json
 import urllib.parse
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_bitcoinwhoswho(SpiderFootPlugin):
+class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
     """SpiderFoot plugin to check Bitcoin addresses against the Bitcoin Who's Who database of suspect/malicious addresses."""
     meta = {
         'name': "Bitcoin Who's Who",
@@ -60,7 +61,7 @@ class sfp_bitcoinwhoswho(SpiderFootPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         if userOpts:
@@ -74,7 +75,7 @@ class sfp_bitcoinwhoswho(SpiderFootPlugin):
 
     def query(self, qry):
         qs = urllib.parse.urlencode({"address": qry})
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://bitcoinwhoswho.com/api/scam/{self.opts['api_key']}?{qs}",
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",

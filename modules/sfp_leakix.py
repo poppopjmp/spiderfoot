@@ -13,10 +13,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_leakix(SpiderFootPlugin):
+class sfp_leakix(SpiderFootModernPlugin):
 
     meta = {
         'name': "LeakIX",
@@ -63,14 +64,10 @@ class sfp_leakix(SpiderFootPlugin):
     errorState = False
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["IP_ADDRESS", "DOMAIN_NAME"]
@@ -88,7 +85,7 @@ class sfp_leakix(SpiderFootPlugin):
             "Accept": "application/json",
             "api-key": self.opts["api_key"]
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://leakix.net/' + qryType + '/' + qry,
             headers=headers,
             timeout=15,
@@ -179,7 +176,7 @@ class sfp_leakix(SpiderFootPlugin):
                     ipevt = None
                     hostname = service.get('host')
                     if hostname and eventName == "DOMAIN_NAME" and self.getTarget().matches(hostname) and hostname not in hosts:
-                        if self.opts["verify"] and not self.sf.resolveHost(hostname) and not self.sf.resolveHost6(hostname):
+                        if self.opts["verify"] and not self.resolve_host(hostname) and not self.resolve_host6(hostname):
                             self.debug(
                                 f"Host {hostname} could not be resolved")
                             evt = SpiderFootEvent(

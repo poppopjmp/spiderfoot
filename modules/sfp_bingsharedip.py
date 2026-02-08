@@ -12,10 +12,11 @@
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_bingsharedip(SpiderFootPlugin):
+class sfp_bingsharedip(SpiderFootModernPlugin):
     """SpiderFoot plugin to search Bing for hosts sharing the same IP."""
     meta = {
         'name': "Bing (Shared IPs)",
@@ -64,16 +65,12 @@ class sfp_bingsharedip(SpiderFootPlugin):
     cohostcount = 0
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.__dataSource__ = "Bing"
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["IP_ADDRESS", "NETBLOCK_OWNER"]

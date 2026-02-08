@@ -13,10 +13,11 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_trumail(SpiderFootPlugin):
+class sfp_trumail(SpiderFootModernPlugin):
 
     meta = {
         'name': "Trumail",
@@ -50,13 +51,9 @@ class sfp_trumail(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "EMAILADDR"
@@ -69,7 +66,7 @@ class sfp_trumail(SpiderFootPlugin):
         ]
 
     def queryEmailAddr(self, qry):
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.trumail.io/v2/lookups/json?email={qry}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"

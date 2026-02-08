@@ -15,10 +15,11 @@ import datetime
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_intelx(SpiderFootPlugin):
+class sfp_intelx(SpiderFootModernPlugin):
 
     meta = {
         'name': "IntelligenceX",
@@ -84,17 +85,13 @@ class sfp_intelx(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["IP_ADDRESS", "AFFILIATE_IPADDR", "INTERNET_NAME", "EMAILADDR",
@@ -128,7 +125,7 @@ class sfp_intelx(SpiderFootPlugin):
         }
 
         url = 'https://' + self.opts['base_url'] + '/' + qtype + '/search'
-        res = self.sf.fetchUrl(url, postData=json.dumps(payload),
+        res = self.fetch_url(url, postData=json.dumps(payload),
                                headers=headers, timeout=self.opts['_fetchtimeout'])
 
         if res['content'] is None:
@@ -158,7 +155,7 @@ class sfp_intelx(SpiderFootPlugin):
                 if self.checkForStop():
                     return None
 
-                res = self.sf.fetchUrl(resulturl, headers=headers)
+                res = self.fetch_url(resulturl, headers=headers)
                 if res['content'] is None:
                     self.info(
                         "No IntelligenceX info found for results from " + qry)

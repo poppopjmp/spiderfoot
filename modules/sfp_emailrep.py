@@ -13,10 +13,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_emailrep(SpiderFootPlugin):
+class sfp_emailrep(SpiderFootModernPlugin):
     """SpiderFoot plugin to search EmailRep.io for email address reputation."""
     meta = {
         'name': "EmailRep",
@@ -57,14 +58,10 @@ class sfp_emailrep(SpiderFootPlugin):
     errorState = False
     errorWarned = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['EMAILADDR']
 
@@ -80,7 +77,7 @@ class sfp_emailrep(SpiderFootPlugin):
         if self.opts['api_key'] != '':
             headers['Key'] = self.opts['api_key']
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://emailrep.io/' + qry,
             headers=headers,
             useragent='SpiderFoot',

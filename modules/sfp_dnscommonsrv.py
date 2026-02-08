@@ -13,10 +13,11 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnscommonsrv(SpiderFootPlugin):
+class sfp_dnscommonsrv(SpiderFootModernPlugin):
     """SpiderFoot plugin to brute-force common DNS SRV records."""
     meta = {
         'name': "DNS Common SRV",
@@ -73,14 +74,10 @@ class sfp_dnscommonsrv(SpiderFootPlugin):
         '_xmpp-server._tcp'
     ]
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ['INTERNET_NAME', 'DOMAIN_NAME']
 

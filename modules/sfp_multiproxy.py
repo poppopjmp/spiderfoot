@@ -13,10 +13,11 @@
 
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_multiproxy(SpiderFootPlugin):
+class sfp_multiproxy(SpiderFootModernPlugin):
 
     meta = {
         'name': "multiproxy.org Open Proxies",
@@ -57,14 +58,10 @@ class sfp_multiproxy(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             'IP_ADDRESS',
@@ -113,7 +110,7 @@ class sfp_multiproxy(SpiderFootPlugin):
         if proxy_list is not None:
             return self.parseProxyList(proxy_list)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "http://multiproxy.org/txt_all/proxy.txt",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],

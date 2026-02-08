@@ -14,10 +14,11 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_cleanbrowsing(SpiderFootPlugin):
+class sfp_cleanbrowsing(SpiderFootModernPlugin):
     """SpiderFoot plugin to check if a host would be blocked by CleanBrowsing.org DNS content filters."""
     meta = {
         'name': "CleanBrowsing.org",
@@ -56,13 +57,9 @@ class sfp_cleanbrowsing(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return [
             "INTERNET_NAME",
@@ -151,7 +148,7 @@ class sfp_cleanbrowsing(SpiderFootPlugin):
 
         # Check that it resolves first, as it becomes a valid
         # malicious host only if NOT resolved by CleanBrowsing DNS.
-        if not self.sf.resolveHost(eventData) and not self.sf.resolveHost6(eventData):
+        if not self.resolve_host(eventData) and not self.resolve_host6(eventData):
             return
 
         family = self.queryFamilyDNS(eventData)

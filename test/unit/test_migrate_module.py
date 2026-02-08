@@ -114,6 +114,7 @@ class TestSetupMigration:
         out = migrate_content(src, result)
         assert "super().setup(sfc, userOpts or {})" in out
         assert "self.sf = sfc" not in out
+        assert "for opt in" not in out
         assert result.migrated
 
     def test_setup_with_datasource(self):
@@ -128,7 +129,26 @@ class TestSetupMigration:
         result = MigrationResult("test.py")
         out = migrate_content(src, result)
         assert "super().setup(sfc, userOpts or {})" in out
+        assert "self.sf = sfc" not in out
+        assert "for opt in" not in out
         assert '__dataSource__ = "Example Source"' in out
+
+    def test_setup_with_extra_lines(self):
+        """Modules with extra init lines should still be migrated."""
+        src = textwrap.dedent("""\
+            def setup(self, sfc, userOpts=None):
+                self.sf = sfc
+                self.errorState = False
+                self.results = self.tempStorage()
+                for opt in list(userOpts.keys()):
+                    self.opts[opt] = userOpts[opt]
+        """)
+        result = MigrationResult("test.py")
+        out = migrate_content(src, result)
+        assert "super().setup(sfc, userOpts or {})" in out
+        assert "self.sf = sfc" not in out
+        assert "for opt in" not in out
+        assert "self.errorState = False" in out
 
 
 class TestFetchUrlMigration:

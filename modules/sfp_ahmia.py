@@ -16,10 +16,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ahmia(SpiderFootPlugin):
+class sfp_ahmia(SpiderFootModernPlugin):
     """Search the Tor search engine 'Ahmia' for content related to the target."""
     meta = {
         'name': "Ahmia",
@@ -63,13 +64,9 @@ class sfp_ahmia(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["DOMAIN_NAME", "HUMAN_NAME", "EMAILADDR"]
@@ -99,7 +96,7 @@ class sfp_ahmia(SpiderFootPlugin):
             'q': eventData
         })
 
-        data = self.sf.fetchUrl(
+        data = self.fetch_url(
             f"https://ahmia.fi/search/?{params}",
             useragent=self.opts['_useragent'],
             timeout=15
@@ -144,7 +141,7 @@ class sfp_ahmia(SpiderFootPlugin):
                 self.notifyListeners(evt)
                 continue
 
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 link,
                 timeout=self.opts['_fetchtimeout'],
                 useragent=self.opts['_useragent'],

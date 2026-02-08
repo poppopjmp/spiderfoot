@@ -16,10 +16,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_numverify(SpiderFootPlugin):
+class sfp_numverify(SpiderFootModernPlugin):
 
     meta = {
         'name': "numverify",
@@ -63,14 +64,10 @@ class sfp_numverify(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['PHONE_NUMBER']
@@ -92,7 +89,7 @@ class sfp_numverify(SpiderFootPlugin):
         }
 
         # Free API does not support HTTPS for no adequately explained reason
-        res = self.sf.fetchUrl("http://apilayer.net/api/validate?" + urllib.parse.urlencode(params),
+        res = self.fetch_url("http://apilayer.net/api/validate?" + urllib.parse.urlencode(params),
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'])
 

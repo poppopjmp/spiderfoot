@@ -14,10 +14,11 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ipapico(SpiderFootPlugin):
+class sfp_ipapico(SpiderFootModernPlugin):
 
     meta = {
         'name': "ipapi.co",
@@ -48,13 +49,9 @@ class sfp_ipapico(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return [
@@ -74,7 +71,7 @@ class sfp_ipapico(SpiderFootPlugin):
     def query(self, qry):
         queryString = f"https://ipapi.co/{qry}/json/"
 
-        res = self.sf.fetchUrl(queryString,
+        res = self.fetch_url(queryString,
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'])
         time.sleep(1.5)

@@ -13,10 +13,11 @@ import json
 import time
 from datetime import datetime
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_fullcontact(SpiderFootPlugin):
+class sfp_fullcontact(SpiderFootModernPlugin):
     """SpiderFoot plugin to gather domain and e-mail information from FullContact.com API."""
     __name__ = "sfp_fullcontact"
     meta = {
@@ -67,14 +68,10 @@ class sfp_fullcontact(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def watchedEvents(self):
         return ["DOMAIN_NAME", "EMAILADDR"]
 
@@ -93,7 +90,7 @@ class sfp_fullcontact(SpiderFootPlugin):
             'Authorization': f"Bearer {self.opts['api_key']}"
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",

@@ -14,10 +14,11 @@
 import json
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_commoncrawl(SpiderFootPlugin):
+class sfp_commoncrawl(SpiderFootModernPlugin):
     """SpiderFoot plugin to search CommonCrawl.org for URLs related to the target."""
     meta = {
         'name': "CommonCrawl",
@@ -56,20 +57,16 @@ class sfp_commoncrawl(SpiderFootPlugin):
     indexBase = list()
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.indexBase = list()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     def search(self, target):
         ret = list()
         for index in self.indexBase:
             url = f"https://index.commoncrawl.org/{index}-index?url={target}/*&output=json"
-            res = self.sf.fetchUrl(url, timeout=60,
+            res = self.fetch_url(url, timeout=60,
                                    useragent="SpiderFoot")
 
             if res['code'] in ["400", "401", "402", "403", "404"]:
@@ -88,7 +85,7 @@ class sfp_commoncrawl(SpiderFootPlugin):
 
     def getLatestIndexes(self):
         url = "https://index.commoncrawl.org/"
-        res = self.sf.fetchUrl(url, timeout=60,
+        res = self.fetch_url(url, timeout=60,
                                useragent="SpiderFoot")
 
         if res['code'] in ["400", "401", "402", "403", "404"]:

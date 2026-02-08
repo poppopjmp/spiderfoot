@@ -17,10 +17,11 @@ import time
 from datetime import datetime
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_greynoise(SpiderFootPlugin):
+class sfp_greynoise(SpiderFootModernPlugin):
 
     meta = {
         "name": "GreyNoise",
@@ -76,16 +77,12 @@ class sfp_greynoise(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ["IP_ADDRESS", "AFFILIATE_IPADDR", "NETBLOCK_MEMBER", "NETBLOCK_OWNER"]
@@ -114,7 +111,7 @@ class sfp_greynoise(SpiderFootPlugin):
         if qry_type == "ip":
             self.debug(f"Querying GreyNoise for IP: {qry}")
             res = {}
-            ip_response = self.sf.fetchUrl(
+            ip_response = self.fetch_url(
                 gn_context_url + qry,
                 timeout=self.opts["_fetchtimeout"],
                 useragent="greynoise-spiderfoot-v1.2.0",
@@ -124,7 +121,7 @@ class sfp_greynoise(SpiderFootPlugin):
                 res = json.loads(ip_response["content"])
         else:
             self.debug(f"Querying GreyNoise for Netblock: {qry}")
-            query_response = self.sf.fetchUrl(
+            query_response = self.fetch_url(
                 gn_gnql_url + qry,
                 timeout=self.opts["_fetchtimeout"],
                 useragent="greynoise-spiderfoot-v1.1.0",

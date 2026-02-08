@@ -18,10 +18,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_openstreetmap(SpiderFootPlugin):
+class sfp_openstreetmap(SpiderFootModernPlugin):
 
     meta = {
         'name': "OpenStreetMap",
@@ -50,13 +51,9 @@ class sfp_openstreetmap(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc, userOpts=None):
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     def watchedEvents(self):
         return ['PHYSICAL_ADDRESS']
@@ -75,7 +72,7 @@ class sfp_openstreetmap(SpiderFootPlugin):
             'addressdetails': '0'
         }
 
-        res = self.sf.fetchUrl("https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(params),
+        res = self.fetch_url("https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(params),
                                timeout=self.opts['_fetchtimeout'], useragent='SpiderFoot')
 
         if res['content'] is None:
