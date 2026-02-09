@@ -39,6 +39,13 @@ from ..schemas import (
     MessageResponse,
 )
 
+# Scan lifecycle hooks — best-effort, non-blocking
+try:
+    from spiderfoot.scan_hooks import get_scan_hooks
+    _hooks = get_scan_hooks()
+except Exception:
+    _hooks = None  # type: ignore[assignment]
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
@@ -293,6 +300,12 @@ async def create_scan(
     except Exception as e:
         logger.error("Failed to create scan: %s", e)
         raise HTTPException(status_code=500, detail="Failed to create scan") from e
+    finally:
+        if _hooks:
+            try:
+                _hooks.on_created(scan_id, scan_request.name, scan_request.target)
+            except Exception:
+                pass
 
 
 @router.get("/scans/{scan_id}")
@@ -324,6 +337,11 @@ async def delete_scan(
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
     svc.delete_scan(scan_id)
+    if _hooks:
+        try:
+            _hooks.on_deleted(scan_id)
+        except Exception:
+            pass
     return ScanDeleteResponse()
 
 
@@ -353,6 +371,11 @@ async def stop_scan(
         raise HTTPException(status_code=404, detail="Scan not found")
     try:
         new_status = svc.stop_scan(scan_id)
+        if _hooks:
+            try:
+                _hooks.on_aborted(scan_id, reason="API stop request")
+            except Exception:
+                pass
         return ScanStopResponse(message="Scan stopped successfully", status=new_status)
     except ScanServiceError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
@@ -834,6 +857,11 @@ async def archive_scan(
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
     svc.archive(scan_id)
+    if _hooks:
+        try:
+            _hooks.on_archived(scan_id)
+        except Exception:
+            pass
     return MessageResponse(message="Scan archived")
 
 
@@ -848,4 +876,9 @@ async def unarchive_scan(
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
     svc.unarchive(scan_id)
+    if _hooks:
+        try:
+            _hooks.on_unarchived(scan_id)
+        except Exception:
+            pass
     return MessageResponse(message="Scan unarchived")
