@@ -15,11 +15,16 @@ from spiderfoot.data_service.local import LocalDataService
 log = logging.getLogger("spiderfoot.dataservice.factory")
 
 
-def create_data_service(config: Optional[DataServiceConfig] = None) -> DataService:
+def create_data_service(
+    config: Optional[DataServiceConfig] = None,
+    resilient: bool = True,
+) -> DataService:
     """Create a DataService instance from explicit config.
     
     Args:
         config: DataServiceConfig specifying backend and settings
+        resilient: If True, wrap remote backends (HTTP/gRPC) with a
+            circuit breaker and optional local fallback.
         
     Returns:
         Configured DataService instance
@@ -33,15 +38,41 @@ def create_data_service(config: Optional[DataServiceConfig] = None) -> DataServi
     elif config.backend == DataServiceBackend.HTTP:
         from spiderfoot.data_service.http_client import HttpDataService
         log.info("Using HTTP data service backend: %s", config.api_url)
-        return HttpDataService(config=config)
+        primary = HttpDataService(config=config)
+        if resilient:
+            return _wrap_resilient(primary, config)
+        return primary
     
     elif config.backend == DataServiceBackend.GRPC:
         from spiderfoot.data_service.grpc_client import GrpcDataService
         log.info("Using gRPC data service backend: %s", config.api_url)
-        return GrpcDataService(config=config)
+        primary = GrpcDataService(config=config)
+        if resilient:
+            return _wrap_resilient(primary, config)
+        return primary
     
     else:
         raise ValueError(f"Unknown data service backend: {config.backend}")
+
+
+def _wrap_resilient(primary: DataService, config: DataServiceConfig) -> DataService:
+    """Wrap a remote DataService with circuit breaker + local fallback."""
+    from spiderfoot.data_service.resilient import ResilientDataService
+
+    fallback = None
+    try:
+        fallback = LocalDataService(config=config, db_opts=config.db_config)
+        log.info("Resilient DataService: primary=%s, fallback=LocalDataService",
+                 type(primary).__name__)
+    except Exception as e:
+        log.warning("Could not create local fallback DataService: %s", e)
+
+    return ResilientDataService(
+        primary=primary,
+        fallback=fallback,
+        failure_threshold=config.max_retries + 2,
+        recovery_timeout=config.timeout,
+    )
 
 
 def create_data_service_from_config(sf_config: Dict[str, Any]) -> DataService:
