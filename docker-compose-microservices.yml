@@ -119,6 +119,10 @@ services:
       SF_WORKER_MAX: ${SF_WORKER_MAX:-8}
       SF_WORKER_STRATEGY: thread
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      # DataService backend — access data through API service
+      SF_DATASERVICE_BACKEND: http
+      SF_DATASERVICE_API_URL: "http://api:8001/api"
+      SF_DATASERVICE_API_KEY: ${SF_API_KEY:-}
     depends_on:
       redis:
         condition: service_healthy
@@ -194,20 +198,17 @@ services:
     restart: unless-stopped
     networks:
       - sf-frontend
-      - sf-backend
-      - sf-events
     environment:
       SF_SERVICE: webui
-      SF_REDIS_URL: redis://redis:6379/0
-      SF_POSTGRES_DSN: postgresql://spiderfoot:${POSTGRES_PASSWORD:-changeme}@postgres:5432/spiderfoot
-      SF_VECTOR_ENDPOINT: http://vector:8686
       SF_WEB_HOST: "0.0.0.0"
       SF_WEB_PORT: "5001"
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      # API proxy mode — WebUI routes all data access through the API
+      SF_WEBUI_API_MODE: "true"
+      SF_WEBUI_API_URL: "http://api:8001/api"
+      SF_WEBUI_API_KEY: ${SF_API_KEY:-}
     depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
+      api:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/ping"]

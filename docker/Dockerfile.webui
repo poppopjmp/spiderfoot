@@ -2,6 +2,10 @@
 # SpiderFoot Web UI Service
 # Runs the CherryPy web interface
 #
+# In microservice mode, the WebUI proxies all data access through the
+# FastAPI API service instead of accessing the database directly.
+# Set SF_WEBUI_API_MODE=true (default in this Dockerfile) to enable.
+#
 FROM spiderfoot-base:latest
 
 LABEL service="webui"
@@ -9,7 +13,11 @@ LABEL description="SpiderFoot web interface"
 
 ENV SF_SERVICE=webui \
     SF_WEB_HOST=0.0.0.0 \
-    SF_WEB_PORT=5001
+    SF_WEB_PORT=5001 \
+    # Enable API proxy mode — WebUI routes all DB calls through the API
+    SF_WEBUI_API_MODE=true \
+    SF_WEBUI_API_URL=http://api:8001/api \
+    SF_WEBUI_API_KEY=""
 
 # Copy static assets (templates, JS, CSS)
 # These are already in the base image via COPY . .
