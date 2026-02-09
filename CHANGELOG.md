@@ -3,6 +3,76 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.97.0] — RC Cycle 10: Documentation Update
+
+### Changed
+- CHANGELOG.md, README.md updated with Release Candidate Cycles 1-10
+
+## [5.96.0] — RC Cycle 9: traceback.format_exc() Cleanup
+
+### Changed
+- Replaced 12 `traceback.format_exc()` calls with `logger.exception()` / `exc_info=True`
+- Removed 4 unused `import traceback` statements
+- Files: module_sandbox.py, threadpool.py, plugin.py, core/modules.py, scanner.py, security_logging.py
+
+## [5.96.0] — RC Cycle 8: Docker Compose Cleanup
+
+### Changed
+- Removed deprecated `version:` field from all 3 docker-compose files
+
+## [5.95.0] — RC Cycle 7: Dockerfile Modernization
+
+### Changed
+- Base image upgraded from `bullseye` to `bookworm` (Debian 12)
+- Added OCI metadata labels (`org.opencontainers.image.*`)
+- Added `HEALTHCHECK` instruction for API endpoint
+- Standardized `as` → `AS` build stage convention
+
+## [5.94.0] — RC Cycle 6: Backup File Cleanup
+
+### Removed
+- Deleted 247 `.threadreaper_backup` files (16,539 lines of dead code)
+- Added `*.threadreaper_backup` to `.gitignore`
+
+## [5.93.0] — RC Cycle 5: Debug Print Removal
+
+### Changed
+- Removed 5 DEBUG print statements from production code
+  - webui/scan.py, sfp_azureblobstorage.py, sflib/core.py
+- Converted 5 DB `_log_db_error()` methods from `print()` to `logging`
+  - db_scan.py, db_event.py, db_correlation.py, db_config.py, db_core.py
+
+## [5.92.0] — RC Cycle 4: Bare Except Clause Fixes
+
+### Changed
+- Fixed all 10 bare `except:` clauses with specific exception types
+  - `queue.Empty`, `ValueError`, `json.JSONDecodeError`, `Exception`
+- Files: logger.py, routes.py, interactive.py, workspaces_enhanced.py, export.py,
+  sfp__security_hardening.py, sfp__stor_db.py, sfp__stor_db_advanced.py
+
+## [5.91.0] — RC Cycle 3: Print/Traceback Antipattern Fix
+
+### Changed
+- Replaced `print(traceback.format_exc())` with `logger.exception()` in data.py
+- Removed inline `import traceback` statements
+
+## [5.90.0] — RC Cycle 2: requirements.txt Cleanup
+
+### Changed
+- Removed duplicate `uvicorn` and `python-multipart` entries
+- Removed unused `ipaddr==2.2.0` dependency (stdlib `ipaddress` used instead)
+- Removed `-i https://pypi.org/simple` (belongs in pip.conf)
+- Pinned upper bounds for `fastapi`, `openai`, `telethon`, `websockets`, `markdown`
+- Organized into logical sections with comments
+- Removed stale Flask migration comments
+
+## [5.89.0] — RC Cycle 1: Critical Security Fixes
+
+### Security
+- **CRITICAL**: Replaced `pickle.loads()` with `json.loads()` in performance.py (RCE prevention)
+- **CRITICAL**: Eliminated traceback disclosure in webui/routes.py error handler
+- **CRITICAL**: Sanitized hardcoded credentials in docstrings (3 files)
+
 ## [5.88.1] — Final Documentation Update (Cycle 100)
 
 ### Changed

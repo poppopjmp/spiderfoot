@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.97.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.97.0)
+[![Stable Release](https://img.shields.io/badge/version-5.97.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.97.1)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -701,6 +701,21 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 ---
 
 ## Recent Updates
+
+### v5.97.0 — Release Candidate Cleanup (RC Cycles 1-10)
+
+| RC Cycle | Version | Change |
+|----------|---------|--------|
+| 1 | 5.89.0 | Critical security fixes (pickle RCE, traceback disclosure, credential sanitization) |
+| 2 | 5.90.0 | requirements.txt cleanup (dedup, pin versions, remove unused deps) |
+| 3 | 5.91.0 | Replace print+traceback antipatterns with logger.exception() |
+| 4 | 5.92.0 | Fix all 10 bare except: clauses with specific exception types |
+| 5 | 5.93.0 | Remove DEBUG prints, convert DB error helpers to logging |
+| 6 | 5.94.0 | Delete 247 .threadreaper_backup files (16,539 lines removed) |
+| 7 | 5.95.0 | Dockerfile modernization (bookworm, OCI labels, HEALTHCHECK) |
+| 8 | 5.96.0 | Remove deprecated version field from docker-compose files |
+| 9 | 5.97.0 | Replace 12 traceback.format_exc() with logger.exception() |
+| 10 | 5.97.0 | Documentation update for RC Cycles 1-10 |
 
 ### v5.88.0 — Modernization Cycles 92-100 (Final)
 
