@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.62.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.62.0)
+[![Stable Release](https://img.shields.io/badge/version-5.62.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.62.1)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -701,6 +701,21 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 ---
 
 ## Recent Updates
+
+### v5.62.0 — Modernization Cycles 55-64
+
+| Cycle | Version | Feature |
+|-------|---------|---------|
+| 55 | 5.55.0 | Wire Pydantic response_model on scan router |
+| 56 | 5.56.0 | Structured API error responses (ErrorResponse envelope) |
+| 57 | 5.56.1 | Rich OpenAPI metadata (tags, license, description) |
+| 58 | 5.57.0 | Config source tracing + environment API |
+| 59 | 5.58.0 | Scan lifecycle event hooks (EventBus integration) |
+| 60 | 5.59.0 | Module execution timeout guard |
+| 61 | 5.60.0 | Inter-service authentication (static + HMAC tokens) |
+| 62 | 5.60.1 | Wire service auth into HTTP clients + docker-compose |
+| 63 | 5.61.0 | API request audit logging middleware |
+| 64 | 5.62.0 | Module output validation (producedEvents enforcement) |
 
 ### v5.54.1 — Modernization Cycles 32-54
 

@@ -346,6 +346,16 @@ migration instructions.
 | 5.53.0 | Service startup sequencer |
 | 5.54.0 | Graceful shutdown coordination |
 | 5.54.1 | Wire startup/shutdown into entry points |
+| 5.55.0 | Wire Pydantic response_model on scan router |
+| 5.56.0 | Structured API error responses (ErrorResponse envelope) |
+| 5.56.1 | Rich OpenAPI metadata (tags, license, description) |
+| 5.57.0 | Config source tracing + environment API |
+| 5.58.0 | Scan lifecycle event hooks (EventBus integration) |
+| 5.59.0 | Module execution timeout guard |
+| 5.60.0 | Inter-service authentication (static + HMAC tokens) |
+| 5.60.1 | Wire service auth into HTTP clients + docker-compose |
+| 5.61.0 | API request audit logging middleware |
+| 5.62.0 | Module output validation (producedEvents enforcement) |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 

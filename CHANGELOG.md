@@ -3,6 +3,105 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.62.0] — Module Output Validation (Cycle 64)
+
+### Added
+- `spiderfoot/module_output_validator.py` — runtime validation of module event output
+  - ModuleOutputValidator with warn/strict/off modes (SF_MODULE_OUTPUT_VALIDATION)
+  - Checks emitted events against producedEvents() declarations
+  - Per-module statistics tracking (total, valid, undeclared counts)
+  - Thread-safe with singleton via get_output_validator()
+
+### Changed
+- `spiderfoot/plugin.py` — both notifyListeners() methods now call output validator (best-effort)
+
+## [5.61.0] — API Request Audit Logging (Cycle 63)
+
+### Added
+- `spiderfoot/api/audit_middleware.py` — structured audit logging for all API requests
+  - AuditLoggingMiddleware: method, path, status, duration_ms, client_ip, request_id
+  - User identity extraction (service tokens, bearer, basic — redacted)
+  - Configurable: SF_API_AUDIT_ENABLED, SF_API_AUDIT_BODY, SF_API_AUDIT_EXCLUDE
+  - Severity-based log levels (info/warning/error by status code)
+
+### Changed
+- `spiderfoot/api/main.py` — audit logging middleware installed after error handlers
+
+## [5.60.1] — Wire Service Auth into Clients (Cycle 62)
+
+### Changed
+- `spiderfoot/data_service/http_client.py` — ServiceTokenIssuer fallback auth
+- `spiderfoot/webui/api_client.py` — ServiceTokenIssuer fallback auth
+- `docker-compose-microservices.yml` — SF_SERVICE_SECRET/TOKEN/NAME for all services
+
+## [5.60.0] — Inter-service Authentication (Cycle 61)
+
+### Added
+- `spiderfoot/service_auth.py` — service-to-service authentication
+  - ServiceTokenIssuer: static token (SF_SERVICE_TOKEN) or HMAC (SF_SERVICE_SECRET)
+  - HMAC tokens: `<service>:<timestamp>:<hmac_sha256>`, cached for 80% of TTL
+  - ServiceTokenValidator with constant-time comparison, clock skew tolerance
+  - generate_service_secret() utility
+
+## [5.59.0] — Module Execution Timeout Guard (Cycle 60)
+
+### Added
+- `spiderfoot/module_timeout.py` — per-module timeout enforcement
+  - ModuleTimeoutGuard with context manager timed() and decorator wrap()
+  - Configurable via SF_MODULE_TIMEOUT (default 300s), SF_MODULE_TIMEOUT_HARD
+  - Hard interrupt via ctypes.pythonapi.PyThreadState_SetAsyncExc (CPython)
+  - Per-module overrides, timeout log (ring buffer 200), stats()
+
+## [5.58.0] — Scan Lifecycle Event Hooks (Cycle 59)
+
+### Added
+- `spiderfoot/scan_hooks.py` — EventBus-integrated scan lifecycle notifications
+  - 8 event types: CREATED, STARTED, COMPLETED, ABORTED, FAILED, DELETED, ARCHIVED, UNARCHIVED
+  - ScanLifecycleHooks: EventBus publishing to `scan.lifecycle` topic + local listeners
+  - Event history tracking, per-scan filtering, statistics
+
+### Changed
+- `spiderfoot/api/routers/scan.py` — hooks wired into create/delete/stop/archive/unarchive
+
+## [5.57.0] — Config Source Tracing + Environment API (Cycle 58)
+
+### Added
+- `spiderfoot/api/routers/config.py` — two new endpoints:
+  - `GET /config/sources` — provenance report for all config keys (filter by source)
+  - `GET /config/environment` — active SF_* env overrides, unknown vars, deployment info
+
+## [5.56.1] — Rich OpenAPI Metadata (Cycle 57)
+
+### Changed
+- `spiderfoot/api/main.py` — enhanced FastAPI initialization
+  - Detailed API description (auth, versioning, error format sections)
+  - MIT license_info
+  - 13 openapi_tags with descriptions (health, scans, workspaces, data, etc.)
+
+## [5.56.0] — Structured API Error Responses (Cycle 56)
+
+### Added
+- `spiderfoot/api/error_handlers.py` — consistent JSON error envelope
+  - ErrorDetail/ErrorResponse Pydantic models
+  - Handlers for HTTPException, RequestValidationError, unhandled Exception
+  - Domain-specific error codes (SCAN_NOT_FOUND, MODULE_NOT_FOUND, etc.)
+  - install_error_handlers(app) for easy wiring
+
+### Changed
+- `spiderfoot/api/main.py` — error handlers installed after middleware
+
+## [5.55.0] — Wire Pydantic response_model on Scan Router (Cycle 55)
+
+### Added
+- `spiderfoot/api/schemas.py` — response envelope models
+  - MessageResponse, ScanCreateResponse, ScanDeleteResponse, ScanStopResponse
+  - ScanMetadataResponse, ScanNotesResponse, ScanRerunResponse, ScanCloneResponse
+  - FalsePositiveResponse
+
+### Changed
+- `spiderfoot/api/routers/scan.py` — 15+ endpoints now use response_model=
+  - Return values changed from raw dicts to Pydantic model instances
+
 ## [5.54.1] — Wire Startup/Shutdown into Entry Points (Cycle 54)
 
 ### Changed
