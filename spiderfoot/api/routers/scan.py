@@ -986,6 +986,77 @@ async def get_scan_timeline(
         raise HTTPException(status_code=500, detail="Failed to build scan timeline") from e
 
 
+@router.get("/scans/{scan_id}/dedup")
+async def detect_duplicate_events(
+    scan_id: str,
+    threshold: int = Query(2, ge=2, le=100, description="Min occurrences to flag as duplicate"),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Detect duplicate events in scan results.
+
+    Finds events with identical (event_type, data) pairs across modules,
+    helping identify redundant data collection and module overlap.
+    """
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    try:
+        events = svc.get_events(scan_id) or []
+
+        # Build fingerprint → occurrences map
+        fingerprints: dict = {}  # (event_type, data_hash) → list of sources
+        for row in events:
+            if isinstance(row, dict):
+                et = row.get("type", row.get("eventType", ""))
+                data = str(row.get("data", ""))
+                module = row.get("module", "")
+            elif isinstance(row, (list, tuple)):
+                data = str(row[1]) if len(row) > 1 else ""
+                module = str(row[3]) if len(row) > 3 else ""
+                et = str(row[4]) if len(row) > 4 else ""
+            else:
+                continue
+
+            if et == "ROOT":
+                continue
+
+            key = (et, data[:500])
+            if key not in fingerprints:
+                fingerprints[key] = []
+            fingerprints[key].append(module)
+
+        # Filter to duplicates only
+        duplicates = []
+        for (et, data_preview), modules in fingerprints.items():
+            if len(modules) >= threshold:
+                duplicates.append({
+                    "event_type": et,
+                    "data": data_preview[:200],
+                    "occurrences": len(modules),
+                    "modules": list(set(modules)),
+                })
+
+        duplicates.sort(key=lambda d: -d["occurrences"])
+
+        total_events = len(events)
+        total_dup_events = sum(d["occurrences"] for d in duplicates)
+
+        return {
+            "scan_id": scan_id,
+            "total_events": total_events,
+            "unique_fingerprints": len(fingerprints),
+            "duplicate_groups": len(duplicates),
+            "duplicate_event_count": total_dup_events,
+            "dedup_ratio": round(1 - len(fingerprints) / max(total_events, 1), 4),
+            "duplicates": duplicates[:200],
+        }
+    except Exception as e:
+        logger.error("Failed to detect duplicates for %s: %s", scan_id, e)
+        raise HTTPException(status_code=500, detail="Failed to detect duplicates") from e
+
+
 @router.get("/scans/{scan_id}/correlations/export")
 async def export_scan_correlations(
     scan_id: str,
