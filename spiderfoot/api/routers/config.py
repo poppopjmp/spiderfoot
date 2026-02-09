@@ -1040,3 +1040,110 @@ async def remove_endpoint_rate_limit(
     except Exception as e:
         logger.error("Failed to remove endpoint rate limit: %s", e)
         raise HTTPException(status_code=500, detail="Failed to remove rate limit") from e
+
+
+# ── Config change history ────────────────────────────────────────────
+# In-memory log of configuration changes for auditing and diffing.
+
+import time as _time
+import threading
+
+_config_history: list = []
+_config_history_lock = threading.Lock()
+_MAX_HISTORY_ENTRIES = 200
+
+
+def _record_config_change(action: str, section: str, changes: dict, source: str = "api"):
+    """Record a config change to the in-memory history."""
+    with _config_history_lock:
+        _config_history.append({
+            "timestamp": _time.time(),
+            "iso_time": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime()),
+            "action": action,
+            "section": section,
+            "changes": changes,
+            "source": source,
+        })
+        # Trim to max entries
+        while len(_config_history) > _MAX_HISTORY_ENTRIES:
+            _config_history.pop(0)
+
+
+@router.get("/config/history")
+async def get_config_history(
+    limit: int = Query(50, ge=1, le=200),
+    section: Optional[str] = Query(None, description="Filter by config section"),
+    api_key: str = optional_auth_dep,
+):
+    """Get configuration change history.
+
+    Returns recent config modifications with timestamps, sections,
+    and change details for auditing purposes.
+    """
+    with _config_history_lock:
+        entries = list(_config_history)
+
+    if section:
+        entries = [e for e in entries if e.get("section") == section]
+
+    # Most recent first
+    entries.reverse()
+    entries = entries[:limit]
+
+    return {
+        "total": len(entries),
+        "limit": limit,
+        "entries": entries,
+    }
+
+
+@router.get("/config/diff")
+async def get_config_diff(
+    api_key: str = optional_auth_dep,
+):
+    """Compare current config against defaults.
+
+    Returns a diff showing which settings have been modified from
+    their default values, useful for troubleshooting and auditing.
+    """
+    try:
+        config = get_app_config()
+        current = config.get_config()
+
+        # Get defaults
+        defaults = {}
+        try:
+            from spiderfoot.sflib.core import SpiderFoot
+            sf = SpiderFoot({})
+            defaults = sf.defaultConfig if hasattr(sf, 'defaultConfig') else {}
+        except Exception:
+            pass
+
+        # Build diff
+        modified = {}
+        added = {}
+        for key, value in current.items():
+            if key.startswith("__") and key.endswith("__"):
+                continue  # Skip internal keys
+            if key in defaults:
+                try:
+                    if value != defaults[key]:
+                        modified[key] = {
+                            "current": str(value)[:200],
+                            "default": str(defaults[key])[:200],
+                        }
+                except (TypeError, ValueError):
+                    pass
+            else:
+                added[key] = str(value)[:200]
+
+        return {
+            "total_settings": len([k for k in current if not (k.startswith("__") and k.endswith("__"))]),
+            "modified_count": len(modified),
+            "added_count": len(added),
+            "modified": modified,
+            "added": added,
+        }
+    except Exception as e:
+        logger.error("Failed to compute config diff: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to compute config diff") from e
