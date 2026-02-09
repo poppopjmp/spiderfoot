@@ -66,12 +66,19 @@ log = logging.getLogger("spiderfoot.grpc_service")
 
 # Try to import grpcio; fall back to HTTP if unavailable
 _GRPC_AVAILABLE = False
+_STUBS_AVAILABLE = False
 try:
     import grpc
     from concurrent import futures
     _GRPC_AVAILABLE = True
+    try:
+        from spiderfoot import spiderfoot_pb2
+        from spiderfoot import spiderfoot_pb2_grpc
+        _STUBS_AVAILABLE = True
+    except ImportError:
+        log.debug("gRPC stubs not found — run 'python -m grpc_tools.protoc' to generate")
 except ImportError:
-    pass
+    log.debug("grpcio not installed — using JSON-over-HTTP fallback")
 
 
 # ---------------------------------------------------------------------------
@@ -162,11 +169,56 @@ class ServiceClient:
         if not _GRPC_AVAILABLE:
             raise ServiceCallError("grpcio not installed")
 
-        # For now, fall back to HTTP since we don't have compiled stubs
-        # Full gRPC integration will use generated stubs from proto/
-        log.debug("gRPC stub not compiled, falling back to HTTP for %s.%s",
-                  self.service_name, method)
-        return self._call_http(method, payload, timeout)
+        if not _STUBS_AVAILABLE:
+            log.debug("gRPC stubs not compiled, falling back to HTTP for %s.%s",
+                      self.service_name, method)
+            return self._call_http(method, payload, timeout)
+
+        try:
+            channel = grpc.insecure_channel(self.endpoint)
+            # Use reflection to find the correct stub based on service name
+            stub_class_name = f"{self.service_name.title().replace('_', '')}ServiceStub"
+            stub_class = getattr(spiderfoot_pb2_grpc, stub_class_name, None)
+            if stub_class is None:
+                log.debug("No gRPC stub found for %s, falling back to HTTP",
+                          self.service_name)
+                return self._call_http(method, payload, timeout)
+
+            stub = stub_class(channel)
+            rpc_method = getattr(stub, method, None)
+            if rpc_method is None:
+                log.debug("No gRPC method %s on %s, falling back to HTTP",
+                          method, stub_class_name)
+                return self._call_http(method, payload, timeout)
+
+            # Build request message from payload
+            request_class_name = f"{method}Request"
+            request_class = getattr(spiderfoot_pb2, request_class_name, None)
+            if request_class is None:
+                # Try ScanIdRequest as a common fallback
+                request_class = getattr(spiderfoot_pb2, 'ScanIdRequest', None)
+
+            if request_class and payload:
+                request = request_class(**payload)
+            elif request_class:
+                request = request_class()
+            else:
+                return self._call_http(method, payload, timeout)
+
+            response = rpc_method(request, timeout=timeout)
+
+            # Convert protobuf response to dict
+            from google.protobuf.json_format import MessageToDict
+            return MessageToDict(response, preserving_proto_field_name=True)
+
+        except grpc.RpcError as e:
+            log.warning("gRPC call %s.%s failed (%s), falling back to HTTP",
+                        self.service_name, method, e.code())
+            return self._call_http(method, payload, timeout)
+        except Exception as e:
+            log.debug("gRPC call error for %s.%s: %s - falling back to HTTP",
+                      self.service_name, method, e)
+            return self._call_http(method, payload, timeout)
 
     def health_check(self) -> dict:
         """Check the health of the remote service."""
