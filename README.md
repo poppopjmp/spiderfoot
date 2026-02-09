@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.80.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.80.0)
+[![Stable Release](https://img.shields.io/badge/version-5.80.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.80.1)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -701,6 +701,19 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 ---
 
 ## Recent Updates
+
+### v5.80.0 — Modernization Cycles 84-91
+
+| Cycle | Version | Feature |
+|-------|---------|----------|
+| 84 | 5.75.0 | Recurring scan schedule API (interval/one-shot timing) |
+| 85 | 5.75.1 | Response schemas wiring (config + data routers) |
+| 86 | 5.76.0 | Request ID propagation to HTTP/gRPC/webhook clients |
+| 87 | 5.77.0 | Scan timeline endpoint (chronological event view) |
+| 88 | 5.78.0 | Module enable/disable API (runtime management) |
+| 89 | 5.79.0 | Scan search/filter API (faceted results) |
+| 90 | 5.80.0 | Graceful shutdown manager (signals + FastAPI lifespan) |
+| 91 | 5.80.1 | Documentation update for Cycles 84-91 |
 
 ### v5.74.0 — Modernization Cycles 75-83
 

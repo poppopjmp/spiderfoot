@@ -3,6 +3,74 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.80.1] — Documentation Update (Cycle 91)
+
+### Changed
+- ARCHITECTURE.md, CHANGELOG.md, README.md updated with Cycles 84-91 entries
+
+## [5.80.0] — Graceful Shutdown Manager (Cycle 90)
+
+### Added
+- `spiderfoot/shutdown_manager.py` — centralized shutdown coordination
+  - LIFO callback execution with per-service timeouts
+  - SIGINT/SIGTERM signal handling + atexit integration
+  - Thread-safe registration, status introspection
+- `spiderfoot/api/main.py` — FastAPI lifespan context for shutdown
+- `spiderfoot/api/routers/health.py` — `GET /health/shutdown` status endpoint
+
+## [5.79.0] — Scan Search/Filter API (Cycle 89)
+
+### Added
+- `spiderfoot/api/routers/scan.py` — `GET /scans/search`
+  - Filter by target (substring), status, tag, date range, module
+  - Faceted results with status counts
+  - Configurable sorting and offset/limit pagination
+
+## [5.78.0] — Module Enable/Disable API (Cycle 88)
+
+### Added
+- `spiderfoot/api/routers/data.py` — runtime module management
+  - `GET /data/modules/status` — view enable/disable state of all modules
+  - `POST /data/modules/{name}/disable` — disable module at runtime
+  - `POST /data/modules/{name}/enable` — re-enable module
+  - `POST /data/modules/bulk-disable` — disable multiple modules at once
+  - Thread-safe in-memory disabled-module set
+
+## [5.77.0] — Scan Timeline Endpoint (Cycle 87)
+
+### Added
+- `spiderfoot/api/routers/scan.py` — `GET /scans/{id}/timeline`
+  - Chronological event timeline with module attribution
+  - Filter by event type, configurable limit
+  - Summary statistics (event type counts, module counts, time range)
+
+## [5.76.0] — Request ID Propagation (Cycle 86)
+
+### Added
+- `spiderfoot/data_service/http_client.py` — X-Request-ID header on outbound HTTP
+- `spiderfoot/data_service/grpc_client.py` — x-request-id metadata on gRPC calls
+- `spiderfoot/webhook_dispatcher.py` — X-Request-ID on webhook deliveries
+
+## [5.75.1] — Response Schemas Wiring (Cycle 85)
+
+### Added
+- `spiderfoot/api/schemas.py` — 4 new response models (EntityTypes, ModuleList, ModuleDetail, RiskLevels)
+
+### Changed
+- Config router: wired `response_model=` on 5 endpoints
+- Data router: wired `response_model=RiskLevelsResponse`
+
+## [5.75.0] — Recurring Scan Schedule API (Cycle 84)
+
+### Added
+- `spiderfoot/recurring_schedule.py` — time-based scan scheduling
+  - RecurringSchedule dataclass with interval/one-shot timing
+  - RecurringScheduler with background check loop
+  - Singleton factory, pause/resume support, max_runs limit
+- `spiderfoot/api/routers/scan.py` — 6 schedule endpoints
+  - `GET/POST /scans/schedules`, `GET/DELETE /scans/schedules/{id}`
+  - `POST .../pause`, `POST .../resume`
+
 ## [5.74.1] — Documentation Update (Cycle 83)
 
 ### Changed

@@ -375,6 +375,14 @@ migration instructions.
 | 5.73.0 | Webhook event filtering + discovery |
 | 5.74.0 | Module dependency graph endpoint |
 | 5.74.1 | Documentation update for Cycles 75-83 |
+| 5.75.0 | Recurring scan schedule API (interval/one-shot) |
+| 5.75.1 | Response schemas wiring (config + data routers) |
+| 5.76.0 | Request ID propagation (HTTP/gRPC/webhooks) |
+| 5.77.0 | Scan timeline endpoint (chronological events) |
+| 5.78.0 | Module enable/disable API (runtime management) |
+| 5.79.0 | Scan search/filter API (faceted results) |
+| 5.80.0 | Graceful shutdown manager (signals + FastAPI lifespan) |
+| 5.80.1 | Documentation update for Cycles 84-91 |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
