@@ -481,6 +481,113 @@ async def list_scans(
         raise HTTPException(status_code=500, detail="Failed to list scans") from e
 
 
+@router.get("/scans/search")
+async def search_scans(
+    target: Optional[str] = Query(None, description="Filter by target (substring match)"),
+    status: Optional[str] = Query(None, description="Filter by status (RUNNING, FINISHED, ABORTED, etc.)"),
+    tag: Optional[str] = Query(None, description="Filter by tag"),
+    started_after: Optional[str] = Query(None, description="Scans started after this ISO timestamp"),
+    started_before: Optional[str] = Query(None, description="Scans started before this ISO timestamp"),
+    module: Optional[str] = Query(None, description="Scans that used this module"),
+    sort_by: Optional[str] = Query("started", description="Sort field: started, target, status"),
+    sort_order: Optional[str] = Query("desc", description="Sort order: asc or desc"),
+    limit: int = Query(50, ge=1, le=500, description="Max results"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Search and filter scans by target, status, tags, date range, and module.
+
+    Returns matching scans with facets (status counts, target summary).
+    """
+    try:
+        records = svc.list_scans()
+        dicts = [r.to_dict() for r in records]
+
+        # Apply filters
+        filtered = []
+        for s in dicts:
+            # Target substring match
+            if target:
+                scan_target = str(s.get("target", s.get("name", "")))
+                if target.lower() not in scan_target.lower():
+                    continue
+
+            # Status match
+            if status:
+                scan_status = str(s.get("status", "")).upper()
+                if scan_status != status.upper():
+                    continue
+
+            # Tag match
+            if tag:
+                meta = s.get("metadata", s.get("meta", {})) or {}
+                scan_tags = meta.get(_TAGS_KEY, [])
+                if tag.lower() not in [t.lower() for t in scan_tags]:
+                    continue
+
+            # Date range
+            scan_started = s.get("started", s.get("created", 0))
+            if started_after:
+                try:
+                    from datetime import datetime
+                    threshold = datetime.fromisoformat(started_after.replace("Z", "+00:00")).timestamp()
+                    if isinstance(scan_started, (int, float)) and scan_started < threshold:
+                        continue
+                except (ValueError, TypeError):
+                    pass
+
+            if started_before:
+                try:
+                    from datetime import datetime
+                    threshold = datetime.fromisoformat(started_before.replace("Z", "+00:00")).timestamp()
+                    if isinstance(scan_started, (int, float)) and scan_started > threshold:
+                        continue
+                except (ValueError, TypeError):
+                    pass
+
+            # Module filter
+            if module:
+                scan_modules = s.get("modules", s.get("module_list", []))
+                if isinstance(scan_modules, str):
+                    scan_modules = [m.strip() for m in scan_modules.split(",")]
+                if module not in scan_modules:
+                    continue
+
+            filtered.append(s)
+
+        # Build facets before pagination
+        status_counts: dict = {}
+        for s in filtered:
+            st = str(s.get("status", "UNKNOWN")).upper()
+            status_counts[st] = status_counts.get(st, 0) + 1
+
+        # Sort
+        sort_key = sort_by if sort_by in ("started", "target", "status") else "started"
+        reverse = sort_order != "asc"
+        filtered.sort(
+            key=lambda s: s.get(sort_key, s.get("created", "")),
+            reverse=reverse,
+        )
+
+        # Pagination
+        total = len(filtered)
+        page = filtered[offset : offset + limit]
+
+        return {
+            "total": total,
+            "offset": offset,
+            "limit": limit,
+            "scans": page,
+            "facets": {
+                "status": status_counts,
+            },
+        }
+    except Exception as e:
+        logger.error("Failed to search scans: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to search scans") from e
+
+
 @router.post("/scans", status_code=201, response_model=ScanCreateResponse)
 async def create_scan(
     scan_request: ScanRequest,
