@@ -299,6 +299,28 @@ class ModuleRegistry:
                 failed,
                 modules_dir,
             )
+
+            # ── Contract validation (non-blocking) ──
+            contract_warnings = 0
+            try:
+                from spiderfoot.module_contract import validate_module
+                for mod_name, mod_class in self._classes.items():
+                    vr = validate_module(mod_class, name=mod_name)
+                    if not vr.is_valid:
+                        contract_warnings += 1
+                        log.warning(
+                            "Module %s contract issues: %s",
+                            mod_name,
+                            "; ".join(vr.all_errors),
+                        )
+                if contract_warnings:
+                    log.info(
+                        "Contract validation: %d/%d modules have warnings",
+                        contract_warnings, len(self._classes),
+                    )
+            except Exception as exc:
+                log.debug("Contract validation skipped: %s", exc)
+
             return DiscoveryResult(
                 total=loaded + failed,
                 loaded=loaded,
