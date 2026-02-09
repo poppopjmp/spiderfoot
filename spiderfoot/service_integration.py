@@ -91,6 +91,7 @@ def wire_scan_services(scanner, scan_id: str) -> None:
         _wire_scan_vector(scan_id)
         _wire_scan_event_bridge(scanner, scan_id)
         _wire_module_loader(scanner)
+        _wire_repository_factory(scanner)
         log.debug("Services wired for scan %s", scan_id)
     except Exception as e:
         log.warning("Partial service wiring for scan %s: %s", scan_id, e)
@@ -277,3 +278,26 @@ def _wire_module_loader(scanner) -> None:
         log.debug("ModuleLoader attached to scanner")
     except Exception as e:
         log.debug("ModuleLoader not available: %s", e)
+
+
+def _wire_repository_factory(scanner) -> None:
+    """Initialize the global RepositoryFactory and attach to scanner.
+
+    The factory provides ``ScanRepository``, ``EventRepository``, and
+    ``ConfigRepository`` instances for use during scan execution.
+    """
+    try:
+        from spiderfoot.db.repositories import (
+            init_repository_factory,
+            get_repository_factory,
+        )
+        config = getattr(scanner, '_SpiderFootScanner__config', None)
+        if config is None:
+            config = {}
+        factory = get_repository_factory()
+        if factory is None:
+            factory = init_repository_factory(config)
+        scanner._repo_factory = factory
+        log.debug("RepositoryFactory attached to scanner")
+    except Exception as e:
+        log.debug("RepositoryFactory not available: %s", e)

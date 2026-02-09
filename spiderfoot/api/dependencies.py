@@ -293,3 +293,62 @@ async def optional_auth(credentials: HTTPAuthorizationCredentials = Depends(secu
     if not credentials:
         return None
     return await get_api_key(credentials)
+
+
+# ------------------------------------------------------------------
+# Repository Depends providers  (Cycle 23)
+# ------------------------------------------------------------------
+
+def get_scan_repository():
+    """FastAPI ``Depends`` provider for ``ScanRepository``.
+
+    Creates a fresh DB handle per request and yields a repository.
+    The handle is closed when the request completes.
+    """
+    from spiderfoot.db.repositories import (
+        get_repository_factory,
+        RepositoryFactory,
+    )
+    factory = get_repository_factory()
+    if factory is None:
+        config = get_app_config().get_config()
+        factory = RepositoryFactory(config)
+    repo = factory.scan_repo()
+    try:
+        yield repo
+    finally:
+        repo.close()
+
+
+def get_event_repository():
+    """FastAPI ``Depends`` provider for ``EventRepository``."""
+    from spiderfoot.db.repositories import (
+        get_repository_factory,
+        RepositoryFactory,
+    )
+    factory = get_repository_factory()
+    if factory is None:
+        config = get_app_config().get_config()
+        factory = RepositoryFactory(config)
+    repo = factory.event_repo()
+    try:
+        yield repo
+    finally:
+        repo.close()
+
+
+def get_config_repository():
+    """FastAPI ``Depends`` provider for ``ConfigRepository``."""
+    from spiderfoot.db.repositories import (
+        get_repository_factory,
+        RepositoryFactory,
+    )
+    factory = get_repository_factory()
+    if factory is None:
+        config = get_app_config().get_config()
+        factory = RepositoryFactory(config)
+    repo = factory.config_repo()
+    try:
+        yield repo
+    finally:
+        repo.close()

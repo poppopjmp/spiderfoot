@@ -314,6 +314,7 @@ migration instructions.
 | 5.23.9 | Config API Modernization (AppConfig wired into API) |
 | 5.24.0 | Scan Event Bridge (live scanner events → WebSocket) |
 | 5.25.0 | Module Dependency Resolution (registry → scanner wiring) |
+| 5.26.0 | Database Repository Pattern (Scan/Event/Config repos) |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
@@ -375,7 +376,31 @@ and `ModuleGraph` for topological dependency ordering. Features:
 - **Global singleton** with thread-safe `init_module_loader()` /
   `get_module_loader()` / `reset_module_loader()`
 - Wired into scanner via `service_integration._wire_module_loader()`
+### Database Repository Pattern (v5.26.0)
 
+#### Repositories (`spiderfoot/db/repositories/`)
+Clean abstraction over `SpiderFootDb` using the Repository Pattern.
+Replaces 20+ direct `SpiderFootDb(config)` instantiations across API
+routers with injectable, testable repository instances.
+
+- **AbstractRepository** — Base class with context-manager lifecycle,
+  `dbh` property, `is_connected`, `close()`, `__enter__`/`__exit__`
+- **ScanRepository** — Scan CRUD: `create_scan()`, `get_scan()`,
+  `list_scans()`, `update_status()`, `delete_scan()`, config, logs,
+  errors. Includes `ScanRecord` dataclass with `from_row()`/`to_dict()`
+- **EventRepository** — Event/result operations: `store_event()`,
+  `get_results()`, `get_unique_results()`, `get_result_summary()`,
+  `search()`, element sources/children (direct + recursive),
+  false-positive management, batch log events
+- **ConfigRepository** — Global config: `set_config()`, `get_config()`,
+  `clear_config()`
+- **RepositoryFactory** — Creates repos with shared or per-request DB
+  handles. Thread-safe singleton via `init_repository_factory()` /
+  `get_repository_factory()` / `reset_repository_factory()`
+- **FastAPI Depends providers** — `get_scan_repository()`,
+  `get_event_repository()`, `get_config_repository()` in
+  `api/dependencies.py` with automatic lifecycle management
+- Wired into scanner via `service_integration._wire_repository_factory()`
 ### Real-Time Event Infrastructure (v5.22.0 – v5.24.0)
 
 #### Event Relay (`spiderfoot/event_relay.py`)
