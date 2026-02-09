@@ -254,3 +254,59 @@ class PaginatedResponse(BaseModel):
     """Generic paginated wrapper."""
     data: List[Any]
     pagination: PaginationMeta
+
+
+# ── API Response Envelopes ───────────────────────────────────────────
+
+class MessageResponse(BaseModel):
+    """Simple success/message response."""
+    message: str
+    success: bool = True
+
+
+class ScanCreateResponse(BaseModel):
+    """Response returned when a scan is created."""
+    id: str
+    name: str
+    target: str
+    status: str = "STARTING"
+    message: str = "Scan created and starting"
+
+
+class ScanDeleteResponse(BaseModel):
+    """Response returned when a scan is deleted."""
+    message: str = "Scan deleted successfully"
+
+
+class ScanStopResponse(BaseModel):
+    """Response returned when a scan is stopped."""
+    message: str
+    status: str
+
+
+class ScanMetadataResponse(BaseModel):
+    """Scan metadata wrapper."""
+    metadata: Dict[str, Any] = {}
+
+
+class ScanNotesResponse(BaseModel):
+    """Scan notes wrapper."""
+    notes: str = ""
+
+
+class ScanRerunResponse(BaseModel):
+    """Response returned when a scan is rerun."""
+    new_scan_id: str
+    message: str = "Scan rerun started"
+
+
+class ScanCloneResponse(BaseModel):
+    """Response returned when a scan is cloned."""
+    new_scan_id: str
+    message: str = "Scan cloned successfully"
+
+
+class FalsePositiveResponse(BaseModel):
+    """Response after setting false positive flags."""
+    success: bool = True
+    updated: int = 0

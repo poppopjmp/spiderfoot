@@ -28,6 +28,16 @@ from spiderfoot.sflib.core import SpiderFoot
 
 from ..dependencies import get_app_config, get_api_key, optional_auth, get_scan_service
 from ..pagination import PaginationParams, paginate
+from ..schemas import (
+    ScanCreateResponse,
+    ScanDeleteResponse,
+    ScanStopResponse,
+    ScanMetadataResponse,
+    ScanNotesResponse,
+    ScanRerunResponse,
+    ScanCloneResponse,
+    MessageResponse,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -232,7 +242,7 @@ async def list_scans(
         raise HTTPException(status_code=500, detail="Failed to list scans") from e
 
 
-@router.post("/scans", status_code=201)
+@router.post("/scans", status_code=201, response_model=ScanCreateResponse)
 async def create_scan(
     scan_request: ScanRequest,
     background_tasks: BackgroundTasks,
@@ -271,13 +281,13 @@ async def create_scan(
             scan_request.type_filter,
             config.get_config(),
         )
-        return {
-            "id": scan_id,
-            "name": scan_request.name,
-            "target": scan_request.target,
-            "status": "STARTING",
-            "message": "Scan created and starting",
-        }
+        return ScanCreateResponse(
+            id=scan_id,
+            name=scan_request.name,
+            target=scan_request.target,
+            status="STARTING",
+            message="Scan created and starting",
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -303,7 +313,7 @@ async def get_scan(
     return result
 
 
-@router.delete("/scans/{scan_id}")
+@router.delete("/scans/{scan_id}", response_model=ScanDeleteResponse)
 async def delete_scan(
     scan_id: str,
     api_key: str = api_key_dep,
@@ -314,10 +324,10 @@ async def delete_scan(
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
     svc.delete_scan(scan_id)
-    return {"message": "Scan deleted successfully"}
+    return ScanDeleteResponse()
 
 
-@router.delete("/scans/{scan_id}/full")
+@router.delete("/scans/{scan_id}/full", response_model=MessageResponse)
 async def delete_scan_full(
     scan_id: str,
     api_key: str = api_key_dep,
@@ -328,10 +338,10 @@ async def delete_scan_full(
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
     svc.delete_scan_full(scan_id)
-    return {"message": "Scan and all related data deleted successfully"}
+    return MessageResponse(message="Scan and all related data deleted successfully")
 
 
-@router.post("/scans/{scan_id}/stop")
+@router.post("/scans/{scan_id}/stop", response_model=ScanStopResponse)
 async def stop_scan(
     scan_id: str,
     api_key: str = api_key_dep,
@@ -343,7 +353,7 @@ async def stop_scan(
         raise HTTPException(status_code=404, detail="Scan not found")
     try:
         new_status = svc.stop_scan(scan_id)
-        return {"message": "Scan stopped successfully", "status": new_status}
+        return ScanStopResponse(message="Scan stopped successfully", status=new_status)
     except ScanServiceError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
 
@@ -611,7 +621,7 @@ async def get_scan_options(
     return ret
 
 
-@router.post("/scans/{scan_id}/rerun")
+@router.post("/scans/{scan_id}/rerun", response_model=ScanRerunResponse)
 async def rerun_scan(
     scan_id: str,
     api_key: str = api_key_dep,
@@ -663,10 +673,10 @@ async def rerun_scan(
     while dbh.scanInstanceGet(new_scan_id) is None:
         time.sleep(1)
 
-    return {"new_scan_id": new_scan_id, "message": "Scan rerun started"}
+    return ScanRerunResponse(new_scan_id=new_scan_id)
 
 
-@router.post("/scans/{scan_id}/clone")
+@router.post("/scans/{scan_id}/clone", response_model=ScanCloneResponse)
 async def clone_scan(
     scan_id: str,
     api_key: str = api_key_dep,
@@ -706,7 +716,7 @@ async def clone_scan(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Scan [{new_scan_id}] clone failed: {e}") from e
 
-    return {"new_scan_id": new_scan_id, "message": "Scan cloned successfully"}
+    return ScanCloneResponse(new_scan_id=new_scan_id)
 
 
 # -----------------------------------------------------------------------
@@ -732,7 +742,7 @@ async def set_results_false_positive(
         raise HTTPException(status_code=404, detail=str(e)) from e
 
 
-@router.post("/scans/{scan_id}/clear")
+@router.post("/scans/{scan_id}/clear", response_model=MessageResponse)
 async def clear_scan(
     scan_id: str,
     api_key: str = api_key_dep,
@@ -744,7 +754,7 @@ async def clear_scan(
         raise HTTPException(status_code=404, detail="Scan not found")
     try:
         svc.clear_results(scan_id)
-        return {"success": True, "message": "Scan results cleared (scan entry retained)"}
+        return MessageResponse(message="Scan results cleared (scan entry retained)")
     except Exception as e:
         logger.error("Failed to clear scan %s: %s", scan_id, e)
         raise HTTPException(status_code=500, detail="Failed to clear scan results") from e
@@ -755,7 +765,7 @@ async def clear_scan(
 # -----------------------------------------------------------------------
 
 
-@router.get("/scans/{scan_id}/metadata")
+@router.get("/scans/{scan_id}/metadata", response_model=ScanMetadataResponse)
 async def get_scan_metadata(
     scan_id: str,
     api_key: str = optional_auth_dep,
@@ -765,7 +775,7 @@ async def get_scan_metadata(
     record = svc.get_scan(scan_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
-    return {"metadata": svc.get_metadata(scan_id)}
+    return ScanMetadataResponse(metadata=svc.get_metadata(scan_id))
 
 
 @router.patch("/scans/{scan_id}/metadata")
@@ -785,7 +795,7 @@ async def update_scan_metadata(
     return {"success": True, "metadata": metadata}
 
 
-@router.get("/scans/{scan_id}/notes")
+@router.get("/scans/{scan_id}/notes", response_model=ScanNotesResponse)
 async def get_scan_notes(
     scan_id: str,
     api_key: str = optional_auth_dep,
@@ -795,7 +805,7 @@ async def get_scan_notes(
     record = svc.get_scan(scan_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
-    return {"notes": svc.get_notes(scan_id)}
+    return ScanNotesResponse(notes=svc.get_notes(scan_id))
 
 
 @router.patch("/scans/{scan_id}/notes")
@@ -813,7 +823,7 @@ async def update_scan_notes(
     return {"success": True, "notes": notes}
 
 
-@router.post("/scans/{scan_id}/archive")
+@router.post("/scans/{scan_id}/archive", response_model=MessageResponse)
 async def archive_scan(
     scan_id: str,
     api_key: str = api_key_dep,
@@ -824,10 +834,10 @@ async def archive_scan(
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
     svc.archive(scan_id)
-    return {"success": True, "message": "Scan archived"}
+    return MessageResponse(message="Scan archived")
 
 
-@router.post("/scans/{scan_id}/unarchive")
+@router.post("/scans/{scan_id}/unarchive", response_model=MessageResponse)
 async def unarchive_scan(
     scan_id: str,
     api_key: str = api_key_dep,
@@ -838,4 +848,4 @@ async def unarchive_scan(
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
     svc.unarchive(scan_id)
-    return {"success": True, "message": "Scan unarchived"}
+    return MessageResponse(message="Scan unarchived")
