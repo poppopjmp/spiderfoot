@@ -366,6 +366,15 @@ migration instructions.
 | 5.66.0 | API key rotation endpoint |
 | 5.67.0 | Scan comparison endpoint |
 | 5.67.1 | Documentation update for Cycles 65-74 |
+| 5.68.0 | Body size limiter middleware |
+| 5.68.1 | CORS middleware |
+| 5.69.0 | Module runtime statistics endpoint |
+| 5.70.0 | Scan tag/label management |
+| 5.71.0 | Bulk scan operations |
+| 5.72.0 | Per-endpoint rate limit configuration |
+| 5.73.0 | Webhook event filtering + discovery |
+| 5.74.0 | Module dependency graph endpoint |
+| 5.74.1 | Documentation update for Cycles 75-83 |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 

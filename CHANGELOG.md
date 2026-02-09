@@ -3,6 +3,80 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.74.1] — Documentation Update (Cycle 83)
+
+### Changed
+- README.md, ARCHITECTURE.md, CHANGELOG.md updated with Cycles 75-83 entries
+
+## [5.74.0] — Module Dependency Graph (Cycle 82)
+
+### Added
+- `spiderfoot/api/routers/data.py` — `GET /data/modules/dependencies`
+  - Module dependency graph showing producers/consumers per event type
+  - Directed edges from producer to consumer modules
+  - Identifies orphan producers and consumers
+
+## [5.73.0] — Webhook Event Filtering (Cycle 81)
+
+### Added
+- `spiderfoot/api/routers/webhooks.py` — Event type discovery and filter management
+  - `GET /webhooks/event-types` — lists all known event types by category
+  - `PUT /webhooks/{id}/event-filter` — update event type subscription filter
+  - Validates event types against known registry with warnings for unknowns
+
+## [5.72.0] — Per-Endpoint Rate Limits (Cycle 80)
+
+### Added
+- `spiderfoot/api/rate_limit_middleware.py` — per-endpoint rate limit overrides
+  - `SF_API_RATE_LIMIT_ENDPOINTS` env var for static overrides
+  - Runtime management functions: `set_endpoint_override()`, `remove_endpoint_override()`
+- `spiderfoot/api/routers/config.py` — rate limit management API
+  - `GET /config/rate-limits` — view config + stats
+  - `PUT /config/rate-limits/endpoints` — set per-endpoint override
+  - `DELETE /config/rate-limits/endpoints` — remove override
+
+## [5.71.0] — Bulk Scan Operations (Cycle 79)
+
+### Added
+- `spiderfoot/api/routers/scan.py` — bulk scan operations
+  - `POST /scans/bulk/stop` — stop multiple scans
+  - `POST /scans/bulk/delete` — delete multiple scans
+  - `POST /scans/bulk/archive` — archive multiple scans
+  - Per-scan results with summary counts
+
+## [5.70.0] — Scan Tag Management (Cycle 78)
+
+### Added
+- `spiderfoot/api/routers/scan.py` — scan tag/label CRUD
+  - `GET /scans/{id}/tags` — get tags
+  - `PUT /scans/{id}/tags` — replace all tags
+  - `POST /scans/{id}/tags` — add tags (merge)
+  - `DELETE /scans/{id}/tags` — remove specific tags
+  - Tags stored in scan metadata, normalized (lowercase, deduped, max 50)
+- `spiderfoot/api/schemas.py` — `ScanTagsResponse` model
+
+## [5.69.0] — Module Runtime Statistics (Cycle 77)
+
+### Added
+- `spiderfoot/api/routers/data.py` — `GET /data/modules/stats`
+  - Aggregates timeout, output validation, and health stats per module
+  - Consolidated view of module performance metrics
+
+## [5.68.1] — CORS Middleware (Cycle 76)
+
+### Added
+- `spiderfoot/api/cors_config.py` — configurable CORS middleware
+  - `SF_API_CORS_ORIGINS`, `SF_API_CORS_METHODS`, `SF_API_CORS_HEADERS`
+  - Safety: disables credentials when origins="*"
+
+## [5.68.0] — Body Size Limiter (Cycle 75)
+
+### Added
+- `spiderfoot/api/body_limit_middleware.py` — request size protection
+  - Default 10MB general, 50MB for upload paths
+  - `SF_API_MAX_BODY_SIZE`, `SF_API_MAX_UPLOAD_SIZE` env vars
+  - Returns 413 Payload Too Large
+
 ## [5.67.1] — Documentation Update (Cycle 74)
 
 ### Changed

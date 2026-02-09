@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.74.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.74.0)
+[![Stable Release](https://img.shields.io/badge/version-5.74.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.74.1)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -701,6 +701,20 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 ---
 
 ## Recent Updates
+
+### v5.74.0 — Modernization Cycles 75-83
+
+| Cycle | Version | Feature |
+|-------|---------|----------|
+| 75 | 5.68.0 | Request body size limiter middleware (DoS prevention) |
+| 76 | 5.68.1 | CORS middleware with configurable origins |
+| 77 | 5.69.0 | Module runtime statistics endpoint (GET /data/modules/stats) |
+| 78 | 5.70.0 | Scan tag/label management (CRUD endpoints) |
+| 79 | 5.71.0 | Bulk scan operations (stop/delete/archive multiple scans) |
+| 80 | 5.72.0 | Per-endpoint rate limit configuration + management API |
+| 81 | 5.73.0 | Webhook event type discovery and filter management |
+| 82 | 5.74.0 | Module dependency graph endpoint |
+| 83 | 5.74.1 | Documentation update for Cycles 75-83 |
 
 ### v5.67.0 — Modernization Cycles 65-74
 
