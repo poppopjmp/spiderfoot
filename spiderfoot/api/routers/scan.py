@@ -720,6 +720,87 @@ async def stop_scan(
         raise HTTPException(status_code=409, detail=str(e)) from e
 
 
+@router.post("/scans/{scan_id}/retry")
+async def retry_scan(
+    scan_id: str,
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Retry a failed or aborted scan by creating a new scan with the same configuration.
+
+    The original scan is preserved for reference.  A new scan is created
+    with the same target, modules, and configuration, and optionally
+    started immediately.
+    """
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    scan_dict = record.to_dict()
+    status = str(scan_dict.get("status", "")).upper()
+
+    # Only allow retry of non-running scans
+    if status in ("RUNNING", "STARTING", "STARTED"):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Cannot retry a scan in '{status}' state — stop it first",
+        )
+
+    try:
+        from spiderfoot import SpiderFootHelpers
+
+        # Get the original scan config
+        dbh = svc._dbh if hasattr(svc, '_dbh') else None
+        scan_config = {}
+        original_target = scan_dict.get("target", scan_dict.get("name", ""))
+        original_modules = scan_dict.get("modules", [])
+
+        if dbh and hasattr(dbh, 'scanConfigGet'):
+            try:
+                scan_config = dbh.scanConfigGet(scan_id) or {}
+            except Exception:
+                pass
+
+        new_scan_id = SpiderFootHelpers.genScanInstanceId()
+
+        # Create the new scan entry
+        if dbh and hasattr(dbh, 'scanInstanceCreate'):
+            scan_name = f"{scan_dict.get('name', original_target)} (Retry)"
+            dbh.scanInstanceCreate(new_scan_id, scan_name, original_target)
+            if scan_config:
+                dbh.scanConfigSet(new_scan_id, scan_config)
+
+        # Copy metadata (including tags, annotations) from original
+        try:
+            original_meta = svc.get_metadata(scan_id) or {}
+            if original_meta:
+                retry_meta = dict(original_meta)
+                retry_meta["_retry_of"] = scan_id
+                retry_meta["_retry_reason"] = status
+                svc.set_metadata(new_scan_id, retry_meta)
+        except Exception:
+            pass
+
+        if _hooks:
+            try:
+                _hooks.on_created(new_scan_id, original_target)
+            except Exception:
+                pass
+
+        return {
+            "original_scan_id": scan_id,
+            "original_status": status,
+            "new_scan_id": new_scan_id,
+            "target": original_target,
+            "message": "New scan created from original configuration. Start it with POST /scans/{id}/start.",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to retry scan %s: %s", scan_id, e)
+        raise HTTPException(status_code=500, detail="Failed to retry scan") from e
+
+
 # -----------------------------------------------------------------------
 # Export endpoints
 # -----------------------------------------------------------------------
