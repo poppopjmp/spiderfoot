@@ -230,6 +230,122 @@ async def rerun_scan_multi(
 
 
 # -----------------------------------------------------------------------
+# Bulk operations
+# -----------------------------------------------------------------------
+
+class BulkScanRequest(BaseModel):
+    """Request body for bulk scan operations."""
+    scan_ids: List[str] = Field(..., description="List of scan IDs to operate on", min_length=1, max_length=100)
+
+
+@router.post("/scans/bulk/stop")
+async def bulk_stop_scans(
+    request: BulkScanRequest,
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Stop multiple scans in one request."""
+    results = {"stopped": [], "not_found": [], "already_finished": [], "errors": []}
+    for scan_id in request.scan_ids:
+        try:
+            record = svc.get_scan(scan_id)
+            if record is None:
+                results["not_found"].append(scan_id)
+                continue
+            status = record.status if hasattr(record, "status") else str(record)
+            if status in ("FINISHED", "ABORTED", "ERROR-FAILED"):
+                results["already_finished"].append(scan_id)
+                continue
+            svc.stop_scan(scan_id)
+            results["stopped"].append(scan_id)
+            if _hooks:
+                try:
+                    _hooks.on_stopped(scan_id)
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.error("Bulk stop failed for %s: %s", scan_id, e)
+            results["errors"].append({"scan_id": scan_id, "error": str(e)})
+    return {
+        **results,
+        "summary": {
+            "stopped": len(results["stopped"]),
+            "not_found": len(results["not_found"]),
+            "already_finished": len(results["already_finished"]),
+            "errors": len(results["errors"]),
+        },
+    }
+
+
+@router.post("/scans/bulk/delete")
+async def bulk_delete_scans(
+    request: BulkScanRequest,
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Delete multiple scans in one request."""
+    results = {"deleted": [], "not_found": [], "errors": []}
+    for scan_id in request.scan_ids:
+        try:
+            record = svc.get_scan(scan_id)
+            if record is None:
+                results["not_found"].append(scan_id)
+                continue
+            svc.delete_scan(scan_id)
+            results["deleted"].append(scan_id)
+            if _hooks:
+                try:
+                    _hooks.on_deleted(scan_id)
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.error("Bulk delete failed for %s: %s", scan_id, e)
+            results["errors"].append({"scan_id": scan_id, "error": str(e)})
+    return {
+        **results,
+        "summary": {
+            "deleted": len(results["deleted"]),
+            "not_found": len(results["not_found"]),
+            "errors": len(results["errors"]),
+        },
+    }
+
+
+@router.post("/scans/bulk/archive")
+async def bulk_archive_scans(
+    request: BulkScanRequest,
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Archive multiple scans in one request."""
+    results = {"archived": [], "not_found": [], "errors": []}
+    for scan_id in request.scan_ids:
+        try:
+            record = svc.get_scan(scan_id)
+            if record is None:
+                results["not_found"].append(scan_id)
+                continue
+            svc.archive(scan_id)
+            results["archived"].append(scan_id)
+            if _hooks:
+                try:
+                    _hooks.on_archived(scan_id)
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.error("Bulk archive failed for %s: %s", scan_id, e)
+            results["errors"].append({"scan_id": scan_id, "error": str(e)})
+    return {
+        **results,
+        "summary": {
+            "archived": len(results["archived"]),
+            "not_found": len(results["not_found"]),
+            "errors": len(results["errors"]),
+        },
+    }
+
+
+# -----------------------------------------------------------------------
 # Parameterized (CRUD + lifecycle) routes
 # -----------------------------------------------------------------------
 
