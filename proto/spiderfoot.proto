@@ -1,6 +1,8 @@
 // SpiderFoot Service Protocol
 // Defines gRPC service interfaces for microservice communication.
-// Scanner, DataService, and ScanControl services.
+// Scanner, DataService, ScanControl, Correlation, and Health services.
+//
+// Version: 2.0.0 — expanded with correlation, metadata, and status RPCs
 
 syntax = "proto3";
 
@@ -141,10 +143,25 @@ service DataService {
     rpc ListScanInstances (ListScansRequest) returns (ListScanRecordsResponse);
     rpc DeleteScan (ScanIdRequest) returns (DeleteResponse);
 
+    // Scan status management
+    rpc SetScanStatus (SetScanStatusRequest) returns (ScanControlResponse);
+
+    // Scan metadata
+    rpc GetScanMetadata (ScanIdRequest) returns (ScanMetadataResponse);
+    rpc SetScanMetadata (SetScanMetadataRequest) returns (Empty);
+    rpc GetScanNotes (ScanIdRequest) returns (ScanNotesResponse);
+    rpc SetScanNotes (SetScanNotesRequest) returns (Empty);
+    rpc ArchiveScan (ScanIdRequest) returns (Empty);
+    rpc UnarchiveScan (ScanIdRequest) returns (Empty);
+
     // Event storage
     rpc StoreEvent (StoreEventRequest) returns (StoreEventResponse);
+    rpc StoreBatchEvents (StoreBatchEventsRequest) returns (StoreBatchEventsResponse);
     rpc GetEvents (GetEventsRequest) returns (GetEventsResponse);
     rpc GetUniqueEventTypes (ScanIdRequest) returns (EventTypesResponse);
+    rpc GetEventSummary (ScanIdRequest) returns (EventSummaryResponse);
+    rpc EventExists (EventExistsRequest) returns (EventExistsResponse);
+    rpc SetFalsePositive (SetFalsePositiveRequest) returns (Empty);
 
     // Scan logs
     rpc LogScanEvent (LogEventRequest) returns (Empty);
@@ -153,6 +170,15 @@ service DataService {
     // Configuration
     rpc SetConfig (SetConfigRequest) returns (Empty);
     rpc GetConfig (GetConfigRequest) returns (GetConfigResponse);
+    rpc SetScanConfig (SetScanConfigRequest) returns (Empty);
+    rpc GetScanConfig (ScanIdRequest) returns (GetConfigResponse);
+
+    // Correlations
+    rpc StoreCorrelation (StoreCorrelationRequest) returns (Empty);
+    rpc GetCorrelations (GetCorrelationsRequest) returns (GetCorrelationsResponse);
+
+    // Bulk operations
+    rpc ClearScanResults (ScanIdRequest) returns (DeleteResponse);
 }
 
 message CreateScanRequest {
@@ -220,6 +246,10 @@ message EventRecord {
     string source_event_hash = 6;
     int32 confidence = 7;
     Timestamp timestamp = 8;
+    int32 visibility = 9;
+    int32 risk = 10;
+    bool false_positive = 11;
+    string source_data = 12;
 }
 
 message EventTypesResponse {
@@ -261,6 +291,170 @@ message GetConfigRequest {
 
 message GetConfigResponse {
     repeated KeyValue config = 1;
+}
+
+// ============================================================================
+// New messages for expanded DataService RPCs
+// ============================================================================
+
+message SetScanStatusRequest {
+    string scan_id = 1;
+    string status = 2;  // e.g. "RUNNING", "FINISHED", "ABORTED"
+}
+
+message ScanMetadataResponse {
+    string scan_id = 1;
+    string scan_name = 2;
+    string target = 3;
+    string status = 4;
+    Timestamp created_at = 5;
+    Timestamp started_at = 6;
+    Timestamp finished_at = 7;
+    bool archived = 8;
+    map<string, string> tags = 9;
+}
+
+message SetScanMetadataRequest {
+    string scan_id = 1;
+    string scan_name = 2;
+    map<string, string> tags = 3;
+}
+
+message ScanNotesResponse {
+    string scan_id = 1;
+    string notes = 2;
+}
+
+message SetScanNotesRequest {
+    string scan_id = 1;
+    string notes = 2;
+}
+
+message StoreBatchEventsRequest {
+    string scan_id = 1;
+    repeated StoreEventRequest events = 2;
+}
+
+message StoreBatchEventsResponse {
+    int32 stored_count = 1;
+    repeated string event_hashes = 2;
+    int32 failed_count = 3;
+}
+
+message EventSummaryResponse {
+    string scan_id = 1;
+    repeated EventTypeSummary summaries = 2;
+    int32 total_events = 3;
+}
+
+message EventTypeSummary {
+    string event_type = 1;
+    int32 count = 2;
+    Timestamp last_seen = 3;
+}
+
+message EventExistsRequest {
+    string scan_id = 1;
+    string event_type = 2;
+    string data = 3;
+}
+
+message EventExistsResponse {
+    bool exists = 1;
+}
+
+message SetFalsePositiveRequest {
+    string scan_id = 1;
+    repeated string event_hashes = 2;
+    bool false_positive = 3;
+}
+
+message SetScanConfigRequest {
+    string scan_id = 1;
+    repeated KeyValue config = 2;
+}
+
+message StoreCorrelationRequest {
+    string scan_id = 1;
+    string rule_id = 2;
+    string rule_name = 3;
+    string severity = 4;
+    string description = 5;
+    repeated string matched_event_hashes = 6;
+    map<string, string> metadata = 7;
+}
+
+message GetCorrelationsRequest {
+    string scan_id = 1;
+    string severity_filter = 2;  // optional
+    int32 limit = 3;
+    int32 offset = 4;
+}
+
+message GetCorrelationsResponse {
+    repeated CorrelationRecord correlations = 1;
+    int32 total_count = 2;
+}
+
+message CorrelationRecord {
+    string rule_id = 1;
+    string rule_name = 2;
+    string severity = 3;
+    string description = 4;
+    repeated string matched_event_hashes = 5;
+    map<string, string> metadata = 6;
+    Timestamp created_at = 7;
+}
+
+// ============================================================================
+// Correlation Service — dedicated service for correlation analysis
+// ============================================================================
+
+service CorrelationService {
+    // Evaluate all rules against a scan's events
+    rpc AnalyzeScan (CorrelationAnalyzeRequest) returns (CorrelationAnalyzeResponse);
+
+    // List available correlation rules
+    rpc ListRules (Empty) returns (ListRulesResponse);
+
+    // Test a single rule against a scan
+    rpc TestRule (TestRuleRequest) returns (TestRuleResponse);
+}
+
+message CorrelationAnalyzeRequest {
+    string scan_id = 1;
+    repeated string rule_ids = 2;  // empty = all rules
+}
+
+message CorrelationAnalyzeResponse {
+    string scan_id = 1;
+    int32 rules_evaluated = 2;
+    int32 total_matches = 3;
+    repeated CorrelationRecord results = 4;
+}
+
+message CorrelationRuleInfo {
+    string rule_id = 1;
+    string name = 2;
+    string severity = 3;
+    string description = 4;
+    repeated string required_event_types = 5;
+    bool enabled = 6;
+}
+
+message ListRulesResponse {
+    repeated CorrelationRuleInfo rules = 1;
+}
+
+message TestRuleRequest {
+    string scan_id = 1;
+    string rule_id = 2;
+}
+
+message TestRuleResponse {
+    bool matched = 1;
+    int32 match_count = 2;
+    repeated CorrelationRecord results = 3;
 }
 
 // ============================================================================
