@@ -1,0 +1,216 @@
+# =============================================================================
+# Vector.dev Configuration for SpiderFoot
+# =============================================================================
+# This configuration collects logs, scan events, and metrics from SpiderFoot
+# and routes them to external data stores.
+#
+# Sources: Docker logs, HTTP endpoint (scan events), Prometheus metrics
+# Sinks: Loki (logs), Elasticsearch (events), S3 (archival), Webhook (alerts)
+#
+# Enable sinks via environment variables:
+#   SF_LOKI_ENDPOINT      - Loki push endpoint (e.g. http://loki:3100)
+#   SF_ES_ENDPOINT        - Elasticsearch endpoint (e.g. http://es:9200)
+#   SF_S3_BUCKET          - S3 bucket for archival
+#   SF_S3_REGION          - S3 region
+#   SF_ALERT_WEBHOOK_URL  - Webhook URL for high-severity alerts
+#   SF_VECTOR_HTTP_PORT   - HTTP source port (default: 8686)
+#
+# See: https://vector.dev/docs/reference/configuration/
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# DATA DIRECTORY
+# ---------------------------------------------------------------------------
+data_dir = "/var/lib/vector"
+
+# ---------------------------------------------------------------------------
+# SOURCES
+# ---------------------------------------------------------------------------
+
+# Collect container logs from all SpiderFoot services
+[sources.sf_docker_logs]
+type = "docker_logs"
+include_containers = ["spiderfoot-*"]
+multiline.mode = "halt_before"
+multiline.start_pattern = '^\{' # JSON lines start with {
+multiline.condition_pattern = '^\{' 
+multiline.timeout_ms = 1000
+
+# HTTP source for scan events (SpiderFoot pushes events here)
+[sources.sf_events_http]
+type = "http_server"
+address = "0.0.0.0:${SF_VECTOR_HTTP_PORT:-8686}"
+encoding.codec = "ndjson"
+strict_decoding = false
+headers = ["Authorization"]
+
+# Internal Vector metrics
+[sources.vector_metrics]
+type = "internal_metrics"
+
+# ---------------------------------------------------------------------------
+# TRANSFORMS
+# ---------------------------------------------------------------------------
+
+# Parse JSON from container logs
+[transforms.parse_docker_logs]
+type = "remap"
+inputs = ["sf_docker_logs"]
+source = '''
+  # Try to parse the message as JSON
+  parsed, err = parse_json(.message)
+  if err == null {
+    . = merge(., parsed)
+    .log_format = "structured"
+  } else {
+    .log_format = "plain"
+  }
+  
+  # Add source info
+  .pipeline = "spiderfoot"
+  .ingestion_timestamp = now()
+'''
+
+# Enrich scan events with metadata
+[transforms.enrich_events]
+type = "remap"
+inputs = ["sf_events_http"]
+source = '''
+  .pipeline = "spiderfoot"
+  .ingestion_timestamp = now()
+  
+  # Categorize by event type
+  .event_category = if starts_with(to_string(.event_type) ?? "", "URL") { "web" }
+    else if starts_with(to_string(.event_type) ?? "", "IP") { "network" }
+    else if starts_with(to_string(.event_type) ?? "", "DOMAIN") { "domain" }
+    else if starts_with(to_string(.event_type) ?? "", "DNS") { "dns" }
+    else if starts_with(to_string(.event_type) ?? "", "VULNERABILITY") { "security" }
+    else if starts_with(to_string(.event_type) ?? "", "MALICIOUS") { "threat" }
+    else if starts_with(to_string(.event_type) ?? "", "EMAIL") { "email" }
+    else if starts_with(to_string(.event_type) ?? "", "PHONE") { "phone" }
+    else if starts_with(to_string(.event_type) ?? "", "USERNAME") { "identity" }
+    else if starts_with(to_string(.event_type) ?? "", "SOCIAL") { "social" }
+    else { "osint" }
+  
+  # Risk classification
+  risk_val = to_int(.risk) ?? 0
+  .risk_level = if risk_val >= 80 { "critical" }
+    else if risk_val >= 60 { "high" }
+    else if risk_val >= 40 { "medium" }
+    else if risk_val >= 20 { "low" }
+    else { "info" }
+'''
+
+# Route events by type
+[transforms.route_events]
+type = "route"
+inputs = ["enrich_events"]
+[transforms.route_events.route]
+  scan_events = '.type == "scan_event"'
+  scan_status = '.type == "scan_status"'
+  metrics = '.type == "metric"'
+  logs = '.type == "log"'
+
+# Route logs by level
+[transforms.route_logs]
+type = "route"
+inputs = ["parse_docker_logs"]
+[transforms.route_logs.route]
+  errors = '.level == "ERROR" || .level == "CRITICAL"'
+  warnings = '.level == "WARNING"'
+  info = '.level == "INFO" || .level == "DEBUG"'
+
+# Filter high-risk events for alerting
+[transforms.high_risk_filter]
+type = "filter"
+inputs = ["enrich_events"]
+condition = '(to_int(.risk) ?? 0) >= 60'
+
+# ---------------------------------------------------------------------------
+# SINKS
+# ---------------------------------------------------------------------------
+
+# Console output for development/debugging
+[sinks.console_debug]
+type = "console"
+inputs = ["enrich_events"]
+encoding.codec = "json"
+# Enable only in development:
+# target = "stdout"
+
+# Elasticsearch for scan events (searchable event store)
+[sinks.elasticsearch_events]
+type = "elasticsearch"
+inputs = ["route_events.scan_events", "route_events.scan_status"]
+endpoints = ["${SF_ES_ENDPOINT:-http://elasticsearch:9200}"]
+api_version = "v8"
+mode = "bulk"
+bulk.index = "spiderfoot-events-{{ event_category }}-%Y-%m-%d"
+encoding.timestamp_format = "rfc3339"
+# auth.strategy = "basic"
+# auth.user = "elastic"
+# auth.password = "${ELASTIC_PASSWORD}"
+
+# Loki for log aggregation (enable via SF_LOKI_ENDPOINT env var)
+[sinks.loki_logs]
+type = "loki"
+inputs = ["route_logs.errors", "route_logs.warnings", "route_logs.info", "route_events.logs"]
+endpoint = "${SF_LOKI_ENDPOINT:-http://loki:3100}"
+labels.service = "spiderfoot"
+labels.environment = "{{ environment }}"
+labels.level = "{{ level }}"
+encoding.codec = "json"
+healthcheck.enabled = true
+
+# High-severity webhook alerting (enable via SF_ALERT_WEBHOOK_URL)
+# Forwards events with risk >= 60 to PagerDuty, Slack, or custom endpoint
+[sinks.high_severity_webhook]
+type = "http"
+inputs = ["high_risk_filter"]
+uri = "${SF_ALERT_WEBHOOK_URL:-http://localhost:9999/alert}"
+method = "post"
+encoding.codec = "json"
+batch.max_events = 1
+batch.timeout_secs = 0
+
+# ClickHouse for high-volume analytics
+# Uncomment when ClickHouse is available
+# [sinks.clickhouse_events]
+# type = "clickhouse"  
+# inputs = ["route_events.scan_events"]
+# endpoint = "http://clickhouse:8123"
+# database = "spiderfoot"
+# table = "events"
+# skip_unknown_fields = true
+
+# File output for local persistence / backup
+[sinks.file_events]
+type = "file"
+inputs = ["enrich_events"]
+path = "/var/log/vector/spiderfoot/events-%Y-%m-%d.json"
+encoding.codec = "json"
+
+[sinks.file_logs]
+type = "file"
+inputs = ["parse_docker_logs"]
+path = "/var/log/vector/spiderfoot/logs-%Y-%m-%d.json"
+encoding.codec = "json"
+
+# Prometheus metrics exporter
+# [sinks.prometheus_metrics]
+# type = "prometheus_exporter"
+# inputs = ["route_events.metrics", "vector_metrics"]
+# address = "0.0.0.0:9598"
+
+# S3 for long-term archival (enable via SF_S3_BUCKET + SF_S3_REGION)
+# Uncomment for cloud deployments
+# [sinks.s3_archive]
+# type = "aws_s3"
+# inputs = ["enrich_events"]
+# bucket = "${SF_S3_BUCKET:-spiderfoot-data-archive}"
+# key_prefix = "events/{{ event_category }}/%Y/%m/%d/"
+# region = "${SF_S3_REGION:-us-east-1}"
+# encoding.codec = "json"
+# compression = "gzip"
+# batch.max_bytes = 10485760  # 10MB
+# batch.timeout_secs = 300

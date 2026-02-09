@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.21.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.21.0)
+[![Stable Release](https://img.shields.io/badge/version-5.22.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.22.1)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -22,7 +22,7 @@ SpiderFoot features an embedded web-server for providing a clean and intuitive w
 
 ## Platform Architecture
 
-SpiderFoot v5.21+ features a fully modular microservices architecture. Each service
+SpiderFoot v5.22+ features a fully modular microservices architecture. Each service
 can run standalone or together in a single process (monolith mode).
 
 ```mermaid
@@ -68,6 +68,7 @@ graph TD;
 | **Auth** | `spiderfoot/auth.py` | JWT/API-key/Basic auth with RBAC |
 | **Metrics** | `spiderfoot/metrics.py` | Zero-dependency Prometheus-compatible metrics |
 | **Vector.dev Sink** | `spiderfoot/vector_sink.py` | Event/log/metric pipeline to Elasticsearch/S3 |
+| **Vector Bootstrap** | `spiderfoot/vector_bootstrap.py` | Vector.dev health check, config validation, sink detection |
 | **gRPC/HTTP RPC** | `spiderfoot/grpc_service.py` | Inter-service communication with fallback |
 | **Health** | `spiderfoot/health.py` | K8s liveness/readiness/startup probes |
 | **WebSocket** | `spiderfoot/websocket_service.py` | Real-time scan event streaming |
@@ -237,6 +238,12 @@ All services can be configured via environment variables (see `docker/env.exampl
 | `SF_REDIS_URL` | Redis URL for EventBus/Cache | None |
 | `SF_EVENTBUS_BACKEND` | `memory`, `redis`, or `nats` | `memory` |
 | `SF_VECTOR_ENDPOINT` | Vector.dev HTTP endpoint | None |
+| `SF_VECTOR_HTTP_PORT` | Vector HTTP source port | `8686` |
+| `SF_LOKI_ENDPOINT` | Loki push API endpoint | None |
+| `SF_ES_ENDPOINT` | Elasticsearch endpoint | None |
+| `SF_S3_BUCKET` | S3 bucket for archival | None |
+| `SF_S3_REGION` | S3 region | `us-east-1` |
+| `SF_ALERT_WEBHOOK_URL` | Webhook URL for high-severity alerts | None |
 | `SF_LOG_FORMAT` | `json` or `text` | `text` |
 
 ---
