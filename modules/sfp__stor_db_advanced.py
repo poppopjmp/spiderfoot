@@ -30,6 +30,8 @@ import hashlib
 import logging
 from contextlib import contextmanager, suppress
 
+_log = logging.getLogger(__name__)
+
 try:
     import psycopg2
     import psycopg2.pool
@@ -118,7 +120,7 @@ class ConnectionLoadBalancer:
                 if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
                     self.log.error(f"Failed to initialize pool {pool_id}: {e}")
                 else:
-                    print(f"Failed to initialize pool {pool_id}: {e}")
+                    _log.error("Failed to initialize pool %s: %s", pool_id, e)
                 self.health_status[pool_id] = False
     
     def get_optimal_connection(self, query_type: str = None) -> Tuple[str, Any]:
@@ -145,7 +147,7 @@ class ConnectionLoadBalancer:
                 if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
                     self.log.error(f"Failed to get connection from {best_pool_id}: {e}")
                 else:
-                    print(f"Failed to get connection from {best_pool_id}: {e}")
+                    _log.error("Failed to get connection from %s: %s", best_pool_id, e)
                 # Retry with next best pool
                 return self.get_optimal_connection(query_type)
     
@@ -168,7 +170,7 @@ class ConnectionLoadBalancer:
                 if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
                     self.log.error(f"Failed to return connection to {pool_id}: {e}")
                 else:
-                    print(f"Failed to return connection to {pool_id}: {e}")
+                    _log.error("Failed to return connection to %s: %s", pool_id, e)
 
 
 class QueryOptimizer:
@@ -334,7 +336,7 @@ class PerformanceMonitor:
         if hasattr(self, 'sf') and hasattr(self.sf, 'warning'):
             self.log.warning(f"Performance alert: {alert_type} - {details}")
         else:
-            print(f"Performance alert: {alert_type} - {details}")
+            _log.warning("Performance alert: %s - %s", alert_type, details)
     
     def _determine_severity(self, alert_type: str, details: Dict[str, Any]) -> str:
         """Determine alert severity."""
@@ -356,7 +358,7 @@ class PerformanceMonitor:
                     if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
                         self.log.error(f"Performance monitoring error: {e}")
                     else:
-                        print(f"Performance monitoring error: {e}")
+                        _log.error("Performance monitoring error: %s", e)
         
         threading.Thread(target=monitor, daemon=True).start()
     
@@ -444,7 +446,7 @@ class AutoScaler:
                     if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
                         self.log.error(f"Auto-scaling error: {e}")
                     else:
-                        print(f"Auto-scaling error: {e}")
+                        _log.error("Auto-scaling error: %s", e)
         
         threading.Thread(target=scale, daemon=True).start()
     
@@ -474,13 +476,13 @@ class AutoScaler:
                 if hasattr(self, 'sf') and hasattr(self.sf, 'info'):
                     self.log.info(f"Scaled up {pool_id} from {current_max} to {new_max} connections")
                 else:
-                    print(f"Scaled up {pool_id} from {current_max} to {new_max} connections")
+                    _log.info("Scaled up %s from %s to %s connections", pool_id, current_max, new_max)
                 
         except Exception as e:
             if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
                 self.log.error(f"Failed to scale up {pool_id}: {e}")
             else:
-                print(f"Failed to scale up {pool_id}: {e}")
+                _log.error("Failed to scale up %s: %s", pool_id, e)
     
     def _scale_down(self, pool_id: str):
         """Scale down connections for a pool."""
@@ -496,13 +498,13 @@ class AutoScaler:
                 if hasattr(self, 'sf') and hasattr(self.sf, 'info'):
                     self.log.info(f"Scaled down {pool_id} from {current_max} to {new_max} connections")
                 else:
-                    print(f"Scaled down {pool_id} from {current_max} to {new_max} connections")
+                    _log.info("Scaled down %s from %s to %s connections", pool_id, current_max, new_max)
                 
         except Exception as e:
             if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
                 self.log.error(f"Failed to scale down {pool_id}: {e}")
             else:
-                print(f"Failed to scale down {pool_id}: {e}")
+                _log.error("Failed to scale down %s: %s", pool_id, e)
     
     def _recreate_pool(self, pool_id: str, config: Dict[str, Any], max_connections: int):
         """Recreate pool with new connection limits."""
@@ -535,7 +537,7 @@ class AutoScaler:
             if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
                 self.log.error(f"Failed to recreate pool {pool_id}: {e}")
             else:
-                print(f"Failed to recreate pool {pool_id}: {e}")
+                _log.error("Failed to recreate pool %s: %s", pool_id, e)
             # Mark pool as unhealthy
             self.load_balancer.health_status[pool_id] = False
 
