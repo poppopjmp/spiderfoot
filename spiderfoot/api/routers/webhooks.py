@@ -185,3 +185,107 @@ else:
         if not mgr.update_webhook(webhook_id, **updates):
             raise HTTPException(status_code=404, detail="Webhook not found.")
         return {"webhook_id": webhook_id, "status": "updated", "fields": list(updates.keys())}
+
+    # -------------------------------------------------------------------
+    # Event type discovery & filter management
+    # -------------------------------------------------------------------
+
+    # All known webhook event types grouped by category
+    KNOWN_EVENT_TYPES: Dict[str, List[str]] = {
+        "scan": [
+            "scan.created",
+            "scan.started",
+            "scan.completed",
+            "scan.stopped",
+            "scan.error",
+            "scan.deleted",
+            "scan.archived",
+            "scan.unarchived",
+            "scan.rerun",
+            "scan.cloned",
+        ],
+        "event": [
+            "event.new",
+            "event.false_positive",
+        ],
+        "correlation": [
+            "correlation.detected",
+            "correlation.resolved",
+        ],
+        "module": [
+            "module.started",
+            "module.completed",
+            "module.error",
+            "module.timeout",
+        ],
+        "system": [
+            "system.health_degraded",
+            "system.config_changed",
+            "system.api_key_rotated",
+        ],
+    }
+
+    @router.get(
+        "/webhooks/event-types",
+        summary="List available event types",
+        description="Returns all known webhook event types that can be used for filtering.",
+    )
+    async def list_event_types():
+        flat = []
+        for category, types in KNOWN_EVENT_TYPES.items():
+            for et in types:
+                flat.append({
+                    "event_type": et,
+                    "category": category,
+                    "description": et.replace(".", " ").replace("_", " ").title(),
+                    "supports_wildcard": True,
+                })
+        return {
+            "event_types": flat,
+            "total": len(flat),
+            "categories": list(KNOWN_EVENT_TYPES.keys()),
+            "note": "Use category prefix with wildcard (e.g. 'scan.*') to subscribe to all events in a category.",
+        }
+
+    class EventFilterUpdateRequest(BaseModel):
+        event_types: List[str] = Field(
+            ...,
+            description="New list of event types to subscribe to (empty = all events)",
+        )
+
+    @router.put(
+        "/webhooks/{webhook_id}/event-filter",
+        summary="Update webhook event filter",
+        description="Replace the event type filter for a webhook.",
+    )
+    async def update_event_filter(webhook_id: str, body: EventFilterUpdateRequest):
+        mgr = get_notification_manager()
+        cfg = mgr.get_webhook(webhook_id)
+        if cfg is None:
+            raise HTTPException(status_code=404, detail="Webhook not found.")
+
+        # Validate event types against known list
+        all_known = set()
+        for types in KNOWN_EVENT_TYPES.values():
+            all_known.update(types)
+        all_categories = set(KNOWN_EVENT_TYPES.keys())
+
+        warnings = []
+        for et in body.event_types:
+            if et.endswith(".*"):
+                cat = et[:-2]
+                if cat not in all_categories:
+                    warnings.append(f"Unknown category wildcard: {et}")
+            elif et not in all_known:
+                warnings.append(f"Unknown event type: {et}")
+
+        if not mgr.update_webhook(webhook_id, event_types=body.event_types):
+            raise HTTPException(status_code=500, detail="Failed to update event filter.")
+
+        return {
+            "webhook_id": webhook_id,
+            "event_types": body.event_types,
+            "subscribes_to_all": len(body.event_types) == 0,
+            "warnings": warnings,
+            "status": "updated",
+        }
