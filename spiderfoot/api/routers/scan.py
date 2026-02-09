@@ -65,6 +65,19 @@ class ScanRequest(BaseModel):
     type_filter: Optional[List[str]] = Field(None, description="List of event types to include")
 
 
+class ScheduleCreateRequest(BaseModel):
+    """Request to create a recurring scan schedule."""
+    name: str = Field(..., description="Schedule name")
+    target: str = Field(..., description="Scan target")
+    interval_minutes: int = Field(0, ge=0, description="Run every N minutes (0 = one-shot)")
+    run_at: Optional[float] = Field(None, description="Unix timestamp for one-shot execution")
+    modules: Optional[List[str]] = Field(None, description="Module list")
+    type_filter: Optional[List[str]] = Field(None, description="Event type filter")
+    max_runs: int = Field(0, ge=0, description="Max runs (0 = unlimited)")
+    description: str = ""
+    tags: Optional[List[str]] = None
+
+
 # -----------------------------------------------------------------------
 # Background task helper
 # -----------------------------------------------------------------------
@@ -342,6 +355,108 @@ async def bulk_archive_scans(
             "not_found": len(results["not_found"]),
             "errors": len(results["errors"]),
         },
+    }
+
+
+# -----------------------------------------------------------------------
+# Recurring scan schedules
+# -----------------------------------------------------------------------
+
+@router.get("/scans/schedules")
+async def list_schedules(api_key: str = optional_auth_dep):
+    """List all recurring scan schedules."""
+    try:
+        from spiderfoot.recurring_schedule import get_recurring_scheduler
+        scheduler = get_recurring_scheduler()
+        schedules = scheduler.list_all()
+        return {
+            "schedules": [s.to_dict() for s in schedules],
+            "count": len(schedules),
+            "stats": scheduler.stats(),
+        }
+    except Exception as e:
+        logger.error("Failed to list schedules: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to list schedules") from e
+
+
+@router.post("/scans/schedules", status_code=201)
+async def create_schedule(
+    body: ScheduleCreateRequest,
+    api_key: str = api_key_dep,
+):
+    """Create a new recurring scan schedule."""
+    if not body.interval_minutes and not body.run_at:
+        raise HTTPException(
+            status_code=422,
+            detail="Either interval_minutes (>0) or run_at must be provided",
+        )
+    try:
+        from spiderfoot.recurring_schedule import get_recurring_scheduler
+        scheduler = get_recurring_scheduler()
+        schedule = scheduler.add_schedule(
+            name=body.name,
+            target=body.target,
+            interval_minutes=body.interval_minutes,
+            run_at=body.run_at,
+            modules=body.modules,
+            type_filter=body.type_filter,
+            max_runs=body.max_runs,
+            description=body.description,
+            tags=body.tags,
+        )
+        return {
+            "schedule_id": schedule.schedule_id,
+            "message": "Schedule created",
+            **schedule.to_dict(),
+        }
+    except Exception as e:
+        logger.error("Failed to create schedule: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to create schedule") from e
+
+
+@router.get("/scans/schedules/{schedule_id}")
+async def get_schedule(schedule_id: str, api_key: str = optional_auth_dep):
+    """Get details of a specific scan schedule."""
+    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    scheduler = get_recurring_scheduler()
+    s = scheduler.get(schedule_id)
+    if s is None:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    return s.to_dict()
+
+
+@router.delete("/scans/schedules/{schedule_id}")
+async def delete_schedule(schedule_id: str, api_key: str = api_key_dep):
+    """Delete a scan schedule."""
+    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    scheduler = get_recurring_scheduler()
+    if not scheduler.remove(schedule_id):
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    return {"schedule_id": schedule_id, "message": "Schedule deleted"}
+
+
+@router.post("/scans/schedules/{schedule_id}/pause")
+async def pause_schedule(schedule_id: str, api_key: str = api_key_dep):
+    """Pause a recurring scan schedule."""
+    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    scheduler = get_recurring_scheduler()
+    if not scheduler.pause(schedule_id):
+        raise HTTPException(status_code=404, detail="Schedule not found or not active")
+    return {"schedule_id": schedule_id, "status": "paused"}
+
+
+@router.post("/scans/schedules/{schedule_id}/resume")
+async def resume_schedule(schedule_id: str, api_key: str = api_key_dep):
+    """Resume a paused scan schedule."""
+    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    scheduler = get_recurring_scheduler()
+    if not scheduler.resume(schedule_id):
+        raise HTTPException(status_code=404, detail="Schedule not found or not paused")
+    s = scheduler.get(schedule_id)
+    return {
+        "schedule_id": schedule_id,
+        "status": "active",
+        "next_run_at": s.next_run_at if s else None,
     }
 
 
