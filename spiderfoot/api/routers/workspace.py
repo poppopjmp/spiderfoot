@@ -8,6 +8,11 @@ from spiderfoot import SpiderFootHelpers
 from ..dependencies import get_app_config, get_api_key, optional_auth
 from ..models import WorkspaceRequest, TargetRequest, MultiScanRequest
 from ..pagination import PaginationParams, paginate
+from ..schemas import (
+    WorkspaceCreateResponse, WorkspaceDetailResponse, WorkspaceUpdateResponse,
+    WorkspaceDeleteResponse, WorkspaceCloneResponse,
+    TargetAddResponse, TargetDeleteResponse,
+)
 import logging
 
 router = APIRouter()
@@ -33,26 +38,25 @@ async def list_workspaces(
         raise HTTPException(status_code=500, detail="Failed to list workspaces") from e
 
 
-@router.post("/workspaces", status_code=201)
+@router.post("/workspaces", status_code=201, response_model=WorkspaceCreateResponse)
 async def create_workspace(workspace_request: WorkspaceRequest, api_key: str = api_key_dep):
     try:
         config = get_app_config()
         workspace = SpiderFootWorkspace(config.get_config(), name=workspace_request.name)
         workspace.description = workspace_request.description
         workspace.save_workspace()
-        return {
-            "workspace_id": workspace.workspace_id,
-            "name": workspace.name,
-            "description": workspace.description,
-            "created_time": workspace.created_time,
-            "message": "Workspace created successfully"
-        }
+        return WorkspaceCreateResponse(
+            workspace_id=workspace.workspace_id,
+            name=workspace.name,
+            description=workspace.description or "",
+            created_time=workspace.created_time,
+        )
     except Exception as e:
         logger.error(f"Failed to create workspace: {e}")
         raise HTTPException(status_code=500, detail="Failed to create workspace") from e
 
 
-@router.get("/workspaces/{workspace_id}")
+@router.get("/workspaces/{workspace_id}", response_model=WorkspaceDetailResponse)
 async def get_workspace(workspace_id: str, api_key: str = optional_auth_dep):
     try:
         config = get_app_config()

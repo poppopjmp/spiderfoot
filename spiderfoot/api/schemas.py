@@ -310,3 +310,63 @@ class FalsePositiveResponse(BaseModel):
     """Response after setting false positive flags."""
     success: bool = True
     updated: int = 0
+
+
+# ── Workspace response schemas ──────────────────────────────────────
+
+class WorkspaceCreateResponse(BaseModel):
+    """Response after creating a workspace."""
+    workspace_id: str
+    name: str
+    description: str = ""
+    created_time: Optional[str] = None
+    message: str = "Workspace created successfully"
+
+
+class WorkspaceDetailResponse(BaseModel):
+    """Detailed workspace information."""
+    workspace_id: str
+    name: str
+    description: str = ""
+    created_time: Optional[str] = None
+    modified_time: Optional[str] = None
+    targets: list = []
+    scans: list = []
+    metadata: dict = {}
+
+
+class WorkspaceUpdateResponse(BaseModel):
+    """Response after updating a workspace."""
+    workspace_id: str
+    name: Optional[str] = None
+    description: Optional[str] = None
+    message: str = "Workspace updated"
+
+
+class WorkspaceDeleteResponse(BaseModel):
+    """Response after deleting a workspace."""
+    message: str
+    workspace_id: str
+
+
+class WorkspaceCloneResponse(BaseModel):
+    """Response after cloning a workspace."""
+    workspace_id: str
+    name: str
+    message: str = "Workspace cloned successfully"
+
+
+class TargetAddResponse(BaseModel):
+    """Response after adding a target."""
+    target_id: str = ""
+    workspace_id: str
+    value: str
+    target_type: str = ""
+    message: str = "Target added successfully"
+
+
+class TargetDeleteResponse(BaseModel):
+    """Response after deleting a target."""
+    message: str
+    target_id: str
+    workspace_id: str
