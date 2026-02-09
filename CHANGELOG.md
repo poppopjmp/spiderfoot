@@ -3,6 +3,85 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.67.1] — Documentation Update (Cycle 74)
+
+### Changed
+- README.md, ARCHITECTURE.md, CHANGELOG.md updated with Cycles 65-74 entries
+
+## [5.67.0] — Scan Comparison Endpoint (Cycle 73)
+
+### Added
+- `spiderfoot/api/routers/scan.py` — `GET /scans/compare` endpoint
+  - Takes two scan IDs, returns event-level diff
+  - Groups by event type, shows only_in_a, only_in_b, common counts
+  - Reports new/removed event types between scans
+
+## [5.66.0] — API Key Rotation Endpoint (Cycle 72)
+
+### Added
+- `spiderfoot/api/routers/config.py` — `POST /config/api-keys/{id}/rotate`
+  - Generates new key value preserving permissions
+  - Tracks rotation count and timestamp
+  - Returns new key (shown only once)
+
+## [5.65.1] — Workspace Response Schemas (Cycle 71)
+
+### Added
+- `spiderfoot/api/schemas.py` — 7 new workspace response models
+  - WorkspaceCreateResponse, WorkspaceDetailResponse, WorkspaceUpdateResponse
+  - WorkspaceDeleteResponse, WorkspaceCloneResponse
+  - TargetAddResponse, TargetDeleteResponse
+
+### Changed
+- `spiderfoot/api/routers/workspace.py` — response_model= on create/detail endpoints
+
+## [5.65.0] — Correlation Export API (Cycle 70)
+
+### Added
+- `spiderfoot/api/routers/correlations.py` — `GET /scans/{id}/correlations/export`
+  - CSV and JSON download of correlation results
+  - Optional risk filter
+
+## [5.64.1] — Comprehensive Config Validation (Cycle 69)
+
+### Added
+- `spiderfoot/api/routers/config.py` — `GET /config/validate`
+  - Validates live running configuration
+  - Checks AppConfig sections, environment variables, API key requirements
+  - Returns severity-based report (error/warning/info)
+
+## [5.64.0] — Health Check Deep Probes (Cycle 68)
+
+### Added
+- `spiderfoot/api/routers/health.py` — 4 new subsystem health checks
+  - service_auth: ServiceTokenIssuer status and mode
+  - scan_hooks: ScanLifecycleHooks event stats
+  - module_timeout: ModuleTimeoutGuard configuration and stats
+  - output_validator: ModuleOutputValidator mode and violation counts
+
+## [5.63.1] — Wire Pagination into More Routers (Cycle 67)
+
+### Changed
+- `spiderfoot/api/routers/workspace.py` — list_workspaces and list_targets use PaginationParams
+- `spiderfoot/api/routers/data.py` — list_modules uses PaginationParams with dict→list conversion
+
+## [5.63.0] — Unified Scan Export API (Cycle 66)
+
+### Added
+- `spiderfoot/api/routers/export.py` — ExportService wired to REST API
+  - `GET /scans/{id}/export` — unified export (format=json|csv|stix|sarif)
+  - `GET /scans/{id}/export/stix` — convenience STIX 2.1 download
+  - `GET /scans/{id}/export/sarif` — convenience SARIF download
+  - Content-Disposition headers for file download
+
+### Changed
+- `spiderfoot/api/main.py` — export router added to versioned router list
+
+## [5.62.1] — Documentation Update (Cycle 65)
+
+### Changed
+- README.md, ARCHITECTURE.md, CHANGELOG.md updated with Cycles 55-64 entries
+
 ## [5.62.0] — Module Output Validation (Cycle 64)
 
 ### Added

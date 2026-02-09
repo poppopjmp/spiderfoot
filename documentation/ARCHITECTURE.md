@@ -356,6 +356,16 @@ migration instructions.
 | 5.60.1 | Wire service auth into HTTP clients + docker-compose |
 | 5.61.0 | API request audit logging middleware |
 | 5.62.0 | Module output validation (producedEvents enforcement) |
+| 5.62.1 | Documentation update for Cycles 55-64 |
+| 5.63.0 | Unified scan export API (STIX/SARIF/JSON/CSV) |
+| 5.63.1 | Wire pagination into workspace + data routers |
+| 5.64.0 | Health check deep probes (4 new subsystem checks) |
+| 5.64.1 | Comprehensive live config validation endpoint |
+| 5.65.0 | Correlation results export API (CSV/JSON) |
+| 5.65.1 | Workspace response schemas + response_model |
+| 5.66.0 | API key rotation endpoint |
+| 5.67.0 | Scan comparison endpoint |
+| 5.67.1 | Documentation update for Cycles 65-74 |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 

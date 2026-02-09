@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.67.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.67.0)
+[![Stable Release](https://img.shields.io/badge/version-5.67.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.67.1)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -701,6 +701,21 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 ---
 
 ## Recent Updates
+
+### v5.67.0 — Modernization Cycles 65-74
+
+| Cycle | Version | Feature |
+|-------|---------|----------|
+| 65 | 5.62.1 | Documentation update for Cycles 55-64 |
+| 66 | 5.63.0 | Unified scan export API (STIX/SARIF/JSON/CSV endpoints) |
+| 67 | 5.63.1 | Wire pagination into workspace + data routers |
+| 68 | 5.64.0 | Health check deep probes (service auth, hooks, timeouts) |
+| 69 | 5.64.1 | Comprehensive live config validation endpoint |
+| 70 | 5.65.0 | Correlation results export API (CSV/JSON download) |
+| 71 | 5.65.1 | Workspace response schemas + response_model wiring |
+| 72 | 5.66.0 | API key rotation endpoint |
+| 73 | 5.67.0 | Scan comparison endpoint (GET /scans/compare) |
+| 74 | 5.67.1 | Documentation update for Cycles 65-74 |
 
 ### v5.62.0 — Modernization Cycles 55-64
 
