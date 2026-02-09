@@ -3,7 +3,9 @@ from fastapi.responses import StreamingResponse, PlainTextResponse, Response
 from typing import List, Optional
 from spiderfoot import SpiderFootDb, SpiderFootHelpers, __version__
 from spiderfoot.scan_service.scanner import startSpiderFootScanner
-from ..dependencies import get_app_config, get_api_key, optional_auth
+from ..dependencies import get_app_config, get_api_key, optional_auth, get_scan_service
+from ..pagination import PaginationParams, paginate
+from spiderfoot.scan_service_facade import ScanService, ScanServiceError
 import csv
 import openpyxl
 import html
@@ -59,50 +61,22 @@ async def start_scan_background(scan_id: str, scan_name: str, target: str,
 
 @router.get("/scans")
 async def list_scans(
-    limit: int = limit_query,
-    offset: int = offset_query,
-    api_key: str = optional_auth_dep
+    params: PaginationParams = Depends(),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
 ):
     """
-    List all scans.
-
-    Args:
-        limit (int): Max number of scans to return.
-        offset (int): Offset for pagination.
-        api_key (str): API key for authentication.
+    List all scans with pagination.
 
     Returns:
-        dict: List of scans and pagination info.
-
-    Raises:
-        HTTPException: On failure.
+        dict: Paginated list of scans.
     """
     try:
-        config = get_app_config()
-        db = SpiderFootDb(config.get_config())
-        scans = db.scanInstanceList()
-        paginated_scans = scans[offset:offset + limit]
-        scan_list = []
-        for scan in paginated_scans:
-            scan_info = {
-                "id": scan[0],
-                "name": scan[1],
-                "target": scan[2],
-                "created": scan[3],
-                "started": scan[4],
-                "ended": scan[5],
-                "status": scan[6],
-                "result_count": scan[7] if len(scan) > 7 else 0
-            }
-            scan_list.append(scan_info)
-        return {
-            "scans": scan_list,
-            "total": len(scans),
-            "offset": offset,
-            "limit": limit
-        }
+        records = svc.list_scans()
+        dicts = [r.to_dict() for r in records]
+        return paginate(dicts, params)
     except Exception as e:
-        logger.error(f"Failed to list scans: {e}")
+        logger.error("Failed to list scans: %s", e)
         raise HTTPException(status_code=500, detail="Failed to list scans") from e
 
 
@@ -167,131 +141,89 @@ async def create_scan(scan_request: ScanRequest, background_tasks: BackgroundTas
 
 
 @router.get("/scans/{scan_id}")
-async def get_scan(scan_id: str, api_key: str = optional_auth_dep):
-    """
-    Get scan details.
-
-    Args:
-        scan_id (str): Scan ID.
-        api_key (str): API key for authentication.
-
-    Returns:
-        dict: Scan details.
-
-    Raises:
-        HTTPException: On failure.
-    """
+async def get_scan(
+    scan_id: str,
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Get scan details."""
     try:
-        config = get_app_config()
-        db = SpiderFootDb(config.get_config())
-        scan_info = db.scanInstanceGet(scan_id)
-        if not scan_info:
+        record = svc.get_scan(scan_id)
+        if record is None:
             raise HTTPException(status_code=404, detail="Scan not found")
-        return {
-            "id": scan_info[0],
-            "name": scan_info[1],
-            "target": scan_info[2],
-            "created": scan_info[3],
-            "started": scan_info[4],
-            "ended": scan_info[5],
-            "status": scan_info[6]
-        }
+        result = record.to_dict()
+        # Include state machine info when available
+        try:
+            result["state_machine"] = svc.get_scan_state(scan_id)
+        except Exception:
+            pass
+        return result
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to get scan {scan_id}: {e}")
+        logger.error("Failed to get scan %s: %s", scan_id, e)
         raise HTTPException(status_code=500, detail="Failed to get scan") from e
 
 
 @router.delete("/scans/{scan_id}")
-async def delete_scan(scan_id: str, api_key: str = api_key_dep):
-    """
-    Delete a scan.
-
-    Args:
-        scan_id (str): Scan ID.
-        api_key (str): API key for authentication.
-
-    Returns:
-        dict: Success message.
-
-    Raises:
-        HTTPException: On failure.
-    """
+async def delete_scan(
+    scan_id: str,
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Delete a scan."""
     try:
-        config = get_app_config()
-        db = SpiderFootDb(config.get_config())
-        scan_info = db.scanInstanceGet(scan_id)
-        if not scan_info:
+        record = svc.get_scan(scan_id)
+        if record is None:
             raise HTTPException(status_code=404, detail="Scan not found")
-        db.scanInstanceDelete(scan_id)
+        svc.delete_scan(scan_id)
         return {"message": "Scan deleted successfully"}
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to delete scan {scan_id}: {e}")
+        logger.error("Failed to delete scan %s: %s", scan_id, e)
         raise HTTPException(status_code=500, detail="Failed to delete scan") from e
 
 
 @router.delete("/scans/{scan_id}/full")
-async def delete_scan_full(scan_id: str, api_key: str = api_key_dep):
-    """
-    Delete a scan and all related data (full parity with web UI advanced delete).
-
-    Args:
-        scan_id (str): The scan ID to delete.
-        api_key (str): API key for authentication.
-
-    Returns:
-        dict: Success message.
-
-    Raises:
-        HTTPException: If scan not found or deletion fails.
-    """
+async def delete_scan_full(
+    scan_id: str,
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Delete a scan and all related data."""
     try:
-        config = get_app_config()
-        db = SpiderFootDb(config.get_config())
-        scan_info = db.scanInstanceGet(scan_id)
-        if not scan_info:
+        record = svc.get_scan(scan_id)
+        if record is None:
             raise HTTPException(status_code=404, detail="Scan not found")
-        db.scanResultDelete(scan_id)
-        db.scanConfigDelete(scan_id)
-        db.scanInstanceDelete(scan_id)
+        svc.delete_scan_full(scan_id)
         return {"message": "Scan and all related data deleted successfully"}
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to fully delete scan {scan_id}: {e}")
+        logger.error("Failed to fully delete scan %s: %s", scan_id, e)
         raise HTTPException(status_code=500, detail="Failed to fully delete scan and related data") from e
 
 
 @router.post("/scans/{scan_id}/stop")
-async def stop_scan(scan_id: str, api_key: str = api_key_dep):
-    """
-    Stop a running scan.
-
-    Args:
-        scan_id (str): Scan ID.
-        api_key (str): API key for authentication.
-
-    Returns:
-        dict: Success message.
-
-    Raises:
-        HTTPException: On failure.
-    """
+async def stop_scan(
+    scan_id: str,
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Stop a running scan with state-machine validation."""
     try:
-        config = get_app_config()
-        db = SpiderFootDb(config.get_config())
-        scan_info = db.scanInstanceGet(scan_id)
-        if not scan_info:
+        record = svc.get_scan(scan_id)
+        if record is None:
             raise HTTPException(status_code=404, detail="Scan not found")
-        db.scanInstanceSet(scan_id, None, None, "ABORTED")
-        return {"message": "Scan stopped successfully"}
+        new_status = svc.stop_scan(scan_id)
+        return {"message": "Scan stopped successfully", "status": new_status}
+    except ScanServiceError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to stop scan {scan_id}: {e}")
+        logger.error("Failed to stop scan %s: %s", scan_id, e)
         raise HTTPException(status_code=500, detail="Failed to stop scan") from e
 
 

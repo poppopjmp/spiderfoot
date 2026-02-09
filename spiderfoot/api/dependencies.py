@@ -369,3 +369,32 @@ def get_correlation_svc():
     )
     config = get_app_config().get_config()
     return _get_svc(config)
+
+
+# ------------------------------------------------------------------
+# Scan Service provider  (Cycle 27)
+# ------------------------------------------------------------------
+
+def get_scan_service():
+    """FastAPI ``Depends`` provider for ``ScanService``.
+
+    Creates a fresh DB handle via the repository factory, wraps it in
+    a ``ScanService``, and tears down on request completion.
+    """
+    from spiderfoot.db.repositories import (
+        get_repository_factory,
+        RepositoryFactory,
+    )
+    from spiderfoot.scan_service_facade import ScanService
+
+    factory = get_repository_factory()
+    if factory is None:
+        config = get_app_config().get_config()
+        factory = RepositoryFactory(config)
+
+    repo = factory.scan_repo()
+    svc = ScanService(repo, dbh=repo._dbh)
+    try:
+        yield svc
+    finally:
+        svc.close()

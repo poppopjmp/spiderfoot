@@ -318,6 +318,7 @@ migration instructions.
 | 5.27.0 | API Rate Limiting Middleware (per-tier, per-client) |
 | 5.28.0 | API Pagination Helpers (PaginationParams, PaginatedResponse) |
 | 5.29.0 | Correlation Service Wiring (CorrelationService → router) |
+| 5.30.0 | Scan Service Facade (ScanStateMachine + ScanRepository → router) |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
@@ -457,6 +458,27 @@ service layer and Cycle 25 pagination.
   + `paginate()` for standardized response envelopes
 - **No direct DB access** — All `SpiderFootDb(config.get_config())`
   and `json.dumps()`/`configSet()` calls eliminated from the router
+
+### Scan Service Facade (v5.30.0)
+
+#### Scan Service (`spiderfoot/scan_service_facade.py`)
+Unified scan lifecycle management combining `ScanRepository` (Cycle 23)
+with `ScanStateMachine` for formal state-transition enforcement.
+
+- **`ScanService`** — High-level facade wrapping repository + state machine
+  with CRUD methods: `list_scans`, `get_scan`, `create_scan`, `delete_scan`,
+  `delete_scan_full`, `stop_scan`, `get_scan_state`
+- **State Machine Integration** — `stop_scan()` validates transitions
+  (RUNNING→STOPPING, CREATED→CANCELLED) before persisting; returns
+  HTTP 409 Conflict when transition is invalid (e.g. stopping a completed scan)
+- **`get_scan_service`** — FastAPI `Depends()` generator provider in
+  `dependencies.py` with automatic lifecycle management
+- **Pagination** — `list_scans` endpoint uses `PaginationParams` +
+  `paginate()` for standardized response envelopes
+- **Typed records** — Endpoints return `ScanRecord.to_dict()` instead
+  of raw tuple-index dicts (`scan[0]`, `scan[6]`, etc.)
+- **Gradual migration** — Service exposes `.dbh` for endpoints not yet
+  migrated (export, viz); full migration planned for future cycles
 ### Real-Time Event Infrastructure (v5.22.0 – v5.24.0)
 
 #### Event Relay (`spiderfoot/event_relay.py`)

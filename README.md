@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.29.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.29.0)
+[![Stable Release](https://img.shields.io/badge/version-5.30.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.30.0)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -691,7 +691,7 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 
 ## Recent Updates
 
-### v5.29.0 — Modernization Cycles 1-26 (1156+ tests)
+### v5.30.0 — Modernization Cycles 1-27 (1189+ tests)
 
 | Cycle | Version | Feature | Tests |
 |-------|---------|---------|-------|
@@ -721,6 +721,7 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 | 24 | 5.27.0 | API Rate Limiting Middleware (per-tier, per-client) | 45 |
 | 25 | 5.28.0 | API Pagination Helpers (standardized response envelope) | 41 |
 | 26 | 5.29.0 | Correlation Service Wiring (CorrelationService → router) | 39 |
+| 27 | 5.30.0 | Scan Service Facade (ScanStateMachine + ScanRepository → router) | 33 |
 
 ### Previous
 
