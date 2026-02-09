@@ -425,6 +425,61 @@ async def delete_api_key(key_id: str, api_key: str = optional_auth_dep):
         logger.error(f"Failed to delete API key: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete API key") from e
 
+
+@router.post("/config/api-keys/{key_id}/rotate")
+async def rotate_api_key(key_id: str, api_key: str = optional_auth_dep):
+    """Rotate an API key — generates a new key value, preserving permissions.
+
+    The old key is immediately invalidated and a new key value is returned.
+    This is an atomic operation: the key's ID, name, and permissions remain
+    the same, only the secret value changes.
+
+    Returns the new key value (only shown once — store it securely).
+    """
+    import secrets
+    import time as _time
+
+    try:
+        config = get_app_config()
+        keys = config.get_api_keys()
+
+        # Find the key to rotate
+        target = None
+        for k in keys:
+            kid = k.get("id") or k.get("key_id") or k.get("name", "")
+            if kid == key_id:
+                target = k
+                break
+
+        if target is None:
+            raise HTTPException(status_code=404, detail=f"API key '{key_id}' not found")
+
+        # Generate new key value
+        new_key_value = secrets.token_urlsafe(32)
+
+        # Preserve metadata, update the key value
+        target["key"] = new_key_value
+        target["rotated_at"] = _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime())
+        target["rotation_count"] = target.get("rotation_count", 0) + 1
+
+        config.save_config()
+
+        logger.info("API key '%s' rotated successfully", key_id)
+
+        return {
+            "success": True,
+            "key_id": key_id,
+            "new_key": new_key_value,
+            "rotated_at": target["rotated_at"],
+            "rotation_count": target["rotation_count"],
+            "message": "API key rotated — store the new key securely (shown only once)",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to rotate API key: {e}")
+        raise HTTPException(status_code=500, detail="Failed to rotate API key") from e
+
 @router.get("/config/credentials")
 async def list_credentials(api_key: str = optional_auth_dep):
     """
