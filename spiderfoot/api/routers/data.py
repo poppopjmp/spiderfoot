@@ -266,4 +266,67 @@ async def list_risk_levels(api_key: str = optional_auth_dep):
         raise HTTPException(status_code=500, detail="Failed to list risk levels") from e
 
 
+@router.get("/data/modules/stats")
+async def get_module_stats(api_key: str = optional_auth_dep):
+    """Runtime module statistics aggregating timeout, output validation, and health data.
+
+    Returns a consolidated view of per-module performance metrics from:
+    - ModuleTimeoutGuard (timeout counts)
+    - ModuleOutputValidator (undeclared event violations)
+    - ModuleHealthMonitor (healthy/degraded/unhealthy status)
+    """
+    result = {"modules": {}}
+
+    # 1. Timeout statistics
+    try:
+        from spiderfoot.module_timeout import get_timeout_guard
+        guard = get_timeout_guard()
+        stats = guard.stats()
+        result["timeout"] = {
+            "default_timeout_s": guard.default_timeout,
+            "total_guarded": stats.get("total_guarded", 0),
+            "total_timeouts": stats.get("total_timeouts", 0),
+        }
+        # Per-module timeouts if available
+        for mod_name, mod_stats in stats.get("per_module", {}).items():
+            result["modules"].setdefault(mod_name, {})["timeout"] = mod_stats
+    except ImportError:
+        result["timeout"] = {"available": False}
+    except Exception:
+        result["timeout"] = {"available": False}
+
+    # 2. Output validation statistics
+    try:
+        from spiderfoot.module_output_validator import get_output_validator
+        validator = get_output_validator()
+        all_stats = validator.get_all_stats()
+        result["output_validation"] = {
+            "mode": validator.mode,
+            "modules_tracked": len(all_stats),
+            "modules_with_violations": sum(1 for s in all_stats.values() if s.get("undeclared", 0) > 0),
+        }
+        for mod_name, mod_stats in all_stats.items():
+            result["modules"].setdefault(mod_name, {})["output_validation"] = mod_stats
+    except ImportError:
+        result["output_validation"] = {"available": False}
+    except Exception:
+        result["output_validation"] = {"available": False}
+
+    # 3. Module health
+    try:
+        from spiderfoot.module_health import get_health_monitor
+        monitor = get_health_monitor()
+        report = monitor.get_report()
+        result["health"] = report.get("summary", {})
+        for mod_name, mod_health in report.get("modules", {}).items():
+            result["modules"].setdefault(mod_name, {})["health"] = mod_health
+    except ImportError:
+        result["health"] = {"available": False}
+    except Exception:
+        result["health"] = {"available": False}
+
+    result["module_count"] = len(result["modules"])
+    return result
+
+
 # No data endpoints have been moved yet. Add data-related endpoints here as needed.
