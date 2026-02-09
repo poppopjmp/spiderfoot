@@ -7,12 +7,15 @@ Provides comprehensive API security including authentication, authorization, and
 import time
 import hmac
 import hashlib
+import logging
 import secrets
 import jwt
 from typing import Dict, List, Optional, Any, Tuple
 from functools import wraps
 from flask import request, jsonify, g
 from werkzeug.security import check_password_hash, generate_password_hash
+
+log = logging.getLogger(__name__)
 
 
 class APISecurityManager:
@@ -226,7 +229,7 @@ class APIKeyManager:
             self.db = SpiderFootDb(config, init=True)
             self._ensure_api_keys_table()
         except Exception as e:
-            print(f"Failed to initialize APIKeyManager database: {e}")
+            log.error("Failed to initialize APIKeyManager database: %s", e)
             self.db = None
     
     def _ensure_api_keys_table(self) -> None:
@@ -268,7 +271,7 @@ class APIKeyManager:
                 self.db.dbh.execute(qry)
                 self.db.conn.commit()
         except Exception as e:
-            print(f"Failed to create API keys table: {e}")
+            log.error("Failed to create API keys table: %s", e)
     
     def create_api_key(self, user_id: str, scopes: List[str], name: str = None,
                       description: str = None, expires_in: int = None) -> Tuple[str, str]:

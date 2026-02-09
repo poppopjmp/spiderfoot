@@ -13,6 +13,8 @@
 Utility functions, error handling, and helpers for SpiderFootDb.
 """
 
+import logging
+
 def get_placeholder(db_type):
     """Return the correct SQL placeholder for the given DB type."""
     db_type = normalize_db_type(db_type)
@@ -171,8 +173,7 @@ def drop_all_tables(db_type, conn):
         conn.commit()
         cursor.close()
     except Exception as e:
-        # For test code, just print; in prod, log properly
-        print(f"Error dropping tables: {e}")
+        logging.getLogger(__name__).error("Error dropping tables: %s", e)
 
 def dump_schema(db_type, conn):
     """Return a string dump of the current DB schema (for debugging)."""

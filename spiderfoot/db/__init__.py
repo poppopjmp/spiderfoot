@@ -12,6 +12,7 @@
 
 from pathlib import Path
 import hashlib
+import logging
 import random
 import re
 import sqlite3
@@ -23,6 +24,8 @@ from spiderfoot.db.db_core import DbCore
 from spiderfoot.db.db_scan import ScanManager
 from spiderfoot.db.db_event import EventManager
 from spiderfoot.db.db_config import ConfigManager
+
+log = logging.getLogger(__name__)
 from spiderfoot.db.db_correlation import CorrelationManager
 
 
@@ -551,7 +554,7 @@ class SpiderFootDb:
             self._setup_managers()
 
         except Exception as e:
-            print("Error connecting to database: {}".format(e))
+            log.error("Error connecting to database: %s", e)
             raise
 
     def _setup_managers(self):
