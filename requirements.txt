@@ -57,3 +57,7 @@ email-validator>=2.0.0,<3.0.0
 python-dateutil>=2.8.0,<3.0.0
 # HTML sanitization (optional but recommended for enhanced security)
 bleach>=6.0.0,<7.0.0
+# gRPC inter-service communication
+grpcio>=1.60.0,<2.0.0
+grpcio-tools>=1.60.0,<2.0.0
+protobuf>=4.25.0,<6.0.0
