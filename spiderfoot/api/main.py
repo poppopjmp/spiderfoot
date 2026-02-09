@@ -19,6 +19,9 @@ from spiderfoot.request_tracing import install_tracing_middleware
 # Rate limiting
 from spiderfoot.api.rate_limit_middleware import install_rate_limiting
 
+# Structured error responses
+from spiderfoot.api.error_handlers import install_error_handlers
+
 # API versioning
 from spiderfoot.api.versioning import mount_versioned_routers, install_api_versioning
 
@@ -74,3 +77,6 @@ install_tracing_middleware(app)
 
 # Install rate limiting middleware (after tracing so 429s get request IDs)
 install_rate_limiting(app)
+
+# Install structured error handlers (after all middleware so errors get request IDs)
+install_error_handlers(app)
