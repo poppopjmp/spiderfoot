@@ -140,15 +140,13 @@ class sfp_gravatar(SpiderFootModernPlugin):
                         "RAW_RIR_DATA", f"Possible full name: {full_name}", self.__name__, event)
                     self.notifyListeners(evt)
 
-        # TODO: re-enable once location validation is implemented
-        # location can not be trusted
-        # if data.get('currentLocation') is not None:
-        #     location = data.get('currentLocation')
-        #     if len(location) < 3 or len(location) > 100:
-        #         self.debug("Skipping likely invalid location.")
-        #     else:
-        #         evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
-        #         self.notifyListeners(evt)
+        if data.get('currentLocation') is not None:
+            location = data.get('currentLocation')
+            if len(location) < 3 or len(location) > 100:
+                self.debug("Skipping likely invalid location.")
+            else:
+                evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
+                self.notifyListeners(evt)
 
         if data.get('phoneNumbers') is not None:
             for number in data.get('phoneNumbers'):

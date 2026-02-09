@@ -139,9 +139,8 @@ class sfp_spider(SpiderFootModernPlugin):
                     f"Saving cookies for {site}: {self.siteCookies[site]}")
 
         if url not in self.urlEvents:
-            # TODO: be more descriptive
             self.error(
-                "Something strange happened - shouldn't get here: url not in self.urlEvents")
+                f"Unexpected state: URL not found in urlEvents tracking dict: {url}")
             self.urlEvents[url] = None
 
         # Notify modules about the content obtained

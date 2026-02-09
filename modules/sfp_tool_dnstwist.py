@@ -105,7 +105,6 @@ class sfp_tool_dnstwist(SpiderFootModernPlugin):
             self.debug(f"Wildcard DNS detected on {eventData} TLD: {tld}")
             return
 
-        # TODO: check dnstwistpath option before trying which()
         dnstwistLocation = which('dnstwist')
         if dnstwistLocation and Path(dnstwistLocation).is_file():
             cmd = ['dnstwist']

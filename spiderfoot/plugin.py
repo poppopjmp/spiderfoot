@@ -299,11 +299,10 @@ class SpiderFootPlugin:
         return self._log
 
     def _updateSocket(self, socksProxy: str) -> None:
-        """Hack to override module's use of socket, replacing it with one that
-        uses the supplied SOCKS server.
+        """Store the SOCKS proxy address for this module.
 
         Args:
-            socksProxy (str): SOCKS proxy
+            socksProxy (str): SOCKS proxy address string
         """
         self.socksProxy = socksProxy
 
@@ -450,16 +449,13 @@ class SpiderFootPlugin:
         self.__outputFilter__ = types
 
     def tempStorage(self) -> dict:
-        """For future use. Module temporary storage.
+        """Module temporary storage.
 
-        A dictionary used to persist state (in memory) for a module.
-
-        Todo:
-            Move all module state to use this, which then would enable a scan to be paused/resumed.
-
+        Returns a new dictionary for modules to persist state (in memory)
+        during a scan. Typically assigned to self.results in setup().
 
         Returns:
-            dict: module temporary state data
+            dict: empty dictionary for module state data
         """
         return dict()
 
