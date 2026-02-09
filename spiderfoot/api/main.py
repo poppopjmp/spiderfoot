@@ -1,5 +1,9 @@
 """
 Main FastAPI app instance for SpiderFoot API (modular)
+
+Routes are mounted under both /api/v1/... (canonical) and /api/... (legacy,
+backwards-compatible).  The ApiVersionMiddleware adds X-API-Version and
+Deprecation headers so clients can migrate at their own pace.
 """
 from fastapi import FastAPI
 from .routers import scan, workspace, config, data, websocket, visualization, correlations, rag_correlation, reports, health, scan_progress, tasks, webhooks
@@ -14,6 +18,9 @@ from spiderfoot.request_tracing import install_tracing_middleware
 
 # Rate limiting
 from spiderfoot.api.rate_limit_middleware import install_rate_limiting
+
+# API versioning
+from spiderfoot.api.versioning import mount_versioned_routers, install_api_versioning
 
 app = FastAPI(
     title="SpiderFoot API",
@@ -34,20 +41,32 @@ def initialize_security(config):
         logging.getLogger(__name__).error(f"Failed to initialize API security: {e}")
         return None
 
-# Include routers
-app.include_router(scan.router, prefix="/api", tags=["scans"])
-app.include_router(workspace.router, prefix="/api", tags=["workspaces"])
-app.include_router(data.router, prefix="/api", tags=["data"])
-app.include_router(config.router, prefix="/api", tags=["configuration"])
-app.include_router(visualization.router, prefix="/api", tags=["visualization"])
-app.include_router(correlations.router, prefix="/api", tags=["correlations"])
-app.include_router(rag_correlation.router, prefix="/api", tags=["rag-correlation"])
-app.include_router(websocket.router, prefix="/ws", tags=["websockets"])
-app.include_router(reports.router, prefix="/api", tags=["reports"])
+# ── Router configuration ──────────────────────────────────────────────
+# Each tuple: (router, prefix, tags)
+# Versioned routers are mounted under /api/v1/ AND legacy /api/
+_VERSIONED_ROUTERS = [
+    (scan.router,             "/api", ["scans"]),
+    (workspace.router,        "/api", ["workspaces"]),
+    (data.router,             "/api", ["data"]),
+    (config.router,           "/api", ["configuration"]),
+    (visualization.router,    "/api", ["visualization"]),
+    (correlations.router,     "/api", ["correlations"]),
+    (rag_correlation.router,  "/api", ["rag-correlation"]),
+    (reports.router,          "/api", ["reports"]),
+    (scan_progress.router,    "/api", ["scan-progress"]),
+    (tasks.router,            "/api", ["tasks"]),
+    (webhooks.router,         "/api", ["webhooks"]),
+    (websocket.router,        "/ws",  ["websockets"]),
+]
+
+# Mount versioned routers: /api/v1/... + legacy /api/...
+mount_versioned_routers(app, _VERSIONED_ROUTERS, keep_legacy=True)
+
+# Health/metrics are unversioned (Kubernetes probes expect stable paths)
 app.include_router(health.router, tags=["health"])
-app.include_router(scan_progress.router, prefix="/api", tags=["scan-progress"])
-app.include_router(tasks.router, prefix="/api", tags=["tasks"])
-app.include_router(webhooks.router, prefix="/api", tags=["webhooks"])
+
+# Install API versioning middleware (adds X-API-Version, Deprecation headers)
+install_api_versioning(app)
 
 # Install request tracing middleware (must be before security middleware
 # so that every request gets a correlation ID regardless of auth outcome)

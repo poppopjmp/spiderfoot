@@ -460,6 +460,18 @@ else:
             media_type="text/plain; version=0.0.4; charset=utf-8",
         )
 
+    @router.get(
+        "/version",
+        summary="API version info",
+        description="Returns current and supported API versions.",
+    )
+    async def version_info():
+        from spiderfoot.api.versioning import get_version_info
+        from spiderfoot import __version__
+        info = get_version_info()
+        info["app_version"] = __version__
+        return info
+
 
 # -----------------------------------------------------------------------
 # Utility
