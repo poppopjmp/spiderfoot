@@ -24,6 +24,7 @@ from spiderfoot.scan_state import (
     ScanStateMachine,
 )
 from spiderfoot.scan_state_map import db_status_to_state, state_to_db_status
+from spiderfoot.scan_metadata_service import ScanMetadataService
 
 log = logging.getLogger("spiderfoot.scan_service_facade")
 
@@ -47,6 +48,10 @@ class ScanService:
         self._dbh = dbh  # fallback raw dbh for methods not yet on repo
         self._machines: Dict[str, ScanStateMachine] = {}
         self._lock = threading.Lock()
+        # Delegate metadata/notes/archive/FP to extracted service
+        self._metadata_svc = ScanMetadataService(
+            dbh=dbh, event_repo=event_repo
+        )
 
     # ------------------------------------------------------------------
     # Scan CRUD (delegates to repository)
@@ -206,153 +211,53 @@ class ScanService:
         return dbh.scanLogs(scan_id) or []
 
     # ------------------------------------------------------------------
-    # Metadata / notes / archive  (Cycle 29)
+    # Metadata / notes / archive  (delegated to ScanMetadataService)
     # ------------------------------------------------------------------
+
+    @property
+    def metadata_service(self) -> ScanMetadataService:
+        """Access the underlying metadata service directly."""
+        return self._metadata_svc
 
     def get_metadata(self, scan_id: str) -> Dict[str, Any]:
-        dbh = self._ensure_dbh()
-        if hasattr(dbh, "scanMetadataGet"):
-            return dbh.scanMetadataGet(scan_id) or {}
-        return {}
+        return self._metadata_svc.get_metadata(scan_id)
 
     def set_metadata(self, scan_id: str, metadata: Dict[str, Any]) -> None:
-        dbh = self._ensure_dbh()
-        if hasattr(dbh, "scanMetadataSet"):
-            dbh.scanMetadataSet(scan_id, metadata)
+        self._metadata_svc.set_metadata(scan_id, metadata)
 
     def get_notes(self, scan_id: str) -> str:
-        dbh = self._ensure_dbh()
-        if hasattr(dbh, "scanNotesGet"):
-            return dbh.scanNotesGet(scan_id) or ""
-        return ""
+        return self._metadata_svc.get_notes(scan_id)
 
     def set_notes(self, scan_id: str, notes: str) -> None:
-        dbh = self._ensure_dbh()
-        if hasattr(dbh, "scanNotesSet"):
-            dbh.scanNotesSet(scan_id, notes)
+        self._metadata_svc.set_notes(scan_id, notes)
 
     def archive(self, scan_id: str) -> None:
-        meta = self.get_metadata(scan_id)
-        meta["archived"] = True
-        self.set_metadata(scan_id, meta)
+        self._metadata_svc.archive(scan_id)
 
     def unarchive(self, scan_id: str) -> None:
-        meta = self.get_metadata(scan_id)
-        meta["archived"] = False
-        self.set_metadata(scan_id, meta)
+        self._metadata_svc.unarchive(scan_id)
 
     # ------------------------------------------------------------------
-    # Results management  (Cycle 29)
+    # Results management  (delegated to ScanMetadataService)
     # ------------------------------------------------------------------
 
     def clear_results(self, scan_id: str) -> None:
         """Delete all results/events for scan, keeping the scan entry."""
-        dbh = self._ensure_dbh()
-        dbh.scanResultDelete(scan_id)
+        self._metadata_svc.clear_results(scan_id)
 
     def set_false_positive(self, scan_id: str, result_ids: List[str],
                            fp: str) -> Dict[str, str]:
-        """Set/unset false-positive flag on results + children.
-
-        Returns ``{"status": "SUCCESS"|"WARNING"|"ERROR", "message": ...}``.
-        """
-        dbh = self._ensure_dbh()
-
-        scan_info = dbh.scanInstanceGet(scan_id)
-        if not scan_info:
-            raise ScanServiceError(f"Scan not found: {scan_id}")
-
-        if scan_info[5] not in ("ABORTED", "FINISHED", "ERROR-FAILED"):
-            return {
-                "status": "WARNING",
-                "message": "Scan must be in a finished state when setting False Positives.",
-            }
-
-        if self._event_repo:
-            if fp == "0":
-                data = self._event_repo.get_element_sources(
-                    scan_id, result_ids, recursive=False)
-                for row in data:
-                    if str(row[14]) == "1":
-                        return {
-                            "status": "WARNING",
-                            "message": (
-                                f"Cannot unset element {scan_id} as False Positive "
-                                "if a parent element is still False Positive."
-                            ),
-                        }
-            childs = self._event_repo.get_element_children(
-                scan_id, result_ids, recursive=True)
-            all_ids = result_ids + childs
-            ret = self._event_repo.update_false_positive(scan_id, all_ids, fp)
-        else:
-            if fp == "0":
-                data = dbh.scanElementSourcesDirect(scan_id, result_ids)
-                for row in data:
-                    if str(row[14]) == "1":
-                        return {
-                            "status": "WARNING",
-                            "message": (
-                                f"Cannot unset element {scan_id} as False Positive "
-                                "if a parent element is still False Positive."
-                            ),
-                        }
-            childs = dbh.scanElementChildrenAll(scan_id, result_ids)
-            all_ids = result_ids + childs
-            ret = dbh.scanResultsUpdateFP(scan_id, all_ids, fp)
-
-        if ret:
-            return {"status": "SUCCESS", "message": ""}
-        return {"status": "ERROR", "message": "Exception encountered."}
+        """Set/unset false-positive flag on results + children."""
+        return self._metadata_svc.set_false_positive(scan_id, result_ids, fp)
 
     # ------------------------------------------------------------------
-    # Scan config retrieval  (Cycle 29)
+    # Scan config retrieval  (delegated to ScanMetadataService)
     # ------------------------------------------------------------------
 
     def get_scan_options(self, scan_id: str,
                         app_config: Dict[str, Any]) -> Dict[str, Any]:
-        """Return scan options with config descriptions.
-
-        ``app_config`` is the full application config dict (needed for
-        module option descriptions).
-        """
-        dbh = self._ensure_dbh()
-        meta = dbh.scanInstanceGet(scan_id)
-        if not meta:
-            return {}
-
-        import time as _time
-
-        started = (
-            _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(meta[3]))
-            if meta[3] != 0 else "Not yet"
-        )
-        finished = (
-            _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(meta[4]))
-            if meta[4] != 0 else "Not yet"
-        )
-
-        ret: Dict[str, Any] = {
-            "meta": [meta[0], meta[1], meta[2], started, finished, meta[5]],
-            "config": dbh.scanConfigGet(scan_id),
-            "configdesc": {},
-        }
-
-        for key in list(ret["config"].keys()):
-            if ":" not in key:
-                descs = app_config.get("__globaloptdescs__", {})
-                if descs:
-                    ret["configdesc"][key] = descs.get(key, f"{key} (legacy)")
-            else:
-                mod_name, mod_opt = key.split(":", 1)
-                modules = app_config.get("__modules__", {})
-                if mod_name not in modules:
-                    continue
-                if mod_opt not in modules[mod_name].get("optdescs", {}):
-                    continue
-                ret["configdesc"][key] = modules[mod_name]["optdescs"][mod_opt]
-
-        return ret
+        """Return scan options with config descriptions."""
+        return self._metadata_svc.get_scan_options(scan_id, app_config)
 
     # ------------------------------------------------------------------
     # Raw DB access  (transitional — for endpoints not yet migrated)
