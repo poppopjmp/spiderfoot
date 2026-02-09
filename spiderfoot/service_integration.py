@@ -121,8 +121,8 @@ def wire_module_services(module, sf_config: Dict[str, Any]) -> None:
     # For legacy modules, we can optionally inject a metrics wrapper
     try:
         _inject_legacy_metrics(module)
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("Legacy metrics injection failed for module: %s", e)
 
 
 def complete_scan_services(scan_id: str, status: str = "FINISHED",
@@ -138,8 +138,10 @@ def complete_scan_services(scan_id: str, status: str = "FINISHED",
     try:
         from spiderfoot.scan_event_bridge import teardown_scan_bridge
         teardown_scan_bridge(scan_id, status=status)
-    except Exception:
-        pass
+    except ImportError:
+        log.debug("ScanEventBridge not available — teardown skipped")
+    except Exception as e:
+        log.warning("Failed to teardown scan event bridge for %s: %s", scan_id, e)
 
     try:
         from spiderfoot.metrics import SCANS_TOTAL, ACTIVE_SCANS, SCAN_DURATION
@@ -148,7 +150,7 @@ def complete_scan_services(scan_id: str, status: str = "FINISHED",
         if duration > 0:
             SCAN_DURATION.observe(duration)
     except ImportError:
-        pass
+        log.debug("Metrics module not available — scan completion metrics skipped")
 
     try:
         from spiderfoot.service_registry import get_registry, SERVICE_EVENT_BUS
@@ -161,8 +163,10 @@ def complete_scan_services(scan_id: str, status: str = "FINISHED",
                 "duration": duration,
                 "timestamp": time.time(),
             })
-    except Exception:
-        pass
+    except ImportError:
+        log.debug("EventBus not available — scan completion event not published")
+    except Exception as e:
+        log.warning("Failed to publish scan completion event for %s: %s", scan_id, e)
 
     try:
         from spiderfoot.service_registry import get_registry, SERVICE_VECTOR
@@ -172,8 +176,10 @@ def complete_scan_services(scan_id: str, status: str = "FINISHED",
             vector.scan_status(scan_id, status, {
                 "duration": duration,
             })
-    except Exception:
-        pass
+    except ImportError:
+        log.debug("Vector sink not available — scan completion status not sent")
+    except Exception as e:
+        log.debug("Vector.dev completion status send failed for %s: %s", scan_id, e)
 
 
 # ---------------------------------------------------------------------------
@@ -187,7 +193,7 @@ def _wire_scan_metrics(scan_id: str) -> None:
         SCANS_TOTAL.labels(status="started").inc()
         ACTIVE_SCANS.inc()
     except ImportError:
-        pass
+        log.debug("Metrics module not available — scan metrics disabled")
 
 
 def _wire_scan_eventbus(scan_id: str) -> None:
@@ -201,8 +207,10 @@ def _wire_scan_eventbus(scan_id: str) -> None:
                 "scan_id": scan_id,
                 "timestamp": time.time(),
             })
-    except Exception:
-        pass
+    except ImportError:
+        log.debug("EventBus not available — scan start event not published")
+    except Exception as e:
+        log.warning("Failed to publish scan.started event for %s: %s", scan_id, e)
 
 
 def _wire_scan_vector(scan_id: str) -> None:
@@ -213,8 +221,10 @@ def _wire_scan_vector(scan_id: str) -> None:
         if registry.has(SERVICE_VECTOR):
             vector = registry.get(SERVICE_VECTOR)
             vector.scan_status(scan_id, "STARTED", {})
-    except Exception:
-        pass
+    except ImportError:
+        log.debug("Vector sink not available — scan start event not sent")
+    except Exception as e:
+        log.debug("Vector.dev scan status send failed for %s: %s", scan_id, e)
 
 
 def _inject_legacy_metrics(module) -> None:
