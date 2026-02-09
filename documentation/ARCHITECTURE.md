@@ -503,6 +503,27 @@ eliminating all raw `SpiderFootDb` instantiation from the scan router.
 - **Static route ordering** — `/scans/export-multi`, `/scans/viz-multi`,
   `/scans/rerun-multi` registered before `/{scan_id}` routes
 
+### Final Router DB Purge (v5.33.0)
+
+#### Complete Router-Layer SpiderFootDb Elimination
+Removes the last 3 raw `SpiderFootDb` instantiations from all API
+routers, achieving a clean architectural boundary between the router
+layer and the database.
+
+- **config.py** — `GET /event-types` now uses `ConfigRepository` via
+  `Depends(get_config_repository)`. New `ConfigRepository.get_event_types()`
+  method wraps `dbh.eventTypes()`.
+- **reports.py** — `_get_scan_events()` helper rewritten to accept an
+  injected `ScanService`. Endpoints `POST /reports/generate` and
+  `POST /reports/preview` pass their `Depends(get_scan_service)` instance.
+- **websocket.py** — `_polling_mode()` rewritten to build a `ScanService`
+  from `RepositoryFactory` instead of raw `SpiderFootDb`. Proper cleanup
+  via `svc.close()` in `finally` block.
+- **Dead code removal** — `event_schema.py` (655 lines) and its test file
+  deleted (zero production imports).
+- **Verification** — `grep -r "SpiderFootDb" spiderfoot/api/routers/`
+  returns only docstring/comment references, zero actual imports.
+
 ### Visualization Service Facade (v5.31.0)
 
 #### Visualization Service (`spiderfoot/visualization_service.py`)

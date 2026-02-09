@@ -56,7 +56,7 @@ def _get_store() -> Optional["ReportStore"]:
         return None
 
 try:
-    from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+    from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
     from fastapi.responses import StreamingResponse
     HAS_FASTAPI = True
 except ImportError:
@@ -347,31 +347,43 @@ def _generate_report_background(
 # Scan event retrieval helper
 # ---------------------------------------------------------------------------
 
-def _get_scan_events(scan_id: str) -> tuple:
+def _get_scan_events(scan_id: str, scan_service=None) -> tuple:
     """Retrieve scan events and metadata.
 
+    Uses ``ScanService`` when provided (injected from endpoints).
+    Falls back to empty if unavailable.
+
     Returns (events_list, metadata_dict).
-    Falls back to empty if DB unavailable.
     """
     events = []
     metadata = {"scan_id": scan_id, "target": "Unknown"}
 
     try:
-        from spiderfoot import SpiderFootDb
-        from spiderfoot.config import get_app_config
+        if scan_service is None:
+            # Fallback: build a service from config (non‑endpoint callers)
+            from spiderfoot.db.repositories import (
+                get_repository_factory,
+                RepositoryFactory,
+            )
+            from spiderfoot.scan_service_facade import ScanService
+            from spiderfoot.config import get_app_config
 
-        config = get_app_config()
-        dbh = SpiderFootDb(config.get_config())
+            config = get_app_config()
+            factory = get_repository_factory()
+            if factory is None:
+                factory = RepositoryFactory(config.get_config())
+            repo = factory.scan_repo()
+            scan_service = ScanService(repo, dbh=repo._dbh)
 
         # Get scan info
-        scan_info = dbh.scanInstanceGet(scan_id)
+        scan_info = scan_service.get_scan(scan_id)
         if scan_info:
-            metadata["target"] = scan_info[1] if len(scan_info) > 1 else "Unknown"
-            metadata["started"] = scan_info[3] if len(scan_info) > 3 else ""
-            metadata["ended"] = scan_info[4] if len(scan_info) > 4 else ""
+            metadata["target"] = getattr(scan_info, "target", "Unknown") or "Unknown"
+            metadata["started"] = getattr(scan_info, "started", "") or ""
+            metadata["ended"] = getattr(scan_info, "ended", "") or ""
 
         # Get events
-        raw_events = dbh.scanResultEvent(scan_id)
+        raw_events = scan_service.get_events(scan_id)
         for row in raw_events:
             events.append({
                 "type": row[4] if len(row) > 4 else "UNKNOWN",
@@ -396,6 +408,8 @@ if not HAS_FASTAPI:
         pass
     router = _StubRouter()
 else:
+    from ..dependencies import get_scan_service
+
     router = APIRouter()
 
     @router.post(
@@ -408,11 +422,12 @@ else:
     async def generate_report(
         request: ReportGenerateRequest,
         background_tasks: BackgroundTasks,
+        scan_service=Depends(get_scan_service),
     ) -> ReportStatusResponse:
         report_id = str(uuid.uuid4())
 
         # Retrieve scan events
-        events, scan_metadata = _get_scan_events(request.scan_id)
+        events, scan_metadata = _get_scan_events(request.scan_id, scan_service=scan_service)
 
         # Initialize report in store
         store_report(report_id, {
@@ -501,10 +516,11 @@ else:
         summary="Generate executive summary preview",
         description="Synchronously generates a quick executive summary for immediate display.",
     )
-    async def preview_report(request: ReportPreviewRequest) -> Dict[str, Any]:
+    async def preview_report(request: ReportPreviewRequest,
+                            scan_service=Depends(get_scan_service)) -> Dict[str, Any]:
         from spiderfoot.report_generator import ReportGenerator, ReportGeneratorConfig
 
-        events, scan_metadata = _get_scan_events(request.scan_id)
+        events, scan_metadata = _get_scan_events(request.scan_id, scan_service=scan_service)
 
         config = ReportGeneratorConfig(
             custom_instructions=request.custom_instructions or "",

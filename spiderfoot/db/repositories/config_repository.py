@@ -27,3 +27,12 @@ class ConfigRepository(AbstractRepository):
     def clear_config(self) -> None:
         """Remove all stored configuration."""
         self.dbh.configClear()
+
+    def get_event_types(self) -> list:
+        """Return all registered event types from the database.
+
+        Returns:
+            list: Each element is a tuple
+            ``(event_descr, event, event_raw, event_type)``.
+        """
+        return self.dbh.eventTypes()

@@ -170,96 +170,99 @@ async def _relay_mode(websocket: WebSocket, scan_id: str) -> None:
 async def _polling_mode(websocket: WebSocket, scan_id: str) -> None:
     """Database polling fallback mode.
 
-    Polls the database every 2 seconds for new events. Used when
-    EventRelay has no EventBus wired or as a backward-compatible
-    fallback.
+    Polls the database every 2 seconds for new events via
+    ``ScanService``. Used when EventRelay has no EventBus wired or
+    as a backward-compatible fallback.
     """
     try:
+        from spiderfoot.db.repositories import (
+            get_repository_factory,
+            RepositoryFactory,
+        )
+        from spiderfoot.scan_service_facade import ScanService
+
         config = get_app_config()
-    except Exception:
-        config = None
-
-    if config is None:
-        await websocket.send_text(json.dumps({
-            "error": "Configuration not available",
-        }))
-        return
-
-    try:
-        from spiderfoot import SpiderFootDb
-        db = SpiderFootDb(config.get_config())
+        factory = get_repository_factory()
+        if factory is None:
+            factory = RepositoryFactory(config.get_config())
+        repo = factory.scan_repo()
+        svc = ScanService(repo, dbh=repo._dbh)
     except Exception as e:
         await websocket.send_text(json.dumps({
-            "error": f"Database not available: {e}",
+            "error": f"Service not available: {e}",
         }))
         return
 
-    scan_info = db.scanInstanceGet(scan_id)
-    if not scan_info:
+    scan_record = svc.get_scan(scan_id)
+    if not scan_record:
         await websocket.send_text(json.dumps({
             "error": "Scan not found",
             "scan_id": scan_id,
         }))
+        svc.close()
         return
 
     last_event_count = 0
 
-    while True:
-        try:
-            current_scan_info = db.scanInstanceGet(scan_id)
-            events = db.scanResultEvent(scan_id, ['ALL'])
+    try:
+        while True:
+            try:
+                current_record = svc.get_scan(scan_id)
+                events = svc.get_events(scan_id)
 
-            if current_scan_info:
-                status = current_scan_info[6]
-                await websocket.send_text(json.dumps({
-                    "type": "status_update",
-                    "scan_id": scan_id,
-                    "data": {
-                        "status": status,
-                        "event_count": len(events),
-                    },
-                    "timestamp": time.time(),
-                }))
-
-                # Check if scan is done
-                if status in ("FINISHED", "ABORTED", "ERROR-FAILED"):
+                if current_record:
+                    status = current_record.status
                     await websocket.send_text(json.dumps({
-                        "type": "stream_end",
+                        "type": "status_update",
                         "scan_id": scan_id,
-                        "reason": "scan_completed",
+                        "data": {
+                            "status": status,
+                            "event_count": len(events),
+                        },
                         "timestamp": time.time(),
                     }))
-                    break
 
-            if len(events) > last_event_count:
-                new_events = events[last_event_count:]
-                await websocket.send_text(json.dumps({
-                    "type": "new_events",
-                    "scan_id": scan_id,
-                    "data": {
-                        "events": [
-                            {
-                                "event_type": event[4],
-                                "data": event[1],
-                                "module": event[3],
-                                "created": (
-                                    datetime.fromtimestamp(event[0]).isoformat()
-                                    if event[0] else None
-                                ),
-                            }
-                            for event in new_events
-                        ],
-                    },
-                    "timestamp": time.time(),
-                }))
-                last_event_count = len(events)
+                    # Check if scan is done
+                    if status in ("FINISHED", "ABORTED", "ERROR-FAILED"):
+                        await websocket.send_text(json.dumps({
+                            "type": "stream_end",
+                            "scan_id": scan_id,
+                            "reason": "scan_completed",
+                            "timestamp": time.time(),
+                        }))
+                        break
 
-        except WebSocketDisconnect:
-            raise
-        except Exception as e:
-            logger.error("Polling error for scan %s: %s", scan_id, e)
+                if len(events) > last_event_count:
+                    new_events = events[last_event_count:]
+                    await websocket.send_text(json.dumps({
+                        "type": "new_events",
+                        "scan_id": scan_id,
+                        "data": {
+                            "events": [
+                                {
+                                    "event_type": event[4],
+                                    "data": event[1],
+                                    "module": event[3],
+                                    "created": (
+                                        datetime.fromtimestamp(event[0]).isoformat()
+                                        if event[0] else None
+                                    ),
+                                }
+                                for event in new_events
+                            ],
+                        },
+                        "timestamp": time.time(),
+                    }))
+                    last_event_count = len(events)
 
-        await asyncio.sleep(2)
+            except WebSocketDisconnect:
+                raise
+            except Exception as e:
+                logger.error("Polling error for scan %s: %s", scan_id, e)
+
+            await asyncio.sleep(2)
+    finally:
+        svc.close()
 
 
 @router.websocket("/scans/{scan_id}")

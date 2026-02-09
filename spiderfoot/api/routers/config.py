@@ -10,8 +10,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Body
 from pydantic import BaseModel, Field
-from spiderfoot import SpiderFootDb
-from ..dependencies import get_app_config, optional_auth
+from ..dependencies import get_app_config, get_config_repository, optional_auth
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -211,12 +210,14 @@ async def update_module_options(module_name: str, options: dict = config_body, a
 
 
 @router.get("/event-types")
-async def get_event_types(api_key: str = optional_auth_dep):
+async def get_event_types(api_key: str = optional_auth_dep,
+                          config_repo=Depends(get_config_repository)):
     """
     Get all event types.
 
     Args:
         api_key (str): API key for authentication.
+        config_repo: Injected ConfigRepository.
 
     Returns:
         dict: List of event types.
@@ -225,9 +226,7 @@ async def get_event_types(api_key: str = optional_auth_dep):
         HTTPException: On error.
     """
     try:
-        config = get_app_config()
-        db = SpiderFootDb(config.get_config())
-        event_types = db.eventTypes()
+        event_types = config_repo.get_event_types()
         return {"event_types": event_types}
     except Exception as e:
         logger.error(f"Failed to get event types: {e}")

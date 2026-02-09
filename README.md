@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.32.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.32.0)
+[![Stable Release](https://img.shields.io/badge/version-5.33.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.33.0)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -98,7 +98,6 @@ graph TD;
 | **Plugin Test** | `spiderfoot/plugin_test.py` | Drop-in test harness for modules |
 | **Module Graph** | `spiderfoot/module_graph.py` | Module dependency visualization |
 | **Module Resolver** | `spiderfoot/module_resolver.py` | Runtime dependency resolution and load ordering |
-| **Event Schema** | `spiderfoot/event_schema.py` | Declarative event type validation |
 | **OpenAPI** | `spiderfoot/openapi_spec.py` | OpenAPI 3.1 spec generation |
 | **Benchmarks** | `spiderfoot/benchmark.py` | Performance benchmarking suite |
 | **DB Migrate** | `spiderfoot/db_migrate.py` | Version-controlled schema migrations |
@@ -691,7 +690,7 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 
 ## Recent Updates
 
-### v5.32.0 — Modernization Cycles 1-29 (1269+ tests)
+### v5.33.0 — Modernization Cycles 1-30 (1284+ tests)
 
 | Cycle | Version | Feature | Tests |
 |-------|---------|---------|-------|
@@ -724,6 +723,7 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 | 27 | 5.30.0 | Scan Service Facade (ScanStateMachine + ScanRepository → router) | 33 |
 | 28 | 5.31.0 | Visualization Service Facade (graph/summary/timeline/heatmap) | 35 |
 | 29 | 5.32.0 | Scan Service Phase 2 (all 25 endpoints → ScanService) | 45 |
+| 30 | 5.33.0 | Final Router DB Purge + Dead Code Removal | 15 |
 
 ### Previous
 
