@@ -1160,6 +1160,100 @@ async def clone_scan(
 
 
 # -----------------------------------------------------------------------
+# Event annotations (per-result notes/comments)
+# -----------------------------------------------------------------------
+
+_ANNOTATIONS_KEY = "_annotations"
+
+
+@router.get("/scans/{scan_id}/annotations")
+async def list_event_annotations(
+    scan_id: str,
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """List all event annotations for a scan.
+
+    Annotations are operator notes attached to individual scan result
+    events, identified by result ID.
+    """
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    meta = svc.get_metadata(scan_id) or {}
+    annotations = meta.get(_ANNOTATIONS_KEY, {})
+    return {
+        "scan_id": scan_id,
+        "total": len(annotations),
+        "annotations": annotations,
+    }
+
+
+@router.put("/scans/{scan_id}/annotations/{result_id}")
+async def set_event_annotation(
+    scan_id: str,
+    result_id: str,
+    note: str = Body(..., embed=True, max_length=2000),
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Add or update an annotation on a specific scan result event.
+
+    Args:
+        result_id: The unique ID of the scan result event.
+        note: The annotation text (max 2000 chars).
+    """
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    import time as _time
+    meta = svc.get_metadata(scan_id) or {}
+    annotations = meta.get(_ANNOTATIONS_KEY, {})
+
+    is_new = result_id not in annotations
+    annotations[result_id] = {
+        "note": note.strip(),
+        "updated_at": _time.time(),
+    }
+    meta[_ANNOTATIONS_KEY] = annotations
+    svc.set_metadata(scan_id, meta)
+
+    return {
+        "scan_id": scan_id,
+        "result_id": result_id,
+        "action": "created" if is_new else "updated",
+        "annotation": annotations[result_id],
+    }
+
+
+@router.delete("/scans/{scan_id}/annotations/{result_id}")
+async def delete_event_annotation(
+    scan_id: str,
+    result_id: str,
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Remove an annotation from a scan result event."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    meta = svc.get_metadata(scan_id) or {}
+    annotations = meta.get(_ANNOTATIONS_KEY, {})
+
+    if result_id not in annotations:
+        raise HTTPException(status_code=404, detail="Annotation not found")
+
+    del annotations[result_id]
+    meta[_ANNOTATIONS_KEY] = annotations
+    svc.set_metadata(scan_id, meta)
+
+    return {"scan_id": scan_id, "result_id": result_id, "deleted": True}
+
+
+# -----------------------------------------------------------------------
 # Results management
 # -----------------------------------------------------------------------
 
