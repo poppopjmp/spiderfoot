@@ -25,6 +25,9 @@ from spiderfoot.api.error_handlers import install_error_handlers
 # API request audit logging
 from spiderfoot.api.audit_middleware import install_audit_logging
 
+# Request body size limits
+from spiderfoot.api.body_limit_middleware import install_body_limits
+
 # API versioning
 from spiderfoot.api.versioning import mount_versioned_routers, install_api_versioning
 
@@ -104,6 +107,9 @@ install_api_versioning(app)
 # Install request tracing middleware (must be before security middleware
 # so that every request gets a correlation ID regardless of auth outcome)
 install_tracing_middleware(app)
+
+# Install body size limits (before rate limiting to reject oversized payloads early)
+install_body_limits(app)
 
 # Install rate limiting middleware (after tracing so 429s get request IDs)
 install_rate_limiting(app)
