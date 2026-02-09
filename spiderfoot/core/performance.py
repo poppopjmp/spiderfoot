@@ -10,7 +10,6 @@ and caching mechanisms for SpiderFoot operations.
 import time
 import threading
 import hashlib
-import pickle
 import json
 import os
 import psutil
@@ -161,7 +160,7 @@ class CacheManager:
             try:
                 cached = self.redis_client.get(f"spiderfoot:{key}")
                 if cached:
-                    return pickle.loads(cached.encode('latin-1'))
+                    return json.loads(cached if isinstance(cached, str) else cached.decode('utf-8'))
             except Exception:
                 pass
         
@@ -180,8 +179,8 @@ class CacheManager:
         # Store in Redis if enabled
         if use_redis and self.redis_client:
             try:
-                pickled_value = pickle.dumps(value)
-                self.redis_client.setex(f"spiderfoot:{key}", ttl, pickled_value.decode('latin-1'))
+                serialized = json.dumps(value, default=str)
+                self.redis_client.setex(f"spiderfoot:{key}", ttl, serialized)
             except Exception:
                 pass
         

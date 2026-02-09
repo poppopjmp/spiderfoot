@@ -10,7 +10,7 @@ Usage::
     config = DataServiceConfig(
         backend=DataServiceBackend.HTTP,
         api_url="http://data-api:8001/api",
-        api_key="secret",
+        api_key="<API_KEY>",
     )
     ds = HttpDataService(config)
     scans = ds.scan_instance_list()

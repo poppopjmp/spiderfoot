@@ -30,7 +30,7 @@ Multi-channel notifications for scan events::
     svc.add_channel(WebhookChannel(url="https://example.com/hook"))
     svc.add_channel(EmailChannel(
         smtp_host="smtp.gmail.com", smtp_port=587,
-        username="user@gmail.com", password="app-password",
+        username="user@gmail.com", password="<YOUR_APP_PASSWORD>",
         from_addr="user@gmail.com", to_addrs=["ops@example.com"]))
 
     # Subscribe to topics

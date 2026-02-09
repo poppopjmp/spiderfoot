@@ -9,7 +9,7 @@ Usage::
 
     from spiderfoot.webhook_dispatcher import WebhookDispatcher, WebhookConfig
 
-    cfg = WebhookConfig(url="https://example.com/hook", secret="s3cret")
+    cfg = WebhookConfig(url="https://example.com/hook", secret="<YOUR_SECRET>")
     dispatcher = WebhookDispatcher()
     record = dispatcher.deliver(cfg, event_type="scan.complete", payload={...})
 """

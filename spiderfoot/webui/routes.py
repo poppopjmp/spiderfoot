@@ -288,8 +288,8 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                     crumb={}
                 )
             except Exception as te:
-                import traceback
-                return f'<pre>Template error: {te}\n\nTraceback:\n{traceback.format_exc()}</pre>'
+                self.log.exception("Template rendering error in documentation endpoint")
+                return '<p>An error occurred while rendering this page. Please check the server logs.</p>'
         except Exception as e:
             self.log.error(f"Documentation endpoint error: {e}")
             from mako.template import Template
