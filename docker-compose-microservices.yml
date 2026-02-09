@@ -16,8 +16,6 @@
 #   docker build -f docker/Dockerfile.base -t spiderfoot-base:latest .
 # =============================================================================
 
-version: "3.9"
-
 networks:
   sf-frontend:
     driver: bridge

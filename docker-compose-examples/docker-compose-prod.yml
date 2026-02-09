@@ -2,8 +2,6 @@
 # Includes: PostgreSQL, Elasticsearch, Nginx, Redis, and monitoring
 # Written by poppopjmp
 
-version: "3.9"
-
 # Production networks for service isolation
 networks:
   spiderfoot-frontend:
