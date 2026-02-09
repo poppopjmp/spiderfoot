@@ -12,6 +12,9 @@ from spiderfoot.secure_config import SecureConfigManager
 # Request tracing
 from spiderfoot.request_tracing import install_tracing_middleware
 
+# Rate limiting
+from spiderfoot.api.rate_limit_middleware import install_rate_limiting
+
 app = FastAPI(
     title="SpiderFoot API",
     description="Complete REST API for SpiderFoot OSINT automation platform",
@@ -49,3 +52,6 @@ app.include_router(webhooks.router, prefix="/api", tags=["webhooks"])
 # Install request tracing middleware (must be before security middleware
 # so that every request gets a correlation ID regardless of auth outcome)
 install_tracing_middleware(app)
+
+# Install rate limiting middleware (after tracing so 429s get request IDs)
+install_rate_limiting(app)

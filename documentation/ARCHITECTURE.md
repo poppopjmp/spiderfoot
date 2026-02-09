@@ -315,6 +315,7 @@ migration instructions.
 | 5.24.0 | Scan Event Bridge (live scanner events → WebSocket) |
 | 5.25.0 | Module Dependency Resolution (registry → scanner wiring) |
 | 5.26.0 | Database Repository Pattern (Scan/Event/Config repos) |
+| 5.27.0 | API Rate Limiting Middleware (per-tier, per-client) |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
@@ -401,6 +402,23 @@ routers with injectable, testable repository instances.
   `get_event_repository()`, `get_config_repository()` in
   `api/dependencies.py` with automatic lifecycle management
 - Wired into scanner via `service_integration._wire_repository_factory()`
+
+### API Rate Limiting (v5.27.0)
+
+#### Rate Limit Middleware (`spiderfoot/api/rate_limit_middleware.py`)
+Starlette/FastAPI middleware bridging the existing `RateLimiterService`
+into the API layer. Every incoming request is checked against per-tier
+rate limits before reaching the router.
+
+- **Per-client identity** extraction from API key, `X-Forwarded-For`, or direct IP
+- **Route-tier mapping** — `/api/scans` → scan tier, `/api/data` → data tier, etc.
+- **429 Too Many Requests** with `Retry-After` header on limit exceeded
+- **X-RateLimit-*** response headers (Limit, Remaining, Reset) on every response
+- **Exempt paths** for health checks, docs, OpenAPI spec
+- **Per-client buckets** — different API keys/IPs have independent limits
+- **RateLimitStats** with tier-level and top-offender tracking
+- **`install_rate_limiting(app, config)`** wiring function
+- Installed in `api/main.py` after request tracing middleware
 ### Real-Time Event Infrastructure (v5.22.0 – v5.24.0)
 
 #### Event Relay (`spiderfoot/event_relay.py`)
