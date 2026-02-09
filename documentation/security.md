@@ -718,9 +718,9 @@ python security_validator.py /path/to/spiderfoot
 
 The validator tests:
 - ✅ Secure Configuration Management
-- ✅ CSRF Protection (requires Flask context)
+- ✅ CSRF Protection
 - ✅ Input Validation
-- ✅ Rate Limiting (requires Flask context)
+- ✅ Rate Limiting
 - ✅ Session Security
 - ✅ API Security
 - ✅ Security Logging

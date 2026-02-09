@@ -398,7 +398,7 @@ class SpiderFootSecurityManager:
         """Log request for security audit.
         
         Args:
-            response: Flask response object
+            response: HTTP response object
         """
         request_data = {
             'method': request.method,
@@ -427,69 +427,3 @@ class SpiderFootSecurityManager:
             user_id=getattr(g, 'user_id', None),
             ip_address=g.client_ip
         )
-
-
-def create_secure_app(config=None) -> Flask:
-    """Create Flask app with security configuration.
-    
-    Args:
-        config: Configuration dictionary
-        
-    Returns:
-        Flask app instance with security enabled
-    """
-    app = Flask(__name__)
-    
-    # Load default security configuration
-    app.config.update({
-        'SECRET_KEY': os.environ.get('SECRET_KEY') or os.urandom(32),
-        'CSRF_ENABLED': True,
-        'RATE_LIMITING_ENABLED': True,
-        'SECURE_SESSIONS': True,
-        'AUTHENTICATION_REQUIRED': False,
-        'SECURITY_LOG_FILE': 'logs/security.log',
-        'JWT_EXPIRY': 3600,
-        'SESSION_COOKIE_SECURE': True,
-        'SESSION_COOKIE_HTTPONLY': True,
-        'SESSION_COOKIE_SAMESITE': 'Strict',
-    })
-    
-    # Override with provided config
-    if config:
-        app.config.update(config)
-    
-    # Initialize security
-    security_manager = SpiderFootSecurityManager(app)
-    
-    return app
-
-
-# Decorators for route protection
-def require_auth(f):
-    """Require authentication for route."""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not hasattr(g, 'user_id') or not g.user_id:
-            return jsonify({'error': 'Authentication required'}), 401
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-def require_permission(scope):
-    """Require specific permission for route."""
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not hasattr(g, 'api_scopes'):
-                return jsonify({'error': 'API authentication required'}), 401
-            
-            # Check permission using API security manager
-            from flask import current_app
-            if hasattr(current_app, 'api_security'):
-                claims = getattr(g, 'api_claims', {})
-                if not current_app.api_security.check_permission(claims, scope):
-                    return jsonify({'error': f'Permission denied. Required: {scope}'}), 403
-            
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator

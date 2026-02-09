@@ -563,7 +563,7 @@ class SecurityIntegrator:
     
     def _implement_secure_sessions(self) -> None:
         """Implement secure session management."""
-        # This would replace default Flask sessions with secure sessions
+        # This would replace default sessions with secure sessions
         pass
     
     def _implement_api_authentication(self) -> None:

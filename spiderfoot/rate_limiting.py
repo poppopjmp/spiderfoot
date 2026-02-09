@@ -7,7 +7,6 @@ Provides protection against abuse and DoS attacks.
 import time
 import hashlib
 from typing import Dict, Optional, Tuple
-from functools import wraps
 
 # Optional dependencies for enhanced rate limiting
 try:
@@ -16,13 +15,6 @@ try:
 except ImportError:
     redis = None
     HAS_REDIS = False
-
-try:
-    from flask import request, jsonify, g
-    HAS_FLASK = True
-except ImportError:
-    request = jsonify = g = None
-    HAS_FLASK = False
 
 
 class RateLimiter:
@@ -284,76 +276,3 @@ class RateLimiter:
         # you'd want separate methods to check without incrementing
         _, info = self.check_rate_limit(limit_type)
         return info
-
-
-def rate_limit(limit_type: str = 'api'):
-    """Decorator to apply rate limiting to Flask routes.
-    
-    Args:
-        limit_type: Type of rate limit to apply
-    """
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not HAS_FLASK:
-                # No Flask available, just execute the function
-                return f(*args, **kwargs)
-                
-            # Get rate limiter from app context
-            try:
-                from flask import current_app
-                
-                if not hasattr(current_app, 'rate_limiter'):
-                    # Initialize rate limiter if not exists
-                    current_app.rate_limiter = RateLimiter()
-                
-                rate_limiter = current_app.rate_limiter
-                allowed, info = rate_limiter.check_rate_limit(limit_type)
-                
-                if not allowed:
-                    response = jsonify({
-                        'error': 'Rate limit exceeded',
-                        'message': f'Too many requests. Limit: {info["main_limit"]} per hour, {info["burst_limit"]} per minute',
-                        'retry_after': min(info['main_reset'], info['burst_reset']) - int(time.time())
-                    })
-                    response.status_code = 429
-                    response.headers['Retry-After'] = str(min(info['main_reset'], info['burst_reset']) - int(time.time()))
-                    response.headers['X-RateLimit-Limit'] = str(info['main_limit'])
-                    response.headers['X-RateLimit-Remaining'] = str(info['main_remaining'])
-                    response.headers['X-RateLimit-Reset'] = str(info['main_reset'])
-                    return response
-            except ImportError:
-                # Flask not available, just execute the function
-                pass
-            
-            # Add rate limit headers to successful responses
-            response = f(*args, **kwargs)
-            if hasattr(response, 'headers'):
-                response.headers['X-RateLimit-Limit'] = str(info['main_limit'])
-                response.headers['X-RateLimit-Remaining'] = str(info['main_remaining'])
-                response.headers['X-RateLimit-Reset'] = str(info['main_reset'])
-            
-            return response
-        return decorated_function
-    return decorator
-
-
-# Convenience decorators for different limit types
-def api_rate_limit(f):
-    """Apply API rate limiting."""
-    return rate_limit('api')(f)
-
-
-def web_rate_limit(f):
-    """Apply web interface rate limiting."""
-    return rate_limit('web')(f)
-
-
-def scan_rate_limit(f):
-    """Apply scan operation rate limiting."""
-    return rate_limit('scan')(f)
-
-
-def login_rate_limit(f):
-    """Apply login attempt rate limiting."""
-    return rate_limit('login')(f)

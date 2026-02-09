@@ -321,7 +321,7 @@ class SecurityHeaders:
         """Add security headers to HTTP response.
         
         Args:
-            response: Flask response object
+            response: HTTP response object
             
         Returns:
             Response with security headers added

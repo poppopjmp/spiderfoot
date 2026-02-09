@@ -9,7 +9,6 @@ import secrets
 import hashlib
 import hmac
 from typing import Dict, Optional, Any
-from flask import session, request, g
 import redis
 
 
