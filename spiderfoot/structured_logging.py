@@ -115,6 +115,28 @@ class StructuredFormatter(logging.Formatter):
         event_type = getattr(record, 'event_type', None)
         if event_type:
             log_entry["event_type"] = event_type
+
+        # Request tracing context (injected by RequestIdFilter or explicit extra)
+        request_id = getattr(record, 'request_id', None)
+        if request_id:
+            log_entry["request_id"] = request_id
+        else:
+            # Fallback: read directly from contextvar
+            try:
+                from spiderfoot.request_tracing import get_request_id
+                rid = get_request_id()
+                if rid:
+                    log_entry["request_id"] = rid
+            except ImportError:
+                pass
+
+        request_method = getattr(record, 'request_method', None)
+        if request_method:
+            log_entry["request_method"] = request_method
+
+        request_path = getattr(record, 'request_path', None)
+        if request_path:
+            log_entry["request_path"] = request_path
         
         # Process/thread info for debugging
         log_entry["pid"] = record.process

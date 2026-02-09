@@ -9,6 +9,9 @@ from spiderfoot import __version__
 from spiderfoot.security_middleware import install_fastapi_security
 from spiderfoot.secure_config import SecureConfigManager
 
+# Request tracing
+from spiderfoot.request_tracing import install_tracing_middleware
+
 app = FastAPI(
     title="SpiderFoot API",
     description="Complete REST API for SpiderFoot OSINT automation platform",
@@ -42,3 +45,7 @@ app.include_router(health.router, tags=["health"])
 app.include_router(scan_progress.router, prefix="/api", tags=["scan-progress"])
 app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 app.include_router(webhooks.router, prefix="/api", tags=["webhooks"])
+
+# Install request tracing middleware (must be before security middleware
+# so that every request gets a correlation ID regardless of auth outcome)
+install_tracing_middleware(app)
