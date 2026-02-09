@@ -6,7 +6,7 @@ backwards-compatible).  The ApiVersionMiddleware adds X-API-Version and
 Deprecation headers so clients can migrate at their own pace.
 """
 from fastapi import FastAPI
-from .routers import scan, workspace, config, data, websocket, visualization, correlations, rag_correlation, reports, health, scan_progress, tasks, webhooks
+from .routers import scan, workspace, config, data, websocket, visualization, correlations, rag_correlation, reports, health, scan_progress, tasks, webhooks, export
 from spiderfoot import __version__
 
 # Security imports
@@ -88,6 +88,7 @@ _VERSIONED_ROUTERS = [
     (scan_progress.router,    "/api", ["scan-progress"]),
     (tasks.router,            "/api", ["tasks"]),
     (webhooks.router,         "/api", ["webhooks"]),
+    (export.router,           "/api", ["scans"]),
     (websocket.router,        "/ws",  ["websockets"]),
 ]
 
