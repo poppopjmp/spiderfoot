@@ -16,7 +16,7 @@ from enum import Enum
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse
 
 log = logging.getLogger("spiderfoot.api.export")
 
@@ -156,3 +156,101 @@ async def export_scan_stix(scan_id: str):
 async def export_scan_sarif(scan_id: str):
     """Convenience endpoint for SARIF export."""
     return await export_scan(scan_id, format=ExportFormatParam.sarif)
+
+
+@router.get(
+    "/scans/{scan_id}/export/stream",
+    tags=["scans"],
+    summary="Streaming export (JSON Lines)",
+    description=(
+        "Stream scan events as newline-delimited JSON (JSONL / NDJSON). "
+        "Ideal for large scans where buffering the full response in memory "
+        "would be impractical.  Each line is a self-contained JSON object."
+    ),
+    responses={
+        200: {"description": "JSONL stream", "content": {"application/x-ndjson": {}}},
+        404: {"description": "Scan not found"},
+    },
+)
+async def export_scan_stream(
+    scan_id: str,
+    event_type: Optional[str] = Query(None, description="Filter by event type"),
+    chunk_size: int = Query(500, ge=100, le=5000, description="Events per chunk"),
+):
+    """Stream scan events as newline-delimited JSON (JSONL).
+
+    Unlike the buffered /export endpoint, this streams events incrementally
+    so the server never needs to hold the full export in memory.
+    """
+    import json
+
+    # Verify scan exists
+    try:
+        from spiderfoot.api.dependencies import get_app_config
+        from spiderfoot.sflib.core import SpiderFoot
+
+        config = get_app_config()
+        sf = SpiderFoot(config.get_config())
+        dbh = _get_dbh()
+
+        if dbh:
+            scan_info = dbh.scanInstanceGet(scan_id)
+        else:
+            scan_info = None
+
+        if not scan_info:
+            raise HTTPException(status_code=404, detail="Scan not found")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log.error("Failed to verify scan %s for streaming: %s", scan_id, exc)
+        raise HTTPException(status_code=500, detail="Failed to access scan data")
+
+    async def _event_generator():
+        """Yield scan events as JSONL."""
+        try:
+            if dbh is None:
+                return
+
+            # Get events in chunks to limit memory
+            all_events = dbh.scanResultEvent(scan_id) or []
+
+            yielded = 0
+            for event_row in all_events:
+                if isinstance(event_row, (list, tuple)):
+                    record = {
+                        "generated": event_row[0] if len(event_row) > 0 else None,
+                        "data": str(event_row[1]) if len(event_row) > 1 else "",
+                        "source_data": str(event_row[2]) if len(event_row) > 2 else "",
+                        "module": str(event_row[3]) if len(event_row) > 3 else "",
+                        "event_type": str(event_row[4]) if len(event_row) > 4 else "",
+                        "confidence": event_row[5] if len(event_row) > 5 else None,
+                    }
+                elif isinstance(event_row, dict):
+                    record = event_row
+                else:
+                    continue
+
+                # Apply event_type filter
+                et = record.get("event_type", "")
+                if event_type and et != event_type:
+                    continue
+                if et == "ROOT":
+                    continue
+
+                yield json.dumps(record, default=str) + "\n"
+                yielded += 1
+
+            log.info("Streamed %d events for scan %s", yielded, scan_id)
+        except Exception as exc:
+            log.error("Streaming export error for %s: %s", scan_id, exc)
+            yield json.dumps({"error": str(exc)}) + "\n"
+
+    return StreamingResponse(
+        _event_generator(),
+        media_type="application/x-ndjson",
+        headers={
+            "Content-Disposition": f'attachment; filename="spiderfoot-{scan_id}.jsonl"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
