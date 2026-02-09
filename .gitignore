@@ -188,3 +188,6 @@ include
 .venv
 # Python virtual environment config file #
 pyvenv.cfg
+
+# Thread reaper backup files #
+*.threadreaper_backup
