@@ -36,9 +36,9 @@ def create_data_service(config: Optional[DataServiceConfig] = None) -> DataServi
         return HttpDataService(config=config)
     
     elif config.backend == DataServiceBackend.GRPC:
-        # Future: gRPC client for high-performance mode
-        log.warning("gRPC data service not yet implemented, falling back to local")
-        return LocalDataService(config=config, db_opts=config.db_config)
+        from spiderfoot.data_service.grpc_client import GrpcDataService
+        log.info("Using gRPC data service backend: %s", config.api_url)
+        return GrpcDataService(config=config)
     
     else:
         raise ValueError(f"Unknown data service backend: {config.backend}")
