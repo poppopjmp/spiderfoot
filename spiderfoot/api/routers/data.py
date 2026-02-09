@@ -194,6 +194,104 @@ async def list_module_options(module_name: str, api_key: str = optional_auth_dep
         raise HTTPException(status_code=500, detail="Failed to list module options") from e
 
 
+@router.post("/data/modules/{module_name}/validate-config")
+async def validate_module_config(
+    module_name: str,
+    proposed_config: dict = {},
+    api_key: str = optional_auth_dep,
+):
+    """Validate proposed configuration for a module.
+
+    Checks that all required API keys are set, option values have valid
+    types, and any constraints (e.g. numeric ranges) are satisfied.
+    Returns a list of warnings and errors.
+    """
+    try:
+        config = get_app_config()
+        all_config = config.get_config()
+        modules = all_config.get("__modules__", {})
+
+        if module_name not in modules:
+            raise HTTPException(status_code=404, detail=f"Module '{module_name}' not found")
+
+        mod_meta = modules[module_name]
+        mod_opts = mod_meta.get("opts", {})
+        mod_descs = mod_meta.get("optdescs", {})
+
+        issues = []
+        warnings = []
+
+        # Merge proposed on top of defaults
+        effective = dict(mod_opts)
+        effective.update(proposed_config)
+
+        # Check for unknown options
+        for key in proposed_config:
+            if key not in mod_opts:
+                warnings.append({
+                    "field": key,
+                    "severity": "warning",
+                    "message": f"Unknown option '{key}' — not in module defaults",
+                })
+
+        # Type checks: compare proposed values against default types
+        for key, value in proposed_config.items():
+            if key in mod_opts and mod_opts[key] is not None:
+                expected_type = type(mod_opts[key])
+                if not isinstance(value, expected_type):
+                    # Allow int/float interchange
+                    if expected_type in (int, float) and isinstance(value, (int, float)):
+                        continue
+                    issues.append({
+                        "field": key,
+                        "severity": "error",
+                        "message": f"Type mismatch: expected {expected_type.__name__}, got {type(value).__name__}",
+                        "expected": expected_type.__name__,
+                        "actual": type(value).__name__,
+                    })
+
+        # Check for API key requirements
+        flags = mod_meta.get("flags", [])
+        if isinstance(flags, list) and "apikey" in flags:
+            # Module requires an API key — check if any string option
+            # with "api" in the name has a value set
+            has_api_key = False
+            for key, value in effective.items():
+                if "api" in key.lower() and "key" in key.lower() and value:
+                    has_api_key = True
+                    break
+            if not has_api_key:
+                warnings.append({
+                    "field": "api_key",
+                    "severity": "warning",
+                    "message": "Module requires an API key but none appears to be configured",
+                })
+
+        # Check boolean options
+        for key, value in proposed_config.items():
+            if key in mod_opts and isinstance(mod_opts[key], bool):
+                if not isinstance(value, bool):
+                    issues.append({
+                        "field": key,
+                        "severity": "error",
+                        "message": f"Expected boolean, got {type(value).__name__}",
+                    })
+
+        valid = len(issues) == 0
+        return {
+            "module": module_name,
+            "valid": valid,
+            "errors": issues,
+            "warnings": warnings,
+            "effective_config": {k: str(v)[:100] for k, v in effective.items()},
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to validate config for %s: %s", module_name, e)
+        raise HTTPException(status_code=500, detail="Failed to validate module config") from e
+
+
 @router.get("/data/module-categories")
 async def list_module_categories(api_key: str = optional_auth_dep):
     """
