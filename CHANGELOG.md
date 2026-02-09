@@ -3,6 +3,68 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.106.0] — RC Cycle 19: Test Infrastructure Cleanup
+
+### Removed
+- Deleted unused test files: filesystem_fixtures.py, test/mocks/ (4 files), coverage_helpers.py, assertion_helpers.py
+- Removed stale `docs/conf.py:A` per-file-ignore from setup.cfg
+- Removed unused pytest markers (threadreaper, no_threadreaper, webui_timeout)
+- Removed dead `legacy_test_helpers` import from conftest.py
+
+## [5.105.0] — RC Cycle 18: Broad Exception Cleanup
+
+### Changed
+- Narrowed `except Exception` to specific types in cache_service.py (OSError for file ops)
+- Replaced 5 silent `except Exception: pass` in modern_plugin.py with specific exceptions + debug logging
+- Changed `queue.get()` except from `Exception` to `queue.Empty`
+
+## [5.104.0] — RC Cycle 17: TODO/FIXME Cleanup
+
+### Changed
+- Removed stale TODO in sfp_tool_dnstwist (already implemented)
+- Improved error message in sfp_spider with URL context
+- Re-enabled Gravatar location extraction with validation
+- Fixed misleading docstrings in plugin.py (_updateSocket, tempStorage)
+
+## [5.103.0] — RC Cycle 16: Stale Flask References
+
+### Removed
+- Removed unused `from flask import session, request, g` from session_security.py
+- Removed dead Flask decorator code from rate_limiting.py (rate_limit, api_rate_limit, etc.)
+- Removed broken `create_secure_app()`, `require_auth()`, `require_permission()` from web_security.py
+
+### Changed
+- Updated "Flask response object" docstrings to "HTTP response object"
+- Updated security.md to remove "(requires Flask context)" notes
+
+## [5.102.0] — RC Cycle 15: .dockerignore Reorganization
+
+### Changed
+- Deduplicated entries, organized into sections, added threadreaper pattern
+
+## [5.101.0] — RC Cycle 14: setup.cfg Cleanup
+
+### Fixed
+- Fixed `flake8-max-line-length` → `max-line-length`
+- Removed stale `spiderfoot/db.py:SFS101` per-file-ignore
+- Removed redundant `[options] install_requires` section
+
+## [5.100.0] — RC Cycle 13: print→logging (plugin.py, sfp__stor_db.py)
+
+### Changed
+- Converted last `print()` calls to `logging.getLogger()` in plugin.py and sfp__stor_db.py
+
+## [5.99.0] — RC Cycle 12: print→logging (sfp__stor_db_advanced.py)
+
+### Changed
+- Converted 11 `print()` fallbacks to `_log` module-level logger calls
+
+## [5.98.0] — RC Cycle 11: print→logging (DB/API)
+
+### Changed
+- Added logging to api_security.py, db/__init__.py, db/db_utils.py
+- Converted 4 remaining `print()` calls to `log.error()`
+
 ## [5.97.0] — RC Cycle 10: Documentation Update
 
 ### Changed
