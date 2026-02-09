@@ -597,6 +597,14 @@ class SpiderFootScanner():
                         if sfEvent.eventType in watchedEvents or "*" in watchedEvents:
                             mod.incomingEventQueue.put(deepcopy(sfEvent))
 
+                # Forward to real-time event bridge (WebSocket relay)
+                try:
+                    bridge = getattr(self, '_event_bridge', None)
+                    if bridge is not None:
+                        bridge.forward(sfEvent)
+                except Exception:
+                    pass
+
         finally:
             for mod in self.__moduleInstances.values():
                 mod._stopScanning = True

@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.22.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.22.1)
+[![Stable Release](https://img.shields.io/badge/version-5.24.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.24.0)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -72,6 +72,15 @@ graph TD;
 | **gRPC/HTTP RPC** | `spiderfoot/grpc_service.py` | Inter-service communication with fallback |
 | **Health** | `spiderfoot/health.py` | K8s liveness/readiness/startup probes |
 | **WebSocket** | `spiderfoot/websocket_service.py` | Real-time scan event streaming |
+| **EventRelay** | `spiderfoot/event_relay.py` | Fan-out EventBus events to WebSocket consumers |
+| **ScanEventBridge** | `spiderfoot/scan_event_bridge.py` | Routes live scanner events to EventRelay |
+| **RequestTracing** | `spiderfoot/request_tracing.py` | X-Request-ID propagation, timing, slow-request warnings |
+| **TaskQueue** | `spiderfoot/task_queue.py` | ThreadPool-backed async task execution |
+| **WebhookDispatcher** | `spiderfoot/webhook_dispatcher.py` | HMAC-signed outbound HTTP notifications with retries |
+| **NotificationMgr** | `spiderfoot/notification_manager.py` | Webhook CRUD, event routing, alert engine wiring |
+| **ReportGenerator** | `spiderfoot/report_generator.py` | LLM-powered scan report pipeline |
+| **ReportStorage** | `spiderfoot/report_storage.py` | SQLite/memory report persistence with LRU cache |
+| **AppConfig** | `spiderfoot/app_config.py` | 11-section typed dataclass config with validation |
 | **Notification** | `spiderfoot/notification_service.py` | Slack/Webhook/Email/Log notifications |
 | **Export** | `spiderfoot/export_service.py` | JSON/CSV/STIX/SARIF export |
 | **Audit Log** | `spiderfoot/audit_log.py` | Immutable audit trail |
@@ -680,15 +689,38 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 
 ## Recent Updates
 
-- Added new modules for enhanced data extraction and analysis.
-- Improved performance and stability of existing modules.
-- Updated dependencies to ensure compatibility with the latest versions.
-- Fixed various bugs and issues reported by the community.
-- Enhanced documentation and added new tutorials for better user experience.
-- Added initial support for Postgresql
-- Container Autocreation
-- Testing Integration
-- Codecoverage and quality
+### v5.24.0 — Modernization Cycles 1-21 (915+ tests)
+
+| Cycle | Version | Feature | Tests |
+|-------|---------|---------|-------|
+| 1 | 5.22.0 | Unified structured logging (JSON + Vector.dev) | 24 |
+| 2 | 5.22.1 | Vector.dev log pipeline bootstrap | 29 |
+| 3 | 5.22.2 | LLM Report Preprocessor (chunk/summarize) | 60 |
+| 4 | 5.22.3 | Context window / token budget manager | 28 |
+| 5 | 5.22.4 | OpenAI-compatible LLM client | 44 |
+| 6 | 5.22.5 | Report generator pipeline | 43 |
+| 7 | 5.22.6 | Multi-format report renderer (PDF/HTML/MD/JSON) | 73 |
+| 8 | 5.22.7 | Report REST API | 39 |
+| 9 | 5.22.8 | Report storage engine (SQLite + LRU cache) | 53 |
+| 10 | 5.22.9 | Module registry (discovery, dependency graph) | 75 |
+| 11 | 5.23.0 | EventBus hardening (DLQ, circuit breaker, retry) | 46 |
+| 12 | 5.23.1 | Wire ReportStore into API | 39 |
+| 13 | 5.23.2 | Typed AppConfig (11 dataclass sections) | 96 |
+| 14 | 5.23.3 | Health check API (7 endpoints, 6 subsystem probes) | 47 |
+| 15 | 5.23.4 | Scan progress API (SSE streaming) | 35 |
+| 16 | 5.23.5 | Task queue (ThreadPool, callbacks, state machine) | 45 |
+| 17 | 5.23.6 | Webhook/notification system (HMAC, retries) | 59 |
+| 18 | 5.23.7 | Request tracing middleware (X-Request-ID, timing) | 24 |
+| 19 | 5.23.8 | Event Relay + WebSocket rewrite (push, not polling) | 38 |
+| 20 | 5.23.9 | Config API modernization (AppConfig wired into API) | 65 |
+| 21 | 5.24.0 | Scan Event Bridge (live events → WebSocket) | 33 |
+
+### Previous
+
+- Added initial support for PostgreSQL
+- Container autocreation
+- Testing integration
+- Code coverage and quality
 
 ---
 

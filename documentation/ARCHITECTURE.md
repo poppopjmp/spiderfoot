@@ -292,6 +292,27 @@ migration instructions.
 | 5.20.0 | Scan queue with backpressure |
 | 5.20.1 | Module dependency resolver |
 | 5.21.0 | Database migration framework |
+| 5.22.0 | Unified structured logging (JSON + correlation) |
+| 5.22.1 | Vector.dev pipeline bootstrap + health checks |
+| 5.22.2 | LLM Report Preprocessor (chunk / summarize) |
+| 5.22.3 | Context window / token budget manager |
+| 5.22.4 | OpenAI-compatible LLM client |
+| 5.22.5 | Report generator pipeline orchestrator |
+| 5.22.6 | Multi-format report renderer (PDF/HTML/MD/JSON) |
+| 5.22.7 | Report REST API |
+| 5.22.8 | Report storage engine (SQLite + LRU) |
+| 5.22.9 | Module Registry (discovery, dependency, categories) |
+| 5.23.0 | EventBus Hardening (DLQ, circuit breaker, retry) |
+| 5.23.1 | Wire ReportStore into API layer |
+| 5.23.2 | Typed AppConfig (11 dataclass sections, validation) |
+| 5.23.3 | Health Check API (7 endpoints, 6 subsystem probes) |
+| 5.23.4 | Scan Progress API (SSE streaming) |
+| 5.23.5 | Task Queue (ThreadPool, callbacks, state machine) |
+| 5.23.6 | Webhook/Notification System (HMAC, retries) |
+| 5.23.7 | Request Tracing Middleware (X-Request-ID, timing) |
+| 5.23.8 | Event Relay + WebSocket rewrite (push, not polling) |
+| 5.23.9 | Config API Modernization (AppConfig wired into API) |
+| 5.24.0 | Scan Event Bridge (live scanner events → WebSocket) |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
@@ -335,3 +356,45 @@ minimal module set and topological load order.
 Version-controlled schema evolution with numbered migration files,
 upgrade/downgrade functions, dry-run mode, and checksum validation.
 Supports SQLite and PostgreSQL dialects.
+
+### Real-Time Event Infrastructure (v5.22.0 – v5.24.0)
+
+#### Event Relay (`spiderfoot/event_relay.py`)
+Central fan-out hub bridging the EventBus to WebSocket/SSE consumers.
+Per-scan consumer queues with bounded overflow (drop-oldest policy),
+EventBus subscription management, and lifecycle helpers for
+`scan_started` / `scan_completed` / `status_update` events.
+
+#### Scan Event Bridge (`spiderfoot/scan_event_bridge.py`)
+Lightweight synchronous adapter that sits in the scanner's
+`waitForThreads()` dispatch loop. Forwards each `SpiderFootEvent`
+to the EventRelay for real-time WebSocket delivery. Features:
+configurable per-event-type throttling, large-data truncation,
+per-scan statistics, and a bridge registry for lifecycle management.
+
+#### Request Tracing (`spiderfoot/request_tracing.py`)
+Starlette middleware that generates/echoes `X-Request-ID` headers,
+sets `contextvars` for request context, and logs request start/end
+with timing. Warns on slow requests exceeding a configurable threshold.
+
+#### Webhook Dispatcher (`spiderfoot/webhook_dispatcher.py`)
+Outbound HTTP notification delivery with HMAC-SHA256 signing
+(`X-SpiderFoot-Signature`), exponential backoff retries, delivery
+history (bounded deque), and stats. Uses `httpx` with `urllib` fallback.
+
+#### Notification Manager (`spiderfoot/notification_manager.py`)
+Webhook CRUD operations, event routing to matching/enabled webhooks,
+fire-and-forget async delivery, webhook testing, and integration
+with the Task Queue and Alert Engine for automated notifications.
+
+#### Task Queue (`spiderfoot/task_queue.py`)
+`ThreadPoolExecutor`-backed task execution with `TaskRecord` state
+machine (PENDING → RUNNING → COMPLETED/FAILED/CANCELLED), progress
+tracking, completion callbacks, and a singleton task manager.
+
+#### Typed AppConfig (`spiderfoot/app_config.py`)
+11-section typed dataclass configuration replacing the legacy flat
+dict. Sections: Core, Network, Database, Web, API, Cache, EventBus,
+Vector, Worker, Redis, Elasticsearch. Features: `from_dict()` /
+`to_dict()` round-trip, `apply_env_overrides()` for SF_* variables,
+20+ validation rules, and merge semantics for layered overrides.

@@ -78,7 +78,7 @@ def wire_scan_services(scanner, scan_id: str) -> None:
     """Wire services into a running scan.
 
     Called at the beginning of __startScan() to connect metrics,
-    event bus, and data service to the scan lifecycle.
+    event bus, event bridge, and data service to the scan lifecycle.
 
     Args:
         scanner: SpiderFootScanner instance.
@@ -88,6 +88,7 @@ def wire_scan_services(scanner, scan_id: str) -> None:
         _wire_scan_metrics(scan_id)
         _wire_scan_eventbus(scan_id)
         _wire_scan_vector(scan_id)
+        _wire_scan_event_bridge(scanner, scan_id)
         log.debug("Services wired for scan %s", scan_id)
     except Exception as e:
         log.warning("Partial service wiring for scan %s: %s", scan_id, e)
@@ -123,13 +124,20 @@ def wire_module_services(module, sf_config: Dict[str, Any]) -> None:
 
 def complete_scan_services(scan_id: str, status: str = "FINISHED",
                            duration: float = 0.0) -> None:
-    """Record scan completion in metrics and event bus.
+    """Record scan completion in metrics, event bus, event bridge and vector.
 
     Args:
         scan_id: The completed scan's ID.
         status: Final status (FINISHED, ABORTED, ERROR).
         duration: Total scan duration in seconds.
     """
+    # Tear down the scan event bridge (pushes completion + stats)
+    try:
+        from spiderfoot.scan_event_bridge import teardown_scan_bridge
+        teardown_scan_bridge(scan_id, status=status)
+    except Exception:
+        pass
+
     try:
         from spiderfoot.metrics import SCANS_TOTAL, ACTIVE_SCANS, SCAN_DURATION
         SCANS_TOTAL.labels(status=status.lower()).inc()
@@ -234,3 +242,20 @@ def _inject_legacy_metrics(module) -> None:
             raise
 
     module.handleEvent = instrumented_handler
+
+
+def _wire_scan_event_bridge(scanner, scan_id: str) -> None:
+    """Create and attach a ScanEventBridge for real-time event relay.
+
+    The bridge is stored on the scanner so ``waitForThreads()`` can
+    call ``bridge.forward(sfEvent)`` for each dispatched event.
+    """
+    try:
+        from spiderfoot.scan_event_bridge import create_scan_bridge
+        bridge = create_scan_bridge(scan_id)
+        # Attach to scanner for easy access in waitForThreads
+        scanner._event_bridge = bridge
+        target_value = getattr(scanner, '_SpiderFootScanner__targetValue', '')
+        bridge.start(target=target_value)
+    except Exception as e:
+        log.debug("Scan event bridge not available: %s", e)
