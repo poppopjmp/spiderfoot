@@ -383,6 +383,15 @@ migration instructions.
 | 5.79.0 | Scan search/filter API (faceted results) |
 | 5.80.0 | Graceful shutdown manager (signals + FastAPI lifespan) |
 | 5.80.1 | Documentation update for Cycles 84-91 |
+| 5.81.0 | Streaming JSONL export for large scans |
+| 5.82.0 | Per-event annotations API |
+| 5.83.0 | API key scoping (predefined permission sets) |
+| 5.84.0 | Config change history + diff-against-defaults |
+| 5.85.0 | Event deduplication detection endpoint |
+| 5.86.0 | Per-module config validation |
+| 5.87.0 | Scan retry for failed/aborted scans |
+| 5.88.0 | Response compression middleware (gzip) |
+| 5.88.1 | Final documentation update — Cycle 100 |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 

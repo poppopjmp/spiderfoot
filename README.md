@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.88.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.88.0)
+[![Stable Release](https://img.shields.io/badge/version-5.88.1-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.88.1)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -701,6 +701,20 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 ---
 
 ## Recent Updates
+
+### v5.88.0 — Modernization Cycles 92-100 (Final)
+
+| Cycle | Version | Feature |
+|-------|---------|----------|
+| 92 | 5.81.0 | Streaming JSONL export for large scans |
+| 93 | 5.82.0 | Per-event annotations API |
+| 94 | 5.83.0 | API key scoping (7 predefined permission sets) |
+| 95 | 5.84.0 | Config change history + diff-against-defaults |
+| 96 | 5.85.0 | Event deduplication detection |
+| 97 | 5.86.0 | Per-module config validation |
+| 98 | 5.87.0 | Scan retry for failed/aborted scans |
+| 99 | 5.88.0 | Response compression middleware (gzip) |
+| 100 | 5.88.1 | Final documentation update — 100 cycles complete |
 
 ### v5.80.0 — Modernization Cycles 84-91
 

@@ -3,6 +3,79 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.88.1] — Final Documentation Update (Cycle 100)
+
+### Changed
+- README.md, ARCHITECTURE.md, CHANGELOG.md updated with Cycles 92-100 entries
+- This marks the completion of 100 improvement cycles
+
+## [5.88.0] — Response Compression Middleware (Cycle 99)
+
+### Added
+- `spiderfoot/api/compression_middleware.py` — gzip compression for API responses
+  - Configurable min size threshold and compression level
+  - Content-type aware (JSON, CSV, STIX, SARIF, etc.)
+  - Env vars: `SF_API_COMPRESS_MIN_SIZE`, `SF_API_COMPRESS_LEVEL`
+- Wired into `main.py` middleware stack
+
+## [5.87.0] — Scan Retry Endpoint (Cycle 98)
+
+### Added
+- `spiderfoot/api/routers/scan.py` — `POST /scans/{id}/retry`
+  - Creates new scan from failed/aborted scan's config
+  - Copies metadata (tags, annotations) with retry provenance
+  - State validation (cannot retry running scans)
+
+## [5.86.0] — Per-Module Config Validation (Cycle 97)
+
+### Added
+- `spiderfoot/api/routers/data.py` — `POST /data/modules/{name}/validate-config`
+  - Type checking against default option types
+  - Unknown option detection
+  - API key requirement warnings
+  - Returns effective config with errors/warnings
+
+## [5.85.0] — Event Deduplication Detection (Cycle 96)
+
+### Added
+- `spiderfoot/api/routers/scan.py` — `GET /scans/{id}/dedup`
+  - Fingerprints events by (type, data) pairs
+  - Configurable threshold, shows module overlap
+  - Dedup ratio metric
+
+## [5.84.0] — Config Change History (Cycle 95)
+
+### Added
+- `spiderfoot/api/routers/config.py` — config audit trail
+  - `GET /config/history` — in-memory config change log (capped at 200)
+  - `GET /config/diff` — diff current config against defaults
+
+## [5.83.0] — API Key Scoping (Cycle 94)
+
+### Added
+- `spiderfoot/api/routers/config.py` — scope-based key permissions
+  - `GET /config/api-keys/scopes` — list available scope definitions
+  - `PUT /config/api-keys/{id}/scopes` — assign scopes to a key
+  - `GET /config/api-keys/{id}/scopes` — view key's current scopes
+  - 7 predefined scopes: admin, read, scans, scans:read, config:read, export, webhooks
+
+## [5.82.0] — Per-Event Annotations (Cycle 93)
+
+### Added
+- `spiderfoot/api/routers/scan.py` — event-level annotation CRUD
+  - `GET /scans/{id}/annotations` — list annotations
+  - `PUT /scans/{id}/annotations/{result_id}` — set annotation
+  - `DELETE /scans/{id}/annotations/{result_id}` — remove annotation
+  - Stored in scan metadata under `_annotations` key
+
+## [5.81.0] — Streaming JSONL Export (Cycle 92)
+
+### Added
+- `spiderfoot/api/routers/export.py` — `GET /scans/{id}/export/stream`
+  - Newline-delimited JSON (NDJSON) streaming for large scans
+  - Event type filtering, no memory buffering
+  - `application/x-ndjson` content type
+
 ## [5.80.1] — Documentation Update (Cycle 91)
 
 ### Changed
