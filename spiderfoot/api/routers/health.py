@@ -263,6 +263,84 @@ def _check_data_service() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
+def _check_service_auth() -> Dict[str, Any]:
+    """Inter-service authentication health."""
+    try:
+        from spiderfoot.service_auth import ServiceTokenIssuer
+        issuer = ServiceTokenIssuer()
+        if not issuer.enabled:
+            return {"status": "unknown", "message": "Service auth not configured"}
+        # Verify we can issue a token
+        token = issuer.issue_token()
+        return {
+            "status": "up",
+            "mode": issuer.mode,
+            "service_name": issuer.service_name,
+            "token_preview": token[:12] + "..." if len(token) > 12 else "***",
+        }
+    except ImportError:
+        return {"status": "unknown", "message": "service_auth module not available"}
+    except Exception as e:
+        return {"status": "down", "message": str(e)}
+
+
+def _check_scan_hooks() -> Dict[str, Any]:
+    """Scan lifecycle hooks health and statistics."""
+    try:
+        from spiderfoot.scan_hooks import get_scan_hooks
+        hooks = get_scan_hooks()
+        stats = hooks.stats()
+        return {
+            "status": "up",
+            "total_events_fired": stats.get("total_events", 0),
+            "listener_count": stats.get("listener_count", 0),
+            "recent_events": stats.get("recent_count", 0),
+        }
+    except ImportError:
+        return {"status": "unknown", "message": "scan_hooks module not available"}
+    except Exception as e:
+        return {"status": "down", "message": str(e)}
+
+
+def _check_module_timeout() -> Dict[str, Any]:
+    """Module timeout guard health and statistics."""
+    try:
+        from spiderfoot.module_timeout import get_timeout_guard
+        guard = get_timeout_guard()
+        stats = guard.stats()
+        return {
+            "status": "up",
+            "default_timeout_s": guard.default_timeout,
+            "total_guarded": stats.get("total_guarded", 0),
+            "total_timeouts": stats.get("total_timeouts", 0),
+            "hard_mode": guard.hard_mode,
+        }
+    except ImportError:
+        return {"status": "unknown", "message": "module_timeout module not available"}
+    except Exception as e:
+        return {"status": "down", "message": str(e)}
+
+
+def _check_output_validator() -> Dict[str, Any]:
+    """Module output validator health and statistics."""
+    try:
+        from spiderfoot.module_output_validator import get_output_validator
+        validator = get_output_validator()
+        if validator.mode == "off":
+            return {"status": "unknown", "message": "Output validation disabled"}
+        violations = validator.get_stats()
+        return {
+            "status": "degraded" if violations else "up",
+            "mode": validator.mode,
+            "modules_with_violations": len(violations),
+            "violation_details": {k: v["undeclared"] for k, v in list(violations.items())[:5]} if violations else {},
+        }
+    except ImportError:
+        return {"status": "unknown", "message": "module_output_validator not available"}
+    except Exception as e:
+        return {"status": "down", "message": str(e)}
+
+
 # -----------------------------------------------------------------------
 # Prometheus metrics helper
 # -----------------------------------------------------------------------
@@ -291,6 +369,10 @@ _SUBSYSTEM_CHECKS = {
     "report_storage": _check_report_storage,
     "app_config": _check_app_config,
     "vector": _check_vector,
+    "service_auth": _check_service_auth,
+    "scan_hooks": _check_scan_hooks,
+    "module_timeout": _check_module_timeout,
+    "output_validator": _check_output_validator,
 }
 
 _startup_time = time.time()
