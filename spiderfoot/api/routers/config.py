@@ -8,7 +8,7 @@ with flat-dict consumers.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import BaseModel, Field
 from ..dependencies import get_app_config, get_config_repository, optional_auth
 import logging
@@ -549,3 +549,112 @@ async def import_config(new_config: dict = config_body, api_key: str = optional_
     except Exception as e:
         logger.error(f"Failed to import config: {e}")
         raise HTTPException(status_code=500, detail="Failed to import config") from e
+
+
+# ------------------------------------------------------------------
+# Config source tracing (Cycle 58)
+# ------------------------------------------------------------------
+
+class ConfigSourceEntry(BaseModel):
+    """Single config key with its value and provenance source."""
+    key: str
+    value: Any = None
+    source: str = "default"
+
+
+class ConfigSourcesResponse(BaseModel):
+    """Full provenance report for all config keys."""
+    total: int = 0
+    breakdown: Dict[str, int] = {}
+    entries: List[ConfigSourceEntry] = []
+
+
+class ConfigEnvironmentResponse(BaseModel):
+    """Environment variable overrides + discovery report."""
+    active_overrides: Dict[str, str] = {}
+    unknown_sf_vars: List[str] = []
+    deployment_mode: str = "standalone"
+    service_role: str = ""
+    service_name: str = ""
+
+
+@router.get("/config/sources")
+async def get_config_sources(
+    filter_source: Optional[str] = Query(
+        None,
+        alias="source",
+        description="Filter by source (default, env:*, file:*, runtime)",
+    ),
+    api_key: str = optional_auth_dep,
+):
+    """Return provenance information for every config key.
+
+    Shows where each value came from: ``default``, ``file:<name>``,
+    ``env:<VAR>``, or ``runtime``.  Useful for debugging configuration
+    precedence in microservice deployments.
+    """
+    try:
+        from spiderfoot.config_service import ConfigService
+
+        cs = ConfigService.get_instance()
+        all_sources = cs.get_sources()
+        raw_config = cs.as_dict()
+
+        entries: List[ConfigSourceEntry] = []
+        for key, src in sorted(all_sources.items()):
+            if filter_source and not src.startswith(filter_source):
+                continue
+            entries.append(ConfigSourceEntry(
+                key=key,
+                value=raw_config.get(key),
+                source=src,
+            ))
+
+        # Build breakdown
+        breakdown: Dict[str, int] = {}
+        for e in entries:
+            prefix = e.source.split(":")[0] if ":" in e.source else e.source
+            breakdown[prefix] = breakdown.get(prefix, 0) + 1
+
+        return ConfigSourcesResponse(
+            total=len(entries),
+            breakdown=breakdown,
+            entries=entries,
+        ).model_dump()
+    except ImportError:
+        raise HTTPException(
+            status_code=501,
+            detail="ConfigService not available — source tracing requires v5.51.0+",
+        )
+    except Exception as e:
+        logger.error(f"Failed to get config sources: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get config sources") from e
+
+
+@router.get("/config/environment")
+async def get_config_environment(api_key: str = optional_auth_dep):
+    """Report environment variable overrides and service identity.
+
+    Returns active ``SF_*`` env vars that override defaults, flags
+    unknown ``SF_*`` vars (possible typos), and reports the current
+    deployment mode / service role / service name.
+    """
+    try:
+        from spiderfoot.config_service import ConfigService
+
+        cs = ConfigService.get_instance()
+        return ConfigEnvironmentResponse(
+            active_overrides=cs.get_env_overrides(),
+            unknown_sf_vars=cs.discover_env_vars(),
+            deployment_mode="microservice" if cs.is_microservice else "standalone",
+            service_role=cs.service_role,
+            service_name=cs.service_name,
+        ).model_dump()
+    except ImportError:
+        raise HTTPException(
+            status_code=501,
+            detail="ConfigService not available — environment tracing requires v5.51.0+",
+        )
+    except Exception as e:
+        logger.error(f"Failed to get environment info: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get environment info") from e
