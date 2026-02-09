@@ -801,6 +801,84 @@ async def export_scan_logs(
     )
 
 
+@router.get("/scans/{scan_id}/timeline")
+async def get_scan_timeline(
+    scan_id: str,
+    limit: int = Query(200, ge=1, le=5000, description="Max timeline entries"),
+    event_type: Optional[str] = Query(None, description="Filter by event type"),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Get a chronological timeline of events for a scan.
+
+    Returns events ordered by timestamp with module attribution,
+    useful for understanding scan progression and discovery order.
+    """
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    try:
+        events = svc.get_events(scan_id) or []
+
+        timeline = []
+        for row in events:
+            if isinstance(row, dict):
+                et = row.get("type", row.get("eventType", ""))
+                data = str(row.get("data", ""))
+                module = row.get("module", "")
+                ts = row.get("generated", row.get("lastSeen", 0))
+            elif isinstance(row, (list, tuple)):
+                ts = row[0] if len(row) > 0 else 0
+                data = str(row[1]) if len(row) > 1 else ""
+                module = str(row[3]) if len(row) > 3 else ""
+                et = str(row[4]) if len(row) > 4 else ""
+            else:
+                continue
+
+            if et == "ROOT":
+                continue
+            if event_type and et != event_type:
+                continue
+
+            # Clean up SFURL markers
+            data = data.replace("<SFURL>", "").replace("</SFURL>", "")
+
+            timeline.append({
+                "timestamp": ts,
+                "event_type": et,
+                "data": data[:500],  # Truncate large data
+                "module": module,
+            })
+
+        # Sort by timestamp (ascending = chronological)
+        timeline.sort(key=lambda e: e["timestamp"])
+        timeline = timeline[:limit]
+
+        # Summary statistics
+        type_counts = {}
+        module_counts = {}
+        for entry in timeline:
+            type_counts[entry["event_type"]] = type_counts.get(entry["event_type"], 0) + 1
+            module_counts[entry["module"]] = module_counts.get(entry["module"], 0) + 1
+
+        return {
+            "scan_id": scan_id,
+            "total_events": len(events),
+            "timeline_entries": len(timeline),
+            "timeline": timeline,
+            "summary": {
+                "event_types": dict(sorted(type_counts.items(), key=lambda x: -x[1])),
+                "modules": dict(sorted(module_counts.items(), key=lambda x: -x[1])),
+                "first_event": timeline[0]["timestamp"] if timeline else None,
+                "last_event": timeline[-1]["timestamp"] if timeline else None,
+            },
+        }
+    except Exception as e:
+        logger.error("Failed to get scan timeline for %s: %s", scan_id, e)
+        raise HTTPException(status_code=500, detail="Failed to build scan timeline") from e
+
+
 @router.get("/scans/{scan_id}/correlations/export")
 async def export_scan_correlations(
     scan_id: str,
