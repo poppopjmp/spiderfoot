@@ -319,6 +319,7 @@ migration instructions.
 | 5.28.0 | API Pagination Helpers (PaginationParams, PaginatedResponse) |
 | 5.29.0 | Correlation Service Wiring (CorrelationService → router) |
 | 5.30.0 | Scan Service Facade (ScanStateMachine + ScanRepository → router) |
+| 5.31.0 | Visualization Service Facade (graph/summary/timeline/heatmap → router) |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
@@ -479,6 +480,28 @@ with `ScanStateMachine` for formal state-transition enforcement.
   of raw tuple-index dicts (`scan[0]`, `scan[6]`, etc.)
 - **Gradual migration** — Service exposes `.dbh` for endpoints not yet
   migrated (export, viz); full migration planned for future cycles
+### Visualization Service Facade (v5.31.0)
+
+#### Visualization Service (`spiderfoot/visualization_service.py`)
+Dedicated service layer for scan data visualization, removing raw
+`SpiderFootDb` from all 5 visualization router endpoints.
+
+- **`VisualizationService`** — Composes `ScanRepository` + raw `dbh`
+  with methods: `get_graph_data`, `get_multi_scan_graph_data`,
+  `get_summary_data`, `get_timeline_data`, `get_heatmap_data`
+- **Smart scan validation** — `_require_scan()` uses `ScanRepository`
+  first, with raw `dbh.scanInstanceGet()` fallback
+- **Timeline aggregation** — Handles both `datetime` and epoch
+  timestamps; supports hour/day/week bucketing
+- **Heatmap matrix** — Builds x/y matrix from result dimensions
+  (module/type/risk) with configurable axes
+- **Multi-scan graph** — Merges results across scan IDs, skipping
+  invalid scans with warning logs
+- **`get_visualization_service`** — FastAPI `Depends()` generator
+  provider in `dependencies.py` with automatic lifecycle management
+- **Static route ordering** — `/visualization/graph/multi` registered
+  before `/{scan_id}` to avoid path parameter capture
+
 ### Real-Time Event Infrastructure (v5.22.0 – v5.24.0)
 
 #### Event Relay (`spiderfoot/event_relay.py`)

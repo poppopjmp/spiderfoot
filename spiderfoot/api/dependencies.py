@@ -398,3 +398,33 @@ def get_scan_service():
         yield svc
     finally:
         svc.close()
+
+
+# ------------------------------------------------------------------
+# Visualization Service provider  (Cycle 28)
+# ------------------------------------------------------------------
+
+def get_visualization_service():
+    """FastAPI ``Depends`` provider for ``VisualizationService``.
+
+    Composes ``ScanRepository`` (for existence checks) and a raw
+    ``dbh`` (for result queries not yet on the repository) into a
+    single service with automatic cleanup.
+    """
+    from spiderfoot.db.repositories import (
+        get_repository_factory,
+        RepositoryFactory,
+    )
+    from spiderfoot.visualization_service import VisualizationService
+
+    factory = get_repository_factory()
+    if factory is None:
+        config = get_app_config().get_config()
+        factory = RepositoryFactory(config)
+
+    scan_repo = factory.scan_repo()
+    svc = VisualizationService(scan_repo=scan_repo, dbh=scan_repo._dbh)
+    try:
+        yield svc
+    finally:
+        svc.close()
