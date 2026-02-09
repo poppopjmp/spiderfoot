@@ -11,6 +11,8 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+import logging
+
 try:
     import psycopg2
     HAS_PSYCOPG2 = True
@@ -286,7 +288,6 @@ class sfp__stor_db(SpiderFootModernPlugin):
                 self.pg_conn.close()
                 self.debug("PostgreSQL connection closed")
             except Exception as e:
-                # Use print since self.debug may not be available during destruction
-                print(f"Error closing PostgreSQL connection: {e}")
+                logging.getLogger(__name__).debug("Error closing PostgreSQL connection: %s", e)
 
 # End of sfp__stor_db class

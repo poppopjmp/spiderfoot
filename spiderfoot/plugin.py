@@ -658,7 +658,7 @@ class SpiderFootPlugin:
             elif hasattr(self, '_log') and self._log:
                 self._log.error(error_msg)
             else:
-                print(f"ERROR: {error_msg}")
+                logging.getLogger(__name__).error(error_msg)
             return
             
         if hasattr(self, 'sf') and self.sf:
