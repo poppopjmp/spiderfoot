@@ -25,8 +25,35 @@ from pydantic import BaseModel, Field
 
 log = logging.getLogger("spiderfoot.api.reports")
 
-# Store generated reports in-memory (replaced by persistence in Cycle 9)
+# ---------------------------------------------------------------------------
+# Persistent store (Cycle 12 — replaces in-memory dict)
+# ---------------------------------------------------------------------------
+
+try:
+    from spiderfoot.report_storage import ReportStore, StoreConfig
+    _persistent_store: Optional["ReportStore"] = None
+except ImportError:
+    _persistent_store = None
+
+# Legacy fallback dict — only used when ReportStore is unavailable
 _report_store: Dict[str, Dict[str, Any]] = {}
+
+
+def _get_store() -> Optional["ReportStore"]:
+    """Lazily initialise the persistent ReportStore singleton."""
+    global _persistent_store
+    if _persistent_store is not None:
+        return _persistent_store
+    try:
+        from spiderfoot.report_storage import ReportStore, StoreConfig
+        store = ReportStore(StoreConfig())
+        log.info("Persistent ReportStore initialised (backend=%s)",
+                 store.config.backend.value)
+        _persistent_store = store
+        return _persistent_store
+    except Exception as exc:
+        log.debug("ReportStore unavailable, using in-memory fallback: %s", exc)
+        return None
 
 try:
     from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
@@ -118,27 +145,102 @@ class ReportListItem(BaseModel):
 # ---------------------------------------------------------------------------
 
 def store_report(report_id: str, data: Dict[str, Any]) -> None:
-    """Save report data to the in-memory store."""
+    """Save report data — persistent store with in-memory fallback."""
+    store = _get_store()
+    if store is not None:
+        try:
+            store.save(data)
+            return
+        except Exception as exc:
+            log.warning("Persistent save failed, using in-memory: %s", exc)
     _report_store[report_id] = data
 
 
 def get_stored_report(report_id: str) -> Optional[Dict[str, Any]]:
-    """Retrieve report data from store."""
+    """Retrieve report data — persistent store with in-memory fallback."""
+    store = _get_store()
+    if store is not None:
+        try:
+            result = store.get(report_id)
+            if result is not None:
+                return result
+        except Exception as exc:
+            log.debug("Persistent get failed: %s", exc)
     return _report_store.get(report_id)
 
 
 def delete_stored_report(report_id: str) -> bool:
-    """Delete report from store. Returns True if found."""
-    return _report_store.pop(report_id, None) is not None
+    """Delete report — persistent store with in-memory fallback."""
+    store = _get_store()
+    deleted = False
+    if store is not None:
+        try:
+            deleted = store.delete(report_id)
+        except Exception as exc:
+            log.debug("Persistent delete failed: %s", exc)
+    if not deleted:
+        deleted = _report_store.pop(report_id, None) is not None
+    return deleted
 
 
-def list_stored_reports() -> List[Dict[str, Any]]:
-    """List all stored reports."""
-    return list(_report_store.values())
+def list_stored_reports(
+    scan_id: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> List[Dict[str, Any]]:
+    """List stored reports — persistent store with in-memory fallback."""
+    store = _get_store()
+    if store is not None:
+        try:
+            return store.list_reports(
+                scan_id=scan_id, limit=limit, offset=offset,
+            )
+        except Exception as exc:
+            log.debug("Persistent list failed: %s", exc)
+    # Fallback
+    reports = list(_report_store.values())
+    if scan_id:
+        reports = [r for r in reports if r.get("scan_id") == scan_id]
+    reports.sort(key=lambda r: r.get("created_at", 0), reverse=True)
+    return reports[offset: offset + limit]
+
+
+def update_stored_report(report_id: str, updates: Dict[str, Any]) -> None:
+    """Partially update a stored report."""
+    store = _get_store()
+    if store is not None:
+        try:
+            store.update(report_id, updates)
+            return
+        except Exception as exc:
+            log.debug("Persistent update failed: %s", exc)
+    # Fallback
+    if report_id in _report_store:
+        _report_store[report_id].update(updates)
 
 
 def clear_store() -> None:
-    """Clear all stored reports (for testing)."""
+    """Clear all stored reports (for testing).
+
+    Resets both the persistent store and the in-memory fallback so
+    each test starts with an empty slate.
+    """
+    global _persistent_store
+    if _persistent_store is not None:
+        try:
+            # Bulk-delete all data via SQL for robustness
+            backend = _persistent_store._backend
+            if hasattr(backend, "_get_conn"):
+                conn = backend._get_conn()
+                conn.execute("DELETE FROM reports")
+                conn.commit()
+            else:
+                # MemoryBackend
+                backend._store.clear()
+            _persistent_store._cache.clear()
+        except Exception:
+            pass
+        _persistent_store = None
     _report_store.clear()
 
 
@@ -171,8 +273,7 @@ def _generate_report_background(
     if stored is None:
         return
 
-    stored["status"] = "generating"
-    stored["progress_pct"] = 10.0
+    update_stored_report(report_id, {"status": "generating", "progress_pct": 10.0})
 
     try:
         # Map string to enum
@@ -198,8 +299,10 @@ def _generate_report_background(
         def on_section(section_title: str, _content: str) -> None:
             sections_done[0] += 1
             pct = min(10 + (sections_done[0] / max(total_sections[0], 1)) * 80, 90)
-            stored["progress_pct"] = pct
-            stored["message"] = f"Generated: {section_title}"
+            update_stored_report(report_id, {
+                "progress_pct": pct,
+                "message": f"Generated: {section_title}",
+            })
 
         config.on_section_complete = on_section
 
@@ -207,32 +310,36 @@ def _generate_report_background(
         report = generator.generate(events, scan_metadata)
 
         # Store completed report
-        stored["status"] = "completed"
-        stored["progress_pct"] = 100.0
-        stored["title"] = report.title
-        stored["report_type"] = report.report_type.value
-        stored["executive_summary"] = report.executive_summary
-        stored["recommendations"] = report.recommendations
-        stored["sections"] = [
-            {
-                "title": s.title,
-                "content": s.content,
-                "section_type": s.section_type,
-                "source_event_count": s.source_event_count,
-                "token_count": s.token_count,
-            }
-            for s in report.sections
-        ]
-        stored["metadata"] = report.metadata
-        stored["generation_time_ms"] = report.generation_time_ms
-        stored["total_tokens_used"] = report.total_tokens_used
-        stored["message"] = "Report generation completed"
+        update_stored_report(report_id, {
+            "status": "completed",
+            "progress_pct": 100.0,
+            "title": report.title,
+            "report_type": report.report_type.value,
+            "executive_summary": report.executive_summary,
+            "recommendations": report.recommendations,
+            "sections": [
+                {
+                    "title": s.title,
+                    "content": s.content,
+                    "section_type": s.section_type,
+                    "source_event_count": s.source_event_count,
+                    "token_count": s.token_count,
+                }
+                for s in report.sections
+            ],
+            "metadata": report.metadata,
+            "generation_time_ms": report.generation_time_ms,
+            "total_tokens_used": report.total_tokens_used,
+            "message": "Report generation completed",
+        })
 
         log.info("Report %s generated in %.0fms", report_id, report.generation_time_ms)
 
     except Exception as e:
-        stored["status"] = "failed"
-        stored["message"] = f"Generation failed: {str(e)}"
+        update_stored_report(report_id, {
+            "status": "failed",
+            "message": f"Generation failed: {str(e)}",
+        })
         log.error("Report %s generation failed: %s", report_id, e, exc_info=True)
 
 
@@ -504,16 +611,7 @@ else:
         limit: int = Query(50, ge=1, le=200),
         offset: int = Query(0, ge=0),
     ) -> List[ReportListItem]:
-        reports = list_stored_reports()
-
-        if scan_id:
-            reports = [r for r in reports if r.get("scan_id") == scan_id]
-
-        # Sort by creation time (newest first)
-        reports.sort(key=lambda r: r.get("created_at", 0), reverse=True)
-
-        # Paginate
-        paginated = reports[offset: offset + limit]
+        reports = list_stored_reports(scan_id=scan_id, limit=limit, offset=offset)
 
         return [
             ReportListItem(
@@ -525,7 +623,7 @@ else:
                 generation_time_ms=r.get("generation_time_ms", 0.0),
                 created_at=r.get("created_at", 0.0),
             )
-            for r in paginated
+            for r in reports
         ]
 
     @router.delete(
