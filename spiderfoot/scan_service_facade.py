@@ -22,6 +22,7 @@ from spiderfoot.scan_state import (
     ScanState,
     ScanStateMachine,
 )
+from spiderfoot.scan_state_map import db_status_to_state, state_to_db_status
 
 log = logging.getLogger("spiderfoot.scan_service_facade")
 
@@ -98,14 +99,8 @@ class ScanService:
         try:
             initial = ScanState(record.status)
         except ValueError:
-            # Legacy status string — map to closest state
-            status_map = {
-                "FINISHED": ScanState.COMPLETED,
-                "ERROR-FAILED": ScanState.FAILED,
-                "ABORTED": ScanState.CANCELLED,
-                "ABORT-REQUESTED": ScanState.STOPPING,
-            }
-            initial = status_map.get(record.status, ScanState.CREATED)
+            # Legacy status string — use centralized mapping
+            initial = db_status_to_state(record.status)
 
         sm = ScanStateMachine(scan_id, initial_state=initial)
         with self._lock:
@@ -135,9 +130,10 @@ class ScanService:
                 f"Cannot stop scan {scan_id} in state {sm.state.value}"
             )
 
-        # Persist — the DB column uses "ABORTED", not the enum value
-        self._repo.update_status(scan_id, "ABORTED")
-        return "ABORTED"
+        # Persist — use centralized DB status mapping
+        db_status = state_to_db_status(new_state)
+        self._repo.update_status(scan_id, db_status)
+        return db_status
 
     def get_scan_state(self, scan_id: str) -> Dict[str, Any]:
         """Return state machine info for a scan."""
