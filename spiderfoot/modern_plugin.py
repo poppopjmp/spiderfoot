@@ -46,6 +46,7 @@ Backward Compatibility:
 """
 
 import logging
+import queue
 import time
 from typing import Any, Dict, List, Optional
 
@@ -177,7 +178,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
             svc_name = mapping.get(name)
             if svc_name and self._registry.has(svc_name):
                 return self._registry.get(svc_name)
-        except Exception:
+        except (KeyError, AttributeError):
             pass
         return None
 
@@ -278,8 +279,8 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
             if hasattr(self, "sf") and self.sf:
                 return self.sf.cacheGet(key, 24)
 
-        except Exception:
-            pass
+        except (KeyError, OSError) as e:
+            self.log.debug(f"cache_get error for {key}: {e}")
 
         return None
 
@@ -294,8 +295,8 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 self.sf.cachePut(key, value)
                 return True
 
-        except Exception:
-            pass
+        except (TypeError, ValueError, OSError) as e:
+            self.log.debug(f"cache_put error for {key}: {e}")
 
         return False
 
@@ -321,8 +322,8 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
         try:
             if self.event_bus is not None:
                 self.event_bus.publish(topic, data)
-        except Exception:
-            pass
+        except (AttributeError, RuntimeError) as e:
+            self.log.debug(f"publish_event error for {topic}: {e}")
 
     # ------------------------------------------------------------------
     # Enhanced event dispatch with metrics
@@ -412,7 +413,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
 
             try:
                 sfEvent = self.incomingEventQueue.get(timeout=1)
-            except Exception:
+            except queue.Empty:
                 continue
 
             if sfEvent is None:

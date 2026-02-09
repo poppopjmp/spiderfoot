@@ -299,7 +299,7 @@ class FileCache(CacheService):
             
             self._hits += 1
             return value
-        except Exception as e:
+        except OSError as e:
             self.log.debug(f"Cache read error for {key}: {e}")
             self._misses += 1
             return None
@@ -319,7 +319,7 @@ class FileCache(CacheService):
             
             self._sets += 1
             return True
-        except Exception as e:
+        except (OSError, TypeError, ValueError) as e:
             self.log.error(f"Cache write error for {key}: {e}")
             return False
     
