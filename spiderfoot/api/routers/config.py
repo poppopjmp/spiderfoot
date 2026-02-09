@@ -1,7 +1,19 @@
+"""
+Configuration API router.
+
+Modernised to delegate to the typed ``AppConfig`` underneath the
+``Config`` facade, providing real validation, structured responses,
+and Pydantic request models while keeping backward compatibility
+with flat-dict consumers.
+"""
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException, Body
+from pydantic import BaseModel, Field
 from spiderfoot import SpiderFootDb
 from ..dependencies import get_app_config, optional_auth
 import logging
+from typing import Any, Dict, List, Optional
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -9,56 +21,87 @@ optional_auth_dep = Depends(optional_auth)
 config_body = Body(...)
 
 
+# ------------------------------------------------------------------
+# Pydantic request / response models
+# ------------------------------------------------------------------
+
+class ConfigUpdateRequest(BaseModel):
+    """Typed request for PATCH /config."""
+    options: Dict[str, Any] = Field(..., description="Config key/value pairs to update")
+
+
+class ConfigValidateRequest(BaseModel):
+    """Typed request for POST /config/validate."""
+    options: Dict[str, Any] = Field(..., description="Config key/value pairs to validate")
+
+
+class ValidationErrorItem(BaseModel):
+    """Single validation error."""
+    field: str
+    message: str
+    value: Optional[Any] = None
+
+
+class ValidationResponse(BaseModel):
+    """Response from validation endpoint."""
+    valid: bool
+    errors: List[ValidationErrorItem] = []
+    sections_checked: int = 0
+
+
+class ConfigSummaryResponse(BaseModel):
+    """Structured config overview."""
+    summary: Dict[str, Any]
+    config: Dict[str, Any]
+    version: str = ""
+
+
 @router.get("/config")
 async def get_config_endpoint(api_key: str = optional_auth_dep):
     """
-    Get the global configuration (safe subset).
+    Get the global configuration.
 
-    Args:
-        api_key (str): API key for authentication.
-
-    Returns:
-        dict: Safe config.
-
-    Raises:
-        HTTPException: On error.
+    Returns a safe subset of the config (no dunder internal keys)
+    alongside a typed summary from ``AppConfig``.
     """
     try:
-        config = get_app_config()
+        cfg = get_app_config()
+        raw = cfg.get_config()
         safe_config = {
-            k: v for k, v in config.get_config().items()
+            k: v for k, v in raw.items()
             if not k.startswith('__') or k in ['__version__', '__database']
         }
-        return {"config": safe_config}
+        return ConfigSummaryResponse(
+            summary=cfg.config_summary(),
+            config=safe_config,
+            version=cfg.app_config.version,
+        ).model_dump()
     except Exception as e:
         logger.error(f"Failed to get config: {e}")
         raise HTTPException(status_code=500, detail="Failed to get configuration") from e
 
 
 @router.patch("/config")
-async def update_config(options: dict = config_body, api_key: str = optional_auth_dep):
+async def update_config(body: ConfigUpdateRequest, api_key: str = optional_auth_dep):
     """
-    Update global config options.
-
-    Args:
-        options (dict): Config options to update.
-        api_key (str): API key for authentication.
-
-    Returns:
-        dict: Success message.
-
-    Raises:
-        HTTPException: On error.
+    Update global config options with typed validation.
     """
     try:
-        config = get_app_config()
-        # Validate known config options
+        cfg = get_app_config()
+        options = body.options
+
+        # Validate the merged state before applying
+        is_valid, errors = cfg.validate_config(options)
+        if not is_valid:
+            return {
+                "success": False,
+                "message": "Validation failed",
+                "errors": errors,
+            }
+
         for k, v in options.items():
-            if k == "_debug" and not isinstance(v, bool):
-                raise HTTPException(status_code=422, detail="_debug must be a boolean")
-            # Add more validation for other keys as needed
-            config.set_config_option(k, v)
-        config.save_config()
+            cfg.set_config_option(k, v)
+        cfg.save_config()
         return {"success": True, "message": "Config updated"}
     except HTTPException:
         raise
@@ -248,48 +291,37 @@ async def update_module_config(
 
 
 @router.post("/config/reload")
-async def reload_config(
-    api_key: str = Depends(optional_auth)
-):
+async def reload_config(api_key: str = Depends(optional_auth)):
     """
-    Reload the application configuration from disk.
-
-    Parameters:
-        api_key (str): Optional API key for authentication.
-    Returns:
-        dict: Status of the reload operation.
-    Raises:
-        HTTPException: If the reload fails.
+    Reload the application configuration from the database
+    and re-apply environment variable overrides.
     """
     try:
-        config = get_app_config()
-        config.reload()
-        return {"status": "reloaded"}
+        cfg = get_app_config()
+        cfg.reload()
+        return {"status": "reloaded", "summary": cfg.config_summary()}
     except Exception as e:
         logger.error(f"Failed to reload config: {e}")
         raise HTTPException(status_code=500, detail="Failed to reload configuration") from e
 
 
 @router.post("/config/validate")
-async def validate_config(options: dict = config_body, api_key: str = optional_auth_dep):
+async def validate_config(body: ConfigValidateRequest, api_key: str = optional_auth_dep):
     """
     Validate configuration options without saving.
 
-    Args:
-        options (dict): Config options to validate.
-        api_key (str): API key for authentication.
-
-    Returns:
-        dict: Validation result.
-
-    Raises:
-        HTTPException: On error.
+    Merges the supplied options with the current config and runs
+    ``AppConfig.validate()`` against the merged state.
     """
     try:
-        config = get_app_config()
-        # Assume config.validate_config returns (bool, errors)
-        is_valid, errors = config.validate_config(options)
-        return {"valid": is_valid, "errors": errors}
+        cfg = get_app_config()
+        is_valid, errors = cfg.validate_config(body.options)
+        resp = ValidationResponse(
+            valid=is_valid,
+            errors=[ValidationErrorItem(**e) for e in errors],
+            sections_checked=11,  # 11 typed sections in AppConfig
+        )
+        return resp.model_dump()
     except Exception as e:
         logger.error(f"Failed to validate config: {e}")
         raise HTTPException(status_code=500, detail="Failed to validate config") from e
@@ -446,6 +478,64 @@ async def export_config(api_key: str = optional_auth_dep):
     except Exception as e:
         logger.error(f"Failed to export config: {e}")
         raise HTTPException(status_code=500, detail="Failed to export config") from e
+
+
+@router.get("/config/summary")
+async def get_config_summary(api_key: str = optional_auth_dep):
+    """
+    Return a typed summary of all 11 AppConfig sections.
+    """
+    try:
+        cfg = get_app_config()
+        ac = cfg.app_config
+        return {
+            "summary": ac.summary(),
+            "sections": {
+                "core": {
+                    "debug": ac.core.debug,
+                    "max_threads": ac.core.max_threads,
+                    "production": ac.core.production,
+                },
+                "network": {
+                    "dns_server": ac.network.dns_server,
+                    "dns_timeout": ac.network.dns_timeout,
+                    "fetch_timeout": ac.network.fetch_timeout,
+                    "proxy_type": ac.network.proxy_type or "none",
+                },
+                "database": {
+                    "db_path": ac.database.db_path,
+                    "pg_host": ac.database.pg_host or "none",
+                },
+                "web": {"host": ac.web.host, "port": ac.web.port},
+                "api": {
+                    "host": ac.api.host,
+                    "port": ac.api.port,
+                    "log_level": ac.api.log_level,
+                },
+                "cache": {
+                    "backend": ac.cache.backend,
+                    "ttl": ac.cache.ttl,
+                },
+                "eventbus": {"backend": ac.eventbus.backend},
+                "vector": {"enabled": ac.vector.enabled},
+                "worker": {
+                    "max_workers": ac.worker.max_workers,
+                    "strategy": ac.worker.strategy,
+                    "max_scans": ac.worker.max_scans,
+                },
+                "redis": {
+                    "host": ac.redis.host,
+                    "port": ac.redis.port,
+                },
+                "elasticsearch": {
+                    "enabled": ac.elasticsearch.enabled,
+                },
+            },
+            "version": ac.version,
+        }
+    except Exception as e:
+        logger.error(f"Failed to get config summary: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get config summary") from e
 
 @router.post("/config/import")
 async def import_config(new_config: dict = config_body, api_key: str = optional_auth_dep):

@@ -1,21 +1,56 @@
 """
-Dependencies and helpers for SpiderFoot API
+Dependencies and helpers for SpiderFoot API.
+
+The ``Config`` class wraps the typed ``AppConfig`` (Cycle 13)
+internally while exposing a backward-compatible ``get_config()``
+that returns a flat dict — so every legacy consumer
+(``SpiderFootDb(config.get_config())``, templates, etc.) keeps
+working without changes.
 """
+from __future__ import annotations
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from spiderfoot.db import SpiderFootDb
 from spiderfoot.sflib.core import SpiderFoot
 from spiderfoot.helpers import SpiderFootHelpers
+from spiderfoot.app_config import AppConfig, ValidationError
 import multiprocessing as mp
 import logging
+from typing import Any, Dict, List, Optional, Tuple
 
 security = HTTPBearer(auto_error=False)
 
 
 class Config:
-    def __init__(self):
+    """API configuration facade backed by typed ``AppConfig``.
+
+    ``get_config()`` returns a flat dict for backward compatibility.
+    ``app_config`` property exposes the typed ``AppConfig`` instance.
+    ``validate_config()`` delegates to ``AppConfig.validate()`` for
+    real validation instead of the former no-op stub.
+    """
+
+    def __init__(self, *, _skip_db: bool = False, _app_config: Optional[AppConfig] = None):
+        """Initialise configuration.
+
+        Args:
+            _skip_db: If True, skip DB/SF initialisation (for testing).
+            _app_config: Inject a pre-built AppConfig (for testing).
+        """
         from spiderfoot import __version__
-        default_config = {
+
+        self.log = logging.getLogger("spiderfoot.api")
+        self.loggingQueue = mp.Queue()
+
+        if _app_config is not None:
+            self._app_config = _app_config
+            if not self._app_config.version:
+                self._app_config.version = __version__
+            return
+
+        # Build legacy default dict
+        default_config: Dict[str, Any] = {
             '__modules__': {},
             '__correlationrules__': [],
             '_debug': False,
@@ -31,95 +66,214 @@ class Config:
             'api_keys': [],
             'credentials': []
         }
-        # Remove all in-memory stubs for real data usage
-        # (do not set __modules__, __eventtypes__, __globaloptdescs__ here)
+
+        if _skip_db:
+            self._app_config = AppConfig.from_dict(default_config)
+            self._app_config.apply_env_overrides()
+            return
+
+        # Normal flow: read from DB, merge, wrap in AppConfig
         self.defaultConfig = default_config.copy()
         dbh = SpiderFootDb(self.defaultConfig, init=True)
         sf = SpiderFoot(self.defaultConfig)
-        self.config = sf.configUnserialize(dbh.configGet(), self.defaultConfig)
-        self.loggingQueue = mp.Queue()
-        self.log = logging.getLogger("spiderfoot.api")
-        # Remove monkey-patch: rely on real SpiderFoot methods
+        merged = sf.configUnserialize(dbh.configGet(), self.defaultConfig)
 
-    def get_config(self):
-        return self.config
+        self._app_config = AppConfig.from_dict(merged)
+        self._app_config.apply_env_overrides()
 
-    def update_config(self, updates: dict):
-        for key, value in updates.items():
-            self.config[key] = value
-        return self.config
+    # ------------------------------------------------------------------
+    # Typed access
+    # ------------------------------------------------------------------
 
-    def set_config_option(self, key, value):
-        self.config[key] = value
+    @property
+    def app_config(self) -> AppConfig:
+        """Typed configuration object (preferred for new code)."""
+        return self._app_config
 
-    def save_config(self):
-        pass  # stub for test/compat
+    # ------------------------------------------------------------------
+    # Backward-compatible flat dict access
+    # ------------------------------------------------------------------
 
-    def reload(self):
-        pass  # stub for test/compat
+    def get_config(self) -> Dict[str, Any]:
+        """Return the flat dict expected by legacy consumers."""
+        return self._app_config.to_dict()
 
-    def validate_config(self, options):
-        return True, []  # stub for test/compat
+    @property
+    def config(self) -> Dict[str, Any]:
+        """Property alias for ``get_config()`` — some callers access
+        ``config.config`` directly."""
+        return self.get_config()
 
-    def get_scan_defaults(self):
-        return self.config.get('scan_defaults', {})
+    @config.setter
+    def config(self, value: Dict[str, Any]) -> None:
+        """Reassign config from a flat dict (e.g. ``replace_config``)."""
+        self._app_config = AppConfig.from_dict(value)
 
-    def set_scan_defaults(self, options):
-        self.config['scan_defaults'] = options
+    # ------------------------------------------------------------------
+    # Mutation helpers
+    # ------------------------------------------------------------------
 
-    def get_workspace_defaults(self):
-        return self.config.get('workspace_defaults', {})
+    def update_config(self, updates: dict) -> Dict[str, Any]:
+        self._app_config.merge(updates)
+        return self.get_config()
 
-    def set_workspace_defaults(self, options):
-        self.config['workspace_defaults'] = options
+    def set_config_option(self, key: str, value: Any) -> None:
+        self._app_config.merge({key: value})
 
-    def get_api_keys(self):
-        return self.config.get('api_keys', [])
+    def save_config(self) -> None:
+        """Persist current config to the database."""
+        try:
+            flat = self.get_config()
+            dbh = SpiderFootDb(flat)
+            dbh.configSet(flat)
+            self.log.info("Configuration saved to database")
+        except Exception as exc:
+            self.log.warning("Failed to save config to DB: %s", exc)
 
-    def add_api_key(self, key_data):
-        self.config.setdefault('api_keys', []).append(key_data)
+    def reload(self) -> None:
+        """Re-read config from DB and apply env overrides."""
+        try:
+            flat = self.get_config()
+            dbh = SpiderFootDb(flat)
+            sf = SpiderFoot(flat)
+            merged = sf.configUnserialize(dbh.configGet(), flat)
+            self._app_config = AppConfig.from_dict(merged)
+            self._app_config.apply_env_overrides()
+            self.log.info("Configuration reloaded from database")
+        except Exception as exc:
+            self.log.warning("Failed to reload config from DB: %s", exc)
 
-    def delete_api_key(self, key_id):
-        self.config['api_keys'] = [k for k in self.config.get('api_keys', []) if k.get('key') != key_id]
+    # ------------------------------------------------------------------
+    # Validation (real implementation via AppConfig)
+    # ------------------------------------------------------------------
 
-    def get_credentials(self):
-        return self.config.get('credentials', [])
+    def validate_config(self, options: Optional[dict] = None) -> Tuple[bool, List[Dict[str, Any]]]:
+        """Validate config options.
 
-    def add_credential(self, cred_data):
-        self.config.setdefault('credentials', []).append(cred_data)
+        If *options* is provided, a temporary AppConfig is built from
+        the merged state (current + options) and validated.  Otherwise
+        the current config is validated.
 
-    def delete_credential(self, cred_id):
-        self.config['credentials'] = [c for c in self.config.get('credentials', []) if c.get('key') != cred_id]
+        Returns:
+            (is_valid, errors) where errors is a list of dicts with
+            ``field``, ``message``, and ``value`` keys.
+        """
+        if options:
+            merged = self.get_config()
+            merged.update(options)
+            tmp = AppConfig.from_dict(merged)
+            validation_errors = tmp.validate()
+        else:
+            validation_errors = self._app_config.validate()
 
-    def replace_config(self, new_config):
-        self.config = new_config
-        # Ensure all required keys are present after replacement
-        for key, value in self.defaultConfig.items():
-            if key not in self.config:
-                self.config[key] = value
+        error_dicts = [
+            {"field": e.field, "message": e.message, "value": e.value}
+            for e in validation_errors
+        ]
+        return len(error_dicts) == 0, error_dicts
 
-    def get_module_config(self, module_name):
-        return self.config.get('__modules__', {}).get(module_name)
+    # ------------------------------------------------------------------
+    # Scan / workspace defaults
+    # ------------------------------------------------------------------
 
-    def update_module_config(self, module_name, new_config):
-        modules = self.config.setdefault('__modules__', {})
+    def get_scan_defaults(self) -> dict:
+        return self._app_config._extra.get('scan_defaults', {})
+
+    def set_scan_defaults(self, options: dict) -> None:
+        self._app_config._extra['scan_defaults'] = options
+
+    def get_workspace_defaults(self) -> dict:
+        return self._app_config._extra.get('workspace_defaults', {})
+
+    def set_workspace_defaults(self, options: dict) -> None:
+        self._app_config._extra['workspace_defaults'] = options
+
+    # ------------------------------------------------------------------
+    # API key management
+    # ------------------------------------------------------------------
+
+    def get_api_keys(self) -> list:
+        return self._app_config._extra.get('api_keys', [])
+
+    def add_api_key(self, key_data: dict) -> None:
+        self._app_config._extra.setdefault('api_keys', []).append(key_data)
+
+    def delete_api_key(self, key_id: str) -> None:
+        keys = self._app_config._extra.get('api_keys', [])
+        self._app_config._extra['api_keys'] = [
+            k for k in keys if k.get('key') != key_id
+        ]
+
+    # ------------------------------------------------------------------
+    # Credential management
+    # ------------------------------------------------------------------
+
+    def get_credentials(self) -> list:
+        return self._app_config._extra.get('credentials', [])
+
+    def add_credential(self, cred_data: dict) -> None:
+        self._app_config._extra.setdefault('credentials', []).append(cred_data)
+
+    def delete_credential(self, cred_id: str) -> None:
+        creds = self._app_config._extra.get('credentials', [])
+        self._app_config._extra['credentials'] = [
+            c for c in creds if c.get('key') != cred_id
+        ]
+
+    # ------------------------------------------------------------------
+    # Full replace / import
+    # ------------------------------------------------------------------
+
+    def replace_config(self, new_config: dict) -> None:
+        """Replace the entire config (e.g. import)."""
+        self._app_config = AppConfig.from_dict(new_config)
+
+    # ------------------------------------------------------------------
+    # Module config helpers
+    # ------------------------------------------------------------------
+
+    def get_module_config(self, module_name: str) -> Optional[dict]:
+        modules = self._app_config.modules or {}
+        return modules.get(module_name)
+
+    def update_module_config(self, module_name: str, new_config: dict) -> None:
+        modules = self._app_config.modules or {}
         if module_name not in modules:
             raise KeyError("404: Module not found")
         modules[module_name] = new_config
+        self._app_config.modules = modules
 
-    def scanResultDelete(self, scan_id):
-        # Stub for test/compat: do nothing or remove from in-memory if implemented
+    # ------------------------------------------------------------------
+    # Misc stubs kept for interface compatibility
+    # ------------------------------------------------------------------
+
+    def scanResultDelete(self, scan_id: str) -> None:
+        """Stub for test/compat."""
         pass
+
+    # ------------------------------------------------------------------
+    # Summary / introspection
+    # ------------------------------------------------------------------
+
+    def config_summary(self) -> Dict[str, Any]:
+        """Return a concise typed config summary."""
+        return self._app_config.summary()
 
 
 app_config = None
 
 
-def get_app_config():
+def get_app_config() -> Config:
     global app_config
     if app_config is None:
         app_config = Config()
     return app_config
+
+
+def reset_app_config() -> None:
+    """Reset the singleton — for testing."""
+    global app_config
+    app_config = None
 
 
 async def get_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)):
