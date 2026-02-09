@@ -174,7 +174,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
             cursor.fetchone()
             cursor.close()
             return True
-        except:
+        except Exception:
             return False
 
     def watchedEvents(self):
@@ -273,7 +273,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
             if self.pg_conn:
                 try:
                     self.pg_conn.rollback()
-                except:
+                except Exception:
                     pass
             # Fall back to SQLite storage
             self.debug("Falling back to SQLite storage")

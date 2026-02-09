@@ -572,7 +572,7 @@ class SecurityAuditLogger:
                     base_score += 0.0  # Internal IP, lower risk
                 else:
                     base_score += 0.2  # External IP, higher risk
-            except:
+            except ValueError:
                 pass
         
         return min(base_score, 1.0)

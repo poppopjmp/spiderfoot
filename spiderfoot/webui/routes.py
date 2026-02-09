@@ -469,7 +469,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             import json
             try:
                 ids = json.loads(resultids)
-            except:
+            except (json.JSONDecodeError, ValueError):
                 ids = [resultids]
             
             # Update FP status

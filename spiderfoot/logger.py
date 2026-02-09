@@ -6,7 +6,7 @@ import sys
 import time
 from contextlib import suppress
 from logging.handlers import QueueHandler, QueueListener, TimedRotatingFileHandler
-from queue import Queue
+from queue import Empty, Queue
 from threading import Thread
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
@@ -69,7 +69,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
             try:
                 item = self.log_queue.get_nowait()
                 batch_items.append(item)
-            except:
+            except Empty:
                 break
         
         if batch_items:

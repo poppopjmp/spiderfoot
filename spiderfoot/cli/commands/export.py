@@ -107,7 +107,7 @@ def export_command(cli, line):
                 data = json.loads(resp)
                 formatted_json = json.dumps(data, indent=2, ensure_ascii=False)
                 cli.dprint(formatted_json, plain=True)
-            except:
+            except (json.JSONDecodeError, ValueError):
                 cli.dprint(resp, plain=True)
         else:
             cli.dprint(resp, plain=True)

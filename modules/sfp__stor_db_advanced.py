@@ -775,7 +775,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
             if conn:
                 try:
                     conn.rollback()
-                except:
+                except Exception:
                     pass
             if pool_id and conn:
                 self.load_balancer.return_connection(pool_id, conn, False)

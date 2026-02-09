@@ -235,7 +235,7 @@ def _create_scan_from_config(cli, scan_config):
                 data = json.loads(resp)
                 scan_id = data.get('id', data.get('scan_id'))
                 cli.dprint(f"Scan created successfully! ID: {scan_id}", plain=True)
-            except:
+            except (json.JSONDecodeError, ValueError):
                 cli.dprint("Scan created successfully!", plain=True)
         else:
             cli.edprint("Failed to create scan")

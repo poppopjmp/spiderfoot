@@ -61,7 +61,7 @@ def workspace_create_command(cli, line):
             data = json.loads(resp)
             workspace_id = data.get('id', name)
             cli.dprint(f"Workspace '{name}' created successfully (ID: {workspace_id})")
-        except:
+        except (json.JSONDecodeError, ValueError):
             cli.dprint(f"Workspace '{name}' created successfully")
     else:
         cli.edprint("Failed to create workspace.")
@@ -174,7 +174,7 @@ def workspace_clone_command(cli, line):
             data = json.loads(resp)
             new_id = data.get('id', new_name)
             cli.dprint(f"Workspace cloned successfully. New workspace ID: {new_id}")
-        except:
+        except (json.JSONDecodeError, ValueError):
             cli.dprint(f"Workspace cloned successfully")
     else:
         cli.edprint(f"Failed to clone workspace '{source_id}'")
