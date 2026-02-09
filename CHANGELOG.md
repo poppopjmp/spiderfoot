@@ -202,10 +202,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Channel-based subscriptions per scan/module/event type
   - FastAPI WebSocket router integration
 
-## [5.12.2] — Event Schema Validation
+## [5.12.2] — Event Schema Validation *(removed in v5.33.0 — dead code)*
 
-### Added
-- `spiderfoot/event_schema.py` — Declarative event type schemas
+### Added *(subsequently deleted)*
+- ~~`spiderfoot/event_schema.py` — Declarative event type schemas~~
   - 15 `DataFormat` validators (IPV4, DOMAIN, EMAIL, URL, etc.)
   - 70+ core event type schemas
   - `EventSchemaRegistry` singleton

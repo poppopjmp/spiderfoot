@@ -481,6 +481,23 @@ with `ScanStateMachine` for formal state-transition enforcement.
   of raw tuple-index dicts (`scan[0]`, `scan[6]`, etc.)
 - **Gradual migration** — Service exposes `.dbh` for endpoints not yet
   migrated (export, viz); full migration planned for future cycles
+### WebUI DB Access Centralisation (v5.34.0)
+
+#### DbProvider Mixin (`spiderfoot/webui/db_provider.py`)
+Centralises all `SpiderFootDb` instantiation across the CherryPy
+WebUI into a single overridable `_get_dbh()` method.
+
+- **78 per-request `SpiderFootDb(self.config)` calls replaced** across
+  `scan.py` (62), `export.py` (7), `settings.py` (4), `helpers.py` (1),
+  `info.py` (1), `routes.py` (3)
+- **`DbProvider` mixin** added to `WebUiRoutes` MRO — all endpoint
+  classes inherit `_get_dbh(config=None)` via diamond inheritance
+- **Single override point** — tests or future service migration can
+  replace `_get_dbh()` instead of patching 78+ instantiation sites
+- **Config override** — `_get_dbh(cfg)` for cases needing `deepcopy`
+  config (e.g. `rerunscan`, `rerunscanmulti`)
+- **CHANGELOG** — `event_schema.py` entry annotated as deleted in v5.33.0
+
 ### Scan Service Phase 2 (v5.32.0)
 
 #### Complete Scan Router Migration

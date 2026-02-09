@@ -84,5 +84,4 @@ class InfoEndpoints:
             return ["ERROR", str(e)]
 
     def get_dbh(self):
-        from spiderfoot import SpiderFootDb
-        return SpiderFootDb(self.config)
+        return self._get_dbh()

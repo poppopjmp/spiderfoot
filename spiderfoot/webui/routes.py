@@ -5,6 +5,7 @@ from .info import InfoEndpoints
 from .settings import SettingsEndpoints
 from .helpers import WebUiHelpers
 from .performance import PerformanceEnhancedWebUI
+from .db_provider import DbProvider
 import logging
 import multiprocessing as mp
 import cherrypy
@@ -18,7 +19,7 @@ except ImportError:
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 
 
-class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEndpoints, InfoEndpoints, WebUiHelpers, PerformanceEnhancedWebUI):
+class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEndpoints, InfoEndpoints, WebUiHelpers, PerformanceEnhancedWebUI, DbProvider):
     defaultConfig = dict()
     config = dict()
     token = None
@@ -551,9 +552,8 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
         """Re-run an existing scan"""
         try:
             from copy import deepcopy
-            from sfwebui import SpiderFootDb
             cfg = deepcopy(self.config)
-            dbh = SpiderFootDb(cfg)
+            dbh = self._get_dbh(cfg)
             info = dbh.scanInstanceGet(id)
             if not info:
                 return self.error("Invalid scan ID.")
@@ -646,10 +646,9 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
         except Exception as e:
             return f'["ERROR", "{str(e)}"]'
 
-    def _get_dbh(self):
-        """Helper to get a new DB handle (matches legacy pattern)"""
-        from sfwebui import SpiderFootDb
-        return SpiderFootDb(self.config, init=False)
+    def _legacy_get_dbh(self):
+        """Superseded by DbProvider._get_dbh() — kept as alias."""
+        return self._get_dbh()
 
     # Add methods from helpers for backward compatibility
     def cleanUserInput(self, inputList):
@@ -715,7 +714,6 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     def buildExcel(self, data, columnNames, sheetNameIndex=0):
         """Convert supplied raw data into Excel format"""
-        from spiderfoot import SpiderFootDb
         from sfwebui import openpyxl, BytesIO
         import string
         
@@ -924,11 +922,10 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
     @cherrypy.expose
     def scanexportjsonmulti(self, ids):
         """Export multiple scans as JSON"""
-        from spiderfoot import SpiderFootDb
         import json
         import time
         
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         scaninfo = list()
         scan_name = ""
 
@@ -1043,8 +1040,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             if not workspace_instance:
                 return {'success': False, 'error': 'Workspace not found'}
             
-            from sfwebui import SpiderFootDb
-            dbh = SpiderFootDb(self.config)
+            dbh = self._get_dbh()
             results = []
             
             # Get scans from workspace

@@ -1,7 +1,7 @@
 import cherrypy
 from copy import deepcopy
 from mako.template import Template
-from spiderfoot import SpiderFootDb, SpiderFootHelpers, __version__
+from spiderfoot import SpiderFootHelpers, __version__
 from spiderfoot.sflib import SpiderFoot
 import time
 import json
@@ -13,7 +13,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanopts(self, id):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         ret = dict()
         meta = dbh.scanInstanceGet(id)
         if not meta:
@@ -30,7 +30,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def rerunscan(self, id):
         cfg = deepcopy(self.config)
-        dbh = SpiderFootDb(cfg)
+        dbh = self._get_dbh(cfg)
         info = dbh.scanInstanceGet(id)
         if not info:
             return self.error("Scan not found")
@@ -71,7 +71,7 @@ class ScanEndpoints:
     def rerunscanmulti(self, ids):
         import sfwebui
         cfg = deepcopy(self.config)
-        dbh = SpiderFootDb(cfg)
+        dbh = self._get_dbh(cfg)
         scan_ids = ids.split(",")
         errors = []
         for scan_id in scan_ids:
@@ -114,7 +114,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def newscan(self):
         import sfwebui  # for patching Template in tests
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         types = dbh.eventTypes()
         
         templ = Template(filename='spiderfoot/templates/newscan.tmpl', lookup=self.lookup)
@@ -125,7 +125,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def clonescan(self, id):
         import sfwebui  # for patching Template in tests
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         types = dbh.eventTypes()
         info = dbh.scanInstanceGet(id)
         if not info:
@@ -149,7 +149,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def scaninfo(self, id):
         import sfwebui
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         res = dbh.scanInstanceGet(id)
         if res is None:
             return self.error("Scan not found")
@@ -159,7 +159,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanlist(self):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = dbh.scanInstanceList()
         retdata = []
         for row in data:
@@ -192,7 +192,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanstatus(self, id):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = dbh.scanInstanceGet(id)
         if not data:
             return self.jsonify_error("404", "Scan not found")
@@ -210,7 +210,7 @@ class ScanEndpoints:
     @cherrypy.tools.json_out()
     def scansummary(self, id, by):
         retdata = []
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             scandata = dbh.scanResultSummary(id, by)
         except Exception:
@@ -227,7 +227,7 @@ class ScanEndpoints:
     @cherrypy.tools.json_out()
     def scancorrelations(self, id):
         retdata = []
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             data = dbh.scanCorrelationList(id)
             for row in data:
@@ -240,7 +240,7 @@ class ScanEndpoints:
     @cherrypy.tools.json_out()
     def scaneventresults(self, id, eventType=None, filterfp=False, correlationId=None):
         retdata = []
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             data = dbh.scanResultEvent(id, eventType, filterfp, correlationId)
             for row in data:
@@ -252,7 +252,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scaneventresultsunique(self, id, eventType, filterfp=False):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         retdata = []
         try:
             data = dbh.scanResultEventUnique(id, eventType, filterfp)
@@ -275,7 +275,7 @@ class ScanEndpoints:
     def scanhistory(self, id):
         if not id:
             return []
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             # Fixed: Use the correct method name scanResultHistory instead of scanHistory
             return dbh.scanResultHistory(id)
@@ -285,7 +285,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanelementtypediscovery(self, id, eventType):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         pc = dict()
         datamap = dict()
         retdata = dict()
@@ -315,7 +315,7 @@ class ScanEndpoints:
         targetType = SpiderFootHelpers.targetTypeFromString(scantarget)
         if targetType is None:
             return self.error("Invalid target type")
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         cfg = deepcopy(self.config)
         sf = SpiderFoot(cfg)
         modlist = []
@@ -363,7 +363,7 @@ class ScanEndpoints:
     def stopscan(self, id):
         if not id:
             return b'["ERROR", "No scan id provided"]'
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         ids = id.split(',')
         errors = []
         for scan_id in ids:
@@ -380,7 +380,7 @@ class ScanEndpoints:
     def scandelete(self, id):
         if not id:
             return b'["ERROR", "No scan id provided"]'
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         ids = id.split(',')
         errors = []
         for scan_id in ids:
@@ -405,7 +405,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def resultsetfp(self, id, resultids, fp):
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         if fp not in ["0", "1"]:
             return b'["ERROR", "Invalid fp value"]'
         try:
@@ -432,7 +432,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanelementtypediscovery(self, id, eventType):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         pc = dict()
         datamap = dict()
         retdata = dict()
@@ -457,7 +457,7 @@ class ScanEndpoints:
                 limit = int(limit)
         except Exception:
             limit = 100
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             results = dbh.scanResultSummary(workspace, limit)
             return {'success': True, 'results': results}
@@ -474,7 +474,7 @@ class ScanEndpoints:
     def scanexportlogs(self, id, dialect="excel"):
         import csv
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             data = dbh.scanLogs(id)
         except Exception:
@@ -496,7 +496,7 @@ class ScanEndpoints:
         import csv
         import sfwebui
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             data = dbh.scanCorrelations(id)
         except Exception:
@@ -524,7 +524,7 @@ class ScanEndpoints:
     def scaneventresultexport(self, id, type, filetype="csv", dialect="excel"):
         import csv
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = dbh.scanResultEvent(id, type)
         headings = ["Date", "Type", "Value", "Source", "Module", "Risk", "FP", "Correlation", "EventId"]
         if filetype.lower() in ["xlsx", "excel"]:
@@ -545,7 +545,7 @@ class ScanEndpoints:
     def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel"):
         import csv
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         scaninfo = dict()
         data = list()
         scan_name = ""
@@ -595,7 +595,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def scanexportjsonmulti(self, ids):
         import json
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         scaninfo = list()
         scan_name = ""
         for id in ids.split(','):
@@ -613,7 +613,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     def scanviz(self, id, gexf="0"):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         if not id:
             return self.error("No scan id provided.")
         data = dbh.scanResultEvent(id, filterFp=True)
@@ -633,7 +633,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     def scanvizmulti(self, ids, gexf="1"):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = list()
         roots = list()
         scan_name = ""
@@ -697,7 +697,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def query(self, query):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             return dbh.query(query)
         except Exception as e:
@@ -715,7 +715,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     def vacuum(self):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             dbh.vacuum()
             return b'["SUCCESS", ""]'
@@ -726,7 +726,7 @@ class ScanEndpoints:
     def stopscan(self, id):
         if not id:
             return b''
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         ids = id.split(',')
         errors = []
         for scan_id in ids:
@@ -742,7 +742,7 @@ class ScanEndpoints:
     def scandelete(self, id):
         if not id:
             return b''
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         ids = id.split(',')
         errors = []
         for scan_id in ids:
@@ -767,7 +767,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def resultsetfp(self, id, resultids, fp):
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         if fp not in ["0", "1"]:
             return b'["ERROR", "Invalid fp value"]'
         try:
@@ -794,7 +794,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanelementtypediscovery(self, id, eventType):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         pc = dict()
         datamap = dict()
         retdata = dict()
@@ -819,7 +819,7 @@ class ScanEndpoints:
                 limit = int(limit)
         except Exception:
             limit = 100
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             results = dbh.scanResultSummary(workspace, limit)
             return {'success': True, 'results': results}
@@ -836,7 +836,7 @@ class ScanEndpoints:
     def scanexportlogs(self, id, dialect="excel"):
         import csv
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             data = dbh.scanLogs(id)
         except Exception:
@@ -858,7 +858,7 @@ class ScanEndpoints:
         import csv
         import sfwebui
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             data = dbh.scanCorrelations(id)
         except Exception:
@@ -886,7 +886,7 @@ class ScanEndpoints:
     def scaneventresultexport(self, id, type, filetype="csv", dialect="excel"):
         import csv
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = dbh.scanResultEvent(id, type)
         headings = ["Date", "Type", "Value", "Source", "Module", "Risk", "FP", "Correlation", "EventId"]
         if filetype.lower() in ["xlsx", "excel"]:
@@ -907,7 +907,7 @@ class ScanEndpoints:
     def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel"):
         import csv
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         scaninfo = dict()
         data = list()
         scan_name = ""
@@ -957,7 +957,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def scanexportjsonmulti(self, ids):
         import json
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         scaninfo = list()
         scan_name = ""
         for id in ids.split(','):
@@ -975,7 +975,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     def scanviz(self, id, gexf="0"):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         if not id:
             return self.error("No scan id provided.")
         data = dbh.scanResultEvent(id, filterFp=True)
@@ -995,7 +995,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     def scanvizmulti(self, ids, gexf="1"):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = list()
         roots = list()
         scan_name = ""
@@ -1059,7 +1059,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def query(self, query):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             return dbh.query(query)
         except Exception as e:
@@ -1077,7 +1077,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     def vacuum(self):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             dbh.vacuum()
             return b'["SUCCESS", ""]'
@@ -1088,7 +1088,7 @@ class ScanEndpoints:
     def stopscan(self, id):
         if not id:
             return b''
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         ids = id.split(',')
         errors = []
         for scan_id in ids:
@@ -1104,7 +1104,7 @@ class ScanEndpoints:
     def scandelete(self, id):
         if not id:
             return b''
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         ids = id.split(',')
         errors = []
         for scan_id in ids:
@@ -1129,7 +1129,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def resultsetfp(self, id, resultids, fp):
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         if fp not in ["0", "1"]:
             return b'["ERROR", "Invalid fp value"]'
         try:
@@ -1156,7 +1156,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanelementtypediscovery(self, id, eventType):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         pc = dict()
         datamap = dict()
         retdata = dict()
@@ -1181,7 +1181,7 @@ class ScanEndpoints:
                 limit = int(limit)
         except Exception:
             limit = 100
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             results = dbh.scanResultSummary(workspace, limit)
             return {'success': True, 'results': results}
@@ -1198,7 +1198,7 @@ class ScanEndpoints:
     def scanexportlogs(self, id, dialect="excel"):
         import csv
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             data = dbh.scanLogs(id)
         except Exception:
@@ -1220,7 +1220,7 @@ class ScanEndpoints:
         import csv
         import sfwebui
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             data = dbh.scanCorrelations(id)
         except Exception:
@@ -1248,7 +1248,7 @@ class ScanEndpoints:
     def scaneventresultexport(self, id, type, filetype="csv", dialect="excel"):
         import csv
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = dbh.scanResultEvent(id, type)
         headings = ["Date", "Type", "Value", "Source", "Module", "Risk", "FP", "Correlation", "EventId"]
         if filetype.lower() in ["xlsx", "excel"]:
@@ -1269,7 +1269,7 @@ class ScanEndpoints:
     def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel"):
         import csv
         from io import StringIO
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         scaninfo = dict()
         data = list()
         scan_name = ""
@@ -1319,7 +1319,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def scanexportjsonmulti(self, ids):
         import json
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         scaninfo = list()
         scan_name = ""
         for id in ids.split(','):
@@ -1337,7 +1337,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     def scanviz(self, id, gexf="0"):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         if not id:
             return self.error("No scan id provided.")
         data = dbh.scanResultEvent(id, filterFp=True)
@@ -1357,7 +1357,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     def scanvizmulti(self, ids, gexf="1"):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = list()
         roots = list()
         scan_name = ""
@@ -1421,7 +1421,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def query(self, query):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             return dbh.query(query)
         except Exception as e:
@@ -1439,7 +1439,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     def vacuum(self):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             dbh.vacuum()
             return b'["SUCCESS", ""]'
@@ -1450,7 +1450,7 @@ class ScanEndpoints:
     def stopscan(self, id):
         if not id:
             return b''
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         ids = id.split(',')
         errors = []
         for scan_id in ids:
@@ -1466,7 +1466,7 @@ class ScanEndpoints:
     def scandelete(self, id):
         if not id:
             return b''
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         ids = id.split(',')
         errors = []
         for scan_id in ids:
@@ -1491,7 +1491,7 @@ class ScanEndpoints:
     @cherrypy.expose
     def resultsetfp(self, id, resultids, fp):
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         if fp not in ["0", "1"]:
             return b'["ERROR", "Invalid fp value"]'
         try:
@@ -1518,7 +1518,7 @@ class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanelementtypediscovery(self, id, eventType):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         pc = dict()
         datamap = dict()
         retdata = dict()
@@ -1543,7 +1543,7 @@ class ScanEndpoints:
                 limit = int(limit)
         except Exception:
             limit = 100
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             results = dbh.scanResultSummary(workspace, limit)
             return {'success': True, 'results': results}

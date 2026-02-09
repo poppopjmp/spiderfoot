@@ -81,8 +81,7 @@ class WebUiHelpers:
         if value in [None, ""] and regex in [None, ""]:
             value = "%"
             regex = ""
-        from spiderfoot import SpiderFootDb
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         criteria = {
             'scan_id': id or '',
             'type': eventType or '',

@@ -2,13 +2,12 @@ import cherrypy
 import csv
 import json
 from io import StringIO
-from spiderfoot import SpiderFootDb, SpiderFootHelpers
+from spiderfoot import SpiderFootHelpers
 
 class ExportEndpoints:
     @cherrypy.expose
     def scanexportlogs(self, id, dialect="excel"):
-        from sfwebui import SpiderFootDb
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             data = dbh.scanLogs(id)
         except Exception:
@@ -28,8 +27,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scancorrelationsexport(self, id, filetype="csv", dialect="excel"):
-        from sfwebui import SpiderFootDb
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         try:
             data = dbh.scanCorrelations(id)
         except Exception:
@@ -59,8 +57,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scaneventresultexport(self, id, type, filetype="csv", dialect="excel"):
-        from sfwebui import SpiderFootDb
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = dbh.scanResultEvent(id, type)
         if filetype.lower() in ["xlsx", "excel"]:
             rows = []
@@ -97,8 +94,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel"):
-        from sfwebui import SpiderFootDb
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         scaninfo = dict()
         data = list()
         scan_name = ""
@@ -183,7 +179,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scanexportjsonmulti(self, ids):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         scaninfo = list()
         scan_name = ""
         for id in ids.split(','):
@@ -206,7 +202,7 @@ class ExportEndpoints:
     def scanviz(self, id, gexf="0"):
         if not id:
             return None
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = dbh.scanResultEvent(id, filterFp=True)
         scan = dbh.scanInstanceGet(id)
         if not scan:
@@ -226,7 +222,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scanvizmulti(self, ids, gexf="1"):
-        dbh = SpiderFootDb(self.config)
+        dbh = self._get_dbh()
         data = list()
         roots = list()
         scan_name = ""

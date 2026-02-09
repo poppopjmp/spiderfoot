@@ -46,7 +46,7 @@ class SettingsEndpoints:
                 docroot=self.docroot,
                 error_message="Invalid CSRF token"
             )
-        from spiderfoot import SpiderFootDb, SpiderFoot
+        from spiderfoot import SpiderFoot
         # Handle file upload
         if configFile and hasattr(configFile, 'file') and configFile.file:
             try:
@@ -57,7 +57,7 @@ class SettingsEndpoints:
                     if '=' in line:
                         k, v = line.split('=', 1)
                         new_config[k.strip()] = v.strip()
-                dbh = SpiderFootDb(self.config)
+                dbh = self._get_dbh()
                 dbh.configSet(new_config)
                 sf = SpiderFoot(self.defaultConfig)
                 self.config = sf.configUnserialize(new_config, self.defaultConfig)
@@ -85,7 +85,7 @@ class SettingsEndpoints:
                     if '=' in line:
                         k, v = line.split('=', 1)
                         new_config[k.strip()] = v.strip()
-                dbh = SpiderFootDb(self.config)
+                dbh = self._get_dbh()
                 dbh.configSet(new_config)
                 sf = SpiderFoot(self.defaultConfig)
                 self.config = sf.configUnserialize(new_config, self.defaultConfig)
@@ -106,7 +106,7 @@ class SettingsEndpoints:
     @cherrypy.expose
     def savesettingsraw(self, allopts, token):
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
-        from spiderfoot import SpiderFootDb, SpiderFoot
+        from spiderfoot import SpiderFoot
         if str(token) != str(self.token):
             return json.dumps(["ERROR", "Invalid CSRF token"]).encode('utf-8')
         # Reset config to default
@@ -120,7 +120,7 @@ class SettingsEndpoints:
                     if '=' in line:
                         k, v = line.split('=', 1)
                         new_config[k.strip()] = v.strip()
-                dbh = SpiderFootDb(self.config)
+                dbh = self._get_dbh()
                 dbh.configSet(new_config)
                 sf = SpiderFoot(self.defaultConfig)
                 self.config = sf.configUnserialize(new_config, self.defaultConfig)
@@ -130,8 +130,7 @@ class SettingsEndpoints:
 
     def reset_settings(self):
         try:
-            from spiderfoot import SpiderFootDb
-            dbh = SpiderFootDb(self.config)
+            dbh = self._get_dbh()
             dbh.configClear()  # Clear it in the DB
             self.config = self.defaultConfig.copy()  # Clear in memory
         except Exception:
