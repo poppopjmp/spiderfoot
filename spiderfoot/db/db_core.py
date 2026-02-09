@@ -12,6 +12,7 @@
 """
 Core DB connection, locking, schema management, and shared resources for SpiderFootDb.
 """
+import logging
 import threading
 import sqlite3
 import psycopg2
@@ -21,6 +22,8 @@ from spiderfoot.db.db_utils import (
     get_placeholder, get_upsert_clause, get_type_mapping, get_bool_value,
     get_schema_version_queries, get_index_if_not_exists, check_connection, is_transient_error, normalize_db_type
 )
+
+log = logging.getLogger(__name__)
 
 class DbCore:
     """
@@ -706,8 +709,7 @@ class DbCore:
     SCHEMA_VERSION = 1  # Increment this on every schema change
 
     def _log_db_error(self, msg, exc):
-        # Placeholder for future logging integration
-        print(f"[DB ERROR] {msg}: {exc}")
+        log.error("[DB] %s: %s", msg, exc)
 
     def __init__(self, opts: dict, init: bool = False) -> None:
         """

@@ -59,9 +59,6 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
     def setup(self, sfc, userOpts=None):
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-        # Debug: print options to ensure suffixes is set
-        print("DEBUG sfp_azureblobstorage opts:", self.opts)
-        print("DEBUG sfp_azureblobstorage opts after userOpts:", self.opts)
 
     # What events is this module interested in for input
     def watchedEvents(self):
@@ -78,7 +75,6 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
             url, timeout=10, useragent="SpiderFoot", noLog=True)
 
         if res["code"]:
-            print(f"DEBUG: Emitting CLOUD_STORAGE_BUCKET for {url}")
             with self.lock:
                 self.s3results[url] = True
 

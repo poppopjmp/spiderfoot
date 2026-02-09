@@ -347,7 +347,6 @@ class ScanEndpoints:
                 max_wait = float(max_wait)
         except Exception:
             max_wait = 10
-        print(f"DEBUG: max_wait={max_wait} (type={type(max_wait)})")
         waited = 0
         while dbh.scanInstanceGet(scanId) is None and waited < max_wait:
             time.sleep(0.1)

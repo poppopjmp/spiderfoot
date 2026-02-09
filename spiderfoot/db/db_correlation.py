@@ -12,8 +12,12 @@
 """
 Correlation result management and queries for SpiderFootDb.
 """
+import logging
 import time
 from .db_utils import get_placeholder, is_transient_error
+
+log = logging.getLogger(__name__)
+
 class CorrelationManager:
     def __init__(self, dbh, conn, dbhLock, db_type):
         self.dbh = dbh
@@ -22,7 +26,7 @@ class CorrelationManager:
         self.db_type = db_type
 
     def _log_db_error(self, msg, exc):
-        print(f"[DB ERROR] {msg}: {exc}")
+        log.error("[DB] %s: %s", msg, exc)
 
     def _is_transient_error(self, exc):
         return is_transient_error(exc)

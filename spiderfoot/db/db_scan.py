@@ -15,8 +15,11 @@ Scan instance management (create, update, delete, list, get) for SpiderFootDb.
 
 import sqlite3
 import psycopg2
+import logging
 import time
 from .db_utils import get_placeholder, is_transient_error
+
+log = logging.getLogger(__name__)
 
 class ScanManager:
     def __init__(self, dbh, conn, dbhLock, db_type):
@@ -26,7 +29,7 @@ class ScanManager:
         self.db_type = db_type
 
     def _log_db_error(self, msg, exc):
-        print(f"[DB ERROR] {msg}: {exc}")
+        log.error("[DB] %s: %s", msg, exc)
 
     def _is_transient_error(self, exc):
         return is_transient_error(exc)

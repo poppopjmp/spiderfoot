@@ -97,8 +97,6 @@ class SpiderFoot:
 
     def fatal(self, error: str) -> None:
         self.log.critical(error, extra={'scanId': self._scanId})
-        import inspect
-        print(str(inspect.stack()))
         import sys
         sys.exit(-1)
 
