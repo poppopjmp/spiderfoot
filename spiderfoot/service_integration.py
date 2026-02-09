@@ -78,7 +78,8 @@ def wire_scan_services(scanner, scan_id: str) -> None:
     """Wire services into a running scan.
 
     Called at the beginning of __startScan() to connect metrics,
-    event bus, event bridge, and data service to the scan lifecycle.
+    event bus, event bridge, module loader, and data service to the
+    scan lifecycle.
 
     Args:
         scanner: SpiderFootScanner instance.
@@ -89,6 +90,7 @@ def wire_scan_services(scanner, scan_id: str) -> None:
         _wire_scan_eventbus(scan_id)
         _wire_scan_vector(scan_id)
         _wire_scan_event_bridge(scanner, scan_id)
+        _wire_module_loader(scanner)
         log.debug("Services wired for scan %s", scan_id)
     except Exception as e:
         log.warning("Partial service wiring for scan %s: %s", scan_id, e)
@@ -259,3 +261,19 @@ def _wire_scan_event_bridge(scanner, scan_id: str) -> None:
         bridge.start(target=target_value)
     except Exception as e:
         log.debug("Scan event bridge not available: %s", e)
+
+
+def _wire_module_loader(scanner) -> None:
+    """Attach a ModuleLoader to the scanner for registry-driven loading.
+
+    The loader is stored as ``scanner._module_loader`` and used by
+    ``__startScan()`` as the primary module loading path with fallback
+    to the legacy ``__import__`` loop.
+    """
+    try:
+        from spiderfoot.module_loader import init_module_loader
+        loader = init_module_loader()
+        scanner._module_loader = loader
+        log.debug("ModuleLoader attached to scanner")
+    except Exception as e:
+        log.debug("ModuleLoader not available: %s", e)

@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.24.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.24.0)
+[![Stable Release](https://img.shields.io/badge/version-5.25.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.25.0)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -74,6 +74,7 @@ graph TD;
 | **WebSocket** | `spiderfoot/websocket_service.py` | Real-time scan event streaming |
 | **EventRelay** | `spiderfoot/event_relay.py` | Fan-out EventBus events to WebSocket consumers |
 | **ScanEventBridge** | `spiderfoot/scan_event_bridge.py` | Routes live scanner events to EventRelay |
+| **ModuleLoader** | `spiderfoot/module_loader.py` | Registry-driven module loading with topological ordering |
 | **RequestTracing** | `spiderfoot/request_tracing.py` | X-Request-ID propagation, timing, slow-request warnings |
 | **TaskQueue** | `spiderfoot/task_queue.py` | ThreadPool-backed async task execution |
 | **WebhookDispatcher** | `spiderfoot/webhook_dispatcher.py` | HMAC-signed outbound HTTP notifications with retries |
@@ -689,7 +690,7 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 
 ## Recent Updates
 
-### v5.24.0 — Modernization Cycles 1-21 (915+ tests)
+### v5.25.0 — Modernization Cycles 1-22 (967+ tests)
 
 | Cycle | Version | Feature | Tests |
 |-------|---------|---------|-------|
@@ -714,6 +715,7 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 | 19 | 5.23.8 | Event Relay + WebSocket rewrite (push, not polling) | 38 |
 | 20 | 5.23.9 | Config API modernization (AppConfig wired into API) | 65 |
 | 21 | 5.24.0 | Scan Event Bridge (live events → WebSocket) | 33 |
+| 22 | 5.25.0 | Module Dependency Resolution (registry → scanner) | 52 |
 
 ### Previous
 

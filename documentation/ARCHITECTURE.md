@@ -313,6 +313,7 @@ migration instructions.
 | 5.23.8 | Event Relay + WebSocket rewrite (push, not polling) |
 | 5.23.9 | Config API Modernization (AppConfig wired into API) |
 | 5.24.0 | Scan Event Bridge (live scanner events → WebSocket) |
+| 5.25.0 | Module Dependency Resolution (registry → scanner wiring) |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
@@ -356,6 +357,24 @@ minimal module set and topological load order.
 Version-controlled schema evolution with numbered migration files,
 upgrade/downgrade functions, dry-run mode, and checksum validation.
 Supports SQLite and PostgreSQL dialects.
+
+### Module Loading & Dependency Resolution (v5.25.0)
+
+#### Module Loader (`spiderfoot/module_loader.py`)
+Registry-driven module loading adapter that replaces the scanner’s
+legacy `__import__` loop with `ModuleRegistry` for discovery/instantiation
+and `ModuleGraph` for topological dependency ordering. Features:
+
+- **Registry-first loading** with automatic legacy fallback
+- **Topological execution order** via Kahn’s algorithm (replaces `_priority` sort)
+- **Minimal-set pruning** — when desired output types are specified,
+  only modules in the dependency chain are loaded
+- **Cycle detection** with warnings (cycles don’t break execution)
+- **LoadResult** dataclass with detailed statistics: loaded/failed/skipped
+  counts, ordering method, pruning info, and timing
+- **Global singleton** with thread-safe `init_module_loader()` /
+  `get_module_loader()` / `reset_module_loader()`
+- Wired into scanner via `service_integration._wire_module_loader()`
 
 ### Real-Time Event Infrastructure (v5.22.0 – v5.24.0)
 

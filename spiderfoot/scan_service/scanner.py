@@ -351,109 +351,149 @@ class SpiderFootScanner():
             self.__sharedThreadPool.start()
 
             self.__sf.debug(f"Loading {len(self.__moduleList)} modules ...")
-            for modName in self.__moduleList:
-                if not modName:
-                    continue
 
-                if modName not in self.__config['__modules__']:
-                    self.__sf.error(f"Failed to load module: {modName}")
-                    continue
-
+            # --- Registry-driven loading (Cycle 22) ---
+            # Try the ModuleLoader first; fall back to legacy __import__ loop.
+            _used_module_loader = False
+            _module_loader = getattr(self, '_module_loader', None)
+            if _module_loader is not None:
                 try:
-                    module = __import__(
-                        'modules.' + modName, globals(), locals(), [modName])
-                except ImportError:
-                    self.__sf.error(f"Failed to load module: {modName}")
-                    continue
+                    load_result = _module_loader.load_modules(
+                        self.__moduleList,
+                        self.__config,
+                        sf=self.__sf,
+                        scan_id=self.__scanId,
+                        dbh=self.__dbh,
+                        target=self.__target,
+                        shared_pool=self.__sharedThreadPool,
+                        event_queue=self.eventQueue,
+                    )
+                    self.__moduleInstances = load_result.modules
+                    # Populate __modconfig from loaded modules' opts
+                    for modName, mod in self.__moduleInstances.items():
+                        modcfg = self.__config.get('__modules__', {}).get(modName, {})
+                        if isinstance(modcfg, dict) and 'opts' in modcfg:
+                            self.__modconfig[modName] = deepcopy(modcfg['opts'])
+                            for opt in list(self.__config.keys()):
+                                self.__modconfig[modName][opt] = deepcopy(self.__config[opt])
+                    _used_module_loader = True
+                    self.__sf.debug(
+                        f"ModuleLoader: {load_result.loaded} loaded, "
+                        f"{load_result.failed} failed, order={load_result.order_method}"
+                    )
+                except Exception as e:
+                    self.__sf.debug(f"ModuleLoader failed, falling back to legacy: {e}")
+                    self.__moduleInstances = {}
 
-                try:
-                    mod = getattr(module, modName)()
-                    mod.__name__ = modName
-                except Exception:
-                    self.__sf.error(
-                        f"Module {modName} initialization failed")
-                    continue
+            # --- Legacy loading fallback ---
+            if not _used_module_loader:
+                for modName in self.__moduleList:
+                    if not modName:
+                        continue
 
-                # Defensive: handle missing or malformed module config
-                modcfg = self.__config['__modules__'].get(modName)
-                if not isinstance(modcfg, dict):
-                    modcfg = {}
-                    self.__config['__modules__'][modName] = modcfg
-                # If 'opts' is missing or None, set to {}
-                if 'opts' not in modcfg or modcfg['opts'] is None:
-                    modcfg['opts'] = {}
-                # If 'opts' is present and not a dict, raise TypeError
-                if 'opts' in modcfg and not isinstance(modcfg['opts'], dict):
-                    raise TypeError(f"Module {modName} 'opts' is not a dict")
-                # Ignore extra keys, do not require 'meta', always proceed
+                    if modName not in self.__config['__modules__']:
+                        self.__sf.error(f"Failed to load module: {modName}")
+                        continue
 
-                try:
-                    self.__modconfig[modName] = deepcopy(modcfg['opts'])
-                    for opt in list(self.__config.keys()):
-                        self.__modconfig[modName][opt] = deepcopy(self.__config[opt])
-
-                    mod.clearListeners()
-                    mod.setScanId(self.__scanId)
-                    mod.setSharedThreadPool(self.__sharedThreadPool)
-                    mod.setDbh(self.__dbh)
-                    mod.setup(self.__sf, self.__modconfig[modName])
-
-                    # Wire new services into module (no-op for legacy modules)
                     try:
-                        from spiderfoot.service_integration import wire_module_services
-                        wire_module_services(mod, self.__config)
+                        module = __import__(
+                            'modules.' + modName, globals(), locals(), [modName])
+                    except ImportError:
+                        self.__sf.error(f"Failed to load module: {modName}")
+                        continue
+
+                    try:
+                        mod = getattr(module, modName)()
+                        mod.__name__ = modName
                     except Exception:
-                        pass
-                except Exception:
-                    self.__sf.error(
-                        f"Module {modName} setup failed")
-                    mod.errorState = True
-                    continue
-
-                if self.__config['_socks1type'] != '':
-                    try:
-                        mod._updateSocket(socket)
-                    except Exception as e:
                         self.__sf.error(
-                            f"Module {modName} socket setup failed: {e}")
+                            f"Module {modName} initialization failed")
                         continue
 
-                if self.__config['__outputfilter']:
+                    # Defensive: handle missing or malformed module config
+                    modcfg = self.__config['__modules__'].get(modName)
+                    if not isinstance(modcfg, dict):
+                        modcfg = {}
+                        self.__config['__modules__'][modName] = modcfg
+                    # If 'opts' is missing or None, set to {}
+                    if 'opts' not in modcfg or modcfg['opts'] is None:
+                        modcfg['opts'] = {}
+                    # If 'opts' is present and not a dict, raise TypeError
+                    if 'opts' in modcfg and not isinstance(modcfg['opts'], dict):
+                        raise TypeError(f"Module {modName} 'opts' is not a dict")
+                    # Ignore extra keys, do not require 'meta', always proceed
+
                     try:
-                        mod.setOutputFilter(self.__config['__outputfilter'])
-                    except Exception as e:
+                        self.__modconfig[modName] = deepcopy(modcfg['opts'])
+                        for opt in list(self.__config.keys()):
+                            self.__modconfig[modName][opt] = deepcopy(self.__config[opt])
+
+                        mod.clearListeners()
+                        mod.setScanId(self.__scanId)
+                        mod.setSharedThreadPool(self.__sharedThreadPool)
+                        mod.setDbh(self.__dbh)
+                        mod.setup(self.__sf, self.__modconfig[modName])
+
+                        # Wire new services into module (no-op for legacy modules)
+                        try:
+                            from spiderfoot.service_integration import wire_module_services
+                            wire_module_services(mod, self.__config)
+                        except Exception:
+                            pass
+                    except Exception:
                         self.__sf.error(
-                            f"Module {modName} output filter setup failed: {e}")
+                            f"Module {modName} setup failed")
+                        mod.errorState = True
                         continue
 
-                try:
-                    newTarget = mod.enrichTarget(self.__target)
-                    if newTarget is not None:
-                        self.__target = newTarget
-                except Exception as e:
-                    self._log_module_error(modName, "target enrichment failed", e)
-                    continue
+                    if self.__config['_socks1type'] != '':
+                        try:
+                            mod._updateSocket(socket)
+                        except Exception as e:
+                            self.__sf.error(
+                                f"Module {modName} socket setup failed: {e}")
+                            continue
 
-                try:
-                    mod.setTarget(self.__target)
-                except Exception as e:
-                    self._log_module_error(modName, f"failed to set target '{self.__target}'", e)
-                    continue
+                    if self.__config['__outputfilter']:
+                        try:
+                            mod.setOutputFilter(self.__config['__outputfilter'])
+                        except Exception as e:
+                            self.__sf.error(
+                                f"Module {modName} output filter setup failed: {e}")
+                            continue
 
-                try:
-                    mod.outgoingEventQueue = self.eventQueue
-                    mod.incomingEventQueue = queue.Queue()
-                    self.__sf.debug(f"Module {modName} queues initialized: incoming={{mod.incomingEventQueue is not None}}, outgoing={{mod.outgoingEventQueue is not None}}")
-                    # Explicitly check both queues
-                    if mod.incomingEventQueue is None or mod.outgoingEventQueue is None:
-                        self.__sf.error(f"Module {modName} queue validation failed after setup")
+                    try:
+                        newTarget = mod.enrichTarget(self.__target)
+                        if newTarget is not None:
+                            self.__target = newTarget
+                    except Exception as e:
+                        self._log_module_error(modName, "target enrichment failed", e)
                         continue
-                except Exception as e:
-                    self._log_module_error(modName, "event queue setup failed", e)
-                    continue
 
-                self.__moduleInstances[modName] = mod
-                self.__sf.status(f"{modName} module loaded.")
+                    try:
+                        mod.setTarget(self.__target)
+                    except Exception as e:
+                        self._log_module_error(modName, f"failed to set target '{self.__target}'", e)
+                        continue
+
+                    try:
+                        mod.outgoingEventQueue = self.eventQueue
+                        mod.incomingEventQueue = queue.Queue()
+                        self.__sf.debug(f"Module {modName} queues initialized: incoming={{mod.incomingEventQueue is not None}}, outgoing={{mod.outgoingEventQueue is not None}}")
+                        # Explicitly check both queues
+                        if mod.incomingEventQueue is None or mod.outgoingEventQueue is None:
+                            self.__sf.error(f"Module {modName} queue validation failed after setup")
+                            continue
+                    except Exception as e:
+                        self._log_module_error(modName, "event queue setup failed", e)
+                        continue
+
+                    self.__moduleInstances[modName] = mod
+                    self.__sf.status(f"{modName} module loaded.")
+
+                # Legacy: sort by _priority
+                self.__moduleInstances = OrderedDict(
+                    sorted(self.__moduleInstances.items(), key=lambda m: m[-1]._priority))
 
             self.__sf.debug(
                 f"Scan [{self.__scanId}] loaded {len(self.__moduleInstances)} modules.")
@@ -462,9 +502,6 @@ class SpiderFootScanner():
                 self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
                 self.__dbh.close()
                 return
-
-            self.__moduleInstances = OrderedDict(
-                sorted(self.__moduleInstances.items(), key=lambda m: m[-1]._priority))
 
             self.__setStatus("RUNNING")
 
