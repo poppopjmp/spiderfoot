@@ -480,6 +480,139 @@ async def rotate_api_key(key_id: str, api_key: str = optional_auth_dep):
         logger.error(f"Failed to rotate API key: {e}")
         raise HTTPException(status_code=500, detail="Failed to rotate API key") from e
 
+
+# ── API key scoping ──────────────────────────────────────────────────
+
+# Predefined scope sets that restrict what an API key can access.
+API_KEY_SCOPES = {
+    "admin": {
+        "description": "Full access to all endpoints",
+        "includes": ["*"],
+    },
+    "read": {
+        "description": "Read-only access (GET endpoints only)",
+        "includes": ["GET:*"],
+    },
+    "scans": {
+        "description": "Scan lifecycle management",
+        "includes": ["GET:/scans/*", "POST:/scans", "POST:/scans/*", "DELETE:/scans/*"],
+    },
+    "scans:read": {
+        "description": "Read-only scan access",
+        "includes": ["GET:/scans/*"],
+    },
+    "config:read": {
+        "description": "Read-only configuration access",
+        "includes": ["GET:/config/*"],
+    },
+    "export": {
+        "description": "Scan export only",
+        "includes": ["GET:/scans/*/export*"],
+    },
+    "webhooks": {
+        "description": "Webhook management",
+        "includes": ["GET:/webhooks/*", "POST:/webhooks*", "PUT:/webhooks/*", "DELETE:/webhooks/*"],
+    },
+}
+
+
+@router.get("/config/api-keys/scopes")
+async def list_api_key_scopes(api_key: str = optional_auth_dep):
+    """List all available API key scopes and their descriptions."""
+    return {
+        "scopes": {
+            name: {
+                "description": scope["description"],
+                "patterns": scope["includes"],
+            }
+            for name, scope in API_KEY_SCOPES.items()
+        },
+    }
+
+
+@router.put("/config/api-keys/{key_id}/scopes")
+async def set_api_key_scopes(
+    key_id: str,
+    scopes: List[str] = Body(..., embed=True),
+    api_key: str = optional_auth_dep,
+):
+    """Set the scopes for an API key.
+
+    Scopes restrict which endpoints the key can access.
+    Use ["admin"] for full access, or combine multiple scopes.
+    """
+    # Validate requested scopes
+    invalid = [s for s in scopes if s not in API_KEY_SCOPES]
+    if invalid:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown scopes: {invalid}. Available: {list(API_KEY_SCOPES.keys())}",
+        )
+
+    try:
+        config = get_app_config()
+        keys = config.get_api_keys()
+
+        target = None
+        for k in keys:
+            kid = k.get("id") or k.get("key_id") or k.get("name", "")
+            if kid == key_id:
+                target = k
+                break
+
+        if target is None:
+            raise HTTPException(status_code=404, detail=f"API key '{key_id}' not found")
+
+        target["scopes"] = scopes
+        config.save_config()
+
+        # Expand the effective patterns
+        effective_patterns = []
+        for scope in scopes:
+            effective_patterns.extend(API_KEY_SCOPES[scope]["includes"])
+
+        logger.info("API key '%s' scopes updated: %s", key_id, scopes)
+        return {
+            "key_id": key_id,
+            "scopes": scopes,
+            "effective_patterns": effective_patterns,
+            "message": "Scopes updated",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to set scopes for key %s: %s", key_id, e)
+        raise HTTPException(status_code=500, detail="Failed to update key scopes") from e
+
+
+@router.get("/config/api-keys/{key_id}/scopes")
+async def get_api_key_scopes(key_id: str, api_key: str = optional_auth_dep):
+    """Get the current scopes for an API key."""
+    try:
+        config = get_app_config()
+        keys = config.get_api_keys()
+
+        for k in keys:
+            kid = k.get("id") or k.get("key_id") or k.get("name", "")
+            if kid == key_id:
+                scopes = k.get("scopes", ["admin"])
+                effective_patterns = []
+                for scope in scopes:
+                    if scope in API_KEY_SCOPES:
+                        effective_patterns.extend(API_KEY_SCOPES[scope]["includes"])
+                return {
+                    "key_id": key_id,
+                    "scopes": scopes,
+                    "effective_patterns": effective_patterns,
+                }
+
+        raise HTTPException(status_code=404, detail=f"API key '{key_id}' not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to get scopes for key %s: %s", key_id, e)
+        raise HTTPException(status_code=500, detail="Failed to get key scopes") from e
+
 @router.get("/config/credentials")
 async def list_credentials(api_key: str = optional_auth_dep):
     """
