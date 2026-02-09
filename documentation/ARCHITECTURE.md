@@ -316,6 +316,7 @@ migration instructions.
 | 5.25.0 | Module Dependency Resolution (registry → scanner wiring) |
 | 5.26.0 | Database Repository Pattern (Scan/Event/Config repos) |
 | 5.27.0 | API Rate Limiting Middleware (per-tier, per-client) |
+| 5.28.0 | API Pagination Helpers (PaginationParams, PaginatedResponse) |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
@@ -419,6 +420,24 @@ rate limits before reaching the router.
 - **RateLimitStats** with tier-level and top-offender tracking
 - **`install_rate_limiting(app, config)`** wiring function
 - Installed in `api/main.py` after request tracing middleware
+
+### API Pagination (v5.28.0)
+
+#### Pagination Helpers (`spiderfoot/api/pagination.py`)
+Standardized pagination across all API list endpoints with consistent
+request parameters and response envelopes.
+
+- **PaginationParams** — FastAPI `Depends()`-compatible query extractor
+  supporting page-based (`page`/`page_size`) and offset-based
+  (`offset`/`limit`) modes with automatic mapping between them
+- **PaginatedResponse** — Standardized envelope: `items`, `total`,
+  `page`, `page_size`, `pages`, `has_next`, `has_previous`
+- **`paginate()`** — In-memory slicing with optional sort support
+- **`paginate_query()`** — For pre-sliced DB results with total count
+- **Sort helpers** — `dict_sort_key()`, `attr_sort_key()` for common patterns
+- **RFC 8288 Link headers** — `generate_link_header()` for `next`/`prev`/
+  `first`/`last` navigation
+- **`make_params()`** — Convenience constructor for programmatic/test use
 ### Real-Time Event Infrastructure (v5.22.0 – v5.24.0)
 
 #### Event Relay (`spiderfoot/event_relay.py`)
