@@ -329,4 +329,127 @@ async def get_module_stats(api_key: str = optional_auth_dep):
     return result
 
 
+@router.get("/data/modules/dependencies")
+async def get_module_dependencies(
+    api_key: str = optional_auth_dep,
+):
+    """Module dependency graph showing which modules produce/consume which event types.
+
+    Returns a dependency map useful for understanding the module pipeline:
+    - **nodes**: Each module with its produced and consumed event types
+    - **edges**: Directed edges from producer module to consumer module via event type
+    - **event_types**: For each event type, which modules produce and consume it
+
+    Use ``?format=mermaid`` to get a Mermaid diagram string.
+    """
+    from fastapi import Query as Q
+    from spiderfoot import SpiderFootHelpers
+    from spiderfoot.sflib.core import SpiderFoot
+
+    fmt = "json"  # default
+    try:
+        sf = SpiderFoot({})
+        module_list = sf.modulesProducing([])  # returns dict of all modules
+    except Exception:
+        module_list = {}
+
+    # Build nodes and event type maps
+    nodes = {}
+    event_type_map = {}  # event_type -> {producers: [], consumers: []}
+    edges = []
+
+    # Load all modules to get their produces/consumes
+    try:
+        config = get_app_config()
+        cfg = config.get_config()
+        sf = SpiderFoot(cfg)
+        mod_dir = sf.modulesPath()
+
+        # Load module metadata
+        all_mods = sf.moduleMeta(mod_dir)
+
+        for mod_name, meta in all_mods.items():
+            produces = []
+            consumes = []
+
+            if isinstance(meta, dict):
+                produces = meta.get("produces", [])
+                consumes = meta.get("consumes", [])
+            elif hasattr(meta, "producedEvents"):
+                produces = meta.producedEvents() if callable(meta.producedEvents) else []
+                consumes = meta.watchedEvents() if callable(getattr(meta, "watchedEvents", None)) else []
+
+            nodes[mod_name] = {
+                "produces": sorted(produces) if produces else [],
+                "consumes": sorted(consumes) if consumes else [],
+            }
+
+            for et in (produces or []):
+                event_type_map.setdefault(et, {"producers": [], "consumers": []})
+                event_type_map[et]["producers"].append(mod_name)
+
+            for et in (consumes or []):
+                event_type_map.setdefault(et, {"producers": [], "consumers": []})
+                event_type_map[et]["consumers"].append(mod_name)
+
+    except Exception as e:
+        logger.error("Failed to load module dependencies: %s", e)
+        # Try a simpler approach using data service
+        try:
+            svc = get_data_service()
+            modules = svc.list_modules()
+            if isinstance(modules, dict):
+                modules = list(modules.values())
+            for mod in modules:
+                name = mod.get("name", mod.get("module", ""))
+                if not name:
+                    continue
+                produces = mod.get("produces", mod.get("producedEvents", []))
+                consumes = mod.get("consumes", mod.get("watchedEvents", []))
+                nodes[name] = {
+                    "produces": sorted(produces) if produces else [],
+                    "consumes": sorted(consumes) if consumes else [],
+                }
+                for et in (produces or []):
+                    event_type_map.setdefault(et, {"producers": [], "consumers": []})
+                    event_type_map[et]["producers"].append(name)
+                for et in (consumes or []):
+                    event_type_map.setdefault(et, {"producers": [], "consumers": []})
+                    event_type_map[et]["consumers"].append(name)
+        except Exception:
+            pass
+
+    # Build edges: producer_module -> consumer_module via event_type
+    for et, info in event_type_map.items():
+        for producer in info["producers"]:
+            for consumer in info["consumers"]:
+                if producer != consumer:
+                    edges.append({
+                        "from": producer,
+                        "to": consumer,
+                        "event_type": et,
+                    })
+
+    return {
+        "nodes": nodes,
+        "edges": edges,
+        "event_types": {
+            k: v for k, v in sorted(event_type_map.items())
+        },
+        "summary": {
+            "total_modules": len(nodes),
+            "total_event_types": len(event_type_map),
+            "total_edges": len(edges),
+            "orphan_producers": sorted([
+                et for et, info in event_type_map.items()
+                if info["producers"] and not info["consumers"]
+            ]),
+            "orphan_consumers": sorted([
+                et for et, info in event_type_map.items()
+                if info["consumers"] and not info["producers"]
+            ]),
+        },
+    }
+
+
 # No data endpoints have been moved yet. Add data-related endpoints here as needed.
