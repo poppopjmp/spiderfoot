@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from spiderfoot.db.repositories.scan_repository import ScanRecord, ScanRepository
+from spiderfoot.db.repositories.event_repository import EventRepository
 from spiderfoot.scan_state import (
     InvalidTransitionError,
     ScanState,
@@ -39,8 +40,10 @@ class ScanService:
     per request via the ``get_scan_service()`` Depends provider.
     """
 
-    def __init__(self, repo: ScanRepository, *, dbh=None) -> None:
+    def __init__(self, repo: ScanRepository, *, dbh=None,
+                 event_repo: Optional[EventRepository] = None) -> None:
         self._repo = repo
+        self._event_repo = event_repo
         self._dbh = dbh  # fallback raw dbh for methods not yet on repo
         self._machines: Dict[str, ScanStateMachine] = {}
         self._lock = threading.Lock()
@@ -163,6 +166,12 @@ class ScanService:
     def get_events(self, scan_id: str, event_type: Optional[str] = None,
                    *, filter_fp: bool = False) -> list:
         """Return raw scan result events."""
+        if self._event_repo:
+            return self._event_repo.get_results(
+                scan_id,
+                event_type=event_type or "ALL",
+                filter_fp=filter_fp,
+            ) or []
         dbh = self._ensure_dbh()
         if filter_fp:
             return dbh.scanResultEvent(scan_id, filterFp=True) or []
@@ -170,7 +179,14 @@ class ScanService:
 
     def search_events(self, scan_id: str, *,
                       event_type: str = "", value: str = "") -> list:
-        """Search scan results (wraps ``dbh.search()``)."""
+        """Search scan results."""
+        if self._event_repo:
+            return self._event_repo.search({
+                "scan_id": scan_id or "",
+                "type": event_type or "",
+                "value": value or "",
+                "regex": "",
+            }) or []
         dbh = self._ensure_dbh()
         return dbh.search({
             "scan_id": scan_id or "",
@@ -252,21 +268,39 @@ class ScanService:
                 "message": "Scan must be in a finished state when setting False Positives.",
             }
 
-        if fp == "0":
-            data = dbh.scanElementSourcesDirect(scan_id, result_ids)
-            for row in data:
-                if str(row[14]) == "1":
-                    return {
-                        "status": "WARNING",
-                        "message": (
-                            f"Cannot unset element {scan_id} as False Positive "
-                            "if a parent element is still False Positive."
-                        ),
-                    }
+        if self._event_repo:
+            if fp == "0":
+                data = self._event_repo.get_element_sources(
+                    scan_id, result_ids, recursive=False)
+                for row in data:
+                    if str(row[14]) == "1":
+                        return {
+                            "status": "WARNING",
+                            "message": (
+                                f"Cannot unset element {scan_id} as False Positive "
+                                "if a parent element is still False Positive."
+                            ),
+                        }
+            childs = self._event_repo.get_element_children(
+                scan_id, result_ids, recursive=True)
+            all_ids = result_ids + childs
+            ret = self._event_repo.update_false_positive(scan_id, all_ids, fp)
+        else:
+            if fp == "0":
+                data = dbh.scanElementSourcesDirect(scan_id, result_ids)
+                for row in data:
+                    if str(row[14]) == "1":
+                        return {
+                            "status": "WARNING",
+                            "message": (
+                                f"Cannot unset element {scan_id} as False Positive "
+                                "if a parent element is still False Positive."
+                            ),
+                        }
+            childs = dbh.scanElementChildrenAll(scan_id, result_ids)
+            all_ids = result_ids + childs
+            ret = dbh.scanResultsUpdateFP(scan_id, all_ids, fp)
 
-        childs = dbh.scanElementChildrenAll(scan_id, result_ids)
-        all_ids = result_ids + childs
-        ret = dbh.scanResultsUpdateFP(scan_id, all_ids, fp)
         if ret:
             return {"status": "SUCCESS", "message": ""}
         return {"status": "ERROR", "message": "Exception encountered."}
