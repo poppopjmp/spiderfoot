@@ -318,3 +318,80 @@ async def analyze_correlation_patterns(
     except Exception as e:
         logger.error("Failed to analyze correlation patterns: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("/scans/{scan_id}/correlations/export")
+async def export_scan_correlations(
+    scan_id: str,
+    format: str = Query("csv", description="Export format: csv, json"),
+    risk: Optional[str] = Query(None, description="Filter by risk level"),
+    api_key: str = optional_auth_dep,
+    svc: CorrelationService = Depends(get_correlation_svc),
+):
+    """Export scan correlation results as CSV or JSON download.
+
+    Provides a downloadable file of all correlation findings for a
+    scan, suitable for offline analysis or integration with external
+    tools (SIEM, ticketing, etc.).
+    """
+    import csv as csv_mod
+    import io
+    import json as json_mod
+
+    from fastapi.responses import Response
+
+    try:
+        results = svc.get_results(scan_id)
+        if not results:
+            results = svc.run_for_scan(scan_id)
+
+        if risk:
+            results = [r for r in results if r.risk.upper() == risk.upper()]
+
+        dicts = [_result_to_dict(r) for r in results]
+
+        if format.lower() == "json":
+            content = json_mod.dumps({
+                "scan_id": scan_id,
+                "total": len(dicts),
+                "correlations": dicts,
+                "exported_at": datetime.now().isoformat(),
+            }, indent=2, default=str)
+            return Response(
+                content=content,
+                media_type="application/json",
+                headers={"Content-Disposition": f'attachment; filename="correlations-{scan_id}.json"'},
+            )
+
+        # Default: CSV
+        if not dicts:
+            csv_content = "No correlation results found"
+        else:
+            output = io.StringIO()
+            fieldnames = ["rule_id", "rule_name", "risk", "title", "description", "scan_id", "event_type", "event_data"]
+            writer = csv_mod.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
+            writer.writeheader()
+            for d in dicts:
+                # Flatten nested fields for CSV
+                flat = {
+                    "rule_id": d.get("rule_id", ""),
+                    "rule_name": d.get("rule_name", ""),
+                    "risk": d.get("risk", ""),
+                    "title": d.get("title", ""),
+                    "description": d.get("description", ""),
+                    "scan_id": d.get("scan_id", scan_id),
+                    "event_type": d.get("event_type", ""),
+                    "event_data": str(d.get("event_data", ""))[:500],
+                }
+                writer.writerow(flat)
+            csv_content = output.getvalue()
+
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="correlations-{scan_id}.csv"'},
+        )
+
+    except Exception as e:
+        logger.error("Failed to export correlations for scan %s: %s", scan_id, e)
+        raise HTTPException(status_code=500, detail=str(e)) from e
