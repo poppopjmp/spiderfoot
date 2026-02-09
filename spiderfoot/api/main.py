@@ -28,6 +28,9 @@ from spiderfoot.api.audit_middleware import install_audit_logging
 # Request body size limits
 from spiderfoot.api.body_limit_middleware import install_body_limits
 
+# CORS
+from spiderfoot.api.cors_config import install_cors
+
 # API versioning
 from spiderfoot.api.versioning import mount_versioned_routers, install_api_versioning
 
@@ -119,3 +122,6 @@ install_error_handlers(app)
 
 # Install audit logging middleware (outermost — captures final status after error handlers)
 install_audit_logging(app)
+
+# Install CORS (must be last middleware added — runs first in ASGI onion)
+install_cors(app)
