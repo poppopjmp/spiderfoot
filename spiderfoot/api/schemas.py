@@ -312,6 +312,13 @@ class FalsePositiveResponse(BaseModel):
     updated: int = 0
 
 
+class ScanTagsResponse(BaseModel):
+    """Response containing scan tags."""
+    scan_id: str
+    tags: List[str] = []
+    message: str = ""
+
+
 # ── Workspace response schemas ──────────────────────────────────────
 
 class WorkspaceCreateResponse(BaseModel):

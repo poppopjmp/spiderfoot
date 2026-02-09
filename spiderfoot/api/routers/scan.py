@@ -36,6 +36,7 @@ from ..schemas import (
     ScanNotesResponse,
     ScanRerunResponse,
     ScanCloneResponse,
+    ScanTagsResponse,
     MessageResponse,
 )
 
@@ -882,6 +883,99 @@ async def unarchive_scan(
         except Exception:
             pass
     return MessageResponse(message="Scan unarchived")
+
+
+# -----------------------------------------------------------------------
+# Scan tags / labels
+# -----------------------------------------------------------------------
+
+_TAGS_KEY = "_tags"
+
+
+@router.get("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
+async def get_scan_tags(
+    scan_id: str,
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Get all tags for a scan."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    meta = svc.get_metadata(scan_id) or {}
+    tags = meta.get(_TAGS_KEY, [])
+    return ScanTagsResponse(scan_id=scan_id, tags=tags)
+
+
+@router.put("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
+async def set_scan_tags(
+    scan_id: str,
+    tags: List[str] = Body(..., description="Complete list of tags to set"),
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Replace all tags for a scan."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    # Normalize: strip, lowercase, deduplicate, remove empty
+    clean = sorted(set(t.strip().lower() for t in tags if t.strip()))
+    if len(clean) > 50:
+        raise HTTPException(status_code=422, detail="Maximum 50 tags per scan")
+    meta = svc.get_metadata(scan_id) or {}
+    meta[_TAGS_KEY] = clean
+    svc.set_metadata(scan_id, meta)
+    return ScanTagsResponse(scan_id=scan_id, tags=clean, message="Tags updated")
+
+
+@router.post("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
+async def add_scan_tags(
+    scan_id: str,
+    tags: List[str] = Body(..., description="Tags to add"),
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Add tags to a scan (merges with existing)."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    meta = svc.get_metadata(scan_id) or {}
+    existing = set(meta.get(_TAGS_KEY, []))
+    new_tags = set(t.strip().lower() for t in tags if t.strip())
+    merged = sorted(existing | new_tags)
+    if len(merged) > 50:
+        raise HTTPException(status_code=422, detail="Maximum 50 tags per scan")
+    meta[_TAGS_KEY] = merged
+    svc.set_metadata(scan_id, meta)
+    added = sorted(new_tags - existing)
+    return ScanTagsResponse(
+        scan_id=scan_id, tags=merged,
+        message=f"Added {len(added)} tag(s)" if added else "No new tags added",
+    )
+
+
+@router.delete("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
+async def remove_scan_tags(
+    scan_id: str,
+    tags: List[str] = Body(..., description="Tags to remove"),
+    api_key: str = api_key_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Remove specific tags from a scan."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    meta = svc.get_metadata(scan_id) or {}
+    existing = set(meta.get(_TAGS_KEY, []))
+    to_remove = set(t.strip().lower() for t in tags if t.strip())
+    remaining = sorted(existing - to_remove)
+    removed = sorted(existing & to_remove)
+    meta[_TAGS_KEY] = remaining
+    svc.set_metadata(scan_id, meta)
+    return ScanTagsResponse(
+        scan_id=scan_id, tags=remaining,
+        message=f"Removed {len(removed)} tag(s)" if removed else "No matching tags found",
+    )
 
 
 # -----------------------------------------------------------------------
