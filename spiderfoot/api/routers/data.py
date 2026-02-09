@@ -455,4 +455,140 @@ async def get_module_dependencies(
     }
 
 
-# No data endpoints have been moved yet. Add data-related endpoints here as needed.
+# ── Module enable / disable management ────────────────────────────────
+# Runtime in-memory set of disabled module names.  Scans check this set
+# before loading modules so operators can disable problematic modules
+# without restarting the service.
+
+_disabled_modules: set = set()
+_disabled_modules_lock = __import__("threading").Lock()
+
+
+def get_disabled_modules() -> set:
+    """Return a frozen copy of the disabled-module set (thread-safe)."""
+    with _disabled_modules_lock:
+        return frozenset(_disabled_modules)
+
+
+@router.get("/data/modules/status")
+async def get_module_status(api_key: str = optional_auth_dep):
+    """Return the enable/disable status of all modules.
+
+    Modules not in the disabled set are considered enabled.
+    """
+    try:
+        config = get_app_config()
+        sf = SpiderFoot(config.get_config())
+        modules = sf.getModules() or {}
+
+        disabled = get_disabled_modules()
+        status_list = []
+        for name in sorted(modules.keys()):
+            status_list.append({
+                "module": name,
+                "enabled": name not in disabled,
+            })
+
+        return {
+            "total": len(status_list),
+            "enabled": sum(1 for s in status_list if s["enabled"]),
+            "disabled": sum(1 for s in status_list if not s["enabled"]),
+            "modules": status_list,
+        }
+    except Exception as e:
+        logger.error("Failed to get module status: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to get module status") from e
+
+
+@router.post("/data/modules/{module_name}/disable")
+async def disable_module(module_name: str, api_key: str = optional_auth_dep):
+    """Disable a module at runtime.
+
+    Disabled modules will be excluded from future scans.
+    Currently running scans are not affected.
+    """
+    try:
+        config = get_app_config()
+        sf = SpiderFoot(config.get_config())
+        modules = sf.getModules() or {}
+        if module_name not in modules:
+            raise HTTPException(status_code=404, detail=f"Module '{module_name}' not found")
+
+        with _disabled_modules_lock:
+            already = module_name in _disabled_modules
+            _disabled_modules.add(module_name)
+
+        logger.info("Module disabled: %s (was_already=%s)", module_name, already)
+        return {
+            "module": module_name,
+            "enabled": False,
+            "message": "already disabled" if already else "disabled",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to disable module %s: %s", module_name, e)
+        raise HTTPException(status_code=500, detail="Failed to disable module") from e
+
+
+@router.post("/data/modules/{module_name}/enable")
+async def enable_module(module_name: str, api_key: str = optional_auth_dep):
+    """Re-enable a previously disabled module."""
+    try:
+        config = get_app_config()
+        sf = SpiderFoot(config.get_config())
+        modules = sf.getModules() or {}
+        if module_name not in modules:
+            raise HTTPException(status_code=404, detail=f"Module '{module_name}' not found")
+
+        with _disabled_modules_lock:
+            was_disabled = module_name in _disabled_modules
+            _disabled_modules.discard(module_name)
+
+        logger.info("Module enabled: %s (was_disabled=%s)", module_name, was_disabled)
+        return {
+            "module": module_name,
+            "enabled": True,
+            "message": "enabled" if was_disabled else "already enabled",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to enable module %s: %s", module_name, e)
+        raise HTTPException(status_code=500, detail="Failed to enable module") from e
+
+
+@router.post("/data/modules/bulk-disable")
+async def bulk_disable_modules(
+    module_names: list = [],
+    api_key: str = optional_auth_dep,
+):
+    """Disable multiple modules at once.
+
+    Body: list of module name strings.
+    """
+    if not module_names:
+        raise HTTPException(status_code=400, detail="Provide a list of module names")
+
+    config = get_app_config()
+    sf = SpiderFoot(config.get_config())
+    modules = sf.getModules() or {}
+
+    results = []
+    with _disabled_modules_lock:
+        for name in module_names:
+            if name not in modules:
+                results.append({"module": name, "status": "not_found"})
+                continue
+            already = name in _disabled_modules
+            _disabled_modules.add(name)
+            results.append({
+                "module": name,
+                "status": "already_disabled" if already else "disabled",
+            })
+
+    logger.info("Bulk disabled %d modules", len(module_names))
+    return {
+        "results": results,
+        "disabled_count": len(_disabled_modules),
+    }
