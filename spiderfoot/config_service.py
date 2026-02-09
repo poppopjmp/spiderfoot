@@ -126,6 +126,27 @@ ENV_MAP: Dict[str, str] = {
     # Scheduler
     "SF_SCANNER_MAX_SCANS": "_scheduler_max_scans",
     "SF_SCANNER_POLL_INTERVAL": "_scheduler_poll_interval",
+
+    # DataService (microservice mode)
+    "SF_DATASERVICE_BACKEND": "_dataservice_backend",
+    "SF_DATASERVICE_API_URL": "_dataservice_api_url",
+    "SF_DATASERVICE_API_KEY": "_dataservice_api_key",
+    "SF_DATASERVICE_GRPC_HOST": "_dataservice_grpc_host",
+    "SF_DATASERVICE_GRPC_PORT": "_dataservice_grpc_port",
+
+    # WebUI (microservice mode)
+    "SF_WEBUI_API_MODE": "_webui_api_mode",
+    "SF_WEBUI_API_URL": "_webui_api_url",
+    "SF_WEBUI_API_KEY": "_webui_api_key",
+
+    # gRPC
+    "SF_GRPC_HOST": "_grpc_host",
+    "SF_GRPC_PORT": "_grpc_port",
+
+    # Service discovery
+    "SF_SERVICE_NAME": "_service_name",
+    "SF_SERVICE_ROLE": "_service_role",
+    "SF_DEPLOYMENT_MODE": "_deployment_mode",
 }
 
 
@@ -251,6 +272,7 @@ class ConfigService:
     def __init__(self):
         self._lock = threading.RLock()
         self._config: Dict[str, Any] = {}
+        self._sources: Dict[str, str] = {}  # key → source (default/file/env/runtime)
         self._watchers: List[Callable] = []
         self._validator = ConfigValidator()
         self._loaded_from: Optional[str] = None
@@ -291,11 +313,16 @@ class ConfigService:
         """Apply default values from validation rules."""
         with self._lock:
             self._validator.apply_defaults(self._config)
+            for key in list(self._config.keys()):
+                if key not in self._sources:
+                    self._sources[key] = "default"
 
     def load_dict(self, config: Dict[str, Any]) -> None:
         """Merge a configuration dict into the current config."""
         with self._lock:
             self._config.update(config)
+            for key in config:
+                self._sources[key] = "runtime"
 
     def load_from_file(self, path: str) -> bool:
         """Load configuration from a JSON or YAML file.
@@ -327,6 +354,8 @@ class ConfigService:
             if isinstance(data, dict):
                 with self._lock:
                     self._config.update(data)
+                    for key in data:
+                        self._sources[key] = f"file:{p.name}"
                     self._loaded_from = str(p)
                     self._last_loaded = time.time()
                 log.info("Loaded config from %s (%d keys)", path, len(data))
@@ -347,6 +376,7 @@ class ConfigService:
                 value = os.environ.get(env_var)
                 if value is not None:
                     self._config[config_key] = value
+                    self._sources[config_key] = f"env:{env_var}"
                     overrides += 1
 
         if overrides > 0:
@@ -384,6 +414,7 @@ class ConfigService:
         with self._lock:
             old_value = self._config.get(key)
             self._config[key] = value
+            self._sources[key] = "runtime"
 
         if old_value != value:
             self._notify_watchers(key, old_value, value)
@@ -470,6 +501,11 @@ class ConfigService:
     def stats(self) -> dict:
         """Return stats about the config service."""
         with self._lock:
+            source_counts: Dict[str, int] = {}
+            for src in self._sources.values():
+                category = src.split(":")[0]
+                source_counts[category] = source_counts.get(category, 0) + 1
+
             return {
                 "total_keys": len(self._config),
                 "loaded_from": self._loaded_from,
@@ -479,7 +515,92 @@ class ConfigService:
                     1 for env_var in ENV_MAP
                     if os.environ.get(env_var) is not None
                 ),
+                "source_breakdown": source_counts,
+                "deployment_mode": self._config.get("_deployment_mode", "monolith"),
+                "service_role": self._config.get("_service_role", "standalone"),
             }
+
+    # ------------------------------------------------------------------
+    # Config source tracing
+    # ------------------------------------------------------------------
+
+    def get_source(self, key: str) -> Optional[str]:
+        """Return the source that last set a config key.
+
+        Returns one of: 'default', 'file:<name>', 'env:<VAR>', 'runtime'
+        or None if the key does not exist.
+        """
+        with self._lock:
+            return self._sources.get(key)
+
+    def get_sources(self) -> Dict[str, str]:
+        """Return all key → source mappings (for diagnostics)."""
+        with self._lock:
+            return dict(self._sources)
+
+    def get_env_overrides(self) -> Dict[str, str]:
+        """Return active environment variable overrides and their values.
+
+        Useful for diagnosing which env vars are in effect.
+        """
+        active: Dict[str, str] = {}
+        for env_var in ENV_MAP:
+            value = os.environ.get(env_var)
+            if value is not None:
+                active[env_var] = value
+        return active
+
+    def discover_env_vars(self) -> Dict[str, Dict[str, Any]]:
+        """Discover all SF_* environment variables, including unknown ones.
+
+        Returns a dict of env_var → {value, mapped_to, known}.
+        Unknown SF_* vars are flagged for debugging misconfiguration.
+        """
+        result: Dict[str, Dict[str, Any]] = {}
+        known_vars = set(ENV_MAP.keys())
+
+        # Check known vars
+        for env_var, config_key in ENV_MAP.items():
+            value = os.environ.get(env_var)
+            result[env_var] = {
+                "value": value,
+                "mapped_to": config_key,
+                "known": True,
+                "active": value is not None,
+            }
+
+        # Discover unknown SF_* vars
+        for env_var, value in os.environ.items():
+            if env_var.startswith("SF_") and env_var not in known_vars:
+                result[env_var] = {
+                    "value": value,
+                    "mapped_to": None,
+                    "known": False,
+                    "active": True,
+                }
+                log.debug("Unknown env var %s=%s (not in ENV_MAP)", env_var, value)
+
+        return result
+
+    # ------------------------------------------------------------------
+    # Deployment mode helpers
+    # ------------------------------------------------------------------
+
+    @property
+    def is_microservice(self) -> bool:
+        """True if running in microservice deployment mode."""
+        mode = self.get("_deployment_mode", "monolith")
+        return str(mode).lower() in ("microservice", "microservices", "distributed")
+
+    @property
+    def service_role(self) -> str:
+        """Return the service role (scanner, api, webui, standalone)."""
+        return str(self.get("_service_role", "standalone"))
+
+    @property
+    def service_name(self) -> str:
+        """Return the logical service name."""
+        return str(self.get("_service_name", "spiderfoot"))
 
 
 # ---------------------------------------------------------------------------
