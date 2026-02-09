@@ -7,13 +7,16 @@ This enables modules to run as independent services without
 holding database connections.
 """
 
-from spiderfoot.data_service.base import DataService, DataServiceConfig
+from spiderfoot.data_service.base import DataService, DataServiceConfig, DataServiceBackend
 from spiderfoot.data_service.local import LocalDataService
+from spiderfoot.data_service.http_client import HttpDataService
 from spiderfoot.data_service.factory import create_data_service
 
 __all__ = [
     'DataService',
+    'DataServiceBackend',
     'DataServiceConfig',
     'LocalDataService',
+    'HttpDataService',
     'create_data_service',
 ]

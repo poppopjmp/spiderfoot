@@ -31,9 +31,9 @@ def create_data_service(config: Optional[DataServiceConfig] = None) -> DataServi
         return LocalDataService(config=config, db_opts=config.db_config)
     
     elif config.backend == DataServiceBackend.HTTP:
-        # Future: HTTP client for microservice mode
-        log.warning("HTTP data service not yet implemented, falling back to local")
-        return LocalDataService(config=config, db_opts=config.db_config)
+        from spiderfoot.data_service.http_client import HttpDataService
+        log.info("Using HTTP data service backend: %s", config.api_url)
+        return HttpDataService(config=config)
     
     elif config.backend == DataServiceBackend.GRPC:
         # Future: gRPC client for high-performance mode
