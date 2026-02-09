@@ -839,3 +839,71 @@ async def validate_current_config(api_key: str = optional_auth_dep):
         },
         "results": results,
     }
+
+
+# -----------------------------------------------------------------------
+# Rate limit management
+# -----------------------------------------------------------------------
+
+@router.get("/config/rate-limits")
+async def get_rate_limits(api_key: str = optional_auth_dep):
+    """Get current rate limit configuration including per-endpoint overrides."""
+    try:
+        from spiderfoot.api.rate_limit_middleware import get_rate_limit_config, get_rate_limit_stats
+        return {
+            "config": get_rate_limit_config(),
+            "stats": get_rate_limit_stats(),
+        }
+    except Exception as e:
+        logger.error("Failed to get rate limit config: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to get rate limit configuration") from e
+
+
+class EndpointRateLimitRequest(BaseModel):
+    """Request to set a per-endpoint rate limit override."""
+    path: str = Field(..., description="URL path prefix (e.g. /api/scans/bulk/delete)")
+    requests: int = Field(..., ge=1, le=10000, description="Max requests per window")
+    window: float = Field(60.0, ge=1.0, le=3600.0, description="Window in seconds")
+
+
+@router.put("/config/rate-limits/endpoints")
+async def set_endpoint_rate_limit(
+    request: EndpointRateLimitRequest,
+    api_key: str = optional_auth_dep,
+):
+    """Set a per-endpoint rate limit override (runtime, not persisted)."""
+    try:
+        from spiderfoot.api.rate_limit_middleware import set_endpoint_override
+        ok = set_endpoint_override(request.path, request.requests, request.window)
+        if not ok:
+            raise HTTPException(status_code=503, detail="Rate limiter not initialized")
+        return {
+            "message": f"Rate limit override set for {request.path}",
+            "path": request.path,
+            "requests": request.requests,
+            "window": request.window,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to set endpoint rate limit: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to set rate limit") from e
+
+
+@router.delete("/config/rate-limits/endpoints")
+async def remove_endpoint_rate_limit(
+    path: str = Query(..., description="URL path prefix to remove override for"),
+    api_key: str = optional_auth_dep,
+):
+    """Remove a per-endpoint rate limit override."""
+    try:
+        from spiderfoot.api.rate_limit_middleware import remove_endpoint_override
+        removed = remove_endpoint_override(path)
+        if not removed:
+            raise HTTPException(status_code=404, detail=f"No override found for {path}")
+        return {"message": f"Rate limit override removed for {path}", "path": path}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to remove endpoint rate limit: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to remove rate limit") from e

@@ -25,6 +25,7 @@ Usage::
 from __future__ import annotations
 
 import logging
+import os
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Set
@@ -79,6 +80,7 @@ class RateLimitConfig:
     Args:
         enabled: Whether rate limiting is active.
         tier_limits: Per-tier limits as ``{tier: (requests, window_seconds)}``.
+        endpoint_overrides: Per-endpoint overrides as ``{path: (requests, window_seconds)}``.
         exempt_paths: Paths to skip entirely.
         trust_forwarded: If True, use ``X-Forwarded-For`` for client IP.
         include_headers: If True, add ``X-RateLimit-*`` response headers.
@@ -87,6 +89,7 @@ class RateLimitConfig:
 
     enabled: bool = True
     tier_limits: Dict[str, tuple] = field(default_factory=lambda: dict(DEFAULT_TIER_LIMITS))
+    endpoint_overrides: Dict[str, tuple] = field(default_factory=dict)
     exempt_paths: Set[str] = field(default_factory=lambda: set(DEFAULT_EXEMPT_PATHS))
     trust_forwarded: bool = True
     include_headers: bool = True
@@ -94,9 +97,29 @@ class RateLimitConfig:
 
     @classmethod
     def from_dict(cls, config: Dict[str, Any]) -> "RateLimitConfig":
-        """Build from a flat SpiderFoot config dict."""
+        """Build from a flat SpiderFoot config dict.
+
+        Per-endpoint overrides can be set via the environment variable
+        ``SF_API_RATE_LIMIT_ENDPOINTS`` as a semicolon-separated list of
+        ``path=requests/window`` entries, e.g.:
+            ``/api/scans=10/60;/api/scans/bulk/delete=5/60``
+        """
+        overrides: Dict[str, tuple] = {}
+        env_overrides = os.environ.get("SF_API_RATE_LIMIT_ENDPOINTS", "")
+        if env_overrides:
+            for entry in env_overrides.split(";"):
+                entry = entry.strip()
+                if "=" not in entry:
+                    continue
+                path_part, limit_part = entry.split("=", 1)
+                try:
+                    reqs, window = limit_part.split("/", 1)
+                    overrides[path_part.strip()] = (int(reqs), float(window))
+                except (ValueError, TypeError):
+                    log.warning("Invalid rate limit override: %s", entry)
         return cls(
             enabled=config.get("__ratelimit_enabled", True),
+            endpoint_overrides=overrides,
             trust_forwarded=config.get("__ratelimit_trust_forwarded", True),
             include_headers=config.get("__ratelimit_headers", True),
             log_rejections=config.get("__ratelimit_log_rejections", True),
@@ -236,6 +259,59 @@ def get_rate_limit_stats() -> Dict[str, Any]:
     return _stats.to_dict()
 
 
+def get_rate_limit_config() -> Dict[str, Any]:
+    """Return the current rate limit configuration including per-endpoint overrides."""
+    if _config is None:
+        return {"enabled": False, "tiers": {}, "endpoint_overrides": {}}
+    return {
+        "enabled": _config.enabled,
+        "tiers": {k: {"requests": v[0], "window": v[1]} for k, v in _config.tier_limits.items()},
+        "endpoint_overrides": {
+            k: {"requests": v[0], "window": v[1]}
+            for k, v in _config.endpoint_overrides.items()
+        },
+        "exempt_paths": sorted(_config.exempt_paths),
+    }
+
+
+def set_endpoint_override(path: str, requests: int, window: float) -> bool:
+    """Set a runtime rate limit override for a specific endpoint path.
+
+    Args:
+        path: The URL path prefix (e.g. ``/api/scans/bulk/delete``).
+        requests: Max requests per window.
+        window: Window in seconds.
+
+    Returns:
+        True if applied successfully.
+    """
+    global _config, _limiter
+    if _config is None:
+        return False
+    _config.endpoint_overrides[path] = (requests, window)
+    # Update limiter if available
+    if _limiter is not None:
+        try:
+            from spiderfoot.rate_limiter import RateLimit
+            _limiter.set_limit(f"endpoint:{path}", RateLimit(requests=requests, window=window))
+        except Exception:
+            pass
+    log.info("Endpoint rate limit override set: %s = %d/%0.0fs", path, requests, window)
+    return True
+
+
+def remove_endpoint_override(path: str) -> bool:
+    """Remove a per-endpoint rate limit override."""
+    global _config
+    if _config is None:
+        return False
+    if path in _config.endpoint_overrides:
+        del _config.endpoint_overrides[path]
+        log.info("Endpoint rate limit override removed: %s", path)
+        return True
+    return False
+
+
 def reset_rate_limit_state() -> None:
     """Reset module state (for testing)."""
     global _stats, _limiter, _config
@@ -297,9 +373,18 @@ if HAS_STARLETTE:
                     f"tier:{tier}",
                     RateLimit(requests=requests, window=window),
                 )
+
+            # Register per-endpoint overrides
+            for path, (requests, window) in self._config.endpoint_overrides.items():
+                _limiter.set_limit(
+                    f"endpoint:{path}",
+                    RateLimit(requests=requests, window=window),
+                )
+
             log.info(
-                "Rate limiting initialized with %d tiers",
+                "Rate limiting initialized with %d tiers, %d endpoint overrides",
                 len(self._config.tier_limits),
+                len(self._config.endpoint_overrides),
             )
 
         async def dispatch(self, request: Request, call_next) -> Response:
@@ -320,11 +405,24 @@ if HAS_STARLETTE:
                 request.scope, headers,
                 trust_forwarded=self._config.trust_forwarded,
             )
+
+            # Check for per-endpoint override (longest match wins)
+            endpoint_key = None
+            best_ep_match = ""
+            for ep_path in self._config.endpoint_overrides:
+                if path.startswith(ep_path) and len(ep_path) > len(best_ep_match):
+                    best_ep_match = ep_path
+                    endpoint_key = f"endpoint:{ep_path}"
+
             tier = detect_tier(path)
 
-            # Build composite key: tier + client
-            limit_key = f"tier:{tier}"
-            client_key = f"{limit_key}:{client_id}"
+            # Use endpoint-specific limit if available, otherwise tier
+            if endpoint_key:
+                limit_key = endpoint_key
+                client_key = f"{endpoint_key}:{client_id}"
+            else:
+                limit_key = f"tier:{tier}"
+                client_key = f"{limit_key}:{client_id}"
 
             # Ensure per-client key inherits the tier's limit
             if client_key not in _limiter._limits:
