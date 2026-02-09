@@ -320,6 +320,7 @@ migration instructions.
 | 5.29.0 | Correlation Service Wiring (CorrelationService → router) |
 | 5.30.0 | Scan Service Facade (ScanStateMachine + ScanRepository → router) |
 | 5.31.0 | Visualization Service Facade (graph/summary/timeline/heatmap → router) |
+| 5.32.0 | Scan Service Phase 2 (all 25 endpoints → ScanService, zero raw DB) |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
@@ -480,6 +481,28 @@ with `ScanStateMachine` for formal state-transition enforcement.
   of raw tuple-index dicts (`scan[0]`, `scan[6]`, etc.)
 - **Gradual migration** — Service exposes `.dbh` for endpoints not yet
   migrated (export, viz); full migration planned for future cycles
+### Scan Service Phase 2 (v5.32.0)
+
+#### Complete Scan Router Migration
+Completes the ScanService facade migration started in Cycle 27,
+eliminating all raw `SpiderFootDb` instantiation from the scan router.
+
+- **15 new ScanService methods** — `get_events()`, `search_events()`,
+  `get_correlations()`, `get_scan_logs()`, `get_metadata()`/`set_metadata()`,
+  `get_notes()`/`set_notes()`, `archive()`/`unarchive()`, `clear_results()`,
+  `set_false_positive()`, `get_scan_options()`
+- **All 25 scan endpoints** now delegate to `ScanService` via
+  `Depends(get_scan_service)` — zero `SpiderFootDb` imports remain
+- **Export endpoints** — CSV/XLSX event export, multi-scan JSON export,
+  search export, logs export, correlations export
+- **Lifecycle endpoints** — create, rerun, rerun-multi, clone
+- **Results management** — false-positive with parent/child validation,
+  clear results
+- **Metadata/notes/archive** — CRUD with `hasattr` guards for optional
+  DB methods
+- **Static route ordering** — `/scans/export-multi`, `/scans/viz-multi`,
+  `/scans/rerun-multi` registered before `/{scan_id}` routes
+
 ### Visualization Service Facade (v5.31.0)
 
 #### Visualization Service (`spiderfoot/visualization_service.py`)

@@ -161,6 +161,170 @@ class ScanService:
         return self._repo.get_scan_errors(scan_id, limit=limit)
 
     # ------------------------------------------------------------------
+    # Event / result queries  (Cycle 29 — Phase 2 migration)
+    # ------------------------------------------------------------------
+
+    def get_events(self, scan_id: str, event_type: Optional[str] = None,
+                   *, filter_fp: bool = False) -> list:
+        """Return raw scan result events."""
+        dbh = self._ensure_dbh()
+        if filter_fp:
+            return dbh.scanResultEvent(scan_id, filterFp=True) or []
+        return dbh.scanResultEvent(scan_id, event_type) or []
+
+    def search_events(self, scan_id: str, *,
+                      event_type: str = "", value: str = "") -> list:
+        """Search scan results (wraps ``dbh.search()``)."""
+        dbh = self._ensure_dbh()
+        return dbh.search({
+            "scan_id": scan_id or "",
+            "type": event_type or "",
+            "value": value or "",
+            "regex": "",
+        }) or []
+
+    def get_correlations(self, scan_id: str) -> list:
+        """Return scan correlation rows."""
+        dbh = self._ensure_dbh()
+        return dbh.scanCorrelations(scan_id) or []
+
+    def get_scan_logs(self, scan_id: str) -> list:
+        """Return raw scan log rows."""
+        dbh = self._ensure_dbh()
+        return dbh.scanLogs(scan_id) or []
+
+    # ------------------------------------------------------------------
+    # Metadata / notes / archive  (Cycle 29)
+    # ------------------------------------------------------------------
+
+    def get_metadata(self, scan_id: str) -> Dict[str, Any]:
+        dbh = self._ensure_dbh()
+        if hasattr(dbh, "scanMetadataGet"):
+            return dbh.scanMetadataGet(scan_id) or {}
+        return {}
+
+    def set_metadata(self, scan_id: str, metadata: Dict[str, Any]) -> None:
+        dbh = self._ensure_dbh()
+        if hasattr(dbh, "scanMetadataSet"):
+            dbh.scanMetadataSet(scan_id, metadata)
+
+    def get_notes(self, scan_id: str) -> str:
+        dbh = self._ensure_dbh()
+        if hasattr(dbh, "scanNotesGet"):
+            return dbh.scanNotesGet(scan_id) or ""
+        return ""
+
+    def set_notes(self, scan_id: str, notes: str) -> None:
+        dbh = self._ensure_dbh()
+        if hasattr(dbh, "scanNotesSet"):
+            dbh.scanNotesSet(scan_id, notes)
+
+    def archive(self, scan_id: str) -> None:
+        meta = self.get_metadata(scan_id)
+        meta["archived"] = True
+        self.set_metadata(scan_id, meta)
+
+    def unarchive(self, scan_id: str) -> None:
+        meta = self.get_metadata(scan_id)
+        meta["archived"] = False
+        self.set_metadata(scan_id, meta)
+
+    # ------------------------------------------------------------------
+    # Results management  (Cycle 29)
+    # ------------------------------------------------------------------
+
+    def clear_results(self, scan_id: str) -> None:
+        """Delete all results/events for scan, keeping the scan entry."""
+        dbh = self._ensure_dbh()
+        dbh.scanResultDelete(scan_id)
+
+    def set_false_positive(self, scan_id: str, result_ids: List[str],
+                           fp: str) -> Dict[str, str]:
+        """Set/unset false-positive flag on results + children.
+
+        Returns ``{"status": "SUCCESS"|"WARNING"|"ERROR", "message": ...}``.
+        """
+        dbh = self._ensure_dbh()
+
+        scan_info = dbh.scanInstanceGet(scan_id)
+        if not scan_info:
+            raise ScanServiceError(f"Scan not found: {scan_id}")
+
+        if scan_info[5] not in ("ABORTED", "FINISHED", "ERROR-FAILED"):
+            return {
+                "status": "WARNING",
+                "message": "Scan must be in a finished state when setting False Positives.",
+            }
+
+        if fp == "0":
+            data = dbh.scanElementSourcesDirect(scan_id, result_ids)
+            for row in data:
+                if str(row[14]) == "1":
+                    return {
+                        "status": "WARNING",
+                        "message": (
+                            f"Cannot unset element {scan_id} as False Positive "
+                            "if a parent element is still False Positive."
+                        ),
+                    }
+
+        childs = dbh.scanElementChildrenAll(scan_id, result_ids)
+        all_ids = result_ids + childs
+        ret = dbh.scanResultsUpdateFP(scan_id, all_ids, fp)
+        if ret:
+            return {"status": "SUCCESS", "message": ""}
+        return {"status": "ERROR", "message": "Exception encountered."}
+
+    # ------------------------------------------------------------------
+    # Scan config retrieval  (Cycle 29)
+    # ------------------------------------------------------------------
+
+    def get_scan_options(self, scan_id: str,
+                        app_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Return scan options with config descriptions.
+
+        ``app_config`` is the full application config dict (needed for
+        module option descriptions).
+        """
+        dbh = self._ensure_dbh()
+        meta = dbh.scanInstanceGet(scan_id)
+        if not meta:
+            return {}
+
+        import time as _time
+
+        started = (
+            _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(meta[3]))
+            if meta[3] != 0 else "Not yet"
+        )
+        finished = (
+            _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(meta[4]))
+            if meta[4] != 0 else "Not yet"
+        )
+
+        ret: Dict[str, Any] = {
+            "meta": [meta[0], meta[1], meta[2], started, finished, meta[5]],
+            "config": dbh.scanConfigGet(scan_id),
+            "configdesc": {},
+        }
+
+        for key in list(ret["config"].keys()):
+            if ":" not in key:
+                descs = app_config.get("__globaloptdescs__", {})
+                if descs:
+                    ret["configdesc"][key] = descs.get(key, f"{key} (legacy)")
+            else:
+                mod_name, mod_opt = key.split(":", 1)
+                modules = app_config.get("__modules__", {})
+                if mod_name not in modules:
+                    continue
+                if mod_opt not in modules[mod_name].get("optdescs", {}):
+                    continue
+                ret["configdesc"][key] = modules[mod_name]["optdescs"][mod_opt]
+
+        return ret
+
+    # ------------------------------------------------------------------
     # Raw DB access  (transitional — for endpoints not yet migrated)
     # ------------------------------------------------------------------
 

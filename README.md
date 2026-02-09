@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9+-green)](https://www.python.org)
-[![Stable Release](https://img.shields.io/badge/version-5.31.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.31.0)
+[![Stable Release](https://img.shields.io/badge/version-5.32.0-blue.svg)](https://github.com/poppopjmp/spiderfoot/releases/tag/v5.32.0)
 [![Production Grade](https://img.shields.io/badge/Production-Grade-blue.svg)](https://github.com/poppopjmp/spiderfoot)
 [![AI Enhanced](https://img.shields.io/badge/AI-Enhanced-orange.svg)](https://github.com/poppopjmp/spiderfoot)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -691,7 +691,7 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 
 ## Recent Updates
 
-### v5.31.0 — Modernization Cycles 1-28 (1224+ tests)
+### v5.32.0 — Modernization Cycles 1-29 (1269+ tests)
 
 | Cycle | Version | Feature | Tests |
 |-------|---------|---------|-------|
@@ -723,6 +723,7 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 | 26 | 5.29.0 | Correlation Service Wiring (CorrelationService → router) | 39 |
 | 27 | 5.30.0 | Scan Service Facade (ScanStateMachine + ScanRepository → router) | 33 |
 | 28 | 5.31.0 | Visualization Service Facade (graph/summary/timeline/heatmap) | 35 |
+| 29 | 5.32.0 | Scan Service Phase 2 (all 25 endpoints → ScanService) | 45 |
 
 ### Previous
 
