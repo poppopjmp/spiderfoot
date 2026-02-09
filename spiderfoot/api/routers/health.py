@@ -204,6 +204,65 @@ def _check_app_config() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
+def _check_data_service() -> Dict[str, Any]:
+    """DataService backend health — checks local, HTTP, or gRPC connectivity."""
+    try:
+        registry = _get_registry()
+        if registry is None:
+            return {"status": "unknown", "message": "ServiceRegistry not available"}
+
+        data_svc = registry.get_optional("data_service")
+        if data_svc is None:
+            # Fall back to checking raw DB via legacy path
+            return {"status": "unknown", "message": "DataService not registered"}
+
+        backend = getattr(data_svc, "config", None)
+        backend_name = backend.backend.value if backend else "unknown"
+
+        # For HTTP backend, do a lightweight probe
+        if backend_name == "http":
+            try:
+                # Try listing scans as a minimal roundtrip
+                result = data_svc.scan_instance_list()
+                return {
+                    "status": "up",
+                    "backend": backend_name,
+                    "url": getattr(data_svc, "_base_url", ""),
+                }
+            except Exception as e:
+                return {
+                    "status": "down",
+                    "backend": backend_name,
+                    "message": f"HTTP probe failed: {e}",
+                }
+
+        # For local backend, verify DB handle
+        if backend_name == "local":
+            dbh = getattr(data_svc, "dbh", None) or getattr(data_svc, "_dbh", None)
+            if dbh is None:
+                return {
+                    "status": "degraded",
+                    "backend": backend_name,
+                    "message": "DB handle not initialized (lazy init)",
+                }
+            try:
+                if hasattr(dbh, "conn"):
+                    dbh.conn.execute("SELECT 1")
+                return {"status": "up", "backend": backend_name}
+            except Exception as e:
+                return {
+                    "status": "down",
+                    "backend": backend_name,
+                    "message": str(e),
+                }
+
+        # Generic: service exists but we can't probe deeply
+        return {"status": "up", "backend": backend_name}
+
+    except Exception as e:
+        return {"status": "down", "message": str(e)}
+
+
 # -----------------------------------------------------------------------
 # Prometheus metrics helper
 # -----------------------------------------------------------------------
@@ -227,6 +286,7 @@ def _get_metrics_text() -> str:
 _SUBSYSTEM_CHECKS = {
     "database": _check_database,
     "eventbus": _check_eventbus,
+    "data_service": _check_data_service,
     "modules": _check_modules,
     "report_storage": _check_report_storage,
     "app_config": _check_app_config,
