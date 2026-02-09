@@ -102,6 +102,18 @@ graph TD;
 | **Benchmarks** | `spiderfoot/benchmark.py` | Performance benchmarking suite |
 | **DB Migrate** | `spiderfoot/db_migrate.py` | Version-controlled schema migrations |
 | **CLI** | `spiderfoot/cli_service.py` | Modern CLI with subcommands |
+| **ScanStateMap** | `spiderfoot/scan_state_map.py` | Unified scan state mapping |
+| **HTTP DataSvc** | `spiderfoot/data_service/http_client.py` | REST DataService backend |
+| **gRPC DataSvc** | `spiderfoot/data_service/grpc_client.py` | Protobuf DataService backend |
+| **CircuitBreaker** | `spiderfoot/data_service/resilient.py` | Circuit breaker for remote DataService |
+| **ScanMetadata** | `spiderfoot/scan_metadata_service.py` | Scan metadata extraction service |
+| **WebUI Proxy** | `spiderfoot/webui/api_client.py` | WebUI → API HTTP proxy client |
+| **DbProvider** | `spiderfoot/webui/db_provider.py` | Dual-mode DB (local/API proxy) |
+| **API Versioning** | `spiderfoot/api/versioning.py` | /api/v1/ prefix with deprecation headers |
+| **API Schemas** | `spiderfoot/api/schemas.py` | Pydantic v2 service boundary contracts |
+| **ModuleContract** | `spiderfoot/module_contract.py` | Typed module interface validation |
+| **StartupSeq** | `spiderfoot/startup_sequencer.py` | Ordered dependency startup probes |
+| **Shutdown** | `spiderfoot/graceful_shutdown.py` | Priority-ordered graceful shutdown |
 
 ---
 
@@ -689,6 +701,34 @@ Maintainer: Poppopjmp <van1sh@van1shland.io>
 ---
 
 ## Recent Updates
+
+### v5.54.1 — Modernization Cycles 32-54
+
+| Cycle | Version | Feature |
+|-------|---------|---------|
+| 32 | 5.35.0 | Fix silent error swallowing in service_integration.py |
+| 33 | 5.36.0 | Add gRPC dependencies to requirements.txt |
+| 34 | 5.37.0 | Generate gRPC stubs, wire grpc_service.py |
+| 35 | 5.38.0 | Unified scan state mapping (scan_state_map.py) |
+| 36 | 5.39.0 | Replace monkey-patching with functools.wraps |
+| 37 | 5.40.0 | Framework-agnostic security + deprecate Flask |
+| 38 | 5.41.0 | Migrate ScanService events to EventRepository |
+| 39 | 5.42.0 | Domain sub-packages for code organization |
+| 40 | 5.43.0 | HTTP DataService client |
+| 41 | 5.43.1 | DataService health check |
+| 42 | 5.44.0 | gRPC DataService client |
+| 43 | 5.44.1 | Circuit breaker for remote DataService |
+| 44 | 5.45.0 | Extract ScanMetadataService |
+| 45 | 5.46.0 | WebUI API proxy layer |
+| 46 | 5.47.0 | Per-service Docker isolation |
+| 47 | 5.48.0 | API versioning with /api/v1/ prefix |
+| 48 | 5.49.0 | Pydantic schemas for service boundaries |
+| 49 | 5.50.0 | Module interface contracts |
+| 50 | 5.51.0 | ConfigService microservice enhancements |
+| 51 | 5.52.0 | Proto schema expansion (15 new RPCs) |
+| 52 | 5.53.0 | Service startup sequencer |
+| 53 | 5.54.0 | Graceful shutdown coordination |
+| 54 | 5.54.1 | Wire startup/shutdown into entry points |
 
 ### v5.34.0 — Modernization Cycles 1-31 (1308+ tests)
 

@@ -321,6 +321,31 @@ migration instructions.
 | 5.30.0 | Scan Service Facade (ScanStateMachine + ScanRepository → router) |
 | 5.31.0 | Visualization Service Facade (graph/summary/timeline/heatmap → router) |
 | 5.32.0 | Scan Service Phase 2 (all 25 endpoints → ScanService, zero raw DB) |
+| 5.33.0 | Final Router DB Purge + Dead Code Removal |
+| 5.34.0 | WebUI DB Access Centralisation (DbProvider mixin) |
+| 5.35.0 | Fix silent error swallowing in service_integration.py |
+| 5.36.0 | Add gRPC dependencies to requirements.txt |
+| 5.37.0 | Generate gRPC stubs, wire grpc_service.py |
+| 5.38.0 | Unified scan state mapping (scan_state_map.py) |
+| 5.39.0 | Replace monkey-patching with functools.wraps |
+| 5.40.0 | Framework-agnostic security + deprecate Flask |
+| 5.41.0 | Migrate ScanService events to EventRepository |
+| 5.42.0 | Domain sub-packages for code organization |
+| 5.43.0 | HTTP DataService client (REST backend) |
+| 5.43.1 | DataService health check endpoints |
+| 5.44.0 | gRPC DataService client (Protobuf backend) |
+| 5.44.1 | Circuit breaker for remote DataService |
+| 5.45.0 | Extract ScanMetadataService |
+| 5.46.0 | WebUI API proxy layer |
+| 5.47.0 | Per-service Docker network isolation |
+| 5.48.0 | API versioning with /api/v1/ prefix |
+| 5.49.0 | Pydantic v2 schemas for service boundaries |
+| 5.50.0 | Module interface contracts (Protocol + validation) |
+| 5.51.0 | ConfigService microservice enhancements |
+| 5.52.0 | Proto schema expansion (15 new RPCs + CorrelationService) |
+| 5.53.0 | Service startup sequencer |
+| 5.54.0 | Graceful shutdown coordination |
+| 5.54.1 | Wire startup/shutdown into entry points |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 

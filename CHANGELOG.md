@@ -3,11 +3,162 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [5.21.1] — Documentation Update
+## [5.54.1] — Wire Startup/Shutdown into Entry Points (Cycle 54)
 
 ### Changed
-- README.md: Updated version badge to 5.21.0, expanded service table to 40+ entries
-- ARCHITECTURE.md: Complete version history v5.4.0–v5.21.0 (48 entries), new service descriptions
+- `sfapi.py` — runs StartupSequencer.wait_for_ready_sync() in microservice mode before uvicorn
+- `sfapi.py` — installs ShutdownCoordinator signal handlers for SIGTERM/SIGINT
+- `docker-entrypoint.sh` — auto-detects SF_SERVICE_ROLE from command arguments
+
+## [5.54.0] — Graceful Shutdown Coordination (Cycle 53)
+
+### Added
+- `spiderfoot/graceful_shutdown.py` — priority-ordered shutdown with signal handling
+  - ShutdownCoordinator with drain timeout (15s), force timeout (30s)
+  - Priority-ordered handler registration (lower = first)
+  - In-flight request tracking (track_request/release_request)
+  - SIGTERM/SIGINT handlers with atexit fallback
+  - Async handler support, singleton via get_shutdown_coordinator()
+
+## [5.53.0] — Service Startup Sequencer (Cycle 52)
+
+### Added
+- `spiderfoot/startup_sequencer.py` — ordered dependency verification
+  - DependencyProbe ABC with TcpProbe, HttpProbe, PostgresProbe, RedisProbe, NatsProbe
+  - Auto-discovery of required probes by service role (api/scanner/webui)
+  - Async wait_for_ready() with configurable retry/backoff (max 30 retries)
+  - ProbeResult/StartupResult dataclasses with summary()
+
+## [5.52.0] — Proto Schema Expansion (Cycle 51)
+
+### Changed
+- `proto/spiderfoot.proto` — expanded from ~290 to ~470 lines
+  - 15 new DataService RPCs (SetScanStatus, metadata, notes, archive, batch events, etc.)
+  - New CorrelationService (AnalyzeScan, ListRules, TestRule)
+  - EventRecord expanded with visibility, risk, false_positive, source_data
+  - 28 new message types
+
+## [5.51.0] — ConfigService Microservice Enhancements (Cycle 50)
+
+### Changed
+- `spiderfoot/config_service.py` — config source tracing + 15 new env vars
+  - Source tracking per key (default/file/env/runtime)
+  - 15 new SF_* env vars for microservice configuration
+  - New properties: is_microservice, service_role, service_name
+  - discover_env_vars() flags unknown SF_* vars
+
+## [5.50.0] — Module Interface Contracts (Cycle 49)
+
+### Added
+- `spiderfoot/module_contract.py` — typed module interface validation
+  - SpiderFootModuleProtocol (runtime-checkable Protocol)
+  - ModuleMeta Pydantic schema for meta dict validation
+  - validate_module() / validate_module_batch() with diagnostics
+
+### Changed
+- `spiderfoot/module_registry.py` — non-blocking contract validation during discover()
+
+## [5.49.0] — Pydantic Schemas for Service Boundaries (Cycle 48)
+
+### Added
+- `spiderfoot/api/schemas.py` — Pydantic v2 service boundary contracts
+  - EventCreate/EventResponse with from_db_row() migration helper
+  - ScanCreate/ScanResponse/ScanListResponse
+  - ScanLogEntry/Create, ConfigEntry/Update
+  - CorrelationResult/Summary, PaginationMeta/PaginatedResponse
+  - ScanStatus enum (8 states)
+
+## [5.48.0] — API Versioning with /api/v1/ Prefix (Cycle 47)
+
+### Added
+- `spiderfoot/api/versioning.py` — API versioning infrastructure
+  - ApiVersionMiddleware (X-API-Version, Deprecation, Sunset, Link headers)
+  - mount_versioned_routers() for dual-mount at /api/v1/ and /api/
+
+### Changed
+- `spiderfoot/api/main.py` — routes dual-mounted via versioning system
+- `spiderfoot/api/routers/health.py` — added GET /version endpoint
+
+## [5.47.0] — Per-Service Docker Isolation (Cycle 46)
+
+### Changed
+- `docker/Dockerfile.webui` — WebUI only on sf-frontend network
+- `docker/Dockerfile.scanner` — scanner uses HTTP DataService
+- `docker-compose-microservices.yml` — network isolation enforced
+
+## [5.46.0] — WebUI API Proxy Layer (Cycle 45)
+
+### Added
+- `spiderfoot/webui/api_client.py` — HTTP client mimicking SpiderFootDb
+- `spiderfoot/webui/db_provider.py` — dual-mode mixin (local or API proxy)
+
+## [5.45.0] — Extract ScanMetadataService (Cycle 44)
+
+### Added
+- `spiderfoot/scan_metadata_service.py` — extracted from ScanServiceFacade
+
+## [5.44.1] — Circuit Breaker for Remote DataService (Cycle 43)
+
+### Added
+- `spiderfoot/data_service/resilient.py` — DataServiceCircuitBreaker + ResilientDataService
+
+## [5.44.0] — gRPC DataService Client (Cycle 42)
+
+### Added
+- `spiderfoot/data_service/grpc_client.py` — protobuf DataService backend
+
+## [5.43.1] — DataService Health Check (Cycle 41)
+
+### Changed
+- `spiderfoot/api/routers/health.py` — added DataService probe
+
+## [5.43.0] — HTTP DataService Client (Cycle 40)
+
+### Added
+- `spiderfoot/data_service/http_client.py` — REST DataService backend
+- `spiderfoot/data_service/factory.py` — create_data_service() factory
+
+## [5.42.0] — Domain Sub-Packages (Cycle 39)
+
+### Changed
+- Reorganized code into domain sub-packages for better organization
+
+## [5.41.0] — Migrate ScanService Events to EventRepository (Cycle 38)
+
+### Changed
+- ScanService now uses EventRepository instead of raw database handles
+
+## [5.40.0] — Framework-Agnostic Security (Cycle 37)
+
+### Changed
+- Security middleware decoupled from Flask, works with any ASGI/WSGI framework
+- Flask dependency deprecated
+
+## [5.39.0] — Replace Monkey-Patching with functools.wraps (Cycle 36)
+
+### Changed
+- Replaced all monkey-patching in decorators with proper functools.wraps
+
+## [5.38.0] — Unified Scan State Mapping (Cycle 35)
+
+### Added
+- `spiderfoot/scan_state_map.py` — canonical scan state definitions
+
+## [5.37.0] — Generate gRPC Stubs (Cycle 34)
+
+### Changed
+- Generated gRPC Python stubs from proto/spiderfoot.proto
+- Wired stubs into grpc_service.py
+
+## [5.36.0] — Add gRPC Dependencies (Cycle 33)
+
+### Changed
+- `requirements.txt` — added grpcio, grpcio-tools, protobuf
+
+## [5.35.0] — Fix Silent Error Swallowing (Cycle 32)
+
+### Fixed
+- `spiderfoot/service_integration.py` — errors now properly logged instead of silently swallowed
 
 ## [5.21.0] — Database Migration Framework
 
