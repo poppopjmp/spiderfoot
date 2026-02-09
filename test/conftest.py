@@ -23,7 +23,6 @@ from spiderfoot import SpiderFootHelpers
 from test.fixtures.database_fixtures import *
 from test.fixtures.network_fixtures import *
 from test.fixtures.event_fixtures import *
-from test.utils import legacy_test_helpers
 
 # Set up logging with error suppression for distributed testing
 
