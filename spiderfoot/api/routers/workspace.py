@@ -7,6 +7,7 @@ from spiderfoot.workspace import SpiderFootWorkspace
 from spiderfoot import SpiderFootHelpers
 from ..dependencies import get_app_config, get_api_key, optional_auth
 from ..models import WorkspaceRequest, TargetRequest, MultiScanRequest
+from ..pagination import PaginationParams, paginate
 import logging
 
 router = APIRouter()
@@ -19,11 +20,14 @@ metadata_body = Body(...)
 
 
 @router.get("/workspaces")
-async def list_workspaces(api_key: str = optional_auth_dep):
+async def list_workspaces(
+    params: PaginationParams = Depends(),
+    api_key: str = optional_auth_dep,
+):
     try:
         config = get_app_config()
         workspaces = SpiderFootWorkspace.list_workspaces(config.get_config())
-        return {"workspaces": workspaces}
+        return paginate(workspaces, params)
     except Exception as e:
         logger.error(f"Failed to list workspaces: {e}")
         raise HTTPException(status_code=500, detail="Failed to list workspaces") from e
@@ -171,12 +175,16 @@ async def add_target(workspace_id: str, target_request: TargetRequest, api_key: 
 
 
 @router.get("/workspaces/{workspace_id}/targets")
-async def list_targets(workspace_id: str, api_key: str = optional_auth_dep):
+async def list_targets(
+    workspace_id: str,
+    params: PaginationParams = Depends(),
+    api_key: str = optional_auth_dep,
+):
     try:
         config = get_app_config()
         workspace = SpiderFootWorkspace(config.get_config(), workspace_id)
         targets = workspace.get_targets()
-        return {"targets": targets}
+        return paginate(targets, params)
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:

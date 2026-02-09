@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..dependencies import get_app_config, optional_auth
+from ..pagination import PaginationParams, paginate
 from spiderfoot.sflib.core import SpiderFoot
 
 router = APIRouter()
@@ -33,15 +34,19 @@ async def list_entity_types(api_key: str = optional_auth_dep):
 
 
 @router.get("/data/modules")
-async def list_modules(api_key: str = optional_auth_dep):
+async def list_modules(
+    params: PaginationParams = Depends(),
+    api_key: str = optional_auth_dep,
+):
     """
-    List all available modules.
+    List all available modules with pagination support.
 
     Args:
+        params: Pagination parameters (page, page_size, sort_by, sort_order).
         api_key (str): API key for authentication.
 
     Returns:
-        dict: Modules.
+        dict: Paginated modules.
 
     Raises:
         HTTPException: On error.
@@ -51,7 +56,12 @@ async def list_modules(api_key: str = optional_auth_dep):
         config = get_app_config()
         sf = SpiderFoot(config.get_config())
         modules = sf.getModules()
-        return {"modules": modules}
+        # modules may be a dict — convert to list for pagination
+        if isinstance(modules, dict):
+            module_list = [{"name": k, **v} if isinstance(v, dict) else {"name": k, "info": v} for k, v in modules.items()]
+        else:
+            module_list = list(modules) if modules else []
+        return paginate(module_list, params)
     except Exception as e:
         print("EXCEPTION TRACEBACK:\n", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to list modules: {e}") from e
