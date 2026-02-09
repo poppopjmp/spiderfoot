@@ -22,6 +22,9 @@ from spiderfoot.api.rate_limit_middleware import install_rate_limiting
 # Structured error responses
 from spiderfoot.api.error_handlers import install_error_handlers
 
+# API request audit logging
+from spiderfoot.api.audit_middleware import install_audit_logging
+
 # API versioning
 from spiderfoot.api.versioning import mount_versioned_routers, install_api_versioning
 
@@ -106,3 +109,6 @@ install_rate_limiting(app)
 
 # Install structured error handlers (after all middleware so errors get request IDs)
 install_error_handlers(app)
+
+# Install audit logging middleware (outermost — captures final status after error handlers)
+install_audit_logging(app)
