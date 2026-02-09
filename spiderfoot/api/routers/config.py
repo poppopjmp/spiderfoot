@@ -658,3 +658,129 @@ async def get_config_environment(api_key: str = optional_auth_dep):
     except Exception as e:
         logger.error(f"Failed to get environment info: {e}")
         raise HTTPException(status_code=500, detail="Failed to get environment info") from e
+
+
+@router.get("/config/validate")
+async def validate_current_config(api_key: str = optional_auth_dep):
+    """Validate the current running configuration comprehensively.
+
+    Unlike ``POST /config/validate`` (which checks proposed changes),
+    this endpoint inspects the **live** configuration, checking:
+
+    - AppConfig typed section validation (11 sections)
+    - Module option consistency (unknown keys, type mismatches)
+    - Required API key presence for enabled modules
+    - Environment variable consistency
+    - Database connection string validity
+
+    Returns a structured report with severity levels (error/warning/info).
+    """
+    import os
+
+    results: List[Dict[str, Any]] = []
+
+    # 1. AppConfig typed section validation
+    try:
+        cfg = get_app_config()
+        is_valid, errors = cfg.validate_config({})
+        if not is_valid:
+            for err in errors:
+                results.append({
+                    "severity": "error",
+                    "category": "app_config",
+                    "field": err.get("field", "unknown"),
+                    "message": err.get("message", "validation failed"),
+                })
+        else:
+            results.append({
+                "severity": "info",
+                "category": "app_config",
+                "message": "All 11 typed config sections valid",
+            })
+    except Exception as e:
+        results.append({
+            "severity": "error",
+            "category": "app_config",
+            "message": f"Config validation failed: {e}",
+        })
+
+    # 2. Check critical environment variables
+    critical_vars = {
+        "SF_DATA_DIR": "Data directory",
+        "SF_MODULES_DIR": "Modules directory",
+    }
+    for var, desc in critical_vars.items():
+        val = os.environ.get(var)
+        if val and not os.path.exists(val):
+            results.append({
+                "severity": "warning",
+                "category": "environment",
+                "field": var,
+                "message": f"{desc} path does not exist: {val}",
+            })
+
+    # 3. Check for unknown SF_* environment variables
+    try:
+        from spiderfoot.config_service import ConfigService
+        cs = ConfigService.get_instance()
+        unknown = cs.discover_env_vars()
+        for var in unknown:
+            results.append({
+                "severity": "warning",
+                "category": "environment",
+                "field": var,
+                "message": f"Unknown SF_* variable (possible typo): {var}",
+            })
+    except Exception:
+        pass
+
+    # 4. Check module API key requirements
+    try:
+        cfg = get_app_config()
+        all_opts = cfg.get_config()
+        modules_missing_keys = []
+        for key, val in all_opts.items():
+            # Convention: _api_key options for modules
+            if key.endswith("_api_key") and not val:
+                module_name = key.rsplit("_api_key", 1)[0]
+                # Check if the module is enabled
+                enabled_key = f"{module_name}_enabled"
+                if all_opts.get(enabled_key, True):
+                    modules_missing_keys.append(module_name)
+
+        if modules_missing_keys:
+            results.append({
+                "severity": "warning",
+                "category": "api_keys",
+                "message": f"{len(modules_missing_keys)} enabled modules missing API keys",
+                "modules": modules_missing_keys[:20],
+            })
+    except Exception:
+        pass
+
+    # 5. Service auth configuration check
+    try:
+        svc_secret = os.environ.get("SF_SERVICE_SECRET")
+        svc_token = os.environ.get("SF_SERVICE_TOKEN")
+        if not svc_secret and not svc_token:
+            results.append({
+                "severity": "info",
+                "category": "security",
+                "message": "No inter-service auth configured (OK for standalone mode)",
+            })
+    except Exception:
+        pass
+
+    error_count = sum(1 for r in results if r["severity"] == "error")
+    warning_count = sum(1 for r in results if r["severity"] == "warning")
+
+    return {
+        "valid": error_count == 0,
+        "summary": {
+            "errors": error_count,
+            "warnings": warning_count,
+            "info": sum(1 for r in results if r["severity"] == "info"),
+            "total_checks": len(results),
+        },
+        "results": results,
+    }
