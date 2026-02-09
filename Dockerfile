@@ -1,10 +1,10 @@
 #
 # Spiderfoot Dockerfile - Enterprise Edition
-# Improved version with virtual environment support and FastAPI
+# Multi-stage build with virtual environment support and FastAPI
 #
 
 # Build stage
-FROM python:3.11-slim-bullseye as builder
+FROM python:3.11-slim-bookworm AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -60,7 +60,13 @@ RUN mkdir -p /tools/bin && \
     mkdir /tools/CMSeeK/Results
 
 # Runtime stage
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim-bookworm
+
+LABEL maintainer="SpiderFoot <support@spiderfoot.net>" \
+      org.opencontainers.image.title="SpiderFoot" \
+      org.opencontainers.image.description="OSINT automation platform" \
+      org.opencontainers.image.source="https://github.com/smicallef/spiderfoot" \
+      org.opencontainers.image.licenses="MIT"
 
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -143,6 +149,10 @@ USER spiderfoot
 
 # Expose ports for both web UI and API
 EXPOSE 5001 8001
+
+# Health check for API endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/v1/health')" || exit 1
 
 # Default command with support for both web UI and API
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh", "python"]
