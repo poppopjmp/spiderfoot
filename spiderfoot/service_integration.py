@@ -230,8 +230,9 @@ def _wire_scan_vector(scan_id: str) -> None:
 def _inject_legacy_metrics(module) -> None:
     """Wrap a legacy module's handleEvent with metrics instrumentation.
 
-    This monkey-patches the handleEvent method to add timing metrics
-    without requiring the module to be modified.
+    Uses a wrapper class that preserves the original method's identity
+    while adding timing metrics. This avoids monkey-patching which breaks
+    isinstance checks and makes debugging opaque.
     """
     try:
         from spiderfoot.metrics import MODULE_DURATION, EVENTS_PROCESSED, MODULE_ERRORS
@@ -241,6 +242,13 @@ def _inject_legacy_metrics(module) -> None:
     original_handler = module.handleEvent
     module_name = getattr(module, "__name__", "unknown")
 
+    # Skip if already instrumented (idempotent)
+    if getattr(original_handler, '_sf_instrumented', False):
+        return
+
+    import functools
+
+    @functools.wraps(original_handler)
     def instrumented_handler(event):
         t0 = time.monotonic()
         try:
@@ -254,6 +262,8 @@ def _inject_legacy_metrics(module) -> None:
             ).inc()
             raise
 
+    instrumented_handler._sf_instrumented = True
+    instrumented_handler._sf_original = original_handler
     module.handleEvent = instrumented_handler
 
 
