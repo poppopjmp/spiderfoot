@@ -123,6 +123,10 @@ services:
       SF_DATASERVICE_BACKEND: http
       SF_DATASERVICE_API_URL: "http://api:8001/api"
       SF_DATASERVICE_API_KEY: ${SF_API_KEY:-}
+      # Inter-service authentication
+      SF_SERVICE_SECRET: ${SF_SERVICE_SECRET:-}
+      SF_SERVICE_TOKEN: ${SF_SERVICE_TOKEN:-}
+      SF_SERVICE_NAME: scanner
     depends_on:
       redis:
         condition: service_healthy
@@ -168,6 +172,10 @@ services:
       SF_API_WORKERS: ${SF_API_WORKERS:-4}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
       SF_API_KEY: ${SF_API_KEY:-}
+      # Inter-service authentication (validator side)
+      SF_SERVICE_SECRET: ${SF_SERVICE_SECRET:-}
+      SF_SERVICE_TOKEN: ${SF_SERVICE_TOKEN:-}
+      SF_SERVICE_NAME: api
     depends_on:
       redis:
         condition: service_healthy
@@ -207,6 +215,10 @@ services:
       SF_WEBUI_API_MODE: "true"
       SF_WEBUI_API_URL: "http://api:8001/api"
       SF_WEBUI_API_KEY: ${SF_API_KEY:-}
+      # Inter-service authentication
+      SF_SERVICE_SECRET: ${SF_SERVICE_SECRET:-}
+      SF_SERVICE_TOKEN: ${SF_SERVICE_TOKEN:-}
+      SF_SERVICE_NAME: webui
     depends_on:
       api:
         condition: service_healthy

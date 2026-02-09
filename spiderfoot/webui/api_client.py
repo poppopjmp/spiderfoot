@@ -42,6 +42,17 @@ class ApiClient:
         self._api_key = api_key
         self._timeout = timeout
         self._session = None
+        self._service_issuer = None
+
+        # Set up inter-service auth if available
+        try:
+            from spiderfoot.service_auth import ServiceTokenIssuer
+            issuer = ServiceTokenIssuer()
+            if issuer.get_token():
+                self._service_issuer = issuer
+                log.info("ApiClient: inter-service auth enabled")
+        except ImportError:
+            pass
 
     # ------------------------------------------------------------------
     # HTTP helpers
@@ -65,6 +76,8 @@ class ApiClient:
 
             if self._api_key:
                 session.headers["Authorization"] = f"Bearer {self._api_key}"
+            elif self._service_issuer:
+                session.headers.update(self._service_issuer.auth_headers())
             session.headers["Accept"] = "application/json"
 
             self._session = session

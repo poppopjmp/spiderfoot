@@ -39,6 +39,17 @@ class HttpDataService(DataService):
         self._timeout = self.config.timeout
         self._max_retries = self.config.max_retries
         self._session = None
+        self._service_issuer = None
+
+        # Set up inter-service auth if available
+        try:
+            from spiderfoot.service_auth import ServiceTokenIssuer
+            issuer = ServiceTokenIssuer()
+            if issuer.get_token():
+                self._service_issuer = issuer
+                log.info("HttpDataService: inter-service auth enabled")
+        except ImportError:
+            pass
 
     # ------------------------------------------------------------------
     # HTTP helpers
@@ -64,6 +75,9 @@ class HttpDataService(DataService):
 
             if self._api_key:
                 session.headers["Authorization"] = f"Bearer {self._api_key}"
+            elif self._service_issuer:
+                # Use inter-service auth tokens
+                session.headers.update(self._service_issuer.auth_headers())
             session.headers["Content-Type"] = "application/json"
             session.headers["Accept"] = "application/json"
 
