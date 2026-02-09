@@ -554,6 +554,16 @@ else:
         info["app_version"] = __version__
         return info
 
+    @router.get(
+        "/health/shutdown",
+        summary="Shutdown manager status",
+        description="Shows registered services and shutdown state.",
+    )
+    async def shutdown_status():
+        from spiderfoot.shutdown_manager import get_shutdown_manager
+        mgr = get_shutdown_manager()
+        return mgr.status()
+
 
 # -----------------------------------------------------------------------
 # Utility

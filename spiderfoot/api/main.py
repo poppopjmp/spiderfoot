@@ -5,6 +5,9 @@ Routes are mounted under both /api/v1/... (canonical) and /api/... (legacy,
 backwards-compatible).  The ApiVersionMiddleware adds X-API-Version and
 Deprecation headers so clients can migrate at their own pace.
 """
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from .routers import scan, workspace, config, data, websocket, visualization, correlations, rag_correlation, reports, health, scan_progress, tasks, webhooks, export
 from spiderfoot import __version__
@@ -34,6 +37,24 @@ from spiderfoot.api.cors_config import install_cors
 # API versioning
 from spiderfoot.api.versioning import mount_versioned_routers, install_api_versioning
 
+# Graceful shutdown
+from spiderfoot.shutdown_manager import get_shutdown_manager
+
+_log = logging.getLogger("spiderfoot.api")
+
+
+@asynccontextmanager
+async def _lifespan(application: FastAPI):
+    """FastAPI lifespan: register background services for graceful shutdown."""
+    mgr = get_shutdown_manager()
+    _log.info("API startup — shutdown manager has %d registered services",
+              len(mgr.registered_services()))
+    yield
+    # On shutdown, run all registered cleanup callbacks
+    results = mgr.shutdown(reason="fastapi_lifespan")
+    _log.info("API shutdown completed: %s", results)
+
+
 app = FastAPI(
     title="SpiderFoot API",
     description=(
@@ -48,6 +69,7 @@ app = FastAPI(
         "machine-readable `code`, the originating `request_id`, and a `timestamp`."
     ),
     version=__version__,
+    lifespan=_lifespan,
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
