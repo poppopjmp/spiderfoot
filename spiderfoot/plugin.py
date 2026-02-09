@@ -202,6 +202,13 @@ class SpiderFootPlugin:
         Args:
             sfEvent: SpiderFootEvent to send
         """
+        # Validate that this event type is declared in producedEvents()
+        try:
+            from spiderfoot.module_output_validator import get_output_validator
+            get_output_validator().check(self, sfEvent)
+        except Exception:
+            pass  # Best-effort — never block event flow
+
         if self.outgoingEventQueue:
             self.outgoingEventQueue.put(sfEvent)
             
@@ -473,6 +480,13 @@ class SpiderFootPlugin:
         if not isinstance(sfEvent, SpiderFootEvent):
             raise TypeError(
                 f"sfEvent is {type(sfEvent)}; expected SpiderFootEvent")
+
+        # Validate that this event type is declared in producedEvents()
+        try:
+            from spiderfoot.module_output_validator import get_output_validator
+            get_output_validator().check(self, sfEvent)
+        except Exception:
+            pass  # Best-effort — never block event flow
 
         eventName = sfEvent.eventType
         eventData = sfEvent.data
