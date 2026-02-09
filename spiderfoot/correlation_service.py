@@ -264,6 +264,76 @@ class CorrelationService:
         return len(self._rules)
 
     # ------------------------------------------------------------------
+    # Rule CRUD  (Cycle 26)
+    # ------------------------------------------------------------------
+
+    def get_rule(self, rule_id: str) -> Optional[dict]:
+        """Return a single rule by its ``id``, or ``None``."""
+        for r in self._rules:
+            if r.get("id") == rule_id:
+                return dict(r)
+        return None
+
+    def add_rule(self, rule: dict) -> dict:
+        """Add a rule dict (must contain ``id``).
+
+        Returns the rule as stored.
+        """
+        import uuid as _uuid
+
+        rule = dict(rule)
+        if "id" not in rule or not rule["id"]:
+            rule["id"] = str(_uuid.uuid4())
+        with self._lock:
+            self._rules.append(rule)
+        log.info("Added correlation rule %s", rule["id"])
+        return rule
+
+    def update_rule(self, rule_id: str, updates: dict) -> Optional[dict]:
+        """Merge *updates* into the rule identified by *rule_id*.
+
+        Returns the updated rule dict or ``None`` if not found.
+        """
+        with self._lock:
+            for i, r in enumerate(self._rules):
+                if r.get("id") == rule_id:
+                    r.update(updates)
+                    r["id"] = rule_id  # prevent id overwrite
+                    self._rules[i] = r
+                    log.info("Updated correlation rule %s", rule_id)
+                    return dict(r)
+        return None
+
+    def delete_rule(self, rule_id: str) -> bool:
+        """Remove a rule by id.  Returns ``True`` if removed."""
+        with self._lock:
+            before = len(self._rules)
+            self._rules = [r for r in self._rules if r.get("id") != rule_id]
+            removed = len(self._rules) < before
+        if removed:
+            log.info("Deleted correlation rule %s", rule_id)
+        return removed
+
+    def filter_rules(
+        self,
+        *,
+        risk: Optional[str] = None,
+        enabled: Optional[bool] = None,
+        tag: Optional[str] = None,
+    ) -> List[dict]:
+        """Return rules matching optional filters."""
+        out: List[dict] = []
+        for r in self._rules:
+            if risk and r.get("risk", r.get("meta", {}).get("risk", "")).upper() != risk.upper():
+                continue
+            if enabled is not None and r.get("enabled", True) != enabled:
+                continue
+            if tag and tag not in r.get("tags", []):
+                continue
+            out.append(dict(r))
+        return out
+
+    # ------------------------------------------------------------------
     # Correlation execution
     # ------------------------------------------------------------------
 

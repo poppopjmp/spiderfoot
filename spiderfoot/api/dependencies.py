@@ -352,3 +352,20 @@ def get_config_repository():
         yield repo
     finally:
         repo.close()
+
+
+# ------------------------------------------------------------------
+# Correlation Service provider  (Cycle 26)
+# ------------------------------------------------------------------
+
+def get_correlation_svc():
+    """FastAPI ``Depends`` provider for ``CorrelationService``.
+
+    Returns the module-level singleton.  The service is lazily
+    created from the current app config if it doesn't exist yet.
+    """
+    from spiderfoot.correlation_service import (
+        get_correlation_service as _get_svc,
+    )
+    config = get_app_config().get_config()
+    return _get_svc(config)

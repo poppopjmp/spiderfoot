@@ -317,6 +317,7 @@ migration instructions.
 | 5.26.0 | Database Repository Pattern (Scan/Event/Config repos) |
 | 5.27.0 | API Rate Limiting Middleware (per-tier, per-client) |
 | 5.28.0 | API Pagination Helpers (PaginationParams, PaginatedResponse) |
+| 5.29.0 | Correlation Service Wiring (CorrelationService → router) |
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
@@ -438,6 +439,24 @@ request parameters and response envelopes.
 - **RFC 8288 Link headers** — `generate_link_header()` for `next`/`prev`/
   `first`/`last` navigation
 - **`make_params()`** — Convenience constructor for programmatic/test use
+
+### Correlation Service Wiring (v5.29.0)
+
+#### Correlations Router (`spiderfoot/api/routers/correlations.py`)
+Rewritten to delegate to `CorrelationService` instead of raw
+`SpiderFootDb` / config manipulation. All 7 endpoints now use the
+service layer and Cycle 25 pagination.
+
+- **Rule CRUD** — `add_rule()`, `get_rule()`, `update_rule()`,
+  `delete_rule()`, `filter_rules()` added to `CorrelationService`
+- **`get_correlation_svc`** — FastAPI `Depends()` provider in
+  `dependencies.py` returning the singleton service
+- **Real execution** — Test/analyze endpoints call
+  `svc.run_for_scan()` with actual timing instead of hardcoded results
+- **Pagination** — List and detailed endpoints use `PaginationParams`
+  + `paginate()` for standardized response envelopes
+- **No direct DB access** — All `SpiderFootDb(config.get_config())`
+  and `json.dumps()`/`configSet()` calls eliminated from the router
 ### Real-Time Event Infrastructure (v5.22.0 – v5.24.0)
 
 #### Event Relay (`spiderfoot/event_relay.py`)
