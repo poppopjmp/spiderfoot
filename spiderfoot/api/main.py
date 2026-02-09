@@ -27,11 +27,37 @@ from spiderfoot.api.versioning import mount_versioned_routers, install_api_versi
 
 app = FastAPI(
     title="SpiderFoot API",
-    description="Complete REST API for SpiderFoot OSINT automation platform",
+    description=(
+        "Complete REST API for SpiderFoot OSINT automation platform.\n\n"
+        "## Authentication\n"
+        "Endpoints accept an `api_key` query parameter or `Authorization: Bearer <key>` header.\n\n"
+        "## Versioning\n"
+        "Canonical routes live under `/api/v1/`. Legacy `/api/` paths continue to work "
+        "but include `Deprecation` headers — migrate when ready.\n\n"
+        "## Error Responses\n"
+        "All errors return a structured `{\"error\": {...}}` envelope with a "
+        "machine-readable `code`, the originating `request_id`, and a `timestamp`."
+    ),
     version=__version__,
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url="/api/openapi.json",
+    license_info={"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
+    openapi_tags=[
+        {"name": "health", "description": "Liveness, readiness, and version probes"},
+        {"name": "scans", "description": "Create, list, manage, and export scans"},
+        {"name": "workspaces", "description": "Workspace CRUD and membership"},
+        {"name": "data", "description": "Raw event data and search"},
+        {"name": "configuration", "description": "Global and per-module config, API keys, credentials"},
+        {"name": "visualization", "description": "Graph, heatmap, and summary endpoints"},
+        {"name": "correlations", "description": "Correlation rule CRUD and execution"},
+        {"name": "rag-correlation", "description": "RAG-based correlation engine"},
+        {"name": "reports", "description": "Report generation and retrieval"},
+        {"name": "scan-progress", "description": "SSE scan progress streaming"},
+        {"name": "tasks", "description": "Background task management"},
+        {"name": "webhooks", "description": "Outbound webhook configuration"},
+        {"name": "websockets", "description": "Real-time event streaming via WebSocket"},
+    ],
 )
 
 # Initialize security (will be done by main application, but provide fallback)
