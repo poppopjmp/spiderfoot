@@ -82,6 +82,14 @@ class HttpDataService(DataService):
             session.headers["Accept"] = "application/json"
 
             self._session = session
+        # Propagate request ID for distributed tracing
+        try:
+            from spiderfoot.request_tracing import get_request_id
+            rid = get_request_id()
+            if rid:
+                self._session.headers["X-Request-ID"] = rid
+        except ImportError:
+            pass
         return self._session
 
     def _url(self, path: str) -> str:

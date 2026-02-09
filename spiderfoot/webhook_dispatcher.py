@@ -184,6 +184,15 @@ class WebhookDispatcher:
             **config.headers,
         }
 
+        # Propagate request ID for distributed tracing
+        try:
+            from spiderfoot.request_tracing import get_request_id
+            rid = get_request_id()
+            if rid:
+                headers["X-Request-ID"] = rid
+        except ImportError:
+            pass
+
         # HMAC signing
         if config.secret:
             sig = hmac.new(

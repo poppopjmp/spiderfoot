@@ -74,6 +74,19 @@ class GrpcDataService(DataService):
             log.info("Connected gRPC DataService to %s", self._target)
         return self._stub
 
+    def _get_metadata(self):
+        """Build gRPC metadata with request ID for distributed tracing."""
+        metadata = []
+        try:
+            from spiderfoot.request_tracing import get_request_id
+            rid = get_request_id()
+            if rid:
+                metadata.append(("x-request-id", rid))
+        except ImportError:
+            pass
+        return metadata or None
+        return self._stub
+
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
