@@ -35,5 +35,19 @@ chmod -R 755 /home/spiderfoot/logs
 echo "Database will be created at: /home/spiderfoot/data/spiderfoot.db"
 echo "Starting SpiderFoot..."
 
+# ── Microservice deployment support ──
+# Auto-detect service role from SF_SERVICE_ROLE or command arguments
+if [ -z "${SF_SERVICE_ROLE}" ]; then
+    case "$1" in
+        *sfapi*|*api*)     export SF_SERVICE_ROLE="api" ;;
+        *scanner*|*sf.py*) export SF_SERVICE_ROLE="scanner" ;;
+        *webui*|*sfwebui*) export SF_SERVICE_ROLE="webui" ;;
+        *)                 export SF_SERVICE_ROLE="standalone" ;;
+    esac
+fi
+
+echo "Service role: ${SF_SERVICE_ROLE}"
+echo "Deployment mode: ${SF_DEPLOYMENT_MODE:-monolith}"
+
 # Execute the original command
 exec "$@"

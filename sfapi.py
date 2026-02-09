@@ -35,6 +35,29 @@ def main():
     parser.add_argument('-c', '--config', help='Configuration file path')
     parser.add_argument('--reload', action='store_true', help='Enable auto-reload for development')
     args = parser.parse_args()
+
+    # ── Startup dependency checks (microservice mode) ──
+    import os
+    service_role = os.environ.get("SF_SERVICE_ROLE", "api")
+    if os.environ.get("SF_DEPLOYMENT_MODE") in ("microservice", "microservices"):
+        try:
+            from spiderfoot.startup_sequencer import StartupSequencer
+            sequencer = StartupSequencer(role=service_role)
+            result = sequencer.wait_for_ready_sync(timeout=60)
+            if not result.all_ready:
+                logger.error("Startup dependency check failed:\n%s", result.summary())
+        except Exception as exc:
+            logger.warning("Startup sequencer unavailable: %s", exc)
+
+    # ── Register shutdown handlers ──
+    try:
+        from spiderfoot.graceful_shutdown import get_shutdown_coordinator
+        coordinator = get_shutdown_coordinator()
+        coordinator.install_signal_handlers()
+        logger.info("Graceful shutdown coordinator active (role=%s)", service_role)
+    except Exception as exc:
+        logger.warning("Shutdown coordinator unavailable: %s", exc)
+
     uvicorn.run(
         "spiderfoot.api.main:app",
         host=args.host,
