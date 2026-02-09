@@ -8,7 +8,6 @@ fault isolation to prevent module failures from affecting scans.
 import logging
 import threading
 import time
-import traceback
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
@@ -207,8 +206,7 @@ class ModuleSandbox:
 
         except Exception as e:
             self._state = SandboxState.FAILED
-            tb = traceback.format_exc()
-            log.error("Module '%s' sandbox error: %s", self.module_name, e)
+            log.exception("Module '%s' sandbox error", self.module_name)
             result = self._make_result(
                 state=SandboxState.FAILED,
                 events=events,

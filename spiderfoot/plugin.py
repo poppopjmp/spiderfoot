@@ -707,9 +707,9 @@ class SpiderFootPlugin:
             self.sf.debug(f"Interrupted module {getattr(self, '__name__', self.__class__.__name__)}.")
             self._stopScanning = True
         except Exception as e:
-            import traceback
-            self.sf.error(f"Exception ({e.__class__.__name__}) in module {getattr(self, '__name__', self.__class__.__name__)}." +
-                          traceback.format_exc())
+            self.sf.error(f"Exception ({e.__class__.__name__}) in module {getattr(self, '__name__', self.__class__.__name__)}.")
+            if hasattr(self, '_log'):
+                self._log.exception("Module error in %s", getattr(self, '__name__', self.__class__.__name__))
             # set errorState
             self.sf.debug(f"Setting errorState for module {getattr(self, '__name__', self.__class__.__name__)}.")
             self.errorState = True

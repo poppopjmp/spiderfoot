@@ -5,7 +5,6 @@ Provides comprehensive error handling, security event logging, and monitoring.
 """
 
 import logging
-import traceback
 import time
 import json
 import sys
@@ -251,8 +250,8 @@ class ErrorHandler:
             f"Error ID: {error_id} | "
             f"Type: {type(e).__name__} | "
             f"Message: {str(e)} | "
-            f"Context: {json.dumps(context)} | "
-            f"Traceback: {traceback.format_exc()}"
+            f"Context: {json.dumps(context)}",
+            exc_info=True,
         )
         
         # Check for security-related exceptions

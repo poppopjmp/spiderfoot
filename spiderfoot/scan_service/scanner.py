@@ -16,7 +16,6 @@ from time import sleep
 from copy import deepcopy
 from contextlib import suppress
 from collections import OrderedDict
-import traceback
 
 import dns.resolver
 
@@ -139,7 +138,7 @@ class SpiderFootScanner():
             self.__dbh.scanInstanceCreate(
                 self.__scanId, self.__scanName, self.__targetValue)
         except Exception as e:
-            self.__sf.status(f"Scan [{self.__scanId}] failed to create scan instance: {e}\n{traceback.format_exc()}")
+            self.__sf.status(f"Scan [{self.__scanId}] failed to create scan instance: {e}")
             self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
             raise
 
@@ -149,7 +148,7 @@ class SpiderFootScanner():
             self.__target = SpiderFootTarget(
                 self.__targetValue, self.__targetType)
         except (TypeError, ValueError) as e:
-            self.__sf.status(f"Scan [{self.__scanId}] failed: {e}\n{traceback.format_exc()}")
+            self.__sf.status(f"Scan [{self.__scanId}] failed: {e}")
             self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
             raise ValueError(f"Invalid target: {e}") from None
 
@@ -166,7 +165,7 @@ class SpiderFootScanner():
             self.__dbh.scanConfigSet(
                 self.__scanId, self.__sf.configSerialize(deepcopy(self.__config)))
         except Exception as e:
-            self.__sf.status(f"Scan [{self.__scanId}] failed to save config: {e}\n{traceback.format_exc()}")
+            self.__sf.status(f"Scan [{self.__scanId}] failed to save config: {e}")
             self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
             raise
 
@@ -226,7 +225,7 @@ class SpiderFootScanner():
             else:
                 dns.resolver.restore_system_resolver()
         except Exception as e:
-            self.__sf.status(f"Scan [{self.__scanId}] failed to set DNS resolver: {e}\n{traceback.format_exc()}")
+            self.__sf.status(f"Scan [{self.__scanId}] failed to set DNS resolver: {e}")
             self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
             raise
 
@@ -236,7 +235,7 @@ class SpiderFootScanner():
             self.__config['_useragent'] = self.__sf.optValueToData(
                 self.__config['_useragent'])
         except Exception as e:
-            self.__sf.status(f"Scan [{self.__scanId}] failed to set user agent: {e}\n{traceback.format_exc()}")
+            self.__sf.status(f"Scan [{self.__scanId}] failed to set user agent: {e}")
             self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
             raise
 
@@ -254,7 +253,7 @@ class SpiderFootScanner():
                 self.__sf.cachePut("internet_tlds", tld_data)
             self.__config['_internettlds'] = tld_data.splitlines()
         except Exception as e:
-            self.__sf.status(f"Scan [{self.__scanId}] failed to set up TLDs: {e}\n{traceback.format_exc()}")
+            self.__sf.status(f"Scan [{self.__scanId}] failed to set up TLDs: {e}")
             self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
             raise
 
@@ -325,7 +324,7 @@ class SpiderFootScanner():
         self.__dbh.scanInstanceSet(self.__scanId, started, ended, status)
 
     def _log_module_error(self, modName, msg, exc):
-        self.__sf.error(f"Module {modName} {msg}: {exc}\n{traceback.format_exc()}")
+        self.__sf.error(f"Module {modName} {msg}: {exc}")
 
     def __startScan(self) -> None:
         failed = True

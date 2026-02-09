@@ -9,7 +9,6 @@ import os
 import sys
 import logging
 import importlib.util
-import traceback
 from typing import Dict, Any, List, Optional
 
 from spiderfoot import SpiderFootHelpers
@@ -112,8 +111,7 @@ class ModuleManager:
             self.log.info(f"Custom loader results: {loaded_count} loaded, {failed_count} failed")
             
         except Exception as e:
-            self.log.error(f"Custom module loader failed: {e}")
-            self.log.error(f"Traceback: {traceback.format_exc()}")
+            self.log.exception("Custom module loader failed")
         
         self.modules = sf_modules
         return sf_modules

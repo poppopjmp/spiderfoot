@@ -260,9 +260,8 @@ class ThreadPoolWorker(threading.Thread):
                         result = callback(*args, **kwargs)
                         ran = True
                     except Exception:  # noqa: B902
-                        import traceback
-                        self.log.error(
-                            f'Error in thread worker {self.name}: {traceback.format_exc()}')
+                        self.log.exception(
+                            'Error in thread worker %s', self.name)
                         break
                     if saveResult:
                         self.pool.outputQueue(self.taskName).put(result)
