@@ -55,7 +55,7 @@ class ConfigSummaryResponse(BaseModel):
     version: str = ""
 
 
-@router.get("/config")
+@router.get("/config", response_model=ConfigSummaryResponse)
 async def get_config_endpoint(api_key: str = optional_auth_dep):
     """
     Get the global configuration.
@@ -74,7 +74,7 @@ async def get_config_endpoint(api_key: str = optional_auth_dep):
             summary=cfg.config_summary(),
             config=safe_config,
             version=cfg.app_config.version,
-        ).model_dump()
+        )
     except Exception as e:
         logger.error(f"Failed to get config: {e}")
         raise HTTPException(status_code=500, detail="Failed to get configuration") from e
@@ -304,7 +304,7 @@ async def reload_config(api_key: str = Depends(optional_auth)):
         raise HTTPException(status_code=500, detail="Failed to reload configuration") from e
 
 
-@router.post("/config/validate")
+@router.post("/config/validate", response_model=ValidationResponse)
 async def validate_config(body: ConfigValidateRequest, api_key: str = optional_auth_dep):
     """
     Validate configuration options without saving.
@@ -320,7 +320,7 @@ async def validate_config(body: ConfigValidateRequest, api_key: str = optional_a
             errors=[ValidationErrorItem(**e) for e in errors],
             sections_checked=11,  # 11 typed sections in AppConfig
         )
-        return resp.model_dump()
+        return resp
     except Exception as e:
         logger.error(f"Failed to validate config: {e}")
         raise HTTPException(status_code=500, detail="Failed to validate config") from e
@@ -633,7 +633,7 @@ class ConfigEnvironmentResponse(BaseModel):
     service_name: str = ""
 
 
-@router.get("/config/sources")
+@router.get("/config/sources", response_model=ConfigSourcesResponse)
 async def get_config_sources(
     filter_source: Optional[str] = Query(
         None,
@@ -686,7 +686,7 @@ async def get_config_sources(
         raise HTTPException(status_code=500, detail="Failed to get config sources") from e
 
 
-@router.get("/config/environment")
+@router.get("/config/environment", response_model=ConfigEnvironmentResponse)
 async def get_config_environment(api_key: str = optional_auth_dep):
     """Report environment variable overrides and service identity.
 

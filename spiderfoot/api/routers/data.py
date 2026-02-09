@@ -2,9 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from ..dependencies import get_app_config, optional_auth
 from ..pagination import PaginationParams, paginate
+from ..schemas import RiskLevelsResponse
 from spiderfoot.sflib.core import SpiderFoot
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 
 
@@ -244,7 +247,7 @@ async def list_module_types(api_key: str = optional_auth_dep):
         raise HTTPException(status_code=500, detail="Failed to list module types") from e
 
 
-@router.get("/data/risk-levels")
+@router.get("/data/risk-levels", response_model=RiskLevelsResponse)
 async def list_risk_levels(api_key: str = optional_auth_dep):
     """
     List all risk levels.

@@ -377,3 +377,31 @@ class TargetDeleteResponse(BaseModel):
     message: str
     target_id: str
     workspace_id: str
+
+
+# ── Data router response schemas ──────────────────────────────────────
+
+class EntityTypesResponse(BaseModel):
+    """Response for listing entity/event types."""
+    entity_types: List[Dict[str, Any]] = []
+    count: int = 0
+
+
+class ModuleListResponse(BaseModel):
+    """Response for listing modules."""
+    modules: Any = []
+    count: int = 0
+
+
+class ModuleDetailResponse(BaseModel):
+    """Detailed information about a single module."""
+    name: str
+    descr: str = ""
+    provides: List[str] = []
+    consumes: List[str] = []
+    meta: Dict[str, Any] = {}
+
+
+class RiskLevelsResponse(BaseModel):
+    """Response for listing risk levels."""
+    risk_levels: List[str] = []
