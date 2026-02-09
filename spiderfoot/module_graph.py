@@ -50,7 +50,6 @@ import importlib
 import importlib.util
 import logging
 import os
-import sys
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple

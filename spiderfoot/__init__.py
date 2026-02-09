@@ -80,7 +80,6 @@ def get_modules_path():
     # Default fallback
     return os.path.join(PROJECT_ROOT, "modules")
 
-import sys
 import importlib.util
 from .helpers import SpiderFootHelpers
 

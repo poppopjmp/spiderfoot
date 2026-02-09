@@ -4,15 +4,12 @@ CherryPy Web Interface Security Integration for SpiderFoot
 Integrates all security components into the CherryPy web application.
 """
 
-import cherrypy
-from functools import wraps
 import os
 import time
-import secrets
 
 # Import our security modules
 from .csrf_protection import CSRFProtection
-from .input_validation import InputValidator, SecurityHeaders
+from .input_validation import SecurityHeaders
 from .rate_limiting import RateLimiter
 from .secure_config import SecureConfigManager
 from .session_security import SecureSessionManager

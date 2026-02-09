@@ -38,7 +38,6 @@ from __future__ import annotations
 import importlib
 import logging
 import re
-import sys
 import types
 from dataclasses import dataclass, field
 from typing import (

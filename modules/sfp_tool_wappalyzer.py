@@ -10,7 +10,6 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-import sys
 import json
 import requests
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers

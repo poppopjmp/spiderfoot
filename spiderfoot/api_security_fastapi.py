@@ -10,10 +10,8 @@ import hashlib
 import secrets
 import jwt
 from typing import Dict, List, Optional, Any, Tuple
-from functools import wraps
 from fastapi import HTTPException, Depends, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 
