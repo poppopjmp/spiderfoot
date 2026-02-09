@@ -2,7 +2,7 @@
 Main FastAPI app instance for SpiderFoot API (modular)
 """
 from fastapi import FastAPI
-from .routers import scan, workspace, config, data, websocket, visualization, correlations, rag_correlation, reports, health, scan_progress
+from .routers import scan, workspace, config, data, websocket, visualization, correlations, rag_correlation, reports, health, scan_progress, tasks
 from spiderfoot import __version__
 
 # Security imports
@@ -40,3 +40,4 @@ app.include_router(websocket.router, prefix="/ws", tags=["websockets"])
 app.include_router(reports.router, prefix="/api", tags=["reports"])
 app.include_router(health.router, tags=["health"])
 app.include_router(scan_progress.router, prefix="/api", tags=["scan-progress"])
+app.include_router(tasks.router, prefix="/api", tags=["tasks"])
