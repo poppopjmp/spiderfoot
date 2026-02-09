@@ -882,3 +882,81 @@ async def unarchive_scan(
         except Exception:
             pass
     return MessageResponse(message="Scan unarchived")
+
+
+# -----------------------------------------------------------------------
+# Scan comparison
+# -----------------------------------------------------------------------
+
+
+@router.get("/scans/compare")
+async def compare_scans(
+    scan_a: str = Query(..., description="First scan ID"),
+    scan_b: str = Query(..., description="Second scan ID"),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+):
+    """Compare two scans and return the diff of their findings.
+
+    Returns event types and data that are:
+    - **only_in_a**: found in scan A but not scan B
+    - **only_in_b**: found in scan B but not scan A
+    - **common**: found in both scans
+
+    Useful for tracking changes between re-scans of the same target.
+    """
+    # Verify both scans exist
+    rec_a = svc.get_scan(scan_a)
+    rec_b = svc.get_scan(scan_b)
+    if rec_a is None:
+        raise HTTPException(status_code=404, detail=f"Scan '{scan_a}' not found")
+    if rec_b is None:
+        raise HTTPException(status_code=404, detail=f"Scan '{scan_b}' not found")
+
+    try:
+        # Get events for both scans
+        events_a = svc.get_events(scan_a) or []
+        events_b = svc.get_events(scan_b) or []
+
+        # Build sets of (eventType, data) tuples for comparison
+        def _event_key(e):
+            if isinstance(e, dict):
+                return (e.get("type", e.get("eventType", "")), str(e.get("data", "")))
+            return (getattr(e, "eventType", ""), str(getattr(e, "data", "")))
+
+        set_a = set(_event_key(e) for e in events_a)
+        set_b = set(_event_key(e) for e in events_b)
+
+        only_a = set_a - set_b
+        only_b = set_b - set_a
+        common = set_a & set_b
+
+        # Group by event type
+        def _group_by_type(items):
+            grouped = {}
+            for etype, data in items:
+                grouped.setdefault(etype, []).append(data)
+            return grouped
+
+        # Type-level summary
+        types_a = set(t for t, _ in set_a)
+        types_b = set(t for t, _ in set_b)
+
+        return {
+            "scan_a": {"id": scan_a, "total_events": len(events_a)},
+            "scan_b": {"id": scan_b, "total_events": len(events_b)},
+            "summary": {
+                "only_in_a": len(only_a),
+                "only_in_b": len(only_b),
+                "common": len(common),
+                "new_event_types_in_b": sorted(types_b - types_a),
+                "removed_event_types_in_b": sorted(types_a - types_b),
+            },
+            "diff": {
+                "only_in_a": _group_by_type(sorted(only_a)[:500]),
+                "only_in_b": _group_by_type(sorted(only_b)[:500]),
+            },
+        }
+    except Exception as e:
+        logger.error("Failed to compare scans %s vs %s: %s", scan_a, scan_b, e)
+        raise HTTPException(status_code=500, detail="Scan comparison failed") from e
