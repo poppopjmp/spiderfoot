@@ -58,3 +58,21 @@ MAX_BODY_BYTES: int = 10 * 1024 * 1024
 
 DEFAULT_MAX_TOKENS: int = 4096
 """Default LLM max token / event data truncation threshold."""
+
+# ---------------------------------------------------------------------------
+# Default service URLs
+# ---------------------------------------------------------------------------
+DEFAULT_OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+"""Default base URL for OpenAI-compatible API endpoints."""
+
+DEFAULT_OLLAMA_BASE_URL: str = "http://localhost:11434"
+"""Default base URL for Ollama local inference server."""
+
+DEFAULT_VLLM_BASE_URL: str = "http://localhost:8000/v1"
+"""Default base URL for vLLM / local model server."""
+
+DEFAULT_DOH_URL: str = "https://cloudflare-dns.com/dns-query"
+"""Default DNS-over-HTTPS resolver URL."""
+
+DEFAULT_DATABASE_NAME: str = "spiderfoot.db"
+"""Default SQLite database filename."""

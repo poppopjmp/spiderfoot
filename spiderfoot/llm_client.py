@@ -36,6 +36,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
+from spiderfoot.constants import (
+    DEFAULT_OLLAMA_BASE_URL,
+    DEFAULT_OPENAI_BASE_URL,
+    DEFAULT_VLLM_BASE_URL,
+)
+
 log = logging.getLogger("spiderfoot.llm_client")
 
 
@@ -113,12 +119,12 @@ class LLMConfig:
 
         if self.provider == LLMProvider.OPENAI:
             if not base:
-                base = "https://api.openai.com/v1"
+                base = DEFAULT_OPENAI_BASE_URL
             return f"{base}/chat/completions"
 
         elif self.provider == LLMProvider.OLLAMA:
             if not base:
-                base = "http://localhost:11434"
+                base = DEFAULT_OLLAMA_BASE_URL
             # Ollama supports /v1/chat/completions
             if "/v1" not in base:
                 return f"{base}/v1/chat/completions"
@@ -134,7 +140,7 @@ class LLMConfig:
 
         elif self.provider in (LLMProvider.VLLM, LLMProvider.LOCAL):
             if not base:
-                base = "http://localhost:8000/v1"
+                base = DEFAULT_VLLM_BASE_URL
             return f"{base}/chat/completions"
 
         elif self.provider == LLMProvider.MOCK:

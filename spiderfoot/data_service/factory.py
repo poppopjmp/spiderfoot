@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 
 from spiderfoot.data_service.base import DataService, DataServiceBackend, DataServiceConfig
 from spiderfoot.data_service.local import LocalDataService
+from spiderfoot.constants import DEFAULT_DATABASE_NAME
 
 log = logging.getLogger("spiderfoot.dataservice.factory")
 
@@ -108,7 +109,7 @@ def create_data_service_from_config(sf_config: Dict[str, Any]) -> DataService:
         api_key=sf_config.get("_dataservice_api_key", ""),
         timeout=float(sf_config.get("_dataservice_timeout", "30")),
         db_config={
-            "__database": sf_config.get("__database", "spiderfoot.db"),
+            "__database": sf_config.get("__database", DEFAULT_DATABASE_NAME),
             "__dbtype": sf_config.get("__dbtype", "sqlite"),
         },
     )
@@ -144,7 +145,7 @@ def create_data_service_from_env() -> DataService:
         api_key=os.environ.get("SF_DATASERVICE_API_KEY", ""),
         timeout=float(os.environ.get("SF_DATASERVICE_TIMEOUT", "30")),
         db_config={
-            "__database": os.environ.get("SF_DATABASE", "spiderfoot.db"),
+            "__database": os.environ.get("SF_DATABASE", DEFAULT_DATABASE_NAME),
             "__dbtype": os.environ.get("SF_DBTYPE", "sqlite"),
         },
     )

@@ -28,6 +28,8 @@ from __future__ import annotations
 import json
 import logging
 import time
+
+from spiderfoot.constants import DEFAULT_OLLAMA_BASE_URL, DEFAULT_OPENAI_BASE_URL
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
@@ -232,7 +234,7 @@ class OpenAILLMBackend(LLMBackend):
                  timeout: float = 60.0) -> None:
         self._model = model
         self._api_key = api_key
-        self._api_base = api_base or "https://api.openai.com/v1"
+        self._api_base = api_base or DEFAULT_OPENAI_BASE_URL
         self._timeout = timeout
 
     def generate(self, system: str, user: str,
@@ -281,7 +283,7 @@ class OllamaLLMBackend(LLMBackend):
     def __init__(self, model: str = "llama3.1:8b",
                  api_base: str = "", timeout: float = 120.0) -> None:
         self._model = model
-        self._api_base = api_base or "http://localhost:11434"
+        self._api_base = api_base or DEFAULT_OLLAMA_BASE_URL
         self._timeout = timeout
 
     def generate(self, system: str, user: str,

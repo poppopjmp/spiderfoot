@@ -28,6 +28,8 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
+
+from spiderfoot.constants import DEFAULT_OPENAI_BASE_URL
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 log = logging.getLogger("spiderfoot.embeddings")
@@ -229,7 +231,7 @@ class OpenAIEmbeddingBackend(EmbeddingBackend):
                  dims: int = 1536, timeout: float = 30.0) -> None:
         self._model = model
         self._api_key = api_key
-        self._api_base = api_base or "https://api.openai.com/v1"
+        self._api_base = api_base or DEFAULT_OPENAI_BASE_URL
         self._dims = dims
         self._timeout = timeout
 

@@ -12,6 +12,7 @@ import cherrypy
 import secure
 from copy import deepcopy
 from spiderfoot import SpiderFootDb, SpiderFootHelpers, __version__
+from spiderfoot.constants import DEFAULT_DATABASE_NAME
 try:
     from spiderfoot.sflib import SpiderFoot
 except ImportError:
@@ -1082,7 +1083,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
         
         # Validate database configuration
         if '__database' not in self.config:
-            self.config['__database'] = 'spiderfoot.db'
+            self.config['__database'] = DEFAULT_DATABASE_NAME
         
         # Validate other critical configuration keys
         if '__version__' not in self.config:

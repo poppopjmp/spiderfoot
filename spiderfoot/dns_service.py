@@ -15,6 +15,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
+from spiderfoot.constants import DEFAULT_DOH_URL
+
 try:
     import dns.resolver
     import dns.reversename
@@ -51,7 +53,7 @@ class DnsServiceConfig:
     cache_enabled: bool = True
     cache_ttl: int = 300
     doh_enabled: bool = False
-    doh_url: str = "https://cloudflare-dns.com/dns-query"
+    doh_url: str = DEFAULT_DOH_URL
     
     @classmethod
     def from_sf_config(cls, opts: Dict[str, Any]) -> "DnsServiceConfig":
