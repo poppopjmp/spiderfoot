@@ -76,15 +76,25 @@ class SecretEntry:
 
     @property
     def age_days(self) -> float:
+        """Return the age of this secret in days."""
         return (time.time() - self.created_at) / 86400
 
     @property
     def needs_rotation(self) -> bool:
+        """Whether this secret has exceeded its rotation period."""
         if self.rotation_days <= 0:
             return False
         return self.age_days > self.rotation_days
 
     def to_dict(self, *, include_value: bool = False) -> dict:
+        """Serialize the secret entry to a dictionary.
+
+        Args:
+            include_value: Whether to include the secret value.
+
+        Returns:
+            Dictionary representation of the entry.
+        """
         d = {
             "key": self.key,
             "created_at": self.created_at,
@@ -101,6 +111,7 @@ class SecretEntry:
 
     @classmethod
     def from_dict(cls, data: dict) -> SecretEntry:
+        """Create a SecretEntry from a dictionary."""
         return cls(
             key=data["key"],
             value=data.get("value", ""),
@@ -148,16 +159,20 @@ class MemorySecretBackend(SecretBackend):
     """In-memory secret storage (for development/testing)."""
 
     def __init__(self) -> None:
+        """Initialize empty in-memory secret store."""
         self._secrets: dict[str, SecretEntry] = {}
 
     def get(self, key: str) -> str | None:
+        """Return the secret value for the given key, or None."""
         entry = self._secrets.get(key)
         return entry.value if entry else None
 
     def get_entry(self, key: str) -> SecretEntry | None:
+        """Return the full SecretEntry for the given key, or None."""
         return self._secrets.get(key)
 
     def set(self, key: str, value: str, **kwargs: Any) -> None:
+        """Store or update a secret in memory."""
         existing = self._secrets.get(key)
         if existing:
             existing.value = value
@@ -171,12 +186,15 @@ class MemorySecretBackend(SecretBackend):
             )
 
     def delete(self, key: str) -> bool:
+        """Delete a secret from memory. Returns True if it existed."""
         return self._secrets.pop(key, None) is not None
 
     def list_keys(self) -> list[str]:
+        """Return all stored secret keys."""
         return list(self._secrets.keys())
 
     def exists(self, key: str) -> bool:
+        """Check if a secret key exists in memory."""
         return key in self._secrets
 
 
@@ -191,18 +209,22 @@ class EnvSecretBackend(SecretBackend):
     """
 
     def __init__(self, prefix: str = "SF_SECRET_") -> None:
+        """Initialize with an environment variable prefix."""
         self._prefix = prefix
 
     def _env_key(self, key: str) -> str:
         return f"{self._prefix}{key.upper()}"
 
     def get(self, key: str) -> str | None:
+        """Read a secret from the environment."""
         return os.environ.get(self._env_key(key))
 
     def set(self, key: str, value: str, **kwargs: Any) -> None:
+        """Set a secret as an environment variable."""
         os.environ[self._env_key(key)] = value
 
     def delete(self, key: str) -> bool:
+        """Remove a secret from the environment. Returns True if it existed."""
         env_key = self._env_key(key)
         if env_key in os.environ:
             del os.environ[env_key]
@@ -210,6 +232,7 @@ class EnvSecretBackend(SecretBackend):
         return False
 
     def list_keys(self) -> list[str]:
+        """List secret keys found in the environment."""
         prefix_len = len(self._prefix)
         return [
             k[prefix_len:].lower()
@@ -218,6 +241,7 @@ class EnvSecretBackend(SecretBackend):
         ]
 
     def exists(self, key: str) -> bool:
+        """Check if the secret exists in the environment."""
         return self._env_key(key) in os.environ
 
 
@@ -233,6 +257,11 @@ class FileSecretBackend(SecretBackend):
     """
 
     def __init__(self, filepath: str = ".secrets.json") -> None:
+        """Initialize file-based secret storage.
+
+        Args:
+            filepath: Path to the JSON secrets file.
+        """
         self._filepath = filepath
         self._secrets: dict[str, SecretEntry] = {}
         self._load()
@@ -262,10 +291,12 @@ class FileSecretBackend(SecretBackend):
             log.error("Failed to save secrets: %s", e)
 
     def get(self, key: str) -> str | None:
+        """Return the secret value for the given key, or None."""
         entry = self._secrets.get(key)
         return entry.value if entry else None
 
     def set(self, key: str, value: str, **kwargs: Any) -> None:
+        """Store or update a secret and persist to file."""
         existing = self._secrets.get(key)
         if existing:
             existing.value = value
@@ -275,6 +306,7 @@ class FileSecretBackend(SecretBackend):
         self._save()
 
     def delete(self, key: str) -> bool:
+        """Delete a secret and persist to file. Returns True if it existed."""
         if key in self._secrets:
             del self._secrets[key]
             self._save()
@@ -282,9 +314,11 @@ class FileSecretBackend(SecretBackend):
         return False
 
     def list_keys(self) -> list[str]:
+        """Return all stored secret keys."""
         return list(self._secrets.keys())
 
     def exists(self, key: str) -> bool:
+        """Check if a secret key exists in the file store."""
         return key in self._secrets
 
 
@@ -302,6 +336,12 @@ class EncryptedFileSecretBackend(SecretBackend):
 
     def __init__(self, filepath: str = ".secrets.enc",
                  encryption_key: str = "") -> None:
+        """Initialize encrypted file-based secret storage.
+
+        Args:
+            filepath: Path to the encrypted secrets file.
+            encryption_key: Passphrase for key derivation.
+        """
         self._filepath = filepath
         self._derived_key = self._derive_key(encryption_key or "default-key")
         self._secrets: dict[str, SecretEntry] = {}
@@ -359,10 +399,12 @@ class EncryptedFileSecretBackend(SecretBackend):
             log.error("Failed to save encrypted secrets: %s", e)
 
     def get(self, key: str) -> str | None:
+        """Return the decrypted secret value for the given key, or None."""
         entry = self._secrets.get(key)
         return entry.value if entry else None
 
     def set(self, key: str, value: str, **kwargs: Any) -> None:
+        """Store or update a secret and persist encrypted."""
         existing = self._secrets.get(key)
         if existing:
             existing.value = value
@@ -372,6 +414,7 @@ class EncryptedFileSecretBackend(SecretBackend):
         self._save()
 
     def delete(self, key: str) -> bool:
+        """Delete a secret and persist encrypted. Returns True if it existed."""
         if key in self._secrets:
             del self._secrets[key]
             self._save()
@@ -379,9 +422,11 @@ class EncryptedFileSecretBackend(SecretBackend):
         return False
 
     def list_keys(self) -> list[str]:
+        """Return all stored secret keys."""
         return list(self._secrets.keys())
 
     def exists(self, key: str) -> bool:
+        """Check if a secret key exists in the encrypted store."""
         return key in self._secrets
 
 
@@ -397,6 +442,12 @@ class SecretManager:
     """
 
     def __init__(self, backend: SecretBackend | None = None, **kwargs: Any) -> None:
+        """Initialize the secret manager.
+
+        Args:
+            backend: Explicit backend instance, or None to auto-create
+                from ``backend_type`` keyword argument.
+        """
         if backend is None:
             backend_type = kwargs.pop("backend_type", "memory")
             backend = self._create_backend(backend_type, **kwargs)
@@ -539,6 +590,7 @@ class SecretManager:
     # --- Stats ---
 
     def stats(self) -> dict:
+        """Return summary statistics about stored secrets."""
         with self._lock:
             return {
                 "total_secrets": len(self._backend.list_keys()),

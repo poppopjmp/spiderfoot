@@ -38,15 +38,18 @@ class PipelineEvent:
     _drop_reason: str = ""
 
     def drop(self, reason: str = "") -> None:
+        """Mark this event as dropped with an optional reason."""
         self._dropped = True
         self._drop_reason = reason
 
     @property
     def is_dropped(self) -> bool:
+        """Whether this event has been dropped."""
         return self._dropped
 
     @property
     def drop_reason(self) -> str:
+        """The reason this event was dropped, if any."""
         return self._drop_reason
 
 
@@ -62,9 +65,11 @@ class StageStats:
 
     @property
     def avg_time(self) -> float:
+        """Average processing time per event in seconds."""
         return self.total_time / self.processed if self.processed > 0 else 0.0
 
     def to_dict(self) -> dict:
+        """Serialize stage statistics to a dictionary."""
         return {
             "name": self.name,
             "processed": self.processed,
@@ -79,6 +84,12 @@ class PipelineStage(ABC):
     """Base class for pipeline stages."""
 
     def __init__(self, name: str = "", enabled: bool = True) -> None:
+        """Initialize the pipeline stage.
+
+        Args:
+            name: Stage name (defaults to class name).
+            enabled: Whether this stage is active.
+        """
         self.name = name or self.__class__.__name__
         self._enabled = enabled
         self._stats = StageStats(name=self.name)
@@ -90,16 +101,20 @@ class PipelineStage(ABC):
 
     @property
     def stats(self) -> StageStats:
+        """Return the statistics for this stage."""
         return self._stats
 
     @property
     def is_enabled(self) -> bool:
+        """Whether this stage is currently enabled."""
         return self._enabled
 
     def enable(self) -> None:
+        """Enable this stage."""
         self._enabled = True
 
     def disable(self) -> None:
+        """Disable this stage."""
         self._enabled = False
 
 
@@ -107,10 +122,17 @@ class FunctionStage(PipelineStage):
     """Stage wrapping a callable."""
 
     def __init__(self, func: Callable[[PipelineEvent], StageResult], name: str = "") -> None:
+        """Initialize a function-based stage.
+
+        Args:
+            func: Callable that processes a PipelineEvent.
+            name: Stage name (defaults to func name).
+        """
         super().__init__(name=name or getattr(func, "__name__", "function_stage"))
         self._func = func
 
     def process(self, event: PipelineEvent) -> StageResult:
+        """Process the event by calling the wrapped function."""
         return self._func(event)
 
 
@@ -123,11 +145,19 @@ class ValidatorStage(PipelineStage):
         max_data_size: int | None = None,
         name: str = "validator",
     ) -> None:
+        """Initialize a validator stage.
+
+        Args:
+            allowed_types: Set of permitted event types, or None for all.
+            max_data_size: Maximum event data length in bytes.
+            name: Stage name.
+        """
         super().__init__(name=name)
         self.allowed_types = allowed_types
         self.max_data_size = max_data_size
 
     def process(self, event: PipelineEvent) -> StageResult:
+        """Validate the event against allowed types and size limits."""
         if self.allowed_types and event.event_type not in self.allowed_types:
             event.drop(f"Type '{event.event_type}' not allowed")
             return StageResult.DROP
@@ -145,12 +175,18 @@ class TransformStage(PipelineStage):
         transform: Callable[[str], str],
         name: str = "transform",
     ) -> None:
+        """Initialize a transform stage.
+
+        Args:
+            transform: Callable that transforms event data strings.
+            name: Stage name.
+        """
         super().__init__(name=name)
         self._transform = transform
 
     def process(self, event: PipelineEvent) -> StageResult:
+        """Apply the transform function to the event data."""
         try:
-            event.data = self._transform(event.data)
             return StageResult.CONTINUE
         except Exception as e:
             log.error("Transform '%s' error: %s", self.name, e)
@@ -161,14 +197,22 @@ class TaggingStage(PipelineStage):
     """Adds tags to events based on rules."""
 
     def __init__(self, rules: dict[str, str] | None = None, name: str = "tagger") -> None:
+        """Initialize a tagging stage.
+
+        Args:
+            rules: Mapping of match patterns to tag strings.
+            name: Stage name.
+        """
         super().__init__(name=name)
         self._rules: dict[str, str] = rules or {}
 
     def add_rule(self, pattern: str, tag: str) -> "TaggingStage":
+        """Add a pattern-to-tag mapping rule."""
         self._rules[pattern] = tag
         return self
 
     def process(self, event: PipelineEvent) -> StageResult:
+        """Tag the event based on pattern matches in type and data."""
         for pattern, tag in self._rules.items():
             if pattern in event.event_type or pattern in event.data:
                 event.tags.add(tag)
@@ -179,14 +223,17 @@ class RouterStage(PipelineStage):
     """Routes events to named destinations based on predicates."""
 
     def __init__(self, name: str = "router") -> None:
+        """Initialize a router stage."""
         super().__init__(name=name)
         self._routes: list[tuple[Callable[[PipelineEvent], bool], str]] = []
 
     def add_route(self, predicate: Callable[[PipelineEvent], bool], destination: str) -> "RouterStage":
+        """Add a routing rule mapping a predicate to a destination."""
         self._routes.append((predicate, destination))
         return self
 
     def process(self, event: PipelineEvent) -> StageResult:
+        """Route the event to matching destinations via metadata."""
         for predicate, destination in self._routes:
             if predicate(event):
                 event.metadata.setdefault("_routes", []).append(destination)
@@ -209,6 +256,11 @@ class EventPipeline:
     """
 
     def __init__(self, name: str = "default") -> None:
+        """Initialize the event pipeline.
+
+        Args:
+            name: Pipeline name.
+        """
         self.name = name
         self._stages: list[PipelineStage] = []
         self._error_handlers: list[Callable[[PipelineEvent, PipelineStage, Exception], None]] = []
@@ -219,17 +271,20 @@ class EventPipeline:
         self._total_errors = 0
 
     def add_stage(self, stage: PipelineStage) -> "EventPipeline":
+        """Append a stage to the pipeline."""
         with self._lock:
             self._stages.append(stage)
         return self
 
     def remove_stage(self, stage_name: str) -> bool:
+        """Remove a stage by name. Returns True if a stage was removed."""
         with self._lock:
             before = len(self._stages)
             self._stages = [s for s in self._stages if s.name != stage_name]
             return len(self._stages) < before
 
     def on_error(self, handler: Callable[[PipelineEvent, PipelineStage, Exception], None]) -> None:
+        """Register an error handler for pipeline stage failures."""
         self._error_handlers.append(handler)
 
     def execute(self, event: PipelineEvent) -> StageResult:
@@ -284,14 +339,17 @@ class EventPipeline:
 
     @property
     def stage_count(self) -> int:
+        """Return the number of stages in the pipeline."""
         with self._lock:
             return len(self._stages)
 
     def get_stage_names(self) -> list[str]:
+        """Return ordered list of stage names."""
         with self._lock:
             return [s.name for s in self._stages]
 
     def get_stats(self) -> dict:
+        """Return aggregate pipeline and per-stage statistics."""
         with self._lock:
             return {
                 "name": self.name,
@@ -304,6 +362,7 @@ class EventPipeline:
             }
 
     def reset_stats(self) -> None:
+        """Reset all pipeline and stage statistics to zero."""
         with self._lock:
             self._total_processed = 0
             self._total_passed = 0
@@ -313,4 +372,5 @@ class EventPipeline:
                 s._stats = StageStats(name=s.name)
 
     def to_dict(self) -> dict:
+        """Serialize the pipeline to a dictionary."""
         return self.get_stats()

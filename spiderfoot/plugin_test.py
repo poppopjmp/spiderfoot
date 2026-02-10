@@ -66,21 +66,26 @@ class FakeTarget:
     """Minimal stand-in for SpiderFootTarget."""
 
     def __init__(self, value: str, target_type: str = "DOMAIN_NAME") -> None:
+        """Initialize a fake target with a value and optional type."""
         self.value = value
         self.target_type = target_type
         self._aliases: list = []
 
     def matches(self, value: str, *, include_parents: bool = True,
                 include_children: bool = True) -> bool:  # noqa: ARG002
+        """Check if the given value matches this target."""
         return value == self.value
 
     def getAliases(self) -> list:  # noqa: N802
+        """Return the list of target aliases."""
         return self._aliases
 
     def setAlias(self, alias: str, typeName: str) -> None:  # noqa: N802, N803
+        """Add an alias to the target."""
         self._aliases.append({"value": alias, "type": typeName})
 
     def __str__(self) -> str:
+        """Return the target value as a string."""
         return self.value
 
 
@@ -93,6 +98,7 @@ class FakeSpiderFoot:
     """
 
     def __init__(self, opts: dict | None = None) -> None:
+        """Initialize with optional configuration options."""
         self.opts: dict[str, Any] = opts or _default_opts()
         self._mock = MagicMock()
         self._scan_id = "TEST_SCAN_001"
@@ -101,10 +107,12 @@ class FakeSpiderFoot:
     # --- helpers frequently called by modules ---
 
     def hashstring(self, s: str) -> str:  # noqa: N802
+        """Return SHA-256 hex digest of the given string."""
         import hashlib
         return hashlib.sha256(s.encode("utf-8", errors="replace")).hexdigest()
 
     def validIP(self, ip: str) -> bool:  # noqa: N802
+        """Check if the string is a valid IP address."""
         import ipaddress as _ip
         try:
             _ip.ip_address(ip)
@@ -113,6 +121,7 @@ class FakeSpiderFoot:
             return False
 
     def validIP6(self, ip: str) -> bool:  # noqa: N802
+        """Check if the string is a valid IPv6 address."""
         import ipaddress as _ip
         try:
             return isinstance(_ip.ip_address(ip), _ip.IPv6Address)
@@ -120,55 +129,71 @@ class FakeSpiderFoot:
             return False
 
     def isDomain(self, hostname: str, tldList: dict | None = None) -> bool:  # noqa: N802, N803
+        """Check if the hostname looks like a valid domain name."""
         return bool(re.match(r"^[a-zA-Z0-9._-]+\.[a-zA-Z]{2,}$", hostname))
 
     def validHost(self, hostname: str) -> bool:  # noqa: N802
+        """Check if the hostname contains only valid characters."""
         return bool(re.match(r"^[a-zA-Z0-9._-]+$", hostname))
 
     def urlFQDN(self, url: str) -> str:  # noqa: N802
+        """Extract the fully qualified domain name from a URL."""
         from urllib.parse import urlparse
         return urlparse(url).hostname or ""
 
     def urlBaseUrl(self, url: str) -> str:  # noqa: N802
+        """Extract the base URL (scheme and netloc) from a URL."""
         from urllib.parse import urlparse
         p = urlparse(url)
         return f"{p.scheme}://{p.netloc}"
 
     def fetchUrl(self, url: str, *args: Any, **kwargs: Any) -> dict:  # noqa: N802
+        """Delegate URL fetching to the internal mock."""
         return self._mock.fetchUrl(url, *args, **kwargs)
 
     def resolveHost(self, host: str) -> list:  # noqa: N802
+        """Delegate host resolution to the internal mock."""
         return self._mock.resolveHost(host)
 
     def resolveHost6(self, host: str) -> list:  # noqa: N802
+        """Delegate IPv6 host resolution to the internal mock."""
         return self._mock.resolveHost6(host)
 
     def resolveTargets(self) -> None:  # noqa: N802
+        """No-op stub for target resolution."""
         pass
 
     def cacheGet(self, key: str, t: str) -> str | None:  # noqa: N802
+        """Delegate cache retrieval to the internal mock."""
         return self._mock.cacheGet(key, t)
 
     def cachePut(self, key: str, t: str, data: str) -> None:  # noqa: N802
+        """Delegate cache storage to the internal mock."""
         self._mock.cachePut(key, t, data)
 
     def error(self, msg: str) -> None:
+        """Log an error message."""
         log.error("sf.error: %s", msg)
 
     def info(self, msg: str) -> None:
+        """Log an informational message."""
         log.info("sf.info: %s", msg)
 
     def debug(self, msg: str) -> None:
+        """Log a debug message."""
         log.debug("sf.debug: %s", msg)
 
     def status(self, msg: str) -> None:
+        """Log a status message."""
         log.info("sf.status: %s", msg)
 
     def myPath(self) -> str:  # noqa: N802
+        """Return the SpiderFoot installation directory path."""
         import os
         return os.path.dirname(os.path.dirname(__file__))
 
     def __getattr__(self, name: str) -> Any:
+        """Delegate attribute access to the internal mock."""
         return getattr(self._mock, name)
 
 
@@ -228,6 +253,7 @@ class EventCapture:
         self.events.append(event)
 
     def clear(self) -> None:
+        """Remove all captured events."""
         self.events.clear()
 
     # --- query helpers ---
@@ -249,22 +275,27 @@ class EventCapture:
         return [e.data for e in source]
 
     def has(self, event_type: str) -> bool:
+        """Check if any captured event matches the given type."""
         return any(e.eventType == event_type for e in self.events)
 
     def count(self, event_type: str | None = None) -> int:
+        """Return the number of captured events, optionally filtered by type."""
         if event_type:
             return len(self.of_type(event_type))
         return len(self.events)
 
     def first(self, event_type: str | None = None) -> Any:
+        """Return the first captured event, optionally filtered by type."""
         source = self.of_type(event_type) if event_type else self.events
         return source[0] if source else None
 
     def last(self, event_type: str | None = None) -> Any:
+        """Return the last captured event, optionally filtered by type."""
         source = self.of_type(event_type) if event_type else self.events
         return source[-1] if source else None
 
     def find(self, predicate: Callable[[Any], bool]) -> list[Any]:
+        """Return all captured events matching the predicate."""
         return [e for e in self.events if predicate(e)]
 
 
@@ -287,6 +318,13 @@ class PluginTestHarness:
     def __init__(self, module_instance: Any, *,
                  target: str = "example.com",
                  target_type: str = "DOMAIN_NAME") -> None:
+        """Initialize the test harness for a module instance.
+
+        Args:
+            module_instance: The SpiderFoot module to test.
+            target: Default scan target value.
+            target_type: Event type of the target.
+        """
         self._module = module_instance
         self._sf = FakeSpiderFoot()
         self._capture = EventCapture()

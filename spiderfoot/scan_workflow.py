@@ -72,6 +72,16 @@ class WorkflowStep:
         on_failure: str = "stop",
         tags: list[str] | None = None,
     ) -> None:
+        """Initialize a workflow step.
+
+        Args:
+            name: Step identifier.
+            step_type: Type of step.
+            retry_count: Max retries on failure.
+            retry_delay: Seconds between retries.
+            on_failure: Action on failure: 'stop', 'skip', or 'continue'.
+            tags: Metadata tags for the step.
+        """
         self.name = name
         self.step_type = step_type
         self.retry_count = retry_count
@@ -83,10 +93,12 @@ class WorkflowStep:
 
     @property
     def status(self) -> StepStatus:
+        """Return the current execution status."""
         return self._status
 
     @property
     def result(self) -> StepResult | None:
+        """Return the step result, or None if not yet executed."""
         return self._result
 
     def execute(self, context: dict) -> StepResult:
@@ -101,6 +113,7 @@ class WorkflowStep:
         self._result = None
 
     def to_dict(self) -> dict:
+        """Serialize the step to a dictionary."""
         return {
             "name": self.name,
             "type": self.step_type.value,
@@ -121,11 +134,19 @@ class ModuleStep(WorkflowStep):
     """
 
     def __init__(self, name: str, module_name: str, options: dict | None = None, **kwargs) -> None:
+        """Initialize a module step.
+
+        Args:
+            name: Step name.
+            module_name: Name of the module to run.
+            options: Module configuration options.
+        """
         super().__init__(name, step_type=StepType.MODULE, **kwargs)
         self.module_name = module_name
         self.options = options or {}
 
     def execute(self, context: dict) -> StepResult:
+        """Execute the module step and record the result."""
         start = time.time()
         self._status = StepStatus.RUNNING
         result = StepResult(
@@ -139,6 +160,7 @@ class ModuleStep(WorkflowStep):
         return result
 
     def to_dict(self) -> dict:
+        """Serialize the module step to a dictionary."""
         d = super().to_dict()
         d["module_name"] = self.module_name
         d["options"] = self.options
@@ -149,14 +171,17 @@ class SequenceStep(WorkflowStep):
     """Step that runs child steps sequentially."""
 
     def __init__(self, name: str, steps: list[WorkflowStep] | None = None, **kwargs) -> None:
+        """Initialize a sequential step group."""
         super().__init__(name, step_type=StepType.SEQUENCE, **kwargs)
         self.steps = steps or []
 
     def add_step(self, step: WorkflowStep) -> "SequenceStep":
+        """Append a child step to the sequence."""
         self.steps.append(step)
         return self
 
     def execute(self, context: dict) -> StepResult:
+        """Execute child steps sequentially, respecting failure policies."""
         start = time.time()
         self._status = StepStatus.RUNNING
         results = []
@@ -183,11 +208,13 @@ class SequenceStep(WorkflowStep):
         return self._result
 
     def reset(self) -> None:
+        """Reset this step and all child steps to pending."""
         super().reset()
         for step in self.steps:
             step.reset()
 
     def to_dict(self) -> dict:
+        """Serialize the sequence step to a dictionary."""
         d = super().to_dict()
         d["steps"] = [s.to_dict() for s in self.steps]
         return d
@@ -197,10 +224,12 @@ class ParallelStep(WorkflowStep):
     """Step that declares child steps to run in parallel."""
 
     def __init__(self, name: str, steps: list[WorkflowStep] | None = None, **kwargs) -> None:
+        """Initialize a parallel step group."""
         super().__init__(name, step_type=StepType.PARALLEL, **kwargs)
         self.steps = steps or []
 
     def add_step(self, step: WorkflowStep) -> "ParallelStep":
+        """Append a child step to run in parallel."""
         self.steps.append(step)
         return self
 
@@ -228,11 +257,13 @@ class ParallelStep(WorkflowStep):
         return self._result
 
     def reset(self) -> None:
+        """Reset this step and all child steps to pending."""
         super().reset()
         for step in self.steps:
             step.reset()
 
     def to_dict(self) -> dict:
+        """Serialize the parallel step to a dictionary."""
         d = super().to_dict()
         d["steps"] = [s.to_dict() for s in self.steps]
         return d
@@ -256,12 +287,21 @@ class ConditionalStep(WorkflowStep):
         if_false: WorkflowStep | None = None,
         **kwargs,
     ) -> None:
+        """Initialize a conditional branching step.
+
+        Args:
+            name: Step name.
+            condition: Callable returning bool given the context dict.
+            if_true: Step to execute when condition is True.
+            if_false: Step to execute when condition is False.
+        """
         super().__init__(name, step_type=StepType.CONDITIONAL, **kwargs)
         self.condition = condition
         self.if_true = if_true
         self.if_false = if_false
 
     def execute(self, context: dict) -> StepResult:
+        """Evaluate the condition and execute the matching branch."""
         start = time.time()
         self._status = StepStatus.RUNNING
 
@@ -290,6 +330,7 @@ class ConditionalStep(WorkflowStep):
         return self._result
 
     def reset(self) -> None:
+        """Reset this step and both branches to pending."""
         super().reset()
         if self.if_true:
             self.if_true.reset()
@@ -297,6 +338,7 @@ class ConditionalStep(WorkflowStep):
             self.if_false.reset()
 
     def to_dict(self) -> dict:
+        """Serialize the conditional step to a dictionary."""
         d = super().to_dict()
         if self.if_true:
             d["if_true"] = self.if_true.to_dict()
@@ -309,10 +351,17 @@ class DelayStep(WorkflowStep):
     """Step that introduces a delay."""
 
     def __init__(self, name: str, delay_seconds: float = 1.0, **kwargs) -> None:
+        """Initialize a delay step.
+
+        Args:
+            name: Step name.
+            delay_seconds: Number of seconds to delay.
+        """
         super().__init__(name, step_type=StepType.DELAY, **kwargs)
         self.delay_seconds = delay_seconds
 
     def execute(self, context: dict) -> StepResult:
+        """Execute the delay step (no-op in test mode)."""
         start = time.time()
         self._status = StepStatus.RUNNING
         # In production, this would time.sleep(). Skip in unit-testable code.
@@ -326,6 +375,7 @@ class DelayStep(WorkflowStep):
         return self._result
 
     def to_dict(self) -> dict:
+        """Serialize the delay step to a dictionary."""
         d = super().to_dict()
         d["delay_seconds"] = self.delay_seconds
         return d
@@ -335,9 +385,11 @@ class CheckpointStep(WorkflowStep):
     """Named checkpoint for workflow resume support."""
 
     def __init__(self, name: str, **kwargs) -> None:
+        """Initialize a checkpoint step."""
         super().__init__(name, step_type=StepType.CHECKPOINT, **kwargs)
 
     def execute(self, context: dict) -> StepResult:
+        """Record the checkpoint and mark it completed."""
         self._status = StepStatus.COMPLETED
         self._result = StepResult(
             step_name=self.name,
@@ -356,6 +408,12 @@ class ScanWorkflow:
     """
 
     def __init__(self, name: str, description: str = "") -> None:
+        """Initialize a scan workflow.
+
+        Args:
+            name: Workflow name.
+            description: Human-readable description.
+        """
         self.name = name
         self.description = description
         self._root = SequenceStep(f"{name}_root")
@@ -378,22 +436,27 @@ class ScanWorkflow:
 
     @property
     def status(self) -> StepStatus:
+        """Return the current workflow status."""
         return self._status
 
     @property
     def steps(self) -> list[WorkflowStep]:
+        """Return the top-level workflow steps."""
         return self._root.steps
 
     @property
     def results(self) -> list[StepResult]:
+        """Return the results from the last execution."""
         return self._results
 
     def reset(self) -> None:
+        """Reset the workflow and all steps to pending."""
         self._root.reset()
         self._results.clear()
         self._status = StepStatus.PENDING
 
     def to_dict(self) -> dict:
+        """Serialize the workflow to a dictionary."""
         return {
             "name": self.name,
             "description": self.description,

@@ -52,10 +52,12 @@ class PolicyCheckResult:
 
     @property
     def has_violations(self) -> bool:
+        """Whether any violations were recorded."""
         return len(self.violations) > 0
 
     @property
     def blocked(self) -> bool:
+        """Whether any violation has a BLOCK action."""
         return any(v.action == PolicyAction.BLOCK for v in self.violations)
 
 
@@ -75,6 +77,11 @@ class ScanPolicy:
     """
 
     def __init__(self, name: str = "default") -> None:
+        """Initialize a scan policy.
+
+        Args:
+            name: Unique policy name.
+        """
         self.name = name
         self._enabled = True
 
@@ -105,18 +112,22 @@ class ScanPolicy:
         self._violations: list[PolicyViolation] = []
 
     def set_max_events(self, n: int) -> "ScanPolicy":
+        """Set the maximum total event count for the scan."""
         self._max_events = n
         return self
 
     def set_max_depth(self, n: int) -> "ScanPolicy":
+        """Set the maximum scan depth."""
         self._max_depth = n
         return self
 
     def set_max_duration(self, seconds: float) -> "ScanPolicy":
+        """Set the maximum scan duration in seconds."""
         self._max_duration_seconds = seconds
         return self
 
     def set_max_targets(self, n: int) -> "ScanPolicy":
+        """Set the maximum number of targets."""
         self._max_targets = n
         return self
 
@@ -132,6 +143,7 @@ class ScanPolicy:
         return self
 
     def allow_targets(self, targets: set[str]) -> "ScanPolicy":
+        """Set the explicit allow-list of targets."""
         self._allowed_targets = targets
         return self
 
@@ -140,6 +152,7 @@ class ScanPolicy:
         allowed: set[str] | None = None,
         denied: set[str] | None = None,
     ) -> "ScanPolicy":
+        """Set allowed and/or denied module lists."""
         if allowed is not None:
             self._allowed_modules = allowed
         if denied is not None:
@@ -147,18 +160,22 @@ class ScanPolicy:
         return self
 
     def deny_event_types(self, types: set[str]) -> "ScanPolicy":
+        """Set event types that should be blocked."""
         self._denied_event_types = types
         return self
 
     def set_max_events_per_type(self, limits: dict[str, int]) -> "ScanPolicy":
+        """Set per-event-type count limits."""
         self._max_events_per_type = limits
         return self
 
     def set_rate_limit(self, module: str, max_per_second: float) -> "ScanPolicy":
+        """Set a per-module request rate limit."""
         self._rate_limit_per_module[module] = max_per_second
         return self
 
     def set_global_rate_limit(self, max_per_second: float) -> "ScanPolicy":
+        """Set a global request rate limit across all modules."""
         self._global_rate_limit = max_per_second
         return self
 
@@ -325,26 +342,33 @@ class ScanPolicy:
 
     @property
     def violations(self) -> list[PolicyViolation]:
+        """Return a copy of all recorded violations."""
         return list(self._violations)
 
     @property
     def violation_count(self) -> int:
+        """Return the total number of recorded violations."""
         return len(self._violations)
 
     def clear_violations(self) -> None:
+        """Remove all recorded violations."""
         self._violations.clear()
 
     def enable(self) -> None:
+        """Enable this policy."""
         self._enabled = True
 
     def disable(self) -> None:
+        """Disable this policy."""
         self._enabled = False
 
     @property
     def is_enabled(self) -> bool:
+        """Whether this policy is currently enabled."""
         return self._enabled
 
     def to_dict(self) -> dict:
+        """Serialize the policy to a dictionary."""
         return {
             "name": self.name,
             "enabled": self._enabled,
@@ -401,19 +425,24 @@ class PolicyEngine:
     """
 
     def __init__(self) -> None:
+        """Initialize an empty policy engine."""
         self._policies: dict[str, ScanPolicy] = {}
 
     def add_policy(self, policy: ScanPolicy) -> "PolicyEngine":
+        """Add a policy to the engine."""
         self._policies[policy.name] = policy
         return self
 
     def remove_policy(self, name: str) -> bool:
+        """Remove a policy by name. Returns True if it existed."""
         return self._policies.pop(name, None) is not None
 
     def get_policy(self, name: str) -> ScanPolicy | None:
+        """Return the policy with the given name, or None."""
         return self._policies.get(name)
 
     def evaluate_target(self, target: str) -> PolicyCheckResult:
+        """Evaluate a target against all policies."""
         all_violations = []
         for policy in self._policies.values():
             result = policy.check_target(target)
@@ -422,6 +451,7 @@ class PolicyEngine:
         return PolicyCheckResult(allowed=not blocked, violations=all_violations)
 
     def evaluate_module(self, module_name: str) -> PolicyCheckResult:
+        """Evaluate a module name against all policies."""
         all_violations = []
         for policy in self._policies.values():
             result = policy.check_module(module_name)
@@ -430,6 +460,7 @@ class PolicyEngine:
         return PolicyCheckResult(allowed=not blocked, violations=all_violations)
 
     def evaluate_event_type(self, event_type: str, count: int = 0) -> PolicyCheckResult:
+        """Evaluate an event type and count against all policies."""
         all_violations = []
         for policy in self._policies.values():
             result = policy.check_event_type(event_type, count)
@@ -439,23 +470,28 @@ class PolicyEngine:
 
     @property
     def policy_count(self) -> int:
+        """Return the number of registered policies."""
         return len(self._policies)
 
     @property
     def policy_names(self) -> list[str]:
+        """Return sorted names of all registered policies."""
         return sorted(self._policies.keys())
 
     def get_all_violations(self) -> list[PolicyViolation]:
+        """Collect violations from all policies."""
         violations = []
         for policy in self._policies.values():
             violations.extend(policy.violations)
         return violations
 
     def clear_all_violations(self) -> None:
+        """Clear violations from all policies."""
         for policy in self._policies.values():
             policy.clear_violations()
 
     def to_dict(self) -> dict:
+        """Serialize the engine and all policies to a dictionary."""
         return {
             "policies": {name: p.to_dict() for name, p in self._policies.items()},
             "total_violations": sum(p.violation_count for p in self._policies.values()),
