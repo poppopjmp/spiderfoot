@@ -3,6 +3,15 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.229.0] — RC Cycle 171: Module Docstrings & Exception Capture — 100% Project-Wide
+
+### Changed
+- Added `as e` to all 122 bare `except Exception:` blocks across 74 module/test files (RC169)
+- Every exception handler in the project now captures the exception variable for logging/debugging
+- Added module-level docstrings to 270 module files — e.g. `"""SpiderFoot plug-in module: shodan."""` (RC170)
+- Added module-level docstrings to 537 test files — e.g. `"""Tests for sfp_shodan module."""` (RC171)
+- **Module docstrings: 100% project-wide coverage** (modules/ + test/)
+
 ## [5.226.0] — RC Cycle 167: `from __future__ import annotations` — 100% Project-Wide
 
 ### Changed
