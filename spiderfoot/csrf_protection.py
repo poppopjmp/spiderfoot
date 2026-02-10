@@ -10,6 +10,7 @@ import hmac
 import secrets
 import time
 from functools import wraps
+from typing import Callable
 import cherrypy
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
@@ -26,7 +27,7 @@ class CSRFProtection:
         self.secret_key = secret_key or secrets.token_hex(32)
         self.token_lifetime = DEFAULT_TTL_ONE_HOUR  # 1 hour
 
-    def generate_csrf_token(self):
+    def generate_csrf_token(self) -> str:
         """Generate a new CSRF token for the current session.
 
         Returns:
@@ -45,7 +46,7 @@ class CSRFProtection:
 
         return session['csrf_token']
 
-    def validate_csrf_token(self, token=None):
+    def validate_csrf_token(self, token=None) -> bool:
         """Validate CSRF token.
 
         Args:
@@ -77,7 +78,7 @@ class CSRFProtection:
         # Constant-time comparison to prevent timing attacks
         return hmac.compare_digest(token, session_token)
 
-    def check_csrf_token(self):
+    def check_csrf_token(self) -> None:
         """Check CSRF token for POST, PUT, DELETE requests.
 
         Raises:
@@ -92,7 +93,7 @@ class CSRFProtection:
             if not self.validate_csrf_token():
                 raise cherrypy.HTTPError(403, "CSRF token missing or invalid")
 
-    def _has_valid_api_auth(self):
+    def _has_valid_api_auth(self) -> bool:
         """Check if request has valid API authentication.
 
         Returns:
@@ -110,7 +111,7 @@ class CSRFTool(cherrypy.Tool):
         cherrypy.Tool.__init__(self, 'before_handler', self.check_csrf)
         self.csrf_protection = CSRFProtection()
 
-    def check_csrf(self):
+    def check_csrf(self) -> None:
         """Check CSRF token before handling request."""
         self.csrf_protection.check_csrf_token()
 
@@ -122,7 +123,7 @@ csrf_protection = CSRFProtection()
 cherrypy.tools.csrf = CSRFTool()
 
 
-def csrf_protect(f):
+def csrf_protect(f) -> Callable:
     """Decorator to enforce CSRF protection on specific routes.
 
     Args:
@@ -138,7 +139,7 @@ def csrf_protect(f):
     return decorated_function
 
 
-def csrf_token():
+def csrf_token() -> str:
     """Get CSRF token for use in templates.
 
     Returns:
@@ -147,7 +148,7 @@ def csrf_token():
     return csrf_protection.generate_csrf_token()
 
 
-def init_csrf_protection(app_config=None):
+def init_csrf_protection(app_config=None) -> CSRFProtection:
     """Initialize CSRF protection for CherryPy application.
 
     Args:

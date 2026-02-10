@@ -4,6 +4,9 @@ CLI configuration management for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import Any
+
+
 class CLIConfig:
     """Configuration store for SpiderFoot CLI options."""
     def __init__(self) -> None:
@@ -22,23 +25,23 @@ class CLIConfig:
             "cli.server_baseurl": "http://127.0.0.1:8001"
         }
 
-    def get(self, key, default=None):
+    def get(self, key, default=None) -> Any:
         return self.options.get(key, default)
 
-    def set(self, key, value):
+    def set(self, key, value) -> None:
         self.options[key] = value
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         return dict(self.options)
 
-    def update(self, d):
+    def update(self, d) -> None:
         self.options.update(d)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> Any:
         return self.options[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         self.options[key] = value
 
-    def __contains__(self, key):
+    def __contains__(self, key) -> bool:
         return key in self.options

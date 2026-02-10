@@ -37,7 +37,7 @@ class CacheEntry:
     def is_expired(self) -> bool:
         return (time.time() - self.created_at) > self.ttl_seconds
 
-    def touch(self):
+    def touch(self) -> None:
         """Record an access."""
         self.last_accessed = time.time()
         self.access_count += 1
@@ -72,7 +72,7 @@ class CacheStats:
             return 0.0
         return self.hits / self.total_requests
 
-    def reset(self):
+    def reset(self) -> None:
         self.hits = 0
         self.misses = 0
         self.evictions = 0
@@ -141,7 +141,7 @@ class ResultCache:
             self._stats.hits += 1
             return entry.value
 
-    def set(self, key: str, value: Any, ttl: float | None = None):
+    def set(self, key: str, value: Any, ttl: float | None = None) -> None:
         """Store a value in cache. Evicts if at capacity."""
         with self._lock:
             effective_ttl = ttl if ttl is not None else self.default_ttl
@@ -181,7 +181,7 @@ class ResultCache:
                 return False
             return True
 
-    def clear(self):
+    def clear(self) -> None:
         """Remove all entries."""
         with self._lock:
             self._entries.clear()
@@ -222,7 +222,7 @@ class ResultCache:
             return True
         return False
 
-    def _evict(self):
+    def _evict(self) -> None:
         """Evict one entry based on the eviction policy."""
         if not self._entries:
             return
@@ -285,7 +285,7 @@ class ScanResultCache:
             parts.append(suffix)
         return ":".join(parts)
 
-    def store_result(self, scan_id: str, module: str, result: Any, ttl: float | None = None):
+    def store_result(self, scan_id: str, module: str, result: Any, ttl: float | None = None) -> None:
         """Cache a module result for a scan."""
         key = self._key(scan_id, module)
         self._cache.set(key, result, ttl=ttl)
@@ -299,14 +299,14 @@ class ScanResultCache:
         key = self._key(scan_id, module)
         return self._cache.has(key)
 
-    def invalidate_scan(self, scan_id: str):
+    def invalidate_scan(self, scan_id: str) -> None:
         """Remove all cached results for a scan."""
         prefix = scan_id + ":"
         keys = [k for k in self._cache.keys() if k.startswith(prefix)]
         for k in keys:
             self._cache.delete(k)
 
-    def invalidate_module(self, module: str):
+    def invalidate_module(self, module: str) -> None:
         """Remove all cached results for a module across all scans."""
         suffix = ":" + module
         keys = [k for k in self._cache.keys() if k.endswith(suffix)]
@@ -317,7 +317,7 @@ class ScanResultCache:
     def stats(self) -> CacheStats:
         return self._cache.stats
 
-    def clear(self):
+    def clear(self) -> None:
         self._cache.clear()
 
     def size(self) -> int:

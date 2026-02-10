@@ -11,7 +11,7 @@ import hashlib
 import logging
 import secrets
 import jwt
-from typing import Any
+from typing import Any, Callable
 from functools import wraps
 from flask import request, jsonify, g
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -436,15 +436,15 @@ class APIKeyManager:
             return []
 
 
-def require_api_auth(required_scope: str = None):
+def require_api_auth(required_scope: str = None) -> Callable:
     """Decorator to require API authentication and authorization.
 
     Args:
         required_scope: Required scope for the endpoint
     """
-    def decorator(f):
+    def decorator(f) -> Callable:
         @wraps(f)
-        def decorated_function(*args, **kwargs):
+        def decorated_function(*args, **kwargs) -> Any:
             # Get API key from Authorization header
             auth_header = request.headers.get('Authorization')
             if not auth_header or not auth_header.startswith('Bearer '):
@@ -483,17 +483,17 @@ def require_api_auth(required_scope: str = None):
 
 
 # Convenience decorators for common scopes
-def require_read_access(f):
+def require_read_access(f) -> Callable:
     """Require read access."""
     return require_api_auth('scan:read')(f)
 
 
-def require_write_access(f):
+def require_write_access(f) -> Callable:
     """Require write access."""
     return require_api_auth('scan:write')(f)
 
 
-def require_admin_access(f):
+def require_admin_access(f) -> Callable:
     """Require admin access."""
     return require_api_auth('system:admin')(f)
 

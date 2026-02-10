@@ -63,7 +63,7 @@ class PerformanceProfiler:
             return wrapper
         return decorator
 
-    def _record_metric(self, operation: str, duration: float, memory_delta: int):
+    def _record_metric(self, operation: str, duration: float, memory_delta: int) -> None:
         """Record performance metric."""
         with self.lock:
             self.metrics[operation].append({
@@ -155,7 +155,7 @@ class CacheManager:
         key_str = json.dumps(key_data, sort_keys=True, default=str)
         return hashlib.md5(key_str.encode()).hexdigest()
 
-    def _get_from_cache(self, key: str, use_redis: bool = False):
+    def _get_from_cache(self, key: str, use_redis: bool = False) -> Any:
         """Get value from cache."""
         # Try Redis first if enabled
         if use_redis and self.redis_client:
@@ -176,7 +176,7 @@ class CacheManager:
 
         return None
 
-    def _store_in_cache(self, key: str, value: Any, ttl: int, use_redis: bool = False):
+    def _store_in_cache(self, key: str, value: Any, ttl: int, use_redis: bool = False) -> None:
         """Store value in cache."""
         # Store in Redis if enabled
         if use_redis and self.redis_client:
@@ -197,7 +197,7 @@ class CacheManager:
             if len(self.memory_cache) > 1000:
                 self._cleanup_memory_cache()
 
-    def _cleanup_memory_cache(self):
+    def _cleanup_memory_cache(self) -> None:
         """Clean up expired cache entries."""
         current_time = time.time()
         expired_keys = [
@@ -284,7 +284,7 @@ class AsyncHTTPManager:
         self.timeout = timeout
         self.session = None
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> AsyncHTTPManager:
         connector = aiohttp.TCPConnector(
             limit=self.max_concurrent,
             limit_per_host=20,
@@ -300,7 +300,7 @@ class AsyncHTTPManager:
         )
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         if self.session:
             await self.session.close()
 
@@ -314,7 +314,7 @@ class AsyncHTTPManager:
         results = await asyncio.gather(*tasks, return_exceptions=True)
         return results
 
-    async def _fetch_single(self, url: str, headers: dict = None):
+    async def _fetch_single(self, url: str, headers: dict = None) -> dict:
         """Fetch a single URL."""
         try:
             async with self.session.get(url, headers=headers) as response:
@@ -410,7 +410,7 @@ class BatchProcessor:
 
         return results
 
-    def _process_single_batch(self, batch: list, processor_func: Callable, **kwargs):
+    def _process_single_batch(self, batch: list, processor_func: Callable, **kwargs) -> list:
         """Process a single batch of items."""
         results = []
         for item in batch:
@@ -488,7 +488,7 @@ def optimize_performance(cache_ttl: int = DEFAULT_TTL_ONE_HOUR, profile: bool = 
 if __name__ == "__main__":
     # Example performance-optimized function
     @optimize_performance(cache_ttl=1800, profile=True)
-    def expensive_operation(data):
+    def expensive_operation(data) -> int:
         """Example expensive operation."""
         time.sleep(0.1)  # Simulate work
         return len(data) * 2

@@ -21,7 +21,7 @@ import json
 import logging
 import threading
 import time
-from typing import Any
+from typing import Any, AsyncGenerator
 
 log = logging.getLogger("spiderfoot.api.scan_progress")
 
@@ -168,7 +168,7 @@ else:
             "overall percentage, ETA, throughput, and module counts."
         ),
     )
-    async def get_progress(scan_id: str):
+    async def get_progress(scan_id: str) -> dict:
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
@@ -192,7 +192,7 @@ else:
             "including status, events, and elapsed time."
         ),
     )
-    async def get_module_progress(scan_id: str):
+    async def get_module_progress(scan_id: str) -> dict:
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
@@ -242,7 +242,7 @@ else:
             "Returns the list of recorded progress snapshots for a scan."
         ),
     )
-    async def get_progress_history(scan_id: str):
+    async def get_progress_history(scan_id: str) -> dict:
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
@@ -269,7 +269,7 @@ else:
         scan_id: str,
         request: Request,
         interval: float = _DEFAULT_SSE_INTERVAL,
-    ):
+    ) -> StreamingResponse:
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
@@ -280,7 +280,7 @@ else:
         # Clamp interval to reasonable range
         interval = max(0.5, min(interval, 30.0))
 
-        async def event_stream():
+        async def event_stream() -> AsyncGenerator[str, None]:
             async for event in _sse_generator(scan_id, interval=interval):
                 # Check if client disconnected
                 if await request.is_disconnected():
@@ -306,7 +306,7 @@ else:
             "Typically called automatically when a scan starts."
         ),
     )
-    async def create_tracker(scan_id: str, modules: list[str] | None = None):
+    async def create_tracker(scan_id: str, modules: list[str] | None = None) -> dict:
         if not HAS_TRACKER:
             raise HTTPException(
                 status_code=501,
@@ -337,7 +337,7 @@ else:
         summary="List actively tracked scans",
         description="Returns IDs of all scans with active progress trackers.",
     )
-    async def list_active_trackers():
+    async def list_active_trackers() -> dict:
         scan_ids = list_tracked_scans()
         summaries = []
         for sid in scan_ids:

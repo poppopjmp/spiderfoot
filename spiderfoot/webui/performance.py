@@ -9,7 +9,7 @@ import concurrent.futures
 import functools
 import time
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Generator
 import threading
 import weakref
 
@@ -24,7 +24,7 @@ class WebUIPerformanceEnhancer:
         self.cache_ttl = {}
         self.logger = logging.getLogger(__name__)
 
-    def cache_with_ttl(self, ttl_seconds: int = 300):
+    def cache_with_ttl(self, ttl_seconds: int = 300) -> Callable:
         """Decorator for caching function results with TTL."""
         def decorator(func: Callable) -> Callable:
             @functools.wraps(func)
@@ -56,12 +56,12 @@ class WebUIPerformanceEnhancer:
             return wrapper
         return decorator
 
-    def async_operation(self, func: Callable, *args, **kwargs):
+    def async_operation(self, func: Callable, *args, **kwargs) -> concurrent.futures.Future:
         """Execute operation asynchronously."""
         future = self.executor.submit(func, *args, **kwargs)
         return future
 
-    def batch_operation(self, func: Callable, items: list, batch_size: int = 10):
+    def batch_operation(self, func: Callable, items: list, batch_size: int = 10) -> list:
         """Execute operations in batches to improve performance."""
         results = []
 
@@ -84,7 +84,7 @@ class WebUIPerformanceEnhancer:
 
         return results
 
-    def clear_cache(self, pattern: str | None = None):
+    def clear_cache(self, pattern: str | None = None) -> None:
         """Clear cache entries, optionally matching a pattern."""
         with self.cache_lock:
             if pattern:
@@ -230,12 +230,12 @@ class MemoryOptimizer:
         except Exception as e:
             return {'error': str(e)}
 
-    def optimize_large_list(self, data: list, chunk_size: int = 1000):
+    def optimize_large_list(self, data: list, chunk_size: int = 1000) -> Generator:
         """Generator for processing large lists in chunks."""
         for i in range(0, len(data), chunk_size):
             yield data[i:i + chunk_size]
 
-    def cleanup_resources(self):
+    def cleanup_resources(self) -> None:
         """Cleanup unused resources."""
         import gc
 
@@ -274,7 +274,7 @@ class AsyncWebUIHelper:
             return results
 
     @staticmethod
-    async def _fetch_url(session, url):
+    async def _fetch_url(session, url) -> dict:
         """Fetch a single URL."""
         try:
             async with session.get(url) as response:
@@ -409,7 +409,7 @@ class PerformanceEnhancedWebUI:
 
         return compression_result
 
-    def cleanup_performance_resources(self):
+    def cleanup_performance_resources(self) -> None:
         """
         Cleanup performance-related resources
         """
