@@ -3,6 +3,26 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.208.0] — RC Cycle 147: Line Length Cleanup
+
+### Changed
+- Shortened 124 code lines to ≤120 characters across 38 files
+- Function calls, string literals, and expressions reformatted with standard Python line-breaking techniques
+- 45 SQL strings intentionally left long for readability
+
+## [5.207.0] — RC Cycle 146: File Formatting Fixes
+
+### Changed
+- Fixed missing trailing newlines in 5 files (`helpers.py`, `api/routers/correlations.py`, `api/routers/scan.py`, `sflib/helpers.py`, `webui/templates.py`)
+- Removed excess consecutive blank lines
+
+## [5.206.0] — RC Cycle 145: Exception Variable Capture
+
+### Changed
+- Added `as e` to all 111 `except Exception:` blocks across 52 files
+- Exception info now available for logging/debugging in all handlers
+- Updated log messages to include exception details where appropriate
+
 ## [5.205.0] — RC Cycle 143: Parameter Type Hints — 100% Coverage
 
 ### Changed
