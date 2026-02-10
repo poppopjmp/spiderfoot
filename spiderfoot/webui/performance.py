@@ -337,9 +337,7 @@ class PerformanceEnhancedWebUI:
         """
         @self.performance_enhancer.cache_with_ttl(ttl_seconds=60)
         def _fetch_scan_results(scan_id: str):
-            # This would call the actual database method
-            # For now, return a placeholder
-            return list(range(1000))  # Simulate large dataset
+            raise NotImplementedError(\"Scan result retrieval not yet connected to database\")
         
         # Get cached or fresh data
         all_results = _fetch_scan_results(scan_id)

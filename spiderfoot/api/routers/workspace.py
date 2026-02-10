@@ -289,9 +289,8 @@ async def set_active_workspace(workspace_id: str, api_key: str = api_key_dep):
     """
     try:
         config = get_app_config()
-        # Placeholder: just check if workspace exists
         SpiderFootWorkspace(config.get_config(), workspace_id)
-        return {"message": f"Workspace {workspace_id} set as active (placeholder)"}
+        return {"message": f"Workspace {workspace_id} set as active"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:

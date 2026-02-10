@@ -432,8 +432,8 @@ class SpiderFoot:
                 return "CRITICAL"
             return None
         for source in sources:
-            # Placeholder: actual CVE lookup logic would go here
-            pass
+            # CVE lookup not yet implemented for extracted sources
+            self.debug(f"CVE lookup for {cveId} from {source} not implemented")
         return (eventType, f"{cveId}\nScore: Unknown\nDescription: Unknown")
 
     def configSerialize(self, opts: dict, filterSystem: bool = True):

@@ -229,10 +229,9 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     def workspacereportdownload(self, report_id, workspace_id, format='json'):
         try:
-            # Placeholder: implement report download logic
-            cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=workspace-{workspace_id}-report.{format}"
-            cherrypy.response.headers['Content-Type'] = f"application/{format}"
-            cherrypy.response.headers['Pragma'] = 'no-cache'
-            return "{}"
+            cherrypy.response.headers['Content-Type'] = 'application/json'
+            raise cherrypy.HTTPError(501, "Report download not yet implemented")
+        except cherrypy.HTTPError:
+            raise
         except Exception as e:
             return str(e)
