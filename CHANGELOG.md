@@ -3,6 +3,40 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.199.0] — RC Cycle 136: Return Type Hints — 100% Coverage
+
+### Changed
+- Added return type hints to final 82 public methods across 53 files
+- All CLI command files: `-> None` on all `xxx_command` and `register` functions (34 hints)
+- Core files: `api_security`, `security`, `server`, `scan`, `csrf_protection`, etc.
+- Dataclass `__post_init__` methods, context manager `__enter__`/`__exit__`, decorators
+- **Return type hint campaign complete**: 0 public methods without hints (excl auto-generated `pb2_grpc`)
+
+## [5.198.0] — RC Cycle 135: Return Type Hints (Batch 5 — 47 methods)
+
+### Changed
+- Added return type hints to 47 methods across 15 files: CLI commands (interactive, monitor, targets, workspaces), API gateway, event, logger, metrics, module_profiler, service_runner, threadpool, worker_pool, webui/routes, enrichment, grpc_service
+
+## [5.197.0] — RC Cycle 134: Return Type Hints (Batch 4 — 76 methods)
+
+### Changed
+- Added return type hints to 76 methods across 15 files: API routers (rag_correlation, tasks, visualization), CLI commands, alert_rules, retry, websocket_service, `__init__`, api_security_fastapi, API export
+
+## [5.196.0] — RC Cycle 133: Return Type Hints (Batch 3 — 71 methods)
+
+### Changed
+- Added return type hints to 71 methods in web_security, core/performance, webui/performance, csrf_protection, result_cache, CLI workspaces_enhanced, API scan_progress, cli/config, api_security
+
+## [5.195.0] — RC Cycle 132: Return Type Hints (Batch 2 — 90 methods)
+
+### Changed
+- Added return type hints to 90 methods in API routers (config, webhooks, correlations, health), data_service/factory, benchmark
+
+## [5.194.0] — RC Cycle 131: Return Type Hints (API + Correlation — 90 methods)
+
+### Changed
+- Added return type hints to 90 methods in API routers (data, workspace, scan) and correlation engine (rule_executor)
+
 ## [5.193.0] — RC Cycle 129: Return Type Hints (WebUI)
 
 ### Changed
