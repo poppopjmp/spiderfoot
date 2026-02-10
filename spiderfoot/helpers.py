@@ -288,30 +288,29 @@ class SpiderFootHelpers():
         """Load correlation rules"""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
-            
-        if not os.path.exists(path):
+
+        rules_dir = Path(path)
+        if not rules_dir.exists():
             raise FileNotFoundError(f"[Errno 2] No such file or directory: '{path}'")
-        
+
         if ignore_files is None:
             ignore_files = []
-        
+
         rules = []
-        
-        for filename in os.listdir(path):
-            if not filename.endswith('.yaml') or filename in ignore_files:
+
+        for yaml_file in sorted(rules_dir.glob('*.yaml')):
+            if yaml_file.name in ignore_files:
                 continue
-                
-            file_path = os.path.join(path, filename)
-            
+
             try:
                 import yaml
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    rule_data = yaml.safe_load(f)
-                    if rule_data:
-                        rules.append(rule_data)
+                rule_data = yaml.safe_load(
+                    yaml_file.read_text(encoding='utf-8'))
+                if rule_data:
+                    rules.append(rule_data)
             except Exception:
                 continue
-                
+
         return rules
 
     @staticmethod

@@ -27,7 +27,7 @@ Generates a complete OpenAPI 3.1 spec from registered API endpoints::
 
 import json
 import logging
-import os
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 log = logging.getLogger("spiderfoot.openapi_spec")
@@ -36,11 +36,9 @@ log = logging.getLogger("spiderfoot.openapi_spec")
 def _read_version() -> str:
     """Read SpiderFoot version."""
     try:
-        version_file = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), "VERSION")
-        if os.path.exists(version_file):
-            with open(version_file, "r", encoding="utf-8") as f:
-                return f.read().strip()
+        version_file = Path(__file__).resolve().parent.parent / "VERSION"
+        if version_file.exists():
+            return version_file.read_text(encoding="utf-8").strip()
     except Exception as e:
         log.debug("reading VERSION file failed: %s", e)
     return "5.17.1"
