@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         rate_limiter
 # Purpose:      Standalone rate limiter service for SpiderFoot.

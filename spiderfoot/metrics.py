@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         metrics
 # Purpose:      Prometheus-compatible metrics endpoint for all SpiderFoot services.

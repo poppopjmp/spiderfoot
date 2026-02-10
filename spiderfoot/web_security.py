@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 CherryPy Web Interface Security Integration for SpiderFoot
 Integrates all security components into the CherryPy web application.

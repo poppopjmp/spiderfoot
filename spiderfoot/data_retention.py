@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         data_retention
 # Purpose:      Automated data retention policies for SpiderFoot.

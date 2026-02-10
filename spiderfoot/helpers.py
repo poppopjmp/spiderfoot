@@ -1,4 +1,3 @@
-#  -*- coding: utf-8 -*-
 """Top-level helper utilities for SpiderFoot.
 
 Contains :class:`SpiderFootHelpers` with static/class methods for URL

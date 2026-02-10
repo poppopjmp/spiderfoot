@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Enhanced Error Handling and Security Logging for SpiderFoot
 Provides comprehensive error handling, security event logging, and monitoring.

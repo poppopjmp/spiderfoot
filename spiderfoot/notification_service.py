@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         notification_service
 # Purpose:      Multi-channel notification service for SpiderFoot.

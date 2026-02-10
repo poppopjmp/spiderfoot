@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Rate Limiting Module for SpiderFoot API and Web Interface
 Provides protection against abuse and DoS attacks.

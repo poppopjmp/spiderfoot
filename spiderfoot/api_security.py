@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 API Security Module for SpiderFoot
 Provides comprehensive API security including authentication, authorization, and request validation.

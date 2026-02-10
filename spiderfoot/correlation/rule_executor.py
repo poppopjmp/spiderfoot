@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         Modular SpiderFoot Correlation Engine
 # Purpose:      Common functions for enriching events with contextual information.

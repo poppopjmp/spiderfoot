@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Input Validation and XSS Prevention Module for SpiderFoot
 Provides comprehensive input sanitization and validation.

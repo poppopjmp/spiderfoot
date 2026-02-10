@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         hot_reload
 # Purpose:      Module hot-reload for SpiderFoot.

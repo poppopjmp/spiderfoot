@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         Modular SpiderFoot SFLib Module
 # Purpose:      Common functions for working with the database back-end.

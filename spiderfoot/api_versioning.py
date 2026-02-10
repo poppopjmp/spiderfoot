@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         api_versioning
 # Purpose:      API versioning framework for SpiderFoot REST endpoints.

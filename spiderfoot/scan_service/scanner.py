@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         Modular SpiderFoot Scanner
 # Purpose:      Common functions for working with the scanning process.

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         secret_manager
 # Purpose:      Secure secret management for API keys, credentials, and

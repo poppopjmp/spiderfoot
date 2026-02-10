@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         modern_plugin
 # Purpose:      Modernized SpiderFootPlugin base class that integrates the

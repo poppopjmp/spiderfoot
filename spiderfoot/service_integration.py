@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         service_integration
 # Purpose:      Wires the extracted service layer (EventBus, HttpService,

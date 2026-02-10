@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         plugin
 # Purpose:      Base class for SpiderFoot modules/plugins

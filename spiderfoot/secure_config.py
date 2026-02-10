@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Secure Configuration Management for SpiderFoot
 Handles encryption of sensitive configuration data including API keys and passwords.

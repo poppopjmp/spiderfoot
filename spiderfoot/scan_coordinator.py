@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         scan_coordinator
 # Purpose:      Coordinate scans across multiple SpiderFoot scanner instances.

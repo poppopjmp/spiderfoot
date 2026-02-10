@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         websocket_service
 # Purpose:      WebSocket real-time event streaming for SpiderFoot.

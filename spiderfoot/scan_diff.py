@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         scan_diff
 # Purpose:      Compare SpiderFoot scan results to detect changes

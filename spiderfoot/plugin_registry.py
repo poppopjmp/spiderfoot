@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         plugin_registry
 # Purpose:      Plugin marketplace and registry for SpiderFoot.

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SpiderFoot Security Integration Module
 Integrates all security enhancements into the existing SpiderFoot codebase.

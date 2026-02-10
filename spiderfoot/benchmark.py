@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         benchmark
 # Purpose:      Performance benchmarking suite for SpiderFoot services.

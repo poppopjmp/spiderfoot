@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 CSRF Protection Module for SpiderFoot Web Interface
 Provides Cross-Site Request Forgery protection for all form submissions and API calls.

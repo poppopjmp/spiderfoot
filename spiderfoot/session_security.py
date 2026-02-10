@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Secure Session Management for SpiderFoot Web Interface
 Provides secure session handling with proper timeouts and validation.

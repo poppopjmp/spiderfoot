@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         auth
 # Purpose:      Authentication and authorization middleware for SpiderFoot

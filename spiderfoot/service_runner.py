@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         service_runner
 # Purpose:      Unified entry point for running SpiderFoot as individual

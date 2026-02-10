@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         correlation_service
 # Purpose:      Standalone correlation service for SpiderFoot.

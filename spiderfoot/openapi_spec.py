@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         openapi_spec
 # Purpose:      Auto-generate OpenAPI 3.1 specification for the

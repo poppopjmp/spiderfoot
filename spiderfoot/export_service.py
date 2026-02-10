@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         export_service
 # Purpose:      Multi-format scan result export service for SpiderFoot.
