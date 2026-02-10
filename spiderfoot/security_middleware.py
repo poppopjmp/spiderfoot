@@ -176,7 +176,11 @@ class SpiderFootSecurityMiddleware:
                 self.config_manager = None
             
             # Core security components
-            csrf_secret = self.config.get('security.csrf.secret_key', 'default-secret')
+            csrf_secret = self.config.get('security.csrf.secret_key')
+            if not csrf_secret:
+                import secrets as _secrets
+                csrf_secret = _secrets.token_hex(32)
+                self.log.warning("No CSRF secret configured (security.csrf.secret_key) — using random ephemeral secret")
             try:
                 self.csrf = CSRFProtection(secret_key=csrf_secret)
             except Exception as e:

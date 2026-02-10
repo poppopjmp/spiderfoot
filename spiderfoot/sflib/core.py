@@ -35,7 +35,14 @@ class SpiderFoot:
             raise TypeError(f"options is {type(options)}; expected dict()")
         self.opts = deepcopy(options)
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
-        ssl._create_default_https_context = ssl._create_unverified_context
+
+        # Create an unverified SSL context for scan connections only,
+        # rather than globally overriding ssl._create_default_https_context
+        # which would affect ALL HTTPS connections process-wide.
+        self._ssl_context = ssl.create_default_context()
+        self._ssl_context.check_hostname = False
+        self._ssl_context.verify_mode = ssl.CERT_NONE
+
         if self.opts.get('_dnsserver', "") != "":
             res = dns.resolver.Resolver()
             res.nameservers = [self.opts['_dnsserver']]
