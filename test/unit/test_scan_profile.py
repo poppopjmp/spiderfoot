@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for spiderfoot.scan_profile."""
+from __future__ import annotations
 
 import json
 import os

@@ -1,4 +1,5 @@
 """Tests for the SpiderFoot EventBus abstraction layer."""
+from __future__ import annotations
 
 import asyncio
 import pytest

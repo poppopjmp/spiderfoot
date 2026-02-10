@@ -1,4 +1,5 @@
 """Unit tests for spiderfoot.cli_service."""
+from __future__ import annotations
 
 import io
 import sys

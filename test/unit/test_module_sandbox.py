@@ -1,4 +1,5 @@
 """Tests for spiderfoot.module_sandbox."""
+from __future__ import annotations
 
 import time
 import threading

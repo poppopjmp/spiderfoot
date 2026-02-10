@@ -1,4 +1,5 @@
 """Tests for spiderfoot.event_registry."""
+from __future__ import annotations
 
 import unittest
 

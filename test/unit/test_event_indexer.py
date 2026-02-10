@@ -1,4 +1,5 @@
 """Tests for spiderfoot.event_indexer — Qdrant auto-indexing via EventBus."""
+from __future__ import annotations
 
 import pytest
 import time

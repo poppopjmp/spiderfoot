@@ -1,4 +1,5 @@
 """Database fixtures for testing SpiderFoot database operations."""
+from __future__ import annotations
 
 import pytest
 import tempfile

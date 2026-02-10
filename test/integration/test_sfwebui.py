@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # test_sfwebui.py
 import os
 import tempfile

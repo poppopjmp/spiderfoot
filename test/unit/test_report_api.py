@@ -4,6 +4,7 @@ Tests for spiderfoot.api.routers.reports — Report API Endpoints.
 Tests the Pydantic models, in-memory store, background generation,
 and FastAPI endpoint handlers using TestClient.
 """
+from __future__ import annotations
 
 import json
 import time

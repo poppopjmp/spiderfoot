@@ -1,4 +1,5 @@
 """Tests for spiderfoot.scan_templates."""
+from __future__ import annotations
 
 import unittest
 from spiderfoot.scan_templates import (

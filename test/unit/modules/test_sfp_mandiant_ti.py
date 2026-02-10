@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 from modules.sfp_mandiant_ti import sfp_mandiant_ti
 from spiderfoot.sflib import SpiderFoot

@@ -4,6 +4,7 @@ Tests the full flow: Events → Embed → Qdrant → Search → Rerank → RAG �
 Uses mock backends (MemoryVectorBackend, MockEmbeddingBackend, etc.)
 to test the pipeline end-to-end without external dependencies.
 """
+from __future__ import annotations
 
 import pytest
 import time

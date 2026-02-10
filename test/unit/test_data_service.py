@@ -1,6 +1,7 @@
 """
 Tests for the DataService abstraction layer.
 """
+from __future__ import annotations
 
 import unittest
 from unittest.mock import MagicMock, patch

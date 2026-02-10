@@ -1,4 +1,5 @@
 """Tests for module health monitoring."""
+from __future__ import annotations
 
 import time
 import unittest

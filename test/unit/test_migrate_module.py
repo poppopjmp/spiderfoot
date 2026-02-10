@@ -1,4 +1,5 @@
 """Tests for the module migration tool."""
+from __future__ import annotations
 
 import textwrap
 import pytest

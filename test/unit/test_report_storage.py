@@ -3,6 +3,7 @@ Tests for spiderfoot.report_storage — Report Storage & Caching.
 
 Covers LRU cache, SQLite backend, memory backend, and ReportStore facade.
 """
+from __future__ import annotations
 
 import os
 import tempfile

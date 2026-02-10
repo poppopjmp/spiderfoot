@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_mastodon import sfp_mastodon
 from spiderfoot import SpiderFootEvent

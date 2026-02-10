@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_tron import sfp_tron
 from spiderfoot import SpiderFootEvent

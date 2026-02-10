@@ -1,4 +1,5 @@
 """Tests for the module validation script."""
+from __future__ import annotations
 
 import textwrap
 import pytest

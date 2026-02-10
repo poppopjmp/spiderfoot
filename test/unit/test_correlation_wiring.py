@@ -7,6 +7,7 @@ Covers:
   - FastAPI Depends provider (get_correlation_svc)
   - Correlations router endpoints via Starlette TestClient
 """
+from __future__ import annotations
 
 import time
 import threading

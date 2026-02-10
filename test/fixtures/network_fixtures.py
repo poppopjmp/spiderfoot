@@ -1,4 +1,5 @@
 """Network and HTTP fixtures for testing SpiderFoot modules."""
+from __future__ import annotations
 
 import pytest
 import json

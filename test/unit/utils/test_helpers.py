@@ -1,4 +1,5 @@
 """Helper functions for SpiderFoot tests to fix common issues."""
+from __future__ import annotations
 
 import functools
 import logging

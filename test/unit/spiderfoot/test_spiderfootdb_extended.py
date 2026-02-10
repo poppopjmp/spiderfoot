@@ -9,6 +9,7 @@ This test suite aims to achieve 70%+ coverage of the database module by testing:
 - Transaction management
 - Concurrent access scenarios
 """
+from __future__ import annotations
 
 import pytest
 import sqlite3

@@ -10,6 +10,7 @@ Covers:
 - FastAPI Depends providers
 - Service integration wiring
 """
+from __future__ import annotations
 
 import threading
 import time

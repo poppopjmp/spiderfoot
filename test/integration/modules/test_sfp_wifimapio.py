@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_wifimapio import sfp_wifimapio
 from spiderfoot import SpiderFootEvent

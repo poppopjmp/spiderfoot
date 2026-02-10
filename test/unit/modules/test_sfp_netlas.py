@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 from unittest.mock import patch
 from modules.sfp_netlas import sfp_netlas

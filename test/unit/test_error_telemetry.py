@@ -1,4 +1,5 @@
 """Tests for spiderfoot.error_telemetry."""
+from __future__ import annotations
 
 import unittest
 import time

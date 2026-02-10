@@ -8,6 +8,7 @@ Covers:
   - routes.py ``_legacy_get_dbh()`` alias
   - CHANGELOG event_schema annotation
 """
+from __future__ import annotations
 
 import inspect
 import os

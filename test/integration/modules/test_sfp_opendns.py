@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_opendns import sfp_opendns
 from spiderfoot.sflib import SpiderFoot

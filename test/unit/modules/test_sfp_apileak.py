@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 from unittest.mock import patch, MagicMock
 from modules.sfp_apileak import sfp_apileak

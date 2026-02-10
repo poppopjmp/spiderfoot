@@ -1,4 +1,5 @@
 """Tests for spiderfoot.rate_limiter."""
+from __future__ import annotations
 
 import time
 import threading

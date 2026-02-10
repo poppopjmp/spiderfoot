@@ -5,6 +5,7 @@ Covers: liveness, readiness, startup probes, individual component
 checks, dashboard, Prometheus metrics endpoint, subsystem check
 functions, and aggregation logic.
 """
+from __future__ import annotations
 
 import time
 from unittest.mock import MagicMock, patch

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import cheroot.test.webtest
 cheroot.test.webtest.getchar = lambda: 'I'
 

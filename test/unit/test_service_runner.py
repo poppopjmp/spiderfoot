@@ -1,6 +1,7 @@
 """
 Tests for the Service Runner (microservices entry point).
 """
+from __future__ import annotations
 
 import json
 import os

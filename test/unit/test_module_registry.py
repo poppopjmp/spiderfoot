@@ -1,4 +1,5 @@
 """Tests for spiderfoot.module_registry — Cycle 10."""
+from __future__ import annotations
 
 import os
 import sys

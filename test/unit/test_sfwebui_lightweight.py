@@ -3,6 +3,7 @@
 Lightweight Web UI tests that avoid CherryPy server startup for faster unit testing.
 These tests focus on testing the Web UI logic without the overhead of a full web server.
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

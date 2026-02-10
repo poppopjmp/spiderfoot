@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # filepath: spiderfoot/test/integration/modules/test_sfpcloudfront.py
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

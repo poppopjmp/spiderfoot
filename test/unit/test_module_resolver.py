@@ -1,4 +1,5 @@
 """Tests for spiderfoot.module_resolver."""
+from __future__ import annotations
 
 import unittest
 

@@ -9,6 +9,7 @@ Covers:
     wire_task_manager, wire_alert_engine, history, stats
   - Webhooks API router: all endpoints
 """
+from __future__ import annotations
 
 import hashlib
 import hmac

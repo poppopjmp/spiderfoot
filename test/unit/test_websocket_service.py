@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for spiderfoot.websocket_service."""
+from __future__ import annotations
 
 import asyncio
 import json

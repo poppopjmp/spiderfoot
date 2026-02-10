@@ -1,4 +1,5 @@
 """Tests for spiderfoot.result_aggregator."""
+from __future__ import annotations
 
 import time
 import unittest

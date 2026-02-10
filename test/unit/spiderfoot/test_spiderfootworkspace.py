@@ -3,6 +3,7 @@
 This test suite provides complete coverage for workspace management functionality
 including creation, loading, target/scan management, and error handling.
 """
+from __future__ import annotations
 
 import json
 import os

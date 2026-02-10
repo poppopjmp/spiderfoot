@@ -5,6 +5,8 @@ Validates that the ``Config`` class in ``dependencies.py`` properly
 wraps ``AppConfig`` and that the config router endpoints use real
 validation, Pydantic models, and structured responses.
 """
+from __future__ import annotations
+
 import asyncio
 import json
 import logging

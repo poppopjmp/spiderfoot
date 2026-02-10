@@ -1,4 +1,5 @@
 """Tests for spiderfoot.correlation_rules module."""
+from __future__ import annotations
 
 import time
 import unittest

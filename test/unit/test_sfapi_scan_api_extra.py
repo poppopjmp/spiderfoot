@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sfapi
 from fastapi.testclient import TestClient
 

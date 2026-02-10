@@ -1,4 +1,5 @@
 """Tests for scan_state_map — unified state mapping."""
+from __future__ import annotations
 
 import pytest
 

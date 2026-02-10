@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # test_modules.py
 import os
 import pytest

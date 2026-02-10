@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_mattermost import sfp_mattermost
 from spiderfoot import SpiderFootEvent

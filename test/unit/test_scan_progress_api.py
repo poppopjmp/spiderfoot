@@ -4,6 +4,7 @@ Tests for spiderfoot.api.routers.scan_progress — Scan Progress API.
 Covers: tracker registry, REST endpoints (progress, modules,
 history, active list, create), SSE streaming, and edge cases.
 """
+from __future__ import annotations
 
 import asyncio
 import json

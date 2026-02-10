@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_unwiredlabs import sfp_unwiredlabs
 from spiderfoot import SpiderFootEvent

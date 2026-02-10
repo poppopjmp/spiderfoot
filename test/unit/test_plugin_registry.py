@@ -1,4 +1,5 @@
 """Tests for spiderfoot.plugin_registry."""
+from __future__ import annotations
 
 import json
 import os

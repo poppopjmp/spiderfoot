@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from spiderfoot import SpiderFootDb
 from spiderfoot.correlation.rule_executor import RuleExecutor

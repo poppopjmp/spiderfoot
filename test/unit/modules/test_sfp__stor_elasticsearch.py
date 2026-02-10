@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # filepath: spiderfoot/test/unit/modules/test_sfp__stor_elasticsearch.py
 from unittest.mock import patch, MagicMock, Mock
 import unittest

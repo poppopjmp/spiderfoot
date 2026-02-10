@@ -1,4 +1,5 @@
 """Tests for spiderfoot.event_taxonomy."""
+from __future__ import annotations
 
 import unittest
 from spiderfoot.event_taxonomy import (

@@ -1,4 +1,5 @@
 """Tests for spiderfoot.test_harness."""
+from __future__ import annotations
 
 import unittest
 

@@ -1,6 +1,7 @@
 """
 Test decorators for safe execution and resource management.
 """
+from __future__ import annotations
 
 import functools
 import threading

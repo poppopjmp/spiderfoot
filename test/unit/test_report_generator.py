@@ -3,6 +3,7 @@ Tests for spiderfoot.report_generator — Report Generator Service.
 
 Covers the full pipeline: preprocess → context window → LLM → assemble.
 """
+from __future__ import annotations
 
 import json
 import time

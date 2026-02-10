@@ -1,4 +1,5 @@
 """Tests for spiderfoot.api.routers.rag_correlation — REST endpoints."""
+from __future__ import annotations
 
 import pytest
 from unittest.mock import patch, MagicMock

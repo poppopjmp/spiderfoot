@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_bluesky import sfp_bluesky
 from spiderfoot import SpiderFootEvent

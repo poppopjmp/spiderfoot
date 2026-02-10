@@ -5,6 +5,7 @@ Essential CLI test suite for SpiderFootCli (sfcli.py) - Core Working Tests
 This test suite focuses on the CLI functionality that works reliably,
 providing a solid foundation for coverage improvement.
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase
@@ -29,7 +30,7 @@ class TestSpiderFootCliEssential(TestModuleBase):
         self.cli = SpiderFootCli()
         # Disable spool to avoid file issues
         self.cli.config['cli.spool'] = False
-        self.cli.version = "5.225.0"
+        self.cli.version = "5.226.0"
 
     def tearDown(self):
         """Clean up after each test method."""

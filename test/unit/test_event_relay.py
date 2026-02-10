@@ -11,6 +11,7 @@ Covers:
     send_to_scan, broadcast, connection_count
   - WebSocket endpoint: relay mode, polling fallback
 """
+from __future__ import annotations
 
 import asyncio
 import json

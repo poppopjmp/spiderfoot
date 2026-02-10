@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_openwifimap import sfp_openwifimap
 from spiderfoot import SpiderFootEvent

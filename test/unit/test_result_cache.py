@@ -1,4 +1,5 @@
 """Tests for spiderfoot.result_cache."""
+from __future__ import annotations
 
 import time
 import pytest

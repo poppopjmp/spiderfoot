@@ -1,6 +1,7 @@
 """
 Tests for the Prometheus-compatible metrics module.
 """
+from __future__ import annotations
 
 import time
 import unittest

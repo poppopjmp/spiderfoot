@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         test_sfp_cisco_umbrella
 # Purpose:      Test Cisco Umbrella Investigate API module.

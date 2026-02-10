@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # filepath: spiderfoot/test/unit/modules/test_sfp_cloudfront.py
 import unittest
 from unittest.mock import patch, MagicMock

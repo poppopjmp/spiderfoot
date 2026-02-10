@@ -5,6 +5,7 @@ event_taxonomy + event_store, scan_templates + scan_workflow,
 result_cache + event_store, alert_rules + event_store,
 module_versioning + scan_templates, and full pipeline compositions.
 """
+from __future__ import annotations
 
 import time
 import pytest

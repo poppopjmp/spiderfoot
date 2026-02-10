@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # filepath: spiderfoot/test/integration/modules/test_sfpbambenek.py
 import pytest
 from unittest.mock import patch

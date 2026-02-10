@@ -1,4 +1,5 @@
 """Tests for spiderfoot.event_dedup module."""
+from __future__ import annotations
 
 import threading
 import time

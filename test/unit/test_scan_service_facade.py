@@ -7,6 +7,7 @@ Covers:
   - Scan router endpoints via Starlette TestClient
   - Pagination on list_scans
 """
+from __future__ import annotations
 
 import time
 import threading

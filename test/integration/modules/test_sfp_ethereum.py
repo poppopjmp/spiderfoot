@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_ethereum import sfp_ethereum
 from spiderfoot import SpiderFootEvent

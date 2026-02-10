@@ -3,6 +3,7 @@
 Comprehensive test suite for sfapi.py
 Focus: Achieving maximum code coverage for the API module
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

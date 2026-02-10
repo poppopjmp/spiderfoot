@@ -16,6 +16,7 @@ implemented in SpiderFoot's storage modules:
 Author: SpiderFoot Enterprise Team
 Created: 2025-01-27
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

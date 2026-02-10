@@ -10,6 +10,7 @@ This comprehensive test suite covers all functionality in sfwebui.py including:
 - Error handling and edge cases
 - Template rendering and response formatting
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

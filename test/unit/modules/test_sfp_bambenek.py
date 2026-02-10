@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # filepath: spiderfoot/test/unit/modules/test_sfp_bambenek.py
 import unittest
 from spiderfoot.sflib import SpiderFoot

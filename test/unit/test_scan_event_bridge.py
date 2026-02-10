@@ -5,6 +5,8 @@ Validates the ScanEventBridge that routes live scan events from
 the scanner's waitForThreads() loop to the EventRelay for
 real-time WebSocket delivery.
 """
+from __future__ import annotations
+
 import time
 import threading
 from unittest.mock import MagicMock, patch, PropertyMock

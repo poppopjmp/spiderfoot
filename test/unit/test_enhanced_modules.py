@@ -9,6 +9,7 @@ Tests the new OSINT modules including:
 - Performance Optimizer
 - Blockchain Analytics
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

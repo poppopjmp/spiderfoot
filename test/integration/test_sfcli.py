@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # test_sfcli.py
 import subprocess
 import sys

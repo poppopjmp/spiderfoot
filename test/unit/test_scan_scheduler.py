@@ -1,6 +1,7 @@
 """
 Tests for the Scan Scheduler Service.
 """
+from __future__ import annotations
 
 import time
 import unittest

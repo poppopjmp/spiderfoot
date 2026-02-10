@@ -1,4 +1,5 @@
 """Tests for the SpiderFoot structured logging module."""
+from __future__ import annotations
 
 import json
 import logging

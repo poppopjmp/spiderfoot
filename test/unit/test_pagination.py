@@ -11,6 +11,7 @@ Covers:
 - Link header generation (RFC 8288)
 - make_params() convenience constructor
 """
+from __future__ import annotations
 
 import pytest
 

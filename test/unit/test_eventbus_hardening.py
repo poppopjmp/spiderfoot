@@ -1,4 +1,5 @@
 """Tests for spiderfoot.eventbus_hardening — Cycle 11."""
+from __future__ import annotations
 
 import asyncio
 import os

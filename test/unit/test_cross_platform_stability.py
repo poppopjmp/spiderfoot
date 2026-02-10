@@ -9,6 +9,7 @@ This test suite specifically addresses:
 5. Cross-platform robustness for Linux, macOS, and Windows
 6. Python version compatibility (3.9-3.13)
 """
+from __future__ import annotations
 
 import sys
 import os

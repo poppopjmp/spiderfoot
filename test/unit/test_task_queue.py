@@ -4,6 +4,7 @@ Tests for spiderfoot.task_queue and spiderfoot.api.routers.tasks.
 Covers: TaskManager lifecycle, submit/get/list/cancel/progress,
 callbacks, history pruning, singleton accessor, and all REST endpoints.
 """
+from __future__ import annotations
 
 import threading
 import time

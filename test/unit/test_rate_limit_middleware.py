@@ -12,6 +12,7 @@ Covers:
 - install_rate_limiting helper
 - Module-level state management
 """
+from __future__ import annotations
 
 import time
 from unittest.mock import MagicMock, AsyncMock, patch

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # test_spiderfootscanner.py
 import pytest
 import unittest

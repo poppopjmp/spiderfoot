@@ -1,4 +1,5 @@
 """Tests for spiderfoot.hybrid_correlation — rules + vector + multi-dim."""
+from __future__ import annotations
 
 import pytest
 from types import SimpleNamespace

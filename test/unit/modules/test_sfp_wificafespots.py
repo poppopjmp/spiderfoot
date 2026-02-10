@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_wificafespots import sfp_wificafespots
 from spiderfoot import SpiderFootEvent

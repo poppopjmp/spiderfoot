@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # filepath: spiderfoot/test/integration/modules/test_sfpleakcheck.py
 import pytest
 import unittest

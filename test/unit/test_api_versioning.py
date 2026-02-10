@@ -1,4 +1,5 @@
 """Tests for spiderfoot.api_versioning."""
+from __future__ import annotations
 
 import unittest
 

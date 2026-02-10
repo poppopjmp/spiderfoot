@@ -9,6 +9,7 @@ This comprehensive test suite covers all functionality in sf.py including:
 - Error handling and edge cases
 - Backward compatibility features
 """
+from __future__ import annotations
 
 import contextlib
 import unittest

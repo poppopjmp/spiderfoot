@@ -1,6 +1,7 @@
 """
 Tests for the ServiceRegistry and dependency injection.
 """
+from __future__ import annotations
 
 import unittest
 from unittest.mock import MagicMock, patch

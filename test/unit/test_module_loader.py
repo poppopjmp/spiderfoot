@@ -4,6 +4,7 @@ Tests for spiderfoot.module_loader — Cycle 22: Module Dependency Resolution Wi
 Tests the ModuleLoader adapter that connects ModuleRegistry and ModuleGraph
 to the scanner's module loading path with fallback to legacy __import__.
 """
+from __future__ import annotations
 
 import queue
 import threading

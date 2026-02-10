@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_arbitrum import sfp_arbitrum
 from spiderfoot import SpiderFootEvent

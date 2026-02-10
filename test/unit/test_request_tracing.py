@@ -9,6 +9,7 @@ Covers:
   - StructuredFormatter integration: request_id in JSON output
   - install_tracing_middleware: wiring and idempotent filter install
 """
+from __future__ import annotations
 
 import json
 import logging

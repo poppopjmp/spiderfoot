@@ -1,4 +1,5 @@
 """Tests for spiderfoot.embedding_service — text-to-vector embeddings."""
+from __future__ import annotations
 
 import math
 import pytest

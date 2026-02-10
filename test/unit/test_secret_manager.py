@@ -1,4 +1,5 @@
 """Tests for spiderfoot.secret_manager."""
+from __future__ import annotations
 
 import json
 import os

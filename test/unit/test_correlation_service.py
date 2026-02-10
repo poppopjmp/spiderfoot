@@ -1,4 +1,5 @@
 """Unit tests for spiderfoot.correlation_service."""
+from __future__ import annotations
 
 import os
 import queue

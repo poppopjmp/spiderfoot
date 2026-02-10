@@ -3,6 +3,7 @@
 Comprehensive unit test suite for sf_orchestrator.py
 Tests the modular orchestrator functionality, argument parsing, and component coordination.
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

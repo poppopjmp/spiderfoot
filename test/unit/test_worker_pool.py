@@ -1,6 +1,7 @@
 """
 Tests for the Module Worker Pool.
 """
+from __future__ import annotations
 
 import queue
 import time

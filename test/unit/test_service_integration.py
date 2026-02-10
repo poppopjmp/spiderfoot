@@ -1,6 +1,7 @@
 """
 Tests for the service integration wiring.
 """
+from __future__ import annotations
 
 import time
 import unittest

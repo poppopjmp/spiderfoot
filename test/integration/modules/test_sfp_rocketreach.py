@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         test_sfp_rocketreach
 # Purpose:      Test RocketReach module.

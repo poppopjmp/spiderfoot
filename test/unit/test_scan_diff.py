@@ -1,4 +1,5 @@
 """Tests for spiderfoot.scan_diff."""
+from __future__ import annotations
 
 import pytest
 

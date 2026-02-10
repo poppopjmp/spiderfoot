@@ -1,4 +1,5 @@
 """Tests for spiderfoot.scan_delta module."""
+from __future__ import annotations
 
 import unittest
 

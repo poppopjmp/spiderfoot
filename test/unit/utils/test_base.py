@@ -1,4 +1,5 @@
 """Base test class with proper resource management to prevent hanging tests."""
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

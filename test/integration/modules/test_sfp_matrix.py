@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from modules.sfp_matrix import sfp_matrix
 from spiderfoot import SpiderFootEvent

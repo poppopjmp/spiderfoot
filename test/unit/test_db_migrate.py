@@ -1,4 +1,5 @@
 """Tests for spiderfoot.db_migrate."""
+from __future__ import annotations
 
 import os
 import tempfile

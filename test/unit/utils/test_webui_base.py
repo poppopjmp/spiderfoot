@@ -1,6 +1,8 @@
 """
 Enhanced base class for web UI tests with robust timeout protection and resource cleanup.
 """
+from __future__ import annotations
+
 import threading
 import time
 import queue

@@ -7,6 +7,7 @@ NOTE: Many of these tests are for legacy functionality that no longer exists
 in the new modular architecture. They should be updated or replaced with
 tests for the new SpiderFootOrchestrator-based architecture.
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

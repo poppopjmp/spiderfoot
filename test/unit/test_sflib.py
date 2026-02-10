@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # test_sflib_comprehensive.py
 import pytest
 import unittest

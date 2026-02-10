@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_openwifimap import sfp_openwifimap

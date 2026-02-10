@@ -10,6 +10,7 @@ This comprehensive test suite covers all functionality in sfcli.py including:
 - History and session management
 - Error handling and edge cases
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

@@ -1,4 +1,5 @@
 """Tests for spiderfoot.module_versioning."""
+from __future__ import annotations
 
 import pytest
 from spiderfoot.module_versioning import (

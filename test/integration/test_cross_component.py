@@ -4,6 +4,7 @@ Tests verify that the major subsystems work together correctly:
 event pipeline + filters, sandbox + metrics, orchestrator + policies,
 correlation + pipeline, export with filtered events, etc.
 """
+from __future__ import annotations
 
 import time
 import unittest

@@ -1,4 +1,5 @@
 """Tests for spiderfoot.enrichment module."""
+from __future__ import annotations
 
 import threading
 import unittest

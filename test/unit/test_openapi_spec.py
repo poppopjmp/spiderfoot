@@ -1,4 +1,5 @@
 """Tests for spiderfoot.openapi_spec."""
+from __future__ import annotations
 
 import json
 import os

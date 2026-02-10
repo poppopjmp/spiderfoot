@@ -1,4 +1,5 @@
 """Event fixtures for testing SpiderFoot event handling."""
+from __future__ import annotations
 
 import pytest
 import time

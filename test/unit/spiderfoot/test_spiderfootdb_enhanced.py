@@ -12,6 +12,7 @@ This test suite covers:
 - Error handling and edge cases
 - Transaction management and data integrity
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

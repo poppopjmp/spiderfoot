@@ -3,6 +3,7 @@
 Enhanced comprehensive test suite for sfapi.py
 Extends existing tests with better coverage for the modular API structure.
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

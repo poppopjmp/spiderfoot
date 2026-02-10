@@ -1,4 +1,5 @@
 """Tests for the Vector.dev integration sink."""
+from __future__ import annotations
 
 import json
 import logging
