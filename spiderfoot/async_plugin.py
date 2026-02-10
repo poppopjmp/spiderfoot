@@ -72,7 +72,7 @@ class AsyncResult:
     """Container for async operation results."""
 
     def __init__(self, data: Any = None, error: str | None = None,
-                 duration: float = 0.0):
+                 duration: float = 0.0) -> None:
         self.data = data
         self.error = error
         self.duration = duration
@@ -96,7 +96,7 @@ class SpiderFootAsyncPlugin(SpiderFootModernPlugin):
     # Maximum concurrent async operations per module
     _max_async_concurrency = 10
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._semaphore: asyncio.Semaphore | None = None
         self._async_executor: ThreadPoolExecutor | None = None

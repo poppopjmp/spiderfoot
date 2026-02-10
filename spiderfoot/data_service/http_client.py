@@ -32,7 +32,7 @@ class HttpDataService(DataService):
     the scanner to be fully decoupled from the database.
     """
 
-    def __init__(self, config: Optional[DataServiceConfig] = None, **kwargs):
+    def __init__(self, config: Optional[DataServiceConfig] = None, **kwargs) -> None:
         super().__init__(config)
         self._base_url = self.config.api_url.rstrip("/")
         self._api_key = self.config.api_key

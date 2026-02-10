@@ -102,7 +102,7 @@ class CorrelationRule:
         mode: MatchMode = MatchMode.ALL,
         enabled: bool = True,
         priority: int = 0,
-    ):
+    ) -> None:
         self.name = name
         self.description = description
         self.mode = mode
@@ -258,7 +258,7 @@ class CorrelationEngine:
             engine.process(event)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._rules: dict[str, CorrelationRule] = {}
         self._callbacks: list[Callable[[CorrelationMatch], None]] = []
         self._matches: list[CorrelationMatch] = []

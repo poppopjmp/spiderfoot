@@ -140,7 +140,7 @@ class AlertRule:
         cooldown_seconds: float = 0.0,
         max_alerts: int = 0,
         enabled: bool = True,
-    ):
+    ) -> None:
         self.name = name
         self.severity = severity
         self.message_template = message_template
@@ -228,7 +228,7 @@ class AlertEngine:
         max_history: Maximum number of triggered alerts to retain.
     """
 
-    def __init__(self, max_history: int = 1000):
+    def __init__(self, max_history: int = 1000) -> None:
         self._rules: dict[str, AlertRule] = {}
         self._alerts: list[Alert] = []
         self._max_history = max_history

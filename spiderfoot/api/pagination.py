@@ -74,7 +74,7 @@ class PaginationParams:
             regex="^(asc|desc)$",
             description="Sort order: asc or desc",
         ),
-    ):
+    ) -> None:
         # Resolve page_size/limit
         if page_size is not None:
             self._page_size = min(max(page_size, self.MIN_PAGE_SIZE), self.MAX_PAGE_SIZE)

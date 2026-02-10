@@ -22,7 +22,7 @@ from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
 log = logging.getLogger(__name__)
 
 class ScanManager:
-    def __init__(self, dbh, conn, dbhLock, db_type):
+    def __init__(self, dbh, conn, dbhLock, db_type) -> None:
         self.dbh = dbh
         self.conn = conn
         self.dbhLock = dbhLock

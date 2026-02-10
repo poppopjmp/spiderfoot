@@ -24,7 +24,7 @@ class RedisEventBus(EventBus):
     Requires: redis[hiredis] (aioredis)
     """
 
-    def __init__(self, config: Optional[EventBusConfig] = None):
+    def __init__(self, config: Optional[EventBusConfig] = None) -> None:
         super().__init__(config)
         self._redis = None
         self._consumer_group = f"sf-workers-{uuid.uuid4().hex[:8]}"

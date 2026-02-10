@@ -22,7 +22,7 @@ class LocalDataService(DataService):
     or single-node mode.
     """
 
-    def __init__(self, config: Optional[DataServiceConfig] = None, db_opts: Optional[dict] = None):
+    def __init__(self, config: Optional[DataServiceConfig] = None, db_opts: Optional[dict] = None) -> None:
         """Initialize LocalDataService.
 
         Args:

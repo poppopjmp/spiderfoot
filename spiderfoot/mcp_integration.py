@@ -18,7 +18,7 @@ from spiderfoot.workspace import SpiderFootWorkspace
 class SpiderFootMCPClient:
     """Client for communicating with MCP servers for CTI analysis."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """Initialize MCP client.
 
         Args:

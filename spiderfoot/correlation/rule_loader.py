@@ -38,7 +38,7 @@ RULE_SCHEMA = {
 }
 
 class RuleLoader:
-    def __init__(self, rule_dir):
+    def __init__(self, rule_dir) -> None:
         self.rule_dir = rule_dir
         self.rules = []
         self.errors = []

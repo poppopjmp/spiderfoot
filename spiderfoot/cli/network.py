@@ -4,7 +4,7 @@ Network communication utilities for SpiderFoot CLI.
 import requests
 
 class SpiderFootApiClient:
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         self.config = config
 
     def request(self, url, post=None):

@@ -47,7 +47,7 @@ class DataServiceCircuitBreaker:
         failure_threshold: int = 5,
         recovery_timeout: float = 30.0,
         half_open_max: int = 1,
-    ):
+    ) -> None:
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.half_open_max = half_open_max
@@ -122,7 +122,7 @@ class ResilientDataService(DataService):
         fallback: Optional[DataService] = None,
         failure_threshold: int = 5,
         recovery_timeout: float = 30.0,
-    ):
+    ) -> None:
         super().__init__(primary.config)
         self._primary = primary
         self._fallback = fallback

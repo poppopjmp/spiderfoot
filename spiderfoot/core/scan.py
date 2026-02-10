@@ -21,7 +21,7 @@ from spiderfoot.scan_service.scanner import startSpiderFootScanner
 class ScanManager:
     """Centralized scan management for SpiderFoot."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any]) -> None:
         """
         Initialize the scan manager.
 

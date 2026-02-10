@@ -53,7 +53,7 @@ class APIKeyInfo:
 class AdvancedRateLimiter:
     """Advanced rate limiting with multiple strategies."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.requests = defaultdict(deque)
         self.blocked_ips = {}
         self.suspicious_ips = defaultdict(int)
@@ -158,7 +158,7 @@ class AdvancedRateLimiter:
 class APIKeyManager:
     """Secure API key management."""
 
-    def __init__(self, secret_key: str):
+    def __init__(self, secret_key: str) -> None:
         self.secret_key = secret_key
         self.api_keys: dict[str, APIKeyInfo] = {}
         self.key_usage = defaultdict(int)
@@ -283,7 +283,7 @@ class RequestValidator:
         r'<%.*%>',                    # Template injection
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.SUSPICIOUS_PATTERNS]
         self.logger = logging.getLogger('spiderfoot.validation')
 
@@ -356,7 +356,7 @@ class RequestValidator:
 class DDoSProtection:
     """DDoS protection mechanisms."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.request_counts = defaultdict(lambda: defaultdict(int))
         self.connection_counts = defaultdict(int)
         self.blocked_networks = set()
@@ -424,7 +424,7 @@ class DDoSProtection:
 class APISecurityMiddleware:
     """Comprehensive API security middleware."""
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, Any]) -> None:
         self.config = config
         self.rate_limiter = AdvancedRateLimiter()
         self.api_key_manager = APIKeyManager(config.get('secret_key', 'default-secret'))

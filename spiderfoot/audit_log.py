@@ -155,7 +155,7 @@ class AuditBackend:
 class MemoryAuditBackend(AuditBackend):
     """In-memory audit log with bounded buffer."""
 
-    def __init__(self, max_events: int = 10000):
+    def __init__(self, max_events: int = 10000) -> None:
         self._events: deque = deque(maxlen=max_events)
         self._lock = threading.Lock()
 
@@ -205,7 +205,7 @@ class MemoryAuditBackend(AuditBackend):
 class FileAuditBackend(AuditBackend):
     """Append-only file audit log (JSON lines)."""
 
-    def __init__(self, filepath: str = "audit.log"):
+    def __init__(self, filepath: str = "audit.log") -> None:
         self._filepath = filepath
         self._lock = threading.Lock()
 
@@ -255,7 +255,7 @@ class AuditLogger:
     callback hooks for real-time audit event processing.
     """
 
-    def __init__(self, backends: Optional[list[AuditBackend]] = None):
+    def __init__(self, backends: Optional[list[AuditBackend]] = None) -> None:
         """
         Args:
             backends: List of audit backends. Defaults to memory backend.

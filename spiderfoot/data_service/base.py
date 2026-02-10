@@ -47,7 +47,7 @@ class DataService(ABC):
     system, but implementations may use async internally.
     """
 
-    def __init__(self, config: Optional[DataServiceConfig] = None):
+    def __init__(self, config: Optional[DataServiceConfig] = None) -> None:
         self.config = config or DataServiceConfig()
         self.log = logging.getLogger(f"spiderfoot.dataservice.{self.config.backend.value}")
 

@@ -69,7 +69,7 @@ class CircuitBreaker:
 
     def __init__(self, failure_threshold: int = 5,
                  recovery_timeout: float = 30.0,
-                 half_open_max: int = 1):
+                 half_open_max: int = 1) -> None:
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.half_open_max = half_open_max
@@ -133,7 +133,7 @@ class CircuitBreaker:
 class RateLimiter:
     """Simple token-bucket rate limiter per client."""
 
-    def __init__(self, rate: float = 30.0, burst: int = 50):
+    def __init__(self, rate: float = 30.0, burst: int = 50) -> None:
         """
         Args:
             rate: Requests per second.
@@ -193,7 +193,7 @@ class APIGateway:
     ServiceClient.
     """
 
-    def __init__(self, mode: Optional[str] = None):
+    def __init__(self, mode: Optional[str] = None) -> None:
         """
         Args:
             mode: "monolith" or "microservices". Auto-detects from
@@ -366,7 +366,7 @@ class APIGateway:
 class GatewayError(Exception):
     """Raised on gateway routing failures."""
 
-    def __init__(self, message: str, status: int = 500):
+    def __init__(self, message: str, status: int = 500) -> None:
         super().__init__(message)
         self.status = status
 

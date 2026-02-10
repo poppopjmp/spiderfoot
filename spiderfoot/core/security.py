@@ -149,7 +149,7 @@ class InputValidator:
 class RateLimiter:
     """Rate limiting implementation with multiple strategies."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.requests = {}
         self.blocked_ips = {}
         self.lock = threading.Lock()
@@ -208,7 +208,7 @@ class RateLimiter:
 class SecurityMiddleware:
     """Security middleware for request processing."""
 
-    def __init__(self, config: dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None) -> None:
         self.config = config or {}
         self.rate_limiter = RateLimiter()
         self.logger = logging.getLogger('spiderfoot.security')
@@ -260,7 +260,7 @@ class SecurityMiddleware:
 class AuthenticationManager:
     """Authentication and authorization management."""
 
-    def __init__(self, secret_key: str = None):
+    def __init__(self, secret_key: str = None) -> None:
         self.secret_key = secret_key or self._generate_secret_key()
         self.sessions = {}
         self.failed_attempts = {}
@@ -354,7 +354,7 @@ class AuthenticationManager:
 class DataProtection:
     """Data protection and encryption utilities."""
 
-    def __init__(self, encryption_key: bytes = None):
+    def __init__(self, encryption_key: bytes = None) -> None:
         if encryption_key is None:
             encryption_key = Fernet.generate_key()
         self.cipher = Fernet(encryption_key)

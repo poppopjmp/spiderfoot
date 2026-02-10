@@ -28,7 +28,7 @@ class WebSocketManager:
     heartbeat support, and graceful disconnect handling.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._connections: dict[str, set[WebSocket]] = {}
         self._lock = asyncio.Lock()
 

@@ -30,7 +30,7 @@ class EventManager:
     delegate all event-related SQL operations.
     """
 
-    def __init__(self, dbh, conn, dbhLock, db_type):
+    def __init__(self, dbh, conn, dbhLock, db_type) -> None:
         self.dbh = dbh
         self.conn = conn
         self.dbhLock = dbhLock

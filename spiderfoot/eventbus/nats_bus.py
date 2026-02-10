@@ -24,7 +24,7 @@ class NatsEventBus(EventBus):
     Requires: nats-py
     """
 
-    def __init__(self, config: Optional[EventBusConfig] = None):
+    def __init__(self, config: Optional[EventBusConfig] = None) -> None:
         super().__init__(config)
         self._nc = None
         self._js = None

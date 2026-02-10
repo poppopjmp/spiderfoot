@@ -80,7 +80,7 @@ class DnsService:
         hostnames = dns_svc.reverse_resolve("93.184.216.34")
     """
 
-    def __init__(self, config: Optional[DnsServiceConfig] = None):
+    def __init__(self, config: Optional[DnsServiceConfig] = None) -> None:
         self.config = config or DnsServiceConfig()
         self.log = logging.getLogger("spiderfoot.dns_service")
         self._cache: dict[str, tuple[float, Any]] = {}

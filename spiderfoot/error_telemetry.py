@@ -200,7 +200,7 @@ def compute_fingerprint(
 class _SlidingWindow:
     """Fixed-window error counter for rate computation."""
 
-    def __init__(self, window_seconds: float = 60.0):
+    def __init__(self, window_seconds: float = 60.0) -> None:
         self._window = window_seconds
         self._timestamps: list[float] = []
         self._lock = threading.Lock()
@@ -250,7 +250,7 @@ class ErrorTelemetry:
         *,
         ring_size: int = 1000,
         window_seconds: float = 60.0,
-    ):
+    ) -> None:
         self._ring_size = ring_size
         self._window_seconds = window_seconds
 

@@ -31,7 +31,7 @@ from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 class PerformanceProfiler:
     """Performance profiling and monitoring."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.metrics = defaultdict(list)
         self.current_operations = {}
         self.lock = threading.Lock()
@@ -100,7 +100,7 @@ class PerformanceProfiler:
 class CacheManager:
     """Multi-layer caching system."""
 
-    def __init__(self, config: dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None) -> None:
         self.config = config or {}
         self.memory_cache = {}
         self.cache_stats = defaultdict(int)
@@ -230,7 +230,7 @@ class CacheManager:
 class DatabaseOptimizer:
     """Database performance optimization."""
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str) -> None:
         self.db_path = db_path
         self.connection_pool = []
         self.pool_lock = threading.Lock()
@@ -278,7 +278,7 @@ class DatabaseOptimizer:
 class AsyncHTTPManager:
     """Asynchronous HTTP request manager for better performance."""
 
-    def __init__(self, max_concurrent: int = 100, timeout: int = 30):
+    def __init__(self, max_concurrent: int = 100, timeout: int = 30) -> None:
         self.max_concurrent = max_concurrent
         self.timeout = timeout
         self.session = None
@@ -334,7 +334,7 @@ class AsyncHTTPManager:
 class ResourceMonitor:
     """Monitor system resources and throttle operations."""
 
-    def __init__(self, cpu_threshold: float = 80.0, memory_threshold: float = 80.0):
+    def __init__(self, cpu_threshold: float = 80.0, memory_threshold: float = 80.0) -> None:
         self.cpu_threshold = cpu_threshold
         self.memory_threshold = memory_threshold
         self.logger = logging.getLogger('spiderfoot.resources')
@@ -381,7 +381,7 @@ class ResourceMonitor:
 class BatchProcessor:
     """Batch processing for improved efficiency."""
 
-    def __init__(self, batch_size: int = 100, max_workers: int = None):
+    def __init__(self, batch_size: int = 100, max_workers: int = None) -> None:
         self.batch_size = batch_size
         self.max_workers = max_workers or min(32, (os.cpu_count() or 1) + 4)
 
@@ -425,7 +425,7 @@ class BatchProcessor:
 class MemoryManager:
     """Memory management and optimization."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.tracked_objects = weakref.WeakSet()
         self.logger = logging.getLogger('spiderfoot.memory')
 

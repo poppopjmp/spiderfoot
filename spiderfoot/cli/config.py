@@ -3,7 +3,7 @@ CLI configuration management for SpiderFoot CLI.
 """
 
 class CLIConfig:
-    def __init__(self):
+    def __init__(self) -> None:
         self.options = {
             "cli.debug": False,
             "cli.silent": False,

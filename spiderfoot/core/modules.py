@@ -17,7 +17,7 @@ from spiderfoot import SpiderFootHelpers
 class ModuleManager:
     """Centralized module management for SpiderFoot."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the module manager."""
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
         self.modules = {}

@@ -151,7 +151,7 @@ class EventDeduplicator:
         action: DedupAction = DedupAction.DROP,
         scope: str = "global",
         max_records: int = 100000,
-    ):
+    ) -> None:
         self.strategy = strategy
         self.action = action
         self.scope = scope  # "global", "per_module", "per_type"
@@ -355,7 +355,7 @@ class ScanDeduplicator:
         scan_id: str,
         default_strategy: DedupStrategy = DedupStrategy.EXACT,
         default_action: DedupAction = DedupAction.DROP,
-    ):
+    ) -> None:
         self.scan_id = scan_id
         self._default_strategy = default_strategy
         self._default_action = default_action

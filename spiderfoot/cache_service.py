@@ -68,7 +68,7 @@ class CacheConfig:
 class CacheService(ABC):
     """Abstract cache service interface."""
 
-    def __init__(self, config: Optional[CacheConfig] = None):
+    def __init__(self, config: Optional[CacheConfig] = None) -> None:
         self.config = config or CacheConfig()
         self.log = logging.getLogger(f"spiderfoot.cache.{self.config.backend.value}")
         self._hits = 0
@@ -175,7 +175,7 @@ class MemoryCache(CacheService):
     Best for single-process deployments and testing.
     """
 
-    def __init__(self, config: Optional[CacheConfig] = None):
+    def __init__(self, config: Optional[CacheConfig] = None) -> None:
         super().__init__(config)
         self._store: dict[str, tuple] = {}  # key -> (expire_time, value)
         self._lock = threading.RLock()
@@ -259,7 +259,7 @@ class FileCache(CacheService):
     Each cache entry is stored as a separate file with SHA-224 hashed name.
     """
 
-    def __init__(self, config: Optional[CacheConfig] = None):
+    def __init__(self, config: Optional[CacheConfig] = None) -> None:
         super().__init__(config)
         self._cache_dir = self.config.cache_dir or os.path.join(
             os.path.expanduser("~"), ".spiderfoot", "cache"
@@ -375,7 +375,7 @@ class RedisCache(CacheService):
     and distributed deployments.
     """
 
-    def __init__(self, config: Optional[CacheConfig] = None):
+    def __init__(self, config: Optional[CacheConfig] = None) -> None:
         super().__init__(config)
         self._client = None
 

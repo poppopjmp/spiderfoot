@@ -110,7 +110,7 @@ class EventBusBridge:
         module_name: str,
         watched_events: list,
         max_queue_size: int = 10000,
-    ):
+    ) -> None:
         self.event_bus = event_bus
         self.scan_id = scan_id
         self.module_name = module_name

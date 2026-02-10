@@ -247,7 +247,7 @@ class EventBusBenchmark(Benchmark):
 
     name = "EventBus"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._bus = None
 
     def setup(self) -> None:
@@ -289,7 +289,7 @@ class CacheBenchmark(Benchmark):
 
     name = "Cache"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._cache = None
 
     def setup(self) -> None:
@@ -342,7 +342,7 @@ class RateLimiterBenchmark(Benchmark):
 
     name = "RateLimiter"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._limiter = None
 
     def setup(self) -> None:
@@ -397,7 +397,7 @@ class SerializationBenchmark(Benchmark):
 
     name = "Serialization"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._payload = {
             "eventType": "IP_ADDRESS",
             "data": "192.168.1.1",
@@ -502,7 +502,7 @@ class HashBenchmark(Benchmark):
 class BenchmarkSuite:
     """Manages and runs a collection of benchmarks."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._benchmarks: list[Benchmark] = []
 
     def add(self, benchmark: Benchmark) -> BenchmarkSuite:

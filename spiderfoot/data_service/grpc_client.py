@@ -45,7 +45,7 @@ class GrpcDataService(DataService):
     channel is created on first use and reused for subsequent calls.
     """
 
-    def __init__(self, config: Optional[DataServiceConfig] = None, **kwargs):
+    def __init__(self, config: Optional[DataServiceConfig] = None, **kwargs) -> None:
         super().__init__(config)
         _ensure_grpc()
         self._target = self.config.api_url

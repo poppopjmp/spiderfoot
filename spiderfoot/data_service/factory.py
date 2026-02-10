@@ -169,7 +169,7 @@ class DataServiceBridge:
         bridge.scanEventStore(scan_id, sf_event)
     """
 
-    def __init__(self, data_service: DataService):
+    def __init__(self, data_service: DataService) -> None:
         self._ds = data_service
         self.log = logging.getLogger("spiderfoot.dataservice.bridge")
 

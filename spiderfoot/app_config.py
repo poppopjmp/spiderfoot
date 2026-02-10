@@ -384,7 +384,7 @@ class ValidationError:
 
     __slots__ = ("field", "message", "value")
 
-    def __init__(self, field: str, message: str, value: Any = None):
+    def __init__(self, field: str, message: str, value: Any = None) -> None:
         self.field = field
         self.message = message
         self.value = value

@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 class APISecurityManager:
     """Comprehensive API security management for FastAPI."""
 
-    def __init__(self, secret_key: str = None, token_expiry: int = 3600):
+    def __init__(self, secret_key: str = None, token_expiry: int = 3600) -> None:
         """Initialize API security manager.
 
         Args:
@@ -228,7 +228,7 @@ class APISecurityManager:
 class APIKeyManager:
     """API key management with database storage for FastAPI."""
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         """Initialize API key manager.
 
         Args:

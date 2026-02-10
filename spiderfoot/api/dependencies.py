@@ -31,7 +31,7 @@ class Config:
     real validation instead of the former no-op stub.
     """
 
-    def __init__(self, *, _skip_db: bool = False, _app_config: AppConfig | None = None):
+    def __init__(self, *, _skip_db: bool = False, _app_config: AppConfig | None = None) -> None:
         """Initialise configuration.
 
         Args:

@@ -18,7 +18,7 @@ class EventEnricher:
     correlation rules are evaluated.
     """
 
-    def __init__(self, dbh):
+    def __init__(self, dbh) -> None:
         self.log = logging.getLogger("spiderfoot.correlation.enricher")
         self.dbh = dbh
 

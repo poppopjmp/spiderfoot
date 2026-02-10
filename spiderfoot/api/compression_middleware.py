@@ -62,7 +62,7 @@ class CompressionMiddleware(BaseHTTPMiddleware):
     - Response is not a streaming response
     """
 
-    def __init__(self, app, *, min_size: int = _DEFAULT_MIN_SIZE, level: int = _DEFAULT_LEVEL):
+    def __init__(self, app, *, min_size: int = _DEFAULT_MIN_SIZE, level: int = _DEFAULT_LEVEL) -> None:
         super().__init__(app)
         self.min_size = min_size
         self.level = max(1, min(9, level))

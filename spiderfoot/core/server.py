@@ -25,7 +25,7 @@ from spiderfoot.constants import DEFAULT_API_PORT
 class ServerManager:
     """Centralized server management for SpiderFoot."""
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, Any]) -> None:
         """
         Initialize the server manager.
 

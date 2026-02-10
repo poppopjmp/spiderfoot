@@ -213,7 +213,7 @@ class ContextWindowManager:
     ContextWindow objects, each fitting within the configured token budget.
     """
 
-    def __init__(self, config: WindowConfig | None = None):
+    def __init__(self, config: WindowConfig | None = None) -> None:
         self.config = config or WindowConfig()
 
     @property

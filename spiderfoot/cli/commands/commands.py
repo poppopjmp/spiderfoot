@@ -8,7 +8,7 @@ import os
 import sys
 
 class CommandRegistry:
-    def __init__(self):
+    def __init__(self) -> None:
         self.commands = {}
 
     def register(self, name, func, help_text=None):
@@ -30,7 +30,7 @@ class BaseCommand:
     """
     Optional base class for CLI commands.
     """
-    def __init__(self, cli):
+    def __init__(self, cli) -> None:
         self.cli = cli
     def run(self, *args, **kwargs):
         raise NotImplementedError("Command must implement run()")

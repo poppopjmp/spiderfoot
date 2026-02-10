@@ -330,7 +330,7 @@ class RuleExecutor:
         if hook_name in cls._event_hooks:
             cls._event_hooks[hook_name].append(func)
 
-    def __init__(self, dbh, rules, scan_ids=None, debug=False):
+    def __init__(self, dbh, rules, scan_ids=None, debug=False) -> None:
         self.log = logging.getLogger("spiderfoot.correlation.executor")
         self.dbh = dbh
         self.rules = rules

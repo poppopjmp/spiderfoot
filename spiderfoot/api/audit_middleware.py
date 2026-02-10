@@ -50,7 +50,7 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
     - user identity (from auth header, redacted)
     """
 
-    def __init__(self, app, exclude_paths: set[str] | None = None, log_body: bool = False):
+    def __init__(self, app, exclude_paths: set[str] | None = None, log_body: bool = False) -> None:
         super().__init__(app)
         env_excludes = os.environ.get("SF_API_AUDIT_EXCLUDE", "")
         if env_excludes:

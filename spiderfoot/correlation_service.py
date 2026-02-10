@@ -145,7 +145,7 @@ class CorrelationService:
     Manages rule loading, event-driven triggers, and batch execution.
     """
 
-    def __init__(self, config: CorrelationServiceConfig):
+    def __init__(self, config: CorrelationServiceConfig) -> None:
         self.config = config
         self._rules: list[dict] = []
         self._lock = threading.Lock()

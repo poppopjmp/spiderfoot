@@ -11,7 +11,7 @@
 import logging
 
 class ResultAggregator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.log = logging.getLogger("spiderfoot.correlation.aggregator")
 
     def aggregate(self, results, method='count'):

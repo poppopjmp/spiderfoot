@@ -73,7 +73,7 @@ class Enricher(ABC):
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
         event_types: Optional[set[str]] = None,
-    ):
+    ) -> None:
         self.name = name or self.__class__.__name__
         self.priority = priority
         self.event_types = event_types  # None = all types
@@ -125,7 +125,7 @@ class FunctionEnricher(Enricher):
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
         event_types: Optional[set[str]] = None,
-    ):
+    ) -> None:
         super().__init__(name=name or func.__name__, priority=priority, event_types=event_types)
         self._func = func
 
@@ -154,7 +154,7 @@ class EnrichmentPipeline:
         result = pipeline.process(ctx)
     """
 
-    def __init__(self, name: str = "default"):
+    def __init__(self, name: str = "default") -> None:
         self.name = name
         self._enrichers: list[Enricher] = []
         self._lock = threading.Lock()
@@ -311,7 +311,7 @@ class TagEnricher(Enricher):
         "COMPANY_NAME": "identity",
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             name="tag_enricher",
             priority=EnrichmentPriority.CRITICAL,
@@ -327,7 +327,7 @@ class TagEnricher(Enricher):
 class DataSizeEnricher(Enricher):
     """Adds data size metadata."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             name="data_size_enricher",
             priority=EnrichmentPriority.CRITICAL,

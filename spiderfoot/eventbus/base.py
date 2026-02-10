@@ -84,7 +84,7 @@ class EventBus(ABC):
     distributed services.
     """
 
-    def __init__(self, config: Optional[EventBusConfig] = None):
+    def __init__(self, config: Optional[EventBusConfig] = None) -> None:
         self.config = config or EventBusConfig()
         self.log = logging.getLogger(f"spiderfoot.eventbus.{self.config.backend.value}")
         self._running = False

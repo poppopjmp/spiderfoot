@@ -23,7 +23,7 @@ class InMemoryEventBus(EventBus):
     wildcards and is fully async-compatible.
     """
 
-    def __init__(self, config: Optional[EventBusConfig] = None):
+    def __init__(self, config: Optional[EventBusConfig] = None) -> None:
         super().__init__(config)
         self._queues: dict[str, asyncio.Queue] = {}
         self._callbacks: dict[str, Callable] = {}  # sub_id -> callback

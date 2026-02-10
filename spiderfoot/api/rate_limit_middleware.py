@@ -355,7 +355,7 @@ if HAS_STARLETTE:
             app,
             *,
             rate_config: RateLimitConfig | None = None,
-        ):
+        ) -> None:
             super().__init__(app)
             self._config = rate_config or RateLimitConfig()
             self._setup_limiter()

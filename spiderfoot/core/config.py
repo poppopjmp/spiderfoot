@@ -58,7 +58,7 @@ class ConfigManager:
         '_modulesenabled': "Modules enabled for the scan."
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the configuration manager."""
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
         self._config = deepcopy(self.DEFAULT_CONFIG)

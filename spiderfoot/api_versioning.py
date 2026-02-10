@@ -157,7 +157,7 @@ class VersionNegotiator:
                  default_version: str = "v1",
                  header_name: str = "X-API-Version",
                  query_param: str = "version",
-                 vendor_type: str = "application/vnd.spiderfoot"):
+                 vendor_type: str = "application/vnd.spiderfoot") -> None:
         self._strategies = strategies or [VersionStrategy.URL_PREFIX]
         self._default = default_version
         self._header_name = header_name
@@ -214,7 +214,7 @@ class APIVersionManager:
 
     def __init__(self, *,
                  default_version: str = "v1",
-                 strategies: list[VersionStrategy] | None = None):
+                 strategies: list[VersionStrategy] | None = None) -> None:
         self._versions: dict[str, APIVersion] = {}
         self._routes: dict[str, list[VersionedRoute]] = {}  # version -> routes
         self._default = default_version

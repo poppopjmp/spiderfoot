@@ -193,7 +193,7 @@ def _coerce(value: Any, target_type: type) -> Any:
 class ConfigValidator:
     """Validates configuration values against rules."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._rules: dict[str, dict[str, Any]] = {}
 
     def add_rule(self, key: str, *,
@@ -268,7 +268,7 @@ class ConfigService:
     Supports hierarchical config with defaults → file → env → runtime.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._lock = threading.RLock()
         self._config: dict[str, Any] = {}
         self._sources: dict[str, str] = {}  # key → source (default/file/env/runtime)

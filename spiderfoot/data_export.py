@@ -56,7 +56,7 @@ class ExportOptions:
 class Exporter(ABC):
     """Base class for data exporters."""
 
-    def __init__(self, name: str = ""):
+    def __init__(self, name: str = "") -> None:
         self.name = name or self.__class__.__name__
 
     @abstractmethod
@@ -104,7 +104,7 @@ class Exporter(ABC):
 class JsonExporter(Exporter):
     """Export events as JSON."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("json")
 
     @property
@@ -138,7 +138,7 @@ class JsonExporter(Exporter):
 class CsvExporter(Exporter):
     """Export events as CSV."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("csv")
 
     @property
@@ -175,7 +175,7 @@ class CsvExporter(Exporter):
 class StixExporter(Exporter):
     """Export events in a STIX-like bundle format."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("stix")
 
     @property
@@ -227,7 +227,7 @@ class StixExporter(Exporter):
 class SummaryExporter(Exporter):
     """Export a human-readable summary."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("summary")
 
     @property
@@ -305,7 +305,7 @@ class ExportRegistry:
         result = registry.export("json", events, options)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._exporters: dict[str, Exporter] = {}
         # Register built-in exporters
         for exporter in [JsonExporter(), CsvExporter(), StixExporter(), SummaryExporter()]:

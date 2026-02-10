@@ -16,7 +16,7 @@ from spiderfoot.constants import DEFAULT_WEB_PORT
 class ValidationUtils:
     """Validation and utility functions for SpiderFoot."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize validation utilities."""
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
 
