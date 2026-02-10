@@ -12,3 +12,25 @@
 from .core import SpiderFoot
 from .config import configSerialize, configUnserialize
 from .helpers import *  # Expose other helpers as needed
+
+__all__ = [
+    'SpiderFoot',
+    'configSerialize',
+    'configUnserialize',
+    # Re-exported from helpers
+    'hashstring',
+    'cachePut',
+    'cacheGet',
+    'removeUrlCreds',
+    'isValidLocalOrLoopbackIp',
+    'domainKeyword',
+    'domainKeywords',
+    'hostDomain',
+    'validHost',
+    'isDomain',
+    'validIP',
+    'validIP6',
+    'validIpNetwork',
+    'isPublicIpAddress',
+    'normalizeDNS',
+]

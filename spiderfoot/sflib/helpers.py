@@ -20,6 +20,24 @@ from publicsuffixlist import PublicSuffixList
 from spiderfoot import SpiderFootHelpers
 import sys
 
+__all__ = [
+    'hashstring',
+    'cachePut',
+    'cacheGet',
+    'removeUrlCreds',
+    'isValidLocalOrLoopbackIp',
+    'domainKeyword',
+    'domainKeywords',
+    'hostDomain',
+    'validHost',
+    'isDomain',
+    'validIP',
+    'validIP6',
+    'validIpNetwork',
+    'isPublicIpAddress',
+    'normalizeDNS',
+]
+
 # Miscellaneous helpers, hash, etc.
 
 def hashstring(string: str) -> str:
