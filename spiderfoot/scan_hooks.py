@@ -69,6 +69,7 @@ class ScanLifecycleEvent:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "event": self.event.value,
             "scan_id": self.scan_id,
@@ -97,6 +98,7 @@ class ScanLifecycleHooks:
     """
 
     def __init__(self) -> None:
+        """Initialize the ScanLifecycleHooks."""
         self._listeners: list[ScanLifecycleListener] = []
         self._event_log: list[ScanLifecycleEvent] = []
         self._max_log_size = 500
@@ -159,6 +161,7 @@ class ScanLifecycleHooks:
     def on_created(
         self, scan_id: str, name: str = "", target: str = "", **metadata: Any
     ) -> None:
+        """Fire a scan-created lifecycle event."""
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.CREATED,
             scan_id=scan_id,
@@ -169,6 +172,7 @@ class ScanLifecycleHooks:
         ))
 
     def on_started(self, scan_id: str, **metadata: Any) -> None:
+        """Fire a scan-started lifecycle event."""
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.STARTED,
             scan_id=scan_id,
@@ -177,6 +181,7 @@ class ScanLifecycleHooks:
         ))
 
     def on_completed(self, scan_id: str, **metadata: Any) -> None:
+        """Fire a scan-completed lifecycle event."""
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.COMPLETED,
             scan_id=scan_id,
@@ -185,6 +190,7 @@ class ScanLifecycleHooks:
         ))
 
     def on_aborted(self, scan_id: str, reason: str = "", **metadata: Any) -> None:
+        """Fire a scan-aborted lifecycle event."""
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.ABORTED,
             scan_id=scan_id,
@@ -194,6 +200,7 @@ class ScanLifecycleHooks:
         ))
 
     def on_failed(self, scan_id: str, reason: str = "", **metadata: Any) -> None:
+        """Fire a scan-failed lifecycle event."""
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.FAILED,
             scan_id=scan_id,
@@ -203,6 +210,7 @@ class ScanLifecycleHooks:
         ))
 
     def on_deleted(self, scan_id: str, **metadata: Any) -> None:
+        """Fire a scan-deleted lifecycle event."""
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.DELETED,
             scan_id=scan_id,
@@ -211,6 +219,7 @@ class ScanLifecycleHooks:
         ))
 
     def on_archived(self, scan_id: str, **metadata: Any) -> None:
+        """Fire a scan-archived lifecycle event."""
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.ARCHIVED,
             scan_id=scan_id,
@@ -219,6 +228,7 @@ class ScanLifecycleHooks:
         ))
 
     def on_unarchived(self, scan_id: str, **metadata: Any) -> None:
+        """Fire a scan-unarchived lifecycle event."""
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.UNARCHIVED,
             scan_id=scan_id,

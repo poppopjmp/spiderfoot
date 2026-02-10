@@ -74,6 +74,7 @@ class Finding:
         return hashlib.sha256(raw.encode()).hexdigest()[:12]
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "event_type": self.event_type,
             "data": self.data,
@@ -93,6 +94,7 @@ class Change:
     detail: str = ""
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         d = {
             "change_type": self.change_type.value,
             "finding": self.finding.to_dict(),
@@ -120,10 +122,12 @@ class ScanSnapshot:
 
     @property
     def finding_count(self) -> int:
+        """Return the number of findings in the snapshot."""
         return len(self.findings)
 
     @property
     def event_types(self) -> set[str]:
+        """Return the set of distinct event types in the snapshot."""
         return {f.event_type for f in self.findings}
 
     def by_type(self, event_type: str) -> list[Finding]:
@@ -168,6 +172,7 @@ class ScanSnapshot:
         )
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "scan_id": self.scan_id,
             "target": self.target,
@@ -178,6 +183,7 @@ class ScanSnapshot:
 
     @classmethod
     def from_dict(cls, data: dict) -> "ScanSnapshot":
+        """Create a ScanSnapshot from a dictionary."""
         findings = [
             Finding(
                 event_type=f["event_type"],
@@ -211,10 +217,12 @@ class DiffResult:
 
     @property
     def total_changes(self) -> int:
+        """Return the total number of changes detected."""
         return len(self.added) + len(self.removed) + len(self.changed)
 
     @property
     def has_changes(self) -> bool:
+        """Check whether any changes were detected."""
         return self.total_changes > 0
 
     def changes_by_type(self) -> dict[str, list[Change]]:
@@ -259,6 +267,7 @@ class DiffResult:
         return "\n".join(lines)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "baseline_id": self.baseline_id,
             "current_id": self.current_id,

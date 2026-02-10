@@ -85,6 +85,7 @@ class DimensionScore:
     details: str = ""
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "dimension": self.dimension.value,
             "score": round(self.score, 4),
@@ -103,6 +104,7 @@ class CorrelationPair:
     fused_score: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "event_a_id": self.event_a_id,
             "event_b_id": self.event_b_id,
@@ -124,6 +126,7 @@ class EventData:
 
     @property
     def dimensions(self) -> set[Dimension]:
+        """Return the correlation dimensions for this event type."""
         return DIMENSION_TYPE_MAP.get(self.event_type, {Dimension.ENTITY})
 
 
@@ -139,6 +142,7 @@ class MultiDimResult:
     elapsed_ms: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "query": self.query,
             "pair_count": len(self.pairs),
@@ -327,6 +331,7 @@ class MultiDimAnalyzer:
         min_score: float = 0.1,
         temporal_window: float = DEFAULT_TTL_ONE_HOUR,
     ) -> None:
+        """Initialize the MultiDimAnalyzer."""
         self._weights = weights or DEFAULT_WEIGHTS
         self._fusion_method = fusion_method
         self._min_score = min_score
@@ -415,12 +420,14 @@ class MultiDimAnalyzer:
         parent: dict[str, str] = {e.event_id: e.event_id for e in events}
 
         def find(x: str) -> str:
+            """Find the root parent of an element in the union-find."""
             while parent[x] != x:
                 parent[x] = parent[parent[x]]
                 x = parent[x]
             return x
 
         def union(x: str, y: str) -> None:
+            """Merge two sets in the union-find."""
             px, py = find(x), find(y)
             if px != py:
                 parent[px] = py
@@ -440,6 +447,7 @@ class MultiDimAnalyzer:
 
     # Stats
     def stats(self) -> dict[str, Any]:
+        """Return analyzer configuration statistics."""
         return {
             "fusion_method": self._fusion_method,
             "min_score": self._min_score,

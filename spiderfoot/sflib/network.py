@@ -62,6 +62,7 @@ def resolveIP(ipaddr: str) -> list:
     return list(set(addrs))
 
 def resolveHost6(hostname: str) -> list:
+    """Return a normalised IPv6 resolution of a hostname."""
     if not hostname:
         return []
     addrs = list()
@@ -75,6 +76,7 @@ def resolveHost6(hostname: str) -> list:
     return list(set(addrs))
 
 def validateIP(host: str, ip: str) -> bool:
+    """Validate that an IP address resolves to the given host."""
     if not host:
         return False
     addrs = []
@@ -89,11 +91,13 @@ def validateIP(host: str, ip: str) -> bool:
     return any(str(addr) == ip for addr in addrs)
 
 def safeSocket(host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
+    """Create a plain TCP socket connection with a timeout."""
     sock = socket.create_connection((host, int(port)), int(timeout))
     sock.settimeout(int(timeout))
     return sock
 
 def safeSSLSocket(host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
+    """Create a TLS-wrapped socket connection with a timeout."""
     context = ssl.create_default_context()
     context.minimum_version = ssl.TLSVersion.TLSv1_2
     s = socket.socket()
@@ -104,6 +108,7 @@ def safeSSLSocket(host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
     return sock
 
 def parseCert(rawcert: str, fqdn: str = None, expiringdays: int = 30) -> dict:
+    """Parse a PEM certificate and return its metadata."""
     if not rawcert:
         return {}
     ret = dict()
@@ -151,6 +156,7 @@ def parseCert(rawcert: str, fqdn: str = None, expiringdays: int = 30) -> dict:
     return ret
 
 def getSession() -> 'requests.sessions.Session':
+    """Create and return a new HTTP requests session."""
     session = requests.session()
     return session
 
@@ -160,6 +166,7 @@ def useProxyForUrl(
     urlFQDN: Callable | None = None,
     isValidLocalOrLoopbackIp: Callable | None = None,
 ) -> bool:
+    """Determine whether a proxy should be used for the given URL."""
     if opts is None:
         return False
     if urlFQDN is None:
@@ -196,6 +203,7 @@ def fetchUrl(
     sizeLimit: int = None, headOnly: bool = False,
     verify: bool = True,
 ) -> dict:
+    """Fetch content from a URL and return response details."""
     if not isinstance(url, str):
         return None
     if not url or not url.strip():
@@ -240,6 +248,7 @@ def fetchUrl(
 
 
 def checkDnsWildcard(target: str) -> bool:
+    """Check if a domain has a DNS wildcard entry."""
     if not target:
         return False
     randpool = 'bcdfghjklmnpqrstvwxyz3456789'

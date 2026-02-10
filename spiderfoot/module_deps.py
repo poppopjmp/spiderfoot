@@ -54,9 +54,11 @@ class ResolutionResult:
 
     @property
     def is_resolved(self) -> bool:
+        """Check whether dependencies were fully resolved."""
         return self.status == DepStatus.RESOLVED
 
     def summary(self) -> str:
+        """Return a human-readable resolution summary."""
         lines = [f"Status: {self.status.value}"]
         lines.append(f"Modules: {len(self.load_order)}")
         lines.append(f"Layers: {len(self.layers)}")
@@ -71,6 +73,7 @@ class ResolutionResult:
         return "\n".join(lines)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "status": self.status.value,
             "load_order": self.load_order,
@@ -98,6 +101,7 @@ class ModuleDependencyResolver:
     """
 
     def __init__(self) -> None:
+        """Initialize the ModuleDependencyResolver."""
         self._modules: dict[str, ModuleNode] = {}
         self._producer_index: dict[str, set[str]] = defaultdict(set)
 
@@ -199,6 +203,7 @@ class ModuleDependencyResolver:
         path: list[str] = []
 
         def dfs(u: str) -> None:
+            """Depth-first search to detect cycles."""
             color[u] = GRAY
             path.append(u)
             for v in adj.get(u, set()):
@@ -328,6 +333,7 @@ class ModuleDependencyResolver:
         memo: dict[str, list[str]] = {}
 
         def longest(name: str, visited: set[str]) -> list[str]:
+            """Recursively find the longest dependency chain."""
             if name in memo:
                 return memo[name]
             if name in visited:
@@ -354,13 +360,16 @@ class ModuleDependencyResolver:
 
     @property
     def module_count(self) -> int:
+        """Return the number of registered modules."""
         return len(self._modules)
 
     @property
     def module_names(self) -> list[str]:
+        """Return sorted list of registered module names."""
         return sorted(self._modules.keys())
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "modules": {
                 name: {

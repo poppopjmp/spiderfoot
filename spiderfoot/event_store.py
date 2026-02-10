@@ -38,15 +38,18 @@ class StoredEvent:
     metadata: dict = field(default_factory=dict)
 
     def add_tag(self, tag: str) -> "StoredEvent":
+        """Add a tag to the event if not already present."""
         if tag not in self.tags:
             self.tags.append(tag)
         return self
 
     def set_meta(self, key: str, value: Any) -> "StoredEvent":
+        """Set a metadata key-value pair on the event."""
         self.metadata[key] = value
         return self
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "event_id": self.event_id,
             "scan_id": self.scan_id,
@@ -90,11 +93,13 @@ class RetentionPolicy:
         max_age_seconds: float = 0,
         min_priority: EventPriority = EventPriority.INFO,
     ) -> None:
+        """Initialize the RetentionPolicy."""
         self.max_events = max_events
         self.max_age_seconds = max_age_seconds
         self.min_priority = min_priority
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "max_events": self.max_events,
             "max_age_seconds": self.max_age_seconds,
@@ -110,6 +115,7 @@ class EventStore:
     """
 
     def __init__(self, retention: RetentionPolicy | None = None) -> None:
+        """Initialize the EventStore."""
         self._events: dict[str, StoredEvent] = {}  # event_id -> event
         self._scan_index: dict[str, list[str]] = {}  # scan_id -> [event_ids]
         self._type_index: dict[str, list[str]] = {}  # event_type -> [event_ids]
@@ -266,6 +272,7 @@ class EventStore:
                 self.delete(e.event_id)
 
     def summary(self) -> dict:
+        """Return summary statistics of the event store."""
         return {
             "total_events": len(self._events),
             "total_stored": self._event_counter,
@@ -275,6 +282,7 @@ class EventStore:
         }
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "summary": self.summary(),
             "retention": self._retention.to_dict(),

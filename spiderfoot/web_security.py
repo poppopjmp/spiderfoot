@@ -115,18 +115,21 @@ class SpiderFootSecurityManager:
         """Initialize security headers."""
         @self.app.after_request
         def add_security_headers(response: Any) -> object:
+            """Add security headers to every response."""
             return SecurityHeaders.add_security_headers(response)
 
     def _init_request_validation(self) -> None:
         """Initialize request validation."""
         @self.app.before_request
         def validate_request() -> None:
+            """Validate each incoming request for security threats."""
             return self._validate_incoming_request()
 
     def _init_error_handlers(self) -> None:
         """Initialize security-aware error handlers."""
         @self.app.errorhandler(400)
         def handle_bad_request(e: Exception) -> tuple:
+            """Handle 400 Bad Request errors with security logging."""
             self.security_logger.log_security_event(
                 SecurityEventType.SUSPICIOUS_ACTIVITY,
                 {'error': 'bad_request', 'path': request.path},
@@ -137,6 +140,7 @@ class SpiderFootSecurityManager:
 
         @self.app.errorhandler(401)
         def handle_unauthorized(e: Exception) -> tuple:
+            """Handle 401 Unauthorized errors with security logging."""
             self.security_logger.log_unauthorized_access(
                 request.path,
                 ip_address=request.remote_addr,
@@ -146,6 +150,7 @@ class SpiderFootSecurityManager:
 
         @self.app.errorhandler(403)
         def handle_forbidden(e: Exception) -> tuple:
+            """Handle 403 Forbidden errors with security logging."""
             self.security_logger.log_unauthorized_access(
                 request.path,
                 user_id=getattr(g, 'user_id', None),
@@ -156,6 +161,7 @@ class SpiderFootSecurityManager:
 
         @self.app.errorhandler(429)
         def handle_rate_limit(e: Exception) -> tuple:
+            """Handle 429 Rate Limit errors with security logging."""
             self.security_logger.log_rate_limit_exceeded(
                 request.path,
                 'unknown',
@@ -166,6 +172,7 @@ class SpiderFootSecurityManager:
 
         @self.app.errorhandler(500)
         def handle_internal_error(e: Exception) -> tuple:
+            """Handle 500 Internal Server errors with security logging."""
             self.security_logger.log_security_event(
                 SecurityEventType.SUSPICIOUS_ACTIVITY,
                 {'error': 'internal_server_error', 'path': request.path},
@@ -179,6 +186,7 @@ class SpiderFootSecurityManager:
         """Set up before request middleware."""
         @self.app.before_request
         def security_before_request() -> tuple | None:
+            """Run security checks before each request."""
             # Store request start time for rate limiting
             g.request_start_time = time.time()
 
@@ -203,6 +211,7 @@ class SpiderFootSecurityManager:
         """Set up after request middleware."""
         @self.app.after_request
         def security_after_request(response: Any) -> object:
+            """Apply security processing after each request."""
             # Add security headers
             response = SecurityHeaders.add_security_headers(response)
 

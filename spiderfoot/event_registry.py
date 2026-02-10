@@ -49,22 +49,27 @@ class EventTypeMeta:
 
     @property
     def is_entity(self) -> bool:
+        """Check if this event type is in the ENTITY category."""
         return self.category == "ENTITY"
 
     @property
     def is_descriptor(self) -> bool:
+        """Check if this event type is in the DESCRIPTOR category."""
         return self.category == "DESCRIPTOR"
 
     @property
     def is_data(self) -> bool:
+        """Check if this event type is in the DATA category."""
         return self.category == "DATA"
 
     @property
     def is_subentity(self) -> bool:
+        """Check if this event type is in the SUBENTITY category."""
         return self.category == "SUBENTITY"
 
     @property
     def is_internal(self) -> bool:
+        """Check if this event type is in the INTERNAL category."""
         return self.category == "INTERNAL"
 
 
@@ -84,6 +89,7 @@ class EventTypeRegistry:
     """
 
     def __init__(self) -> None:
+        """Initialize the EventTypeRegistry."""
         self._types: dict[str, EventTypeMeta] = {}
         self._categories: dict[str, list[str]] = {}
 
@@ -175,9 +181,11 @@ class EventTypeRegistry:
         return sorted(self._categories.keys())
 
     def __len__(self) -> int:
+        """Return the number of registered event types."""
         return len(self._types)
 
     def __contains__(self, event_type: str) -> bool:
+        """Check if an event type is registered."""
         return event_type in self._types
 
     def validate_module_events(self, module_name: str,
