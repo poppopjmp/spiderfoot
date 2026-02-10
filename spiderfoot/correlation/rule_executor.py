@@ -346,12 +346,12 @@ class RuleExecutor:
                 continue
             try:
                 if self.debug:
-                    print(f"[DEBUG] Evaluating rule: {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}")
+                    self.log.debug("Evaluating rule: %s", rule.get('id', rule.get('meta', {}).get('name', 'unknown')))
                 for hook in self._event_hooks['pre_rule']:
                     hook(rule, self.scan_ids)
                 rule_result = self.process_rule(rule)
                 if self.debug:
-                    print(f"[DEBUG] Rule result: {rule_result}")
+                    self.log.debug("Rule result: %s", rule_result)
                 for hook in self._event_hooks['post_rule']:
                     hook(rule, rule_result, self.scan_ids)
                 self.results[rule.get('id', rule.get('meta', {}).get('name', 'unknown'))] = rule_result
@@ -363,7 +363,7 @@ class RuleExecutor:
         rule_type = rule.get('meta', {}).get('type', 'default')
         strategy = self._strategy_registry.get(rule_type, DefaultRuleExecutionStrategy())
         if self.debug:
-            print(f"[DEBUG] Using strategy: {strategy.__class__.__name__}")
+            self.log.debug("Using strategy: %s", strategy.__class__.__name__)
         return strategy.execute(self.dbh, rule, self.scan_ids)
 
 # Example: Register a custom strategy for a new rule type
