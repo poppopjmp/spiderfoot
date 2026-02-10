@@ -3,6 +3,30 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.110.0] — RC Cycle 24: Code Quality Cleanup
+
+### Changed
+- Added debug logging to 4 silent `except: pass` blocks in module_loader.py
+
+### Removed
+- Deleted commented-out `create_workflow` code from workspace.py
+
+## [5.109.0] — RC Cycle 23: Final Print Cleanup
+
+### Changed
+- Converted 22 `print()` startup banner calls to `self.log.info()` in core/server.py
+
+## [5.108.0] — RC Cycle 22: Dead Code Removal
+
+### Removed
+- Deleted 13 dead code files (4,022 lines): web_security_cherrypy.py, session_security_cherrypy.py, api_security_fastapi.py, rate_limiting_unified.py, security_migration.py, security_integration.py, db.py (shadowed), sflib/logging.py, webui/main.py, cli/history.py, correlation/external_checker.py, correlation/schema.py, core/error_handling.py
+- Cleaned up security/__init__.py `__all__` list
+
+## [5.107.0] — RC Cycle 21: Dead Import Cleanup
+
+### Removed
+- Removed unused imports from 6 files: cherrypy/wraps/secrets/InputValidator from web_security.py, duplicate import sys from __init__.py, unused sys from module_graph.py/plugin_test.py/sfp_tool_wappalyzer.py, unused wraps/JSONResponse from api_security_fastapi.py
+
 ## [5.106.0] — RC Cycle 19: Test Infrastructure Cleanup
 
 ### Removed
