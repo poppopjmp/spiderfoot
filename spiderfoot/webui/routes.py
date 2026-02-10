@@ -189,6 +189,7 @@ class WebUiRoutes(
         title = ''
 
         def highlight(code: str, lang: str | None = None) -> str:
+            """Return code unchanged as a passthrough highlight stub."""
             # Dummy highlight function for template compatibility
             return code
 
@@ -223,6 +224,7 @@ class WebUiRoutes(
                 return f'<pre>Template error: {te}</pre>'
         try:
             def list_docs(base_dir: str) -> list:
+                """List all Markdown documentation files under a directory."""
                 docs = []
                 for root, _dirs, files in os.walk(base_dir):
                     for f in files:
@@ -232,6 +234,7 @@ class WebUiRoutes(
                 return docs
 
             def get_title(md_path: str) -> str:
+                """Extract the title from a Markdown file's first heading."""
                 import contextlib
                 with contextlib.suppress(Exception):
                     with open(md_path, encoding='utf-8') as f:

@@ -105,6 +105,7 @@ class WorkerInfo:
         return time.time() - self.started_at
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "module_name": self.module_name,
             "state": self.state.value,
@@ -132,6 +133,7 @@ class ModuleWorker:
         output_callback: Callable | None = None,
         config: WorkerPoolConfig | None = None,
     ) -> None:
+        """Initialize the ModuleWorker."""
         self.module_name = module_name
         self.module = module_instance
         self.input_queue = input_queue or queue.Queue(maxsize=1000)
@@ -227,6 +229,7 @@ class WorkerPool:
     """
 
     def __init__(self, config: WorkerPoolConfig | None = None) -> None:
+        """Initialize the WorkerPool."""
         self.config = config or WorkerPoolConfig()
         self.log = logging.getLogger("spiderfoot.worker_pool")
         self._workers: dict[str, ModuleWorker] = {}

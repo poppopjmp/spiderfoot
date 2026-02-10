@@ -72,6 +72,7 @@ class CircuitBreaker:
     def __init__(self, failure_threshold: int = 5,
                  recovery_timeout: float = 30.0,
                  half_open_max: int = 1) -> None:
+        """Initialize the CircuitBreaker."""
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.half_open_max = half_open_max
@@ -84,6 +85,7 @@ class CircuitBreaker:
 
     @property
     def state(self) -> CircuitState:
+        """Return the current circuit breaker state, transitioning if needed."""
         with self._lock:
             if self._state == CircuitState.OPEN:
                 if time.monotonic() - self._last_failure_time >= self.recovery_timeout:
@@ -121,6 +123,7 @@ class CircuitBreaker:
                             self._failure_count)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "state": self.state.value,
             "failure_count": self._failure_count,
@@ -369,6 +372,7 @@ class GatewayError(Exception):
     """Raised on gateway routing failures."""
 
     def __init__(self, message: str, status: int = 500) -> None:
+        """Initialize the GatewayError."""
         super().__init__(message)
         self.status = status
 

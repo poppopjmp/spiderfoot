@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 class CorrelationManager:
     """Manages correlation result storage and queries in the database."""
     def __init__(self, dbh: Any, conn: Any, dbhLock: RLock, db_type: str) -> None:
+        """Initialize the CorrelationManager."""
         self.dbh = dbh
         self.conn = conn
         self.dbhLock = dbhLock
@@ -38,6 +39,7 @@ class CorrelationManager:
 
     def correlationResultCreate(self, instanceId: str, event_hash: str, ruleId: str,
         ruleName: str, ruleDescr: str, ruleRisk: str, ruleYaml: str, correlationTitle: str, eventHashes: list) -> str:
+        """Create a new correlation result and associate event hashes."""
         import uuid
         correlation_id = str(uuid.uuid4())
         ph = get_placeholder(self.db_type)
@@ -84,6 +86,7 @@ class CorrelationManager:
         return str(correlationId)
 
     def scanCorrelationSummary(self, instanceId: str, by: str = "rule") -> list:
+        """Return a summary of correlation results grouped by rule or risk."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(by, str):
@@ -109,6 +112,7 @@ class CorrelationManager:
                     raise OSError("SQL error encountered when fetching correlation summary") from e
 
     def scanCorrelationList(self, instanceId: str) -> list:
+        """Return the list of correlation results for a scan."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         ph = get_placeholder(self.db_type)
@@ -127,6 +131,7 @@ class CorrelationManager:
                     raise OSError("SQL error encountered when fetching correlation list") from e
 
     def close(self) -> None:
+        """Close the database cursor and connection."""
         if hasattr(self, 'dbh') and self.dbh:
             try:
                 self.dbh.close()

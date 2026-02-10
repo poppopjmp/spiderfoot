@@ -19,6 +19,7 @@ class MiscEndpoints:
         import re
 
         def highlight(text: str, query: str) -> str:
+            """Highlight occurrences of a query string in text with HTML marks."""
             if not text or not query:
                 return text
             pattern = re.compile(re.escape(query), re.IGNORECASE)

@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 class ConfigManager:
     """Manages global and per-scan configuration storage in the database."""
     def __init__(self, dbh: Any, conn: Any, dbhLock: RLock, db_type: str) -> None:
+        """Initialize the ConfigManager."""
         self.dbh = dbh
         self.conn = conn
         self.dbhLock = dbhLock
@@ -37,6 +38,7 @@ class ConfigManager:
         return is_transient_error(exc)
 
     def configSet(self, optMap: dict = None) -> bool:
+        """Store global configuration options in the database."""
         if optMap is None:
             optMap = {}
         if not isinstance(optMap, dict):
@@ -76,6 +78,7 @@ class ConfigManager:
         return True
 
     def configGet(self) -> dict:
+        """Retrieve all global configuration options from the database."""
         ph = get_placeholder(self.db_type)
         qry = "SELECT scope, opt, val FROM tbl_config"
         retval = dict()
@@ -97,6 +100,7 @@ class ConfigManager:
                     raise OSError("SQL error encountered when fetching configuration") from e
 
     def configClear(self) -> None:
+        """Delete all global configuration from the database."""
         ph = get_placeholder(self.db_type)
         qry = "DELETE from tbl_config"
         with self.dbhLock:
@@ -113,6 +117,7 @@ class ConfigManager:
                     raise OSError("Unable to clear configuration from the database") from e
 
     def scanConfigSet(self, scan_id: str, optMap: dict | None = None) -> None:
+        """Store per-scan configuration options in the database."""
         if optMap is None:
             optMap = {}
         if not isinstance(optMap, dict):
@@ -151,6 +156,7 @@ class ConfigManager:
                     raise OSError("SQL error encountered when storing config, aborting") from e
 
     def scanConfigGet(self, instanceId: str) -> dict:
+        """Retrieve per-scan configuration options from the database."""
         ph = get_placeholder(self.db_type)
         qry = f"SELECT component, opt, val FROM tbl_scan_config WHERE scan_instance_id = {ph} ORDER BY component, opt"
         qvars = [instanceId]
@@ -173,6 +179,7 @@ class ConfigManager:
                     raise OSError("SQL error encountered when fetching configuration") from e
 
     def scanConfigClear(self, instanceId: str) -> None:
+        """Delete per-scan configuration from the database."""
         ph = get_placeholder(self.db_type)
         qry = f"DELETE from tbl_scan_config WHERE scan_instance_id = {ph}"
         qvars = [instanceId]
@@ -190,6 +197,7 @@ class ConfigManager:
                     raise OSError("Unable to clear scan configuration from the database") from e
 
     def close(self) -> None:
+        """Close the database cursor and connection."""
         if hasattr(self, 'dbh') and self.dbh:
             try:
                 self.dbh.close()

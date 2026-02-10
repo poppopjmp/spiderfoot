@@ -501,6 +501,7 @@ class SpiderFoot:
         sources = sources.split(",")
         eventType = "VULNERABILITY_GENERAL"
         def cveRating(score: int) -> str:
+            """Return the severity rating string for a CVE score."""
             if score == "Unknown":
                 return None
             if score >= 0 and score <= 3.9:
