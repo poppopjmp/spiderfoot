@@ -537,7 +537,7 @@ class SecurityAuditLogger:
                 'details': event.details
             }
             
-            with open(self.log_file, 'a') as f:
+            with open(self.log_file, 'a', encoding='utf-8') as f:
                 f.write(json.dumps(log_entry) + '\n')
                 
         except Exception as e:

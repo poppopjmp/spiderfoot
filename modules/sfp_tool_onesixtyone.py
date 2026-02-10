@@ -63,7 +63,7 @@ class sfp_tool_onesixtyone(SpiderFootModernPlugin):
         # Write communities to file for use later on
         try:
             _, self.communitiesFile = tempfile.mkstemp("communities")
-            with open(self.communitiesFile, "w") as f:
+            with open(self.communitiesFile, "w", encoding="utf-8") as f:
                 for community in self.opts['communities'].split(","):
                     f.write(community.strip() + "\n")
         except Exception as e:

@@ -145,7 +145,7 @@ class SpiderFootSecurityMiddleware:
     interface for both web and API security management.
     """
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, Any]) -> None:
         """
         Initialize SpiderFoot security middleware.
 
@@ -257,7 +257,7 @@ class CherryPySecurityTool(cherrypy.Tool):
     CherryPy security tool for web interface protection.
     """
 
-    def __init__(self, middleware: SpiderFootSecurityMiddleware):
+    def __init__(self, middleware: SpiderFootSecurityMiddleware) -> None:
         """
         Initialize CherryPy security tool.
 
@@ -567,7 +567,7 @@ class FastAPISecurityMiddleware:
     FastAPI security middleware for API protection.
     """
 
-    def __init__(self, middleware: SpiderFootSecurityMiddleware):
+    def __init__(self, middleware: SpiderFootSecurityMiddleware) -> None:
         """
         Initialize FastAPI security middleware.
 

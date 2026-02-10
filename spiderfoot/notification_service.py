@@ -99,7 +99,7 @@ class NotificationChannel(ABC):
     """Abstract notification channel."""
 
     def __init__(self, channel_id: str = "", name: str = "",
-                 enabled: bool = True):
+                 enabled: bool = True) -> None:
         self.channel_id = channel_id or self._default_id()
         self.name = name or self.channel_id
         self.enabled = enabled
@@ -146,7 +146,7 @@ class SlackChannel(NotificationChannel):
                  name: str = "Slack",
                  username: str = "SpiderFoot",
                  icon_emoji: str = ":spider:",
-                 enabled: bool = True):
+                 enabled: bool = True) -> None:
         super().__init__(channel_id=channel_id or "slack-default",
                         name=name, enabled=enabled)
         self.webhook_url = webhook_url
@@ -214,7 +214,7 @@ class WebhookChannel(NotificationChannel):
                  name: str = "Webhook",
                  headers: Optional[dict[str, str]] = None,
                  method: str = "POST",
-                 enabled: bool = True):
+                 enabled: bool = True) -> None:
         super().__init__(channel_id=channel_id or "webhook-default",
                         name=name, enabled=enabled)
         self.url = url
@@ -271,7 +271,7 @@ class EmailChannel(NotificationChannel):
                  use_tls: bool = True,
                  channel_id: str = "",
                  name: str = "Email",
-                 enabled: bool = True):
+                 enabled: bool = True) -> None:
         super().__init__(channel_id=channel_id or "email-default",
                         name=name, enabled=enabled)
         self.smtp_host = smtp_host
@@ -366,7 +366,7 @@ class LogChannel(NotificationChannel):
 
     def __init__(self, channel_id: str = "log-default",
                  name: str = "Logger", enabled: bool = True,
-                 logger: Optional[logging.Logger] = None):
+                 logger: Optional[logging.Logger] = None) -> None:
         super().__init__(channel_id=channel_id, name=name,
                         enabled=enabled)
         self._logger = logger or log
@@ -394,7 +394,7 @@ class NotificationService:
     """Manages channels, subscriptions, and async dispatch."""
 
     def __init__(self, *, async_dispatch: bool = True,
-                 max_queue_size: int = 1000):
+                 max_queue_size: int = 1000) -> None:
         self._channels: dict[str, NotificationChannel] = {}
         self._subscriptions: dict[str, set[str]] = {}  # topic → channel_ids
         self._lock = threading.Lock()

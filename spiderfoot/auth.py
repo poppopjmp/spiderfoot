@@ -204,7 +204,7 @@ class AuthResult:
     def __init__(self, authenticated: bool,
                  identity: str = "",
                  role: Role = Role.VIEWER,
-                 error: str = ""):
+                 error: str = "") -> None:
         self.authenticated = authenticated
         self.identity = identity
         self.role = role
@@ -231,7 +231,7 @@ class AuthGuard:
     Supports multiple auth methods and role-based access control.
     """
 
-    def __init__(self, config: AuthConfig):
+    def __init__(self, config: AuthConfig) -> None:
         self.config = config
         self._api_key_set: set[str] = set(config.api_keys)
 

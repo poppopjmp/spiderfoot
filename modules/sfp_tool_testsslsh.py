@@ -201,7 +201,7 @@ class sfp_tool_testsslsh(SpiderFootModernPlugin):
                 continue
 
             try:
-                with open(fname, "r") as f:
+                with open(fname, "r", encoding="utf-8") as f:
                     result_json = json.loads(f.read())
                 os.unlink(fname)
             except Exception as e:

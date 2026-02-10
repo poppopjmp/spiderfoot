@@ -15,7 +15,7 @@ import weakref
 class WebUIPerformanceEnhancer:
     """Performance enhancement utilities for WebUI operations."""
 
-    def __init__(self, max_workers: int = 4):
+    def __init__(self, max_workers: int = 4) -> None:
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
         self.cache = {}
         self.cache_lock = threading.RLock()
@@ -204,7 +204,7 @@ class DataCompressionHelper:
 class MemoryOptimizer:
     """Memory optimization utilities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.object_pool = weakref.WeakValueDictionary()
         self.logger = logging.getLogger(__name__)
 
@@ -324,7 +324,7 @@ performance_enhancer = WebUIPerformanceEnhancer()
 class PerformanceEnhancedWebUI:
     """Mixin class with performance-enhanced WebUI methods."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.performance_enhancer = performance_enhancer
         self.pagination_optimizer = PaginationOptimizer()
         self.memory_optimizer = MemoryOptimizer()

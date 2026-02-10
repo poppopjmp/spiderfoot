@@ -56,7 +56,7 @@ class ComponentHealth:
 
     def __init__(self, name: str, status: HealthStatus,
                  message: str = "", details: Optional[dict] = None,
-                 latency_ms: float = 0.0):
+                 latency_ms: float = 0.0) -> None:
         self.name = name
         self.status = status
         self.message = message
@@ -89,7 +89,7 @@ class HealthAggregator:
     _instance = None
     _lock = threading.Lock()
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._checks: dict[str, Callable[[], HealthStatus]] = {}
         self._detailed_checks: dict[
             str, Callable[[], ComponentHealth]

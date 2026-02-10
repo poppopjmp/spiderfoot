@@ -37,7 +37,7 @@ class ApiClient:
         base_url: str = "http://localhost:8001/api",
         api_key: str = "",
         timeout: float = 30.0,
-    ):
+    ) -> None:
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
         self._timeout = timeout

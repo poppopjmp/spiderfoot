@@ -15,7 +15,7 @@ from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 class CSRFProtection:
     """CSRF Protection implementation for SpiderFoot with CherryPy."""
 
-    def __init__(self, secret_key=None):
+    def __init__(self, secret_key=None) -> None:
         """Initialize CSRF protection.
 
         Args:
@@ -104,7 +104,7 @@ class CSRFProtection:
 class CSRFTool(cherrypy.Tool):
     """CherryPy tool for CSRF protection."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         cherrypy.Tool.__init__(self, 'before_handler', self.check_csrf)
         self.csrf_protection = CSRFProtection()
 

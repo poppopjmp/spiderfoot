@@ -44,7 +44,7 @@ class StructuredFormatter(logging.Formatter):
         include_hostname: bool = True,
         include_caller: bool = False,
         extra_fields: Optional[dict[str, Any]] = None,
-    ):
+    ) -> None:
         """Initialize the structured formatter.
 
         Args:
@@ -189,7 +189,7 @@ class StructuredLogHandler(logging.Handler):
         stream=None,
         formatter: Optional[StructuredFormatter] = None,
         **kwargs
-    ):
+    ) -> None:
         super().__init__()
         self.stream = stream or sys.stdout
         if formatter:
@@ -218,7 +218,7 @@ class EventLogEmitter:
     pipeline, allowing Vector.dev to capture scan data alongside logs.
     """
 
-    def __init__(self, logger_name: str = "spiderfoot.events"):
+    def __init__(self, logger_name: str = "spiderfoot.events") -> None:
         self.log = logging.getLogger(logger_name)
 
     def emit_scan_event(
