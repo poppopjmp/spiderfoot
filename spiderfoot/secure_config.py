@@ -282,7 +282,6 @@ class SecureConfigManager:
                         json.dump(old_config, f, indent=2)
 
                     # Update cipher and re-encrypt
-                    old_cipher = self.cipher
                     self.cipher = new_cipher
                     self.master_key = new_key_bytes
 

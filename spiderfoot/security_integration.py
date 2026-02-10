@@ -255,7 +255,7 @@ class SecurityIntegrator:
         Returns:
             Detailed migration plan with steps and priorities
         """
-        analysis = self.analyze_existing_setup()
+        self.analyze_existing_setup()
 
         migration_plan = {
             'phases': {

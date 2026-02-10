@@ -120,7 +120,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
                 # For PostgreSQL, test with a simple query
                 with self.dbh.dbhLock:
                     self.dbh.dbh.execute("SELECT 1")
-        except Exception as e:
+        except Exception:
             self.dbh = None
 
     def rotate_logs(self) -> None:
@@ -165,7 +165,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
             try:
                 time.sleep(1)  # Add sleep to prevent busy waiting
                 self.logBatch()
-            except Exception as e:
+            except Exception:
                 # Log error but continue processing
                 continue
 

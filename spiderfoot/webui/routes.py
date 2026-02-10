@@ -290,7 +290,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                     entry={},
                     crumb={}
                 )
-            except Exception as te:
+            except Exception:
                 self.log.exception("Template rendering error in documentation endpoint")
                 return '<p>An error occurred while rendering this page. Please check the server logs.</p>'
         except Exception as e:

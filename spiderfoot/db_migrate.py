@@ -348,7 +348,7 @@ class MigrationManager:
         dry_run: bool = False,
     ) -> MigrationPlan:
         """Create a plan to upgrade to ``target_version`` (or latest)."""
-        current = self.current_version()
+        self.current_version()  # validate current state
         pending = self.pending_migrations()
         warnings: list[str] = []
 

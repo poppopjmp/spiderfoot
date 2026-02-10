@@ -341,9 +341,7 @@ class ModuleLoader:
 
         # Try registry-based loading first
         instance = None
-        registry_tried = False
         if self._registry is not None and mod_name in self._registry:
-            registry_tried = True
             try:
                 instance = self._registry.create_instance(mod_name)
                 log.debug("Loaded %s via registry", mod_name)
