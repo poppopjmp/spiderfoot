@@ -653,6 +653,7 @@ class SpiderFootHelpers():
             raise ValueError("data is empty")
 
         def get_next_parent_entities(item: str, pids: typing.list[str] | None = None) -> list[str]:
+            """Recursively resolve the nearest parent entities for a given item."""
             if not pids:
                 pids = []
 
@@ -726,6 +727,7 @@ class SpiderFootHelpers():
             raise ValueError("data is empty")
 
         def get_children(needle: str, haystack: dict[str, typing.list[str] | None]) -> typing.list[Tree] | None:
+            """Recursively build a list of child tree nodes for the given key."""
             ret: list[Tree] = list()
 
             if needle not in list(haystack.keys()):

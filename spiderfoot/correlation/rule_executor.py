@@ -19,6 +19,7 @@ from spiderfoot.correlation.rule_loader import RuleLoader
 class RuleExecutionStrategy:
     """Base class for pluggable rule execution strategies."""
     def execute(self, dbh, rule, scan_ids) -> dict:
+        """Execute a correlation rule against scan data and return results."""
         raise NotImplementedError
 
 class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
@@ -328,14 +329,17 @@ class RuleExecutor:
 
     @classmethod
     def register_strategy(cls, rule_type, strategy) -> None:
+        """Register a custom execution strategy for the given rule type."""
         cls._strategy_registry[rule_type] = strategy
 
     @classmethod
     def register_event_hook(cls, hook_name, func) -> None:
+        """Register a callback function for the specified rule lifecycle hook."""
         if hook_name in cls._event_hooks:
             cls._event_hooks[hook_name].append(func)
 
     def __init__(self, dbh, rules, scan_ids=None, debug=False) -> None:
+        """Initialize the rule executor with a database handle, rules, and scan IDs."""
         self.log = logging.getLogger("spiderfoot.correlation.executor")
         self.dbh = dbh
         self.rules = rules
@@ -344,6 +348,7 @@ class RuleExecutor:
         self.debug = debug
 
     def run(self) -> dict:
+        """Execute all enabled rules in sequence and return aggregated results."""
         for rule in self.rules:
             if not rule.get('enabled', True):
                 self.log.info(f"Skipping disabled rule: {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}")
@@ -364,6 +369,7 @@ class RuleExecutor:
         return self.results
 
     def process_rule(self, rule) -> dict:
+        """Process a single rule by dispatching to the appropriate execution strategy."""
         rule_type = rule.get('meta', {}).get('type', 'default')
         strategy = self._strategy_registry.get(rule_type, DefaultRuleExecutionStrategy())
         if self.debug:

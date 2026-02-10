@@ -17,9 +17,11 @@ import logging
 class ResultAggregator:
     """Aggregates correlation rule results using configurable methods."""
     def __init__(self) -> None:
+        """Initialize the result aggregator with a logger."""
         self.log = logging.getLogger("spiderfoot.correlation.aggregator")
 
     def aggregate(self, results, method='count') -> int | list:
+        """Aggregate correlation results using the specified method."""
         # Example: aggregate results by method
         if method == 'count':
             return len(results)

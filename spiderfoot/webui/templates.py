@@ -12,6 +12,7 @@ class MiscEndpoints:
     """WebUI endpoints for documentation and miscellaneous pages."""
     @cherrypy.expose
     def documentation(self, doc=None, q=None):
+        """Render the documentation page with optional search query highlighting."""
         # Render documentation page or search results
         import re
 
@@ -45,17 +46,20 @@ class MiscEndpoints:
 
     @cherrypy.expose
     def active_maintenance_status(self):
+        """Return the current active maintenance status."""
         # Return a simple status string or JSON
         return "OK"
 
     @cherrypy.expose
     def footer(self):
+        """Render the page footer template."""
         # Render a footer template or return a static string
         templ = Template(filename='spiderfoot/templates/FOOTER.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, version=__version__)
 
     @cherrypy.expose
     def workspaces(self):
+        """Render the workspace list page."""
         # Render the workspace list UI page
         templ = Template(filename='spiderfoot/templates/workspaces.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, version=__version__)

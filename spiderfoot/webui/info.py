@@ -13,6 +13,7 @@ class InfoEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def eventtypes(self):
+        """Return a sorted JSON list of all available event types."""
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         dbh = self.get_dbh()
         types = dbh.eventTypes()
@@ -24,6 +25,7 @@ class InfoEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def modules(self):
+        """Return a sorted JSON list of all available modules with metadata."""
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         modlist = list()
         modules_data = self.config['__modules__']
@@ -60,6 +62,7 @@ class InfoEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def correlationrules(self):
+        """Return a sorted JSON list of all configured correlation rules."""
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         rules = list()
         for rule in self.config.get('__correlationrules__', []):
@@ -69,12 +72,14 @@ class InfoEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def ping(self):
+        """Return a health-check response with the current application version."""
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         return ["SUCCESS", __version__]
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def query(self, query):
+        """Execute a read-only SQL SELECT query and return the results as JSON."""
         dbh = self.get_dbh()
         if not query:
             return ["ERROR", "No query provided"]
@@ -87,4 +92,5 @@ class InfoEndpoints:
             return ["ERROR", str(e)]
 
     def get_dbh(self):
+        """Return a database handle instance."""
         return self._get_dbh()

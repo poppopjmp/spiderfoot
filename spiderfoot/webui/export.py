@@ -9,6 +9,7 @@ class ExportEndpoints:
     """WebUI endpoints for exporting scan data."""
     @cherrypy.expose
     def scanexportlogs(self, id, dialect="excel"):
+        """Export scan logs as a CSV file download."""
         dbh = self._get_dbh()
         try:
             data = dbh.scanLogs(id)
@@ -29,6 +30,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scancorrelationsexport(self, id, filetype="csv", dialect="excel"):
+        """Export scan correlations as a CSV or Excel file download."""
         dbh = self._get_dbh()
         try:
             data = dbh.scanCorrelations(id)
@@ -59,6 +61,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scaneventresultexport(self, id, type, filetype="csv", dialect="excel"):
+        """Export scan event results filtered by type as CSV or Excel."""
         dbh = self._get_dbh()
         data = dbh.scanResultEvent(id, type)
         if filetype.lower() in ["xlsx", "excel"]:
@@ -96,6 +99,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel"):
+        """Export event results from multiple scans as CSV or Excel."""
         dbh = self._get_dbh()
         scaninfo = dict()
         data = list()
@@ -149,6 +153,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scansearchresultexport(self, id, eventType=None, value=None, filetype="csv", dialect="excel"):
+        """Export scan search results as CSV or Excel."""
         data = self.searchBase(id, eventType, value)
         if not data:
             return None
@@ -181,6 +186,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scanexportjsonmulti(self, ids):
+        """Export event results from multiple scans as a JSON file download."""
         dbh = self._get_dbh()
         scaninfo = list()
         scan_name = ""
@@ -202,6 +208,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scanviz(self, id, gexf="0"):
+        """Generate scan result visualization as JSON graph or GEXF export."""
         if not id:
             return None
         dbh = self._get_dbh()
@@ -224,6 +231,7 @@ class ExportEndpoints:
 
     @cherrypy.expose
     def scanvizmulti(self, ids, gexf="1"):
+        """Generate combined visualization from multiple scans as JSON or GEXF."""
         dbh = self._get_dbh()
         data = list()
         roots = list()

@@ -37,6 +37,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacelist(self):
+        """List all available workspaces as JSON."""
         try:
             workspaces = SpiderFootWorkspace.list_workspaces(self.config)
             return workspaces
@@ -46,6 +47,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacecreate(self, name, description=''):
+        """Create a new workspace with the given name and description."""
         try:
             ws = SpiderFootWorkspace(self.config, name=name)
             ws.description = description
@@ -57,6 +59,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspaceget(self, workspace_id):
+        """Retrieve workspace details including targets, scans, and metadata."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             return {
@@ -75,6 +78,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspaceupdate(self, workspace_id, name=None, description=None):
+        """Update workspace name and description."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             if name:
@@ -89,6 +93,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacedelete(self, workspace_id):
+        """Delete a workspace by its ID."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             ws.delete_workspace()
@@ -99,6 +104,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacesummary(self, workspace_id):
+        """Return a summary of the workspace including scan statistics."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             return ws.get_workspace_summary()
@@ -108,6 +114,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspaceaddtarget(self, workspace_id, target, target_type=None):
+        """Add a scan target to the specified workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             target_id = ws.add_target(target, target_type)
@@ -118,6 +125,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspaceremovetarget(self, workspace_id, target_id):
+        """Remove a scan target from the specified workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             ok = ws.remove_target(target_id)
@@ -128,6 +136,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspaceimportscans(self, workspace_id, scan_ids):
+        """Import existing scans into a workspace by scan IDs."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             scan_id_list = [s.strip() for s in scan_ids.split(',') if s.strip()]
@@ -139,6 +148,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacemultiscan(self, workspace_id, targets, modules, scan_name_prefix, enable_correlation='false'):
+        """Launch scans against multiple targets in a workspace."""
         self.log.info("[MULTISCAN] Starting multi-target scan for workspace: %s", workspace_id)
         self.log.debug("[MULTISCAN] Input parameters - targets: %s, modules: %s, prefix: %s", targets, modules, scan_name_prefix)
         try:
@@ -153,6 +163,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacemcpreport(self, workspace_id, report_type, format='json', include_correlations='true', include_threat_intel='true', include_recommendations='true', tlp_level='amber'):
+        """Generate an MCP-format report for the specified workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             report = ws.generate_mcp_report(report_type, format, include_correlations, include_threat_intel, include_recommendations, tlp_level)
@@ -163,6 +174,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacetiming(self, workspace_id, timezone=None, default_start_time=None, retention_period=None, auto_scheduling=None, business_hours_only=None, enable_throttling=None, business_start=None, business_end=None):
+        """Update scan timing and scheduling configuration for a workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             timing = ws.update_timing_config(timezone, default_start_time, retention_period, auto_scheduling, business_hours_only, enable_throttling, business_start, business_end)
@@ -173,6 +185,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacescanresults(self, workspace_id, scan_id=None, event_type=None, limit=100):
+        """Retrieve scan results for a workspace, optionally filtered by scan or event type."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             results = ws.get_scan_results(scan_id=scan_id, event_type=event_type, limit=limit)
@@ -183,6 +196,7 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacescancorrelations(self, workspace_id):
+        """Retrieve cross-scan correlations for a workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             correlations = ws.get_cross_scan_correlations()
@@ -192,6 +206,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     def workspacedetails(self, workspace_id):
+        """Render the workspace details page with scans and metadata."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
 
@@ -231,6 +246,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     def workspacereportdownload(self, report_id, workspace_id, format='json'):
+        """Download a generated workspace report by report ID."""
         try:
             cherrypy.response.headers['Content-Type'] = 'application/json'
             raise cherrypy.HTTPError(501, "Report download not yet implemented")

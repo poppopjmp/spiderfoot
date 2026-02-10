@@ -10,6 +10,7 @@ from spiderfoot import __version__
 class WebUiHelpers:
     """Utility methods for WebUI input sanitization and rendering."""
     def cleanUserInput(self, inputList):
+        """Sanitize a list of user input strings by escaping HTML entities."""
         if not isinstance(inputList, list):
             raise TypeError(f"inputList is {type(inputList)}; expected list()")
         ret = list()
@@ -23,6 +24,7 @@ class WebUiHelpers:
         return ret
 
     def buildExcel(self, data, columnNames, sheetNameIndex=0):
+        """Build an Excel workbook from tabular data and return it as bytes."""
         rowNums = dict()
         from sfwebui import BytesIO  # Local import to avoid circular import
         workbook = openpyxl.Workbook()
@@ -55,6 +57,7 @@ class WebUiHelpers:
             return f.read()
 
     def jsonify_error(self, status, message):
+        """Return a JSON-formatted error response with the given HTTP status."""
         cherrypy.response.headers['Content-Type'] = 'application/json'
         cherrypy.response.status = status
         return {
@@ -65,11 +68,13 @@ class WebUiHelpers:
         }
 
     def error(self, message):
+        """Render the error page template with the given message."""
         templ = Template(
             filename='spiderfoot/templates/error.tmpl', lookup=self.lookup)
         return templ.render(message=message, docroot=self.docroot, version=__version__)
 
     def searchBase(self, id=None, eventType=None, value=None):
+        """Search scan results by ID, event type, or value and return formatted rows."""
         import time
         retdata = []
         if not id and not eventType and not value:

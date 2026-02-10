@@ -23,10 +23,12 @@ class EventEnricher:
     """
 
     def __init__(self, dbh) -> None:
+        """Initialize the event enricher with a database handle."""
         self.log = logging.getLogger("spiderfoot.correlation.enricher")
         self.dbh = dbh
 
     def enrich_sources(self, scan_id, events) -> list:
+        """Attach source module information to each event."""
         # Example: Add source info to each event
         for event in events:
             event_hash = event.get('hash', event.get('id', ''))
@@ -34,12 +36,14 @@ class EventEnricher:
         return events
 
     def enrich_children(self, scan_id, events) -> list:
+        """Attach child event information to each event."""
         # Example: Add child info to each event
         for event in events:
             event['children'] = self.dbh.get_children(scan_id, event['id'])
         return events
 
     def enrich_entities(self, scan_id, events) -> list:
+        """Attach entity summary information to each event."""
         # Example: Add entity info to each event
         for event in events:
             event_hash = event.get('hash', event.get('id', ''))

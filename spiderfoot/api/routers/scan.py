@@ -91,6 +91,7 @@ async def start_scan_background(
     type_filter: list,
     config: dict,
 ):
+    """Launch a SpiderFoot scan in the background for the given target and modules."""
     try:
         startSpiderFootScanner(
             None, scan_name, scan_id, target, target_type, modules, config,

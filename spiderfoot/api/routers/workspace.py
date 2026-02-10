@@ -32,6 +32,7 @@ async def list_workspaces(
     params: PaginationParams = Depends(),
     api_key: str = optional_auth_dep,
 ):
+    """List all workspaces with pagination support."""
     try:
         config = get_app_config()
         workspaces = SpiderFootWorkspace.list_workspaces(config.get_config())
@@ -43,6 +44,7 @@ async def list_workspaces(
 
 @router.post("/workspaces", status_code=201, response_model=WorkspaceCreateResponse)
 async def create_workspace(workspace_request: WorkspaceRequest, api_key: str = api_key_dep):
+    """Create a new workspace with the given name and description."""
     try:
         config = get_app_config()
         workspace = SpiderFootWorkspace(config.get_config(), name=workspace_request.name)
@@ -61,6 +63,7 @@ async def create_workspace(workspace_request: WorkspaceRequest, api_key: str = a
 
 @router.get("/workspaces/{workspace_id}", response_model=WorkspaceDetailResponse)
 async def get_workspace(workspace_id: str, api_key: str = optional_auth_dep):
+    """Retrieve workspace details including targets, scans, and metadata."""
     try:
         config = get_app_config()
         workspace = SpiderFootWorkspace(config.get_config(), workspace_id)
@@ -143,6 +146,7 @@ async def get_workspace_summary(workspace_id: str, api_key: str = optional_auth_
 
 @router.delete("/workspaces/{workspace_id}")
 async def delete_workspace(workspace_id: str, api_key: str = api_key_dep):
+    """Delete a workspace by its ID."""
     try:
         config = get_app_config()
         workspace = SpiderFootWorkspace(config.get_config(), workspace_id)
@@ -157,6 +161,7 @@ async def delete_workspace(workspace_id: str, api_key: str = api_key_dep):
 
 @router.post("/workspaces/{workspace_id}/targets", status_code=201)
 async def add_target(workspace_id: str, target_request: TargetRequest, api_key: str = api_key_dep):
+    """Add a validated target to the specified workspace."""
     try:
         config = get_app_config()
         workspace = SpiderFootWorkspace(config.get_config(), workspace_id)
@@ -187,6 +192,7 @@ async def list_targets(
     params: PaginationParams = Depends(),
     api_key: str = optional_auth_dep,
 ):
+    """List all targets in a workspace with pagination support."""
     try:
         config = get_app_config()
         workspace = SpiderFootWorkspace(config.get_config(), workspace_id)
@@ -201,6 +207,7 @@ async def list_targets(
 
 @router.delete("/workspaces/{workspace_id}/targets/{target_id}")
 async def remove_target(workspace_id: str, target_id: str, api_key: str = api_key_dep):
+    """Remove a target from the specified workspace."""
     try:
         config = get_app_config()
         workspace = SpiderFootWorkspace(config.get_config(), workspace_id)
@@ -224,6 +231,7 @@ async def start_multi_scan(
     background_tasks: BackgroundTasks,
     api_key: str = api_key_dep
 ):
+    """Start a multi-target scan for all targets in the workspace."""
     try:
         config = get_app_config()
         workspace = SpiderFootWorkspace(config.get_config(), workspace_id)

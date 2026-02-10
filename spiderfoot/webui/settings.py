@@ -11,12 +11,14 @@ class SettingsEndpoints:
     """WebUI endpoints for application settings."""
     @cherrypy.expose
     def opts(self, updated=None):
+        """Render the settings page with current configuration options."""
         templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
         self.token = random.SystemRandom().randint(0, 99999999)
         return templ.render(opts=self.config, pageid='SETTINGS', token=self.token, version=__version__, updated=updated, docroot=self.docroot)
 
     @cherrypy.expose
     def optsexport(self, pattern=None):
+        """Export current settings as a downloadable configuration file."""
         sf = SpiderFoot(self.config)
         conf = sf.configSerialize(self.config)
         content = ""
@@ -29,6 +31,7 @@ class SettingsEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def optsraw(self):
+        """Return current settings and a CSRF token as JSON."""
         ret = dict()
         self.token = random.SystemRandom().randint(0, 99999999)
         for opt in self.config:
@@ -37,6 +40,7 @@ class SettingsEndpoints:
 
     @cherrypy.expose
     def savesettings(self, allopts, token, configFile=None):
+        """Save settings from form input or uploaded config file."""
         if str(token) != str(self.token):
             # Render opts.tmpl with error message for CSRF error
             templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
@@ -108,6 +112,7 @@ class SettingsEndpoints:
 
     @cherrypy.expose
     def savesettingsraw(self, allopts, token):
+        """Save settings via API and return JSON success or error response."""
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         from spiderfoot import SpiderFoot
         if str(token) != str(self.token):
@@ -132,6 +137,7 @@ class SettingsEndpoints:
         return json.dumps(["SUCCESS", ""]).encode('utf-8')
 
     def reset_settings(self):
+        """Reset all settings to their default values."""
         try:
             dbh = self._get_dbh()
             dbh.configClear()  # Clear it in the DB

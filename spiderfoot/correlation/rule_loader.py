@@ -44,11 +44,13 @@ RULE_SCHEMA = {
 class RuleLoader:
     """Loads and validates YAML correlation rules from a directory."""
     def __init__(self, rule_dir) -> None:
+        """Initialize the rule loader with the given rules directory."""
         self.rule_dir = rule_dir
         self.rules = []
         self.errors = []
 
     def load_rules(self) -> list:
+        """Load and validate all YAML rule files from the configured directory."""
         for fname in os.listdir(self.rule_dir):
             if not fname.endswith('.yaml'):
                 continue
@@ -65,7 +67,9 @@ class RuleLoader:
         return self.rules
 
     def get_errors(self) -> list:
+        """Return the list of errors encountered during rule loading."""
         return self.errors
 
     def get_rules(self) -> list:
+        """Return the list of successfully loaded and validated rules."""
         return self.rules
