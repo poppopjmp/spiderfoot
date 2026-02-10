@@ -70,6 +70,7 @@ class ModuleTimeoutGuard:
         hard_interrupt: bool = False,
         module_timeouts: dict[str, float] | None = None,
     ) -> None:
+        """Initialize the ModuleTimeoutGuard."""
         # Config from environment
         env_timeout = os.environ.get("SF_MODULE_TIMEOUT")
         env_hard = os.environ.get("SF_MODULE_TIMEOUT_HARD", "").lower()

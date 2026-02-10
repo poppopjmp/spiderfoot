@@ -89,6 +89,7 @@ class SpiderFootModuleFinder:
     """Custom module finder to fix SpiderFoot module imports."""
 
     def find_spec(self, name: str, path: str | None, target: object | None = None) -> None:
+        """Locate a module spec for SpiderFoot module imports."""
         # Only intercept sfp_ module imports
         if name.startswith('modules.sfp_') or name.startswith('sfp_'):
             return None  # Let default finder handle it, we'll fix in exec_module
@@ -98,12 +99,15 @@ class SpiderFootModuleLoader:
     """Custom module loader to fix SpiderFoot module imports."""
 
     def __init__(self, spec: object) -> None:
+        """Initialize the SpiderFootModuleLoader."""
         self.spec = spec
 
     def create_module(self, spec: object) -> None:
+        """Create a module object using default semantics."""
         return None  # Use default module creation
 
     def exec_module(self, module: object) -> None:
+        """Execute and fix SpiderFoot module imports."""
         # Execute the module normally first
         spec = importlib.util.find_spec(module.__name__)
         if spec and spec.loader:
@@ -122,6 +126,7 @@ def fetchUrl(self, url: str, fatal: bool = False, cookies: str | None = None, ti
              useragent: str = "SpiderFoot", headers: dict | None = None, noLog: bool = False,
              postData: str | dict | None = None, dontMaskPassword: bool = False, sizeLimit: int | None = None,
              headOnly: bool = False, verify: bool = True) -> None:
+    """Fetch a URL and return the response content."""
     # Check for invalid URL types
     if not isinstance(url, str):
         return None

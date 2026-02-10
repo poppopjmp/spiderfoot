@@ -120,6 +120,7 @@ class CorrelationHit:
     strategy: str = ""
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         d = {
             "event_id": self.event.event_id,
             "event_type": self.event.event_type,
@@ -148,6 +149,7 @@ class VectorCorrelationResult:
     metrics: dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "query": self.query,
             "strategy": self.strategy,
@@ -193,6 +195,7 @@ class VectorCorrelationEngine:
         reranker: Any = None,
         config: VectorCorrelationConfig | None = None,
     ) -> None:
+        """Initialize the VectorCorrelationEngine."""
         self._config = config or VectorCorrelationConfig()
         self._qdrant = qdrant
         self._embeddings = embeddings
@@ -589,6 +592,7 @@ class VectorCorrelationEngine:
     # -----------------------------------------------------------------------
 
     def stats(self) -> dict[str, Any]:
+        """Return engine statistics."""
         s: dict[str, Any] = {
             "indexed_count": self._indexed_count,
             "collection": self._config.collection_name,

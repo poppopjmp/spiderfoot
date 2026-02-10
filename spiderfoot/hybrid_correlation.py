@@ -92,6 +92,7 @@ class HybridFinding:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "finding_id": self.finding_id,
             "headline": self.headline,
@@ -116,6 +117,7 @@ class HybridCorrelationResult:
     elapsed_ms: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "scan_id": self.scan_id,
             "total_findings": self.total_findings,
@@ -377,6 +379,7 @@ class HybridCorrelator:
         multidim_analyzer: Any = None,
         event_loader: Callable | None = None,
     ) -> None:
+        """Initialize the HybridCorrelator."""
         self.config = config or HybridConfig()
         self._rule_factory = rule_executor_factory
         self._vector_engine = vector_engine

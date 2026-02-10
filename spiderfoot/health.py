@@ -59,6 +59,7 @@ class ComponentHealth:
     def __init__(self, name: str, status: HealthStatus,
                  message: str = "", details: dict | None = None,
                  latency_ms: float = 0.0) -> None:
+        """Initialize the ComponentHealth."""
         self.name = name
         self.status = status
         self.message = message
@@ -67,6 +68,7 @@ class ComponentHealth:
         self.timestamp = time.time()
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         d = {
             "status": self.status.value,
             "latency_ms": round(self.latency_ms, 2),
@@ -92,6 +94,7 @@ class HealthAggregator:
     _lock = threading.Lock()
 
     def __init__(self) -> None:
+        """Initialize the HealthAggregator."""
         self._checks: dict[str, Callable[[], HealthStatus]] = {}
         self._detailed_checks: dict[
             str, Callable[[], ComponentHealth]
@@ -102,6 +105,7 @@ class HealthAggregator:
 
     @classmethod
     def get_instance(cls) -> "HealthAggregator":
+        """Return the singleton HealthAggregator instance."""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:

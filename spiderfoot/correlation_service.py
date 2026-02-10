@@ -90,6 +90,7 @@ class CorrelationServiceConfig:
 
     @classmethod
     def from_config(cls, opts: dict) -> "CorrelationServiceConfig":
+        """Create a CorrelationServiceConfig from a SpiderFoot config dict."""
         trigger_str = opts.get("_correlation_trigger", "scan")
         try:
             trigger = CorrelationTrigger(trigger_str)
@@ -148,6 +149,7 @@ class CorrelationService:
     """
 
     def __init__(self, config: CorrelationServiceConfig) -> None:
+        """Initialize the CorrelationService."""
         self.config = config
         self._rules: list[dict] = []
         self._lock = threading.Lock()
@@ -160,6 +162,7 @@ class CorrelationService:
 
     @classmethod
     def from_config(cls, opts: dict) -> "CorrelationService":
+        """Create a CorrelationService from a SpiderFoot config dict."""
         config = CorrelationServiceConfig.from_config(opts)
         return cls(config)
 
@@ -262,6 +265,7 @@ class CorrelationService:
 
     @property
     def rule_count(self) -> int:
+        """Return the number of loaded correlation rules."""
         return len(self._rules)
 
     # ------------------------------------------------------------------

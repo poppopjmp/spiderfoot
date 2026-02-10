@@ -140,6 +140,7 @@ class ModuleMeta(BaseModel):
     @field_validator("flags", mode="before")
     @classmethod
     def ensure_flags_list(cls, v: Any) -> list[str]:
+        """Ensure the flags field is a list of strings."""
         if v is None:
             return []
         if isinstance(v, str):
@@ -149,6 +150,7 @@ class ModuleMeta(BaseModel):
     @field_validator("useCases", mode="before")
     @classmethod
     def ensure_use_cases_list(cls, v: Any) -> list[str]:
+        """Ensure the useCases field is a list of strings."""
         if v is None:
             return []
         if isinstance(v, str):
@@ -158,6 +160,7 @@ class ModuleMeta(BaseModel):
     @field_validator("categories", mode="before")
     @classmethod
     def ensure_categories_list(cls, v: Any) -> list[str]:
+        """Ensure the categories field is a list of strings."""
         if v is None:
             return []
         if isinstance(v, str):
@@ -180,6 +183,7 @@ class ModuleValidationResult:
 
     @property
     def all_errors(self) -> list[str]:
+        """Return all protocol and meta validation errors combined."""
         return self.protocol_errors + self.meta_errors
 
 

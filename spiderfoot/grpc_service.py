@@ -245,6 +245,7 @@ class ServiceServer:
     """
 
     def __init__(self, service_name: str, port: int = 5003) -> None:
+        """Initialize the ServiceServer."""
         self.service_name = service_name
         self.port = port
         self._handlers: dict[str, Callable] = {}
@@ -296,6 +297,7 @@ class ServiceServer:
 
     @property
     def is_running(self) -> bool:
+        """Return whether the RPC server is currently running."""
         return self._running
 
 
@@ -307,6 +309,7 @@ def _make_handler_factory(service_name: str,
         """HTTP request handler for gRPC-over-HTTP bridge."""
 
         def do_POST(self) -> None:  # noqa: N802
+            """Handle incoming POST requests for RPC method dispatch."""
             # Expected path: /rpc/{service_name}/{method}
             parts = self.path.strip("/").split("/")
             if len(parts) >= 3 and parts[0] == "rpc":
@@ -346,6 +349,7 @@ def _make_handler_factory(service_name: str,
                 self.wfile.write(error_body)
 
         def log_message(self, format: str, *args) -> None:  # noqa: A002
+            """Suppress default HTTP request logging."""
             pass
 
     return _RPCHandler

@@ -47,6 +47,7 @@ class ModuleProgress:
 
     @property
     def is_terminal(self) -> bool:
+        """Return whether the module has reached a terminal status."""
         return self.status in (
             ModuleStatus.COMPLETED,
             ModuleStatus.FAILED,
@@ -54,6 +55,7 @@ class ModuleProgress:
         )
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "module": self.module_name,
             "status": self.status.value,
@@ -76,6 +78,7 @@ class ProgressSnapshot:
     eta_seconds: float | None
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "timestamp": self.timestamp,
             "overall_pct": round(self.overall_pct, 2),
@@ -103,6 +106,7 @@ class ScanProgressTracker:
     """
 
     def __init__(self, scan_id: str) -> None:
+        """Initialize the ScanProgressTracker."""
         self.scan_id = scan_id
         self._modules: dict[str, ModuleProgress] = {}
         self._lock = threading.Lock()

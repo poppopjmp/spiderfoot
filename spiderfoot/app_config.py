@@ -389,14 +389,17 @@ class ValidationError:
     __slots__ = ("field", "message", "value")
 
     def __init__(self, field: str, message: str, value: Any = None) -> None:
+        """Initialize the ValidationError."""
         self.field = field
         self.message = message
         self.value = value
 
     def __repr__(self) -> str:
+        """Return a developer-friendly string representation."""
         return f"ValidationError({self.field!r}, {self.message!r})"
 
     def __str__(self) -> str:
+        """Return a human-readable string representation."""
         return f"{self.field}: {self.message}"
 
 

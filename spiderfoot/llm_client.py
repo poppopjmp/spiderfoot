@@ -197,6 +197,7 @@ class LLMResponse:
 
     @property
     def total_tokens(self) -> int:
+        """Return the total number of tokens used."""
         return self.usage.total_tokens
 
 
@@ -215,6 +216,7 @@ class StreamChunk:
 class LLMError(Exception):
     """Base error for LLM operations."""
     def __init__(self, message: str, status_code: int = 0, response: str = "") -> None:
+        """Initialize the LLMError."""
         super().__init__(message)
         self.status_code = status_code
         self.response = response
@@ -244,6 +246,7 @@ class _MockGenerator:
 
     @staticmethod
     def generate(messages: list[dict[str, str]], model: str) -> LLMResponse:
+        """Generate a mock LLM response for testing."""
         user_msg = ""
         for m in reversed(messages):
             if m.get("role") == "user":
@@ -290,6 +293,7 @@ class LLMClient:
     """
 
     def __init__(self, config: LLMConfig | None = None) -> None:
+        """Initialize the LLMClient."""
         self.config = config or LLMConfig()
         self._total_requests = 0
         self._total_tokens = 0

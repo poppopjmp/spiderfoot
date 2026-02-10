@@ -16,7 +16,7 @@ def _get_version():
         return version_string
     except (FileNotFoundError, OSError):
         # Fallback version if VERSION file is not found
-        return "5.222.0"
+        return "5.223.0"
 
 __version__ = _get_version()
 

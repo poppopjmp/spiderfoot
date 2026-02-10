@@ -73,12 +73,14 @@ class AsyncResult:
 
     def __init__(self, data: Any = None, error: str | None = None,
                  duration: float = 0.0) -> None:
+        """Initialize the AsyncResult."""
         self.data = data
         self.error = error
         self.duration = duration
         self.ok = error is None
 
     def __repr__(self) -> str:
+        """Return a developer-friendly string representation."""
         return f"AsyncResult(ok={self.ok}, duration={self.duration:.3f}s)"
 
 
@@ -97,6 +99,7 @@ class SpiderFootAsyncPlugin(SpiderFootModernPlugin):
     _max_async_concurrency = 10
 
     def __init__(self) -> None:
+        """Initialize the SpiderFootAsyncPlugin."""
         super().__init__()
         self._semaphore: asyncio.Semaphore | None = None
         self._async_executor: ThreadPoolExecutor | None = None

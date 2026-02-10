@@ -397,6 +397,7 @@ def create_gateway_router() -> Any:
 
     @router.post("/route/{service}/{method}")
     async def route_request(service: str, method: str, request: Request) -> JSONResponse:
+        """Route a REST request to the appropriate backend service."""
         try:
             body = await request.json()
         except Exception as e:
@@ -412,10 +413,12 @@ def create_gateway_router() -> Any:
 
     @router.get("/status")
     async def system_status() -> dict:
+        """Return aggregated system status from all services."""
         return gateway.get_system_status()
 
     @router.get("/stats")
     async def gateway_stats() -> dict:
+        """Return gateway routing statistics."""
         return gateway.stats()
 
     return router

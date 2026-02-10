@@ -101,6 +101,7 @@ class IndexerMetrics:
     last_flush_time: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "indexed": self.indexed,
             "skipped": self.skipped,
@@ -121,6 +122,7 @@ class BatchWriter:
     def __init__(self, config: IndexerConfig,
                  flush_fn: Callable[[list[Any]], int],
                  metrics: IndexerMetrics) -> None:
+        """Initialize the BatchWriter."""
         self._config = config
         self._flush_fn = flush_fn
         self._metrics = metrics
@@ -200,6 +202,7 @@ class BatchWriter:
 
     @property
     def pending(self) -> int:
+        """Return the number of events pending in the queue."""
         return len(self._queue)
 
 
@@ -226,6 +229,7 @@ class EventIndexer:
         vector_engine: Any = None,
         event_bus: Any = None,
     ) -> None:
+        """Initialize the EventIndexer."""
         self.config = config or IndexerConfig()
         self._vector_engine = vector_engine
         self._event_bus = event_bus

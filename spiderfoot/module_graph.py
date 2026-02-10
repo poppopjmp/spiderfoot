@@ -71,9 +71,11 @@ class ModuleInfo:
 
     @property
     def display_name(self) -> str:
+        """Return the human-readable display name from module metadata."""
         return self.meta.get("name", self.name)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "name": self.name,
             "display_name": self.display_name,
@@ -88,6 +90,7 @@ class ModuleGraph:
     """Directed graph of module event-type dependencies."""
 
     def __init__(self) -> None:
+        """Initialize the ModuleGraph."""
         self.modules: dict[str, ModuleInfo] = {}
 
         # event_type -> set of module names that produce it

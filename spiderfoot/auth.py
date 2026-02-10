@@ -208,6 +208,7 @@ class AuthResult:
                  identity: str = "",
                  role: Role = Role.VIEWER,
                  error: str = "") -> None:
+        """Initialize the AuthResult."""
         self.authenticated = authenticated
         self.identity = identity
         self.role = role
@@ -217,9 +218,11 @@ class AuthResult:
         )
 
     def has_permission(self, permission: str) -> bool:
+        """Check if the authenticated identity has the given permission."""
         return permission in self.permissions
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "authenticated": self.authenticated,
             "identity": self.identity,
@@ -235,6 +238,7 @@ class AuthGuard:
     """
 
     def __init__(self, config: AuthConfig) -> None:
+        """Initialize the AuthGuard."""
         self.config = config
         self._api_key_set: set[str] = set(config.api_keys)
 
