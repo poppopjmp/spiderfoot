@@ -5,7 +5,7 @@ class sfp_soroush(SpiderFootModernPlugin):
     meta = {
         'name': "Soroush Monitor",
         'summary': "Monitors Soroush for new messages and emits events.",
-        'flags': [],
+        'flags': ['experimental'],
         'useCases': ["Passive", "Investigate"],
         'group': ["Passive", "Investigate"],
         'categories': ["Social Media"],

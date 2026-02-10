@@ -5,7 +5,7 @@ class sfp_tron(SpiderFootModernPlugin):
     meta = {
         'name': "Tron Blockchain Monitor",
         'summary': "Monitors Tron blockchain for transactions and emits events.",
-        'flags': ['apikey'],
+        'flags': ['apikey', 'experimental'],
         'useCases': ["Passive", "Investigate"],
         'group': ["Passive", "Investigate"],
         'categories': ["Reputation Systems"],

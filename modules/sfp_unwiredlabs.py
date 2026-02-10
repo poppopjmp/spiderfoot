@@ -5,7 +5,7 @@ class sfp_unwiredlabs(SpiderFootModernPlugin):
     meta = {
         'name': "UnwiredLabs Geolocation API",
         'summary': "Queries UnwiredLabs for geolocation data based on cell towers, WiFi, or IP.",
-        'flags': ['apikey'],
+        'flags': ['apikey', 'experimental'],
         'useCases': ["Investigate", "Footprint"],
         'categories': ["Real World"],
         'dataSource': {

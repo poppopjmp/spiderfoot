@@ -5,7 +5,7 @@ class sfp_instagram(SpiderFootModernPlugin):
     meta = {
         'name': "Instagram Monitor",
         'summary': "Monitors Instagram for new posts or stories and emits events.",
-        'flags': ['apikey'],
+        'flags': ['apikey', 'experimental'],
         'useCases': ["Passive", "Investigate"],
         'group': ["Passive", "Investigate"],
         'categories': ["Social Media"],

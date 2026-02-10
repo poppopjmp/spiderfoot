@@ -5,7 +5,7 @@ class sfp_whatsapp(SpiderFootModernPlugin):
     meta = {
         'name': "WhatsApp Monitor",
         'summary': "Monitors WhatsApp for new messages and emits events.",
-        'flags': ['apikey'],
+        'flags': ['apikey', 'experimental'],
         'useCases': ["Passive", "Investigate"],
         'group': ["Passive", "Investigate"],
         'categories': ["Social Media"],

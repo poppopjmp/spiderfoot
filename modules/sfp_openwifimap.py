@@ -5,7 +5,7 @@ class sfp_openwifimap(SpiderFootModernPlugin):
     meta = {
         'name': "OpenWifiMap.net Lookup",
         'summary': "Queries OpenWifiMap.net for public WiFi hotspots and related info.",
-        'flags': [],
+        'flags': ['experimental'],
         'useCases': ["Investigate", "Footprint"],
         'categories': ["Public Registries"],
         'dataSource': {

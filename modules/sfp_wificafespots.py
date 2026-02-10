@@ -5,7 +5,7 @@ class sfp_wificafespots(SpiderFootModernPlugin):
     meta = {
         'name': "WiFiCafeSpots.com Lookup",
         'summary': "Queries WiFiCafeSpots.com for public WiFi hotspots and related info.",
-        'flags': [],
+        'flags': ['experimental'],
         'useCases': ["Investigate", "Footprint"],
         'categories': ["Public Registries"],
         'dataSource': {

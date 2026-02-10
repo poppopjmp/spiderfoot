@@ -5,7 +5,7 @@ class sfp_rubika(SpiderFootModernPlugin):
     meta = {
         'name': "Rubika Monitor",
         'summary': "Monitors Rubika for new messages and emits events.",
-        'flags': [],
+        'flags': ['experimental'],
         'useCases': ["Passive", "Investigate"],
         'group': ["Passive", "Investigate"],
         'categories': ["Social Media"],

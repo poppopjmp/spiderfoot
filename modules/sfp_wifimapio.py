@@ -5,7 +5,7 @@ class sfp_wifimapio(SpiderFootModernPlugin):
     meta = {
         'name': "WiFiMap.io Lookup",
         'summary': "Queries WiFiMap.io for public WiFi hotspots and related info.",
-        'flags': [],
+        'flags': ['experimental'],
         'useCases': ["Investigate", "Footprint"],
         'categories': ["Public Registries"],
         'dataSource': {
