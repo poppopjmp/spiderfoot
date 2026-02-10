@@ -3,6 +3,33 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.177.0] — RC Cycle 109: Complete Typing Modernization
+
+### Changed
+- Removed all legacy `Dict[`, `List[`, `Tuple[`, `Set[`, `Optional[`, `Union[` generic usage from the entire codebase
+- Fixed remaining old typing in `sfwebui.py` (6 code annotations) and docstring references in `target.py`, `workspace.py`, `hybrid_correlation.py`
+- Zero remaining old-style typing generics in the project
+
+## [5.176.0] — RC Cycle 108: Future Annotations + Typing Modernization (105 files)
+
+### Changed
+- Added `from __future__ import annotations` to 105 files that used legacy typing generics
+- Applied PEP 585/604 typing modernization: `Dict[` -> `dict[`, `List[` -> `list[`, `Optional[X]` -> `X | None`, `Union[X, Y]` -> `X | Y`
+- Removed now-unused `Dict`, `List`, `Tuple`, `Set`, `Optional`, `Union` from `from typing import` lines
+
+## [5.175.0] — RC Cycle 107: Typing Modernization (71 files)
+
+### Changed
+- Applied PEP 585/604 typing modernization across 71 files that already had `from __future__ import annotations`
+- Added `scripts/modernize_typing.py` automation script for typing migration
+
+## [5.174.0] — RC Cycle 106: f-string, Future Annotations, Mutable Default Fixes
+
+### Changed
+- Converted 3 `.format()` calls to f-strings in blockchain modules (`sfp_arbitrum`, `sfp_ethereum`, `sfp_tron`)
+- Added `from __future__ import annotations` to `websocket.py` and `modern_plugin.py`
+- Fixed 2 mutable default arguments in `db_config.py` (`optMap={}` and `optMap=dict()` -> `optMap=None`)
+
 ## [5.173.0] — RC Cycle 104: Complete __init__ Return Type Coverage
 
 ### Changed
