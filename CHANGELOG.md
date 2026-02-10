@@ -3,6 +3,35 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.114.0] — RC Cycle 29: Plugin Dead Stub Removal
+
+### Removed
+- Removed 135 lines of dead stub methods from plugin.py
+- 13 early stub methods that were shadowed by full implementations later in the class
+- Removed orphaned `_run()` method (only caller was the dead early `start()`)
+- Early stubs used wrong attribute names (`_scanId` vs `__scanId__`, `_dbh` vs `__sfdb__`)
+
+## [5.113.0] — RC Cycle 28: Scan Endpoint Deduplication
+
+### Removed
+- Removed ~850 lines of duplicated methods in webui/scan.py
+- 22 methods were copy-pasted 3-4 times, all shadowed by the last definition
+- File reduced from 1,551 lines to 700 lines with 37 unique methods
+
+## [5.112.0] — RC Cycle 27: Stub Module Flags
+
+### Changed
+- Marked 11 stub modules as `experimental` (sfp_ethereum, sfp_tron, sfp_bnb, sfp_openwifimap, sfp_unwiredlabs, sfp_wificafespots, sfp_wifimapio, sfp_instagram, sfp_rubika, sfp_soroush, sfp_whatsapp)
+- All 11 have no-op `handleEvent()` methods — flag warns users they are not yet functional
+
+## [5.111.0] — RC Cycle 26: Placeholder Endpoint Fixes
+
+### Changed
+- Replaced fake scan result endpoint with `NotImplementedError` in webui/performance.py
+- Removed `(placeholder)` from workspace API response messages
+- Replaced fake report download returning `"{}"` with HTTP 501 in webui/workspace.py
+- Replaced placeholder CVE lookup with debug logging per source in sflib/core.py
+
 ## [5.110.0] — RC Cycle 24: Code Quality Cleanup
 
 ### Changed
