@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_leakcheck module."""
+
 # filepath: spiderfoot/test/integration/modules/test_sfpleakcheck.py
 import pytest
 import unittest

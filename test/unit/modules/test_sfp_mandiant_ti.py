@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_mandiant_ti module."""
+
 import unittest
 from modules.sfp_mandiant_ti import sfp_mandiant_ti
 from spiderfoot.sflib import SpiderFoot

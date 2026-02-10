@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfapi_search_base module."""
+
 import pytest
 from spiderfoot.api import search_base
 

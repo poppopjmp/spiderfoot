@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_unwiredlabs module."""
+
 import pytest
 from modules.sfp_unwiredlabs import sfp_unwiredlabs
 from spiderfoot import SpiderFootEvent

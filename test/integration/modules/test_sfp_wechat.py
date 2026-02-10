@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_wechat module."""
+
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_wechat import sfp_wechat

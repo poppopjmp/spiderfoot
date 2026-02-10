@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_email module."""
+
 import pytest
 import unittest
 

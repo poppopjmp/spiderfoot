@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfcli module."""
+
 # test_sfcli.py
 import subprocess
 import sys

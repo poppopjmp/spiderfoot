@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sf module."""
+
 # test_sf.py
 import subprocess
 import sys

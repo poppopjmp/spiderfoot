@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_yandexdns module."""
+
 import pytest
 from modules.sfp_yandexdns import sfp_yandexdns
 from spiderfoot.sflib import SpiderFoot

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp__stor_db module."""
+
 import pytest
 import unittest
 from unittest.mock import patch, MagicMock, Mock

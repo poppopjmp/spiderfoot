@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_opendns module."""
+
 import pytest
 from modules.sfp_opendns import sfp_opendns
 from spiderfoot.sflib import SpiderFoot

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_cisco_umbrella module."""
+
 # -------------------------------------------------------------------------------
 # Name:         test_sfp_cisco_umbrella
 # Purpose:      Test Cisco Umbrella Investigate API module.

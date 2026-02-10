@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_portscan_tcp module."""
+
 import pytest
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

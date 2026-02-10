@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sflib module."""
+
 # test_sflib_comprehensive.py
 import pytest
 import unittest

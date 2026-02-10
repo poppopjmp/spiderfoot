@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_dns_for_family module."""
+
 import pytest
 import unittest
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_ai_summary module."""
+
 import unittest
 from unittest.mock import patch, MagicMock
 from modules.sfp_ai_summary import sfp_ai_summary

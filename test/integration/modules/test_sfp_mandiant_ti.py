@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_mandiant_ti module."""
+
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch

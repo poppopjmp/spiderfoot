@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_whoisfreaks module."""
+
 # filepath: spiderfoot/test/unit/modules/test_sfp_whoisfreaks.py
 from unittest.mock import patch, MagicMock
 from spiderfoot.sflib import SpiderFoot

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_tool_nuclei_remote module."""
+
 import pytest
 import unittest
 from unittest.mock import patch, MagicMock

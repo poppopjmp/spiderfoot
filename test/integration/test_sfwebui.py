@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfwebui module."""
+
 # test_sfwebui.py
 import os
 import tempfile

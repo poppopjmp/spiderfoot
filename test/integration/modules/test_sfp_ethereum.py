@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_ethereum module."""
+
 import pytest
 from modules.sfp_ethereum import sfp_ethereum
 from spiderfoot import SpiderFootEvent

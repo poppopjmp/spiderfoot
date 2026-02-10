@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfwebui module."""
+
 import cheroot.test.webtest
 cheroot.test.webtest.getchar = lambda: 'I'
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_luminar module."""
+
 import unittest
 from unittest.mock import patch, MagicMock
 

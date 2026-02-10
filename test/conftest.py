@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pytest configuration and fixtures for test tests."""
+
 import contextlib
 import os
 import sys

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_virustotal module."""
+
 import json
 import time
 import unittest.mock as mock

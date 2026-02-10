@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_grep_app module."""
+
 import pytest
 import unittest
 

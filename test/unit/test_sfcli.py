@@ -30,7 +30,7 @@ class TestSpiderFootCliEssential(TestModuleBase):
         self.cli = SpiderFootCli()
         # Disable spool to avoid file issues
         self.cli.config['cli.spool'] = False
-        self.cli.version = "5.228.0"
+        self.cli.version = "5.229.0"
 
     def tearDown(self):
         """Clean up after each test method."""

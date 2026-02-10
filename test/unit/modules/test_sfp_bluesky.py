@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_bluesky module."""
+
 import pytest
 from unittest.mock import patch, MagicMock
 from modules.sfp_bluesky import sfp_bluesky

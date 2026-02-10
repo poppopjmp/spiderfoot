@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_rubika module."""
+
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_rubika import sfp_rubika

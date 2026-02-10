@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_numverify module."""
+
 import pytest
 import unittest
 

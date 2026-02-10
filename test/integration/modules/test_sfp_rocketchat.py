@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_rocketchat module."""
+
 import pytest
 from modules.sfp_rocketchat import sfp_rocketchat
 from spiderfoot import SpiderFootEvent

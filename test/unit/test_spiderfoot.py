@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for spiderfoot module."""
+
 # test_spiderfoot.py
 import pytest
 import unittest

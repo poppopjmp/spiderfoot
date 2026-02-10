@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_greynoise_community module."""
+
 # filepath: spiderfoot/test/unit/modules/test_sfp_greynoise_community.py
 from unittest.mock import patch, MagicMock
 from spiderfoot.sflib import SpiderFoot

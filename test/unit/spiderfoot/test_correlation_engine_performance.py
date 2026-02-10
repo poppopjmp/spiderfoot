@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for correlation_engine_performance module."""
+
 import pytest
 from unittest.mock import MagicMock
 from spiderfoot.correlation.rule_executor import RuleExecutor

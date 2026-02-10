@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_cloudfront module."""
+
 # filepath: spiderfoot/test/unit/modules/test_sfp_cloudfront.py
 import unittest
 from unittest.mock import patch, MagicMock

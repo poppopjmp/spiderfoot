@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfapi_config_api module."""
+
 import pytest
 from fastapi.testclient import TestClient
 import sfapi

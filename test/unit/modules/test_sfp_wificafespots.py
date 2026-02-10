@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for sfp_wificafespots module."""
+
 import pytest
 from modules.sfp_wificafespots import sfp_wificafespots
 from spiderfoot import SpiderFootEvent

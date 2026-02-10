@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tests for modules module."""
+
 # test_modules.py
 import os
 import pytest
