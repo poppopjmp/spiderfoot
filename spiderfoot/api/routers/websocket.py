@@ -18,7 +18,7 @@ from datetime import datetime
 import asyncio
 
 router = APIRouter()
-logger = logging.getLogger("spiderfoot.api.websocket")
+log = logging.getLogger("spiderfoot.api.websocket")
 
 
 class WebSocketManager:
@@ -39,7 +39,7 @@ class WebSocketManager:
             if scan_id not in self._connections:
                 self._connections[scan_id] = set()
             self._connections[scan_id].add(websocket)
-        logger.info(
+        log.info(
             "WebSocket connected: scan=%s (total=%d)",
             scan_id, self.connection_count(scan_id),
         )
@@ -52,7 +52,7 @@ class WebSocketManager:
                 conns.discard(websocket)
                 if not conns:
                     del self._connections[scan_id]
-        logger.info("WebSocket disconnected: scan=%s", scan_id)
+        log.info("WebSocket disconnected: scan=%s", scan_id)
 
     async def send_to_scan(self, scan_id: str, message: dict) -> int:
         """Send a message to all WebSocket clients watching a scan.
@@ -124,7 +124,7 @@ async def _relay_mode(websocket: WebSocket, scan_id: str) -> None:
         try:
             await relay.subscribe_scan(scan_id)
         except Exception as e:
-            logger.debug("EventBus subscription not available: %s", e)
+            log.debug("EventBus subscription not available: %s", e)
 
         while True:
             try:
@@ -258,7 +258,7 @@ async def _polling_mode(websocket: WebSocket, scan_id: str) -> None:
             except WebSocketDisconnect:
                 raise
             except Exception as e:
-                logger.error("Polling error for scan %s: %s", scan_id, e)
+                log.error("Polling error for scan %s: %s", scan_id, e)
 
             await asyncio.sleep(2)
     finally:
@@ -293,15 +293,15 @@ from spiderfoot.scan_state_map import (
             pass
 
         if use_relay:
-            logger.info("Using relay mode for scan %s", scan_id)
+            log.info("Using relay mode for scan %s", scan_id)
             await _relay_mode(websocket, scan_id)
         else:
-            logger.info("Using polling mode for scan %s", scan_id)
+            log.info("Using polling mode for scan %s", scan_id)
             await _polling_mode(websocket, scan_id)
 
     except WebSocketDisconnect:
-        logger.info("Client disconnected: scan=%s", scan_id)
+        log.info("Client disconnected: scan=%s", scan_id)
     except Exception as e:
-        logger.error("WebSocket error for scan %s: %s", scan_id, e)
+        log.error("WebSocket error for scan %s: %s", scan_id, e)
     finally:
         await websocket_manager.disconnect(websocket, scan_id)

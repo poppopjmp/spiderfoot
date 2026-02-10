@@ -16,7 +16,7 @@ from spiderfoot import SpiderFootHelpers
 from spiderfoot.visualization_service import VisualizationServiceError
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 
 
@@ -68,7 +68,7 @@ async def get_multi_scan_graph_data(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to generate multi-scan graph: %s", e)
+        log.error("Failed to generate multi-scan graph: %s", e)
         raise HTTPException(
             status_code=500, detail=f"Failed to generate graph: {e}"
         )
@@ -109,7 +109,7 @@ async def get_scan_graph_data(
     except VisualizationServiceError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as e:
-        logger.error("Failed to generate graph for scan %s: %s", scan_id, e)
+        log.error("Failed to generate graph for scan %s: %s", scan_id, e)
         raise HTTPException(
             status_code=500, detail=f"Failed to generate graph: {e}"
         )
@@ -129,7 +129,7 @@ async def get_scan_summary_data(
     except VisualizationServiceError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as e:
-        logger.error("Failed to get summary data for scan %s: %s", scan_id, e)
+        log.error("Failed to get summary data for scan %s: %s", scan_id, e)
         raise HTTPException(
             status_code=500, detail=f"Failed to get summary data: {e}"
         )
@@ -152,7 +152,7 @@ async def get_scan_timeline_data(
     except VisualizationServiceError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as e:
-        logger.error("Failed to get timeline data for scan %s: %s", scan_id, e)
+        log.error("Failed to get timeline data for scan %s: %s", scan_id, e)
         raise HTTPException(
             status_code=500, detail=f"Failed to get timeline data: {e}"
         )
@@ -175,7 +175,7 @@ async def get_scan_heatmap_data(
     except VisualizationServiceError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as e:
-        logger.error("Failed to get heatmap data for scan %s: %s", scan_id, e)
+        log.error("Failed to get heatmap data for scan %s: %s", scan_id, e)
         raise HTTPException(
             status_code=500, detail=f"Failed to get heatmap data: {e}"
         )

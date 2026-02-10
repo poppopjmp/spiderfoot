@@ -36,7 +36,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-log = logging.getLogger("spiderfoot.shutdown")
+log = logging.getLogger("spiderfoot.graceful_shutdown")
 
 
 @dataclass

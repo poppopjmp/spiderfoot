@@ -33,7 +33,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 # ── Error response schema ────────────────────────────────────────────
@@ -152,7 +152,7 @@ async def _unhandled_exception_handler(
     request: Request, exc: Exception
 ) -> JSONResponse:
     """Catch-all for unhandled exceptions — returns 500 without leaking internals."""
-    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    log.exception("Unhandled exception on %s %s", request.method, request.url.path)
     return _build_error_response(
         500,
         "Internal server error",
@@ -167,4 +167,4 @@ def install_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(StarletteHTTPException, _http_exception_handler)
     app.add_exception_handler(RequestValidationError, _validation_exception_handler)
     app.add_exception_handler(Exception, _unhandled_exception_handler)
-    logger.info("Structured API error handlers installed")
+    log.info("Structured API error handlers installed")

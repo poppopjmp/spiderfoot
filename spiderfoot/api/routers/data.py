@@ -7,7 +7,7 @@ from spiderfoot.sflib.core import SpiderFoot
 import logging
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 
 
@@ -31,7 +31,7 @@ async def list_entity_types(api_key: str = optional_auth_dep):
         types = sf.getEventTypes()
         return {"entity_types": types}
     except Exception as e:
-        logger.exception("Failed to list entity types")
+        log.exception("Failed to list entity types")
         raise HTTPException(status_code=500, detail=f"Failed to list entity types: {e}") from e
 
 
@@ -64,7 +64,7 @@ async def list_modules(
             module_list = list(modules) if modules else []
         return paginate(module_list, params)
     except Exception as e:
-        logger.exception("Failed to list modules")
+        log.exception("Failed to list modules")
         raise HTTPException(status_code=500, detail=f"Failed to list modules: {e}") from e
 
 
@@ -286,7 +286,7 @@ async def validate_module_config(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to validate config for %s: %s", module_name, e)
+        log.error("Failed to validate config for %s: %s", module_name, e)
         raise HTTPException(status_code=500, detail="Failed to validate module config") from e
 
 
@@ -492,7 +492,7 @@ async def get_module_dependencies(
                 event_type_map[et]["consumers"].append(mod_name)
 
     except Exception as e:
-        logger.error("Failed to load module dependencies: %s", e)
+        log.error("Failed to load module dependencies: %s", e)
         # Try a simpler approach using data service
         try:
             svc = get_data_service()
@@ -592,7 +592,7 @@ async def get_module_status(api_key: str = optional_auth_dep):
             "modules": status_list,
         }
     except Exception as e:
-        logger.error("Failed to get module status: %s", e)
+        log.error("Failed to get module status: %s", e)
         raise HTTPException(status_code=500, detail="Failed to get module status") from e
 
 
@@ -614,7 +614,7 @@ async def disable_module(module_name: str, api_key: str = optional_auth_dep):
             already = module_name in _disabled_modules
             _disabled_modules.add(module_name)
 
-        logger.info("Module disabled: %s (was_already=%s)", module_name, already)
+        log.info("Module disabled: %s (was_already=%s)", module_name, already)
         return {
             "module": module_name,
             "enabled": False,
@@ -623,7 +623,7 @@ async def disable_module(module_name: str, api_key: str = optional_auth_dep):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to disable module %s: %s", module_name, e)
+        log.error("Failed to disable module %s: %s", module_name, e)
         raise HTTPException(status_code=500, detail="Failed to disable module") from e
 
 
@@ -641,7 +641,7 @@ async def enable_module(module_name: str, api_key: str = optional_auth_dep):
             was_disabled = module_name in _disabled_modules
             _disabled_modules.discard(module_name)
 
-        logger.info("Module enabled: %s (was_disabled=%s)", module_name, was_disabled)
+        log.info("Module enabled: %s (was_disabled=%s)", module_name, was_disabled)
         return {
             "module": module_name,
             "enabled": True,
@@ -650,7 +650,7 @@ async def enable_module(module_name: str, api_key: str = optional_auth_dep):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to enable module %s: %s", module_name, e)
+        log.error("Failed to enable module %s: %s", module_name, e)
         raise HTTPException(status_code=500, detail="Failed to enable module") from e
 
 
@@ -683,7 +683,7 @@ async def bulk_disable_modules(
                 "status": "already_disabled" if already else "disabled",
             })
 
-    logger.info("Bulk disabled %d modules", len(module_names))
+    log.info("Bulk disabled %d modules", len(module_names))
     return {
         "results": results,
         "disabled_count": len(_disabled_modules),

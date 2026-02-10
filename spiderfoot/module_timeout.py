@@ -40,7 +40,7 @@ from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -112,7 +112,7 @@ class ModuleTimeoutGuard:
         def _on_timeout() -> None:
             timed_out.set()
             elapsed = time.monotonic() - start_time
-            logger.warning(
+            log.warning(
                 "Module %s exceeded timeout of %.1fs (elapsed: %.1fs) scan=%s",
                 module_name, timeout, elapsed, scan_id,
             )
@@ -143,7 +143,7 @@ class ModuleTimeoutGuard:
             timer.cancel()
             if timed_out.is_set():
                 elapsed = time.monotonic() - start_time
-                logger.info(
+                log.info(
                     "Module %s completed after timeout (%.1fs) scan=%s",
                     module_name, elapsed, scan_id,
                 )
@@ -175,7 +175,7 @@ class ModuleTimeoutGuard:
                 ctypes.py_object(TimeoutError),
             )
             if res == 1:
-                logger.info("Hard interrupt sent to thread %s", thread_id)
+                log.info("Hard interrupt sent to thread %s", thread_id)
                 return True
             elif res > 1:
                 # Revert if more than one thread affected (shouldn't happen)
@@ -184,7 +184,7 @@ class ModuleTimeoutGuard:
                 )
             return False
         except Exception as exc:
-            logger.debug("Hard interrupt failed: %s", exc)
+            log.debug("Hard interrupt failed: %s", exc)
             return False
 
     # ── Query ────────────────────────────────────────────────────

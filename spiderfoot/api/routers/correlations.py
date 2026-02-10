@@ -17,7 +17,7 @@ from spiderfoot.correlation_service import CorrelationService, CorrelationResult
 from pydantic import BaseModel, Field
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 
 
@@ -81,7 +81,7 @@ async def list_correlation_rules(
         rules = svc.filter_rules(risk=risk, enabled=enabled, tag=tag)
         return paginate(rules, params)
     except Exception as e:
-        logger.error("Failed to list correlation rules: %s", e)
+        log.error("Failed to list correlation rules: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -105,10 +105,10 @@ async def create_correlation_rule(
             "modified": now,
         }
         created = svc.add_rule(new_rule)
-        logger.info("Created correlation rule: %s", created.get("id"))
+        log.info("Created correlation rule: %s", created.get("id"))
         return {"rule": created, "message": "Correlation rule created successfully"}
     except Exception as e:
-        logger.error("Failed to create correlation rule: %s", e)
+        log.error("Failed to create correlation rule: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -142,7 +142,7 @@ async def update_correlation_rule(
     if updated is None:
         raise HTTPException(status_code=404, detail="Correlation rule not found")
 
-    logger.info("Updated correlation rule: %s", rule_id)
+    log.info("Updated correlation rule: %s", rule_id)
     return {"rule": updated, "message": "Correlation rule updated successfully"}
 
 
@@ -157,7 +157,7 @@ async def delete_correlation_rule(
     if not removed:
         raise HTTPException(status_code=404, detail="Correlation rule not found")
 
-    logger.info("Deleted correlation rule: %s", rule_id)
+    log.info("Deleted correlation rule: %s", rule_id)
     return {"message": "Correlation rule deleted successfully"}
 
 
@@ -205,7 +205,7 @@ async def test_correlation_rule(
             "message": "Rule test completed successfully",
         }
     except Exception as e:
-        logger.error("Failed to test correlation rule %s: %s", rule_id, e)
+        log.error("Failed to test correlation rule %s: %s", rule_id, e)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -251,7 +251,7 @@ async def get_detailed_scan_correlations(
         return resp
 
     except Exception as e:
-        logger.error(
+        log.error(
             "Failed to get correlations for scan %s: %s", scan_id, e
         )
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -316,7 +316,7 @@ async def analyze_correlation_patterns(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to analyze correlation patterns: %s", e)
+        log.error("Failed to analyze correlation patterns: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -393,5 +393,5 @@ async def export_scan_correlations(
         )
 
     except Exception as e:
-        logger.error("Failed to export correlations for scan %s: %s", scan_id, e)
+        log.error("Failed to export correlations for scan %s: %s", scan_id, e)
         raise HTTPException(status_code=500, detail=str(e)) from e

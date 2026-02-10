@@ -34,7 +34,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class ScanEvent(str, Enum):
@@ -114,7 +114,7 @@ class ScanLifecycleHooks:
         if len(self._event_log) > self._max_log_size:
             self._event_log = self._event_log[-self._max_log_size:]
 
-        logger.info("Scan lifecycle: %s scan_id=%s", event.event.value, event.scan_id)
+        log.info("Scan lifecycle: %s scan_id=%s", event.event.value, event.scan_id)
 
         # Publish to EventBus
         self._publish_to_eventbus(event)
@@ -124,7 +124,7 @@ class ScanLifecycleHooks:
             try:
                 listener(event)
             except Exception as exc:
-                logger.warning(
+                log.warning(
                     "Scan lifecycle listener %s failed: %s",
                     getattr(listener, "__name__", listener),
                     exc,
@@ -146,7 +146,7 @@ class ScanLifecycleHooks:
             except RuntimeError:
                 asyncio.run(bus.publish(LIFECYCLE_TOPIC, event.to_dict()))
         except Exception as exc:
-            logger.debug("EventBus publish skipped: %s", exc)
+            log.debug("EventBus publish skipped: %s", exc)
 
     # ── Convenience methods ──────────────────────────────────────
     def on_created(

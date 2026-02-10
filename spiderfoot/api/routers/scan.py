@@ -48,7 +48,7 @@ except Exception:
     _hooks = None  # type: ignore[assignment]
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 api_key_dep = Depends(get_api_key)
 optional_auth_dep = Depends(optional_auth)
@@ -96,7 +96,7 @@ async def start_scan_background(
             None, scan_name, scan_id, target, target_type, modules, config,
         )
     except Exception as e:
-        logger.error("Failed to start scan %s: %s", scan_id, e)
+        log.error("Failed to start scan %s: %s", scan_id, e)
 
 
 # -----------------------------------------------------------------------
@@ -275,9 +275,9 @@ async def bulk_stop_scans(
                 try:
                     _hooks.on_stopped(scan_id)
                 except Exception as e:
-                    logger.debug("on_stopped hook failed for scan %s: %s", scan_id, e)
+                    log.debug("on_stopped hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
-            logger.error("Bulk stop failed for %s: %s", scan_id, e)
+            log.error("Bulk stop failed for %s: %s", scan_id, e)
             results["errors"].append({"scan_id": scan_id, "error": str(e)})
     return {
         **results,
@@ -310,9 +310,9 @@ async def bulk_delete_scans(
                 try:
                     _hooks.on_deleted(scan_id)
                 except Exception as e:
-                    logger.debug("on_deleted hook failed for scan %s: %s", scan_id, e)
+                    log.debug("on_deleted hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
-            logger.error("Bulk delete failed for %s: %s", scan_id, e)
+            log.error("Bulk delete failed for %s: %s", scan_id, e)
             results["errors"].append({"scan_id": scan_id, "error": str(e)})
     return {
         **results,
@@ -344,9 +344,9 @@ async def bulk_archive_scans(
                 try:
                     _hooks.on_archived(scan_id)
                 except Exception as e:
-                    logger.debug("on_archived hook failed for scan %s: %s", scan_id, e)
+                    log.debug("on_archived hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
-            logger.error("Bulk archive failed for %s: %s", scan_id, e)
+            log.error("Bulk archive failed for %s: %s", scan_id, e)
             results["errors"].append({"scan_id": scan_id, "error": str(e)})
     return {
         **results,
@@ -375,7 +375,7 @@ async def list_schedules(api_key: str = optional_auth_dep):
             "stats": scheduler.stats(),
         }
     except Exception as e:
-        logger.error("Failed to list schedules: %s", e)
+        log.error("Failed to list schedules: %s", e)
         raise HTTPException(status_code=500, detail="Failed to list schedules") from e
 
 
@@ -410,7 +410,7 @@ async def create_schedule(
             **schedule.to_dict(),
         }
     except Exception as e:
-        logger.error("Failed to create schedule: %s", e)
+        log.error("Failed to create schedule: %s", e)
         raise HTTPException(status_code=500, detail="Failed to create schedule") from e
 
 
@@ -477,7 +477,7 @@ async def list_scans(
         dicts = [r.to_dict() for r in records]
         return paginate(dicts, params)
     except Exception as e:
-        logger.error("Failed to list scans: %s", e)
+        log.error("Failed to list scans: %s", e)
         raise HTTPException(status_code=500, detail="Failed to list scans") from e
 
 
@@ -584,7 +584,7 @@ async def search_scans(
             },
         }
     except Exception as e:
-        logger.error("Failed to search scans: %s", e)
+        log.error("Failed to search scans: %s", e)
         raise HTTPException(status_code=500, detail="Failed to search scans") from e
 
 
@@ -612,7 +612,7 @@ async def create_scan(
         try:
             svc.create_scan(scan_id, scan_request.name, scan_request.target)
         except Exception as e:
-            logger.error("Failed to create scan instance: %s", e)
+            log.error("Failed to create scan instance: %s", e)
             raise HTTPException(
                 status_code=500, detail="Unable to create scan instance in database"
             ) from e
@@ -637,14 +637,14 @@ async def create_scan(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to create scan: %s", e)
+        log.error("Failed to create scan: %s", e)
         raise HTTPException(status_code=500, detail="Failed to create scan") from e
     finally:
         if _hooks:
             try:
                 _hooks.on_created(scan_id, scan_request.name, scan_request.target)
             except Exception as e:
-                logger.debug("on_created hook failed for scan %s: %s", scan_id, e)
+                log.debug("on_created hook failed for scan %s: %s", scan_id, e)
 
 
 @router.get("/scans/{scan_id}")
@@ -661,7 +661,7 @@ async def get_scan(
     try:
         result["state_machine"] = svc.get_scan_state(scan_id)
     except Exception as e:
-        logger.debug("Failed to retrieve state machine for scan %s: %s", scan_id, e)
+        log.debug("Failed to retrieve state machine for scan %s: %s", scan_id, e)
     return result
 
 
@@ -680,7 +680,7 @@ async def delete_scan(
         try:
             _hooks.on_deleted(scan_id)
         except Exception as e:
-            logger.debug("on_deleted hook failed for scan %s: %s", scan_id, e)
+            log.debug("on_deleted hook failed for scan %s: %s", scan_id, e)
     return ScanDeleteResponse()
 
 
@@ -714,7 +714,7 @@ async def stop_scan(
             try:
                 _hooks.on_aborted(scan_id, reason="API stop request")
             except Exception as e:
-                logger.debug("on_aborted hook failed for scan %s: %s", scan_id, e)
+                log.debug("on_aborted hook failed for scan %s: %s", scan_id, e)
         return ScanStopResponse(message="Scan stopped successfully", status=new_status)
     except ScanServiceError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
@@ -759,7 +759,7 @@ async def retry_scan(
             try:
                 scan_config = dbh.scanConfigGet(scan_id) or {}
             except Exception as e:
-                logger.debug("Failed to retrieve scan config for %s: %s", scan_id, e)
+                log.debug("Failed to retrieve scan config for %s: %s", scan_id, e)
 
         new_scan_id = SpiderFootHelpers.genScanInstanceId()
 
@@ -779,13 +779,13 @@ async def retry_scan(
                 retry_meta["_retry_reason"] = status
                 svc.set_metadata(new_scan_id, retry_meta)
         except Exception as e:
-            logger.debug("Failed to copy metadata from scan %s to %s: %s", scan_id, new_scan_id, e)
+            log.debug("Failed to copy metadata from scan %s to %s: %s", scan_id, new_scan_id, e)
 
         if _hooks:
             try:
                 _hooks.on_created(new_scan_id, original_target)
             except Exception as e:
-                logger.debug("on_created hook failed for retry scan %s: %s", new_scan_id, e)
+                log.debug("on_created hook failed for retry scan %s: %s", new_scan_id, e)
 
         return {
             "original_scan_id": scan_id,
@@ -797,7 +797,7 @@ async def retry_scan(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to retry scan %s: %s", scan_id, e)
+        log.error("Failed to retry scan %s: %s", scan_id, e)
         raise HTTPException(status_code=500, detail="Failed to retry scan") from e
 
 
@@ -968,7 +968,7 @@ async def export_scan_logs(
     try:
         data = svc.get_scan_logs(scan_id)
     except Exception as e:
-        logger.debug("Failed to export scan logs for %s: %s", scan_id, e)
+        log.debug("Failed to export scan logs for %s: %s", scan_id, e)
         raise HTTPException(status_code=404, detail="Scan ID not found") from e
 
     if not data:
@@ -1064,7 +1064,7 @@ async def get_scan_timeline(
             },
         }
     except Exception as e:
-        logger.error("Failed to get scan timeline for %s: %s", scan_id, e)
+        log.error("Failed to get scan timeline for %s: %s", scan_id, e)
         raise HTTPException(status_code=500, detail="Failed to build scan timeline") from e
 
 
@@ -1135,7 +1135,7 @@ async def detect_duplicate_events(
             "duplicates": duplicates[:200],
         }
     except Exception as e:
-        logger.error("Failed to detect duplicates for %s: %s", scan_id, e)
+        log.error("Failed to detect duplicates for %s: %s", scan_id, e)
         raise HTTPException(status_code=500, detail="Failed to detect duplicates") from e
 
 
@@ -1443,7 +1443,7 @@ async def clear_scan(
         svc.clear_results(scan_id)
         return MessageResponse(message="Scan results cleared (scan entry retained)")
     except Exception as e:
-        logger.error("Failed to clear scan %s: %s", scan_id, e)
+        log.error("Failed to clear scan %s: %s", scan_id, e)
         raise HTTPException(status_code=500, detail="Failed to clear scan results") from e
 
 
@@ -1724,5 +1724,5 @@ async def compare_scans(
             },
         }
     except Exception as e:
-        logger.error("Failed to compare scans %s vs %s: %s", scan_a, scan_b, e)
+        log.error("Failed to compare scans %s vs %s: %s", scan_a, scan_b, e)
         raise HTTPException(status_code=500, detail="Scan comparison failed") from e

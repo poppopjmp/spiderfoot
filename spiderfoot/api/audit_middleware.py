@@ -6,7 +6,7 @@ client IP, and user identity (from auth headers) for compliance,
 debugging, and usage analytics.
 
 Logs are emitted at INFO level in structured JSON format via the
-standard ``spiderfoot.api.audit`` logger, allowing them to be routed
+standard ``spiderfoot.api.audit`` log, allowing them to be routed
 to Vector.dev / Elasticsearch / file via existing log infrastructure.
 
 Usage:
@@ -29,7 +29,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response
 
-logger = logging.getLogger("spiderfoot.api.audit")
+log = logging.getLogger("spiderfoot.api.audit")
 
 # Paths to exclude from audit logging (high-frequency probes)
 _DEFAULT_EXCLUDES = {"/health", "/health/live", "/health/ready", "/health/startup", "/metrics"}
@@ -110,11 +110,11 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
 
             # Log at appropriate level
             if status_code >= 500:
-                logger.error("API request: %(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
+                log.error("API request: %(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
             elif status_code >= 400:
-                logger.warning("API request: %(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
+                log.warning("API request: %(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
             else:
-                logger.info("API request: %(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
+                log.info("API request: %(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
 
     @staticmethod
     def _extract_identity(auth_header: str) -> str:
@@ -154,7 +154,7 @@ def install_audit_logging(app, **kwargs) -> None:
     """Install the audit logging middleware on a FastAPI/Starlette app."""
     enabled = os.environ.get("SF_API_AUDIT_ENABLED", "true").lower()
     if enabled in ("0", "false", "no", "off"):
-        logger.info("API audit logging disabled via SF_API_AUDIT_ENABLED")
+        log.info("API audit logging disabled via SF_API_AUDIT_ENABLED")
         return
     app.add_middleware(AuditLoggingMiddleware, **kwargs)
-    logger.info("API audit logging middleware installed")
+    log.info("API audit logging middleware installed")

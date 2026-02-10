@@ -16,7 +16,7 @@ from ..schemas import (
 import logging
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 api_key_dep = Depends(get_api_key)
 optional_auth_dep = Depends(optional_auth)
@@ -34,7 +34,7 @@ async def list_workspaces(
         workspaces = SpiderFootWorkspace.list_workspaces(config.get_config())
         return paginate(workspaces, params)
     except Exception as e:
-        logger.error(f"Failed to list workspaces: {e}")
+        log.error(f"Failed to list workspaces: {e}")
         raise HTTPException(status_code=500, detail="Failed to list workspaces") from e
 
 
@@ -52,7 +52,7 @@ async def create_workspace(workspace_request: WorkspaceRequest, api_key: str = a
             created_time=workspace.created_time,
         )
     except Exception as e:
-        logger.error(f"Failed to create workspace: {e}")
+        log.error(f"Failed to create workspace: {e}")
         raise HTTPException(status_code=500, detail="Failed to create workspace") from e
 
 
@@ -74,7 +74,7 @@ async def get_workspace(workspace_id: str, api_key: str = optional_auth_dep):
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to get workspace {workspace_id}: {e}")
+        log.error(f"Failed to get workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to get workspace") from e
 
 
@@ -107,7 +107,7 @@ async def update_workspace(workspace_id: str, name: Optional[str] = None, descri
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to update workspace {workspace_id}: {e}")
+        log.error(f"Failed to update workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to update workspace") from e
 
 
@@ -134,7 +134,7 @@ async def get_workspace_summary(workspace_id: str, api_key: str = optional_auth_
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to get workspace summary for {workspace_id}: {e}")
+        log.error(f"Failed to get workspace summary for {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to get workspace summary") from e
 
 
@@ -148,7 +148,7 @@ async def delete_workspace(workspace_id: str, api_key: str = api_key_dep):
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to delete workspace {workspace_id}: {e}")
+        log.error(f"Failed to delete workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete workspace") from e
 
 
@@ -174,7 +174,7 @@ async def add_target(workspace_id: str, target_request: TargetRequest, api_key: 
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to add target to workspace {workspace_id}: {e}")
+        log.error(f"Failed to add target to workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to add target") from e
 
 
@@ -192,7 +192,7 @@ async def list_targets(
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to list targets for workspace {workspace_id}: {e}")
+        log.error(f"Failed to list targets for workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to list targets") from e
 
 
@@ -210,7 +210,7 @@ async def remove_target(workspace_id: str, target_id: str, api_key: str = api_ke
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to remove target {target_id} from workspace {workspace_id}: {e}")
+        log.error(f"Failed to remove target {target_id} from workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to remove target") from e
 
 
@@ -238,7 +238,7 @@ async def start_multi_scan(
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to start multi-scan: {e}")
+        log.error(f"Failed to start multi-scan: {e}")
         raise HTTPException(status_code=500, detail="Failed to start multi-scan") from e
 
 
@@ -268,7 +268,7 @@ async def remove_scan_from_workspace(workspace_id: str, scan_id: str, api_key: s
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to remove scan {scan_id} from workspace {workspace_id}: {e}")
+        log.error(f"Failed to remove scan {scan_id} from workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to remove scan from workspace") from e
 
 
@@ -294,7 +294,7 @@ async def set_active_workspace(workspace_id: str, api_key: str = api_key_dep):
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to set active workspace {workspace_id}: {e}")
+        log.error(f"Failed to set active workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to set active workspace") from e
 
 
@@ -329,7 +329,7 @@ async def update_workspace_metadata(
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to update metadata for workspace {workspace_id}: {e}")
+        log.error(f"Failed to update metadata for workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to update workspace metadata") from e
 
 
@@ -370,7 +370,7 @@ async def clone_workspace(workspace_id: str, api_key: str = api_key_dep):
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to clone workspace {workspace_id}: {e}")
+        log.error(f"Failed to clone workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to clone workspace") from e
 
 
@@ -414,7 +414,7 @@ async def export_workspace(workspace_id: str, api_key: str = api_key_dep):
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to export workspace {workspace_id}: {e}")
+        log.error(f"Failed to export workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to export workspace") from e
 
 
@@ -459,7 +459,7 @@ async def import_workspace(
             "message": "Workspace imported successfully"
         }
     except Exception as e:
-        logger.error(f"Failed to import workspace: {e}")
+        log.error(f"Failed to import workspace: {e}")
         raise HTTPException(status_code=400, detail="Failed to import workspace") from e
 
 
@@ -492,7 +492,7 @@ async def clear_workspace(workspace_id: str, api_key: str = api_key_dep):
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to clear workspace {workspace_id}: {e}")
+        log.error(f"Failed to clear workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to clear workspace") from e
 
 
@@ -510,7 +510,7 @@ async def archive_workspace(workspace_id: str, api_key: str = api_key_dep):
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to archive workspace {workspace_id}: {e}")
+        log.error(f"Failed to archive workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to archive workspace") from e
 
 
@@ -528,5 +528,5 @@ async def unarchive_workspace(workspace_id: str, api_key: str = api_key_dep):
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
-        logger.error(f"Failed to unarchive workspace {workspace_id}: {e}")
+        log.error(f"Failed to unarchive workspace {workspace_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to unarchive workspace") from e

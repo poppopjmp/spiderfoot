@@ -39,7 +39,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 @dataclass
