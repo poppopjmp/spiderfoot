@@ -126,7 +126,7 @@ class SpiderFootPlugin:
     _dbh = None
     _listeners = []
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the plugin."""
         self._listeners = []
         self.errorState = False
@@ -139,7 +139,7 @@ class SpiderFootPlugin:
     def __repr__(self) -> str:
         return f"SpiderFootPlugin({self._name!r})"
 
-    def finished(self):
+    def finished(self) -> None:
         """Called when the module should finish processing."""
         pass
 
@@ -539,7 +539,7 @@ class SpiderFootPlugin:
         self.thread = thread
         self.thread.start()
 
-    def finish(self):
+    def finish(self) -> None:
         """Perform final/cleanup functions before module exits Note that this
         function may be called multiple times Overridden by the implementer."""
 

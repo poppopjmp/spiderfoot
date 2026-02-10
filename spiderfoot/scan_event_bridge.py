@@ -64,7 +64,7 @@ class ScanEventBridge:
         scan_id: str,
         relay: Any = None,
         throttle_ms: int = 50,
-    ):
+    ) -> None:
         self.scan_id = scan_id
         self._relay = relay
         self._throttle_s = throttle_ms / 1000.0

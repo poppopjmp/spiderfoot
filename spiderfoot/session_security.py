@@ -15,7 +15,7 @@ from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 class SecureSessionManager:
     """Secure session management with Redis backend and security features."""
 
-    def __init__(self, redis_client=None, redis_host='localhost', redis_port=6379):
+    def __init__(self, redis_client=None, redis_host='localhost', redis_port=6379) -> None:
         """Initialize secure session manager.
 
         Args:

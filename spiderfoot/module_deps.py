@@ -95,7 +95,7 @@ class ModuleDependencyResolver:
         print(result.load_order)  # ['sfp_target', 'sfp_dns', 'sfp_whois']
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._modules: dict[str, ModuleNode] = {}
         self._producer_index: dict[str, set[str]] = defaultdict(set)
 

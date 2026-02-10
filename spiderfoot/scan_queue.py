@@ -135,7 +135,7 @@ class ScanQueue(Generic[T]):
         capacity: int = 10000,
         backpressure_action: BackpressureAction = BackpressureAction.BLOCK,
         pressure_thresholds: dict[PressureLevel, float] | None = None,
-    ):
+    ) -> None:
         self._capacity = max(1, capacity)
         self._action = backpressure_action
 

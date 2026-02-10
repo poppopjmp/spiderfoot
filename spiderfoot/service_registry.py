@@ -48,7 +48,7 @@ class ServiceRegistry:
         _lock: Thread lock for safe concurrent access
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._services: dict[str, Any] = {}
         self._factories: dict[str, Callable[[], Any]] = {}
         self._lock = threading.RLock()

@@ -19,7 +19,7 @@ from .security_logging import SecurityLogger, SecurityEventType, SecurityMonitor
 class SpiderFootSecurityManager:
     """Main security manager that integrates all security components for CherryPy."""
 
-    def __init__(self, app_config: dict = None):
+    def __init__(self, app_config: dict = None) -> None:
         """Initialize security manager.
 
         Args:

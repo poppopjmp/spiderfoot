@@ -80,7 +80,7 @@ class ShutdownCoordinator:
         *,
         drain_timeout: float = 15.0,
         force_timeout: float = 30.0,
-    ):
+    ) -> None:
         """
         Args:
             drain_timeout: Seconds to wait for in-flight work after signal.

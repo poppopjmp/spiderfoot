@@ -172,7 +172,7 @@ class EventTaxonomy:
         children = taxonomy.get_children("IP_ADDRESS")
     """
 
-    def __init__(self, load_defaults: bool = True):
+    def __init__(self, load_defaults: bool = True) -> None:
         self._types: dict[str, EventTypeInfo] = {}
         if load_defaults:
             self._load_defaults()

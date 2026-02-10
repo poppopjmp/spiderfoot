@@ -28,7 +28,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
     token = None
     docroot = ''
 
-    def __init__(self, web_config, config, loggingQueue=None):
+    def __init__(self, web_config, config, loggingQueue=None) -> None:
         from mako.lookup import TemplateLookup
 
         if not isinstance(config, dict):

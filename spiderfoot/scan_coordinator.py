@@ -209,7 +209,7 @@ class ScanCoordinator:
                  strategy: DistributionStrategy = DistributionStrategy.LEAST_LOADED,
                  heartbeat_interval: float = 30.0,
                  heartbeat_timeout: float = 90.0,
-                 auto_monitor: bool = False):
+                 auto_monitor: bool = False) -> None:
         self._lock = threading.Lock()
         self._nodes: dict[str, ScannerNode] = {}
         self._work: dict[str, WorkAssignment] = {}

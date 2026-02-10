@@ -15,7 +15,7 @@ persist and restore SpiderFoot scan settings to/from the database.
 """
 from copy import deepcopy
 
-def configSerialize(opts: dict, filterSystem: bool = True):
+def configSerialize(opts: dict, filterSystem: bool = True) -> dict:
     if not isinstance(opts, dict):
         raise TypeError(f"opts is {type(opts)}; expected dict()")
     storeopts = dict()
@@ -55,7 +55,7 @@ def configSerialize(opts: dict, filterSystem: bool = True):
                 storeopts[mod_opt] = ','.join(str(x) for x in mod_opt_val)
     return storeopts
 
-def configUnserialize(opts: dict, referencePoint: dict, filterSystem: bool = True):
+def configUnserialize(opts: dict, referencePoint: dict, filterSystem: bool = True) -> dict:
     if not isinstance(opts, dict):
         raise TypeError(f"opts is {type(opts)}; expected dict()")
     if not isinstance(referencePoint, dict):

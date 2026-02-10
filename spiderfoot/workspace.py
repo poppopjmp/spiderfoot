@@ -17,7 +17,7 @@ from spiderfoot import SpiderFootDb, SpiderFootHelpers
 class SpiderFootWorkspace:
     """Manages SpiderFoot workspaces for multi-target, multi-scan operations."""
 
-    def __init__(self, config: dict, workspace_id: str = None, name: str = None):
+    def __init__(self, config: dict, workspace_id: str = None, name: str = None) -> None:
         """Initialize workspace.
 
         Args:
