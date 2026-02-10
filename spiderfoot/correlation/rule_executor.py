@@ -68,7 +68,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             'correlations_created': correlations_created
         }
 
-    def _collect_events(self, dbh, rule, scan_ids):
+    def _collect_events(self, dbh, rule, scan_ids) -> list:
         """Collect events from database based on rule collections."""
         log = logging.getLogger("spiderfoot.correlation.collect")
 
@@ -97,7 +97,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
 
         return all_events
 
-    def _get_scan_events(self, dbh, scan_id, collect_rules):
+    def _get_scan_events(self, dbh, scan_id, collect_rules) -> list:
         """Get events for a specific scan that match collection rules."""
         log = logging.getLogger("spiderfoot.correlation.collect")
 
@@ -165,7 +165,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             log.error("Error collecting events for scan %s: %s", scan_id, e)
             return []
 
-    def _apply_collection_filter(self, events, collect_rule):
+    def _apply_collection_filter(self, events, collect_rule) -> list:
         """Apply a single collection filter to events."""
         method = collect_rule.get('method', '')
         field = collect_rule.get('field', '')
@@ -188,7 +188,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             # Unknown method, return all events
             return events
 
-    def _aggregate_events(self, events, aggregation):
+    def _aggregate_events(self, events, aggregation) -> dict:
         """Group events according to aggregation rules."""
         if not aggregation or not events:
             # No aggregation, return all events in a single group
@@ -204,7 +204,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
 
         return dict(groups)
 
-    def _get_field_value(self, event, field):
+    def _get_field_value(self, event, field) -> str:
         """Get field value from event, supporting nested references."""
         if '.' in field:
             # Handle nested fields like 'source.data'
@@ -215,7 +215,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
 
         return event.get(field, '')
 
-    def _analyze_groups(self, groups, analysis_rules, rule=None):
+    def _analyze_groups(self, groups, analysis_rules, rule=None) -> dict:
         """
         Apply analysis rules to filter groups. Also enforces multi-scan logic if required.
 
@@ -254,7 +254,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                 filtered_groups[group_key] = events
         return filtered_groups
 
-    def _create_correlation_result(self, dbh, rule, scan_ids, group_key, events):
+    def _create_correlation_result(self, dbh, rule, scan_ids, group_key, events) -> str | None:
         """
         Create a correlation result in the database.
 

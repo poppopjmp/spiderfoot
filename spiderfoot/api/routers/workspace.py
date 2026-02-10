@@ -31,7 +31,7 @@ metadata_body = Body(...)
 async def list_workspaces(
     params: PaginationParams = Depends(),
     api_key: str = optional_auth_dep,
-):
+) -> dict:
     """List all workspaces with pagination support."""
     try:
         config = get_app_config()
@@ -43,7 +43,7 @@ async def list_workspaces(
 
 
 @router.post("/workspaces", status_code=201, response_model=WorkspaceCreateResponse)
-async def create_workspace(workspace_request: WorkspaceRequest, api_key: str = api_key_dep):
+async def create_workspace(workspace_request: WorkspaceRequest, api_key: str = api_key_dep) -> WorkspaceCreateResponse:
     """Create a new workspace with the given name and description."""
     try:
         config = get_app_config()
@@ -62,7 +62,7 @@ async def create_workspace(workspace_request: WorkspaceRequest, api_key: str = a
 
 
 @router.get("/workspaces/{workspace_id}", response_model=WorkspaceDetailResponse)
-async def get_workspace(workspace_id: str, api_key: str = optional_auth_dep):
+async def get_workspace(workspace_id: str, api_key: str = optional_auth_dep) -> dict:
     """Retrieve workspace details including targets, scans, and metadata."""
     try:
         config = get_app_config()
@@ -85,7 +85,7 @@ async def get_workspace(workspace_id: str, api_key: str = optional_auth_dep):
 
 
 @router.put("/workspaces/{workspace_id}")
-async def update_workspace(workspace_id: str, name: str | None = None, description: str | None = None, api_key: str = api_key_dep):
+async def update_workspace(workspace_id: str, name: str | None = None, description: str | None = None, api_key: str = api_key_dep) -> dict:
     """
     Update workspace details (name, description).
 
@@ -118,7 +118,7 @@ async def update_workspace(workspace_id: str, name: str | None = None, descripti
 
 
 @router.get("/workspaces/{workspace_id}/summary")
-async def get_workspace_summary(workspace_id: str, api_key: str = optional_auth_dep):
+async def get_workspace_summary(workspace_id: str, api_key: str = optional_auth_dep) -> dict:
     """
     Get workspace summary.
 
@@ -145,7 +145,7 @@ async def get_workspace_summary(workspace_id: str, api_key: str = optional_auth_
 
 
 @router.delete("/workspaces/{workspace_id}")
-async def delete_workspace(workspace_id: str, api_key: str = api_key_dep):
+async def delete_workspace(workspace_id: str, api_key: str = api_key_dep) -> dict:
     """Delete a workspace by its ID."""
     try:
         config = get_app_config()
@@ -160,7 +160,7 @@ async def delete_workspace(workspace_id: str, api_key: str = api_key_dep):
 
 
 @router.post("/workspaces/{workspace_id}/targets", status_code=201)
-async def add_target(workspace_id: str, target_request: TargetRequest, api_key: str = api_key_dep):
+async def add_target(workspace_id: str, target_request: TargetRequest, api_key: str = api_key_dep) -> dict:
     """Add a validated target to the specified workspace."""
     try:
         config = get_app_config()
@@ -191,7 +191,7 @@ async def list_targets(
     workspace_id: str,
     params: PaginationParams = Depends(),
     api_key: str = optional_auth_dep,
-):
+) -> dict:
     """List all targets in a workspace with pagination support."""
     try:
         config = get_app_config()
@@ -206,7 +206,7 @@ async def list_targets(
 
 
 @router.delete("/workspaces/{workspace_id}/targets/{target_id}")
-async def remove_target(workspace_id: str, target_id: str, api_key: str = api_key_dep):
+async def remove_target(workspace_id: str, target_id: str, api_key: str = api_key_dep) -> dict:
     """Remove a target from the specified workspace."""
     try:
         config = get_app_config()
@@ -230,7 +230,7 @@ async def start_multi_scan(
     multi_scan_request: MultiScanRequest,
     background_tasks: BackgroundTasks,
     api_key: str = api_key_dep
-):
+) -> dict:
     """Start a multi-target scan for all targets in the workspace."""
     try:
         config = get_app_config()
@@ -254,7 +254,7 @@ async def start_multi_scan(
 
 
 @router.delete("/workspaces/{workspace_id}/scans/{scan_id}")
-async def remove_scan_from_workspace(workspace_id: str, scan_id: str, api_key: str = api_key_dep):
+async def remove_scan_from_workspace(workspace_id: str, scan_id: str, api_key: str = api_key_dep) -> dict:
     """
     Remove a scan from a workspace.
 
@@ -284,7 +284,7 @@ async def remove_scan_from_workspace(workspace_id: str, scan_id: str, api_key: s
 
 
 @router.post("/workspaces/{workspace_id}/set-active")
-async def set_active_workspace(workspace_id: str, api_key: str = api_key_dep):
+async def set_active_workspace(workspace_id: str, api_key: str = api_key_dep) -> dict:
     """
     Set the active workspace for the current session/user.
 
@@ -314,7 +314,7 @@ async def update_workspace_metadata(
     workspace_id: str,
     metadata: dict = metadata_body,
     api_key: str = api_key_dep
-):
+) -> dict:
     """
     Update workspace metadata (key/value pairs).
 
@@ -345,7 +345,7 @@ async def update_workspace_metadata(
 
 
 @router.post("/workspaces/{workspace_id}/clone", status_code=201)
-async def clone_workspace(workspace_id: str, api_key: str = api_key_dep):
+async def clone_workspace(workspace_id: str, api_key: str = api_key_dep) -> dict:
     """
     Clone a workspace (name, description, metadata, and targets).
 
@@ -386,7 +386,7 @@ async def clone_workspace(workspace_id: str, api_key: str = api_key_dep):
 
 
 @router.get("/workspaces/{workspace_id}/export")
-async def export_workspace(workspace_id: str, api_key: str = api_key_dep):
+async def export_workspace(workspace_id: str, api_key: str = api_key_dep) -> StreamingResponse:
     """
     Export a workspace as a downloadable JSON file.
 
@@ -433,7 +433,7 @@ async def export_workspace(workspace_id: str, api_key: str = api_key_dep):
 async def import_workspace(
     file: UploadFile = File(...),
     api_key: str = api_key_dep
-):
+) -> dict:
     """
     Import a workspace from a JSON file upload.
 
@@ -475,7 +475,7 @@ async def import_workspace(
 
 
 @router.post("/workspaces/{workspace_id}/clear")
-async def clear_workspace(workspace_id: str, api_key: str = api_key_dep):
+async def clear_workspace(workspace_id: str, api_key: str = api_key_dep) -> dict:
     """
     Remove all scans and targets from a workspace.
 
@@ -508,7 +508,7 @@ async def clear_workspace(workspace_id: str, api_key: str = api_key_dep):
 
 
 @router.post("/workspaces/{workspace_id}/archive")
-async def archive_workspace(workspace_id: str, api_key: str = api_key_dep):
+async def archive_workspace(workspace_id: str, api_key: str = api_key_dep) -> dict:
     """
     Archive a workspace (set archived flag in metadata).
     """
@@ -526,7 +526,7 @@ async def archive_workspace(workspace_id: str, api_key: str = api_key_dep):
 
 
 @router.post("/workspaces/{workspace_id}/unarchive")
-async def unarchive_workspace(workspace_id: str, api_key: str = api_key_dep):
+async def unarchive_workspace(workspace_id: str, api_key: str = api_key_dep) -> dict:
     """
     Unarchive a workspace (unset archived flag in metadata).
     """

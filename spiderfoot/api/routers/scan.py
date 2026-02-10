@@ -90,7 +90,7 @@ async def start_scan_background(
     modules: list,
     type_filter: list,
     config: dict,
-):
+) -> None:
     """Launch a SpiderFoot scan in the background for the given target and modules."""
     try:
         startSpiderFootScanner(
@@ -110,7 +110,7 @@ async def export_scan_json_multi(
     ids: str,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> StreamingResponse:
     """Export event results for multiple scans as JSON."""
     scaninfo: list = []
     scan_name = ""
@@ -158,7 +158,7 @@ async def export_scan_viz_multi(
     gexf: str = "1",
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> Response:
     """Export entities from multiple scans in GEXF format."""
     if not ids:
         raise HTTPException(status_code=400, detail="No scan IDs provided")
@@ -203,7 +203,7 @@ async def rerun_scan_multi(
     ids: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Rerun multiple scans."""
     config = get_app_config()
     cfg = deepcopy(config.get_config())
@@ -257,7 +257,7 @@ async def bulk_stop_scans(
     request: BulkScanRequest,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Stop multiple scans in one request."""
     results = {"stopped": [], "not_found": [], "already_finished": [], "errors": []}
     for scan_id in request.scan_ids:
@@ -296,7 +296,7 @@ async def bulk_delete_scans(
     request: BulkScanRequest,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Delete multiple scans in one request."""
     results = {"deleted": [], "not_found": [], "errors": []}
     for scan_id in request.scan_ids:
@@ -330,7 +330,7 @@ async def bulk_archive_scans(
     request: BulkScanRequest,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Archive multiple scans in one request."""
     results = {"archived": [], "not_found": [], "errors": []}
     for scan_id in request.scan_ids:
@@ -364,7 +364,7 @@ async def bulk_archive_scans(
 # -----------------------------------------------------------------------
 
 @router.get("/scans/schedules")
-async def list_schedules(api_key: str = optional_auth_dep):
+async def list_schedules(api_key: str = optional_auth_dep) -> dict:
     """List all recurring scan schedules."""
     try:
         from spiderfoot.recurring_schedule import get_recurring_scheduler
@@ -384,7 +384,7 @@ async def list_schedules(api_key: str = optional_auth_dep):
 async def create_schedule(
     body: ScheduleCreateRequest,
     api_key: str = api_key_dep,
-):
+) -> dict:
     """Create a new recurring scan schedule."""
     if not body.interval_minutes and not body.run_at:
         raise HTTPException(
@@ -416,7 +416,7 @@ async def create_schedule(
 
 
 @router.get("/scans/schedules/{schedule_id}")
-async def get_schedule(schedule_id: str, api_key: str = optional_auth_dep):
+async def get_schedule(schedule_id: str, api_key: str = optional_auth_dep) -> dict:
     """Get details of a specific scan schedule."""
     from spiderfoot.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
@@ -427,7 +427,7 @@ async def get_schedule(schedule_id: str, api_key: str = optional_auth_dep):
 
 
 @router.delete("/scans/schedules/{schedule_id}")
-async def delete_schedule(schedule_id: str, api_key: str = api_key_dep):
+async def delete_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
     """Delete a scan schedule."""
     from spiderfoot.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
@@ -437,7 +437,7 @@ async def delete_schedule(schedule_id: str, api_key: str = api_key_dep):
 
 
 @router.post("/scans/schedules/{schedule_id}/pause")
-async def pause_schedule(schedule_id: str, api_key: str = api_key_dep):
+async def pause_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
     """Pause a recurring scan schedule."""
     from spiderfoot.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
@@ -447,7 +447,7 @@ async def pause_schedule(schedule_id: str, api_key: str = api_key_dep):
 
 
 @router.post("/scans/schedules/{schedule_id}/resume")
-async def resume_schedule(schedule_id: str, api_key: str = api_key_dep):
+async def resume_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
     """Resume a paused scan schedule."""
     from spiderfoot.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
@@ -471,7 +471,7 @@ async def list_scans(
     params: PaginationParams = Depends(),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """List all scans with pagination."""
     try:
         records = svc.list_scans()
@@ -496,7 +496,7 @@ async def search_scans(
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Search and filter scans by target, status, tags, date range, and module.
 
     Returns matching scans with facets (status counts, target summary).
@@ -595,7 +595,7 @@ async def create_scan(
     background_tasks: BackgroundTasks,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanCreateResponse:
     """Create and start a new scan."""
     try:
         config = get_app_config()
@@ -653,7 +653,7 @@ async def get_scan(
     scan_id: str,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Get scan details."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -671,7 +671,7 @@ async def delete_scan(
     scan_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanDeleteResponse:
     """Delete a scan."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -690,7 +690,7 @@ async def delete_scan_full(
     scan_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> MessageResponse:
     """Delete a scan and all related data."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -704,7 +704,7 @@ async def stop_scan(
     scan_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanStopResponse:
     """Stop a running scan with state-machine validation."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -726,7 +726,7 @@ async def retry_scan(
     scan_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Retry a failed or aborted scan by creating a new scan with the same configuration.
 
     The original scan is preserved for reference.  A new scan is created
@@ -815,7 +815,7 @@ async def export_scan_event_results(
     dialect: str = "excel",
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> StreamingResponse:
     """Export scan event result data as CSV or Excel."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -879,7 +879,7 @@ async def export_scan_search_results(
     dialect: str = "excel",
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> StreamingResponse:
     """Export search result data as CSV or Excel."""
     data = []
     for row in svc.search_events(scan_id, event_type=event_type or "", value=value or ""):
@@ -937,7 +937,7 @@ async def export_scan_viz(
     gexf: str = "0",
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> Response:
     """Export entities from scan results for visualising (GEXF/graph)."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -964,7 +964,7 @@ async def export_scan_logs(
     dialect: str = "excel",
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> StreamingResponse:
     """Export scan logs as CSV."""
     try:
         data = svc.get_scan_logs(scan_id)
@@ -998,7 +998,7 @@ async def get_scan_timeline(
     event_type: str | None = Query(None, description="Filter by event type"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Get a chronological timeline of events for a scan.
 
     Returns events ordered by timestamp with module attribution,
@@ -1075,7 +1075,7 @@ async def detect_duplicate_events(
     threshold: int = Query(2, ge=2, le=100, description="Min occurrences to flag as duplicate"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Detect duplicate events in scan results.
 
     Finds events with identical (event_type, data) pairs across modules,
@@ -1147,7 +1147,7 @@ async def export_scan_correlations(
     dialect: str = "excel",
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> StreamingResponse:
     """Export scan correlation data as CSV or Excel."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1208,7 +1208,7 @@ async def get_scan_options(
     scan_id: str,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Return configuration used for the specified scan."""
     config = get_app_config()
     ret = svc.get_scan_options(scan_id, config.get_config())
@@ -1220,7 +1220,7 @@ async def rerun_scan(
     scan_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanRerunResponse:
     """Rerun a scan."""
     config = get_app_config()
     cfg = deepcopy(config.get_config())
@@ -1275,7 +1275,7 @@ async def clone_scan(
     scan_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanCloneResponse:
     """Clone a scan configuration (without running it)."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1325,7 +1325,7 @@ async def list_event_annotations(
     scan_id: str,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """List all event annotations for a scan.
 
     Annotations are operator notes attached to individual scan result
@@ -1351,7 +1351,7 @@ async def set_event_annotation(
     note: str = Body(..., embed=True, max_length=2000),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Add or update an annotation on a specific scan result event.
 
     Args:
@@ -1388,7 +1388,7 @@ async def delete_event_annotation(
     result_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Remove an annotation from a scan result event."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1419,7 +1419,7 @@ async def set_results_false_positive(
     fp: str = Body(...),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Set a batch of results as false positive or not."""
     if fp not in ("0", "1"):
         raise HTTPException(status_code=400, detail="No FP flag set or not set correctly.")
@@ -1435,7 +1435,7 @@ async def clear_scan(
     scan_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> MessageResponse:
     """Remove all results/events for a scan, keeping the scan entry."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1458,7 +1458,7 @@ async def get_scan_metadata(
     scan_id: str,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanMetadataResponse:
     """Get scan metadata."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1472,7 +1472,7 @@ async def update_scan_metadata(
     metadata: dict = Body(...),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Update scan metadata (key/value pairs)."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1488,7 +1488,7 @@ async def get_scan_notes(
     scan_id: str,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanNotesResponse:
     """Get scan notes/comments."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1502,7 +1502,7 @@ async def update_scan_notes(
     notes: str = Body(...),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Update scan notes/comments."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1516,7 +1516,7 @@ async def archive_scan(
     scan_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> MessageResponse:
     """Archive a scan."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1535,7 +1535,7 @@ async def unarchive_scan(
     scan_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> MessageResponse:
     """Unarchive a scan."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1561,7 +1561,7 @@ async def get_scan_tags(
     scan_id: str,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanTagsResponse:
     """Get all tags for a scan."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1577,7 +1577,7 @@ async def set_scan_tags(
     tags: list[str] = Body(..., description="Complete list of tags to set"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanTagsResponse:
     """Replace all tags for a scan."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1598,7 +1598,7 @@ async def add_scan_tags(
     tags: list[str] = Body(..., description="Tags to add"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanTagsResponse:
     """Add tags to a scan (merges with existing)."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1624,7 +1624,7 @@ async def remove_scan_tags(
     tags: list[str] = Body(..., description="Tags to remove"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> ScanTagsResponse:
     """Remove specific tags from a scan."""
     record = svc.get_scan(scan_id)
     if record is None:
@@ -1661,7 +1661,7 @@ async def compare_scans(
     scan_b: str = Query(..., description="Second scan ID"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
-):
+) -> dict:
     """Compare two scans and return the diff of their findings.
 
     Returns event types and data that are:

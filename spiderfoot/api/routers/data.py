@@ -16,7 +16,7 @@ optional_auth_dep = Depends(optional_auth)
 
 
 @router.get("/data/entity-types")
-async def list_entity_types(api_key: str = optional_auth_dep):
+async def list_entity_types(api_key: str = optional_auth_dep) -> dict:
     """
     List all supported entity/event types.
 
@@ -43,7 +43,7 @@ async def list_entity_types(api_key: str = optional_auth_dep):
 async def list_modules(
     params: PaginationParams = Depends(),
     api_key: str = optional_auth_dep,
-):
+) -> dict:
     """
     List all available modules with pagination support.
 
@@ -73,7 +73,7 @@ async def list_modules(
 
 
 @router.get("/data/sources")
-async def list_sources(api_key: str = optional_auth_dep):
+async def list_sources(api_key: str = optional_auth_dep) -> dict:
     """
     List all data sources.
 
@@ -96,7 +96,7 @@ async def list_sources(api_key: str = optional_auth_dep):
 
 
 @router.get("/data/modules/{module_name}")
-async def get_module_details(module_name: str, api_key: str = optional_auth_dep):
+async def get_module_details(module_name: str, api_key: str = optional_auth_dep) -> dict:
     """
     Get details for a specific module.
 
@@ -122,7 +122,7 @@ async def get_module_details(module_name: str, api_key: str = optional_auth_dep)
 
 
 @router.get("/data/entity-types/{type_name}")
-async def get_entity_type_details(type_name: str, api_key: str = optional_auth_dep):
+async def get_entity_type_details(type_name: str, api_key: str = optional_auth_dep) -> dict:
     """
     Get details for a specific entity/event type.
 
@@ -149,7 +149,7 @@ async def get_entity_type_details(type_name: str, api_key: str = optional_auth_d
 
 
 @router.get("/data/global-options")
-async def list_global_options(api_key: str = optional_auth_dep):
+async def list_global_options(api_key: str = optional_auth_dep) -> dict:
     """
     List global config options/descriptions.
 
@@ -171,7 +171,7 @@ async def list_global_options(api_key: str = optional_auth_dep):
 
 
 @router.get("/data/modules/{module_name}/options")
-async def list_module_options(module_name: str, api_key: str = optional_auth_dep):
+async def list_module_options(module_name: str, api_key: str = optional_auth_dep) -> dict:
     """
     List config options for a specific module.
 
@@ -201,7 +201,7 @@ async def validate_module_config(
     module_name: str,
     proposed_config: dict = {},
     api_key: str = optional_auth_dep,
-):
+) -> dict:
     """Validate proposed configuration for a module.
 
     Checks that all required API keys are set, option values have valid
@@ -295,7 +295,7 @@ async def validate_module_config(
 
 
 @router.get("/data/module-categories")
-async def list_module_categories(api_key: str = optional_auth_dep):
+async def list_module_categories(api_key: str = optional_auth_dep) -> dict:
     """
     List all module categories/tags.
 
@@ -321,7 +321,7 @@ async def list_module_categories(api_key: str = optional_auth_dep):
 
 
 @router.get("/data/module-types")
-async def list_module_types(api_key: str = optional_auth_dep):
+async def list_module_types(api_key: str = optional_auth_dep) -> dict:
     """
     List all module types (e.g., passive, active).
 
@@ -348,7 +348,7 @@ async def list_module_types(api_key: str = optional_auth_dep):
 
 
 @router.get("/data/risk-levels", response_model=RiskLevelsResponse)
-async def list_risk_levels(api_key: str = optional_auth_dep):
+async def list_risk_levels(api_key: str = optional_auth_dep) -> dict:
     """
     List all risk levels.
 
@@ -370,7 +370,7 @@ async def list_risk_levels(api_key: str = optional_auth_dep):
 
 
 @router.get("/data/modules/stats")
-async def get_module_stats(api_key: str = optional_auth_dep):
+async def get_module_stats(api_key: str = optional_auth_dep) -> dict:
     """Runtime module statistics aggregating timeout, output validation, and health data.
 
     Returns a consolidated view of per-module performance metrics from:
@@ -435,7 +435,7 @@ async def get_module_stats(api_key: str = optional_auth_dep):
 @router.get("/data/modules/dependencies")
 async def get_module_dependencies(
     api_key: str = optional_auth_dep,
-):
+) -> dict:
     """Module dependency graph showing which modules produce/consume which event types.
 
     Returns a dependency map useful for understanding the module pipeline:
@@ -571,7 +571,7 @@ def get_disabled_modules() -> set:
 
 
 @router.get("/data/modules/status")
-async def get_module_status(api_key: str = optional_auth_dep):
+async def get_module_status(api_key: str = optional_auth_dep) -> dict:
     """Return the enable/disable status of all modules.
 
     Modules not in the disabled set are considered enabled.
@@ -601,7 +601,7 @@ async def get_module_status(api_key: str = optional_auth_dep):
 
 
 @router.post("/data/modules/{module_name}/disable")
-async def disable_module(module_name: str, api_key: str = optional_auth_dep):
+async def disable_module(module_name: str, api_key: str = optional_auth_dep) -> dict:
     """Disable a module at runtime.
 
     Disabled modules will be excluded from future scans.
@@ -632,7 +632,7 @@ async def disable_module(module_name: str, api_key: str = optional_auth_dep):
 
 
 @router.post("/data/modules/{module_name}/enable")
-async def enable_module(module_name: str, api_key: str = optional_auth_dep):
+async def enable_module(module_name: str, api_key: str = optional_auth_dep) -> dict:
     """Re-enable a previously disabled module."""
     try:
         config = get_app_config()
@@ -662,7 +662,7 @@ async def enable_module(module_name: str, api_key: str = optional_auth_dep):
 async def bulk_disable_modules(
     module_names: list = [],
     api_key: str = optional_auth_dep,
-):
+) -> dict:
     """Disable multiple modules at once.
 
     Body: list of module name strings.
