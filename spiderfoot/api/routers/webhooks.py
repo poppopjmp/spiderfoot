@@ -41,6 +41,7 @@ from spiderfoot.webhook_dispatcher import WebhookConfig
 if HAS_FASTAPI:
 
     class WebhookCreateRequest(BaseModel):
+        """Data model for a webhook registration request."""
         url: str = Field(..., description="Webhook URL to POST to")
         secret: str = Field("", description="HMAC-SHA256 signing secret")
         event_types: list[str] = Field(
@@ -57,6 +58,7 @@ if HAS_FASTAPI:
         description: str = ""
 
     class WebhookUpdateRequest(BaseModel):
+        """Data model for a webhook update request."""
         url: str | None = None
         secret: str | None = None
         event_types: list[str] | None = None
@@ -73,6 +75,7 @@ if HAS_FASTAPI:
 if not HAS_FASTAPI:
 
     class _StubRouter:
+        """Stub router for when FastAPI dependencies are unavailable."""
         pass
 
     router = _StubRouter()
@@ -248,6 +251,7 @@ else:
         }
 
     class EventFilterUpdateRequest(BaseModel):
+        """Data model for updating a webhook's event type filter."""
         event_types: list[str] = Field(
             ...,
             description="New list of event types to subscribe to (empty = all events)",

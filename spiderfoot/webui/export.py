@@ -4,6 +4,7 @@ import json
 from spiderfoot import SpiderFootHelpers
 
 class ExportEndpoints:
+    """WebUI endpoints for exporting scan data."""
     @cherrypy.expose
     def scanexportlogs(self, id, dialect="excel"):
         dbh = self._get_dbh()

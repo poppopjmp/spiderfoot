@@ -235,6 +235,7 @@ class Histogram:
 
 
 class _HistogramTimer:
+    """Context manager for timing observations in a Histogram."""
     def __init__(self, histogram: Histogram) -> None:
         self._histogram = histogram
         self._start = None

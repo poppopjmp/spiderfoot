@@ -10,6 +10,7 @@ import os
 import sys
 
 class CommandRegistry:
+    """Registry for CLI command handlers."""
     def __init__(self) -> None:
         self.commands = {}
 

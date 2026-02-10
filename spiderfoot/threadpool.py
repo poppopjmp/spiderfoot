@@ -241,6 +241,7 @@ class SpiderFootThreadPool:
 
 
 class ThreadPoolWorker(threading.Thread):
+    """Worker thread that processes tasks from module input queues."""
 
     def __init__(self, pool, name: str = None) -> None:
 

@@ -45,6 +45,7 @@ log = logging.getLogger("spiderfoot.rag")
 # ---------------------------------------------------------------------------
 
 class LLMProvider(Enum):
+    """Enumeration of supported LLM backends."""
     MOCK = "mock"
     OPENAI = "openai"
     OLLAMA = "ollama"

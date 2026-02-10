@@ -58,6 +58,7 @@ optional_auth_dep = Depends(optional_auth)
 # -----------------------------------------------------------------------
 
 class ScanRequest(BaseModel):
+    """Data model for a scan creation request."""
     name: str = Field(..., description="Name of the scan")
     target: str = Field(..., description="Target for the scan")
     modules: list[str] | None = Field(None, description="List of module names to run")

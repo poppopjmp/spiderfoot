@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging
 
 class ResultAggregator:
+    """Aggregates correlation rule results using configurable methods."""
     def __init__(self) -> None:
         self.log = logging.getLogger("spiderfoot.correlation.aggregator")
 

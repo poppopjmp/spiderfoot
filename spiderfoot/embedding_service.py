@@ -42,6 +42,7 @@ log = logging.getLogger("spiderfoot.embeddings")
 # ---------------------------------------------------------------------------
 
 class EmbeddingProvider(Enum):
+    """Enumeration of supported embedding backends."""
     MOCK = "mock"
     SENTENCE_TRANSFORMER = "sentence_transformer"
     OPENAI = "openai"

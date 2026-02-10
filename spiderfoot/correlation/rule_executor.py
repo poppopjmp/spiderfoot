@@ -20,6 +20,7 @@ class RuleExecutionStrategy:
         raise NotImplementedError
 
 class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
+    """Default strategy for executing correlation rules against scan data."""
     def execute(self, dbh, rule, scan_ids) -> dict:
         """Execute correlation rule and save results to database."""
         import uuid
@@ -314,6 +315,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             return None
 
 class RuleExecutor:
+    """Orchestrates correlation rule execution with pluggable strategies."""
     _strategy_registry = {}
     _event_hooks = {
         'pre_rule': [],

@@ -6,6 +6,7 @@ from __future__ import annotations
 import requests
 
 class SpiderFootApiClient:
+    """HTTP client for communicating with the SpiderFoot API."""
     def __init__(self, config) -> None:
         self.config = config
 

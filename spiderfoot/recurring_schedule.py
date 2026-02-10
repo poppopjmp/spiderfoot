@@ -32,6 +32,7 @@ log = logging.getLogger("spiderfoot.recurring_schedule")
 
 
 class RecurringStatus(str, Enum):
+    """Enumeration of recurring schedule states."""
     ACTIVE = "active"
     PAUSED = "paused"
     COMPLETED = "completed"     # one-shot that has fired

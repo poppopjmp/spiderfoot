@@ -434,6 +434,7 @@ def mark_startup_complete() -> None:
 
 if not HAS_FASTAPI:
     class _StubRouter:
+        """Stub router for when dependencies are unavailable."""
         pass
     router = _StubRouter()
 else:

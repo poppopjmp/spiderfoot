@@ -17,6 +17,7 @@ from urllib.parse import urljoin, urlencode
 
 
 class HttpMethod(Enum):
+    """Enumeration of HTTP request methods."""
     GET = "GET"
     POST = "POST"
     PUT = "PUT"
@@ -26,6 +27,7 @@ class HttpMethod(Enum):
 
 
 class ResponseFormat(Enum):
+    """Enumeration of API response format types."""
     JSON = "json"
     TEXT = "text"
     BINARY = "binary"

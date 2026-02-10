@@ -304,6 +304,7 @@ def _make_handler_factory(service_name: str,
     """Create an HTTP request handler class with bound handlers."""
 
     class _RPCHandler(BaseHTTPRequestHandler):
+        """HTTP request handler for gRPC-over-HTTP bridge."""
 
         def do_POST(self):  # noqa: N802
             # Expected path: /rpc/{service_name}/{method}

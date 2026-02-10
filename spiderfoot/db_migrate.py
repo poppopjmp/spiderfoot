@@ -34,11 +34,13 @@ log = logging.getLogger("spiderfoot.db_migrate")
 # ---------------------------------------------------------------------------
 
 class MigrationDirection(Enum):
+    """Enumeration of migration directions."""
     UP = "up"
     DOWN = "down"
 
 
 class MigrationStatus(Enum):
+    """Enumeration of migration states."""
     PENDING = "pending"
     APPLIED = "applied"
     ROLLED_BACK = "rolled_back"
@@ -46,6 +48,7 @@ class MigrationStatus(Enum):
 
 
 class DbDialect(Enum):
+    """Enumeration of supported database dialects."""
     SQLITE = "sqlite"
     POSTGRESQL = "postgresql"
 

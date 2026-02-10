@@ -23,6 +23,7 @@ from spiderfoot.logger import logListenerSetup, logWorkerSetup
 
 
 class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEndpoints, InfoEndpoints, WebUiHelpers, PerformanceEnhancedWebUI, DbProvider):
+    """Main WebUI controller combining all endpoint groups."""
     defaultConfig = dict()
     config = dict()
     token = None

@@ -7,6 +7,7 @@ except ImportError:
     pass
 
 class InfoEndpoints:
+    """WebUI endpoints for event type and module information."""
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def eventtypes(self):

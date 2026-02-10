@@ -27,6 +27,7 @@ import networkx as nx
 
 
 class _GraphNode(typing.TypedDict):
+    """Typed dictionary representing a node in a graph."""
     id: str
     label: str
     size: typing.int | float
@@ -35,11 +36,13 @@ class _GraphNode(typing.TypedDict):
     b: int
 
 class _GraphEdge(typing.TypedDict):
+    """Typed dictionary representing an edge in a graph."""
     source: str
     target: str
     weight: typing.int | float
 
 class _Graph(typing.TypedDict, total=False):
+    """Typed dictionary representing a graph of nodes and edges."""
     nodes: list[_GraphNode]
     edges: list[_GraphEdge]
     meta: dict[str, typing.Any]

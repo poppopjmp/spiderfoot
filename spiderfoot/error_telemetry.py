@@ -46,6 +46,7 @@ class ErrorClass(Enum):
 
 
 class AlertSeverity(Enum):
+    """Enumeration of alert severity levels."""
     WARNING = "warning"
     CRITICAL = "critical"
 

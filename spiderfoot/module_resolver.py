@@ -38,6 +38,7 @@ class DepKind(Enum):
 
 
 class ResolveStatus(Enum):
+    """Enumeration of module dependency resolution outcomes."""
     OK = "ok"
     MISSING_DEPS = "missing_deps"
     CIRCULAR = "circular"

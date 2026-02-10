@@ -31,6 +31,7 @@ log = logging.getLogger("spiderfoot.multidim")
 # ---------------------------------------------------------------------------
 
 class Dimension(Enum):
+    """Enumeration of OSINT correlation dimensions."""
     ENTITY = "entity"
     TEMPORAL = "temporal"
     NETWORK = "network"

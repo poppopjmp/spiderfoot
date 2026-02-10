@@ -51,6 +51,7 @@ except ImportError:
 # -----------------------------------------------------------------------
 
 class DeliveryStatus(Enum):
+    """Enumeration of webhook delivery states."""
     PENDING = "pending"
     SUCCESS = "success"
     FAILED = "failed"

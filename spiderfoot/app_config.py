@@ -62,23 +62,27 @@ class ProxyType(str, Enum):
 
 
 class CacheBackend(str, Enum):
+    """Enumeration of supported cache backends."""
     MEMORY = "memory"
     REDIS = "redis"
 
 
 class EventBusBackend(str, Enum):
+    """Enumeration of supported event bus backends."""
     MEMORY = "memory"
     REDIS = "redis"
     NATS = "nats"
 
 
 class WorkerStrategy(str, Enum):
+    """Enumeration of worker execution strategies."""
     THREAD = "thread"
     PROCESS = "process"
     ASYNC = "async"
 
 
 class LogLevel(str, Enum):
+    """Enumeration of logging severity levels."""
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"

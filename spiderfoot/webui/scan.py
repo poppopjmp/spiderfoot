@@ -20,6 +20,7 @@ from spiderfoot.scan_state_map import (
 )
 
 class ScanEndpoints:
+    """WebUI endpoints for scan management."""
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanopts(self, id) -> dict:

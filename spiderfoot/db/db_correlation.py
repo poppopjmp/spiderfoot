@@ -21,6 +21,7 @@ from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
 log = logging.getLogger(__name__)
 
 class CorrelationManager:
+    """Manages correlation result storage and queries in the database."""
     def __init__(self, dbh, conn, dbhLock, db_type) -> None:
         self.dbh = dbh
         self.conn = conn

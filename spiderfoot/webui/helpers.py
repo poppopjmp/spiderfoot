@@ -6,6 +6,7 @@ from mako.template import Template
 from spiderfoot import __version__
 
 class WebUiHelpers:
+    """Utility methods for WebUI input sanitization and rendering."""
     def cleanUserInput(self, inputList):
         if not isinstance(inputList, list):
             raise TypeError(f"inputList is {type(inputList)}; expected list()")

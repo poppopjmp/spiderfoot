@@ -7,6 +7,7 @@ from spiderfoot import __version__
 
 
 class MiscEndpoints:
+    """WebUI endpoints for documentation and miscellaneous pages."""
     @cherrypy.expose
     def documentation(self, doc=None, q=None):
         # Render documentation page or search results

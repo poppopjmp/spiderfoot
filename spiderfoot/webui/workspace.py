@@ -5,6 +5,7 @@ from spiderfoot.workspace import SpiderFootWorkspace
 from spiderfoot import __version__
 
 class WorkspaceEndpoints:
+    """WebUI endpoints for workspace management."""
     @cherrypy.expose
     def workspaces(self):
         """Show workspace management page.

@@ -5,6 +5,7 @@ CLI configuration management for SpiderFoot CLI.
 from __future__ import annotations
 
 class CLIConfig:
+    """Configuration store for SpiderFoot CLI options."""
     def __init__(self) -> None:
         self.options = {
             "cli.debug": False,

@@ -39,6 +39,7 @@ log = logging.getLogger("spiderfoot.reranker")
 # ---------------------------------------------------------------------------
 
 class RerankerProvider(Enum):
+    """Enumeration of supported reranker backends."""
     MOCK = "mock"
     CROSS_ENCODER = "cross_encoder"
     COHERE = "cohere"
@@ -46,6 +47,7 @@ class RerankerProvider(Enum):
 
 
 class ScoreNormalization(Enum):
+    """Enumeration of score normalization methods."""
     NONE = "none"
     SIGMOID = "sigmoid"
     MINMAX = "minmax"

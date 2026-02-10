@@ -39,12 +39,14 @@ log = logging.getLogger("spiderfoot.qdrant")
 # ---------------------------------------------------------------------------
 
 class DistanceMetric(Enum):
+    """Enumeration of vector distance metrics."""
     COSINE = "Cosine"
     EUCLID = "Euclid"
     DOT = "Dot"
 
 
 class QdrantBackend(Enum):
+    """Enumeration of Qdrant connection backends."""
     MEMORY = "memory"      # in-process dict (testing)
     HTTP = "http"          # REST API
     GRPC = "grpc"          # gRPC

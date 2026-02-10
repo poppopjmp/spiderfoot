@@ -6,6 +6,7 @@ from spiderfoot.sflib import SpiderFoot
 from spiderfoot import __version__
 
 class SettingsEndpoints:
+    """WebUI endpoints for application settings."""
     @cherrypy.expose
     def opts(self, updated=None):
         templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)

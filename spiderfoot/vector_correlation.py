@@ -38,6 +38,7 @@ log = logging.getLogger("spiderfoot.vector_correlation")
 # ---------------------------------------------------------------------------
 
 class CorrelationStrategy(Enum):
+    """Enumeration of vector correlation strategies."""
     SIMILARITY = "similarity"         # direct vector similarity
     CROSS_SCAN = "cross_scan"         # find same entities across scans
     TEMPORAL = "temporal"             # time-based clustering

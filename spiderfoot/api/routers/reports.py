@@ -405,6 +405,7 @@ def _get_scan_events(scan_id: str, scan_service=None) -> tuple:
 if not HAS_FASTAPI:
     # Provide a stub router so imports don't fail
     class _StubRouter:
+        """Stub router for when dependencies are unavailable."""
         pass
     router = _StubRouter()
 else:

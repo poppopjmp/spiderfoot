@@ -319,6 +319,7 @@ class EventBusMetrics:
 
 
 class HealthStatus(str, Enum):
+    """Enumeration of event bus health states."""
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
