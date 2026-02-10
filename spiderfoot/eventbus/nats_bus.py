@@ -58,7 +58,7 @@ class NatsEventBus(EventBus):
                 storage="file",
                 num_replicas=1,
             )
-        except Exception:
+        except Exception as e:
             pass  # Stream may already exist
 
         self._running = True

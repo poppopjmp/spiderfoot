@@ -430,7 +430,7 @@ def _filter_scans_for_deletion(cli, scan_ids, status_filter, older_than):
 
                 filtered_ids.append(scan_id)
 
-        except Exception:
+        except Exception as e:
             # If we can't get status, exclude from deletion for safety
             pass
 

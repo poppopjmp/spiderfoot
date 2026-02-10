@@ -424,7 +424,7 @@ class DnsService:
                                     "data": str(rdata),
                                 })
                     return records
-                except Exception:
+                except Exception as e:
                     continue
 
         return None

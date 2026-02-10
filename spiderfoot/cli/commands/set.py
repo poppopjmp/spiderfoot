@@ -21,8 +21,8 @@ def set_command(cli: SpiderFootCli, line: str) -> None:
     if len(c[0]) > 2:
         try:
             val = c[0][2]
-        except Exception:
-            cli.edprint("Invalid syntax.")
+        except Exception as e:
+            cli.edprint(f"Invalid syntax: {e}")
             return
     # Local CLI config
     if cfg and val:

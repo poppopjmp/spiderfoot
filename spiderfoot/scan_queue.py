@@ -343,8 +343,8 @@ class ScanQueue(Generic[T]):
             for cb in self._pressure_callbacks:
                 try:
                     cb(level)
-                except Exception:
-                    log.debug("Pressure callback error", exc_info=True)
+                except Exception as e:
+                    log.debug("Pressure callback error: %s", e, exc_info=True)
 
     # -------------------------------------------------------------------
     # DLQ

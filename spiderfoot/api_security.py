@@ -362,7 +362,7 @@ class APIKeyManager:
 
                 return cursor.rowcount > 0
 
-        except Exception:
+        except Exception as e:
             return False
 
     def update_last_used(self, key_hash: str) -> None:
@@ -388,7 +388,7 @@ class APIKeyManager:
                 self.db.dbh.execute(qry, params)
                 self.db.conn.commit()
 
-        except Exception:
+        except Exception as e:
             pass  # Don't fail request if we can't update timestamp
 
     def list_user_api_keys(self, user_id: str) -> list[dict[str, Any]]:
@@ -432,7 +432,7 @@ class APIKeyManager:
 
                 return keys
 
-        except Exception:
+        except Exception as e:
             return []
 
 

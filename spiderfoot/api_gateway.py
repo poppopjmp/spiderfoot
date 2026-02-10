@@ -395,7 +395,7 @@ def create_gateway_router() -> Any:
     async def route_request(service: str, method: str, request: Request) -> JSONResponse:
         try:
             body = await request.json()
-        except Exception:
+        except Exception as e:
             body = {}
 
         client_id = request.client.host if request.client else "unknown"

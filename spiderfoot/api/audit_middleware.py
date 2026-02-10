@@ -79,7 +79,7 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
                 body = await request.body()
                 body_str = body.decode("utf-8", errors="replace")
                 body_snippet = body_str[:500]  # Truncate large bodies
-            except Exception:
+            except Exception as e:
                 body_snippet = "<unreadable>"
 
         # Process request

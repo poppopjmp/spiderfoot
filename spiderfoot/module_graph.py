@@ -365,7 +365,7 @@ class ModuleGraph:
 
         try:
             spec.loader.exec_module(mod)
-        except Exception:
+        except Exception as e:
             return None
 
         # Find the plugin class
@@ -382,7 +382,7 @@ class ModuleGraph:
             meta = getattr(instance, "meta", {})
             flags = meta.get("flags", [])
             categories = meta.get("categories", [])
-        except Exception:
+        except Exception as e:
             # Fallback: parse from class attributes
             watched = []
             produced = []

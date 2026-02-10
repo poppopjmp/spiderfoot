@@ -341,5 +341,5 @@ class VectorLogHandler(logging.Handler):
                 data["exception_message"] = str(record.exc_info[1])
 
             self.sink.emit_event("log", data)
-        except Exception:
+        except Exception as e:
             self.handleError(record)

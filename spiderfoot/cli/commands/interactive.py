@@ -81,7 +81,7 @@ def _prompt_input(cli, prompt, default=None, required=False):
                 cli.dprint("This field is required", plain=True)
         except KeyboardInterrupt:
             raise
-        except Exception:
+        except Exception as e:
             if not required:
                 return ""
 

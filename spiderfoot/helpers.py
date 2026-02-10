@@ -77,7 +77,7 @@ class SpiderFootHelpers():
             if not os.path.exists(data_dir):
                 os.makedirs(data_dir, exist_ok=True)
             return data_dir
-        except Exception:
+        except Exception as e:
             # Fallback to current directory
             fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'data'))
             if not os.path.exists(fallback_dir):
@@ -92,7 +92,7 @@ class SpiderFootHelpers():
             if not os.path.exists(cache_dir):
                 os.makedirs(cache_dir, exist_ok=True)
             return cache_dir
-        except Exception:
+        except Exception as e:
             # Fallback to current directory
             fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'cache'))
             if not os.path.exists(fallback_dir):
@@ -107,7 +107,7 @@ class SpiderFootHelpers():
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir, exist_ok=True)
             return log_dir
-        except Exception:
+        except Exception as e:
             # Fallback to current directory
             fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'logs'))
             if not os.path.exists(fallback_dir):
@@ -280,7 +280,7 @@ class SpiderFootHelpers():
                             'group': getattr(mod_class, 'meta', {}).get('useCases', []),
                             'modern': is_modern,
                         }
-            except Exception:
+            except Exception as e:
                 continue
 
         return modules
@@ -546,7 +546,7 @@ class SpiderFootHelpers():
 
             gexf = GEXFWriter(graph=graph)
             return str(gexf).encode('utf-8')
-        except Exception:
+        except Exception as e:
             return b""
 
     @staticmethod
@@ -624,7 +624,7 @@ class SpiderFootHelpers():
                 })
 
             return json.dumps(ret)
-        except Exception:
+        except Exception as e:
             return "{}"
 
     @staticmethod
@@ -798,7 +798,7 @@ class SpiderFootHelpers():
             import phonenumbers
             parsed = phonenumbers.parse(phone, None)
             return phonenumbers.is_valid_number(parsed)
-        except Exception:
+        except Exception as e:
             # Fallback to basic regex if phonenumbers library is not available
             return bool(re.match(r'^\+?[\d\s\-\(\)]{7,15}$', phone.strip()))
 
@@ -829,12 +829,12 @@ class SpiderFootHelpers():
                 for lnk in BeautifulSoup(data, features="lxml", parse_only=SoupStrainer(t)).find_all(t):
                     if lnk.has_attr(tags[t]):
                         links.append(lnk[tags[t]])
-        except Exception:
+        except Exception as e:
             return returnLinks
 
         try:
             proto = url.split(":")[0]
-        except Exception:
+        except Exception as e:
             proto = "http"
 
         # Loop through all the URLs/links found
@@ -1336,7 +1336,7 @@ def fix_module_for_tests(module_name: str) -> typing.typing.Any | None:
                 break
 
         return module
-    except Exception:
+    except Exception as e:
         return None
 
 

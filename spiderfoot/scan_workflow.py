@@ -268,7 +268,7 @@ class ConditionalStep(WorkflowStep):
         branch_result = None
         try:
             cond_val = self.condition(context)
-        except Exception:
+        except Exception as e:
             cond_val = False
 
         if cond_val and self.if_true:

@@ -232,7 +232,7 @@ class ModuleResolver:
                 if callable(getattr(cls, "watchedEvents", None)):
                     try:
                         watched = cls.watchedEvents(None) or []
-                    except Exception:
+                    except Exception as e:
                         watched = getattr(cls, "watchedEvents", [])
                 else:
                     watched = getattr(cls, "watchedEvents", [])
@@ -240,7 +240,7 @@ class ModuleResolver:
                 if callable(getattr(cls, "producedEvents", None)):
                     try:
                         produced = cls.producedEvents(None) or []
-                    except Exception:
+                    except Exception as e:
                         produced = getattr(cls, "producedEvents", [])
                 else:
                     produced = getattr(cls, "producedEvents", [])

@@ -292,7 +292,7 @@ class AuthenticationManager:
         try:
             expected_hash, _ = self.hash_password(password, salt)
             return hmac.compare_digest(expected_hash, hashed)
-        except Exception:
+        except Exception as e:
             return False
 
     def create_session(self, user_id: str, ip_address: str = None) -> str:
@@ -374,8 +374,8 @@ class DataProtection:
             return encrypted_data
         try:
             return self.cipher.decrypt(encrypted_data.encode()).decode()
-        except Exception:
-            raise ValueError("Failed to decrypt data")
+        except Exception as e:
+            raise ValueError(f"Failed to decrypt data: {e}")
 
     def hash_data(self, data: str) -> str:
         """Create hash of data for comparison."""

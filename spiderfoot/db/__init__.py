@@ -458,7 +458,7 @@ class SpiderFootDb:
                 try:
                     rx = re.compile(qry, re.IGNORECASE | re.DOTALL)
                     ret = rx.match(data)
-                except Exception:
+                except Exception as e:
                     return False
                 return ret is not None
             with self.dbhLock:
@@ -499,7 +499,7 @@ class SpiderFootDb:
                                 event, event_descr, event_raw, event_type
                             ))
                             self.conn.commit()
-                        except Exception:
+                        except Exception as e:
                             continue
                     self.conn.commit()
         elif self.db_type == 'postgresql':
@@ -534,7 +534,7 @@ class SpiderFootDb:
                                 event, event_descr, event_raw, event_type
                             ))
                             self.conn.commit()
-                        except Exception:
+                        except Exception as e:
                             continue
                     self.conn.commit()
         else:

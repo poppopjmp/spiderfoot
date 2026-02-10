@@ -128,7 +128,7 @@ class HttpProbe(DependencyProbe):
                 lambda: urllib.request.urlopen(req, timeout=self.timeout),
             )
             return 200 <= resp.status < 300
-        except Exception:
+        except Exception as e:
             return False
 
 
@@ -153,7 +153,7 @@ class PostgresProbe(DependencyProbe):
             cur.close()
             conn.close()
             return True
-        except Exception:
+        except Exception as e:
             return False
 
 
@@ -173,7 +173,7 @@ class RedisProbe(DependencyProbe):
             r = redis.Redis.from_url(self.url, socket_timeout=5)
             result = await loop.run_in_executor(None, r.ping)
             return bool(result)
-        except Exception:
+        except Exception as e:
             return False
 
 

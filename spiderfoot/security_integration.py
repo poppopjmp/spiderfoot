@@ -136,7 +136,7 @@ class SecurityIntegrator:
                             # Check for CSRF tokens
                             if '<form' in content and 'csrf_token' not in content:
                                 analysis['critical_issues'].append(f'Missing CSRF token in form in {file}')
-                    except Exception:
+                    except Exception as e:
                         continue
 
     def _analyze_api_endpoints(self, analysis: dict[str, Any]) -> None:
@@ -214,7 +214,7 @@ class SecurityIntegrator:
                         if any(default in content for default in ['admin', 'password', 'changeme']):
                             analysis['critical_issues'].append(f'Default passwords in {config_file.name}')
 
-                except Exception:
+                except Exception as e:
                     continue
 
         analysis['configuration_changes'].extend([

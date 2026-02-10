@@ -77,7 +77,7 @@ class WebSocketManager:
             try:
                 await ws.send_text(text)
                 delivered += 1
-            except Exception:
+            except Exception as e:
                 failed.append(ws)
 
         # Clean up failed connections
@@ -159,7 +159,7 @@ async def _relay_mode(websocket: WebSocket, scan_id: str) -> None:
                         "scan_id": scan_id,
                         "timestamp": time.time(),
                     }))
-                except Exception:
+                except Exception as e:
                     break
 
             except WebSocketDisconnect:
@@ -171,7 +171,7 @@ async def _relay_mode(websocket: WebSocket, scan_id: str) -> None:
         if not relay.has_consumers(scan_id):
             try:
                 await relay.unsubscribe_scan(scan_id)
-            except Exception:
+            except Exception as e:
                 logging.debug("WebSocket cleanup error", exc_info=True)
 
 

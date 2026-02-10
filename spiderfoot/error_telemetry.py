@@ -489,8 +489,8 @@ class ErrorTelemetry:
                 if rule.callback:
                     try:
                         rule.callback(evt)
-                    except Exception:
-                        log.debug("Alert callback error", exc_info=True)
+                    except Exception as e:
+                        log.debug("Alert callback error: %s", e, exc_info=True)
 
     def alert_history(self, limit: int = 50) -> list[AlertEvent]:
         return self._alert_history[-limit:]

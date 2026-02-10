@@ -269,7 +269,7 @@ class ModuleTestHarness:
             if original_produce:
                 try:
                     original_produce(event, *args, **kwargs)
-                except Exception:
+                except Exception as e:
                     pass  # Ignore storage errors in test
 
         instance.produceEvent = capture_produce

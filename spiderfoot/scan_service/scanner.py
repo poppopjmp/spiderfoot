@@ -294,7 +294,7 @@ class SpiderFootScanner():
             try:
                 mod = getattr(module, modName)()
                 mod.__name__ = modName
-            except Exception:
+            except Exception as e:
                 continue
             # Defensive: handle missing or malformed module config
             modcfg = self.__config['__modules__'].get(modName)
@@ -426,9 +426,9 @@ class SpiderFootScanner():
                     try:
                         mod = getattr(module, modName)()
                         mod.__name__ = modName
-                    except Exception:
+                    except Exception as e:
                         self.__sf.error(
-                            f"Module {modName} initialization failed")
+                            f"Module {modName} initialization failed: {e}")
                         continue
 
                     # Defensive: handle missing or malformed module config
@@ -461,9 +461,9 @@ class SpiderFootScanner():
                             wire_module_services(mod, self.__config)
                         except Exception as e:
                             log.debug("wire_module_services failed for %s: %s", modName, e)
-                    except Exception:
+                    except Exception as e:
                         self.__sf.error(
-                            f"Module {modName} setup failed")
+                            f"Module {modName} setup failed: {e}")
                         mod.errorState = True
                         continue
 
@@ -680,7 +680,7 @@ class SpiderFootScanner():
             try:
                 if m.incomingEventQueue is not None:
                     modules_waiting[m.__name__] = m.incomingEventQueue.qsize()
-            except Exception:
+            except Exception as e:
                 with suppress(Exception):
                     m.errorState = True
         modules_waiting = sorted(
@@ -691,7 +691,7 @@ class SpiderFootScanner():
             try:
                 if m.running:
                     modules_running.append(m.__name__)
-            except Exception:
+            except Exception as e:
                 with suppress(Exception):
                     m.errorState = True
 
@@ -700,7 +700,7 @@ class SpiderFootScanner():
             try:
                 if m.errorState:
                     modules_errored.append(m.__name__)
-            except Exception:
+            except Exception as e:
                 with suppress(Exception):
                     m.errorState = True
 
@@ -768,7 +768,7 @@ class SpiderFootScanner():
                 with suppress(Exception):
                     self.__setStatus(DB_STATUS_ABORTED, None, time.time() * 1000)
 
-        except Exception:
+        except Exception as e:
             # Complete silent failure to prevent issues during cleanup
             pass
 

@@ -289,7 +289,7 @@ class HttpDataService(DataService):
                 params={"event_type": event_type, "data": data},
             )
             return resp.get("exists", False) if isinstance(resp, dict) else bool(resp)
-        except Exception:
+        except Exception as e:
             return False
 
     # ------------------------------------------------------------------

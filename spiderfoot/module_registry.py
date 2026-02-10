@@ -370,13 +370,13 @@ class ModuleRegistry:
         try:
             inst = mod_class.__new__(mod_class)
             watched = list(inst.watchedEvents())
-        except Exception:
+        except Exception as e:
             watched = list(meta.get("consumes", []))
 
         try:
             inst = mod_class.__new__(mod_class)
             produced = list(inst.producedEvents())
-        except Exception:
+        except Exception as e:
             produced = list(meta.get("provides", []))
 
         descriptor = ModuleDescriptor(
@@ -652,7 +652,7 @@ class ModuleRegistry:
 
         try:
             return self._lazy_load_class(module_name)
-        except Exception:
+        except Exception as e:
             return None
 
     # ------------------------------------------------------------------

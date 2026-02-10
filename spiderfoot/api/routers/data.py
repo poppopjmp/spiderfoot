@@ -395,7 +395,7 @@ async def get_module_stats(api_key: str = optional_auth_dep) -> dict:
             result["modules"].setdefault(mod_name, {})["timeout"] = mod_stats
     except ImportError:
         result["timeout"] = {"available": False}
-    except Exception:
+    except Exception as e:
         result["timeout"] = {"available": False}
 
     # 2. Output validation statistics
@@ -412,7 +412,7 @@ async def get_module_stats(api_key: str = optional_auth_dep) -> dict:
             result["modules"].setdefault(mod_name, {})["output_validation"] = mod_stats
     except ImportError:
         result["output_validation"] = {"available": False}
-    except Exception:
+    except Exception as e:
         result["output_validation"] = {"available": False}
 
     # 3. Module health
@@ -425,7 +425,7 @@ async def get_module_stats(api_key: str = optional_auth_dep) -> dict:
             result["modules"].setdefault(mod_name, {})["health"] = mod_health
     except ImportError:
         result["health"] = {"available": False}
-    except Exception:
+    except Exception as e:
         result["health"] = {"available": False}
 
     result["module_count"] = len(result["modules"])
@@ -453,7 +453,7 @@ async def get_module_dependencies(
     try:
         sf = SpiderFoot({})
         module_list = sf.modulesProducing([])  # returns dict of all modules
-    except Exception:
+    except Exception as e:
         module_list = {}
 
     # Build nodes and event type maps

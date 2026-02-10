@@ -44,7 +44,7 @@ def _get_registry():
     try:
         from spiderfoot.service_registry import ServiceRegistry
         return ServiceRegistry()
-    except Exception:
+    except Exception as e:
         return None
 
 

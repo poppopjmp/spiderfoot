@@ -257,7 +257,7 @@ def validate_module(
                 result.warnings.append("watchedEvents() returns empty list — module will receive no events")
             if produced is not None and not produced:
                 result.warnings.append("producedEvents() returns empty list — module declares no output")
-        except Exception:
+        except Exception as e:
             # Can't instantiate bare — that's fine, skip event checks
             pass
 

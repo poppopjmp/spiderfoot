@@ -360,7 +360,7 @@ class SpiderFootPlugin:
         try:
             from spiderfoot.module_output_validator import get_output_validator
             get_output_validator().check(self, sfEvent)
-        except Exception:
+        except Exception as e:
             pass  # Best-effort — never block event flow
 
         eventName = sfEvent.eventType

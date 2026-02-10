@@ -822,7 +822,7 @@ class DbCore:
                 self.dbh.execute(queries['get'])
                 row = self.dbh.fetchone()
                 return int(row[0]) if row else 0
-            except Exception:
+            except Exception as e:
                 return 0
 
     def set_schema_version(self, version: int | None = None) -> None:

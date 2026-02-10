@@ -63,7 +63,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                     self.config['__modules__'] = modules
                 else:
                     self.config['__modules__'] = {}
-            except Exception:
+            except Exception as e:
                 self.config['__modules__'] = {}
 
         if '__globaloptdescs__' not in self.config:
@@ -72,7 +72,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                 # Import from sf.py where it's defined
                 from sf import sfOptdescs
                 self.config['__globaloptdescs__'] = sfOptdescs
-            except Exception:
+            except Exception as e:
                 # Fallback to basic descriptions
                 self.config['__globaloptdescs__'] = {
                     '_debug': "Enable debugging?",
@@ -298,7 +298,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                     entry={},
                     crumb={}
                 )
-            except Exception:
+            except Exception as e:
                 self.log.exception("Template rendering error in documentation endpoint")
                 return '<p>An error occurred while rendering this page. Please check the server logs.</p>'
         except Exception as e:
@@ -466,7 +466,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             dbh = self._get_dbh()
             dbh.configClear()
             return True
-        except Exception:
+        except Exception as e:
             return False
 
     @cherrypy.expose
@@ -709,7 +709,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
         try:
             data = dbh.search(criteria)
-        except Exception:
+        except Exception as e:
             return retdata
 
         for row in data:

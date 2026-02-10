@@ -178,7 +178,7 @@ class VisualizationService:
                     key = start.strftime("%Y-%m-%d")
                 else:
                     key = dt.strftime("%Y-%m-%d %H:00")
-            except Exception:
+            except Exception as e:
                 continue
             buckets[key] += 1
 

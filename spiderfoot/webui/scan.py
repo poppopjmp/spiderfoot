@@ -235,11 +235,11 @@ class ScanEndpoints:
         dbh = self._get_dbh()
         try:
             scandata = dbh.scanResultSummary(id, by)
-        except Exception:
+        except Exception as e:
             return retdata
         try:
             eventtypes = dbh.eventTypes()
-        except Exception:
+        except Exception as e:
             eventtypes = []
         retdata.extend(scandata)
         return retdata
@@ -266,7 +266,7 @@ class ScanEndpoints:
         try:
             data = dbh.scanResultEvent(id, eventType, filterfp, correlationId)
             retdata = list(data)
-        except Exception:
+        except Exception as e:
             return retdata
         return retdata
 
@@ -279,7 +279,7 @@ class ScanEndpoints:
         try:
             data = dbh.scanResultEventUnique(id, eventType, filterfp)
             retdata = list(data)
-        except Exception:
+        except Exception as e:
             return retdata
         return retdata
 
@@ -289,7 +289,7 @@ class ScanEndpoints:
         """Search scan results by ID, event type, or value."""
         try:
             return self.searchBase(id, eventType, value)
-        except Exception:
+        except Exception as e:
             return []
 
     @cherrypy.expose
@@ -302,7 +302,7 @@ class ScanEndpoints:
         try:
             # Fixed: Use the correct method name scanResultHistory instead of scanHistory
             return dbh.scanResultHistory(id)
-        except Exception:
+        except Exception as e:
             return []
 
     @cherrypy.expose
@@ -445,7 +445,7 @@ class ScanEndpoints:
         try:
             pc = dbh.scanElementTypeDiscovery(id, eventType)
             datamap = dbh.scanElementTypeDiscoveryData(id, eventType)
-        except Exception:
+        except Exception as e:
             retdata['tree'] = {}
             retdata['data'] = {}
             return retdata
@@ -486,7 +486,7 @@ class ScanEndpoints:
         dbh = self._get_dbh()
         try:
             data = dbh.scanLogs(id)
-        except Exception:
+        except Exception as e:
             data = []
         if not data:
             return self.error("No log data found.")
@@ -509,11 +509,11 @@ class ScanEndpoints:
         dbh = self._get_dbh()
         try:
             data = dbh.scanCorrelations(id)
-        except Exception:
+        except Exception as e:
             data = []
         try:
             scan = dbh.scanInstanceGet(id)
-        except Exception:
+        except Exception as e:
             scan = None
         headings = ["Rule Name", "Correlation", "Risk", "Description"]
         if filetype.lower() in ["xlsx", "excel"]:

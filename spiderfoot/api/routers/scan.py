@@ -43,7 +43,7 @@ from ..schemas import (
 try:
     from spiderfoot.scan_hooks import get_scan_hooks
     _hooks = get_scan_hooks()
-except Exception:
+except Exception as e:
     _hooks = None  # type: ignore[assignment]
 
 router = APIRouter()
@@ -234,7 +234,7 @@ async def rerun_scan_multi(
             )
             p.daemon = True
             p.start()
-        except Exception:
+        except Exception as e:
             continue
         while dbh.scanInstanceGet(new_scan_id) is None:
             time.sleep(1)
@@ -1155,7 +1155,7 @@ async def export_scan_correlations(
 
     try:
         data = svc.get_correlations(scan_id)
-    except Exception:
+    except Exception as e:
         raise HTTPException(status_code=404, detail="Scan ID not found")
 
     headings = ["Rule Name", "Correlation", "Risk", "Description"]
@@ -1525,7 +1525,7 @@ async def archive_scan(
     if _hooks:
         try:
             _hooks.on_archived(scan_id)
-        except Exception:
+        except Exception as e:
             logging.debug("Hook callback error", exc_info=True)
     return MessageResponse(message="Scan archived")
 
@@ -1544,7 +1544,7 @@ async def unarchive_scan(
     if _hooks:
         try:
             _hooks.on_unarchived(scan_id)
-        except Exception:
+        except Exception as e:
             logging.debug("Hook callback error", exc_info=True)
     return MessageResponse(message="Scan unarchived")
 

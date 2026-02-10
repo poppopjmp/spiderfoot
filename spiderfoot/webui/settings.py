@@ -145,6 +145,6 @@ class SettingsEndpoints:
             dbh = self._get_dbh()
             dbh.configClear()  # Clear it in the DB
             self.config = self.defaultConfig.copy()  # Clear in memory
-        except Exception:
+        except Exception as e:
             return False
         return True

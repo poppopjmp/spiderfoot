@@ -15,7 +15,7 @@ class ExportEndpoints:
         dbh = self._get_dbh()
         try:
             data = dbh.scanLogs(id)
-        except Exception:
+        except Exception as e:
             return json.dumps(self.jsonify_error("404", "Scan ID not found")).encode("utf-8")
         if not data:
             return json.dumps(self.jsonify_error("404", "No scan logs found")).encode("utf-8")
@@ -36,11 +36,11 @@ class ExportEndpoints:
         dbh = self._get_dbh()
         try:
             data = dbh.scanCorrelations(id)
-        except Exception:
+        except Exception as e:
             return self.error("Scan ID not found")
         try:
             scan = dbh.scanInstanceGet(id)
-        except Exception:
+        except Exception as e:
             return self.error("Scan ID not found")
         headings = ["Rule Name", "Correlation", "Risk", "Description"]
         if filetype.lower() in ["xlsx", "excel"]:

@@ -100,7 +100,7 @@ class WebUiHelpers:
         }
         try:
             data = dbh.search(criteria)
-        except Exception:
+        except Exception as e:
             return retdata
         for row in data:
             lastseen = time.strftime(

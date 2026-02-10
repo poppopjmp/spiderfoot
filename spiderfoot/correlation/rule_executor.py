@@ -120,7 +120,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                 base_query = "SELECT scan_id as hash, type, data, 'test_module' as module, 0 as created, 'ROOT' as source_event_hash FROM tbl_scan_results WHERE scan_id = ?"
                 query_params = [scan_id]
 
-            except Exception:
+            except Exception as e:
                 # Use full production schema
                 base_query = """
                     SELECT hash, type, data, module, generated, source_event_hash

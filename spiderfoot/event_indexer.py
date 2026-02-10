@@ -339,7 +339,7 @@ class EventIndexer:
         try:
             from spiderfoot.service_registry import get_registry
             return get_registry().get_optional("event_bus")
-        except Exception:
+        except Exception as e:
             return None
 
     def _get_vector_engine(self) -> Any:

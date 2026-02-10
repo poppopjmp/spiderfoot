@@ -244,7 +244,7 @@ class AsyncDeadLetterQueue:
                     replayed += 1
                 else:
                     remaining.append(entry)
-            except Exception:
+            except Exception as e:
                 remaining.append(entry)
 
         if remaining:

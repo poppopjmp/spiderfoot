@@ -87,7 +87,7 @@ def check_connection(conn: object, db_type: str) -> bool:
         else:
             raise ValueError(f"Unsupported db_type: {db_type}")
         return True
-    except Exception:
+    except Exception as e:
         return False
 
 def get_type_mapping(db_type: str) -> dict:

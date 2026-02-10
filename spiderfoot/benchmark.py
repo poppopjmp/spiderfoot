@@ -219,7 +219,7 @@ def _timed_loop(operation_name: str, bench_name: str,
             t0 = time.perf_counter()
             try:
                 fn()
-            except Exception:
+            except Exception as e:
                 errors += 1
             t1 = time.perf_counter()
             times.append(t1 - t0)

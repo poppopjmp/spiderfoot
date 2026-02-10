@@ -575,7 +575,7 @@ class NotificationService:
                 self._queue.task_done()
             except queue.Empty:
                 continue
-            except Exception:
+            except Exception as e:
                 continue
 
     def shutdown(self, timeout: float = 5.0) -> None:

@@ -273,7 +273,7 @@ class ThreadPoolWorker(threading.Thread):
                     try:
                         result = callback(*args, **kwargs)
                         ran = True
-                    except Exception:  # noqa: B902
+                    except Exception as e:  # noqa: B902
                         self.log.exception(
                             'Error in thread worker %s', self.name)
                         break

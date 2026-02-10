@@ -124,7 +124,7 @@ class SecureConfigManager:
             encrypted_bytes = base64.b64decode(encrypted_value.encode())
             decrypted = self.cipher.decrypt(encrypted_bytes)
             return decrypted.decode()
-        except Exception:
+        except Exception as e:
             # If decryption fails, return original value (might be unencrypted)
             return encrypted_value
 
@@ -339,7 +339,7 @@ class SecureConfigManager:
             os.chmod(backup_path, 0o600)
             return True
 
-        except Exception:
+        except Exception as e:
             return False
 
     def restore_from_backup(self, backup_path: str) -> dict[str, Any]:

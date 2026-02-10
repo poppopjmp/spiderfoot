@@ -135,7 +135,7 @@ class RedisEventBus(EventBus):
                 id="0",
                 mkstream=True
             )
-        except Exception:
+        except Exception as e:
             pass  # Group already exists
 
         self._callbacks[sub_id] = callback

@@ -276,7 +276,7 @@ def check_database() -> HealthStatus:
         if hasattr(data_svc, "dbh") and data_svc.dbh:
             return HealthStatus.UP
         return HealthStatus.DOWN
-    except Exception:
+    except Exception as e:
         return HealthStatus.DOWN
 
 
@@ -289,7 +289,7 @@ def check_event_bus() -> HealthStatus:
         if bus is None:
             return HealthStatus.UNKNOWN
         return HealthStatus.UP
-    except Exception:
+    except Exception as e:
         return HealthStatus.DOWN
 
 
@@ -302,7 +302,7 @@ def check_cache() -> HealthStatus:
         if cache is None:
             return HealthStatus.UNKNOWN
         return HealthStatus.UP
-    except Exception:
+    except Exception as e:
         return HealthStatus.DOWN
 
 

@@ -209,7 +209,7 @@ class StructuredLogHandler(logging.Handler):
             msg = self.format(record)
             self.stream.write(msg + "\n")
             self.stream.flush()
-        except Exception:
+        except Exception as e:
             self.handleError(record)
 
 

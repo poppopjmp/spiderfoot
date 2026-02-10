@@ -305,7 +305,7 @@ class MigrationManager:
                 f"SELECT MAX(version) FROM {_TRACKING_TABLE} WHERE direction = 'up'"
             )
             return row[0] if row and row[0] is not None else 0
-        except Exception:
+        except Exception as e:
             return 0
 
     def applied_migrations(self) -> list[AppliedMigration]:
@@ -323,7 +323,7 @@ class MigrationManager:
                 )
                 for r in rows
             ]
-        except Exception:
+        except Exception as e:
             return []
 
     def pending_migrations(self) -> list[MigrationRecord]:

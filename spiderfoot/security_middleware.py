@@ -314,7 +314,7 @@ class CherryPySecurityTool(cherrypy.Tool):
                     if self.middleware.rate_limiter.redis:
                         try:
                             allowed, rate_info = self.middleware.rate_limiter._check_redis_limit(client_id, 'web')
-                        except Exception:
+                        except Exception as e:
                             allowed, rate_info = self.middleware.rate_limiter._check_memory_limit(client_id, 'web')
                     if not allowed:
                         self._block_request(429, "Rate limit exceeded")
@@ -621,7 +621,7 @@ class FastAPISecurityMiddleware:
                     if self.middleware.rate_limiter.redis:
                         try:
                             allowed, rate_info = self.middleware.rate_limiter._check_redis_limit(client_id, 'api')
-                        except Exception:
+                        except Exception as e:
                             allowed, rate_info = self.middleware.rate_limiter._check_memory_limit(client_id, 'api')
                     if not allowed:
                         return self._create_error_response(429, "Rate limit exceeded")
@@ -726,7 +726,7 @@ class FastAPISecurityMiddleware:
                     if (self.middleware.input_validator is not None and
                         not self.middleware.input_validator.validate_json_input(body)):
                         return {'success': False, 'error': 'Invalid JSON input'}
-                except Exception:
+                except Exception as e:
                     return {'success': False, 'error': 'Invalid JSON format'}
 
             return {'success': True}

@@ -282,7 +282,7 @@ class GrpcDataService(DataService):
         try:
             events = self.event_get_by_scan(scan_id, event_type=event_type)
             return any(e.get("data") == data for e in events)
-        except Exception:
+        except Exception as e:
             return False
 
     # ------------------------------------------------------------------

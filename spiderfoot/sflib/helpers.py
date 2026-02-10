@@ -182,7 +182,7 @@ def validIpNetwork(cidr: str) -> bool:
         return False
     try:
         return netaddr.IPNetwork(str(cidr)).size > 0
-    except Exception:
+    except Exception as e:
         return False
 
 def isPublicIpAddress(ip: str) -> bool:
@@ -315,7 +315,7 @@ def useProxyForUrl(self, url: str) -> bool:
     ip_obj = None
     try:
         ip_obj = netaddr.IPAddress(host)
-    except Exception:
+    except Exception as e:
         ip_obj = None
 
     # If host is a valid IPv4 or IPv6 address, or netaddr parsed it, check for private/local/loopback
