@@ -465,8 +465,8 @@ class CorrelationService:
                 event_bus = registry.get_optional("event_bus")
                 if event_bus:
                     event_bus.unsubscribe(self._event_bus_sub)
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("optional event_bus lookup failed: %s", e)
             self._event_bus_sub = None
 
     def _on_scan_completed(self, event: dict) -> None:
@@ -518,8 +518,8 @@ class CorrelationService:
             data_svc = registry.get_optional("data")
             if data_svc and hasattr(data_svc, "dbh"):
                 return data_svc.dbh
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("optional data service lookup failed: %s", e)
 
         # Fallback: try to create a direct DB handle
         try:

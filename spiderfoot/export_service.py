@@ -365,8 +365,8 @@ class ExportService:
                 raw = data_svc.event_get_all(scan_id)
                 if raw:
                     return self._normalize_events(raw)
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("optional data service lookup failed: %s", e)
 
         # Fallback to dbh
         if dbh:
@@ -390,8 +390,8 @@ class ExportService:
                 info = data_svc.scan_get(scan_id)
                 if info:
                     return info
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("optional data service lookup failed: %s", e)
 
         return {"scan_id": scan_id}
 

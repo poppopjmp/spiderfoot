@@ -451,8 +451,8 @@ class MigrationManager:
                 for cb in self._callbacks:
                     try:
                         cb(applied)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        log.debug("migration callback cb(applied) failed: %s", e)
 
                 log.info(
                     "Applied migration %d_%s (%s) in %.1fms",

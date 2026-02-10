@@ -42,8 +42,8 @@ def _read_version() -> str:
         if os.path.exists(version_file):
             with open(version_file, "r") as f:
                 return f.read().strip()
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("reading VERSION file failed: %s", e)
     return "5.17.1"
 
 

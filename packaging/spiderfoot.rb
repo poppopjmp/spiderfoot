@@ -5,7 +5,7 @@ class Spiderfoot < Formula
 
   desc "Open Source Intelligence Automation Tool"
   homepage "https://github.com/poppopjmp/spiderfoot"
-  url "https://github.com/poppopjmp/spiderfoot/archive/refs/tags/v5.122.1.tar.gz"
+  url "https://github.com/poppopjmp/spiderfoot/archive/refs/tags/v5.123.0.tar.gz"
   sha256 "SKIP" # Replace with actual sha256sum for the release tarball
   license "MIT"
 

@@ -145,8 +145,8 @@ class AsyncCircuitBreaker:
                     await cb(old, new)
                 else:
                     cb(old, new)
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("lifecycle callback cb(old, new) failed: %s", e)
 
     def on_state_change(self, callback: Callable) -> None:
         """Register a callback ``(old_state, new_state)``."""

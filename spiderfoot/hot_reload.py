@@ -375,8 +375,8 @@ class ModuleWatcher:
         for cb in self._error_callbacks:
             try:
                 cb(state.module_name, error)
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("error callback cb(module_name, error) failed: %s", e)
 
     # ------------------------------------------------------------------
     # Trim history

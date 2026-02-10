@@ -262,8 +262,8 @@ class ModuleHealthMonitor:
             for cb in self._callbacks:
                 try:
                     cb(module_name, health.to_dict())
-                except Exception:
-                    pass
+                except Exception as e:
+                    log.debug("health callback cb(module_name, health) failed: %s", e)
 
 
 # Singleton

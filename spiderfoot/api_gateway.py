@@ -322,8 +322,8 @@ class APIGateway:
             gate_counter.labels(
                 service=service, method=method, status=status
             ).inc()
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("lazy metrics import failed: %s", e)
 
     # ------------------------------------------------------------------
     # Composite queries

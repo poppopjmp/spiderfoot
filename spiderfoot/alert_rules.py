@@ -4,12 +4,15 @@ Provides configurable alerting based on scan events: severity thresholds,
 pattern matching, rate-based alerts, and notification channel routing.
 """
 
+import logging
 import re
 import time
 import threading
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Optional
+
+log = logging.getLogger("spiderfoot.alert_rules")
 
 
 class AlertSeverity(Enum):
@@ -269,8 +272,8 @@ class AlertEngine:
             for handler in self._handlers:
                 try:
                     handler(alert)
-                except Exception:
-                    pass
+                except Exception as e:
+                    log.debug("handler(alert) callback failed: %s", e)
 
         return triggered
 

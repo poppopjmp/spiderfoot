@@ -293,8 +293,8 @@ class AuditLogger:
         for hook in self._hooks:
             try:
                 hook(event)
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("audit hook(event) callback failed: %s", e)
 
         with self._lock:
             self._total_events += 1

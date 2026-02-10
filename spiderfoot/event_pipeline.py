@@ -255,8 +255,8 @@ class EventPipeline:
                 for handler in self._error_handlers:
                     try:
                         handler(event, stage, e)
-                    except Exception:
-                        pass
+                    except Exception as e2:
+                        log.debug("error handler handler(event, stage, e) failed: %s", e2)
                 continue
 
             elapsed = time.monotonic() - start
