@@ -27,6 +27,8 @@ import threading
 import time
 import psycopg2
 import psycopg2.extras
+from typing import Any, Dict, List, Optional
+
 from spiderfoot.db.db_core import DbCore
 from spiderfoot.db.db_scan import ScanManager
 from spiderfoot.db.db_event import EventManager
@@ -37,7 +39,7 @@ from spiderfoot.db.db_correlation import CorrelationManager
 
 
 
-def get_schema_queries(db_type):
+def get_schema_queries(db_type: str) -> List[str]:
     """
     Return a list of schema creation queries appropriate for the backend.
     """
@@ -539,7 +541,7 @@ class SpiderFootDb:
         else:
             raise ValueError(f"Unsupported database type: {self.db_type}")
 
-    def connect(self):
+    def connect(self) -> None:
         """
         Connect to the database using the provided parameters.
         """
@@ -564,7 +566,7 @@ class SpiderFootDb:
             log.error("Error connecting to database: %s", e)
             raise
 
-    def _setup_managers(self):
+    def _setup_managers(self) -> None:
         """
         Set up the various manager instances for interacting with the database.
         """
@@ -574,7 +576,7 @@ class SpiderFootDb:
         self.managers['correlation'] = CorrelationManager(self)
         # self.managers['utils'] = DbUtils(self)  # Removed: DbUtils class no longer exists, use get_placeholder instead
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the database connection and release all resources.
         """
@@ -614,18 +616,18 @@ class SpiderFootDb:
     def vacuumDB(self) -> bool:
         return self._core.vacuumDB()
     # --- SCAN INSTANCE MANAGEMENT ---
-    def scanInstanceCreate(self, *args, **kwargs):
+    def scanInstanceCreate(self, *args, **kwargs) -> None:
         return self._scan.scanInstanceCreate(*args, **kwargs)
-    def scanInstanceGet(self, scan_id):
+    def scanInstanceGet(self, scan_id: str) -> Optional[list]:
         result = self._scan.scanInstanceGet(scan_id)
         if not result or result == []:
             return None
         return result[0]
-    def scanInstanceUpdate(self, *args, **kwargs):
+    def scanInstanceUpdate(self, *args, **kwargs) -> None:
         return self._scan.scanInstanceUpdate(*args, **kwargs)
-    def scanInstanceDelete(self, *args, **kwargs):
+    def scanInstanceDelete(self, *args, **kwargs) -> None:
         return self._scan.scanInstanceDelete(*args, **kwargs)
-    def scanInstanceList(self):
+    def scanInstanceList(self) -> list:
         return self._scan.scanInstanceList()
     def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None):
         """
@@ -645,33 +647,33 @@ class SpiderFootDb:
         """
         return self._scan.scanInstanceSet(instanceId, started, ended, status)
     # --- CONFIGURATION MANAGEMENT ---
-    def configSet(self, *args, **kwargs):
+    def configSet(self, *args, **kwargs) -> None:
         return self._config.configSet(*args, **kwargs)
-    def configGet(self, *args, **kwargs):
+    def configGet(self, *args, **kwargs) -> Optional[dict]:
         return self._config.configGet(*args, **kwargs)
-    def configGetAll(self, *args, **kwargs):
+    def configGetAll(self, *args, **kwargs) -> dict:
         return self._config.configGetAll(*args, **kwargs)
-    def scanConfigSet(self, scan_id, optMap):
+    def scanConfigSet(self, scan_id: str, optMap: dict) -> None:
         return self._config.scanConfigSet(scan_id, optMap)
-    def scanConfigGet(self, scan_id):
+    def scanConfigGet(self, scan_id: str) -> Optional[dict]:
         return self._config.scanConfigGet(scan_id)
     def scanConfigDelete(self, *args, **kwargs):
         """Stub for API/test compatibility. Does nothing."""
         return True
     # --- EVENT TYPES ---
-    def eventTypes(self, *args, **kwargs):
+    def eventTypes(self, *args, **kwargs) -> list:
         return self._core.eventTypes(*args, **kwargs)
     # --- EVENT MANAGEMENT ---
-    def eventAdd(self, *args, **kwargs):
+    def eventAdd(self, *args, **kwargs) -> None:
         return self._event.eventAdd(*args, **kwargs)
-    def eventGet(self, *args, **kwargs):
+    def eventGet(self, *args, **kwargs) -> Optional[list]:
         return self._event.eventGet(*args, **kwargs)
-    def scanEventStore(self, instanceId, sfEvent, truncateSize=0):
+    def scanEventStore(self, instanceId: str, sfEvent: Any, truncateSize: int = 0) -> None:
         return self._event.scanEventStore(instanceId, sfEvent, truncateSize)
     # --- CORRELATION MANAGEMENT ---
-    def correlationAdd(self, *args, **kwargs):
+    def correlationAdd(self, *args, **kwargs) -> None:
         return self._correlation.correlationAdd(*args, **kwargs)
-    def correlationGet(self, *args, **kwargs):
+    def correlationGet(self, *args, **kwargs) -> Optional[list]:
         return self._correlation.correlationGet(*args, **kwargs)
     # --- LOGGING ---
     def scanLogEvent(self, instanceId, classification, message, component=None):
@@ -718,7 +720,7 @@ class SpiderFootDb:
         return self._correlation.scanCorrelationList(instanceId)
 
     # --- Backend-aware schema generation ---
-    def get_schema_queries(self, db_type):
+    def get_schema_queries(self, db_type: str) -> List[str]:
         """
         Generate schema DDL queries for the specified backend.
         Args:
@@ -823,7 +825,7 @@ class SpiderFootDb:
         queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)")
         return queries
 
-    def create(self):
+    def create(self) -> None:
         """
         Create the database schema for the current backend.
         """
