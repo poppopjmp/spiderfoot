@@ -3,6 +3,28 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.160.0] — RC Cycle 88: Core Class Docstrings
+
+### Added
+- Added docstrings to 8 core classes: `SpiderFoot`, `EventManager`, `EventEnricher`, `TargetAlias`, `Tree`, `ExtractedLink`, `CircuitState` (×2)
+
+## [5.159.0] — RC Cycle 87: Narrow Broad Except Clauses
+
+### Changed
+- Narrowed 15 `except Exception` clauses to specific types across 5 files
+- `socket.gethostbyname_ex/gethostbyaddr/getaddrinfo` → `(socket.gaierror, socket.herror, OSError)`
+- `urllib.parse.urlparse` → `ValueError` / `(ValueError, AttributeError)`
+- `float()`/`int()` conversions → `(ValueError, TypeError)`
+- `json.loads` → `(json.JSONDecodeError, ValueError)`
+- `yaml.safe_load` + file read → `(yaml.YAMLError, OSError)`
+- `str.split()` → `(AttributeError, TypeError)`
+
+## [5.158.0] — RC Cycle 86: String Formatting Cleanup
+
+### Changed
+- Replaced 7 `%`-style string interpolations with f-strings in `webui/scan.py` and `webui/routes.py`
+- Fixed potential bytes-interpolation bugs in error response formatting
+
 ## [5.157.0] — RC Cycle 84: Module Exports & Safety Fixes
 
 ### Added
