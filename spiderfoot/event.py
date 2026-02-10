@@ -406,7 +406,7 @@ class SpiderFootEvent:
         """
         return hash(self.hash)
 
-    def setSourceEventHash(self, eventHash: str):
+    def setSourceEventHash(self, eventHash: str) -> None:
         """Set the source event hash.
 
         Args:
@@ -415,7 +415,7 @@ class SpiderFootEvent:
         if self.sourceEvent:
             self.sourceEvent.hash = eventHash
 
-    def setActualSource(self, source: str):
+    def setActualSource(self, source: str) -> None:
         """Set the actual source of this event.
 
         Args:
@@ -423,7 +423,7 @@ class SpiderFootEvent:
         """
         self.actualSource = source
 
-    def setFalsePositive(self, fp: bool = True):
+    def setFalsePositive(self, fp: bool = True) -> None:
         """Mark this event as a false positive.
 
         Args:

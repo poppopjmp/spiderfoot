@@ -377,7 +377,7 @@ class GatewayError(Exception):
 # FastAPI router (optional integration)
 # ---------------------------------------------------------------------------
 
-def create_gateway_router():
+def create_gateway_router() -> Any:
     """Create a FastAPI router for the gateway.
 
     Returns None if FastAPI is not available.
@@ -407,11 +407,11 @@ def create_gateway_router():
             raise HTTPException(status_code=e.status, detail=str(e)) from e
 
     @router.get("/status")
-    async def system_status():
+    async def system_status() -> dict:
         return gateway.get_system_status()
 
     @router.get("/stats")
-    async def gateway_stats():
+    async def gateway_stats() -> dict:
         return gateway.stats()
 
     return router

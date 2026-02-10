@@ -179,7 +179,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
         related = []
         title = ''
 
-        def highlight(code, lang=None):
+        def highlight(code, lang=None) -> str:
             # Dummy highlight function for template compatibility
             return code
 
@@ -213,7 +213,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             except Exception as te:
                 return f'<pre>Template error: {te}</pre>'
         try:
-            def list_docs(base_dir):
+            def list_docs(base_dir) -> list:
                 docs = []
                 for root, _dirs, files in os.walk(base_dir):
                     for f in files:
@@ -222,7 +222,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                             docs.append(rel.replace('\\', '/'))
                 return docs
 
-            def get_title(md_path):
+            def get_title(md_path) -> str:
                 import contextlib
                 with contextlib.suppress(Exception):
                     with open(md_path, encoding='utf-8') as f:

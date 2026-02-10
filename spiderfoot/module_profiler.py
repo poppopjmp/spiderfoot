@@ -30,7 +30,7 @@ import threading
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
 
 log = logging.getLogger("spiderfoot.module_profiler")
 
@@ -215,7 +215,7 @@ class ModuleProfiler:
         return self._modules[module_name]
 
     @contextmanager
-    def trace(self, module_name: str, method_name: str):
+    def trace(self, module_name: str, method_name: str) -> Iterator[None]:
         """Context manager to time a method execution.
 
         Usage::
@@ -247,7 +247,7 @@ class ModuleProfiler:
             mp = profile.get_method(method_name)
             mp.record(duration)
 
-    def profile(self, module_name: str, method_name: str = ""):
+    def profile(self, module_name: str, method_name: str = "") -> Callable:
         """Decorator to profile a function.
 
         Usage::
@@ -264,7 +264,7 @@ class ModuleProfiler:
             name = method_name or func.__qualname__
 
             @functools.wraps(func)
-            def wrapper(*args, **kwargs):
+            def wrapper(*args, **kwargs) -> Any:
                 with self.trace(module_name, name):
                     return func(*args, **kwargs)
 

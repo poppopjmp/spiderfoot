@@ -9,7 +9,7 @@ import threading
 from datetime import datetime
 
 
-def monitor_command(cli, line):
+def monitor_command(cli, line) -> None:
     """Monitor scan progress in real-time. Usage: monitor <scan_id> [options]
 
     Options:
@@ -172,7 +172,7 @@ def _display_detailed_status(cli, status_data):
     cli.dprint("-" * 40, plain=True)
 
 
-def watch_scans_command(cli, line):
+def watch_scans_command(cli, line) -> None:
     """Watch all active scans. Usage: watch_scans [options]
 
     Options:
@@ -285,7 +285,7 @@ def _display_scans_simple(cli, scans):
         cli.dprint(f"  • {name} ({status}) - {progress}%", plain=True)
 
 
-def logs_stream_command(cli, line):
+def logs_stream_command(cli, line) -> None:
     """Stream logs from a scan in real-time. Usage: logs_stream <scan_id> [options]
 
     Options:
@@ -368,7 +368,7 @@ def logs_stream_command(cli, line):
         cli.edprint(f"Log streaming failed: {e}")
 
 
-def register(registry):
+def register(registry) -> None:
     """Register all monitoring commands."""
     registry.register("monitor", monitor_command,
                      help_text="Monitor scan progress in real-time")

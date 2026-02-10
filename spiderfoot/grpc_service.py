@@ -306,7 +306,7 @@ def _make_handler_factory(service_name: str,
     class _RPCHandler(BaseHTTPRequestHandler):
         """HTTP request handler for gRPC-over-HTTP bridge."""
 
-        def do_POST(self):  # noqa: N802
+        def do_POST(self) -> None:  # noqa: N802
             # Expected path: /rpc/{service_name}/{method}
             parts = self.path.strip("/").split("/")
             if len(parts) >= 3 and parts[0] == "rpc":
@@ -345,7 +345,7 @@ def _make_handler_factory(service_name: str,
                 self.end_headers()
                 self.wfile.write(error_body)
 
-        def log_message(self, format, *args):  # noqa: A002
+        def log_message(self, format, *args) -> None:  # noqa: A002
             pass
 
     return _RPCHandler

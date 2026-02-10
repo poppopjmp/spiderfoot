@@ -72,7 +72,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
             self.log_queue.put(
                 (scanId, level, record.getMessage(), component, time.time()))
 
-    def logBatch(self):
+    def logBatch(self) -> None:
         """Log a batch of records to the database."""
         # Process all items in queue
         batch_items = []
@@ -89,7 +89,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         if len(self.batch) >= self.batch_size:
             self.process_log_batch()
 
-    def process_log_batch(self):
+    def process_log_batch(self) -> None:
         """Process a batch of log records."""
         if not self.batch:
             return
@@ -161,7 +161,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         """
         return self._formatter.format(record)
 
-    def process_log_queue(self):
+    def process_log_queue(self) -> None:
         """Process log records from the queue."""
         while True:
             try:

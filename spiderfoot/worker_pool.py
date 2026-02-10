@@ -141,13 +141,13 @@ class ModuleWorker:
         self.log = logging.getLogger(f"spiderfoot.worker.{module_name}")
         self._stop_event = threading.Event()
 
-    def start(self):
+    def start(self) -> None:
         """Start processing events."""
         self.info.state = WorkerState.RUNNING
         self.info.started_at = time.time()
         self.log.debug("Worker started: %s", self.module_name)
 
-    def stop(self):
+    def stop(self) -> None:
         """Signal the worker to stop."""
         self.info.state = WorkerState.STOPPING
         self._stop_event.set()
@@ -184,7 +184,7 @@ class ModuleWorker:
             self.log.error("Module %s error: %s", self.module_name, e)
             return None
 
-    def run_loop(self):
+    def run_loop(self) -> None:
         """Main processing loop — blocks until stopped."""
         self.start()
 

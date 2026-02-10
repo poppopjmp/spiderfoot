@@ -77,7 +77,7 @@ _health = _HealthStatus()
 class _HealthHandler(BaseHTTPRequestHandler):
     """Minimal HTTP handler for /health, /healthz, /metrics endpoints."""
 
-    def do_GET(self):  # noqa: N802
+    def do_GET(self) -> None:  # noqa: N802
         if self.path in ("/health", "/healthz", "/ping"):
             payload = json.dumps(_health.to_dict()).encode()
             code = 200 if _health.ready else 503
@@ -98,7 +98,7 @@ class _HealthHandler(BaseHTTPRequestHandler):
         else:
             self.send_error(404)
 
-    def log_message(self, format, *args):  # noqa: A002
+    def log_message(self, format, *args) -> None:  # noqa: A002
         pass  # silence health-check logs
 
 
@@ -262,7 +262,7 @@ _SERVICE_MAP = {
 # Main
 # ---------------------------------------------------------------------------
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="SpiderFoot Microservice Runner",
     )

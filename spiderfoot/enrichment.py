@@ -192,9 +192,9 @@ class EnrichmentPipeline:
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
         event_types: set[str] | None = None,
-    ):
+    ) -> Callable:
         """Decorator to register a function as an enricher."""
-        def decorator(func):
+        def decorator(func) -> Callable:
             self.add_function(func, name=name or func.__name__, priority=priority, event_types=event_types)
             return func
         return decorator

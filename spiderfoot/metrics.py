@@ -212,7 +212,7 @@ class Histogram:
                     self._bucket_counts[b] += 1
             self._bucket_counts[float("inf")] += 1
 
-    def time(self):
+    def time(self) -> _HistogramTimer:
         """Context manager that times the wrapped block."""
         return _HistogramTimer(self)
 
@@ -240,11 +240,11 @@ class _HistogramTimer:
         self._histogram = histogram
         self._start = None
 
-    def __enter__(self):
+    def __enter__(self) -> _HistogramTimer:
         self._start = time.monotonic()
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args) -> None:
         self._histogram.observe(time.monotonic() - self._start)
 
 
