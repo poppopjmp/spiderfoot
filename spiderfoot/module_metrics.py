@@ -32,7 +32,7 @@ class MetricValue:
     metric_type: MetricType
     value: float = 0.0
     count: int = 0
-    _values: List[float] = field(default_factory=list, repr=False)
+    _values: list[float] = field(default_factory=list, repr=False)
 
     def record(self, value: float) -> None:
         if self.metric_type == MetricType.COUNTER:
@@ -137,7 +137,7 @@ class ModuleMetrics:
 
     def __init__(self, module_name: str):
         self.module_name = module_name
-        self._metrics: Dict[str, MetricValue] = {}
+        self._metrics: dict[str, MetricValue] = {}
         self._lock = threading.Lock()
         self._created_at = time.time()
 
@@ -171,12 +171,12 @@ class ModuleMetrics:
         with self._lock:
             return self._metrics.get(name)
 
-    def get_all(self) -> Dict[str, MetricValue]:
+    def get_all(self) -> dict[str, MetricValue]:
         with self._lock:
             return dict(self._metrics)
 
     @property
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         with self._lock:
             return sorted(self._metrics.keys())
 
@@ -209,10 +209,10 @@ class MetricsCollector:
     _instance_lock = threading.Lock()
 
     def __init__(self):
-        self._modules: Dict[str, ModuleMetrics] = {}
+        self._modules: dict[str, ModuleMetrics] = {}
         self._global_metrics = ModuleMetrics("__global__")
         self._lock = threading.Lock()
-        self._snapshots: List[dict] = []
+        self._snapshots: list[dict] = []
         self._max_snapshots = 100
 
     def get_module(self, module_name: str) -> ModuleMetrics:
@@ -230,7 +230,7 @@ class MetricsCollector:
         return self._global_metrics
 
     @property
-    def module_names(self) -> List[str]:
+    def module_names(self) -> list[str]:
         with self._lock:
             return sorted(self._modules.keys())
 
@@ -252,7 +252,7 @@ class MetricsCollector:
                 self._snapshots = self._snapshots[-self._max_snapshots:]
             return snap
 
-    def get_snapshots(self) -> List[dict]:
+    def get_snapshots(self) -> list[dict]:
         return list(self._snapshots)
 
     def summary(self) -> dict:

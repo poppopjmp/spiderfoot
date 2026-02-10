@@ -26,9 +26,9 @@ class DepStatus(Enum):
 class ModuleNode:
     """Represents a module in the dependency graph."""
     name: str
-    produces: FrozenSet[str] = frozenset()
-    consumes: FrozenSet[str] = frozenset()
-    optional_consumes: FrozenSet[str] = frozenset()
+    produces: frozenset[str] = frozenset()
+    consumes: frozenset[str] = frozenset()
+    optional_consumes: frozenset[str] = frozenset()
 
 
 @dataclass
@@ -44,11 +44,11 @@ class DepEdge:
 class ResolutionResult:
     """Result of dependency resolution."""
     status: DepStatus
-    load_order: List[str] = field(default_factory=list)
-    cycles: List[List[str]] = field(default_factory=list)
-    missing_providers: Dict[str, List[str]] = field(default_factory=dict)
-    edges: List[DepEdge] = field(default_factory=list)
-    layers: List[List[str]] = field(default_factory=list)
+    load_order: list[str] = field(default_factory=list)
+    cycles: list[list[str]] = field(default_factory=list)
+    missing_providers: dict[str, list[str]] = field(default_factory=dict)
+    edges: list[DepEdge] = field(default_factory=list)
+    layers: list[list[str]] = field(default_factory=list)
 
     @property
     def is_resolved(self) -> bool:
@@ -96,15 +96,15 @@ class ModuleDependencyResolver:
     """
 
     def __init__(self):
-        self._modules: Dict[str, ModuleNode] = {}
-        self._producer_index: Dict[str, Set[str]] = defaultdict(set)
+        self._modules: dict[str, ModuleNode] = {}
+        self._producer_index: dict[str, set[str]] = defaultdict(set)
 
     def add_module(
         self,
         name: str,
-        produces: Optional[Set[str]] = None,
-        consumes: Optional[Set[str]] = None,
-        optional_consumes: Optional[Set[str]] = None,
+        produces: Optional[set[str]] = None,
+        consumes: Optional[set[str]] = None,
+        optional_consumes: Optional[set[str]] = None,
     ) -> "ModuleDependencyResolver":
         """Register a module with its event type dependencies (chainable)."""
         prod = frozenset(produces or set())
@@ -128,11 +128,11 @@ class ModuleDependencyResolver:
             self._producer_index[et].discard(name)
         return True
 
-    def get_producers(self, event_type: str) -> Set[str]:
+    def get_producers(self, event_type: str) -> set[str]:
         """Get all modules that produce a given event type."""
         return set(self._producer_index.get(event_type, set()))
 
-    def get_consumers(self, event_type: str) -> Set[str]:
+    def get_consumers(self, event_type: str) -> set[str]:
         """Get all modules that consume a given event type."""
         return {
             name
@@ -140,7 +140,7 @@ class ModuleDependencyResolver:
             if event_type in node.consumes or event_type in node.optional_consumes
         }
 
-    def get_dependencies(self, module_name: str) -> Set[str]:
+    def get_dependencies(self, module_name: str) -> set[str]:
         """Get all modules that the given module depends on (its providers)."""
         node = self._modules.get(module_name)
         if node is None:
@@ -152,7 +152,7 @@ class ModuleDependencyResolver:
         deps.discard(module_name)
         return deps
 
-    def get_dependents(self, module_name: str) -> Set[str]:
+    def get_dependents(self, module_name: str) -> set[str]:
         """Get all modules that depend on the given module."""
         node = self._modules.get(module_name)
         if node is None:
@@ -165,10 +165,10 @@ class ModuleDependencyResolver:
                     dependents.add(name)
         return dependents
 
-    def _build_edges(self) -> Tuple[List[DepEdge], Dict[str, List[str]]]:
+    def _build_edges(self) -> tuple[list[DepEdge], dict[str, list[str]]]:
         """Build dependency edges and find missing providers."""
         edges = []
-        missing: Dict[str, List[str]] = defaultdict(list)
+        missing: dict[str, list[str]] = defaultdict(list)
 
         for name, node in self._modules.items():
             for et in node.consumes:
@@ -189,12 +189,12 @@ class ModuleDependencyResolver:
 
         return edges, dict(missing)
 
-    def _detect_cycles(self, adj: Dict[str, Set[str]]) -> List[List[str]]:
+    def _detect_cycles(self, adj: dict[str, set[str]]) -> list[list[str]]:
         """Detect all cycles in the dependency graph using DFS."""
         WHITE, GRAY, BLACK = 0, 1, 2
         color = {name: WHITE for name in self._modules}
         cycles = []
-        path: List[str] = []
+        path: list[str] = []
 
         def dfs(u: str) -> None:
             color[u] = GRAY
@@ -216,21 +216,21 @@ class ModuleDependencyResolver:
 
         return cycles
 
-    def _topological_sort(self, adj: Dict[str, Set[str]]) -> Tuple[List[str], List[List[str]]]:
+    def _topological_sort(self, adj: dict[str, set[str]]) -> tuple[list[str], list[list[str]]]:
         """Kahn's algorithm for topological sort with layer detection.
 
         Returns (ordered_list, layers) where layers groups modules
         that can be loaded/executed in parallel.
         """
-        in_degree: Dict[str, int] = {name: 0 for name in self._modules}
+        in_degree: dict[str, int] = {name: 0 for name in self._modules}
         for u, neighbors in adj.items():
             for v in neighbors:
                 if v in in_degree:
                     in_degree[v] += 1
 
         queue = deque(name for name, deg in in_degree.items() if deg == 0)
-        order: List[str] = []
-        layers: List[List[str]] = []
+        order: list[str] = []
+        layers: list[list[str]] = []
 
         while queue:
             layer = sorted(queue)
@@ -262,7 +262,7 @@ class ModuleDependencyResolver:
         edges, missing = self._build_edges()
 
         # Build adjacency: producer -> consumer (consumer depends on producer)
-        adj: Dict[str, Set[str]] = defaultdict(set)
+        adj: dict[str, set[str]] = defaultdict(set)
         for edge in edges:
             if not edge.optional:
                 adj[edge.producer].add(edge.consumer)
@@ -299,7 +299,7 @@ class ModuleDependencyResolver:
             missing_providers=missing,
         )
 
-    def get_impact(self, module_name: str) -> Set[str]:
+    def get_impact(self, module_name: str) -> set[str]:
         """Get all modules transitively affected if this module is removed."""
         node = self._modules.get(module_name)
         if node is None:
@@ -317,15 +317,15 @@ class ModuleDependencyResolver:
 
         return affected
 
-    def get_critical_path(self, module_name: str) -> List[str]:
+    def get_critical_path(self, module_name: str) -> list[str]:
         """Get the longest dependency chain ending at the given module."""
         node = self._modules.get(module_name)
         if node is None:
             return []
 
-        memo: Dict[str, List[str]] = {}
+        memo: dict[str, list[str]] = {}
 
-        def longest(name: str, visited: Set[str]) -> List[str]:
+        def longest(name: str, visited: set[str]) -> list[str]:
             if name in memo:
                 return memo[name]
             if name in visited:
@@ -337,7 +337,7 @@ class ModuleDependencyResolver:
                 memo[name] = [name]
                 return [name]
 
-            best: List[str] = []
+            best: list[str] = []
             for d in deps:
                 chain = longest(d, visited)
                 if len(chain) > len(best):
@@ -355,7 +355,7 @@ class ModuleDependencyResolver:
         return len(self._modules)
 
     @property
-    def module_names(self) -> List[str]:
+    def module_names(self) -> list[str]:
         return sorted(self._modules.keys())
 
     def to_dict(self) -> dict:

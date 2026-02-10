@@ -31,15 +31,15 @@ log = logging.getLogger("spiderfoot.api.reports")
 
 try:
     from spiderfoot.report_storage import ReportStore, StoreConfig
-    _persistent_store: Optional["ReportStore"] = None
+    _persistent_store: ReportStore | None = None
 except ImportError:
     _persistent_store = None
 
 # Legacy fallback dict — only used when ReportStore is unavailable
-_report_store: Dict[str, Dict[str, Any]] = {}
+_report_store: dict[str, dict[str, Any]] = {}
 
 
-def _get_store() -> Optional["ReportStore"]:
+def _get_store() -> ReportStore | None:
     """Lazily initialise the persistent ReportStore singleton."""
     global _persistent_store
     if _persistent_store is not None:
@@ -92,9 +92,9 @@ class ReportGenerateRequest(BaseModel):
         ReportTypeEnum.FULL,
         description="Type of report to generate",
     )
-    title: Optional[str] = Field(None, description="Custom report title")
+    title: str | None = Field(None, description="Custom report title")
     language: str = Field("English", description="Report language")
-    custom_instructions: Optional[str] = Field(
+    custom_instructions: str | None = Field(
         None, description="Additional instructions for the LLM"
     )
 
@@ -102,7 +102,7 @@ class ReportGenerateRequest(BaseModel):
 class ReportPreviewRequest(BaseModel):
     """Request body for quick executive summary preview."""
     scan_id: str = Field(..., description="ID of the scan")
-    custom_instructions: Optional[str] = Field(None)
+    custom_instructions: str | None = Field(None)
 
 
 class ReportStatusResponse(BaseModel):
@@ -121,10 +121,10 @@ class ReportResponse(BaseModel):
     title: str
     status: str
     report_type: str
-    executive_summary: Optional[str] = None
-    recommendations: Optional[str] = None
-    sections: List[Dict[str, Any]] = []
-    metadata: Dict[str, Any] = {}
+    executive_summary: str | None = None
+    recommendations: str | None = None
+    sections: list[dict[str, Any]] = []
+    metadata: dict[str, Any] = {}
     generation_time_ms: float = 0.0
     total_tokens_used: int = 0
 
@@ -144,7 +144,7 @@ class ReportListItem(BaseModel):
 # Report store helpers (in-memory, replaced by DB in Cycle 9)
 # ---------------------------------------------------------------------------
 
-def store_report(report_id: str, data: Dict[str, Any]) -> None:
+def store_report(report_id: str, data: dict[str, Any]) -> None:
     """Save report data — persistent store with in-memory fallback."""
     store = _get_store()
     if store is not None:
@@ -156,7 +156,7 @@ def store_report(report_id: str, data: Dict[str, Any]) -> None:
     _report_store[report_id] = data
 
 
-def get_stored_report(report_id: str) -> Optional[Dict[str, Any]]:
+def get_stored_report(report_id: str) -> dict[str, Any] | None:
     """Retrieve report data — persistent store with in-memory fallback."""
     store = _get_store()
     if store is not None:
@@ -184,10 +184,10 @@ def delete_stored_report(report_id: str) -> bool:
 
 
 def list_stored_reports(
-    scan_id: Optional[str] = None,
+    scan_id: str | None = None,
     limit: int = 50,
     offset: int = 0,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """List stored reports — persistent store with in-memory fallback."""
     store = _get_store()
     if store is not None:
@@ -205,7 +205,7 @@ def list_stored_reports(
     return reports[offset: offset + limit]
 
 
-def update_stored_report(report_id: str, updates: Dict[str, Any]) -> None:
+def update_stored_report(report_id: str, updates: dict[str, Any]) -> None:
     """Partially update a stored report."""
     store = _get_store()
     if store is not None:
@@ -252,11 +252,11 @@ def _generate_report_background(
     report_id: str,
     scan_id: str,
     report_type: str,
-    title: Optional[str],
+    title: str | None,
     language: str,
-    custom_instructions: Optional[str],
-    events: List[Dict[str, Any]],
-    scan_metadata: Dict[str, Any],
+    custom_instructions: str | None,
+    events: list[dict[str, Any]],
+    scan_metadata: dict[str, Any],
 ) -> None:
     """Run report generation as a background task.
 
@@ -517,7 +517,7 @@ else:
         description="Synchronously generates a quick executive summary for immediate display.",
     )
     async def preview_report(request: ReportPreviewRequest,
-                            scan_service=Depends(get_scan_service)) -> Dict[str, Any]:
+                            scan_service=Depends(get_scan_service)) -> dict[str, Any]:
         from spiderfoot.report_generator import ReportGenerator, ReportGeneratorConfig
 
         events, scan_metadata = _get_scan_events(request.scan_id, scan_service=scan_service)
@@ -619,14 +619,14 @@ else:
 
     @router.get(
         "/reports",
-        response_model=List[ReportListItem],
+        response_model=list[ReportListItem],
         summary="List generated reports",
     )
     async def list_reports(
-        scan_id: Optional[str] = Query(None, description="Filter by scan ID"),
+        scan_id: str | None = Query(None, description="Filter by scan ID"),
         limit: int = Query(50, ge=1, le=200),
         offset: int = Query(0, ge=0),
-    ) -> List[ReportListItem]:
+    ) -> list[ReportListItem]:
         reports = list_stored_reports(scan_id=scan_id, limit=limit, offset=offset)
 
         return [

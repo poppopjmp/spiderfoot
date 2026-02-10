@@ -32,8 +32,8 @@ class RequestContext:
     client_ip: str = "127.0.0.1"
     method: str = "GET"
     path: str = "/"
-    headers: Dict[str, str] = field(default_factory=dict)
-    state: Dict[str, Any] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
+    state: dict[str, Any] = field(default_factory=dict)
     _raw_request: Any = None
 
     def get_header(self, name: str, default: str = "") -> str:
@@ -125,7 +125,7 @@ def get_request_context(request: Any) -> RequestContext:
     return RequestContext(_raw_request=request)
 
 
-def json_error_response(message: str, status_code: int = 400) -> Dict[str, Any]:
+def json_error_response(message: str, status_code: int = 400) -> dict[str, Any]:
     """Create a JSON error response dict.
 
     Returns a plain dict that can be used by both Flask (``jsonify()``)

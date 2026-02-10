@@ -42,11 +42,11 @@ class ScanService:
     """
 
     def __init__(self, repo: ScanRepository, *, dbh=None,
-                 event_repo: Optional[EventRepository] = None) -> None:
+                 event_repo: EventRepository | None = None) -> None:
         self._repo = repo
         self._event_repo = event_repo
         self._dbh = dbh  # fallback raw dbh for methods not yet on repo
-        self._machines: Dict[str, ScanStateMachine] = {}
+        self._machines: dict[str, ScanStateMachine] = {}
         self._lock = threading.Lock()
         # Delegate metadata/notes/archive/FP to extracted service
         self._metadata_svc = ScanMetadataService(
@@ -57,11 +57,11 @@ class ScanService:
     # Scan CRUD (delegates to repository)
     # ------------------------------------------------------------------
 
-    def list_scans(self) -> List[ScanRecord]:
+    def list_scans(self) -> list[ScanRecord]:
         """Return all scan records."""
         return self._repo.list_scans()
 
-    def get_scan(self, scan_id: str) -> Optional[ScanRecord]:
+    def get_scan(self, scan_id: str) -> ScanRecord | None:
         """Get a single scan record or ``None``."""
         return self._repo.get_scan(scan_id)
 
@@ -143,7 +143,7 @@ class ScanService:
         self._repo.update_status(scan_id, db_status)
         return db_status
 
-    def get_scan_state(self, scan_id: str) -> Dict[str, Any]:
+    def get_scan_state(self, scan_id: str) -> dict[str, Any]:
         """Return state machine info for a scan."""
         sm = self._get_machine(scan_id)
         return sm.to_dict()
@@ -152,23 +152,23 @@ class ScanService:
     # Config / logs  (delegate to repo)
     # ------------------------------------------------------------------
 
-    def get_config(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def get_config(self, scan_id: str) -> dict[str, Any] | None:
         return self._repo.get_config(scan_id)
 
     def set_config(self, scan_id: str, config_data: str) -> None:
         self._repo.set_config(scan_id, config_data)
 
-    def get_scan_log(self, scan_id: str, **kw) -> List[Any]:
+    def get_scan_log(self, scan_id: str, **kw) -> list[Any]:
         return self._repo.get_scan_log(scan_id, **kw)
 
-    def get_scan_errors(self, scan_id: str, limit: int = 0) -> List[Any]:
+    def get_scan_errors(self, scan_id: str, limit: int = 0) -> list[Any]:
         return self._repo.get_scan_errors(scan_id, limit=limit)
 
     # ------------------------------------------------------------------
     # Event / result queries  (Cycle 29 — Phase 2 migration)
     # ------------------------------------------------------------------
 
-    def get_events(self, scan_id: str, event_type: Optional[str] = None,
+    def get_events(self, scan_id: str, event_type: str | None = None,
                    *, filter_fp: bool = False) -> list:
         """Return raw scan result events."""
         if self._event_repo:
@@ -219,10 +219,10 @@ class ScanService:
         """Access the underlying metadata service directly."""
         return self._metadata_svc
 
-    def get_metadata(self, scan_id: str) -> Dict[str, Any]:
+    def get_metadata(self, scan_id: str) -> dict[str, Any]:
         return self._metadata_svc.get_metadata(scan_id)
 
-    def set_metadata(self, scan_id: str, metadata: Dict[str, Any]) -> None:
+    def set_metadata(self, scan_id: str, metadata: dict[str, Any]) -> None:
         self._metadata_svc.set_metadata(scan_id, metadata)
 
     def get_notes(self, scan_id: str) -> str:
@@ -245,8 +245,8 @@ class ScanService:
         """Delete all results/events for scan, keeping the scan entry."""
         self._metadata_svc.clear_results(scan_id)
 
-    def set_false_positive(self, scan_id: str, result_ids: List[str],
-                           fp: str) -> Dict[str, str]:
+    def set_false_positive(self, scan_id: str, result_ids: list[str],
+                           fp: str) -> dict[str, str]:
         """Set/unset false-positive flag on results + children."""
         return self._metadata_svc.set_false_positive(scan_id, result_ids, fp)
 
@@ -255,7 +255,7 @@ class ScanService:
     # ------------------------------------------------------------------
 
     def get_scan_options(self, scan_id: str,
-                        app_config: Dict[str, Any]) -> Dict[str, Any]:
+                        app_config: dict[str, Any]) -> dict[str, Any]:
         """Return scan options with config descriptions."""
         return self._metadata_svc.get_scan_options(scan_id, app_config)
 

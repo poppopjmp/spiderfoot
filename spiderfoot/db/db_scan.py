@@ -54,7 +54,7 @@ class ScanManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("Unable to create scan instance in database") from e
+                    raise OSError("Unable to create scan instance in database") from e
 
     def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None) -> None:
         if not isinstance(instanceId, str):
@@ -88,7 +88,7 @@ class ScanManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("Unable to set information for the scan instance.") from e
+                    raise OSError("Unable to set information for the scan instance.") from e
 
     def scanInstanceGet(self, instanceId: str) -> list:
         if not isinstance(instanceId, str):
@@ -106,7 +106,7 @@ class ScanManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when retrieving scan instance") from e
+                    raise OSError("SQL error encountered when retrieving scan instance") from e
 
     def scanInstanceList(self) -> list:
         qry = "SELECT i.guid, i.name, i.seed_target, ROUND(i.created/1000), ROUND(i.started)/1000 as started, ROUND(i.ended)/1000, i.status, COUNT(r.type) FROM tbl_scan_instance i, tbl_scan_results r WHERE i.guid = r.scan_instance_id AND r.type <> 'ROOT' GROUP BY i.guid UNION ALL SELECT i.guid, i.name, i.seed_target, ROUND(i.created/1000), ROUND(i.started)/1000 as started, ROUND(i.ended)/1000, i.status, '0' FROM tbl_scan_instance i  WHERE i.guid NOT IN ( SELECT distinct scan_instance_id FROM tbl_scan_results WHERE type <> 'ROOT') ORDER BY started DESC"
@@ -120,7 +120,7 @@ class ScanManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when fetching scan list") from e
+                    raise OSError("SQL error encountered when fetching scan list") from e
 
     def scanInstanceDelete(self, instanceId: str) -> bool:
         if not isinstance(instanceId, str):
@@ -145,7 +145,7 @@ class ScanManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when deleting scan") from e
+                    raise OSError("SQL error encountered when deleting scan") from e
         return True
 
     def close(self):

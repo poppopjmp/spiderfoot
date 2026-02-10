@@ -85,7 +85,7 @@ class SecurityLogger:
             self.logger.addHandler(console_handler)
 
     def log_security_event(self, event_type: SecurityEventType,
-                          details: Dict[str, Any],
+                          details: dict[str, Any],
                           severity: str = 'INFO',
                           user_id: str = None,
                           ip_address: str = None,
@@ -187,7 +187,7 @@ class SecurityLogger:
             ip_address=ip_address
         )
 
-    def log_suspicious_activity(self, activity_type: str, details: Dict[str, Any],
+    def log_suspicious_activity(self, activity_type: str, details: dict[str, Any],
                                user_id: str = None, ip_address: str = None) -> None:
         """Log suspicious activity.
 
@@ -229,9 +229,9 @@ class ErrorHandler:
             self.error_logger.addHandler(handler)
             self.error_logger.setLevel(logging.ERROR)
 
-    def handle_exception(self, e: Exception, context: Dict[str, Any] = None,
+    def handle_exception(self, e: Exception, context: dict[str, Any] = None,
                         user_id: str = None, ip_address: str = None,
-                        sanitize_output: bool = True) -> Dict[str, Any]:
+                        sanitize_output: bool = True) -> dict[str, Any]:
         """Handle exception with logging and sanitization.
 
         Args:
@@ -272,7 +272,7 @@ class ErrorHandler:
                 'context': context
             }
 
-    def _check_security_implications(self, e: Exception, context: Dict[str, Any],
+    def _check_security_implications(self, e: Exception, context: dict[str, Any],
                                    user_id: str = None, ip_address: str = None) -> None:
         """Check if exception has security implications.
 
@@ -330,7 +330,7 @@ class ErrorHandler:
                 ip_address=ip_address
             )
 
-    def _create_sanitized_response(self, e: Exception, error_id: str) -> Dict[str, Any]:
+    def _create_sanitized_response(self, e: Exception, error_id: str) -> dict[str, Any]:
         """Create sanitized error response for public consumption.
 
         Args:
@@ -422,7 +422,7 @@ class SecurityMonitor:
 
         return False
 
-    def _get_threshold_config(self, event_type: SecurityEventType) -> Optional[Dict[str, int]]:
+    def _get_threshold_config(self, event_type: SecurityEventType) -> Optional[dict[str, int]]:
         """Get alert threshold configuration for event type.
 
         Args:
@@ -471,7 +471,7 @@ error_handler = ErrorHandler(security_logger)
 security_monitor = SecurityMonitor(security_logger)
 
 
-def log_security_event(event_type: SecurityEventType, details: Dict[str, Any],
+def log_security_event(event_type: SecurityEventType, details: dict[str, Any],
                       severity: str = 'INFO', **kwargs) -> None:
     """Convenience function to log security events.
 
@@ -484,7 +484,7 @@ def log_security_event(event_type: SecurityEventType, details: Dict[str, Any],
     security_logger.log_security_event(event_type, details, severity, **kwargs)
 
 
-def handle_error(e: Exception, **kwargs) -> Dict[str, Any]:
+def handle_error(e: Exception, **kwargs) -> dict[str, Any]:
     """Convenience function to handle errors.
 
     Args:

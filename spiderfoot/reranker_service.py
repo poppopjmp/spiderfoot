@@ -67,7 +67,7 @@ class RerankerConfig:
     timeout: float = 30.0
 
     @classmethod
-    def from_env(cls, env: Optional[Dict[str, str]] = None) -> "RerankerConfig":
+    def from_env(cls, env: dict[str, str] | None = None) -> RerankerConfig:
         import os
         e = env or os.environ
         return cls(
@@ -90,7 +90,7 @@ class RerankItem:
     id: str
     text: str
     retrieval_score: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -104,9 +104,9 @@ class RerankResult:
     combined_score: float = 0.0
     retrieval_rank: int = 0
     rerank_rank: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "text": self.text[:200],  # truncate for display
@@ -124,12 +124,12 @@ class RerankResponse:
     """Full reranking response."""
 
     query: str
-    results: List[RerankResult] = field(default_factory=list)
+    results: list[RerankResult] = field(default_factory=list)
     model: str = ""
     elapsed_ms: float = 0.0
     input_count: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "query": self.query,
             "results": [r.to_dict() for r in self.results],
@@ -152,7 +152,7 @@ def _sigmoid(x: float) -> float:
         return 0.0 if x < 0 else 1.0
 
 
-def _minmax_normalize(scores: List[float]) -> List[float]:
+def _minmax_normalize(scores: list[float]) -> list[float]:
     """Min-max normalize scores to [0, 1]."""
     if not scores:
         return []
@@ -163,8 +163,8 @@ def _minmax_normalize(scores: List[float]) -> List[float]:
     return [(s - mn) / (mx - mn) for s in scores]
 
 
-def normalize_scores(scores: List[float],
-                     method: ScoreNormalization) -> List[float]:
+def normalize_scores(scores: list[float],
+                     method: ScoreNormalization) -> list[float]:
     """Normalize a list of scores."""
     if method == ScoreNormalization.NONE:
         return scores
@@ -180,10 +180,10 @@ def normalize_scores(scores: List[float],
 # ---------------------------------------------------------------------------
 
 def reciprocal_rank_fusion(
-    retrieval_ranks: List[int],
-    rerank_ranks: List[int],
+    retrieval_ranks: list[int],
+    rerank_ranks: list[int],
     k: int = 60,
-) -> List[float]:
+) -> list[float]:
     """Compute RRF scores combining two rank lists.
 
     RRF(d) = 1/(k + rank_retrieval(d)) + 1/(k + rank_rerank(d))
@@ -203,7 +203,7 @@ class RerankerBackend(ABC):
     """Abstract reranker backend."""
 
     @abstractmethod
-    def score(self, query: str, documents: List[str]) -> List[float]:
+    def score(self, query: str, documents: list[str]) -> list[float]:
         """Score query-document pairs, returning raw scores."""
         ...
 
@@ -219,7 +219,7 @@ class RerankerBackend(ABC):
 class MockRerankerBackend(RerankerBackend):
     """Mock reranker using word overlap + hashing for testing."""
 
-    def score(self, query: str, documents: List[str]) -> List[float]:
+    def score(self, query: str, documents: list[str]) -> list[float]:
         query_words = set(query.lower().split())
         scores = []
         for doc in documents:
@@ -263,7 +263,7 @@ class CrossEncoderBackend(RerankerBackend):
                         self._model = "UNAVAILABLE"
         return self._model
 
-    def score(self, query: str, documents: List[str]) -> List[float]:
+    def score(self, query: str, documents: list[str]) -> list[float]:
         model = self._get_model()
         if model == "UNAVAILABLE":
             return MockRerankerBackend().score(query, documents)
@@ -288,7 +288,7 @@ class CohereRerankerBackend(RerankerBackend):
         self._model = model
         self._timeout = timeout
 
-    def score(self, query: str, documents: List[str]) -> List[float]:
+    def score(self, query: str, documents: list[str]) -> list[float]:
         import urllib.request
         url = "https://api.cohere.ai/v1/rerank"
         body = json.dumps({
@@ -334,7 +334,7 @@ class JinaRerankerBackend(RerankerBackend):
         self._model = model
         self._timeout = timeout
 
-    def score(self, query: str, documents: List[str]) -> List[float]:
+    def score(self, query: str, documents: list[str]) -> list[float]:
         import urllib.request
         url = "https://api.jina.ai/v1/rerank"
         body = json.dumps({
@@ -379,7 +379,7 @@ class RerankerService:
         response = svc.rerank("find IP correlations", items)
     """
 
-    def __init__(self, config: Optional[RerankerConfig] = None) -> None:
+    def __init__(self, config: RerankerConfig | None = None) -> None:
         self._config = config or RerankerConfig()
         self._backend = self._create_backend()
 
@@ -397,9 +397,9 @@ class RerankerService:
             return MockRerankerBackend()
 
     def rerank(self, query: str,
-               items: List[RerankItem],
-               top_k: Optional[int] = None,
-               score_threshold: Optional[float] = None,
+               items: list[RerankItem],
+               top_k: int | None = None,
+               score_threshold: float | None = None,
                ) -> RerankResponse:
         """Rerank items by cross-encoder relevance to query."""
         start = time.time()
@@ -416,7 +416,7 @@ class RerankerService:
         documents = [item.text for item in items]
 
         # Batch scoring
-        raw_scores: List[float] = []
+        raw_scores: list[float] = []
         for batch_start in range(0, len(documents), self._config.batch_size):
             batch = documents[batch_start:batch_start + self._config.batch_size]
             raw_scores.extend(self._backend.score(query, batch))
@@ -425,7 +425,7 @@ class RerankerService:
         normalized = normalize_scores(raw_scores, self._config.normalization)
 
         # Build results with ranks
-        results: List[RerankResult] = []
+        results: list[RerankResult] = []
         for i, (item, norm_score) in enumerate(zip(items, normalized)):
             results.append(RerankResult(
                 id=item.id, text=item.text,
@@ -468,7 +468,7 @@ class RerankerService:
         )
 
     # Stats
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "provider": self._config.provider.value,
             "model": self._backend.model_name(),

@@ -59,10 +59,10 @@ class MigrationRecord:
     description: str = ""
     checksum: str = ""
     filepath: str = ""
-    upgrade_fn: Optional[Callable] = None
-    downgrade_fn: Optional[Callable] = None
+    upgrade_fn: Callable | None = None
+    downgrade_fn: Callable | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "version": self.version,
             "name": self.name,
@@ -83,7 +83,7 @@ class AppliedMigration:
     execution_time_ms: float = 0.0
     direction: str = "up"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "version": self.version,
             "name": self.name,
@@ -99,15 +99,15 @@ class MigrationPlan:
     """A set of migrations to apply."""
 
     direction: MigrationDirection
-    steps: List[MigrationRecord] = field(default_factory=list)
+    steps: list[MigrationRecord] = field(default_factory=list)
     dry_run: bool = False
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
     @property
     def count(self) -> int:
         return len(self.steps)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "direction": self.direction.value,
             "steps": [s.to_dict() for s in self.steps],
@@ -124,9 +124,9 @@ class MigrationPlan:
 class DbAdapter(Protocol):
     """Minimal database interface for migrations."""
 
-    def execute(self, sql: str, params: Optional[tuple] = None) -> None: ...
-    def fetchall(self, sql: str, params: Optional[tuple] = None) -> List[tuple]: ...
-    def fetchone(self, sql: str, params: Optional[tuple] = None) -> Optional[tuple]: ...
+    def execute(self, sql: str, params: tuple | None = None) -> None: ...
+    def fetchall(self, sql: str, params: tuple | None = None) -> list[tuple]: ...
+    def fetchone(self, sql: str, params: tuple | None = None) -> tuple | None: ...
     def commit(self) -> None: ...
     def rollback(self) -> None: ...
 
@@ -135,16 +135,16 @@ class InMemoryDbAdapter:
     """Simple in-memory adapter for testing."""
 
     def __init__(self) -> None:
-        self._tables: Dict[str, List[Dict]] = {}
-        self._log: List[str] = []
+        self._tables: dict[str, list[dict]] = {}
+        self._log: list[str] = []
 
-    def execute(self, sql: str, params: Optional[tuple] = None) -> None:
+    def execute(self, sql: str, params: tuple | None = None) -> None:
         self._log.append(sql)
 
-    def fetchall(self, sql: str, params: Optional[tuple] = None) -> List[tuple]:
+    def fetchall(self, sql: str, params: tuple | None = None) -> list[tuple]:
         return []
 
-    def fetchone(self, sql: str, params: Optional[tuple] = None) -> Optional[tuple]:
+    def fetchone(self, sql: str, params: tuple | None = None) -> tuple | None:
         return None
 
     def commit(self) -> None:
@@ -154,7 +154,7 @@ class InMemoryDbAdapter:
         self._log.append("ROLLBACK")
 
     @property
-    def sql_log(self) -> List[str]:
+    def sql_log(self) -> list[str]:
         return list(self._log)
 
 
@@ -165,13 +165,13 @@ class SqliteAdapter:
         import sqlite3
         self._conn = sqlite3.connect(db_path)
 
-    def execute(self, sql: str, params: Optional[tuple] = None) -> None:
+    def execute(self, sql: str, params: tuple | None = None) -> None:
         self._conn.execute(sql, params or ())
 
-    def fetchall(self, sql: str, params: Optional[tuple] = None) -> List[tuple]:
+    def fetchall(self, sql: str, params: tuple | None = None) -> list[tuple]:
         return self._conn.execute(sql, params or ()).fetchall()
 
-    def fetchone(self, sql: str, params: Optional[tuple] = None) -> Optional[tuple]:
+    def fetchone(self, sql: str, params: tuple | None = None) -> tuple | None:
         return self._conn.execute(sql, params or ()).fetchone()
 
     def commit(self) -> None:
@@ -226,8 +226,8 @@ class MigrationManager:
         self._db = db
         self._dir = migrations_dir
         self._dialect = dialect
-        self._migrations: Dict[int, MigrationRecord] = {}
-        self._callbacks: List[Callable[[AppliedMigration], None]] = []
+        self._migrations: dict[int, MigrationRecord] = {}
+        self._callbacks: list[Callable[[AppliedMigration], None]] = []
 
         self._ensure_tracking_table()
         self._load_migrations()
@@ -305,7 +305,7 @@ class MigrationManager:
         except Exception:
             return 0
 
-    def applied_migrations(self) -> List[AppliedMigration]:
+    def applied_migrations(self) -> list[AppliedMigration]:
         """Return all applied migrations."""
         try:
             rows = self._db.fetchall(
@@ -323,7 +323,7 @@ class MigrationManager:
         except Exception:
             return []
 
-    def pending_migrations(self) -> List[MigrationRecord]:
+    def pending_migrations(self) -> list[MigrationRecord]:
         """Return migrations that have not yet been applied."""
         current = self.current_version()
         return sorted(
@@ -331,7 +331,7 @@ class MigrationManager:
             key=lambda m: m.version,
         )
 
-    def available_migrations(self) -> List[MigrationRecord]:
+    def available_migrations(self) -> list[MigrationRecord]:
         """Return all discovered migrations."""
         return sorted(self._migrations.values(), key=lambda m: m.version)
 
@@ -344,13 +344,13 @@ class MigrationManager:
 
     def plan_upgrade(
         self,
-        target_version: Optional[int] = None,
+        target_version: int | None = None,
         dry_run: bool = False,
     ) -> MigrationPlan:
         """Create a plan to upgrade to ``target_version`` (or latest)."""
         current = self.current_version()
         pending = self.pending_migrations()
-        warnings: List[str] = []
+        warnings: list[str] = []
 
         if target_version is not None:
             pending = [m for m in pending if m.version <= target_version]
@@ -376,7 +376,7 @@ class MigrationManager:
     ) -> MigrationPlan:
         """Create a plan to downgrade to ``target_version``."""
         current = self.current_version()
-        warnings: List[str] = []
+        warnings: list[str] = []
 
         # Migrations to roll back (in reverse order)
         to_rollback = sorted(
@@ -403,9 +403,9 @@ class MigrationManager:
     # Execution
     # -------------------------------------------------------------------
 
-    def execute_plan(self, plan: MigrationPlan) -> List[AppliedMigration]:
+    def execute_plan(self, plan: MigrationPlan) -> list[AppliedMigration]:
         """Execute a migration plan, returning applied migrations."""
-        results: List[AppliedMigration] = []
+        results: list[AppliedMigration] = []
 
         for migration in plan.steps:
             fn = (migration.upgrade_fn if plan.direction == MigrationDirection.UP
@@ -472,12 +472,12 @@ class MigrationManager:
 
         return results
 
-    def upgrade(self, target_version: Optional[int] = None) -> List[AppliedMigration]:
+    def upgrade(self, target_version: int | None = None) -> list[AppliedMigration]:
         """Shortcut: plan and execute upgrade."""
         plan = self.plan_upgrade(target_version)
         return self.execute_plan(plan)
 
-    def downgrade(self, target_version: int = 0) -> List[AppliedMigration]:
+    def downgrade(self, target_version: int = 0) -> list[AppliedMigration]:
         """Shortcut: plan and execute downgrade."""
         plan = self.plan_downgrade(target_version)
         return self.execute_plan(plan)
@@ -558,12 +558,12 @@ def downgrade(db, dialect):
     # Validation
     # -------------------------------------------------------------------
 
-    def validate_checksums(self) -> List[str]:
+    def validate_checksums(self) -> list[str]:
         """Check applied migrations against on-disk checksums.
 
         Returns list of warning messages for mismatches.
         """
-        warnings: List[str] = []
+        warnings: list[str] = []
         applied = {m.version: m for m in self.applied_migrations()}
 
         for version, record in self._migrations.items():
@@ -587,7 +587,7 @@ def downgrade(db, dialect):
     # Stats
     # -------------------------------------------------------------------
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "current_version": self.current_version(),
             "total_available": len(self._migrations),

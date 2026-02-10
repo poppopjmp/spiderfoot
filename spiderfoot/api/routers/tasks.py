@@ -49,7 +49,7 @@ if HAS_FASTAPI:
             "generic",
             description="Task type: scan, report, workspace, export, generic.",
         )
-        meta: Dict[str, Any] = Field(
+        meta: dict[str, Any] = Field(
             default_factory=dict,
             description="Arbitrary metadata attached to the task.",
         )
@@ -60,12 +60,12 @@ if HAS_FASTAPI:
         task_type: str
         state: str
         progress: float
-        meta: Dict[str, Any]
+        meta: dict[str, Any]
         result: Any = None
-        error: Optional[str] = None
+        error: str | None = None
         created_at: float
-        started_at: Optional[float] = None
-        completed_at: Optional[float] = None
+        started_at: float | None = None
+        completed_at: float | None = None
         elapsed_seconds: float = 0.0
 
 
@@ -125,8 +125,8 @@ else:
         description="List background tasks, optionally filtered by state and type.",
     )
     async def list_tasks(
-        state: Optional[str] = Query(None, description="Filter by state"),
-        task_type: Optional[str] = Query(None, description="Filter by task type"),
+        state: str | None = Query(None, description="Filter by state"),
+        task_type: str | None = Query(None, description="Filter by task type"),
         limit: int = Query(50, ge=1, le=500),
     ):
         mgr = get_task_manager()

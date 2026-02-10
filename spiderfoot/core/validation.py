@@ -21,7 +21,7 @@ class ValidationUtils:
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
 
     @staticmethod
-    def validate_python_version(min_version: Tuple[int, int] = (3, 9)) -> None:
+    def validate_python_version(min_version: tuple[int, int] = (3, 9)) -> None:
         """
         Validate Python version meets minimum requirements.
 
@@ -72,7 +72,7 @@ class ValidationUtils:
 
     @staticmethod
     def parse_host_port(host_port: str, default_host: str = '127.0.0.1',
-                       default_port: int = DEFAULT_WEB_PORT) -> Tuple[str, int]:
+                       default_port: int = DEFAULT_WEB_PORT) -> tuple[str, int]:
         """
         Parse host:port string into components.
 
@@ -160,7 +160,7 @@ class ValidationUtils:
         return sanitized
 
     @staticmethod
-    def validate_module_list(modules: Union[str, List[str]]) -> List[str]:
+    def validate_module_list(modules: Union[str, list[str]]) -> list[str]:
         """
         Validate and parse module list.
 
@@ -188,7 +188,7 @@ class ValidationUtils:
         return valid_modules
 
     @staticmethod
-    def validate_event_types(event_types: Union[str, List[str]]) -> List[str]:
+    def validate_event_types(event_types: Union[str, list[str]]) -> list[str]:
         """
         Validate and parse event types list.
 
@@ -261,7 +261,7 @@ class ValidationUtils:
         return sanitized
 
     @staticmethod
-    def clean_user_input(input_data: Union[str, List[str]]) -> Union[str, List[str]]:
+    def clean_user_input(input_data: Union[str, list[str]]) -> Union[str, list[str]]:
         """
         Clean user input by escaping HTML and removing dangerous characters.
 
@@ -292,7 +292,7 @@ class ValidationUtils:
         return input_data
 
     @staticmethod
-    def validate_config_option(key: str, value: Any, config_descriptions: Dict[str, str]) -> bool:
+    def validate_config_option(key: str, value: Any, config_descriptions: dict[str, str]) -> bool:
         """
         Validate a configuration option.
 

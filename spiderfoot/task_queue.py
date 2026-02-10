@@ -67,12 +67,12 @@ class TaskRecord:
     task_type: TaskType
     state: TaskState
     progress: float  # 0-100
-    meta: Dict[str, Any]
+    meta: dict[str, Any]
     result: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     created_at: float = 0.0
-    started_at: Optional[float] = None
-    completed_at: Optional[float] = None
+    started_at: float | None = None
+    completed_at: float | None = None
 
     @property
     def elapsed_seconds(self) -> float:
@@ -87,7 +87,7 @@ class TaskRecord:
             TaskState.COMPLETED, TaskState.FAILED, TaskState.CANCELLED,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "task_id": self.task_id,
             "task_type": self.task_type.value,
@@ -124,13 +124,13 @@ class TaskManager:
         max_history: int = 500,
     ):
         self._lock = threading.Lock()
-        self._tasks: Dict[str, _TaskEntry] = {}
+        self._tasks: dict[str, _TaskEntry] = {}
         self._pool = ThreadPoolExecutor(
             max_workers=max_workers,
             thread_name_prefix="sf-task",
         )
         self._max_history = max_history
-        self._callbacks: List[Callable[[TaskRecord], None]] = []
+        self._callbacks: list[Callable[[TaskRecord], None]] = []
 
     # -- submit -----------------------------------------------------------
 
@@ -138,10 +138,10 @@ class TaskManager:
         self,
         task_type: TaskType,
         func: Callable[..., Any],
-        args: Tuple = (),
-        kwargs: Optional[Dict[str, Any]] = None,
-        meta: Optional[Dict[str, Any]] = None,
-        task_id: Optional[str] = None,
+        args: tuple = (),
+        kwargs: dict[str, Any] | None = None,
+        meta: dict[str, Any] | None = None,
+        task_id: str | None = None,
     ) -> str:
         """Submit a callable for background execution.
 
@@ -195,7 +195,7 @@ class TaskManager:
 
     # -- query ------------------------------------------------------------
 
-    def get(self, task_id: str) -> Optional[TaskRecord]:
+    def get(self, task_id: str) -> TaskRecord | None:
         """Get current state of a task.  Returns None if unknown."""
         with self._lock:
             entry = self._tasks.get(task_id)
@@ -203,10 +203,10 @@ class TaskManager:
 
     def list_tasks(
         self,
-        state: Optional[TaskState] = None,
-        task_type: Optional[TaskType] = None,
+        state: TaskState | None = None,
+        task_type: TaskType | None = None,
         limit: int = 50,
-    ) -> List[TaskRecord]:
+    ) -> list[TaskRecord]:
         """List tasks, optionally filtered by state and type."""
         with self._lock:
             entries = list(self._tasks.values())
@@ -331,7 +331,7 @@ class _TaskEntry:
         self,
         task_id: str,
         task_type: TaskType,
-        meta: Dict[str, Any],
+        meta: dict[str, Any],
         created_at: float,
     ):
         self.task_id = task_id
@@ -340,11 +340,11 @@ class _TaskEntry:
         self.progress = 0.0
         self.meta = meta
         self.result: Any = None
-        self.error: Optional[str] = None
+        self.error: str | None = None
         self.created_at = created_at
-        self.started_at: Optional[float] = None
-        self.completed_at: Optional[float] = None
-        self.future: Optional[Future] = None
+        self.started_at: float | None = None
+        self.completed_at: float | None = None
+        self.future: Future | None = None
 
     @property
     def is_terminal(self) -> bool:
@@ -371,7 +371,7 @@ class _TaskEntry:
 # Singleton accessor
 # -----------------------------------------------------------------------
 
-_manager: Optional[TaskManager] = None
+_manager: TaskManager | None = None
 _manager_lock = threading.Lock()
 
 

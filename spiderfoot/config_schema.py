@@ -42,12 +42,12 @@ class FieldSchema:
     description: str = ""
     required: bool = False
     default: Any = None
-    min_value: Optional[Union[int, float]] = None
-    max_value: Optional[Union[int, float]] = None
-    min_length: Optional[int] = None
-    max_length: Optional[int] = None
-    pattern: Optional[str] = None
-    enum: Optional[List[Any]] = None
+    min_value: int | float | None = None
+    max_value: int | float | None = None
+    min_length: int | None = None
+    max_length: int | None = None
+    pattern: str | None = None
+    enum: list[Any] | None = None
     sensitive: bool = False  # True for passwords/API keys
 
     _TYPE_MAP = {
@@ -62,7 +62,7 @@ class FieldSchema:
         "list": list,
     }
 
-    def validate(self, value: Any) -> List[str]:
+    def validate(self, value: Any) -> list[str]:
         """Validate a value against this field's schema.
 
         Returns a list of error messages (empty if valid).
@@ -128,9 +128,9 @@ class FieldSchema:
 
         return errors
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Export as a dict for documentation/JSON Schema."""
-        d: Dict[str, Any] = {
+        d: dict[str, Any] = {
             "name": self.name,
             "type": self.type,
             "description": self.description,
@@ -163,9 +163,9 @@ class ConfigSchema:
 
     def __init__(self, module_name: str = "") -> None:
         self.module_name = module_name
-        self._fields: Dict[str, FieldSchema] = {}
+        self._fields: dict[str, FieldSchema] = {}
 
-    def add_field(self, name: str, **kwargs) -> "ConfigSchema":
+    def add_field(self, name: str, **kwargs) -> ConfigSchema:
         """Add a field to the schema. Returns self for chaining.
 
         Args:
@@ -175,23 +175,23 @@ class ConfigSchema:
         self._fields[name] = FieldSchema(name=name, **kwargs)
         return self
 
-    def get_field(self, name: str) -> Optional[FieldSchema]:
+    def get_field(self, name: str) -> FieldSchema | None:
         """Get a field schema by name."""
         return self._fields.get(name)
 
     @property
-    def fields(self) -> Dict[str, FieldSchema]:
+    def fields(self) -> dict[str, FieldSchema]:
         return dict(self._fields)
 
     @property
-    def required_fields(self) -> List[str]:
+    def required_fields(self) -> list[str]:
         return [n for n, f in self._fields.items() if f.required]
 
     @property
-    def sensitive_fields(self) -> List[str]:
+    def sensitive_fields(self) -> list[str]:
         return [n for n, f in self._fields.items() if f.sensitive]
 
-    def validate(self, config: Dict[str, Any]) -> List[str]:
+    def validate(self, config: dict[str, Any]) -> list[str]:
         """Validate a config dict against the schema.
 
         Args:
@@ -213,7 +213,7 @@ class ConfigSchema:
 
         return errors
 
-    def get_defaults(self) -> Dict[str, Any]:
+    def get_defaults(self) -> dict[str, Any]:
         """Get a dict of default values for all fields."""
         return {
             name: fs.default
@@ -221,11 +221,11 @@ class ConfigSchema:
             if fs.default is not None
         }
 
-    def find_unknown_keys(self, config: Dict[str, Any]) -> List[str]:
+    def find_unknown_keys(self, config: dict[str, Any]) -> list[str]:
         """Find config keys not declared in the schema."""
         return sorted(k for k in config if k not in self._fields)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Export schema as a dict."""
         return {
             "module_name": self.module_name,
@@ -244,8 +244,8 @@ class ConfigSchema:
         return name in self._fields
 
 
-def infer_schema_from_module(opts: Dict[str, Any],
-                              optdescs: Dict[str, str],
+def infer_schema_from_module(opts: dict[str, Any],
+                              optdescs: dict[str, str],
                               module_name: str = "") -> ConfigSchema:
     """Infer a ConfigSchema from a module's opts and optdescs dicts.
 
@@ -297,9 +297,9 @@ def infer_schema_from_module(opts: Dict[str, Any],
     return schema
 
 
-def validate_module_config(module_name: str, config: Dict[str, Any],
-                           opts: Dict[str, Any],
-                           optdescs: Dict[str, str]) -> List[str]:
+def validate_module_config(module_name: str, config: dict[str, Any],
+                           opts: dict[str, Any],
+                           optdescs: dict[str, str]) -> list[str]:
     """Convenience function to validate a module's config.
 
     Args:

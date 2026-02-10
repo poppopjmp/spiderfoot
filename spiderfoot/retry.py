@@ -75,12 +75,12 @@ class RetryConfig:
     jitter: bool = True            # Add randomized jitter
     jitter_range: float = 0.5      # Max jitter as fraction of delay
 
-    retryable_exceptions: List[Type[Exception]] = field(
+    retryable_exceptions: list[type[Exception]] = field(
         default_factory=lambda: [
             ConnectionError, TimeoutError, OSError,
         ]
     )
-    non_retryable_exceptions: List[Type[Exception]] = field(
+    non_retryable_exceptions: list[type[Exception]] = field(
         default_factory=lambda: [
             KeyboardInterrupt, SystemExit, ValueError,
         ]
@@ -156,7 +156,7 @@ class RetryResult:
     exception: Optional[Exception] = None
     attempts: int = 0
     total_delay: float = 0.0
-    errors: List[Tuple[int, str]] = field(default_factory=list)
+    errors: list[tuple[int, str]] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -194,7 +194,7 @@ class DeadLetterQueue:
         with self._lock:
             return self._queue.popleft() if self._queue else None
 
-    def peek(self, n: int = 10) -> List[DeadLetterEntry]:
+    def peek(self, n: int = 10) -> list[DeadLetterEntry]:
         with self._lock:
             return list(self._queue)[-n:]
 
@@ -375,7 +375,7 @@ def retry(max_attempts: int = 3, *,
           backoff_strategy: BackoffStrategy = BackoffStrategy.EXPONENTIAL,
           backoff_base: float = 1.0,
           backoff_max: float = 60.0,
-          retryable_exceptions: Optional[List[Type[Exception]]] = None,
+          retryable_exceptions: Optional[list[type[Exception]]] = None,
           on_retry: Optional[Callable] = None):
     """Decorator to add retry logic to a function.
 

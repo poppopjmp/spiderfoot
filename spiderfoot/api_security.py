@@ -49,7 +49,7 @@ class APISecurityManager:
             'admin': {'requests': 200, 'window': 3600}
         }
 
-    def generate_api_key(self, user_id: str, scopes: List[str] = None,
+    def generate_api_key(self, user_id: str, scopes: list[str] = None,
                         expires_in: int = None) -> str:
         """Generate API key with JWT.
 
@@ -75,7 +75,7 @@ class APISecurityManager:
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
-    def validate_api_key(self, api_key: str) -> Optional[Dict[str, Any]]:
+    def validate_api_key(self, api_key: str) -> Optional[dict[str, Any]]:
         """Validate API key and extract claims.
 
         Args:
@@ -103,7 +103,7 @@ class APISecurityManager:
         except jwt.InvalidTokenError:
             return None
 
-    def check_permission(self, claims: Dict[str, Any], required_scope: str) -> bool:
+    def check_permission(self, claims: dict[str, Any], required_scope: str) -> bool:
         """Check if user has required permission.
 
         Args:
@@ -192,7 +192,7 @@ class APISecurityManager:
         # Constant-time comparison
         return hmac.compare_digest(signature, expected_signature)
 
-    def get_api_limits(self, scopes: List[str]) -> Dict[str, int]:
+    def get_api_limits(self, scopes: list[str]) -> dict[str, int]:
         """Get rate limits for given scopes.
 
         Args:
@@ -273,8 +273,8 @@ class APIKeyManager:
         except Exception as e:
             log.error("Failed to create API keys table: %s", e)
 
-    def create_api_key(self, user_id: str, scopes: List[str], name: str = None,
-                      description: str = None, expires_in: int = None) -> Tuple[str, str]:
+    def create_api_key(self, user_id: str, scopes: list[str], name: str = None,
+                      description: str = None, expires_in: int = None) -> tuple[str, str]:
         """Create and store API key.
 
         Args:
@@ -389,7 +389,7 @@ class APIKeyManager:
         except Exception:
             pass  # Don't fail request if we can't update timestamp
 
-    def list_user_api_keys(self, user_id: str) -> List[Dict[str, Any]]:
+    def list_user_api_keys(self, user_id: str) -> list[dict[str, Any]]:
         """List API keys for a user.
 
         Args:

@@ -62,7 +62,7 @@ def batch_scan_command(cli, line):
 
     # Read targets from file
     try:
-        with open(targets_file, 'r', encoding='utf-8') as f:
+        with open(targets_file, encoding='utf-8') as f:
             targets = [line.strip() for line in f if line.strip() and not line.startswith('#')]
     except Exception as e:
         cli.edprint(f"Failed to read targets file: {e}")

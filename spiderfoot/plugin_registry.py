@@ -72,15 +72,15 @@ class PluginManifest:
     min_spiderfoot_version: str = "5.0.0"
     max_spiderfoot_version: str = ""
     python_requires: str = ">=3.9"
-    dependencies: List[str] = field(default_factory=list)  # pip packages
-    module_dependencies: List[str] = field(default_factory=list)  # other SF modules
+    dependencies: list[str] = field(default_factory=list)  # pip packages
+    module_dependencies: list[str] = field(default_factory=list)  # other SF modules
 
     # Module info
-    watched_events: List[str] = field(default_factory=list)
-    produced_events: List[str] = field(default_factory=list)
-    flags: List[str] = field(default_factory=list)
-    categories: List[str] = field(default_factory=list)
-    use_cases: List[str] = field(default_factory=list)
+    watched_events: list[str] = field(default_factory=list)
+    produced_events: list[str] = field(default_factory=list)
+    flags: list[str] = field(default_factory=list)
+    categories: list[str] = field(default_factory=list)
+    use_cases: list[str] = field(default_factory=list)
 
     # Registry metadata
     download_url: str = ""
@@ -88,7 +88,7 @@ class PluginManifest:
     size_bytes: int = 0
     downloads: int = 0
     rating: float = 0.0
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
 
@@ -170,8 +170,8 @@ class PluginRegistry:
         self.modules_dir = os.path.abspath(modules_dir)
         self.registry_url = registry_url
 
-        self._catalog: Dict[str, PluginManifest] = {}
-        self._installed: Dict[str, InstalledPlugin] = {}
+        self._catalog: dict[str, PluginManifest] = {}
+        self._installed: dict[str, InstalledPlugin] = {}
 
         # Load persisted state
         self._load_state()
@@ -191,7 +191,7 @@ class PluginRegistry:
         Returns number of plugins loaded.
         """
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
 
             plugins = data if isinstance(data, list) else data.get("plugins", [])
@@ -228,10 +228,10 @@ class PluginRegistry:
     # ------------------------------------------------------------------
 
     def search(self, query: str = "", *,
-               tags: Optional[List[str]] = None,
-               categories: Optional[List[str]] = None,
+               tags: Optional[list[str]] = None,
+               categories: Optional[list[str]] = None,
                author: Optional[str] = None
-               ) -> List[PluginManifest]:
+               ) -> list[PluginManifest]:
         """Search the plugin catalog.
 
         Args:
@@ -347,7 +347,7 @@ class PluginRegistry:
 
         # Validate Python syntax
         try:
-            with open(source_path, "r", encoding="utf-8") as f:
+            with open(source_path, encoding="utf-8") as f:
                 source = f.read()
             compile(source, source_path, "exec")
         except SyntaxError as e:
@@ -413,7 +413,7 @@ class PluginRegistry:
     # Updates
     # ------------------------------------------------------------------
 
-    def check_updates(self) -> List[Tuple[str, str, str]]:
+    def check_updates(self) -> list[tuple[str, str, str]]:
         """Check for available updates.
 
         Returns list of (name, installed_version, available_version).
@@ -439,7 +439,7 @@ class PluginRegistry:
     # List / Status
     # ------------------------------------------------------------------
 
-    def list_installed(self) -> List[InstalledPlugin]:
+    def list_installed(self) -> list[InstalledPlugin]:
         """List all installed plugins."""
         return sorted(self._installed.values(),
                       key=lambda p: p.manifest.name)
@@ -533,7 +533,7 @@ class PluginRegistry:
         return True
 
     def _check_module_dependencies(self, manifest: PluginManifest
-                                    ) -> List[str]:
+                                    ) -> list[str]:
         """Check which required modules are missing."""
         missing = []
         for dep in manifest.module_dependencies:
@@ -562,7 +562,7 @@ class PluginRegistry:
             return
 
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 data = json.load(f)
 
             for name, info in data.items():

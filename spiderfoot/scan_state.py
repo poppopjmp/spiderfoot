@@ -58,7 +58,7 @@ class ScanState(Enum):
 
 
 # Valid state transitions: from_state -> set of allowed to_states
-VALID_TRANSITIONS: Dict[ScanState, Set[ScanState]] = {
+VALID_TRANSITIONS: dict[ScanState, set[ScanState]] = {
     ScanState.CREATED: {ScanState.QUEUED, ScanState.CANCELLED},
     ScanState.QUEUED: {ScanState.STARTING, ScanState.CANCELLED},
     ScanState.STARTING: {ScanState.RUNNING, ScanState.FAILED,
@@ -83,7 +83,7 @@ class StateTransition:
     timestamp: float
     reason: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "from": self.from_state.value,
             "to": self.to_state.value,
@@ -119,8 +119,8 @@ class ScanStateMachine:
         self.scan_id = scan_id
         self._state = initial_state
         self._lock = threading.Lock()
-        self._history: List[StateTransition] = []
-        self._callbacks: List[TransitionCallback] = []
+        self._history: list[StateTransition] = []
+        self._callbacks: list[TransitionCallback] = []
         self._created_at = time.time()
 
     @property
@@ -140,7 +140,7 @@ class ScanStateMachine:
         return self.state.is_active
 
     @property
-    def history(self) -> List[StateTransition]:
+    def history(self) -> list[StateTransition]:
         """Get transition history."""
         with self._lock:
             return list(self._history)
@@ -225,7 +225,7 @@ class ScanStateMachine:
 
             return total
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Export state machine as dict."""
         with self._lock:
             return {

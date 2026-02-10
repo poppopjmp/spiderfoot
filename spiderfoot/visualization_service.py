@@ -38,7 +38,7 @@ class VisualizationService:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _require_scan(self, scan_id: str) -> Dict[str, Any]:
+    def _require_scan(self, scan_id: str) -> dict[str, Any]:
         """Return scan info dict or raise 404-able error."""
         if self._scan_repo is not None:
             record = self._scan_repo.get_scan(scan_id)
@@ -75,8 +75,8 @@ class VisualizationService:
         self,
         scan_id: str,
         *,
-        event_type: Optional[str] = None,
-    ) -> Tuple[Dict[str, Any], list]:
+        event_type: str | None = None,
+    ) -> tuple[dict[str, Any], list]:
         """Return (scan_info, results) for graph rendering.
 
         Returns:
@@ -88,15 +88,15 @@ class VisualizationService:
 
     def get_multi_scan_graph_data(
         self,
-        scan_ids: List[str],
+        scan_ids: list[str],
         *,
-        event_type: Optional[str] = None,
-    ) -> Tuple[List[str], list]:
+        event_type: str | None = None,
+    ) -> tuple[list[str], list]:
         """Return (valid_scan_ids, merged_results) for multi-scan graph.
 
         Skips invalid scan IDs with a warning.
         """
-        valid_ids: List[str] = []
+        valid_ids: list[str] = []
         all_results: list = []
         for sid in scan_ids:
             try:
@@ -112,13 +112,13 @@ class VisualizationService:
         scan_id: str,
         *,
         group_by: str = "type",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return chart-ready summary data."""
         info = self._require_scan(scan_id)
         summary_rows = self._get_summary(scan_id, group_by)
 
-        labels: List[str] = []
-        values: List[int] = []
+        labels: list[str] = []
+        values: list[int] = []
         total = 0
 
         for item in summary_rows:
@@ -148,13 +148,13 @@ class VisualizationService:
         scan_id: str,
         *,
         interval: str = "hour",
-        event_type: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        event_type: str | None = None,
+    ) -> dict[str, Any]:
         """Return timeline aggregation."""
         info = self._require_scan(scan_id)
         results = self._get_results(scan_id, event_type)
 
-        buckets: Dict[str, int] = defaultdict(int)
+        buckets: dict[str, int] = defaultdict(int)
         for row in results:
             ts = row[0] if row else None
             if ts is None:
@@ -200,12 +200,12 @@ class VisualizationService:
         *,
         dimension_x: str = "module",
         dimension_y: str = "type",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return heatmap matrix data."""
         info = self._require_scan(scan_id)
         results = self._get_results(scan_id)
 
-        matrix: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        matrix: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
         x_labels: set = set()
         y_labels: set = set()
 

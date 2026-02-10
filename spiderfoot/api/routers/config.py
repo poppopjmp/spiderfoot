@@ -26,32 +26,32 @@ config_body = Body(...)
 
 class ConfigUpdateRequest(BaseModel):
     """Typed request for PATCH /config."""
-    options: Dict[str, Any] = Field(..., description="Config key/value pairs to update")
+    options: dict[str, Any] = Field(..., description="Config key/value pairs to update")
 
 
 class ConfigValidateRequest(BaseModel):
     """Typed request for POST /config/validate."""
-    options: Dict[str, Any] = Field(..., description="Config key/value pairs to validate")
+    options: dict[str, Any] = Field(..., description="Config key/value pairs to validate")
 
 
 class ValidationErrorItem(BaseModel):
     """Single validation error."""
     field: str
     message: str
-    value: Optional[Any] = None
+    value: Any | None = None
 
 
 class ValidationResponse(BaseModel):
     """Response from validation endpoint."""
     valid: bool
-    errors: List[ValidationErrorItem] = []
+    errors: list[ValidationErrorItem] = []
     sections_checked: int = 0
 
 
 class ConfigSummaryResponse(BaseModel):
     """Structured config overview."""
-    summary: Dict[str, Any]
-    config: Dict[str, Any]
+    summary: dict[str, Any]
+    config: dict[str, Any]
     version: str = ""
 
 
@@ -533,7 +533,7 @@ async def list_api_key_scopes(api_key: str = optional_auth_dep):
 @router.put("/config/api-keys/{key_id}/scopes")
 async def set_api_key_scopes(
     key_id: str,
-    scopes: List[str] = Body(..., embed=True),
+    scopes: list[str] = Body(..., embed=True),
     api_key: str = optional_auth_dep,
 ):
     """Set the scopes for an API key.
@@ -753,14 +753,14 @@ class ConfigSourceEntry(BaseModel):
 class ConfigSourcesResponse(BaseModel):
     """Full provenance report for all config keys."""
     total: int = 0
-    breakdown: Dict[str, int] = {}
-    entries: List[ConfigSourceEntry] = []
+    breakdown: dict[str, int] = {}
+    entries: list[ConfigSourceEntry] = []
 
 
 class ConfigEnvironmentResponse(BaseModel):
     """Environment variable overrides + discovery report."""
-    active_overrides: Dict[str, str] = {}
-    unknown_sf_vars: List[str] = []
+    active_overrides: dict[str, str] = {}
+    unknown_sf_vars: list[str] = []
     deployment_mode: str = "standalone"
     service_role: str = ""
     service_name: str = ""
@@ -768,7 +768,7 @@ class ConfigEnvironmentResponse(BaseModel):
 
 @router.get("/config/sources", response_model=ConfigSourcesResponse)
 async def get_config_sources(
-    filter_source: Optional[str] = Query(
+    filter_source: str | None = Query(
         None,
         alias="source",
         description="Filter by source (default, env:*, file:*, runtime)",
@@ -788,7 +788,7 @@ async def get_config_sources(
         all_sources = cs.get_sources()
         raw_config = cs.as_dict()
 
-        entries: List[ConfigSourceEntry] = []
+        entries: list[ConfigSourceEntry] = []
         for key, src in sorted(all_sources.items()):
             if filter_source and not src.startswith(filter_source):
                 continue
@@ -799,7 +799,7 @@ async def get_config_sources(
             ))
 
         # Build breakdown
-        breakdown: Dict[str, int] = {}
+        breakdown: dict[str, int] = {}
         for e in entries:
             prefix = e.source.split(":")[0] if ":" in e.source else e.source
             breakdown[prefix] = breakdown.get(prefix, 0) + 1
@@ -865,7 +865,7 @@ async def validate_current_config(api_key: str = optional_auth_dep):
     """
     import os
 
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
 
     # 1. AppConfig typed section validation
     try:
@@ -1072,7 +1072,7 @@ def _record_config_change(action: str, section: str, changes: dict, source: str 
 @router.get("/config/history")
 async def get_config_history(
     limit: int = Query(50, ge=1, le=200),
-    section: Optional[str] = Query(None, description="Filter by config section"),
+    section: str | None = Query(None, description="Filter by config section"),
     api_key: str = optional_auth_dep,
 ):
     """Get configuration change history.

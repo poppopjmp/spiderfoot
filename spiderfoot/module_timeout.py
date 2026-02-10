@@ -67,7 +67,7 @@ class ModuleTimeoutGuard:
         self,
         default_timeout: float = 300.0,
         hard_interrupt: bool = False,
-        module_timeouts: Optional[Dict[str, float]] = None,
+        module_timeouts: dict[str, float] | None = None,
     ) -> None:
         # Config from environment
         env_timeout = os.environ.get("SF_MODULE_TIMEOUT")
@@ -75,8 +75,8 @@ class ModuleTimeoutGuard:
 
         self.default_timeout = float(env_timeout) if env_timeout else default_timeout
         self.hard_interrupt = env_hard in ("1", "true", "yes") or hard_interrupt
-        self._module_timeouts: Dict[str, float] = module_timeouts or {}
-        self._timeout_log: List[TimeoutRecord] = []
+        self._module_timeouts: dict[str, float] = module_timeouts or {}
+        self._timeout_log: list[TimeoutRecord] = []
         self._max_log = 200
         self._lock = threading.Lock()
 
@@ -188,7 +188,7 @@ class ModuleTimeoutGuard:
             return False
 
     # ── Query ────────────────────────────────────────────────────
-    def get_timeout_log(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_timeout_log(self, limit: int = 50) -> list[dict[str, Any]]:
         """Return recent timeout records."""
         with self._lock:
             records = self._timeout_log[-limit:]
@@ -203,11 +203,11 @@ class ModuleTimeoutGuard:
             for r in records
         ]
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Summary statistics."""
         with self._lock:
             total = len(self._timeout_log)
-            by_module: Dict[str, int] = {}
+            by_module: dict[str, int] = {}
             for r in self._timeout_log:
                 by_module[r.module_name] = by_module.get(r.module_name, 0) + 1
         return {
@@ -221,7 +221,7 @@ class ModuleTimeoutGuard:
 
 # ── Singleton ────────────────────────────────────────────────────────
 
-_instance: Optional[ModuleTimeoutGuard] = None
+_instance: ModuleTimeoutGuard | None = None
 
 
 def get_timeout_guard() -> ModuleTimeoutGuard:

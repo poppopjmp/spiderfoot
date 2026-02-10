@@ -61,7 +61,7 @@ class VectorHealthStatus:
     events_processed: int = 0
     error: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "reachable": self.reachable,
             "version": self.version,
@@ -80,7 +80,7 @@ class VectorBootstrapConfig:
     vector_graphql_url: str = "http://localhost:8686/graphql"
     config_path: str = "config/vector.toml"
     health_timeout: float = 5.0
-    enabled_sinks: List[str] = field(default_factory=lambda: ["console", "file"])
+    enabled_sinks: list[str] = field(default_factory=lambda: ["console", "file"])
 
 
 # ---------------------------------------------------------------------------
@@ -97,12 +97,12 @@ class VectorBootstrap:
     - Minimal config generation for quick-start
     """
 
-    def __init__(self, config: Optional[VectorBootstrapConfig] = None):
+    def __init__(self, config: VectorBootstrapConfig | None = None):
         self.config = config or VectorBootstrapConfig()
-        self._health_cache: Optional[VectorHealthStatus] = None
+        self._health_cache: VectorHealthStatus | None = None
 
     @classmethod
-    def from_config(cls, sf_config: dict) -> "VectorBootstrap":
+    def from_config(cls, sf_config: dict) -> VectorBootstrap:
         """Create from SpiderFoot configuration dict."""
         endpoint = sf_config.get("_vector_endpoint", "http://localhost:8686")
         config_path = sf_config.get("_vector_config_path", "config/vector.toml")
@@ -140,7 +140,7 @@ class VectorBootstrap:
         self._health_cache = status
         return status
 
-    def detect_enabled_sinks(self) -> List[str]:
+    def detect_enabled_sinks(self) -> list[str]:
         """Detect which sinks should be enabled based on environment variables.
 
         Returns:
@@ -163,7 +163,7 @@ class VectorBootstrap:
         """Check if the Vector config file exists."""
         return Path(self.config.config_path).exists()
 
-    def validate_config(self) -> Dict[str, Any]:
+    def validate_config(self) -> dict[str, Any]:
         """Validate the Vector configuration file.
 
         Returns:
@@ -231,7 +231,7 @@ class VectorBootstrap:
         encoding.codec = "json"
         """).replace("\\'", "'")
 
-    def get_status_summary(self) -> Dict[str, Any]:
+    def get_status_summary(self) -> dict[str, Any]:
         """Get a summary of the Vector.dev integration status.
 
         Returns:

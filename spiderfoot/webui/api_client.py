@@ -86,13 +86,13 @@ class ApiClient:
     def _url(self, path: str) -> str:
         return f"{self._base_url}/{path.lstrip('/')}"
 
-    def _get(self, path: str, params: Optional[Dict] = None) -> Any:
+    def _get(self, path: str, params: Optional[dict] = None) -> Any:
         session = self._get_session()
         resp = session.get(self._url(path), params=params, timeout=self._timeout)
         resp.raise_for_status()
         return resp.json()
 
-    def _post(self, path: str, json_data: Optional[Dict] = None) -> Any:
+    def _post(self, path: str, json_data: Optional[dict] = None) -> Any:
         session = self._get_session()
         resp = session.post(
             self._url(path), json=json_data or {}, timeout=self._timeout
@@ -108,7 +108,7 @@ class ApiClient:
             return resp.json()
         return {"success": True}
 
-    def _patch(self, path: str, json_data: Optional[Dict] = None) -> Any:
+    def _patch(self, path: str, json_data: Optional[dict] = None) -> Any:
         session = self._get_session()
         resp = session.patch(
             self._url(path), json=json_data or {}, timeout=self._timeout
@@ -176,7 +176,7 @@ class ApiClient:
     ) -> None:
         """Update scan metadata."""
         try:
-            payload: Dict[str, Any] = {}
+            payload: dict[str, Any] = {}
             if status:
                 payload["status"] = status
             if started:
@@ -191,7 +191,7 @@ class ApiClient:
     # Scan config
     # ------------------------------------------------------------------
 
-    def scanConfigGet(self, scan_id: str) -> Dict[str, str]:
+    def scanConfigGet(self, scan_id: str) -> dict[str, str]:
         """Get scan configuration."""
         try:
             data = self._get(f"/scans/{scan_id}/options")
@@ -200,7 +200,7 @@ class ApiClient:
             log.error("API scanConfigGet failed: %s", e)
             return {}
 
-    def configGet(self) -> Dict[str, str]:
+    def configGet(self) -> dict[str, str]:
         """Get global configuration."""
         try:
             data = self._get("/config")
@@ -209,7 +209,7 @@ class ApiClient:
             log.error("API configGet failed: %s", e)
             return {}
 
-    def configSet(self, optMap: Optional[Dict] = None) -> None:
+    def configSet(self, optMap: Optional[dict] = None) -> None:
         """Set global configuration."""
         if optMap is None:
             return
@@ -227,7 +227,7 @@ class ApiClient:
     ) -> list:
         """Get scan results in legacy tuple format."""
         try:
-            params: Dict[str, Any] = {}
+            params: dict[str, Any] = {}
             if eventType and eventType != "ALL":
                 params["event_type"] = eventType
             data = self._get(f"/scans/{scan_id}/events", params=params)
@@ -266,7 +266,7 @@ class ApiClient:
     # Scan events/search
     # ------------------------------------------------------------------
 
-    def search(self, criteria: Dict[str, str]) -> list:
+    def search(self, criteria: dict[str, str]) -> list:
         """Search scan results."""
         try:
             scan_id = criteria.get("scan_id", "")
@@ -286,7 +286,7 @@ class ApiClient:
     def scanLogs(self, scan_id: str, limit=None, fromRowId=0, reverse=False) -> list:
         """Get scan logs in legacy tuple format."""
         try:
-            params: Dict[str, Any] = {}
+            params: dict[str, Any] = {}
             if limit:
                 params["limit"] = limit
             if fromRowId:
@@ -361,7 +361,7 @@ class ApiClient:
     # Scan stop
     # ------------------------------------------------------------------
 
-    def scan_stop(self, scan_id: str) -> Dict[str, Any]:
+    def scan_stop(self, scan_id: str) -> dict[str, Any]:
         """Stop / abort a running scan."""
         try:
             return self._post(f"/scans/{scan_id}/stop")

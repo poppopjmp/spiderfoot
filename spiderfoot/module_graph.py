@@ -61,11 +61,11 @@ class ModuleInfo:
     """Metadata about a SpiderFoot module."""
     name: str
     filename: str
-    watched_events: List[str] = field(default_factory=list)
-    produced_events: List[str] = field(default_factory=list)
-    meta: Dict[str, Any] = field(default_factory=dict)
-    flags: List[str] = field(default_factory=list)
-    categories: List[str] = field(default_factory=list)
+    watched_events: list[str] = field(default_factory=list)
+    produced_events: list[str] = field(default_factory=list)
+    meta: dict[str, Any] = field(default_factory=dict)
+    flags: list[str] = field(default_factory=list)
+    categories: list[str] = field(default_factory=list)
 
     @property
     def display_name(self) -> str:
@@ -86,16 +86,16 @@ class ModuleGraph:
     """Directed graph of module event-type dependencies."""
 
     def __init__(self):
-        self.modules: Dict[str, ModuleInfo] = {}
+        self.modules: dict[str, ModuleInfo] = {}
 
         # event_type -> set of module names that produce it
-        self._producers: Dict[str, Set[str]] = defaultdict(set)
+        self._producers: dict[str, set[str]] = defaultdict(set)
 
         # event_type -> set of module names that watch it
-        self._consumers: Dict[str, Set[str]] = defaultdict(set)
+        self._consumers: dict[str, set[str]] = defaultdict(set)
 
         # module -> set of modules it depends on (via event types)
-        self._edges: Dict[str, Set[str]] = defaultdict(set)
+        self._edges: dict[str, set[str]] = defaultdict(set)
 
     def load_modules(self, modules_dir: str = "modules") -> int:
         """Load all module metadata from a directory.
@@ -148,15 +148,15 @@ class ModuleGraph:
     # Queries
     # ------------------------------------------------------------------
 
-    def producers_of(self, event_type: str) -> List[str]:
+    def producers_of(self, event_type: str) -> list[str]:
         """Get modules that produce a specific event type."""
         return sorted(self._producers.get(event_type, set()))
 
-    def consumers_of(self, event_type: str) -> List[str]:
+    def consumers_of(self, event_type: str) -> list[str]:
         """Get modules that watch a specific event type."""
         return sorted(self._consumers.get(event_type, set()))
 
-    def dependencies_of(self, module_name: str) -> Set[str]:
+    def dependencies_of(self, module_name: str) -> set[str]:
         """Get modules that must run before this module.
 
         A module depends on producers of its watched event types.
@@ -172,11 +172,11 @@ class ModuleGraph:
         deps.discard(module_name)
         return deps
 
-    def dependents_of(self, module_name: str) -> Set[str]:
+    def dependents_of(self, module_name: str) -> set[str]:
         """Get modules that depend on this module's output."""
         return self._edges.get(module_name, set()).copy()
 
-    def resolve_for_output(self, desired_types: List[str]) -> Set[str]:
+    def resolve_for_output(self, desired_types: list[str]) -> set[str]:
         """Find the minimal set of modules needed to produce desired types.
 
         Uses BFS backward through the dependency graph.
@@ -201,15 +201,15 @@ class ModuleGraph:
 
         return needed
 
-    def topological_order(self) -> List[str]:
+    def topological_order(self) -> list[str]:
         """Get modules in topological order (dependencies first).
 
         Returns a list where each module appears after its dependencies.
         Cycles are broken arbitrarily.
         """
         # Compute in-degree based on reverse edges
-        in_degree: Dict[str, int] = {m: 0 for m in self.modules}
-        reverse_edges: Dict[str, Set[str]] = defaultdict(set)
+        in_degree: dict[str, int] = {m: 0 for m in self.modules}
+        reverse_edges: dict[str, set[str]] = defaultdict(set)
 
         for producer, consumers in self._edges.items():
             for consumer in consumers:
@@ -238,7 +238,7 @@ class ModuleGraph:
 
         return order
 
-    def detect_cycles(self) -> List[List[str]]:
+    def detect_cycles(self) -> list[list[str]]:
         """Detect cycles in the module dependency graph.
 
         Returns list of cycles, each as a list of module names.
@@ -271,7 +271,7 @@ class ModuleGraph:
 
         return cycles
 
-    def all_event_types(self) -> Set[str]:
+    def all_event_types(self) -> set[str]:
         """Get all known event types."""
         types = set()
         for info in self.modules.values():

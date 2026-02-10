@@ -68,7 +68,7 @@ class HttpServiceConfig:
     bing_api_key: str = ""
 
     @classmethod
-    def from_sf_config(cls, opts: Dict[str, Any]) -> "HttpServiceConfig":
+    def from_sf_config(cls, opts: dict[str, Any]) -> "HttpServiceConfig":
         """Create config from SpiderFoot options dict.
 
         Maps legacy _socks* and _fetchtimeout keys.
@@ -158,7 +158,7 @@ class HttpService:
 
         return True
 
-    def _get_proxy_dict(self) -> Dict[str, str]:
+    def _get_proxy_dict(self) -> dict[str, str]:
         """Build the proxy dict for requests.
 
         Returns:
@@ -190,13 +190,13 @@ class HttpService:
         cookies: Optional[str] = None,
         timeout: Optional[int] = None,
         useragent: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
+        headers: Optional[dict[str, str]] = None,
         post_data: Optional[str] = None,
         disable_content_encoding: bool = False,
         size_limit: Optional[int] = None,
         head_only: bool = False,
         verify: Optional[bool] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Fetch a URL and return the response.
 
         Args:
@@ -308,8 +308,8 @@ class HttpService:
     def google_iterate(
         self,
         search_string: str,
-        opts: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+        opts: Optional[dict] = None,
+    ) -> dict[str, Any]:
         """Search Google Custom Search API.
 
         Args:
@@ -365,8 +365,8 @@ class HttpService:
     def bing_iterate(
         self,
         search_string: str,
-        opts: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+        opts: Optional[dict] = None,
+    ) -> dict[str, Any]:
         """Search Bing Web Search API.
 
         Args:
@@ -466,7 +466,7 @@ class HttpService:
         raw_cert: str,
         fqdn: Optional[str] = None,
         expiring_days: int = 30,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Parse a PEM certificate and extract details.
 
         Args:
@@ -573,7 +573,7 @@ class HttpService:
 
     # --- Metrics ---
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get service statistics.
 
         Returns:

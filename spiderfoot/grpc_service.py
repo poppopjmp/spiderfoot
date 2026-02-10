@@ -105,8 +105,8 @@ class ServiceClient:
         self.timeout = timeout
         self._use_grpc = use_grpc if use_grpc is not None else _GRPC_AVAILABLE
 
-    def call(self, method: str, payload: Dict[str, Any] = None,
-             timeout: Optional[float] = None) -> Dict[str, Any]:
+    def call(self, method: str, payload: dict[str, Any] = None,
+             timeout: Optional[float] = None) -> dict[str, Any]:
         """Call a remote service method.
 
         Args:
@@ -245,7 +245,7 @@ class ServiceServer:
     def __init__(self, service_name: str, port: int = 5003):
         self.service_name = service_name
         self.port = port
-        self._handlers: Dict[str, Callable] = {}
+        self._handlers: dict[str, Callable] = {}
         self._server: Optional[HTTPServer] = None
         self._thread: Optional[threading.Thread] = None
         self._running = False
@@ -298,7 +298,7 @@ class ServiceServer:
 
 
 def _make_handler_factory(service_name: str,
-                          handlers: Dict[str, Callable]):
+                          handlers: dict[str, Callable]):
     """Create an HTTP request handler class with bound handlers."""
 
     class _RPCHandler(BaseHTTPRequestHandler):

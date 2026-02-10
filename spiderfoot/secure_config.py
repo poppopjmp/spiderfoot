@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 class SecureConfigManager:
     """Secure configuration manager with encryption for sensitive data."""
 
-    def __init__(self, config_or_key: Union[str, Dict[str, Any], None] = None, salt: Optional[bytes] = None):
+    def __init__(self, config_or_key: Union[str, dict[str, Any], None] = None, salt: Optional[bytes] = None):
         """Initialize secure configuration manager.
 
         Args:
@@ -126,7 +126,7 @@ class SecureConfigManager:
             # If decryption fails, return original value (might be unencrypted)
             return encrypted_value
 
-    def encrypt_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def encrypt_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """Encrypt sensitive values in configuration dictionary.
 
         Args:
@@ -153,7 +153,7 @@ class SecureConfigManager:
 
         return encrypted_config
 
-    def decrypt_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def decrypt_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """Decrypt sensitive values in configuration dictionary.
 
         Args:
@@ -178,7 +178,7 @@ class SecureConfigManager:
 
         return decrypted_config
 
-    def save_secure_config(self, config: Dict[str, Any], filepath: str) -> None:
+    def save_secure_config(self, config: dict[str, Any], filepath: str) -> None:
         """Save configuration with encrypted sensitive values.
 
         Args:
@@ -204,7 +204,7 @@ class SecureConfigManager:
         # Set restrictive file permissions
         os.chmod(filepath, 0o600)
 
-    def load_secure_config(self, filepath: str) -> Dict[str, Any]:
+    def load_secure_config(self, filepath: str) -> dict[str, Any]:
         """Load and decrypt configuration from file.
 
         Args:
@@ -214,7 +214,7 @@ class SecureConfigManager:
             Decrypted configuration dictionary
         """
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, encoding='utf-8') as f:
                 secure_config = json.load(f)
 
             # Check if file is encrypted
@@ -228,7 +228,7 @@ class SecureConfigManager:
         except (FileNotFoundError, json.JSONDecodeError):
             return {}
 
-    def migrate_config(self, old_config: Dict[str, Any]) -> Dict[str, Any]:
+    def migrate_config(self, old_config: dict[str, Any]) -> dict[str, Any]:
         """Migrate old unencrypted configuration to encrypted format.
 
         Args:
@@ -239,7 +239,7 @@ class SecureConfigManager:
         """
         return self.encrypt_config(old_config)
 
-    def rotate_encryption_key(self, new_master_key: str, config_files: list = None) -> Dict[str, Any]:
+    def rotate_encryption_key(self, new_master_key: str, config_files: list = None) -> dict[str, Any]:
         """Rotate encryption key and re-encrypt all sensitive data.
 
         Args:
@@ -305,7 +305,7 @@ class SecureConfigManager:
 
         return results
 
-    def create_encrypted_backup(self, config: Dict[str, Any], backup_path: str,
+    def create_encrypted_backup(self, config: dict[str, Any], backup_path: str,
                                include_metadata: bool = True) -> bool:
         """Create encrypted backup of configuration.
 
@@ -341,7 +341,7 @@ class SecureConfigManager:
         except Exception:
             return False
 
-    def restore_from_backup(self, backup_path: str) -> Dict[str, Any]:
+    def restore_from_backup(self, backup_path: str) -> dict[str, Any]:
         """Restore configuration from encrypted backup.
 
         Args:
@@ -351,7 +351,7 @@ class SecureConfigManager:
             Restored configuration
         """
         try:
-            with open(backup_path, 'r', encoding='utf-8') as f:
+            with open(backup_path, encoding='utf-8') as f:
                 backup_data = json.load(f)
 
             config = backup_data.get('config', {})
@@ -360,7 +360,7 @@ class SecureConfigManager:
         except Exception:
             return {}
 
-    def validate_compliance(self, config: Dict[str, Any], standards: list = None) -> Dict[str, Any]:
+    def validate_compliance(self, config: dict[str, Any], standards: list = None) -> dict[str, Any]:
         """Validate configuration against security compliance standards.
 
         Args:
@@ -398,7 +398,7 @@ class SecureConfigManager:
 
         return compliance_results
 
-    def _validate_owasp_compliance(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_owasp_compliance(self, config: dict[str, Any]) -> dict[str, Any]:
         """Validate OWASP security compliance.
 
         Args:
@@ -452,7 +452,7 @@ class SecureConfigManager:
             'standard': 'OWASP'
         }
 
-    def _validate_nist_compliance(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_nist_compliance(self, config: dict[str, Any]) -> dict[str, Any]:
         """Validate NIST Cybersecurity Framework compliance.
 
         Args:
@@ -504,7 +504,7 @@ class SecureConfigManager:
             'standard': 'NIST'
         }
 
-    def _validate_iso27001_compliance(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_iso27001_compliance(self, config: dict[str, Any]) -> dict[str, Any]:
         """Validate ISO 27001 compliance.
 
         Args:

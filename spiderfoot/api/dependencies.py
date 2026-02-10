@@ -31,7 +31,7 @@ class Config:
     real validation instead of the former no-op stub.
     """
 
-    def __init__(self, *, _skip_db: bool = False, _app_config: Optional[AppConfig] = None):
+    def __init__(self, *, _skip_db: bool = False, _app_config: AppConfig | None = None):
         """Initialise configuration.
 
         Args:
@@ -50,7 +50,7 @@ class Config:
             return
 
         # Build legacy default dict
-        default_config: Dict[str, Any] = {
+        default_config: dict[str, Any] = {
             '__modules__': {},
             '__correlationrules__': [],
             '_debug': False,
@@ -94,18 +94,18 @@ class Config:
     # Backward-compatible flat dict access
     # ------------------------------------------------------------------
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         """Return the flat dict expected by legacy consumers."""
         return self._app_config.to_dict()
 
     @property
-    def config(self) -> Dict[str, Any]:
+    def config(self) -> dict[str, Any]:
         """Property alias for ``get_config()`` — some callers access
         ``config.config`` directly."""
         return self.get_config()
 
     @config.setter
-    def config(self, value: Dict[str, Any]) -> None:
+    def config(self, value: dict[str, Any]) -> None:
         """Reassign config from a flat dict (e.g. ``replace_config``)."""
         self._app_config = AppConfig.from_dict(value)
 
@@ -113,7 +113,7 @@ class Config:
     # Mutation helpers
     # ------------------------------------------------------------------
 
-    def update_config(self, updates: dict) -> Dict[str, Any]:
+    def update_config(self, updates: dict) -> dict[str, Any]:
         self._app_config.merge(updates)
         return self.get_config()
 
@@ -147,7 +147,7 @@ class Config:
     # Validation (real implementation via AppConfig)
     # ------------------------------------------------------------------
 
-    def validate_config(self, options: Optional[dict] = None) -> Tuple[bool, List[Dict[str, Any]]]:
+    def validate_config(self, options: dict | None = None) -> tuple[bool, list[dict[str, Any]]]:
         """Validate config options.
 
         If *options* is provided, a temporary AppConfig is built from
@@ -232,7 +232,7 @@ class Config:
     # Module config helpers
     # ------------------------------------------------------------------
 
-    def get_module_config(self, module_name: str) -> Optional[dict]:
+    def get_module_config(self, module_name: str) -> dict | None:
         modules = self._app_config.modules or {}
         return modules.get(module_name)
 
@@ -255,7 +255,7 @@ class Config:
     # Summary / introspection
     # ------------------------------------------------------------------
 
-    def config_summary(self) -> Dict[str, Any]:
+    def config_summary(self) -> dict[str, Any]:
         """Return a concise typed config summary."""
         return self._app_config.summary()
 

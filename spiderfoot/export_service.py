@@ -38,7 +38,9 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Generator, IO, List, Optional
+from typing import Any, Dict, IO, List, Optional
+
+from collections.abc import Generator
 
 log = logging.getLogger("spiderfoot.export_service")
 
@@ -57,7 +59,7 @@ class ExportConfig:
     include_raw_data: bool = True
     include_correlations: bool = True
     max_events: int = 0       # 0 = unlimited
-    event_types: List[str] = field(default_factory=list)  # empty = all
+    event_types: list[str] = field(default_factory=list)  # empty = all
     pretty_print: bool = True
 
     @classmethod
@@ -135,7 +137,7 @@ class ExportService:
     # ------------------------------------------------------------------
 
     def _to_json(self, scan_info: dict,
-                 events: List[dict]) -> str:
+                 events: list[dict]) -> str:
         """Export as JSON."""
         output = {
             "meta": {
@@ -153,7 +155,7 @@ class ExportService:
         return json.dumps(output, indent=indent, default=str)
 
     def _to_csv(self, scan_info: dict,
-                events: List[dict]) -> str:
+                events: list[dict]) -> str:
         """Export as CSV."""
         output = io.StringIO()
         columns = [
@@ -177,7 +179,7 @@ class ExportService:
         return output.getvalue()
 
     def _to_stix(self, scan_info: dict,
-                 events: List[dict]) -> str:
+                 events: list[dict]) -> str:
         """Export as STIX 2.1 bundle.
 
         Maps SpiderFoot event types to STIX Cyber Observable objects.
@@ -292,7 +294,7 @@ class ExportService:
         return json.dumps(bundle, indent=indent, default=str)
 
     def _to_sarif(self, scan_info: dict,
-                  events: List[dict]) -> str:
+                  events: list[dict]) -> str:
         """Export as SARIF 2.1.0.
 
         Maps vulnerability and security findings to SARIF results.
@@ -351,7 +353,7 @@ class ExportService:
     # ------------------------------------------------------------------
 
     def _get_events(self, scan_id: str,
-                    dbh=None) -> List[dict]:
+                    dbh=None) -> list[dict]:
         """Get events for a scan via DataService or dbh."""
         events = []
 
@@ -394,7 +396,7 @@ class ExportService:
 
         return {"scan_id": scan_id}
 
-    def _normalize_events(self, raw_events) -> List[dict]:
+    def _normalize_events(self, raw_events) -> list[dict]:
         """Normalize raw event data to dicts."""
         events = []
 

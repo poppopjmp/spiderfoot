@@ -45,7 +45,7 @@ class ProbeResult:
     name: str
     ready: bool
     latency_ms: float = 0.0
-    error: Optional[str] = None
+    error: str | None = None
     attempts: int = 0
 
 
@@ -53,7 +53,7 @@ class ProbeResult:
 class StartupResult:
     """Aggregate result of all startup probes."""
     all_ready: bool
-    probes: List[ProbeResult] = field(default_factory=list)
+    probes: list[ProbeResult] = field(default_factory=list)
     total_wait_seconds: float = 0.0
     role: str = "standalone"
 
@@ -136,7 +136,7 @@ class HttpProbe(DependencyProbe):
 class PostgresProbe(DependencyProbe):
     """Probe that verifies Postgres connectivity."""
 
-    def __init__(self, dsn: Optional[str] = None, *, required: bool = True):
+    def __init__(self, dsn: str | None = None, *, required: bool = True):
         super().__init__("postgres", required=required)
         self.dsn = dsn or os.environ.get("POSTGRES_DSN", "")
 
@@ -161,7 +161,7 @@ class PostgresProbe(DependencyProbe):
 class RedisProbe(DependencyProbe):
     """Probe that verifies Redis connectivity."""
 
-    def __init__(self, url: Optional[str] = None, *, required: bool = True):
+    def __init__(self, url: str | None = None, *, required: bool = True):
         super().__init__("redis", required=required)
         self.url = url or os.environ.get("SF_REDIS_URL", "")
 
@@ -181,7 +181,7 @@ class RedisProbe(DependencyProbe):
 class NatsProbe(DependencyProbe):
     """Probe that verifies NATS connectivity."""
 
-    def __init__(self, url: Optional[str] = None, *, required: bool = True):
+    def __init__(self, url: str | None = None, *, required: bool = True):
         super().__init__("nats", required=required)
         self.url = url or os.environ.get("SF_EVENTBUS_NATS_URL", "")
 
@@ -201,9 +201,9 @@ class NatsProbe(DependencyProbe):
 
 # ── Predefined probes by service role ────────────────────────────────
 
-def _probes_for_role(role: str) -> List[DependencyProbe]:
+def _probes_for_role(role: str) -> list[DependencyProbe]:
     """Return default probes based on service role."""
-    probes: List[DependencyProbe] = []
+    probes: list[DependencyProbe] = []
 
     if role in ("api", "scanner"):
         dsn = os.environ.get("POSTGRES_DSN", "")
@@ -253,12 +253,12 @@ class StartupSequencer:
         self.role = role
         self.retry_interval = retry_interval
         self.max_retries = max_retries
-        self._probes: List[DependencyProbe] = []
+        self._probes: list[DependencyProbe] = []
 
         if auto_discover:
             self._probes.extend(_probes_for_role(role))
 
-    def add_probe(self, probe: DependencyProbe) -> "StartupSequencer":
+    def add_probe(self, probe: DependencyProbe) -> StartupSequencer:
         """Add a dependency probe."""
         self._probes.append(probe)
         return self
@@ -285,7 +285,7 @@ class StartupSequencer:
         )
 
         start = time.monotonic()
-        results: Dict[str, ProbeResult] = {}
+        results: dict[str, ProbeResult] = {}
         pending = set(range(len(self._probes)))
 
         for attempt in range(1, self.max_retries + 1):

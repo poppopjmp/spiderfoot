@@ -90,8 +90,8 @@ class HealthAggregator:
     _lock = threading.Lock()
 
     def __init__(self):
-        self._checks: Dict[str, Callable[[], HealthStatus]] = {}
-        self._detailed_checks: Dict[
+        self._checks: dict[str, Callable[[], HealthStatus]] = {}
+        self._detailed_checks: dict[
             str, Callable[[], ComponentHealth]
         ] = {}
         self._startup_complete = False
@@ -183,7 +183,7 @@ class HealthAggregator:
         Returns:
             Dict with overall status and per-component results.
         """
-        components: Dict[str, dict] = {}
+        components: dict[str, dict] = {}
         overall = HealthStatus.UP
 
         # Simple checks

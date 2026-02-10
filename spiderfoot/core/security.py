@@ -208,12 +208,12 @@ class RateLimiter:
 class SecurityMiddleware:
     """Security middleware for request processing."""
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
         self.rate_limiter = RateLimiter()
         self.logger = logging.getLogger('spiderfoot.security')
 
-    def validate_request(self, request_data: Dict[str, Any],
+    def validate_request(self, request_data: dict[str, Any],
                         client_ip: str = None) -> tuple[bool, str]:
         """Validate incoming request."""
         # Rate limiting

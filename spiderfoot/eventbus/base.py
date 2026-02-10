@@ -73,7 +73,7 @@ class EventEnvelope:
     visibility: int = 100
     risk: int = 0
     timestamp: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class EventBus(ABC):
@@ -88,7 +88,7 @@ class EventBus(ABC):
         self.config = config or EventBusConfig()
         self.log = logging.getLogger(f"spiderfoot.eventbus.{self.config.backend.value}")
         self._running = False
-        self._subscribers: Dict[str, List[Callable]] = {}
+        self._subscribers: dict[str, list[Callable]] = {}
 
     @abstractmethod
     async def connect(self) -> None:

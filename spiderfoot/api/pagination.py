@@ -34,10 +34,11 @@ from typing import (
     Generic,
     List,
     Optional,
-    Sequence,
     TypeVar,
     Union,
 )
+
+from collections.abc import Sequence
 
 from fastapi import Query
 
@@ -63,12 +64,12 @@ class PaginationParams:
 
     def __init__(
         self,
-        page: Optional[int] = Query(None, ge=1, description="Page number (1-based)"),
-        page_size: Optional[int] = Query(None, ge=1, le=1000, description="Items per page"),
-        offset: Optional[int] = Query(None, ge=0, description="Offset (backward compat)"),
-        limit: Optional[int] = Query(None, ge=1, le=1000, description="Limit (backward compat)"),
-        sort_by: Optional[str] = Query(None, description="Field to sort by"),
-        sort_order: Optional[str] = Query(
+        page: int | None = Query(None, ge=1, description="Page number (1-based)"),
+        page_size: int | None = Query(None, ge=1, le=1000, description="Items per page"),
+        offset: int | None = Query(None, ge=0, description="Offset (backward compat)"),
+        limit: int | None = Query(None, ge=1, le=1000, description="Limit (backward compat)"),
+        sort_by: str | None = Query(None, description="Field to sort by"),
+        sort_order: str | None = Query(
             "asc",
             regex="^(asc|desc)$",
             description="Sort order: asc or desc",
@@ -149,7 +150,7 @@ class PaginatedResponse:
         }
     """
 
-    items: List[Any]
+    items: list[Any]
     total: int
     page: int
     page_size: int
@@ -157,7 +158,7 @@ class PaginatedResponse:
     has_next: bool
     has_previous: bool
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-compatible dict."""
         return {
             "items": self.items,
@@ -188,9 +189,9 @@ def paginate(
     items: Sequence[Any],
     params: PaginationParams,
     *,
-    total: Optional[int] = None,
-    sort_key: Optional[Callable] = None,
-) -> Dict[str, Any]:
+    total: int | None = None,
+    sort_key: Callable | None = None,
+) -> dict[str, Any]:
     """Paginate a sequence of items using the given parameters.
 
     Args:
@@ -240,8 +241,8 @@ def paginate_query(
     items: Sequence[Any],
     params: PaginationParams,
     *,
-    total: Optional[int] = None,
-) -> Dict[str, Any]:
+    total: int | None = None,
+) -> dict[str, Any]:
     """Paginate pre-sliced query results (DB already applied LIMIT/OFFSET).
 
     Use when the database handles pagination and you only have
@@ -344,7 +345,7 @@ def generate_link_header(
 def make_params(
     page: int = 1,
     page_size: int = 50,
-    sort_by: Optional[str] = None,
+    sort_by: str | None = None,
     sort_order: str = "asc",
 ) -> PaginationParams:
     """Create ``PaginationParams`` programmatically (for internal use / testing)."""

@@ -102,18 +102,18 @@ class ScanProgressTracker:
 
     def __init__(self, scan_id: str):
         self.scan_id = scan_id
-        self._modules: Dict[str, ModuleProgress] = {}
+        self._modules: dict[str, ModuleProgress] = {}
         self._lock = threading.Lock()
         self._started_at: Optional[float] = None
         self._completed_at: Optional[float] = None
         self._total_events = 0
-        self._snapshots: List[ProgressSnapshot] = []
+        self._snapshots: list[ProgressSnapshot] = []
         self._max_snapshots = 1000
-        self._callbacks: List[Callable] = []
-        self._milestone_thresholds: Set[int] = {25, 50, 75, 100}
-        self._milestones_reached: Set[int] = set()
+        self._callbacks: list[Callable] = []
+        self._milestone_thresholds: set[int] = {25, 50, 75, 100}
+        self._milestones_reached: set[int] = set()
 
-    def register_modules(self, module_names: List[str]) -> None:
+    def register_modules(self, module_names: list[str]) -> None:
         """Register the set of modules participating in this scan."""
         with self._lock:
             for name in module_names:
@@ -247,12 +247,12 @@ class ScanProgressTracker:
         with self._lock:
             return self._modules.get(module_name)
 
-    def get_all_module_progress(self) -> Dict[str, ModuleProgress]:
+    def get_all_module_progress(self) -> dict[str, ModuleProgress]:
         """Get progress for all modules."""
         with self._lock:
             return dict(self._modules)
 
-    def get_running_modules(self) -> List[str]:
+    def get_running_modules(self) -> list[str]:
         """Get names of currently running modules."""
         with self._lock:
             return [
@@ -260,7 +260,7 @@ class ScanProgressTracker:
                 if mp.status == ModuleStatus.RUNNING
             ]
 
-    def get_failed_modules(self) -> List[str]:
+    def get_failed_modules(self) -> list[str]:
         """Get names of failed modules."""
         with self._lock:
             return [
@@ -268,7 +268,7 @@ class ScanProgressTracker:
                 if mp.status == ModuleStatus.FAILED
             ]
 
-    def get_pending_modules(self) -> List[str]:
+    def get_pending_modules(self) -> list[str]:
         """Get names of pending modules."""
         with self._lock:
             return [
@@ -311,7 +311,7 @@ class ScanProgressTracker:
                     except Exception as e:
                         log.error("Milestone callback error: %s", e)
 
-    def get_history(self) -> List[ProgressSnapshot]:
+    def get_history(self) -> list[ProgressSnapshot]:
         """Get recorded snapshot history."""
         with self._lock:
             return list(self._snapshots)

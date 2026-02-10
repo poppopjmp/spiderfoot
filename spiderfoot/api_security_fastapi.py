@@ -47,7 +47,7 @@ class APISecurityManager:
             'admin': {'requests': 200, 'window': 3600}
         }
 
-    def generate_jwt_token(self, user_id: str, scopes: List[str] = None,
+    def generate_jwt_token(self, user_id: str, scopes: list[str] = None,
                           expires_in: int = None) -> str:
         """Generate JWT token for API authentication.
 
@@ -72,7 +72,7 @@ class APISecurityManager:
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
-    def validate_jwt_token(self, token: str) -> Optional[Dict[str, Any]]:
+    def validate_jwt_token(self, token: str) -> Optional[dict[str, Any]]:
         """Validate JWT token.
 
         Args:
@@ -92,7 +92,7 @@ class APISecurityManager:
         except jwt.InvalidTokenError:
             return None
 
-    def generate_api_key(self, user_id: str, scopes: List[str] = None,
+    def generate_api_key(self, user_id: str, scopes: list[str] = None,
                         expires_in: int = None) -> str:
         """Generate API key (same as JWT for now).
 
@@ -106,7 +106,7 @@ class APISecurityManager:
         """
         return self.generate_jwt_token(user_id, scopes, expires_in)
 
-    def validate_api_key(self, api_key: str) -> Optional[Dict[str, Any]]:
+    def validate_api_key(self, api_key: str) -> Optional[dict[str, Any]]:
         """Validate API key.
 
         Args:
@@ -117,7 +117,7 @@ class APISecurityManager:
         """
         return self.validate_jwt_token(api_key)
 
-    def check_permission(self, claims: Dict[str, Any], required_scope: str) -> bool:
+    def check_permission(self, claims: dict[str, Any], required_scope: str) -> bool:
         """Check if user has required permission.
 
         Args:
@@ -202,7 +202,7 @@ class APISecurityManager:
         except (ValueError, TypeError):
             return False
 
-    def get_api_limits(self, scopes: List[str]) -> Dict[str, int]:
+    def get_api_limits(self, scopes: list[str]) -> dict[str, int]:
         """Get API rate limits based on user scopes.
 
         Args:
@@ -271,8 +271,8 @@ class APIKeyManager:
             # Log error but don't fail initialization
             pass
 
-    def create_api_key(self, user_id: str, scopes: List[str], name: str = None,
-                      description: str = None, expires_in: int = None) -> Tuple[str, str]:
+    def create_api_key(self, user_id: str, scopes: list[str], name: str = None,
+                      description: str = None, expires_in: int = None) -> tuple[str, str]:
         """Create new API key.
 
         Args:
@@ -349,7 +349,7 @@ class APIKeyManager:
         except Exception:
             pass
 
-    def list_user_api_keys(self, user_id: str) -> List[Dict[str, Any]]:
+    def list_user_api_keys(self, user_id: str) -> list[dict[str, Any]]:
         """List API keys for user.
 
         Args:
@@ -392,7 +392,7 @@ def get_current_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
     api_security: APISecurityManager = Depends()
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get current authenticated user from JWT token.
 
     Args:
@@ -416,7 +416,7 @@ def get_current_user(
     return claims
 
 
-def require_scopes(required_scopes: List[str]):
+def require_scopes(required_scopes: list[str]):
     """Dependency to require specific scopes.
 
     Args:
@@ -426,9 +426,9 @@ def require_scopes(required_scopes: List[str]):
         FastAPI dependency function
     """
     def check_scopes(
-        current_user: Dict[str, Any] = Depends(get_current_user),
+        current_user: dict[str, Any] = Depends(get_current_user),
         api_security: APISecurityManager = Depends()
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Check if user has required scopes."""
         user_scopes = current_user.get('scopes', [])
 
@@ -448,7 +448,7 @@ def require_api_key(
     request: Request,
     x_api_key: Optional[str] = Header(None),
     api_security: APISecurityManager = Depends()
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Dependency to require API key authentication.
 
     Args:
@@ -473,17 +473,17 @@ def require_api_key(
 
 
 # Convenience dependencies for common scopes
-def require_read_access(current_user: Dict[str, Any] = Depends(require_scopes(['scan:read']))):
+def require_read_access(current_user: dict[str, Any] = Depends(require_scopes(['scan:read']))):
     """Require read access."""
     return current_user
 
 
-def require_write_access(current_user: Dict[str, Any] = Depends(require_scopes(['scan:write']))):
+def require_write_access(current_user: dict[str, Any] = Depends(require_scopes(['scan:write']))):
     """Require write access."""
     return current_user
 
 
-def require_admin_access(current_user: Dict[str, Any] = Depends(require_scopes(['system:admin']))):
+def require_admin_access(current_user: dict[str, Any] = Depends(require_scopes(['system:admin']))):
     """Require admin access."""
     return current_user
 

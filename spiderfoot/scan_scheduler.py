@@ -43,12 +43,12 @@ class ScanRequest:
     """
     scan_name: str
     target: str
-    modules: List[str] = field(default_factory=list)
-    config: Dict[str, Any] = field(default_factory=dict)
+    modules: list[str] = field(default_factory=list)
+    config: dict[str, Any] = field(default_factory=dict)
     scan_id: str = ""
     priority: ScanPriority = ScanPriority.NORMAL
     max_duration: int = 0
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         if not self.scan_id:
@@ -79,7 +79,7 @@ class ScanStatus:
             return 0
         return end - self.started_at
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "scan_id": self.scan_id,
             "scan_name": self.scan_name,
@@ -111,7 +111,7 @@ class SchedulerConfig:
     enable_auto_correlations: bool = True
 
     @classmethod
-    def from_sf_config(cls, opts: Dict[str, Any]) -> "SchedulerConfig":
+    def from_sf_config(cls, opts: dict[str, Any]) -> "SchedulerConfig":
         return cls(
             max_concurrent_scans=int(opts.get("_scheduler_max_scans", 3)),
             scan_poll_interval=float(opts.get("_scheduler_poll_interval", 5)),
@@ -152,9 +152,9 @@ class ScanScheduler:
         self._registry = registry
         self.log = logging.getLogger("spiderfoot.scan_scheduler")
 
-        self._pending: List[ScanRequest] = []
-        self._active: Dict[str, ScanStatus] = {}
-        self._completed: Dict[str, ScanStatus] = {}
+        self._pending: list[ScanRequest] = []
+        self._active: dict[str, ScanStatus] = {}
+        self._completed: dict[str, ScanStatus] = {}
         self._lock = threading.RLock()
         self._running = False
         self._scheduler_thread: Optional[threading.Thread] = None
@@ -282,7 +282,7 @@ class ScanScheduler:
 
     # --- Status ---
 
-    def get_scan_status(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def get_scan_status(self, scan_id: str) -> Optional[dict[str, Any]]:
         """Get the current status of a scan.
 
         Checks active, completed, and pending queues.
@@ -313,7 +313,7 @@ class ScanScheduler:
     def list_scans(
         self,
         state: Optional[ScanState] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List scans, optionally filtered by state."""
         results = []
 
@@ -517,7 +517,7 @@ class ScanScheduler:
 
     # --- Metrics ---
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get scheduler statistics."""
         with self._lock:
             return {

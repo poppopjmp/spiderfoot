@@ -70,9 +70,9 @@ class ErrorRecord:
     source_file: str = ""
     source_line: int = 0
     timestamp: float = field(default_factory=time.time)
-    extra: Dict[str, Any] = field(default_factory=dict)
+    extra: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "fingerprint": self.fingerprint,
             "exception_type": self.exception_type,
@@ -104,9 +104,9 @@ class ErrorGroup:
     last_seen: float = 0.0
     count: int = 0
     last_message: str = ""
-    affected_scans: Set[str] = field(default_factory=set)
+    affected_scans: set[str] = field(default_factory=set)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "fingerprint": self.fingerprint,
             "exception_type": self.exception_type,
@@ -131,7 +131,7 @@ class AlertRule:
     threshold: float  # errors per minute
     window_seconds: float = 60.0
     module_filter: str = ""  # empty = global
-    callback: Optional[Callable[["AlertEvent"], None]] = None
+    callback: Callable[[AlertEvent], None] | None = None
 
 
 @dataclass
@@ -151,7 +151,7 @@ class AlertEvent:
 # ---------------------------------------------------------------------------
 
 # Keywords matched against str(exception) and exception class name.
-_CLASSIFICATION_RULES: List[tuple] = [
+_CLASSIFICATION_RULES: list[tuple] = [
     (ErrorClass.TIMEOUT, {"timeout", "timed out", "TimeoutError", "ReadTimeout"}),
     (ErrorClass.RATE_LIMITED, {"429", "rate limit", "too many requests", "RateLimitError"}),
     (ErrorClass.AUTH_FAILURE, {"401", "403", "unauthorized", "forbidden", "AuthError", "authentication"}),
@@ -202,15 +202,15 @@ class _SlidingWindow:
 
     def __init__(self, window_seconds: float = 60.0):
         self._window = window_seconds
-        self._timestamps: List[float] = []
+        self._timestamps: list[float] = []
         self._lock = threading.Lock()
 
-    def record(self, ts: Optional[float] = None) -> None:
+    def record(self, ts: float | None = None) -> None:
         ts = ts or time.time()
         with self._lock:
             self._timestamps.append(ts)
 
-    def rate(self, now: Optional[float] = None) -> float:
+    def rate(self, now: float | None = None) -> float:
         """Return events per minute within the window."""
         now = now or time.time()
         cutoff = now - self._window
@@ -221,7 +221,7 @@ class _SlidingWindow:
             return 0.0
         return count * (60.0 / self._window)
 
-    def count(self, now: Optional[float] = None) -> int:
+    def count(self, now: float | None = None) -> int:
         now = now or time.time()
         cutoff = now - self._window
         with self._lock:
@@ -254,12 +254,12 @@ class ErrorTelemetry:
         self._ring_size = ring_size
         self._window_seconds = window_seconds
 
-        self._records: List[ErrorRecord] = []  # ring buffer
-        self._groups: Dict[str, ErrorGroup] = {}  # fingerprint → group
+        self._records: list[ErrorRecord] = []  # ring buffer
+        self._groups: dict[str, ErrorGroup] = {}  # fingerprint → group
         self._global_rate = _SlidingWindow(window_seconds)
-        self._module_rates: Dict[str, _SlidingWindow] = {}
-        self._alerts: List[AlertRule] = []
-        self._alert_history: List[AlertEvent] = []
+        self._module_rates: dict[str, _SlidingWindow] = {}
+        self._alerts: list[AlertRule] = []
+        self._alert_history: list[AlertEvent] = []
         self._lock = threading.Lock()
 
     # -------------------------------------------------------------------
@@ -268,15 +268,15 @@ class ErrorTelemetry:
 
     def capture(
         self,
-        exc: Optional[BaseException] = None,
+        exc: BaseException | None = None,
         *,
         message: str = "",
         module_name: str = "",
         scan_id: str = "",
         event_type: str = "",
         target: str = "",
-        error_class: Optional[ErrorClass] = None,
-        extra: Optional[Dict[str, Any]] = None,
+        error_class: ErrorClass | None = None,
+        extra: dict[str, Any] | None = None,
     ) -> ErrorRecord:
         """Record an error occurrence.
 
@@ -408,8 +408,8 @@ class ErrorTelemetry:
         *,
         module_name: str = "",
         scan_id: str = "",
-        error_class: Optional[ErrorClass] = None,
-    ) -> List[ErrorRecord]:
+        error_class: ErrorClass | None = None,
+    ) -> list[ErrorRecord]:
         """Return the most recent errors, optionally filtered."""
         with self._lock:
             records = list(self._records)
@@ -421,35 +421,35 @@ class ErrorTelemetry:
             records = [r for r in records if r.error_class == error_class]
         return records[-limit:]
 
-    def top_errors(self, limit: int = 10) -> List[ErrorGroup]:
+    def top_errors(self, limit: int = 10) -> list[ErrorGroup]:
         """Return error groups sorted by frequency (descending)."""
         with self._lock:
             groups = list(self._groups.values())
         groups.sort(key=lambda g: g.count, reverse=True)
         return groups[:limit]
 
-    def get_group(self, fingerprint: str) -> Optional[ErrorGroup]:
+    def get_group(self, fingerprint: str) -> ErrorGroup | None:
         with self._lock:
             return self._groups.get(fingerprint)
 
-    def groups_for_module(self, module_name: str) -> List[ErrorGroup]:
+    def groups_for_module(self, module_name: str) -> list[ErrorGroup]:
         with self._lock:
             return [
                 g for g in self._groups.values()
                 if g.module_name == module_name
             ]
 
-    def groups_for_scan(self, scan_id: str) -> List[ErrorGroup]:
+    def groups_for_scan(self, scan_id: str) -> list[ErrorGroup]:
         with self._lock:
             return [
                 g for g in self._groups.values()
                 if scan_id in g.affected_scans
             ]
 
-    def affected_modules(self) -> Dict[str, int]:
+    def affected_modules(self) -> dict[str, int]:
         """Return {module_name: error_count} for all modules with errors."""
         with self._lock:
-            result: Dict[str, int] = {}
+            result: dict[str, int] = {}
             for g in self._groups.values():
                 if g.module_name:
                     result[g.module_name] = result.get(g.module_name, 0) + g.count
@@ -491,7 +491,7 @@ class ErrorTelemetry:
                     except Exception:
                         log.debug("Alert callback error", exc_info=True)
 
-    def alert_history(self, limit: int = 50) -> List[AlertEvent]:
+    def alert_history(self, limit: int = 50) -> list[AlertEvent]:
         return self._alert_history[-limit:]
 
     # -------------------------------------------------------------------
@@ -506,7 +506,7 @@ class ErrorTelemetry:
             self._global_rate = _SlidingWindow(self._window_seconds)
             self._alert_history.clear()
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         with self._lock:
             return {
                 "total_records": len(self._records),
@@ -523,7 +523,7 @@ class ErrorTelemetry:
 # Singleton
 # ---------------------------------------------------------------------------
 
-_instance: Optional[ErrorTelemetry] = None
+_instance: ErrorTelemetry | None = None
 _instance_lock = threading.Lock()
 
 

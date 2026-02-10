@@ -43,13 +43,13 @@ class EventPayload(BaseModel):
     data: str = Field(..., description="Event data value")
     scan_id: str = Field("", description="Scan that produced the event")
     timestamp: float = Field(0.0, description="Unix epoch timestamp")
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class IndexRequest(BaseModel):
     """Batch event indexing request."""
 
-    events: List[EventPayload] = Field(..., min_length=1,
+    events: list[EventPayload] = Field(..., min_length=1,
                                        description="Events to index")
     collection: str = Field("osint_events",
                             description="Target Qdrant collection")
@@ -70,7 +70,7 @@ class CorrelateRequest(BaseModel):
     strategy: str = Field("similarity",
                           description="Correlation strategy: similarity, "
                                       "cross_scan, multi_hop, infrastructure")
-    scan_id: Optional[str] = Field(None, description="Restrict to scan")
+    scan_id: str | None = Field(None, description="Restrict to scan")
     top_k: int = Field(20, ge=1, le=200, description="Max results")
     threshold: float = Field(0.5, ge=0.0, le=1.0,
                              description="Minimum similarity threshold")
@@ -86,7 +86,7 @@ class CorrelationHitResponse(BaseModel):
     data: str
     scan_id: str
     score: float
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class CorrelateResponse(BaseModel):
@@ -95,8 +95,8 @@ class CorrelateResponse(BaseModel):
     query: str
     strategy: str
     total_hits: int
-    hits: List[CorrelationHitResponse]
-    analysis: Optional[str] = None
+    hits: list[CorrelationHitResponse]
+    analysis: str | None = None
     confidence: float = 0.0
     risk_level: str = "INFO"
     elapsed_ms: float = 0.0
@@ -106,9 +106,9 @@ class MultiDimRequest(BaseModel):
     """Multi-dimensional correlation request."""
 
     query: str = Field(..., description="Correlation query context")
-    events: List[EventPayload] = Field(..., min_length=1,
+    events: list[EventPayload] = Field(..., min_length=1,
                                        description="Events to analyze")
-    dimensions: Optional[List[str]] = Field(
+    dimensions: list[str] | None = Field(
         None, description="Dimensions to evaluate: entity, temporal, "
                           "network, identity, behavioral, geographic")
     fusion_method: str = Field("weighted",
@@ -133,7 +133,7 @@ class PairResponse(BaseModel):
     event_a_id: str
     event_b_id: str
     fused_score: float
-    dimensions: List[DimensionScoreResponse]
+    dimensions: list[DimensionScoreResponse]
 
 
 class MultiDimResponse(BaseModel):
@@ -143,9 +143,9 @@ class MultiDimResponse(BaseModel):
     total_events: int
     total_pairs: int
     total_clusters: int
-    pairs: List[PairResponse]
-    clusters: List[List[str]]
-    dimension_summary: Dict[str, float]
+    pairs: list[PairResponse]
+    clusters: list[list[str]]
+    dimension_summary: dict[str, float]
     elapsed_ms: float
 
 
@@ -154,8 +154,8 @@ class SearchRequest(BaseModel):
 
     query: str = Field(..., description="Text to embed and search")
     top_k: int = Field(10, ge=1, le=200)
-    scan_id: Optional[str] = None
-    event_type: Optional[str] = None
+    scan_id: str | None = None
+    event_type: str | None = None
 
 
 class SearchHitResponse(BaseModel):
@@ -163,7 +163,7 @@ class SearchHitResponse(BaseModel):
 
     event_id: str
     score: float
-    payload: Dict[str, Any] = Field(default_factory=dict)
+    payload: dict[str, Any] = Field(default_factory=dict)
 
 
 class SearchResponse(BaseModel):
@@ -171,7 +171,7 @@ class SearchResponse(BaseModel):
 
     query: str
     total: int
-    hits: List[SearchHitResponse]
+    hits: list[SearchHitResponse]
     elapsed_ms: float
 
 
@@ -183,7 +183,7 @@ class StatsResponse(BaseModel):
     collection: str
     total_vectors: int
     dimensions: int
-    stats: Dict[str, Any] = Field(default_factory=dict)
+    stats: dict[str, Any] = Field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -406,7 +406,7 @@ async def semantic_search(req: SearchRequest,
         vec = emb.embed_text(req.query)
 
         payload_filter = None
-        conditions: Dict[str, Any] = {}
+        conditions: dict[str, Any] = {}
         if req.scan_id:
             conditions["scan_id"] = req.scan_id
         if req.event_type:
@@ -452,7 +452,7 @@ async def stats(_auth: str = optional_auth_dep):
     emb_ok = False
     total_vectors = 0
     dims = 0
-    extra: Dict[str, Any] = {}
+    extra: dict[str, Any] = {}
 
     try:
         from spiderfoot.qdrant_client import get_qdrant_client

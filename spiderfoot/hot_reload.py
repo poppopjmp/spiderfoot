@@ -94,10 +94,10 @@ class ModuleWatcher:
         self.poll_interval = poll_interval
         self.pattern = pattern
 
-        self._states: Dict[str, ModuleState] = {}
-        self._history: List[ReloadEvent] = []
-        self._callbacks: List[Callable] = []
-        self._error_callbacks: List[Callable] = []
+        self._states: dict[str, ModuleState] = {}
+        self._history: list[ReloadEvent] = []
+        self._callbacks: list[Callable] = []
+        self._error_callbacks: list[Callable] = []
 
         self._thread: Optional[threading.Thread] = None
         self._running = False
@@ -173,14 +173,14 @@ class ModuleWatcher:
 
         return self._reload(state)
 
-    def reload_all(self) -> Dict[str, bool]:
+    def reload_all(self) -> dict[str, bool]:
         """Reload all tracked modules. Returns name->success map."""
         results = {}
         for name, state in self._states.items():
             results[name] = self._reload(state)
         return results
 
-    def check_now(self) -> List[str]:
+    def check_now(self) -> list[str]:
         """Check for changes immediately. Returns list of reloaded modules."""
         return self._check_changes()
 
@@ -188,7 +188,7 @@ class ModuleWatcher:
     # Query
     # ------------------------------------------------------------------
 
-    def tracked_modules(self) -> List[str]:
+    def tracked_modules(self) -> list[str]:
         """Get list of tracked module names."""
         return sorted(self._states.keys())
 
@@ -196,7 +196,7 @@ class ModuleWatcher:
         """Get the tracked state of a module."""
         return self._states.get(module_name)
 
-    def get_history(self, limit: int = 50) -> List[ReloadEvent]:
+    def get_history(self, limit: int = 50) -> list[ReloadEvent]:
         """Get reload history, most recent first."""
         return list(reversed(self._history[-limit:]))
 
@@ -259,7 +259,7 @@ class ModuleWatcher:
                 time.sleep(min(0.5, self.poll_interval - waited))
                 waited += 0.5
 
-    def _check_changes(self) -> List[str]:
+    def _check_changes(self) -> list[str]:
         """Check all tracked files for modifications."""
         reloaded = []
 
@@ -296,7 +296,7 @@ class ModuleWatcher:
 
         # Step 1: Syntax check
         try:
-            with open(state.filepath, "r", encoding="utf-8") as f:
+            with open(state.filepath, encoding="utf-8") as f:
                 source = f.read()
             compile(source, state.filepath, "exec")
         except SyntaxError as e:

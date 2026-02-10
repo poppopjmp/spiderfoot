@@ -231,7 +231,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
 
             # Enforce multi-scan: only keep groups with >1 unique scan_id
             if rule and rule.get('meta', {}).get('type') == 'multi-scan':
-                scan_ids = set(e.get('scan_id') for e in events)
+                scan_ids = {e.get('scan_id') for e in events}
                 if len(scan_ids) <= 1:
                     keep_group = False
 

@@ -76,7 +76,7 @@ def _wrap_resilient(primary: DataService, config: DataServiceConfig) -> DataServ
     )
 
 
-def create_data_service_from_config(sf_config: Dict[str, Any]) -> DataService:
+def create_data_service_from_config(sf_config: dict[str, Any]) -> DataService:
     """Create a DataService from SpiderFoot configuration dict.
 
     Reads _dataservice_* keys from the SpiderFoot config.

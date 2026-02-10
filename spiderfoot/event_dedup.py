@@ -37,7 +37,7 @@ class DedupRecord:
     first_seen: float = field(default_factory=time.time)
     last_seen: float = field(default_factory=time.time)
     count: int = 1
-    modules: Set[str] = field(default_factory=set)
+    modules: set[str] = field(default_factory=set)
     original_data: str = ""
 
     def touch(self, module: str = "") -> None:
@@ -54,8 +54,8 @@ class DedupStats:
     total_events: int = 0
     unique_events: int = 0
     duplicates_found: int = 0
-    duplicates_by_type: Dict[str, int] = field(default_factory=dict)
-    duplicates_by_module: Dict[str, int] = field(default_factory=dict)
+    duplicates_by_type: dict[str, int] = field(default_factory=dict)
+    duplicates_by_module: dict[str, int] = field(default_factory=dict)
 
     @property
     def dedup_rate(self) -> float:
@@ -157,10 +157,10 @@ class EventDeduplicator:
         self.scope = scope  # "global", "per_module", "per_type"
         self.max_records = max_records
 
-        self._records: Dict[str, DedupRecord] = {}
+        self._records: dict[str, DedupRecord] = {}
         self._lock = threading.Lock()
         self._stats = DedupStats()
-        self._callbacks: List[Callable] = []
+        self._callbacks: list[Callable] = []
         self._enabled = True
         self._normalizer = ContentNormalizer()
 
@@ -211,8 +211,8 @@ class EventDeduplicator:
 
     def check_batch(
         self,
-        events: List[Tuple[str, str, str]],
-    ) -> List[bool]:
+        events: list[tuple[str, str, str]],
+    ) -> list[bool]:
         """Check multiple events at once.
 
         Args:
@@ -248,7 +248,7 @@ class EventDeduplicator:
         with self._lock:
             return self._records.get(content_hash)
 
-    def get_duplicates(self, min_count: int = 2) -> List[DedupRecord]:
+    def get_duplicates(self, min_count: int = 2) -> list[DedupRecord]:
         """Get all records with at least min_count occurrences."""
         with self._lock:
             return [
@@ -256,7 +256,7 @@ class EventDeduplicator:
                 if r.count >= min_count
             ]
 
-    def get_top_duplicates(self, n: int = 10) -> List[DedupRecord]:
+    def get_top_duplicates(self, n: int = 10) -> list[DedupRecord]:
         """Get the most frequently duplicated events."""
         with self._lock:
             records = sorted(
@@ -359,12 +359,12 @@ class ScanDeduplicator:
         self.scan_id = scan_id
         self._default_strategy = default_strategy
         self._default_action = default_action
-        self._type_strategies: Dict[str, DedupStrategy] = {}
+        self._type_strategies: dict[str, DedupStrategy] = {}
         self._deduplicator = EventDeduplicator(
             strategy=default_strategy,
             action=default_action,
         )
-        self._type_deduplicators: Dict[str, EventDeduplicator] = {}
+        self._type_deduplicators: dict[str, EventDeduplicator] = {}
         self._lock = threading.Lock()
 
     def set_strategy(
@@ -393,7 +393,7 @@ class ScanDeduplicator:
 
         return dedup.check(event_type, data, module)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get combined statistics from all deduplicators."""
         with self._lock:
             stats = {
@@ -407,7 +407,7 @@ class ScanDeduplicator:
                     stats["type_specific"][etype] = s.to_dict()
             return stats
 
-    def get_all_duplicates(self, min_count: int = 2) -> List[DedupRecord]:
+    def get_all_duplicates(self, min_count: int = 2) -> list[DedupRecord]:
         """Get all duplicates across all deduplicators."""
         with self._lock:
             results = list(self._deduplicator.get_duplicates(min_count))

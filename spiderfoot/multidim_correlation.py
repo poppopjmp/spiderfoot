@@ -39,7 +39,7 @@ class Dimension(Enum):
     GEOGRAPHIC = "geographic"
 
 
-DEFAULT_WEIGHTS: Dict[Dimension, float] = {
+DEFAULT_WEIGHTS: dict[Dimension, float] = {
     Dimension.ENTITY: 1.0,
     Dimension.TEMPORAL: 0.8,
     Dimension.NETWORK: 0.9,
@@ -49,7 +49,7 @@ DEFAULT_WEIGHTS: Dict[Dimension, float] = {
 }
 
 # Event type → dimension mapping
-DIMENSION_TYPE_MAP: Dict[str, Set[Dimension]] = {
+DIMENSION_TYPE_MAP: dict[str, set[Dimension]] = {
     "IP_ADDRESS": {Dimension.NETWORK, Dimension.ENTITY},
     "IPV6_ADDRESS": {Dimension.NETWORK, Dimension.ENTITY},
     "INTERNET_NAME": {Dimension.NETWORK, Dimension.ENTITY},
@@ -83,7 +83,7 @@ class DimensionScore:
     evidence_count: int = 0
     details: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "dimension": self.dimension.value,
             "score": round(self.score, 4),
@@ -98,10 +98,10 @@ class CorrelationPair:
 
     event_a_id: str
     event_b_id: str
-    dimension_scores: List[DimensionScore] = field(default_factory=list)
+    dimension_scores: list[DimensionScore] = field(default_factory=list)
     fused_score: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "event_a_id": self.event_a_id,
             "event_b_id": self.event_b_id,
@@ -119,10 +119,10 @@ class EventData:
     data: str
     scan_id: str = ""
     timestamp: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def dimensions(self) -> Set[Dimension]:
+    def dimensions(self) -> set[Dimension]:
         return DIMENSION_TYPE_MAP.get(self.event_type, {Dimension.ENTITY})
 
 
@@ -131,13 +131,13 @@ class MultiDimResult:
     """Result of multi-dimensional analysis."""
 
     query: str
-    pairs: List[CorrelationPair] = field(default_factory=list)
-    dimension_summary: Dict[str, float] = field(default_factory=dict)
-    clusters: List[List[str]] = field(default_factory=list)
+    pairs: list[CorrelationPair] = field(default_factory=list)
+    dimension_summary: dict[str, float] = field(default_factory=dict)
+    clusters: list[list[str]] = field(default_factory=list)
     total_events: int = 0
     elapsed_ms: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "query": self.query,
             "pair_count": len(self.pairs),
@@ -274,8 +274,8 @@ DIMENSION_SCORERS = {
 # Score fusion
 # ---------------------------------------------------------------------------
 
-def weighted_fusion(scores: List[DimensionScore],
-                    weights: Optional[Dict[Dimension, float]] = None
+def weighted_fusion(scores: list[DimensionScore],
+                    weights: dict[Dimension, float] | None = None
                     ) -> float:
     """Fuse dimension scores using weighted average."""
     w = weights or DEFAULT_WEIGHTS
@@ -290,14 +290,14 @@ def weighted_fusion(scores: List[DimensionScore],
     return total_score / total_weight
 
 
-def max_fusion(scores: List[DimensionScore]) -> float:
+def max_fusion(scores: list[DimensionScore]) -> float:
     """Use maximum dimension score."""
     if not scores:
         return 0.0
     return max(ds.score for ds in scores)
 
 
-def harmonic_fusion(scores: List[DimensionScore]) -> float:
+def harmonic_fusion(scores: list[DimensionScore]) -> float:
     """Harmonic mean of non-zero scores (rewards multi-dimension coverage)."""
     nonzero = [ds.score for ds in scores if ds.score > 0]
     if not nonzero:
@@ -321,7 +321,7 @@ class MultiDimAnalyzer:
 
     def __init__(
         self,
-        weights: Optional[Dict[Dimension, float]] = None,
+        weights: dict[Dimension, float] | None = None,
         fusion_method: str = "weighted",
         min_score: float = 0.1,
         temporal_window: float = DEFAULT_TTL_ONE_HOUR,
@@ -332,8 +332,8 @@ class MultiDimAnalyzer:
         self._temporal_window = temporal_window
 
     def analyze(self, query: str,
-                events: List[EventData],
-                dimensions: Optional[List[Dimension]] = None,
+                events: list[EventData],
+                dimensions: list[Dimension] | None = None,
                 ) -> MultiDimResult:
         """Analyze events across multiple dimensions."""
         start = time.time()
@@ -345,9 +345,9 @@ class MultiDimAnalyzer:
             return result
 
         # Score all pairs
-        pairs: List[CorrelationPair] = []
-        dim_totals: Dict[str, float] = {d.value: 0.0 for d in dims}
-        dim_counts: Dict[str, int] = {d.value: 0 for d in dims}
+        pairs: list[CorrelationPair] = []
+        dim_totals: dict[str, float] = {d.value: 0.0 for d in dims}
+        dim_counts: dict[str, int] = {d.value: 0 for d in dims}
 
         for i in range(len(events)):
             for j in range(i + 1, len(events)):
@@ -377,9 +377,9 @@ class MultiDimAnalyzer:
         return result
 
     def _score_pair(self, a: EventData, b: EventData,
-                    dims: List[Dimension]) -> CorrelationPair:
+                    dims: list[Dimension]) -> CorrelationPair:
         """Score a pair of events across dimensions."""
-        scores: List[DimensionScore] = []
+        scores: list[DimensionScore] = []
         for dim in dims:
             scorer = DIMENSION_SCORERS.get(dim)
             if not scorer:
@@ -408,10 +408,10 @@ class MultiDimAnalyzer:
             fused_score=fused,
         )
 
-    def _cluster_events(self, events: List[EventData],
-                        pairs: List[CorrelationPair]) -> List[List[str]]:
+    def _cluster_events(self, events: list[EventData],
+                        pairs: list[CorrelationPair]) -> list[list[str]]:
         """Cluster correlated events using Union-Find."""
-        parent: Dict[str, str] = {e.event_id: e.event_id for e in events}
+        parent: dict[str, str] = {e.event_id: e.event_id for e in events}
 
         def find(x: str) -> str:
             while parent[x] != x:
@@ -429,7 +429,7 @@ class MultiDimAnalyzer:
                 union(pair.event_a_id, pair.event_b_id)
 
         # Group by root
-        groups: Dict[str, List[str]] = {}
+        groups: dict[str, list[str]] = {}
         for eid in parent:
             root = find(eid)
             groups.setdefault(root, []).append(eid)
@@ -438,7 +438,7 @@ class MultiDimAnalyzer:
         return [members for members in groups.values() if len(members) >= 2]
 
     # Stats
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "fusion_method": self._fusion_method,
             "min_score": self._min_score,

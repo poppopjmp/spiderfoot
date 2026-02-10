@@ -55,12 +55,12 @@ class MockSpiderFootTarget:
                  target_type: str = "INTERNET_NAME") -> None:
         self.targetValue = target_value
         self.targetType = target_type
-        self._aliases: List[Dict[str, str]] = []
+        self._aliases: list[dict[str, str]] = []
 
     def setAlias(self, value: str, type_: str) -> None:
         self._aliases.append({"value": value, "type": type_})
 
-    def getEquivalents(self, type_: str) -> List[str]:
+    def getEquivalents(self, type_: str) -> list[str]:
         return [a["value"] for a in self._aliases if a["type"] == type_]
 
     def matches(self, value: str, includeChildren: bool = True,
@@ -76,7 +76,7 @@ class MockSpiderFootEvent:
     """Minimal mock of SpiderFootEvent."""
 
     def __init__(self, event_type: str, data: str, module: str,
-                 source_event: Optional["MockSpiderFootEvent"] = None) -> None:
+                 source_event: MockSpiderFootEvent | None = None) -> None:
         self.eventType = event_type
         self.data = data
         self.module = module
@@ -99,7 +99,7 @@ class MockSpiderFootEvent:
 class MockSpiderFoot:
     """Minimal mock of SpiderFoot core for module testing."""
 
-    def __init__(self, target: Optional[MockSpiderFootTarget] = None) -> None:
+    def __init__(self, target: MockSpiderFootTarget | None = None) -> None:
         self.target = target or MockSpiderFootTarget()
         self.opts = {
             "_debug": False,
@@ -114,8 +114,8 @@ class MockSpiderFoot:
             "_socks4user": "",
             "_socks5pwd": "",
         }
-        self._temp_storage: Dict[str, Dict] = {}
-        self._cache: Dict[str, Any] = {}
+        self._temp_storage: dict[str, dict] = {}
+        self._cache: dict[str, Any] = {}
         self._log = logging.getLogger("test.spiderfoot")
 
     def debug(self, msg: str) -> None:
@@ -130,10 +130,10 @@ class MockSpiderFoot:
     def warning(self, msg: str) -> None:
         self._log.warning(msg)
 
-    def tempStorage(self) -> Dict:
+    def tempStorage(self) -> dict:
         return {}
 
-    def cacheGet(self, key: str, max_age: int = 0) -> Optional[str]:
+    def cacheGet(self, key: str, max_age: int = 0) -> str | None:
         return self._cache.get(key)
 
     def cachePut(self, key: str, value: str) -> None:
@@ -161,7 +161,7 @@ class MockSpiderFoot:
         from urllib.parse import urlparse
         return urlparse(url).hostname or ""
 
-    def fetchUrl(self, url: str, **kwargs) -> Dict:
+    def fetchUrl(self, url: str, **kwargs) -> dict:
         """Mock URL fetch — returns empty result by default."""
         return {
             "content": "",
@@ -171,13 +171,13 @@ class MockSpiderFoot:
             "realurl": url,
         }
 
-    def resolveHost(self, host: str) -> Optional[List[str]]:
+    def resolveHost(self, host: str) -> list[str] | None:
         return None
 
-    def resolveHost6(self, host: str) -> Optional[List[str]]:
+    def resolveHost6(self, host: str) -> list[str] | None:
         return None
 
-    def resolveIP(self, ip: str) -> Optional[List[str]]:
+    def resolveIP(self, ip: str) -> list[str] | None:
         return None
 
     def checkForStop(self) -> bool:
@@ -194,7 +194,7 @@ class ModuleTestHarness:
     def __init__(self, module_name: str,
                  target_value: str = "example.com",
                  target_type: str = "INTERNET_NAME",
-                 module_opts: Optional[Dict[str, Any]] = None) -> None:
+                 module_opts: dict[str, Any] | None = None) -> None:
         """Initialize the test harness.
 
         Args:
@@ -206,12 +206,12 @@ class ModuleTestHarness:
         self.module_name = module_name
         self.target = MockSpiderFootTarget(target_value, target_type)
         self.sf = MockSpiderFoot(self.target)
-        self._captured_events: List[CapturedEvent] = []
+        self._captured_events: list[CapturedEvent] = []
         self._module_instance = None
         self._module_class = None
         self._module_opts = module_opts or {}
 
-    def _load_module_class(self) -> Type:
+    def _load_module_class(self) -> type:
         """Load the module class from the modules directory."""
         if self._module_class:
             return self._module_class
@@ -296,16 +296,16 @@ class ModuleTestHarness:
 
         instance.handleEvent(event)
 
-    def get_produced_events(self) -> List[CapturedEvent]:
+    def get_produced_events(self) -> list[CapturedEvent]:
         """Get all events produced during testing."""
         return list(self._captured_events)
 
-    def get_events_by_type(self, event_type: str) -> List[CapturedEvent]:
+    def get_events_by_type(self, event_type: str) -> list[CapturedEvent]:
         """Get produced events filtered by type."""
         return [e for e in self._captured_events
                 if e.event_type == event_type]
 
-    def get_event_types(self) -> Set[str]:
+    def get_event_types(self) -> set[str]:
         """Get the set of event types produced."""
         return {e.event_type for e in self._captured_events}
 
@@ -313,7 +313,7 @@ class ModuleTestHarness:
         """Clear captured events."""
         self._captured_events.clear()
 
-    def assert_valid_metadata(self) -> List[str]:
+    def assert_valid_metadata(self) -> list[str]:
         """Validate module metadata structure.
 
         Returns list of warnings.
@@ -349,7 +349,7 @@ class ModuleTestHarness:
 
         return warnings
 
-    def get_module_info(self) -> Dict[str, Any]:
+    def get_module_info(self) -> dict[str, Any]:
         """Get module metadata summary."""
         cls = self._load_module_class()
         instance = cls()
@@ -365,7 +365,7 @@ class ModuleTestHarness:
 
     def set_fetch_response(self, url_pattern: str,
                            content: str = "", code: str = "200",
-                           headers: Optional[Dict] = None) -> None:
+                           headers: dict | None = None) -> None:
         """Set a mock response for URL fetching.
 
         Args:

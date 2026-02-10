@@ -45,10 +45,11 @@ from typing import (
     Dict,
     List,
     Optional,
-    Sequence,
     Type,
     Union,
 )
+
+from collections.abc import Sequence
 from unittest.mock import MagicMock, patch
 
 log = logging.getLogger("spiderfoot.plugin_test")
@@ -98,8 +99,8 @@ class FakeSpiderFoot:
     Anything not explicitly stubbed falls through to a ``MagicMock``.
     """
 
-    def __init__(self, opts: Optional[dict] = None):
-        self.opts: Dict[str, Any] = opts or _default_opts()
+    def __init__(self, opts: dict | None = None):
+        self.opts: dict[str, Any] = opts or _default_opts()
         self._mock = MagicMock()
         self._scan_id = "TEST_SCAN_001"
         self.scanId = self._scan_id  # noqa: N815
@@ -125,7 +126,7 @@ class FakeSpiderFoot:
         except ValueError:
             return False
 
-    def isDomain(self, hostname: str, tldList: Optional[dict] = None) -> bool:  # noqa: N802, N803
+    def isDomain(self, hostname: str, tldList: dict | None = None) -> bool:  # noqa: N802, N803
         return bool(re.match(r"^[a-zA-Z0-9._-]+\.[a-zA-Z]{2,}$", hostname))
 
     def validHost(self, hostname: str) -> bool:  # noqa: N802
@@ -152,7 +153,7 @@ class FakeSpiderFoot:
     def resolveTargets(self) -> None:  # noqa: N802
         pass
 
-    def cacheGet(self, key: str, t: str) -> Optional[str]:  # noqa: N802
+    def cacheGet(self, key: str, t: str) -> str | None:  # noqa: N802
         return self._mock.cacheGet(key, t)
 
     def cachePut(self, key: str, t: str, data: str) -> None:  # noqa: N802
@@ -208,7 +209,7 @@ def make_root_event(target: str = "example.com",
 
 def make_event(event_type: str, data: str,
                module: str = "sfp_test",
-               parent: Optional[Any] = None,
+               parent: Any | None = None,
                confidence: int = 100) -> Any:
     """Create a SpiderFootEvent with optional parent defaulting to ROOT."""
     cls = _get_event_class()
@@ -227,7 +228,7 @@ def make_event(event_type: str, data: str,
 class EventCapture:
     """Collects events emitted by a module under test."""
 
-    events: List[Any] = field(default_factory=list)
+    events: list[Any] = field(default_factory=list)
 
     def __call__(self, event: Any) -> None:
         """Callable adapter – used as ``notifyListeners`` replacement."""
@@ -238,18 +239,18 @@ class EventCapture:
 
     # --- query helpers ---
 
-    def of_type(self, event_type: str) -> List[Any]:
+    def of_type(self, event_type: str) -> list[Any]:
         """Return captured events matching *event_type*."""
         return [e for e in self.events if e.eventType == event_type]
 
-    def types(self) -> List[str]:
+    def types(self) -> list[str]:
         """Return unique event types captured (preserving order)."""
         seen: dict = {}
         for e in self.events:
             seen.setdefault(e.eventType, None)
         return list(seen)
 
-    def data_values(self, event_type: Optional[str] = None) -> List[str]:
+    def data_values(self, event_type: str | None = None) -> list[str]:
         """Return data payloads, optionally filtered by type."""
         source = self.of_type(event_type) if event_type else self.events
         return [e.data for e in source]
@@ -257,20 +258,20 @@ class EventCapture:
     def has(self, event_type: str) -> bool:
         return any(e.eventType == event_type for e in self.events)
 
-    def count(self, event_type: Optional[str] = None) -> int:
+    def count(self, event_type: str | None = None) -> int:
         if event_type:
             return len(self.of_type(event_type))
         return len(self.events)
 
-    def first(self, event_type: Optional[str] = None) -> Any:
+    def first(self, event_type: str | None = None) -> Any:
         source = self.of_type(event_type) if event_type else self.events
         return source[0] if source else None
 
-    def last(self, event_type: Optional[str] = None) -> Any:
+    def last(self, event_type: str | None = None) -> Any:
         source = self.of_type(event_type) if event_type else self.events
         return source[-1] if source else None
 
-    def find(self, predicate: Callable[[Any], bool]) -> List[Any]:
+    def find(self, predicate: Callable[[Any], bool]) -> list[Any]:
         return [e for e in self.events if predicate(e)]
 
 
@@ -314,7 +315,7 @@ class PluginTestHarness:
     @classmethod
     def for_module(cls, module_name: str, *,
                    target: str = "example.com",
-                   target_type: str = "DOMAIN_NAME") -> "PluginTestHarness":
+                   target_type: str = "DOMAIN_NAME") -> PluginTestHarness:
         """Load a module by name and return a harness wrapping it.
 
         *module_name* should be the Python module name, e.g. ``sfp_shodan``.
@@ -328,16 +329,16 @@ class PluginTestHarness:
         return harness
 
     @classmethod
-    def for_class(cls, klass: Type[Any], *,
+    def for_class(cls, klass: type[Any], *,
                   target: str = "example.com",
-                  target_type: str = "DOMAIN_NAME") -> "PluginTestHarness":
+                  target_type: str = "DOMAIN_NAME") -> PluginTestHarness:
         """Create a harness from a module class."""
         instance = klass()
         return cls(instance, target=target, target_type=target_type)
 
     # --- setup ---
 
-    def setup(self, user_opts: Optional[dict] = None) -> "PluginTestHarness":
+    def setup(self, user_opts: dict | None = None) -> PluginTestHarness:
         """Wire and initialise the module."""
         opts = user_opts or {}
 
@@ -380,7 +381,7 @@ class PluginTestHarness:
         self._setup_done = True
         return self
 
-    def set_options(self, opts: dict) -> "PluginTestHarness":
+    def set_options(self, opts: dict) -> PluginTestHarness:
         """Set module options (calls setup if not done yet)."""
         if not self._setup_done:
             self.setup(opts)
@@ -390,7 +391,7 @@ class PluginTestHarness:
         return self
 
     def set_target(self, value: str,
-                   target_type: str = "DOMAIN_NAME") -> "PluginTestHarness":
+                   target_type: str = "DOMAIN_NAME") -> PluginTestHarness:
         """Replace the scan target."""
         self._target = FakeTarget(value, target_type)
         self._root = make_root_event(value)
@@ -402,8 +403,8 @@ class PluginTestHarness:
 
     def mock_http_response(self, status_code: int = 200,
                            content: str = "",
-                           headers: Optional[dict] = None,
-                           url: str = "") -> "PluginTestHarness":
+                           headers: dict | None = None,
+                           url: str = "") -> PluginTestHarness:
         """Configure the default HTTP response for the next fetchUrl call."""
         resp = {
             "content": content,
@@ -417,7 +418,7 @@ class PluginTestHarness:
             self.http_mock.fetch_url.return_value = resp
         return self
 
-    def mock_http_sequence(self, responses: List[dict]) -> "PluginTestHarness":
+    def mock_http_sequence(self, responses: list[dict]) -> PluginTestHarness:
         """Configure a sequence of HTTP responses."""
         formatted = []
         for r in responses:
@@ -434,7 +435,7 @@ class PluginTestHarness:
         return self
 
     def mock_dns_response(self, hostname: str,
-                          ips: Optional[List[str]] = None) -> "PluginTestHarness":
+                          ips: list[str] | None = None) -> PluginTestHarness:
         """Configure DNS resolution mock."""
         ips = ips or []
         self._sf._mock.resolveHost.return_value = ips
@@ -445,8 +446,8 @@ class PluginTestHarness:
     # --- event feeding ---
 
     def feed_event(self, event_type: str, data: str,
-                   parent: Optional[Any] = None,
-                   confidence: int = 100) -> "PluginTestHarness":
+                   parent: Any | None = None,
+                   confidence: int = 100) -> PluginTestHarness:
         """Feed an event into the module's handleEvent()."""
         if not self._setup_done:
             self.setup()
@@ -461,14 +462,14 @@ class PluginTestHarness:
         self._module.handleEvent(evt)
         return self
 
-    def feed_root(self) -> "PluginTestHarness":
+    def feed_root(self) -> PluginTestHarness:
         """Feed the ROOT event."""
         if not self._setup_done:
             self.setup()
         self._module.handleEvent(self._root)
         return self
 
-    def feed_events(self, events: Sequence[tuple]) -> "PluginTestHarness":
+    def feed_events(self, events: Sequence[tuple]) -> PluginTestHarness:
         """Feed multiple events as ``(type, data)`` or ``(type, data, parent)`` tuples."""
         for item in events:
             if len(item) == 2:
@@ -488,23 +489,23 @@ class PluginTestHarness:
         """Did the module produce at least one event of *event_type*?."""
         return self._capture.has(event_type)
 
-    def produced_count(self, event_type: Optional[str] = None) -> int:
+    def produced_count(self, event_type: str | None = None) -> int:
         """How many events of *event_type* (or total) were produced?."""
         return self._capture.count(event_type)
 
-    def events_of_type(self, event_type: str) -> List[Any]:
+    def events_of_type(self, event_type: str) -> list[Any]:
         """Return all captured events of *event_type*."""
         return self._capture.of_type(event_type)
 
-    def all_events(self) -> List[Any]:
+    def all_events(self) -> list[Any]:
         """Return all captured events."""
         return list(self._capture.events)
 
-    def event_types(self) -> List[str]:
+    def event_types(self) -> list[str]:
         """Unique event types produced."""
         return self._capture.types()
 
-    def event_data(self, event_type: Optional[str] = None) -> List[str]:
+    def event_data(self, event_type: str | None = None) -> list[str]:
         """Return data payloads for captured events."""
         return self._capture.data_values(event_type)
 
@@ -550,7 +551,7 @@ class PluginTestHarness:
 
     # --- cleanup ---
 
-    def reset(self) -> "PluginTestHarness":
+    def reset(self) -> PluginTestHarness:
         """Clear captured events for a fresh run."""
         self._capture.clear()
         return self

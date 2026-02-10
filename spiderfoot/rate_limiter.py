@@ -127,8 +127,8 @@ class RateLimiterService:
         """
         self._default = default_limit or RateLimit(
             requests=60, window=60.0)
-        self._limits: Dict[str, RateLimit] = {}
-        self._states: Dict[str, LimitState] = {}
+        self._limits: dict[str, RateLimit] = {}
+        self._states: dict[str, LimitState] = {}
         self._lock = threading.Lock()
         self._global_enabled = True
 
@@ -251,7 +251,7 @@ class RateLimiterService:
     # Bulk operations
     # ------------------------------------------------------------------
 
-    def allow_all(self, keys: List[str]) -> bool:
+    def allow_all(self, keys: list[str]) -> bool:
         """Check multiple keys — all must be allowed."""
         results = [self.check(k) for k in keys]
         return all(r.allowed for r in results)
@@ -295,7 +295,7 @@ class RateLimiterService:
             }
 
     @property
-    def all_stats(self) -> List[dict]:
+    def all_stats(self) -> list[dict]:
         """Get stats for all tracked keys."""
         with self._lock:
             keys = set(self._limits.keys()) | set(self._states.keys())
@@ -358,7 +358,7 @@ class RateLimiterService:
     # Pre-configured module limits
     # ------------------------------------------------------------------
 
-    def configure_from_dict(self, config: Dict[str, dict]) -> int:
+    def configure_from_dict(self, config: dict[str, dict]) -> int:
         """Load rate limits from a config dictionary.
 
         Format::

@@ -60,7 +60,7 @@ class LoadResult:
     skipped: int
     """Modules skipped (e.g. not in registry or disabled)."""
 
-    errors: List[Tuple[str, str]]
+    errors: list[tuple[str, str]]
     """``(module_name, error_message)`` pairs."""
 
     order_method: str
@@ -72,7 +72,7 @@ class LoadResult:
     duration: float
     """Wall-clock seconds for the entire load operation."""
 
-    pruned: List[str] = field(default_factory=list)
+    pruned: list[str] = field(default_factory=list)
     """Module names removed by minimal-set resolution."""
 
     def __repr__(self) -> str:
@@ -191,8 +191,8 @@ class ModuleLoader:
 
     def load_modules(
         self,
-        module_list: List[str],
-        config: Dict[str, Any],
+        module_list: list[str],
+        config: dict[str, Any],
         *,
         sf: Any = None,
         scan_id: Optional[str] = None,
@@ -200,7 +200,7 @@ class ModuleLoader:
         target: Any = None,
         shared_pool: Any = None,
         event_queue: Any = None,
-        desired_output_types: Optional[List[str]] = None,
+        desired_output_types: Optional[list[str]] = None,
     ) -> LoadResult:
         """Load, wire, and order all modules.
 
@@ -229,9 +229,9 @@ class ModuleLoader:
         loaded_count = 0
         failed_count = 0
         skipped_count = 0
-        errors: List[Tuple[str, str]] = []
-        instances: Dict[str, Any] = {}
-        pruned: List[str] = []
+        errors: list[tuple[str, str]] = []
+        instances: dict[str, Any] = {}
+        pruned: list[str] = []
 
         # Optional pruning
         effective_list = list(module_list)
@@ -316,7 +316,7 @@ class ModuleLoader:
     def _load_single(
         self,
         mod_name: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         *,
         sf: Any = None,
         scan_id: Optional[str] = None,
@@ -391,8 +391,8 @@ class ModuleLoader:
     def _wire_module(
         instance: Any,
         mod_name: str,
-        config: Dict[str, Any],
-        modules_config: Dict[str, Any],
+        config: dict[str, Any],
+        modules_config: dict[str, Any],
         *,
         sf: Any = None,
         scan_id: Optional[str] = None,
@@ -492,8 +492,8 @@ class ModuleLoader:
 
     def _order_modules(
         self,
-        instances: Dict[str, Any],
-    ) -> Tuple[OrderedDict, str, int]:
+        instances: dict[str, Any],
+    ) -> tuple[OrderedDict, str, int]:
         """Order loaded modules — topological if graph available, else priority.
 
         Returns:
@@ -520,8 +520,8 @@ class ModuleLoader:
 
     def _topological_order(
         self,
-        instances: Dict[str, Any],
-    ) -> Tuple[OrderedDict, str, int]:
+        instances: dict[str, Any],
+    ) -> tuple[OrderedDict, str, int]:
         """Apply topological ordering from the dependency graph.
 
         Modules not in the graph are appended at the end, sorted by
@@ -559,9 +559,9 @@ class ModuleLoader:
 
     def resolve_minimal_set(
         self,
-        desired_output_types: List[str],
-        available_modules: Optional[List[str]] = None,
-    ) -> Set[str]:
+        desired_output_types: list[str],
+        available_modules: Optional[list[str]] = None,
+    ) -> set[str]:
         """Find the minimal set of modules needed for desired output.
 
         Args:
@@ -585,8 +585,8 @@ class ModuleLoader:
 
     def get_topological_order(
         self,
-        module_names: Optional[List[str]] = None,
-    ) -> List[str]:
+        module_names: Optional[list[str]] = None,
+    ) -> list[str]:
         """Get modules in dependency order.
 
         Args:
@@ -606,14 +606,14 @@ class ModuleLoader:
         name_set = set(module_names)
         return [m for m in full_order if m in name_set]
 
-    def dependency_info(self, module_name: str) -> Dict[str, Any]:
+    def dependency_info(self, module_name: str) -> dict[str, Any]:
         """Get dependency information for a module.
 
         Returns:
             Dict with ``depends_on``, ``depended_on_by``, ``watched``,
             ``produced`` event types.
         """
-        info: Dict[str, Any] = {
+        info: dict[str, Any] = {
             "module": module_name,
             "depends_on": [],
             "depended_on_by": [],
@@ -670,9 +670,9 @@ class ModuleLoader:
         """The underlying ``ModuleGraph`` (or None)."""
         return self._graph
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Combined statistics from registry and graph."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "has_registry": self.has_registry,
             "has_graph": self.has_graph,
             "enable_topological": self._enable_topological,

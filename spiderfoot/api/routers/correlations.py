@@ -32,7 +32,7 @@ class CorrelationRuleRequest(BaseModel):
     risk: str = Field(..., description="Risk level: HIGH, MEDIUM, LOW, INFO")
     logic: str = Field(..., description="Rule logic/query")
     enabled: bool = Field(True, description="Whether rule is enabled")
-    tags: Optional[List[str]] = Field(None, description="Rule tags")
+    tags: Optional[list[str]] = Field(None, description="Rule tags")
 
 
 class CorrelationRuleUpdate(BaseModel):
@@ -42,7 +42,7 @@ class CorrelationRuleUpdate(BaseModel):
     risk: Optional[str] = Field(None, description="Risk level")
     logic: Optional[str] = Field(None, description="Rule logic/query")
     enabled: Optional[bool] = Field(None, description="Whether rule is enabled")
-    tags: Optional[List[str]] = Field(None, description="Rule tags")
+    tags: Optional[list[str]] = Field(None, description="Rule tags")
 
 
 # -----------------------------------------------------------------------
@@ -168,7 +168,7 @@ async def delete_correlation_rule(
 @router.post("/correlation-rules/{rule_id}/test")
 async def test_correlation_rule(
     rule_id: str,
-    test_data: Dict[str, Any] = Body(
+    test_data: dict[str, Any] = Body(
         ..., description="Test data (must include scan_id)"
     ),
     api_key: str = optional_auth_dep,
@@ -236,7 +236,7 @@ async def get_detailed_scan_correlations(
         resp = paginate(dicts, params)
 
         # Build risk summary from full (pre-paginated) list
-        risk_summary: Dict[str, int] = {}
+        risk_summary: dict[str, int] = {}
         for r in results:
             risk_summary[r.risk] = risk_summary.get(r.risk, 0) + 1
 
@@ -259,15 +259,15 @@ async def get_detailed_scan_correlations(
 
 @router.post("/correlations/analyze")
 async def analyze_correlation_patterns(
-    analysis_request: Dict[str, Any] = Body(
+    analysis_request: dict[str, Any] = Body(
         ..., description="Analysis configuration"
     ),
     api_key: str = optional_auth_dep,
     svc: CorrelationService = Depends(get_correlation_svc),
 ):
     """Run correlation analysis across multiple scans."""
-    scan_ids: List[str] = analysis_request.get("scan_ids", [])
-    rule_ids: Optional[List[str]] = analysis_request.get("rule_ids") or None
+    scan_ids: list[str] = analysis_request.get("scan_ids", [])
+    rule_ids: Optional[list[str]] = analysis_request.get("rule_ids") or None
 
     if not scan_ids:
         raise HTTPException(
@@ -278,13 +278,13 @@ async def analyze_correlation_patterns(
         import time as _time
 
         t0 = _time.monotonic()
-        all_results: List[CorrelationResult] = []
+        all_results: list[CorrelationResult] = []
         for sid in scan_ids:
             all_results.extend(svc.run_for_scan(sid, rule_ids=rule_ids))
         elapsed_ms = round((_time.monotonic() - t0) * 1000, 1)
 
         # Aggregate — rule frequency
-        rule_freq: Dict[str, int] = {}
+        rule_freq: dict[str, int] = {}
         for r in all_results:
             rule_freq[r.rule_name] = rule_freq.get(r.rule_name, 0) + 1
 
@@ -296,7 +296,7 @@ async def analyze_correlation_patterns(
         ]
 
         # Risk breakdown
-        risk_summary: Dict[str, int] = {}
+        risk_summary: dict[str, int] = {}
         for r in all_results:
             risk_summary[r.risk] = risk_summary.get(r.risk, 0) + 1
 

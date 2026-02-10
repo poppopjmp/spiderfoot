@@ -24,44 +24,37 @@ from networkx.readwrite.gexf import GEXFWriter
 import networkx as nx
 
 
-if sys.version_info >= (3, 8):  # PEP 589 support (TypedDict)
-    class _GraphNode(typing.TypedDict):
-        id: str
-        label: str
-        size: typing.Union[int, float]
-        r: int
-        g: int
-        b: int
+class _GraphNode(typing.TypedDict):
+    id: str
+    label: str
+    size: typing.Union[int, float]
+    r: int
+    g: int
+    b: int
 
-    class _GraphEdge(typing.TypedDict):
-        source: str
-        target: str
-        weight: typing.Union[int, float]
+class _GraphEdge(typing.TypedDict):
+    source: str
+    target: str
+    weight: typing.Union[int, float]
 
-    class _Graph(typing.TypedDict, total=False):
-        nodes: typing.List[_GraphNode]
-        edges: typing.List[_GraphEdge]
-        meta: typing.Dict[str, typing.Any]
+class _Graph(typing.TypedDict, total=False):
+    nodes: list[_GraphNode]
+    edges: list[_GraphEdge]
+    meta: dict[str, typing.Any]
 
-    class Tree(typing.TypedDict):
-        name: str
-        children: typing.List['Tree']
-        size: typing.Optional[int]
+class Tree(typing.TypedDict):
+    name: str
+    children: list['Tree']
+    size: typing.Optional[int]
 
-    class ExtractedLink(typing.TypedDict):
-        url: str
-        text: str
-        title: typing.Optional[str]
-
-else:
-    _GraphNode = typing.Dict[str, typing.Union[str, int]]
-    _GraphEdge = typing.Dict[str, str]
-    _GraphObject = typing.Union[_GraphNode, _GraphEdge]
-    Tree = typing.Dict[str, typing.Any]
-    ExtractedLink = typing.Dict[str, typing.Any]
+class ExtractedLink(typing.TypedDict):
+    url: str
+    text: str
+    title: typing.Optional[str]
 
 
-EmptyTree = typing.Dict[None, object]
+
+EmptyTree = dict[None, object]
 
 
 class SpiderFootHelpers():
@@ -204,7 +197,7 @@ class SpiderFootHelpers():
         return None
 
     @staticmethod
-    def loadModulesAsDict(path: str, ignore_files: typing.Optional[typing.List[str]] = None) -> dict:
+    def loadModulesAsDict(path: str, ignore_files: typing.Optional[list[str]] = None) -> dict:
         """Load modules as dictionary."""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
@@ -284,7 +277,7 @@ class SpiderFootHelpers():
         return modules
 
     @staticmethod
-    def loadCorrelationRulesRaw(path: str, ignore_files: typing.Optional[typing.List[str]] = None) -> typing.List[dict]:
+    def loadCorrelationRulesRaw(path: str, ignore_files: typing.Optional[list[str]] = None) -> list[dict]:
         """Load correlation rules."""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
@@ -400,7 +393,7 @@ class SpiderFootHelpers():
         return sanitized
 
     @staticmethod
-    def dictionaryWordsFromWordlists(wordlists: typing.Optional[typing.List[str]] = None) -> typing.Set[str]:
+    def dictionaryWordsFromWordlists(wordlists: typing.Optional[list[str]] = None) -> set[str]:
         """Return dictionary words from several language dictionaries.
 
         Args:
@@ -412,7 +405,7 @@ class SpiderFootHelpers():
         Raises:
             IOError: Error reading wordlist file
         """
-        words: typing.Set[str] = set()
+        words: set[str] = set()
 
         if wordlists is None:
             wordlists = ["english", "german", "french", "spanish"]
@@ -425,12 +418,12 @@ class SpiderFootHelpers():
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
-                raise IOError(f"Could not read wordlist file '{d}.dict'") from e
+                raise OSError(f"Could not read wordlist file '{d}.dict'") from e
 
         return words
 
     @staticmethod
-    def humanNamesFromWordlists(wordlists: typing.Optional[typing.List[str]] = None) -> typing.Set[str]:
+    def humanNamesFromWordlists(wordlists: typing.Optional[list[str]] = None) -> set[str]:
         """Return list of human names from wordlist file.
 
         Args:
@@ -442,7 +435,7 @@ class SpiderFootHelpers():
         Raises:
             IOError: Error reading wordlist file
         """
-        words: typing.Set[str] = set()
+        words: set[str] = set()
 
         if wordlists is None:
             wordlists = ["names"]
@@ -454,12 +447,12 @@ class SpiderFootHelpers():
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
-                raise IOError(f"Could not read wordlist file '{d}.dict'") from e
+                raise OSError(f"Could not read wordlist file '{d}.dict'") from e
 
         return words
 
     @staticmethod
-    def usernamesFromWordlists(wordlists: typing.Optional[typing.List[str]] = None) -> typing.Set[str]:
+    def usernamesFromWordlists(wordlists: typing.Optional[list[str]] = None) -> set[str]:
         """Return list of usernames from wordlist file.
 
         Args:
@@ -471,7 +464,7 @@ class SpiderFootHelpers():
         Raises:
             IOError: Error reading wordlist file
         """
-        words: typing.Set[str] = set()
+        words: set[str] = set()
 
         if wordlists is None:
             wordlists = ["generic-usernames"]
@@ -483,12 +476,12 @@ class SpiderFootHelpers():
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
-                raise IOError(f"Could not read wordlist file '{d}.txt'") from e
+                raise OSError(f"Could not read wordlist file '{d}.txt'") from e
 
         return words
 
     @staticmethod
-    def buildGraphGexf(root: str, title: str, data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> str:
+    def buildGraphGexf(root: str, title: str, data: list[str], flt: typing.Optional[list[str]] = None) -> str:
         """Convert supplied raw data into GEXF (Graph Exchange XML Format)
         format (e.g. for Gephi).
 
@@ -508,7 +501,7 @@ class SpiderFootHelpers():
             mapping = SpiderFootHelpers.buildGraphData(data, flt)
             graph = nx.Graph()
 
-            nodelist: typing.Dict[str, int] = dict()
+            nodelist: dict[str, int] = dict()
             ncounter = 0
             for pair in mapping:
                 (dst, src) = pair
@@ -548,7 +541,7 @@ class SpiderFootHelpers():
             return b""
 
     @staticmethod
-    def buildGraphJson(root: str, data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> str:
+    def buildGraphJson(root: str, data: list[str], flt: typing.Optional[list[str]] = None) -> str:
         """Convert supplied raw data into JSON format for SigmaJS.
 
         Args:
@@ -568,7 +561,7 @@ class SpiderFootHelpers():
             ret['nodes'] = list()
             ret['edges'] = list()
 
-            nodelist: typing.Dict[str, int] = dict()
+            nodelist: dict[str, int] = dict()
             ecounter = 0
             ncounter = 0
             for pair in mapping:
@@ -626,7 +619,7 @@ class SpiderFootHelpers():
             return "{}"
 
     @staticmethod
-    def buildGraphData(data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> typing.Set[typing.Tuple[str, str]]:
+    def buildGraphData(data: list[str], flt: typing.Optional[list[str]] = None) -> set[tuple[str, str]]:
         """Return a format-agnostic collection of tuples to use as the basis
         for building graphs in various formats.
 
@@ -650,11 +643,11 @@ class SpiderFootHelpers():
         if not data:
             raise ValueError("data is empty")
 
-        def get_next_parent_entities(item: str, pids: typing.Optional[typing.List[str]] = None) -> typing.List[str]:
+        def get_next_parent_entities(item: str, pids: typing.Optional[list[str]] = None) -> list[str]:
             if not pids:
                 pids = []
 
-            ret: typing.List[str] = list()
+            ret: list[str] = list()
 
             for [parent, entity_id] in parents[item]:
                 if entity_id in pids:
@@ -667,9 +660,9 @@ class SpiderFootHelpers():
                         ret.append(p)
             return ret
 
-        mapping: typing.Set[typing.Tuple[str, str]] = set()
-        entities: typing.Dict[str, bool] = dict()
-        parents: typing.Dict[str, typing.List[typing.List[str]]] = dict()
+        mapping: set[tuple[str, str]] = set()
+        entities: dict[str, bool] = dict()
+        parents: dict[str, list[list[str]]] = dict()
 
         for row in data:
             if len(row) != 15:
@@ -703,7 +696,7 @@ class SpiderFootHelpers():
         return mapping
 
     @staticmethod
-    def dataParentChildToTree(data: typing.Dict[str, typing.Optional[typing.List[str]]]) -> typing.Union[Tree, EmptyTree]:
+    def dataParentChildToTree(data: dict[str, typing.Optional[list[str]]]) -> typing.Union[Tree, EmptyTree]:
         """Converts a dictionary of k -> array to a nested tree that can be
         digested by d3 for visualizations.
 
@@ -723,8 +716,8 @@ class SpiderFootHelpers():
         if not data:
             raise ValueError("data is empty")
 
-        def get_children(needle: str, haystack: typing.Dict[str, typing.Optional[typing.List[str]]]) -> typing.Optional[typing.List[Tree]]:
-            ret: typing.List[Tree] = list()
+        def get_children(needle: str, haystack: dict[str, typing.Optional[list[str]]]) -> typing.Optional[list[Tree]]:
+            ret: list[Tree] = list()
 
             if needle not in list(haystack.keys()):
                 return None
@@ -799,9 +792,9 @@ class SpiderFootHelpers():
             return bool(re.match(r'^\+?[\d\s\-\(\)]{7,15}$', phone.strip()))
 
     @staticmethod
-    def extractLinksFromHtml(url: str, data: str, domains: typing.Optional[typing.List[str]] = None) -> typing.Dict[str, ExtractedLink]:
+    def extractLinksFromHtml(url: str, data: str, domains: typing.Optional[list[str]] = None) -> dict[str, ExtractedLink]:
         """Find all URLs within the supplied content."""
-        returnLinks: typing.Dict[str, ExtractedLink] = dict()
+        returnLinks: dict[str, ExtractedLink] = dict()
 
         if not isinstance(url, str):
             raise TypeError(f"url {type(url)}; expected str()")
@@ -818,7 +811,7 @@ class SpiderFootHelpers():
             'area': 'href', 'base': 'href', 'form': 'action'
         }
 
-        links: typing.List[typing.Union[typing.List[str], str]] = []
+        links: list[typing.Union[list[str], str]] = []
 
         try:
             for t in list(tags.keys()):
@@ -888,9 +881,9 @@ class SpiderFootHelpers():
         return returnLinks
 
     @staticmethod
-    def extractHashesFromText(data: str) -> typing.List[typing.Tuple[str, str]]:
+    def extractHashesFromText(data: str) -> list[tuple[str, str]]:
         """Extract all hashes within the supplied content."""
-        ret: typing.List[typing.Tuple[str, str]] = list()
+        ret: list[tuple[str, str]] = list()
         if not isinstance(data, str):
             return ret
 
@@ -908,7 +901,7 @@ class SpiderFootHelpers():
         return ret
 
     @staticmethod
-    def extractUrlsFromRobotsTxt(robotsTxtData: str) -> typing.List[str]:
+    def extractUrlsFromRobotsTxt(robotsTxtData: str) -> list[str]:
         """Parse the contents of robots.txt.
 
         Args:
@@ -922,7 +915,7 @@ class SpiderFootHelpers():
 
             Future: Fix whitespace parsing — " " is not a valid disallowed path.
         """
-        returnArr: typing.List[str] = list()
+        returnArr: list[str] = list()
 
         if not isinstance(robotsTxtData, str):
             return returnArr
@@ -936,7 +929,7 @@ class SpiderFootHelpers():
         return returnArr
 
     @staticmethod
-    def extractPgpKeysFromText(data: str) -> typing.List[str]:
+    def extractPgpKeysFromText(data: str) -> list[str]:
         """Extract all PGP keys within the supplied content.
 
         Args:
@@ -948,7 +941,7 @@ class SpiderFootHelpers():
         if not isinstance(data, str):
             return list()
 
-        keys: typing.Set[str] = set()
+        keys: set[str] = set()
 
         pattern = re.compile(
             "(-----BEGIN.*?END.*?BLOCK-----)", re.MULTILINE | re.DOTALL)
@@ -959,7 +952,7 @@ class SpiderFootHelpers():
         return list(keys)
 
     @staticmethod
-    def extractEmailsFromText(data: str) -> typing.List[str]:
+    def extractEmailsFromText(data: str) -> list[str]:
         """Extract all email addresses within the supplied content.
 
         Args:
@@ -971,7 +964,7 @@ class SpiderFootHelpers():
         if not isinstance(data, str):
             return list()
 
-        emails: typing.Set[str] = set()
+        emails: set[str] = set()
         matches = re.findall(
             r'([\%a-zA-Z\.0-9_\-\+]+@[a-zA-Z\.0-9\-]+\.[a-zA-Z\.0-9\-]+)', data)
 
@@ -982,7 +975,7 @@ class SpiderFootHelpers():
         return list(emails)
 
     @staticmethod
-    def extractIbansFromText(data: str) -> typing.List[str]:
+    def extractIbansFromText(data: str) -> list[str]:
         """Find all International Bank Account Numbers (IBANs) within the
         supplied content.
 
@@ -1000,7 +993,7 @@ class SpiderFootHelpers():
         if not isinstance(data, str):
             return list()
 
-        ibans: typing.Set[str] = set()
+        ibans: set[str] = set()
 
         # Dictionary of country codes and their respective IBAN lengths
         ibanCountryLengths = {
@@ -1066,7 +1059,7 @@ class SpiderFootHelpers():
         return list(ibans)
 
     @staticmethod
-    def extractCreditCardsFromText(data: str) -> typing.List[str]:
+    def extractCreditCardsFromText(data: str) -> list[str]:
         """Find all credit card numbers with the supplied content.
 
         Extracts numbers with lengths ranging from 13 - 19 digits
@@ -1083,7 +1076,7 @@ class SpiderFootHelpers():
         if not isinstance(data, str):
             return list()
 
-        creditCards: typing.Set[str] = set()
+        creditCards: set[str] = set()
 
         # Remove whitespace from data.
         # Credit cards might contain spaces between them
@@ -1116,7 +1109,7 @@ class SpiderFootHelpers():
         return list(creditCards)
 
     @staticmethod
-    def extractUrlsFromText(data: str) -> typing.List[str]:
+    def extractUrlsFromText(data: str) -> list[str]:
         """Extract URLs from text."""
         if not isinstance(data, str):
             return []
@@ -1156,7 +1149,7 @@ class SpiderFootHelpers():
         return country_tlds.get(tld.upper())
 
     @staticmethod
-    def countryCodes() -> typing.Dict[str, str]:
+    def countryCodes() -> dict[str, str]:
         """Dictionary of country codes and associated country names."""
         return {
             "AF": "Afghanistan", "AX": "Aland Islands", "AL": "Albania", "DZ": "Algeria",

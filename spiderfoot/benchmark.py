@@ -65,9 +65,9 @@ class BenchmarkResult:
     operation: str
     iterations: int
     total_time: float       # seconds
-    times: List[float] = field(default_factory=list)  # per-iteration
+    times: list[float] = field(default_factory=list)  # per-iteration
     errors: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def ops_per_sec(self) -> float:
@@ -140,10 +140,10 @@ class BenchmarkResult:
 class BenchmarkReport:
     """Collection of benchmark results."""
 
-    results: List[BenchmarkResult] = field(default_factory=list)
+    results: list[BenchmarkResult] = field(default_factory=list)
     started_at: float = 0.0
     completed_at: float = 0.0
-    system_info: Dict[str, Any] = field(default_factory=dict)
+    system_info: dict[str, Any] = field(default_factory=dict)
 
     @property
     def total_time(self) -> float:
@@ -197,7 +197,7 @@ class Benchmark:
         """Called once after the benchmark finishes."""
         pass
 
-    def run(self, iterations: int = 10000) -> List[BenchmarkResult]:
+    def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
         """Execute the benchmark and return results."""
         raise NotImplementedError
 
@@ -270,7 +270,7 @@ class EventBusBenchmark(Benchmark):
             except Exception as e:
                 log.debug("EventBus shutdown failed during teardown: %s", e)
 
-    def run(self, iterations: int = 10000) -> List[BenchmarkResult]:
+    def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
         results = []
         if self._bus is None:
             return results
@@ -299,7 +299,7 @@ class CacheBenchmark(Benchmark):
         except ImportError:
             self._cache = None
 
-    def run(self, iterations: int = 10000) -> List[BenchmarkResult]:
+    def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
         results = []
         if self._cache is None:
             return results
@@ -356,7 +356,7 @@ class RateLimiterBenchmark(Benchmark):
         except ImportError:
             self._limiter = None
 
-    def run(self, iterations: int = 10000) -> List[BenchmarkResult]:
+    def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
         results = []
         if self._limiter is None:
             return results
@@ -375,7 +375,7 @@ class WorkerPoolBenchmark(Benchmark):
 
     name = "WorkerPool"
 
-    def run(self, iterations: int = 5000) -> List[BenchmarkResult]:
+    def run(self, iterations: int = 5000) -> list[BenchmarkResult]:
         import concurrent.futures
         results = []
 
@@ -414,7 +414,7 @@ class SerializationBenchmark(Benchmark):
             },
         }
 
-    def run(self, iterations: int = 10000) -> List[BenchmarkResult]:
+    def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
         import json
         results = []
         payload = self._payload
@@ -442,7 +442,7 @@ class ThreadingBenchmark(Benchmark):
 
     name = "Threading"
 
-    def run(self, iterations: int = 2000) -> List[BenchmarkResult]:
+    def run(self, iterations: int = 2000) -> list[BenchmarkResult]:
         results = []
 
         # Lock acquire/release
@@ -473,7 +473,7 @@ class HashBenchmark(Benchmark):
 
     name = "Hashing"
 
-    def run(self, iterations: int = 10000) -> List[BenchmarkResult]:
+    def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
         import hashlib
         results = []
 
@@ -503,9 +503,9 @@ class BenchmarkSuite:
     """Manages and runs a collection of benchmarks."""
 
     def __init__(self):
-        self._benchmarks: List[Benchmark] = []
+        self._benchmarks: list[Benchmark] = []
 
-    def add(self, benchmark: Benchmark) -> "BenchmarkSuite":
+    def add(self, benchmark: Benchmark) -> BenchmarkSuite:
         self._benchmarks.append(benchmark)
         return self
 

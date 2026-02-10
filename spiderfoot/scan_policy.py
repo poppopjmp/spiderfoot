@@ -38,7 +38,7 @@ class PolicyViolation:
     message: str
     severity: ViolationSeverity = ViolationSeverity.WARNING
     action: PolicyAction = PolicyAction.BLOCK
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
 
 
@@ -46,7 +46,7 @@ class PolicyViolation:
 class PolicyCheckResult:
     """Result of checking an operation against all policies."""
     allowed: bool
-    violations: List[PolicyViolation] = field(default_factory=list)
+    violations: list[PolicyViolation] = field(default_factory=list)
 
     @property
     def has_violations(self) -> bool:
@@ -83,24 +83,24 @@ class ScanPolicy:
         self._max_targets: Optional[int] = None
 
         # Target exclusions
-        self._excluded_patterns: List[re.Pattern] = []
-        self._excluded_networks: List[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
-        self._allowed_targets: Optional[Set[str]] = None
+        self._excluded_patterns: list[re.Pattern] = []
+        self._excluded_networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
+        self._allowed_targets: Optional[set[str]] = None
 
         # Module restrictions
-        self._allowed_modules: Optional[Set[str]] = None
-        self._denied_modules: Set[str] = set()
+        self._allowed_modules: Optional[set[str]] = None
+        self._denied_modules: set[str] = set()
 
         # Event type restrictions
-        self._denied_event_types: Set[str] = set()
-        self._max_events_per_type: Dict[str, int] = {}
+        self._denied_event_types: set[str] = set()
+        self._max_events_per_type: dict[str, int] = {}
 
         # Rate limits
-        self._rate_limit_per_module: Dict[str, float] = {}  # module -> max requests/sec
+        self._rate_limit_per_module: dict[str, float] = {}  # module -> max requests/sec
         self._global_rate_limit: Optional[float] = None
 
         # Tracking
-        self._violations: List[PolicyViolation] = []
+        self._violations: list[PolicyViolation] = []
 
     def set_max_events(self, n: int) -> "ScanPolicy":
         self._max_events = n
@@ -118,7 +118,7 @@ class ScanPolicy:
         self._max_targets = n
         return self
 
-    def exclude_targets(self, patterns: List[str]) -> "ScanPolicy":
+    def exclude_targets(self, patterns: list[str]) -> "ScanPolicy":
         """Exclude targets matching glob patterns or CIDR networks."""
         for p in patterns:
             try:
@@ -129,14 +129,14 @@ class ScanPolicy:
                 self._excluded_patterns.append(re.compile(f"^{regex}$", re.IGNORECASE))
         return self
 
-    def allow_targets(self, targets: Set[str]) -> "ScanPolicy":
+    def allow_targets(self, targets: set[str]) -> "ScanPolicy":
         self._allowed_targets = targets
         return self
 
     def restrict_modules(
         self,
-        allowed: Optional[Set[str]] = None,
-        denied: Optional[Set[str]] = None,
+        allowed: Optional[set[str]] = None,
+        denied: Optional[set[str]] = None,
     ) -> "ScanPolicy":
         if allowed is not None:
             self._allowed_modules = allowed
@@ -144,11 +144,11 @@ class ScanPolicy:
             self._denied_modules = denied
         return self
 
-    def deny_event_types(self, types: Set[str]) -> "ScanPolicy":
+    def deny_event_types(self, types: set[str]) -> "ScanPolicy":
         self._denied_event_types = types
         return self
 
-    def set_max_events_per_type(self, limits: Dict[str, int]) -> "ScanPolicy":
+    def set_max_events_per_type(self, limits: dict[str, int]) -> "ScanPolicy":
         self._max_events_per_type = limits
         return self
 
@@ -322,7 +322,7 @@ class ScanPolicy:
         return PolicyCheckResult(allowed=True)
 
     @property
-    def violations(self) -> List[PolicyViolation]:
+    def violations(self) -> list[PolicyViolation]:
         return list(self._violations)
 
     @property
@@ -399,7 +399,7 @@ class PolicyEngine:
     """
 
     def __init__(self):
-        self._policies: Dict[str, ScanPolicy] = {}
+        self._policies: dict[str, ScanPolicy] = {}
 
     def add_policy(self, policy: ScanPolicy) -> "PolicyEngine":
         self._policies[policy.name] = policy
@@ -440,10 +440,10 @@ class PolicyEngine:
         return len(self._policies)
 
     @property
-    def policy_names(self) -> List[str]:
+    def policy_names(self) -> list[str]:
         return sorted(self._policies.keys())
 
-    def get_all_violations(self) -> List[PolicyViolation]:
+    def get_all_violations(self) -> list[PolicyViolation]:
         violations = []
         for policy in self._policies.values():
             violations.extend(policy.violations)

@@ -25,7 +25,7 @@ if _version_not_supported:
     )
 
 
-class ScanServiceStub(object):
+class ScanServiceStub:
     """============================================================================
     Scan Service — submit, control, and monitor scans
     ============================================================================
@@ -75,7 +75,7 @@ class ScanServiceStub(object):
                 _registered_method=True)
 
 
-class ScanServiceServicer(object):
+class ScanServiceServicer:
     """============================================================================
     Scan Service — submit, control, and monitor scans
     ============================================================================
@@ -177,7 +177,7 @@ def add_ScanServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class ScanService(object):
+class ScanService:
     """============================================================================
     Scan Service — submit, control, and monitor scans
     ============================================================================
@@ -374,7 +374,7 @@ class ScanService(object):
             _registered_method=True)
 
 
-class DataServiceStub(object):
+class DataServiceStub:
     """============================================================================
     Data Service — CRUD operations for scan data
     ============================================================================
@@ -444,7 +444,7 @@ class DataServiceStub(object):
                 _registered_method=True)
 
 
-class DataServiceServicer(object):
+class DataServiceServicer:
     """============================================================================
     Data Service — CRUD operations for scan data
     ============================================================================
@@ -587,7 +587,7 @@ def add_DataServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class DataService(object):
+class DataService:
     """============================================================================
     Data Service — CRUD operations for scan data
     ============================================================================
@@ -892,7 +892,7 @@ class DataService(object):
             _registered_method=True)
 
 
-class HealthServiceStub(object):
+class HealthServiceStub:
     """============================================================================
     Health Service — universal health check for all services
     ============================================================================
@@ -917,7 +917,7 @@ class HealthServiceStub(object):
                 _registered_method=True)
 
 
-class HealthServiceServicer(object):
+class HealthServiceServicer:
     """============================================================================
     Health Service — universal health check for all services
     ============================================================================
@@ -957,7 +957,7 @@ def add_HealthServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class HealthService(object):
+class HealthService:
     """============================================================================
     Health Service — universal health check for all services
     ============================================================================

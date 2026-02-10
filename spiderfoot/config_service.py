@@ -58,7 +58,7 @@ log = logging.getLogger("spiderfoot.config_service")
 # ---------------------------------------------------------------------------
 
 # Maps SF_* env vars to internal config keys
-ENV_MAP: Dict[str, str] = {
+ENV_MAP: dict[str, str] = {
     # Core
     "SF_DEBUG": "_debug",
     "SF_LOG_LEVEL": "_loglevel",
@@ -157,7 +157,7 @@ _BOOL_TRUE = {"1", "true", "yes", "on"}
 _BOOL_FALSE = {"0", "false", "no", "off", ""}
 
 
-def _coerce(value: Any, target_type: Type) -> Any:
+def _coerce(value: Any, target_type: type) -> Any:
     """Coerce a value to the target type."""
     if value is None:
         return None
@@ -194,14 +194,14 @@ class ConfigValidator:
     """Validates configuration values against rules."""
 
     def __init__(self):
-        self._rules: Dict[str, Dict[str, Any]] = {}
+        self._rules: dict[str, dict[str, Any]] = {}
 
     def add_rule(self, key: str, *,
-                 type: Optional[Type] = None,
+                 type: Optional[type] = None,
                  required: bool = False,
                  min_value: Optional[float] = None,
                  max_value: Optional[float] = None,
-                 choices: Optional[Set] = None,
+                 choices: Optional[set] = None,
                  default: Any = None) -> None:
         """Add a validation rule for a config key."""
         self._rules[key] = {
@@ -213,7 +213,7 @@ class ConfigValidator:
             "default": default,
         }
 
-    def validate(self, config: Dict[str, Any]) -> List[str]:
+    def validate(self, config: dict[str, Any]) -> list[str]:
         """Validate a config dict. Returns list of error messages."""
         errors = []
 
@@ -251,7 +251,7 @@ class ConfigValidator:
 
         return errors
 
-    def apply_defaults(self, config: Dict[str, Any]) -> None:
+    def apply_defaults(self, config: dict[str, Any]) -> None:
         """Apply default values for missing keys."""
         for key, rule in self._rules.items():
             if key not in config and rule["default"] is not None:
@@ -270,9 +270,9 @@ class ConfigService:
 
     def __init__(self):
         self._lock = threading.RLock()
-        self._config: Dict[str, Any] = {}
-        self._sources: Dict[str, str] = {}  # key → source (default/file/env/runtime)
-        self._watchers: List[Callable] = []
+        self._config: dict[str, Any] = {}
+        self._sources: dict[str, str] = {}  # key → source (default/file/env/runtime)
+        self._watchers: list[Callable] = []
         self._validator = ConfigValidator()
         self._loaded_from: Optional[str] = None
         self._last_loaded: float = 0.0
@@ -316,7 +316,7 @@ class ConfigService:
                 if key not in self._sources:
                     self._sources[key] = "default"
 
-    def load_dict(self, config: Dict[str, Any]) -> None:
+    def load_dict(self, config: dict[str, Any]) -> None:
         """Merge a configuration dict into the current config."""
         with self._lock:
             self._config.update(config)
@@ -386,7 +386,7 @@ class ConfigService:
     # ------------------------------------------------------------------
 
     def get(self, key: str, default: Any = None,
-            cast: Optional[Type] = None) -> Any:
+            cast: Optional[type] = None) -> Any:
         """Get a config value with optional type casting.
 
         Args:
@@ -423,12 +423,12 @@ class ConfigService:
         with self._lock:
             return key in self._config
 
-    def keys(self) -> List[str]:
+    def keys(self) -> list[str]:
         """Return all config keys."""
         with self._lock:
             return list(self._config.keys())
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """Return a copy of the full config dict."""
         with self._lock:
             return copy.deepcopy(self._config)
@@ -437,7 +437,7 @@ class ConfigService:
     # Snapshots (per-scan isolation)
     # ------------------------------------------------------------------
 
-    def snapshot(self) -> Dict[str, Any]:
+    def snapshot(self) -> dict[str, Any]:
         """Create an isolated copy of the current config.
 
         Used to give each scan its own config that won't be affected
@@ -450,7 +450,7 @@ class ConfigService:
     # Validation
     # ------------------------------------------------------------------
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         """Validate the current configuration.
 
         Returns:
@@ -500,7 +500,7 @@ class ConfigService:
     def stats(self) -> dict:
         """Return stats about the config service."""
         with self._lock:
-            source_counts: Dict[str, int] = {}
+            source_counts: dict[str, int] = {}
             for src in self._sources.values():
                 category = src.split(":")[0]
                 source_counts[category] = source_counts.get(category, 0) + 1
@@ -532,30 +532,30 @@ class ConfigService:
         with self._lock:
             return self._sources.get(key)
 
-    def get_sources(self) -> Dict[str, str]:
+    def get_sources(self) -> dict[str, str]:
         """Return all key → source mappings (for diagnostics)."""
         with self._lock:
             return dict(self._sources)
 
-    def get_env_overrides(self) -> Dict[str, str]:
+    def get_env_overrides(self) -> dict[str, str]:
         """Return active environment variable overrides and their values.
 
         Useful for diagnosing which env vars are in effect.
         """
-        active: Dict[str, str] = {}
+        active: dict[str, str] = {}
         for env_var in ENV_MAP:
             value = os.environ.get(env_var)
             if value is not None:
                 active[env_var] = value
         return active
 
-    def discover_env_vars(self) -> Dict[str, Dict[str, Any]]:
+    def discover_env_vars(self) -> dict[str, dict[str, Any]]:
         """Discover all SF_* environment variables, including unknown ones.
 
         Returns a dict of env_var → {value, mapped_to, known}.
         Unknown SF_* vars are flagged for debugging misconfiguration.
         """
-        result: Dict[str, Dict[str, Any]] = {}
+        result: dict[str, dict[str, Any]] = {}
         known_vars = set(ENV_MAP.keys())
 
         # Check known vars

@@ -63,8 +63,8 @@ class WebhookConfig:
     webhook_id: str = ""
     url: str = ""
     secret: str = ""  # HMAC-SHA256 signing secret
-    headers: Dict[str, str] = field(default_factory=dict)
-    event_types: List[str] = field(default_factory=list)  # empty = all
+    headers: dict[str, str] = field(default_factory=dict)
+    event_types: list[str] = field(default_factory=list)  # empty = all
     enabled: bool = True
     timeout: float = 10.0
     max_retries: int = 3
@@ -83,7 +83,7 @@ class WebhookConfig:
             for et in self.event_types
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "webhook_id": self.webhook_id,
             "url": self.url,
@@ -105,10 +105,10 @@ class DeliveryRecord:
     event_type: str = ""
     status: DeliveryStatus = DeliveryStatus.PENDING
     attempts: int = 0
-    status_code: Optional[int] = None
-    error: Optional[str] = None
+    status_code: int | None = None
+    error: str | None = None
     created_at: float = 0.0
-    completed_at: Optional[float] = None
+    completed_at: float | None = None
     payload_size: int = 0
 
     def __post_init__(self):
@@ -122,7 +122,7 @@ class DeliveryRecord:
         end = self.completed_at or time.time()
         return round(end - self.created_at, 3)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "delivery_id": self.delivery_id,
             "webhook_id": self.webhook_id,
@@ -155,7 +155,7 @@ class WebhookDispatcher:
         self,
         config: WebhookConfig,
         event_type: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> DeliveryRecord:
         """Synchronously deliver a payload to a webhook endpoint.
 
@@ -260,7 +260,7 @@ class WebhookDispatcher:
         self,
         url: str,
         body: bytes,
-        headers: Dict[str, str],
+        headers: dict[str, str],
         timeout: float,
     ) -> int:
         """Low-level HTTP POST.  Uses httpx if available, else urllib."""
@@ -292,9 +292,9 @@ class WebhookDispatcher:
 
     def get_history(
         self,
-        webhook_id: Optional[str] = None,
+        webhook_id: str | None = None,
         limit: int = 50,
-    ) -> List[DeliveryRecord]:
+    ) -> list[DeliveryRecord]:
         """Return recent delivery records, optionally filtered."""
         with self._lock:
             records = list(self._history)
@@ -310,7 +310,7 @@ class WebhookDispatcher:
         return count
 
     @property
-    def stats(self) -> Dict[str, int]:
+    def stats(self) -> dict[str, int]:
         """Aggregate delivery stats."""
         with self._lock:
             records = list(self._history)

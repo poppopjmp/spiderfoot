@@ -46,7 +46,7 @@ class VectorConfig:
         timeout: float = 10.0,
         api_key: str = "",
         environment: str = "development",
-        extra_labels: Optional[Dict[str, str]] = None,
+        extra_labels: Optional[dict[str, str]] = None,
     ):
         self.enabled = enabled
         self.endpoint = endpoint.rstrip("/")
@@ -149,7 +149,7 @@ class VectorSink:
             f"Vector.dev sink stopped. Stats: {json.dumps(self._stats)}"
         )
 
-    def emit_event(self, event_type: str, data: Dict[str, Any]) -> None:
+    def emit_event(self, event_type: str, data: dict[str, Any]) -> None:
         """Queue an event for sending to Vector.
 
         Args:
@@ -231,7 +231,7 @@ class VectorSink:
         self,
         name: str,
         value: float,
-        tags: Optional[Dict[str, str]] = None,
+        tags: Optional[dict[str, str]] = None,
     ) -> None:
         """Emit a metric event.
 
@@ -254,7 +254,7 @@ class VectorSink:
 
     def _flush_batch(self) -> None:
         """Drain the buffer and send events to Vector."""
-        batch: List[Dict] = []
+        batch: list[dict] = []
 
         while len(batch) < self.config.batch_size:
             try:
@@ -303,7 +303,7 @@ class VectorSink:
         self.log.error("Failed to send %s events to Vector.dev after %s attempts", len(batch), self.config.max_retries)
 
     @property
-    def stats(self) -> Dict[str, int]:
+    def stats(self) -> dict[str, int]:
         """Get sink statistics."""
         return dict(self._stats)
 

@@ -327,7 +327,7 @@ class SpiderFootWorkspace:
             self.log.error("Failed to import scan %s: %s", scan_id, e)
             return False
 
-    def bulk_import_scans(self, scan_ids: List[str], metadata: dict = None) -> Dict[str, bool]:
+    def bulk_import_scans(self, scan_ids: list[str], metadata: dict = None) -> dict[str, bool]:
         """Import multiple scans into the workspace.
 
         Args:
@@ -349,15 +349,15 @@ class SpiderFootWorkspace:
 
         return results
 
-    def get_targets(self) -> List[dict]:
+    def get_targets(self) -> list[dict]:
         """Get all targets in workspace."""
         return self.targets.copy()
 
-    def get_scans(self) -> List[dict]:
+    def get_scans(self) -> list[dict]:
         """Get all scans in workspace."""
         return self.scans.copy()
 
-    def get_scan_ids(self) -> List[str]:
+    def get_scan_ids(self) -> list[str]:
         """Get list of scan IDs in workspace."""
         return [scan['scan_id'] for scan in self.scans]
 
@@ -415,7 +415,7 @@ class SpiderFootWorkspace:
             raise
 
     @classmethod
-    def list_workspaces(cls, config: dict) -> List[dict]:
+    def list_workspaces(cls, config: dict) -> list[dict]:
         """List all workspaces.
 
         Args:
@@ -543,7 +543,7 @@ class SpiderFootWorkspace:
 
         return export_data
 
-    def get_workspace_summary(self) -> Dict[str, Any]:
+    def get_workspace_summary(self) -> dict[str, Any]:
         """Get comprehensive workspace summary.
 
         Returns:
@@ -617,8 +617,8 @@ class SpiderFootWorkspace:
 
         return summary
 
-    def search_events(self, query: str, event_types: List[str] = None,
-                     scan_ids: List[str] = None) -> List[dict]:
+    def search_events(self, query: str, event_types: list[str] = None,
+                     scan_ids: list[str] = None) -> list[dict]:
         """Search events across workspace scans.
 
         Args:
@@ -656,7 +656,7 @@ class SpiderFootWorkspace:
         return matching_events
 
     async def generate_cti_report(self, report_type: str = 'threat_assessment',
-                                 custom_prompt: str = None) -> Dict[str, Any]:
+                                 custom_prompt: str = None) -> dict[str, Any]:
         """Generate CTI report using MCP integration.
 
         Args:

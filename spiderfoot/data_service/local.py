@@ -20,7 +20,7 @@ class LocalDataService(DataService):
     or single-node mode.
     """
 
-    def __init__(self, config: Optional[DataServiceConfig] = None, db_opts: Optional[Dict] = None):
+    def __init__(self, config: Optional[DataServiceConfig] = None, db_opts: Optional[dict] = None):
         """Initialize LocalDataService.
 
         Args:
@@ -76,7 +76,7 @@ class LocalDataService(DataService):
             self.log.error("scan_instance_create failed: %s", e)
             return False
 
-    def scan_instance_get(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def scan_instance_get(self, scan_id: str) -> Optional[dict[str, Any]]:
         """Get a scan instance by ID."""
         try:
             rows = self.dbh.scanInstanceGet(scan_id)
@@ -102,7 +102,7 @@ class LocalDataService(DataService):
             self.log.error("scan_instance_get failed: %s", e)
             return None
 
-    def scan_instance_list(self) -> List[Dict[str, Any]]:
+    def scan_instance_list(self) -> list[dict[str, Any]]:
         """List all scan instances."""
         try:
             rows = self.dbh.scanInstanceList()
@@ -216,7 +216,7 @@ class LocalDataService(DataService):
         scan_id: str,
         event_type: Optional[str] = None,
         limit: int = 0,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get events for a scan."""
         try:
             et = event_type if event_type else "ALL"
@@ -250,7 +250,7 @@ class LocalDataService(DataService):
         self,
         scan_id: str,
         event_type: str,
-    ) -> List[str]:
+    ) -> list[str]:
         """Get unique event data values."""
         try:
             rows = self.dbh.scanResultEventUnique(scan_id, eventType=event_type)
@@ -301,7 +301,7 @@ class LocalDataService(DataService):
         limit: int = 0,
         offset: int = 0,
         log_type: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get scan log entries."""
         try:
             rows = self.dbh.scanLogs(
@@ -331,7 +331,7 @@ class LocalDataService(DataService):
 
     # --- Config Operations ---
 
-    def config_set(self, config_data: Dict[str, str], scope: str = "GLOBAL") -> bool:
+    def config_set(self, config_data: dict[str, str], scope: str = "GLOBAL") -> bool:
         """Set configuration values."""
         try:
             if scope == "GLOBAL":
@@ -345,7 +345,7 @@ class LocalDataService(DataService):
             self.log.error("config_set failed: %s", e)
             return False
 
-    def config_get(self, scope: str = "GLOBAL") -> Dict[str, str]:
+    def config_get(self, scope: str = "GLOBAL") -> dict[str, str]:
         """Get configuration values."""
         try:
             all_config = self.dbh.configGet()
@@ -364,7 +364,7 @@ class LocalDataService(DataService):
             self.log.error("config_get failed: %s", e)
             return {}
 
-    def scan_config_set(self, scan_id: str, config_data: Dict[str, str]) -> bool:
+    def scan_config_set(self, scan_id: str, config_data: dict[str, str]) -> bool:
         """Save scan-specific configuration."""
         try:
             self.dbh.scanConfigSet(scan_id, config_data)
@@ -385,7 +385,7 @@ class LocalDataService(DataService):
         rule_risk: str,
         rule_descr: str,
         rule_logic: str,
-        event_hashes: List[str],
+        event_hashes: list[str],
     ) -> bool:
         """Store a correlation result."""
         try:
@@ -407,7 +407,7 @@ class LocalDataService(DataService):
             self.log.error("correlation_store failed: %s", e)
             return False
 
-    def correlation_get_by_scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def correlation_get_by_scan(self, scan_id: str) -> list[dict[str, Any]]:
         """Get all correlations for a scan."""
         try:
             rows = self.dbh.scanCorrelationList(scan_id)
@@ -431,7 +431,7 @@ class LocalDataService(DataService):
 
     # --- Summary Operations ---
 
-    def scan_result_summary(self, scan_id: str) -> Dict[str, int]:
+    def scan_result_summary(self, scan_id: str) -> dict[str, int]:
         """Get event type counts for a scan."""
         try:
             rows = self.dbh.scanResultSummary(scan_id, by="type")
@@ -441,7 +441,7 @@ class LocalDataService(DataService):
             self.log.error("scan_result_summary failed: %s", e)
             return {}
 
-    def event_types_list(self) -> List[Dict[str, str]]:
+    def event_types_list(self) -> list[dict[str, str]]:
         """List all registered event types."""
         try:
             rows = self.dbh.eventTypes()

@@ -27,7 +27,9 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+from collections.abc import Sequence
 
 log = logging.getLogger("spiderfoot.qdrant")
 
@@ -62,7 +64,7 @@ class QdrantConfig:
     collection_prefix: str = "sf_"
 
     @classmethod
-    def from_env(cls, env: Optional[Dict[str, str]] = None) -> "QdrantConfig":
+    def from_env(cls, env: dict[str, str] | None = None) -> QdrantConfig:
         import os
         e = env or os.environ
         return cls(
@@ -86,11 +88,11 @@ class VectorPoint:
     """A single point in a vector collection."""
 
     id: str
-    vector: List[float]
-    payload: Dict[str, Any] = field(default_factory=dict)
+    vector: list[float]
+    payload: dict[str, Any] = field(default_factory=dict)
     score: float = 0.0  # populated on search results
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "vector": self.vector,
@@ -109,7 +111,7 @@ class CollectionInfo:
     point_count: int = 0
     created_at: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "vector_size": self.vector_size,
@@ -122,11 +124,11 @@ class CollectionInfo:
 class SearchResult:
     """Result of a vector similarity search."""
 
-    points: List[VectorPoint]
+    points: list[VectorPoint]
     query_time_ms: float = 0.0
     total_found: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "points": [p.to_dict() for p in self.points],
             "query_time_ms": round(self.query_time_ms, 2),
@@ -138,25 +140,25 @@ class SearchResult:
 class Filter:
     """Simple payload filter for Qdrant queries."""
 
-    must: List[Dict[str, Any]] = field(default_factory=list)
-    must_not: List[Dict[str, Any]] = field(default_factory=list)
-    should: List[Dict[str, Any]] = field(default_factory=list)
+    must: list[dict[str, Any]] = field(default_factory=list)
+    must_not: list[dict[str, Any]] = field(default_factory=list)
+    should: list[dict[str, Any]] = field(default_factory=list)
 
     @staticmethod
-    def match(key: str, value: Any) -> Dict[str, Any]:
+    def match(key: str, value: Any) -> dict[str, Any]:
         return {"key": key, "match": {"value": value}}
 
     @staticmethod
-    def range(key: str, gte: Optional[float] = None, lte: Optional[float] = None) -> Dict[str, Any]:
-        r: Dict[str, Any] = {"key": key, "range": {}}
+    def range(key: str, gte: float | None = None, lte: float | None = None) -> dict[str, Any]:
+        r: dict[str, Any] = {"key": key, "range": {}}
         if gte is not None:
             r["range"]["gte"] = gte
         if lte is not None:
             r["range"]["lte"] = lte
         return r
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {}
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {}
         if self.must:
             d["must"] = self.must
         if self.must_not:
@@ -187,29 +189,29 @@ class VectorStoreBackend:
     def collection_exists(self, name: str) -> bool:
         raise NotImplementedError
 
-    def collection_info(self, name: str) -> Optional[CollectionInfo]:
+    def collection_info(self, name: str) -> CollectionInfo | None:
         raise NotImplementedError
 
-    def list_collections(self) -> List[str]:
+    def list_collections(self) -> list[str]:
         raise NotImplementedError
 
-    def upsert(self, collection: str, points: List[VectorPoint]) -> int:
+    def upsert(self, collection: str, points: list[VectorPoint]) -> int:
         raise NotImplementedError
 
-    def get(self, collection: str, ids: List[str]) -> List[VectorPoint]:
+    def get(self, collection: str, ids: list[str]) -> list[VectorPoint]:
         raise NotImplementedError
 
-    def delete(self, collection: str, ids: List[str]) -> int:
+    def delete(self, collection: str, ids: list[str]) -> int:
         raise NotImplementedError
 
-    def search(self, collection: str, query_vector: List[float],
+    def search(self, collection: str, query_vector: list[float],
                limit: int = 10, score_threshold: float = 0.0,
-               filter_: Optional[Filter] = None) -> SearchResult:
+               filter_: Filter | None = None) -> SearchResult:
         raise NotImplementedError
 
     def scroll(self, collection: str, limit: int = 100,
-               offset: Optional[str] = None,
-               filter_: Optional[Filter] = None) -> Tuple[List[VectorPoint], Optional[str]]:
+               offset: str | None = None,
+               filter_: Filter | None = None) -> tuple[list[VectorPoint], str | None]:
         raise NotImplementedError
 
     def count(self, collection: str) -> int:
@@ -220,7 +222,7 @@ class VectorStoreBackend:
 # In-memory backend (testing / development)
 # ---------------------------------------------------------------------------
 
-def _cosine_sim(a: List[float], b: List[float]) -> float:
+def _cosine_sim(a: list[float], b: list[float]) -> float:
     dot = sum(x * y for x, y in zip(a, b))
     na = sum(x * x for x in a) ** 0.5
     nb = sum(x * x for x in b) ** 0.5
@@ -229,17 +231,17 @@ def _cosine_sim(a: List[float], b: List[float]) -> float:
     return dot / (na * nb)
 
 
-def _euclid_dist(a: List[float], b: List[float]) -> float:
+def _euclid_dist(a: list[float], b: list[float]) -> float:
     return sum((x - y) ** 2 for x, y in zip(a, b)) ** 0.5
 
 
-def _dot_product(a: List[float], b: List[float]) -> float:
+def _dot_product(a: list[float], b: list[float]) -> float:
     return sum(x * y for x, y in zip(a, b))
 
 
-def _matches_filter(payload: Dict[str, Any], filter_: Filter) -> bool:
+def _matches_filter(payload: dict[str, Any], filter_: Filter) -> bool:
     """Evaluate a simple filter against a payload."""
-    def _check_condition(cond: Dict[str, Any]) -> bool:
+    def _check_condition(cond: dict[str, Any]) -> bool:
         key = cond.get("key", "")
         if "match" in cond:
             return payload.get(key) == cond["match"].get("value")
@@ -271,8 +273,8 @@ class MemoryVectorBackend(VectorStoreBackend):
     """In-memory vector store for testing."""
 
     def __init__(self) -> None:
-        self._collections: Dict[str, CollectionInfo] = {}
-        self._points: Dict[str, Dict[str, VectorPoint]] = {}
+        self._collections: dict[str, CollectionInfo] = {}
+        self._points: dict[str, dict[str, VectorPoint]] = {}
         self._lock = threading.Lock()
 
     def create_collection(self, name: str, vector_size: int,
@@ -298,17 +300,17 @@ class MemoryVectorBackend(VectorStoreBackend):
     def collection_exists(self, name: str) -> bool:
         return name in self._collections
 
-    def collection_info(self, name: str) -> Optional[CollectionInfo]:
+    def collection_info(self, name: str) -> CollectionInfo | None:
         with self._lock:
             info = self._collections.get(name)
             if info:
                 info.point_count = len(self._points.get(name, {}))
             return info
 
-    def list_collections(self) -> List[str]:
+    def list_collections(self) -> list[str]:
         return list(self._collections.keys())
 
-    def upsert(self, collection: str, points: List[VectorPoint]) -> int:
+    def upsert(self, collection: str, points: list[VectorPoint]) -> int:
         with self._lock:
             store = self._points.get(collection)
             if store is None:
@@ -322,12 +324,12 @@ class MemoryVectorBackend(VectorStoreBackend):
                 )
             return len(points)
 
-    def get(self, collection: str, ids: List[str]) -> List[VectorPoint]:
+    def get(self, collection: str, ids: list[str]) -> list[VectorPoint]:
         with self._lock:
             store = self._points.get(collection, {})
             return [store[i] for i in ids if i in store]
 
-    def delete(self, collection: str, ids: List[str]) -> int:
+    def delete(self, collection: str, ids: list[str]) -> int:
         with self._lock:
             store = self._points.get(collection, {})
             deleted = 0
@@ -337,9 +339,9 @@ class MemoryVectorBackend(VectorStoreBackend):
                     deleted += 1
             return deleted
 
-    def search(self, collection: str, query_vector: List[float],
+    def search(self, collection: str, query_vector: list[float],
                limit: int = 10, score_threshold: float = 0.0,
-               filter_: Optional[Filter] = None) -> SearchResult:
+               filter_: Filter | None = None) -> SearchResult:
         start = time.time()
         with self._lock:
             store = self._points.get(collection, {})
@@ -348,7 +350,7 @@ class MemoryVectorBackend(VectorStoreBackend):
                 return SearchResult(points=[], query_time_ms=0, total_found=0)
 
             dist = info.distance
-            scored: List[Tuple[float, VectorPoint]] = []
+            scored: list[tuple[float, VectorPoint]] = []
 
             for p in store.values():
                 if filter_ and not _matches_filter(p.payload, filter_):
@@ -381,8 +383,8 @@ class MemoryVectorBackend(VectorStoreBackend):
         )
 
     def scroll(self, collection: str, limit: int = 100,
-               offset: Optional[str] = None,
-               filter_: Optional[Filter] = None) -> Tuple[List[VectorPoint], Optional[str]]:
+               offset: str | None = None,
+               filter_: Filter | None = None) -> tuple[list[VectorPoint], str | None]:
         with self._lock:
             store = self._points.get(collection, {})
             all_ids = sorted(store.keys())
@@ -394,7 +396,7 @@ class MemoryVectorBackend(VectorStoreBackend):
             except ValueError:
                 start_idx = 0
 
-        result: List[VectorPoint] = []
+        result: list[VectorPoint] = []
         for pid in all_ids[start_idx:]:
             p = store.get(pid)
             if p and (not filter_ or _matches_filter(p.payload, filter_)):
@@ -420,12 +422,12 @@ class HttpVectorBackend(VectorStoreBackend):
         self._config = config
         scheme = "https" if config.https else "http"
         self._base = f"{scheme}://{config.host}:{config.port}"
-        self._headers: Dict[str, str] = {"Content-Type": "application/json"}
+        self._headers: dict[str, str] = {"Content-Type": "application/json"}
         if config.api_key:
             self._headers["api-key"] = config.api_key
 
     def _request(self, method: str, path: str,
-                 body: Optional[Dict] = None) -> Dict[str, Any]:
+                 body: dict | None = None) -> dict[str, Any]:
         import urllib.request
         url = f"{self._base}{path}"
         data = json.dumps(body).encode() if body else None
@@ -456,7 +458,7 @@ class HttpVectorBackend(VectorStoreBackend):
         resp = self._request("GET", f"/collections/{name}")
         return "result" in resp and "error" not in resp
 
-    def collection_info(self, name: str) -> Optional[CollectionInfo]:
+    def collection_info(self, name: str) -> CollectionInfo | None:
         resp = self._request("GET", f"/collections/{name}")
         result = resp.get("result")
         if not result:
@@ -469,12 +471,12 @@ class HttpVectorBackend(VectorStoreBackend):
             point_count=result.get("points_count", 0),
         )
 
-    def list_collections(self) -> List[str]:
+    def list_collections(self) -> list[str]:
         resp = self._request("GET", "/collections")
         collections = resp.get("result", {}).get("collections", [])
         return [c.get("name", "") for c in collections]
 
-    def upsert(self, collection: str, points: List[VectorPoint]) -> int:
+    def upsert(self, collection: str, points: list[VectorPoint]) -> int:
         body = {
             "points": [
                 {"id": p.id, "vector": p.vector, "payload": p.payload}
@@ -484,7 +486,7 @@ class HttpVectorBackend(VectorStoreBackend):
         resp = self._request("PUT", f"/collections/{collection}/points", body)
         return len(points) if resp.get("status") == "ok" else 0
 
-    def get(self, collection: str, ids: List[str]) -> List[VectorPoint]:
+    def get(self, collection: str, ids: list[str]) -> list[VectorPoint]:
         body = {"ids": ids, "with_vector": True, "with_payload": True}
         resp = self._request("POST", f"/collections/{collection}/points", body)
         result = resp.get("result", [])
@@ -494,16 +496,16 @@ class HttpVectorBackend(VectorStoreBackend):
             for r in result
         ]
 
-    def delete(self, collection: str, ids: List[str]) -> int:
+    def delete(self, collection: str, ids: list[str]) -> int:
         body = {"points": ids}
         resp = self._request("POST", f"/collections/{collection}/points/delete", body)
         return len(ids) if resp.get("status") == "ok" else 0
 
-    def search(self, collection: str, query_vector: List[float],
+    def search(self, collection: str, query_vector: list[float],
                limit: int = 10, score_threshold: float = 0.0,
-               filter_: Optional[Filter] = None) -> SearchResult:
+               filter_: Filter | None = None) -> SearchResult:
         start = time.time()
-        body: Dict[str, Any] = {
+        body: dict[str, Any] = {
             "vector": query_vector,
             "limit": limit,
             "with_payload": True,
@@ -528,9 +530,9 @@ class HttpVectorBackend(VectorStoreBackend):
                             total_found=len(points))
 
     def scroll(self, collection: str, limit: int = 100,
-               offset: Optional[str] = None,
-               filter_: Optional[Filter] = None) -> Tuple[List[VectorPoint], Optional[str]]:
-        body: Dict[str, Any] = {
+               offset: str | None = None,
+               filter_: Filter | None = None) -> tuple[list[VectorPoint], str | None]:
+        body: dict[str, Any] = {
             "limit": limit,
             "with_payload": True,
             "with_vector": True,
@@ -560,7 +562,7 @@ class HttpVectorBackend(VectorStoreBackend):
 # Factory
 # ---------------------------------------------------------------------------
 
-def create_vector_store(config: Optional[QdrantConfig] = None) -> VectorStoreBackend:
+def create_vector_store(config: QdrantConfig | None = None) -> VectorStoreBackend:
     """Create a vector store backend from config."""
     if config is None:
         config = QdrantConfig()
@@ -595,7 +597,7 @@ class QdrantClient:
         results = client.search("events", query_vector=[0.1, 0.2, ...], limit=5)
     """
 
-    def __init__(self, config: Optional[QdrantConfig] = None) -> None:
+    def __init__(self, config: QdrantConfig | None = None) -> None:
         self._config = config or QdrantConfig()
         self._backend = create_vector_store(self._config)
         self._prefix = self._config.collection_prefix
@@ -617,15 +619,15 @@ class QdrantClient:
     def delete_collection(self, name: str) -> bool:
         return self._backend.delete_collection(self._cname(name))
 
-    def list_collections(self) -> List[str]:
+    def list_collections(self) -> list[str]:
         return [c for c in self._backend.list_collections()
                 if c.startswith(self._prefix)]
 
-    def collection_info(self, name: str) -> Optional[CollectionInfo]:
+    def collection_info(self, name: str) -> CollectionInfo | None:
         return self._backend.collection_info(self._cname(name))
 
     # Points
-    def upsert(self, collection: str, points: List[VectorPoint],
+    def upsert(self, collection: str, points: list[VectorPoint],
                batch_size: int = 100) -> int:
         cname = self._cname(collection)
         total = 0
@@ -634,16 +636,16 @@ class QdrantClient:
             total += self._backend.upsert(cname, batch)
         return total
 
-    def get(self, collection: str, ids: List[str]) -> List[VectorPoint]:
+    def get(self, collection: str, ids: list[str]) -> list[VectorPoint]:
         return self._backend.get(self._cname(collection), ids)
 
-    def delete(self, collection: str, ids: List[str]) -> int:
+    def delete(self, collection: str, ids: list[str]) -> int:
         return self._backend.delete(self._cname(collection), ids)
 
     # Search
-    def search(self, collection: str, query_vector: List[float],
+    def search(self, collection: str, query_vector: list[float],
                limit: int = 10, score_threshold: float = 0.0,
-               filter_: Optional[Filter] = None) -> SearchResult:
+               filter_: Filter | None = None) -> SearchResult:
         return self._backend.search(
             self._cname(collection), query_vector, limit,
             score_threshold, filter_,
@@ -651,15 +653,15 @@ class QdrantClient:
 
     # Scroll
     def scroll(self, collection: str, limit: int = 100,
-               offset: Optional[str] = None,
-               filter_: Optional[Filter] = None) -> Tuple[List[VectorPoint], Optional[str]]:
+               offset: str | None = None,
+               filter_: Filter | None = None) -> tuple[list[VectorPoint], str | None]:
         return self._backend.scroll(self._cname(collection), limit, offset, filter_)
 
     def count(self, collection: str) -> int:
         return self._backend.count(self._cname(collection))
 
     # Stats
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         collections = self.list_collections()
         total_points = 0
         for c in collections:
@@ -678,7 +680,7 @@ class QdrantClient:
 # Singleton
 # ---------------------------------------------------------------------------
 
-_instance: Optional[QdrantClient] = None
+_instance: QdrantClient | None = None
 _instance_lock = threading.Lock()
 
 

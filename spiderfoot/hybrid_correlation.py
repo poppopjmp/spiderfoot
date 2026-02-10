@@ -85,13 +85,13 @@ class HybridFinding:
     description: str = ""
     risk_level: str = "INFO"        # INFO, LOW, MEDIUM, HIGH, CRITICAL
     confidence: float = 0.0         # 0.0 – 1.0
-    sources: List[CorrelationSource] = field(default_factory=list)
-    event_ids: List[str] = field(default_factory=list)
-    dimensions: Dict[str, float] = field(default_factory=dict)
-    raw_scores: Dict[str, float] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    sources: list[CorrelationSource] = field(default_factory=list)
+    event_ids: list[str] = field(default_factory=list)
+    dimensions: dict[str, float] = field(default_factory=dict)
+    raw_scores: dict[str, float] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "finding_id": self.finding_id,
             "headline": self.headline,
@@ -111,11 +111,11 @@ class HybridCorrelationResult:
 
     scan_id: str
     total_findings: int = 0
-    findings: List[HybridFinding] = field(default_factory=list)
-    engine_stats: Dict[str, Any] = field(default_factory=dict)
+    findings: list[HybridFinding] = field(default_factory=list)
+    engine_stats: dict[str, Any] = field(default_factory=dict)
     elapsed_ms: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "scan_id": self.scan_id,
             "total_findings": self.total_findings,
@@ -129,9 +129,9 @@ class HybridCorrelationResult:
 # Result normalizers (engine-specific → HybridFinding)
 # ---------------------------------------------------------------------------
 
-def _normalize_rule_result(rule_result: Dict[str, Any]) -> List[HybridFinding]:
+def _normalize_rule_result(rule_result: dict[str, Any]) -> list[HybridFinding]:
     """Convert a YAML rule engine result dict to HybridFindings."""
-    findings: List[HybridFinding] = []
+    findings: list[HybridFinding] = []
     rule_id = rule_result.get("rule_id", rule_result.get("id", "unknown"))
     headline = rule_result.get("headline", "Rule correlation")
     risk = rule_result.get("risk", "INFO")
@@ -170,9 +170,9 @@ def _normalize_rule_result(rule_result: Dict[str, Any]) -> List[HybridFinding]:
     return findings
 
 
-def _normalize_vector_result(vec_result: Any) -> List[HybridFinding]:
+def _normalize_vector_result(vec_result: Any) -> list[HybridFinding]:
     """Convert a VectorCorrelationResult to HybridFindings."""
-    findings: List[HybridFinding] = []
+    findings: list[HybridFinding] = []
 
     hits = getattr(vec_result, "hits", [])
     analysis = getattr(vec_result, "analysis", "")
@@ -201,9 +201,9 @@ def _normalize_vector_result(vec_result: Any) -> List[HybridFinding]:
     return findings
 
 
-def _normalize_multidim_result(md_result: Any) -> List[HybridFinding]:
+def _normalize_multidim_result(md_result: Any) -> list[HybridFinding]:
     """Convert a MultiDimResult to HybridFindings."""
-    findings: List[HybridFinding] = []
+    findings: list[HybridFinding] = []
 
     pairs = getattr(md_result, "pairs", [])
     clusters = getattr(md_result, "clusters", [])
@@ -216,7 +216,7 @@ def _normalize_multidim_result(md_result: Any) -> List[HybridFinding]:
 
         # Find pairs within this cluster
         cluster_set = set(cluster)
-        cluster_scores: Dict[str, float] = {}
+        cluster_scores: dict[str, float] = {}
         max_fused = 0.0
         for p in pairs:
             if p.event_a_id in cluster_set and p.event_b_id in cluster_set:
@@ -265,9 +265,9 @@ def _event_overlap(a: HybridFinding, b: HybridFinding) -> float:
     return inter / union if union else 0.0
 
 
-def merge_findings(findings: List[HybridFinding],
+def merge_findings(findings: list[HybridFinding],
                    threshold: float = 0.85,
-                   boost: float = 0.15) -> List[HybridFinding]:
+                   boost: float = 0.15) -> list[HybridFinding]:
     """Deduplicate and merge overlapping findings.
 
     Findings with event overlap above *threshold* are merged:
@@ -280,8 +280,8 @@ def merge_findings(findings: List[HybridFinding],
 
     # Sort by confidence descending
     findings = sorted(findings, key=lambda f: f.confidence, reverse=True)
-    merged: List[HybridFinding] = []
-    used: Set[int] = set()
+    merged: list[HybridFinding] = []
+    used: set[int] = set()
 
     for i, primary in enumerate(findings):
         if i in used:
@@ -301,13 +301,13 @@ def merge_findings(findings: List[HybridFinding],
             continue
 
         # Merge the group
-        all_sources: Set[CorrelationSource] = set()
-        all_events: Set[str] = set()
-        all_dims: Dict[str, float] = {}
+        all_sources: set[CorrelationSource] = set()
+        all_events: set[str] = set()
+        all_dims: dict[str, float] = {}
         best_confidence = 0.0
         best_risk = "INFO"
-        headlines: List[str] = []
-        descriptions: List[str] = []
+        headlines: list[str] = []
+        descriptions: list[str] = []
 
         risk_order = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1, "INFO": 0}
         best_risk_val = 0
@@ -371,18 +371,18 @@ class HybridCorrelator:
 
     def __init__(
         self,
-        config: Optional[HybridConfig] = None,
-        rule_executor_factory: Optional[Callable] = None,
+        config: HybridConfig | None = None,
+        rule_executor_factory: Callable | None = None,
         vector_engine: Any = None,
         multidim_analyzer: Any = None,
-        event_loader: Optional[Callable] = None,
+        event_loader: Callable | None = None,
     ):
         self.config = config or HybridConfig()
         self._rule_factory = rule_executor_factory
         self._vector_engine = vector_engine
         self._multidim = multidim_analyzer
         self._event_loader = event_loader
-        self._callbacks: List[Callable] = []
+        self._callbacks: list[Callable] = []
 
     def on_finding(self, callback: Callable) -> None:
         """Register callback invoked for each finding."""
@@ -392,7 +392,7 @@ class HybridCorrelator:
         self,
         scan_id: str,
         query: str = "",
-        rule_ids: Optional[List[str]] = None,
+        rule_ids: list[str] | None = None,
     ) -> HybridCorrelationResult:
         """Run all enabled engines and merge results.
 
@@ -411,10 +411,10 @@ class HybridCorrelator:
         """
         t0 = time.perf_counter()
         cfg = self.config
-        all_findings: List[HybridFinding] = []
-        stats: Dict[str, Any] = {}
+        all_findings: list[HybridFinding] = []
+        stats: dict[str, Any] = {}
 
-        tasks: Dict[str, Callable] = {}
+        tasks: dict[str, Callable] = {}
         if cfg.enable_rules and self._rule_factory:
             tasks["rules"] = lambda: self._run_rules(scan_id, rule_ids)
         if cfg.enable_vector and self._vector_engine:
@@ -467,10 +467,10 @@ class HybridCorrelator:
     # -----------------------------------------------------------------------
 
     def _run_rules(self, scan_id: str,
-                   rule_ids: Optional[List[str]]) -> Tuple[List[HybridFinding], Dict]:
+                   rule_ids: list[str] | None) -> tuple[list[HybridFinding], dict]:
         """Execute YAML rule engine."""
         t0 = time.perf_counter()
-        findings: List[HybridFinding] = []
+        findings: list[HybridFinding] = []
         try:
             results = self._rule_factory(scan_id, rule_ids=rule_ids)
             if isinstance(results, dict):
@@ -490,10 +490,10 @@ class HybridCorrelator:
         return findings, {"rules": {"count": len(findings), "elapsed_ms": round(elapsed, 2)}}
 
     def _run_vector(self, scan_id: str,
-                    query: str) -> Tuple[List[HybridFinding], Dict]:
+                    query: str) -> tuple[list[HybridFinding], dict]:
         """Execute vector correlation engine."""
         t0 = time.perf_counter()
-        findings: List[HybridFinding] = []
+        findings: list[HybridFinding] = []
         try:
             from spiderfoot.vector_correlation import CorrelationStrategy
             result = self._vector_engine.correlate(
@@ -509,10 +509,10 @@ class HybridCorrelator:
         return findings, {"vector": {"count": len(findings), "elapsed_ms": round(elapsed, 2)}}
 
     def _run_multidim(self, scan_id: str,
-                      query: str) -> Tuple[List[HybridFinding], Dict]:
+                      query: str) -> tuple[list[HybridFinding], dict]:
         """Execute multi-dimensional analyzer."""
         t0 = time.perf_counter()
-        findings: List[HybridFinding] = []
+        findings: list[HybridFinding] = []
         try:
             events = self._event_loader(scan_id)
             result = self._multidim.analyze(query or f"scan:{scan_id}", events)
@@ -527,10 +527,10 @@ class HybridCorrelator:
     # Execution strategies
     # -----------------------------------------------------------------------
 
-    def _run_parallel(self, tasks: Dict[str, Callable]) -> Tuple[List[HybridFinding], Dict]:
+    def _run_parallel(self, tasks: dict[str, Callable]) -> tuple[list[HybridFinding], dict]:
         """Run engines in parallel via thread pool."""
-        all_findings: List[HybridFinding] = []
-        all_stats: Dict[str, Any] = {}
+        all_findings: list[HybridFinding] = []
+        all_stats: dict[str, Any] = {}
 
         with ThreadPoolExecutor(max_workers=self.config.max_workers) as pool:
             futures = {pool.submit(fn): name for name, fn in tasks.items()}
@@ -546,10 +546,10 @@ class HybridCorrelator:
 
         return all_findings, all_stats
 
-    def _run_sequential(self, tasks: Dict[str, Callable]) -> Tuple[List[HybridFinding], Dict]:
+    def _run_sequential(self, tasks: dict[str, Callable]) -> tuple[list[HybridFinding], dict]:
         """Run engines sequentially."""
-        all_findings: List[HybridFinding] = []
-        all_stats: Dict[str, Any] = {}
+        all_findings: list[HybridFinding] = []
+        all_stats: dict[str, Any] = {}
 
         for name, fn in tasks.items():
             try:

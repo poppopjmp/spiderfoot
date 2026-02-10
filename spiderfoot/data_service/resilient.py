@@ -189,10 +189,10 @@ class ResilientDataService(DataService):
     def scan_instance_create(self, scan_id: str, scan_name: str, target: str) -> bool:
         return self._call("scan_instance_create", scan_id, scan_name, target, default=False)
 
-    def scan_instance_get(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def scan_instance_get(self, scan_id: str) -> Optional[dict[str, Any]]:
         return self._call("scan_instance_get", scan_id, default=None)
 
-    def scan_instance_list(self) -> List[Dict[str, Any]]:
+    def scan_instance_list(self) -> list[dict[str, Any]]:
         return self._call("scan_instance_list", default=[])
 
     def scan_instance_delete(self, scan_id: str) -> bool:
@@ -216,11 +216,11 @@ class ResilientDataService(DataService):
 
     def event_get_by_scan(self, scan_id: str,
                           event_type: Optional[str] = None,
-                          limit: int = 0) -> List[Dict[str, Any]]:
+                          limit: int = 0) -> list[dict[str, Any]]:
         return self._call("event_get_by_scan", scan_id,
                           event_type=event_type, limit=limit, default=[])
 
-    def event_get_unique(self, scan_id: str, event_type: str) -> List[str]:
+    def event_get_unique(self, scan_id: str, event_type: str) -> list[str]:
         return self._call("event_get_unique", scan_id, event_type, default=[])
 
     def event_exists(self, scan_id: str, event_type: str,
@@ -234,37 +234,37 @@ class ResilientDataService(DataService):
 
     def scan_log_get(self, scan_id: str, limit: int = 0,
                      offset: int = 0,
-                     log_type: Optional[str] = None) -> List[Dict[str, Any]]:
+                     log_type: Optional[str] = None) -> list[dict[str, Any]]:
         return self._call("scan_log_get", scan_id, limit=limit,
                           offset=offset, log_type=log_type, default=[])
 
-    def config_set(self, config_data: Dict[str, str],
+    def config_set(self, config_data: dict[str, str],
                    scope: str = "GLOBAL") -> bool:
         return self._call("config_set", config_data, scope=scope, default=False)
 
-    def config_get(self, scope: str = "GLOBAL") -> Dict[str, str]:
+    def config_get(self, scope: str = "GLOBAL") -> dict[str, str]:
         return self._call("config_get", scope=scope, default={})
 
     def scan_config_set(self, scan_id: str,
-                        config_data: Dict[str, str]) -> bool:
+                        config_data: dict[str, str]) -> bool:
         return self._call("scan_config_set", scan_id, config_data, default=False)
 
     def correlation_store(self, correlation_id: str, scan_id: str,
                           title: str, rule_id: str, rule_name: str,
                           rule_risk: str, rule_descr: str,
                           rule_logic: str,
-                          event_hashes: List[str]) -> bool:
+                          event_hashes: list[str]) -> bool:
         return self._call(
             "correlation_store", correlation_id, scan_id, title,
             rule_id, rule_name, rule_risk, rule_descr, rule_logic,
             event_hashes, default=False,
         )
 
-    def correlation_get_by_scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def correlation_get_by_scan(self, scan_id: str) -> list[dict[str, Any]]:
         return self._call("correlation_get_by_scan", scan_id, default=[])
 
-    def scan_result_summary(self, scan_id: str) -> Dict[str, int]:
+    def scan_result_summary(self, scan_id: str) -> dict[str, int]:
         return self._call("scan_result_summary", scan_id, default={})
 
-    def event_types_list(self) -> List[Dict[str, str]]:
+    def event_types_list(self) -> list[dict[str, str]]:
         return self._call("event_types_list", default=[])

@@ -83,7 +83,7 @@ class SpiderFoot:
             fname = val.split('@')[1]
             self.info(f"Loading configuration data from: {fname}")
             try:
-                with open(fname, "r", encoding="utf-8") as f:
+                with open(fname, encoding="utf-8") as f:
                     return f.read()
             except Exception as e:
                 self.error(f"Unable to open option file, {fname}: {e}")

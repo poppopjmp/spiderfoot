@@ -22,7 +22,7 @@ from typing import List
 log = logging.getLogger("spiderfoot.api.cors")
 
 
-def _parse_list(env_var: str, default: str = "*") -> List[str]:
+def _parse_list(env_var: str, default: str = "*") -> list[str]:
     """Parse a comma-separated env var into a list."""
     value = os.environ.get(env_var, default).strip()
     if value == "*":

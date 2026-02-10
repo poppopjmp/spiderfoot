@@ -38,21 +38,23 @@ Usage::
 
 import threading
 import time
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Tuple
+
+from collections.abc import Sequence
 
 
 # ---------------------------------------------------------------------------
 # Label helpers
 # ---------------------------------------------------------------------------
 
-def _label_key(labels: Dict[str, str]) -> str:
+def _label_key(labels: dict[str, str]) -> str:
     """Create a canonical key from a label dict."""
     if not labels:
         return ""
     return ",".join(f'{k}="{v}"' for k, v in sorted(labels.items()))
 
 
-def _format_labels(labels: Dict[str, str]) -> str:
+def _format_labels(labels: dict[str, str]) -> str:
     """Format labels for Prometheus exposition."""
     if not labels:
         return ""
@@ -91,12 +93,12 @@ class Counter:
     """Prometheus-style counter (monotonically increasing)."""
 
     def __init__(self, name: str, help_text: str = "",
-                 label_names: Optional[List[str]] = None):
+                 label_names: Optional[list[str]] = None):
         self.name = name
         self.help_text = help_text
         self.label_names = label_names or []
         self._lock = threading.Lock()
-        self._values: Dict[str, _LabeledValue] = {}
+        self._values: dict[str, _LabeledValue] = {}
         # No-label variant
         if not self.label_names:
             self._values[""] = _LabeledValue()
@@ -115,7 +117,7 @@ class Counter:
             self._values[""].inc(amount)
 
     def expose(self) -> str:
-        lines: List[str] = []
+        lines: list[str] = []
         if self.help_text:
             lines.append(f"# HELP {self.name} {self.help_text}")
         lines.append(f"# TYPE {self.name} counter")
@@ -134,12 +136,12 @@ class Gauge:
     """Prometheus-style gauge (can increase and decrease)."""
 
     def __init__(self, name: str, help_text: str = "",
-                 label_names: Optional[List[str]] = None):
+                 label_names: Optional[list[str]] = None):
         self.name = name
         self.help_text = help_text
         self.label_names = label_names or []
         self._lock = threading.Lock()
-        self._values: Dict[str, _LabeledValue] = {}
+        self._values: dict[str, _LabeledValue] = {}
         if not self.label_names:
             self._values[""] = _LabeledValue()
 
@@ -164,7 +166,7 @@ class Gauge:
             self._values[""].dec(amount)
 
     def expose(self) -> str:
-        lines: List[str] = []
+        lines: list[str] = []
         if self.help_text:
             lines.append(f"# HELP {self.name} {self.help_text}")
         lines.append(f"# TYPE {self.name} gauge")
@@ -187,7 +189,7 @@ class Histogram:
 
     def __init__(self, name: str, help_text: str = "",
                  buckets: Optional[Sequence[float]] = None,
-                 label_names: Optional[List[str]] = None):
+                 label_names: Optional[list[str]] = None):
         self.name = name
         self.help_text = help_text
         self.buckets = sorted(buckets or self.DEFAULT_BUCKETS)
@@ -214,7 +216,7 @@ class Histogram:
         return _HistogramTimer(self)
 
     def expose(self) -> str:
-        lines: List[str] = []
+        lines: list[str] = []
         if self.help_text:
             lines.append(f"# HELP {self.name} {self.help_text}")
         lines.append(f"# TYPE {self.name} histogram")
@@ -253,7 +255,7 @@ class MetricsRegistry:
 
     def __init__(self):
         self._lock = threading.Lock()
-        self._metrics: Dict[str, object] = {}
+        self._metrics: dict[str, object] = {}
 
     def register(self, metric) -> None:
         """Register a metric (Counter, Gauge, or Histogram)."""

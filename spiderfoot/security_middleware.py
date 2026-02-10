@@ -67,7 +67,7 @@ class SecurityConfigDefaults:
     }
 
 
-def create_security_config(custom_config: Dict[str, Any] = None) -> Dict[str, Any]:
+def create_security_config(custom_config: dict[str, Any] = None) -> dict[str, Any]:
     """Create security configuration with defaults.
 
     Args:
@@ -89,7 +89,7 @@ def create_security_config(custom_config: Dict[str, Any] = None) -> Dict[str, An
     return config
 
 
-def validate_security_config(config: Dict[str, Any]) -> bool:
+def validate_security_config(config: dict[str, Any]) -> bool:
     """Validate security configuration.
 
     Args:
@@ -121,7 +121,7 @@ def validate_security_config(config: Dict[str, Any]) -> bool:
     return True
 
 
-def get_security_status() -> Dict[str, Any]:
+def get_security_status() -> dict[str, Any]:
     """Get current security status.
 
     Returns:
@@ -145,7 +145,7 @@ class SpiderFootSecurityMiddleware:
     interface for both web and API security management.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize SpiderFoot security middleware.
 
@@ -236,7 +236,7 @@ class SpiderFootSecurityMiddleware:
             # Don't raise exception to prevent complete failure
             self.log.warning("Security middleware will continue with reduced functionality")
 
-    def _get_security_config(self) -> Dict[str, Any]:
+    def _get_security_config(self) -> dict[str, Any]:
         """Get security configuration with defaults."""
         return {
             'csrf_enabled': self.config.get('security.csrf.enabled', True),
@@ -531,7 +531,7 @@ class CherryPySecurityTool(cherrypy.Tool):
         raise cherrypy.HTTPError(status_code, message)
 
 
-def install_cherrypy_security(config: Dict[str, Any]) -> SpiderFootSecurityMiddleware:
+def install_cherrypy_security(config: dict[str, Any]) -> SpiderFootSecurityMiddleware:
     """
     Install security middleware for CherryPy web interface.
 
@@ -682,7 +682,7 @@ class FastAPISecurityMiddleware:
         bypass_endpoints = self.middleware.security_config['bypass_auth_endpoints']
         return any(endpoint.startswith(bp) for bp in bypass_endpoints)
 
-    async def _check_api_authentication(self, request) -> Dict[str, Any]:
+    async def _check_api_authentication(self, request) -> dict[str, Any]:
         """Check API authentication."""
         try:
             # Check for API key in header
@@ -709,7 +709,7 @@ class FastAPISecurityMiddleware:
             self.log.error("API authentication error: %s", e)
             return {'success': False, 'error': 'Authentication check failed'}
 
-    async def _validate_request_data(self, request) -> Dict[str, Any]:
+    async def _validate_request_data(self, request) -> dict[str, Any]:
         """Validate request data."""
         try:
             # Validate query parameters
@@ -766,7 +766,7 @@ class FastAPISecurityMiddleware:
         )
 
 
-def install_fastapi_security(app, config: Dict[str, Any]) -> SpiderFootSecurityMiddleware:
+def install_fastapi_security(app, config: dict[str, Any]) -> SpiderFootSecurityMiddleware:
     """
     Install security middleware for FastAPI.
 

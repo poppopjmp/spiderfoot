@@ -40,7 +40,7 @@ from typing import Any, Dict, Optional
 log = logging.getLogger("spiderfoot.service_integration")
 
 
-def integrate_services(sf_config: Dict[str, Any]) -> bool:
+def integrate_services(sf_config: dict[str, Any]) -> bool:
     """Initialize the global service registry from SpiderFoot configuration.
 
     This should be called once during application startup (sf.py, sfapi.py,
@@ -96,7 +96,7 @@ def wire_scan_services(scanner, scan_id: str) -> None:
         log.warning("Partial service wiring for scan %s: %s", scan_id, e)
 
 
-def wire_module_services(module, sf_config: Dict[str, Any]) -> None:
+def wire_module_services(module, sf_config: dict[str, Any]) -> None:
     """Inject service references into a module if it supports them.
 
     Called after mod.setup() for each module. If the module is a

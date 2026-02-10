@@ -28,8 +28,8 @@ class NatsEventBus(EventBus):
         super().__init__(config)
         self._nc = None
         self._js = None
-        self._subscriptions: Dict[str, Any] = {}  # sub_id -> nats subscription
-        self._callbacks: Dict[str, Callable] = {}
+        self._subscriptions: dict[str, Any] = {}  # sub_id -> nats subscription
+        self._callbacks: dict[str, Callable] = {}
 
     async def connect(self) -> None:
         """Connect to NATS and set up JetStream."""

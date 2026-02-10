@@ -58,7 +58,7 @@ class Finding:
     module: str = ""
     source_event: str = ""
     confidence: int = 100
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def key(self) -> str:
@@ -107,11 +107,11 @@ class ScanSnapshot:
     scan_id: str = ""
     target: str = ""
     timestamp: float = field(default_factory=time.time)
-    findings: List[Finding] = field(default_factory=list)
+    findings: list[Finding] = field(default_factory=list)
 
-    def _index(self) -> Dict[str, Finding]:
+    def _index(self) -> dict[str, Finding]:
         """Build a lookup index by finding key."""
-        index: Dict[str, Finding] = {}
+        index: dict[str, Finding] = {}
         for f in self.findings:
             index[f.key] = f
         return index
@@ -121,16 +121,16 @@ class ScanSnapshot:
         return len(self.findings)
 
     @property
-    def event_types(self) -> Set[str]:
+    def event_types(self) -> set[str]:
         return {f.event_type for f in self.findings}
 
-    def by_type(self, event_type: str) -> List[Finding]:
+    def by_type(self, event_type: str) -> list[Finding]:
         """Get findings of a specific event type."""
         return [f for f in self.findings
                 if f.event_type == event_type]
 
     @classmethod
-    def from_events(cls, events: List[dict], *,
+    def from_events(cls, events: list[dict], *,
                     scan_id: str = "",
                     target: str = "") -> "ScanSnapshot":
         """Create a snapshot from raw event dictionaries.
@@ -202,9 +202,9 @@ class DiffResult:
     current_id: str = ""
     target: str = ""
     timestamp: float = field(default_factory=time.time)
-    added: List[Change] = field(default_factory=list)
-    removed: List[Change] = field(default_factory=list)
-    changed: List[Change] = field(default_factory=list)
+    added: list[Change] = field(default_factory=list)
+    removed: list[Change] = field(default_factory=list)
+    changed: list[Change] = field(default_factory=list)
     unchanged_count: int = 0
 
     @property
@@ -215,9 +215,9 @@ class DiffResult:
     def has_changes(self) -> bool:
         return self.total_changes > 0
 
-    def changes_by_type(self) -> Dict[str, List[Change]]:
+    def changes_by_type(self) -> dict[str, list[Change]]:
         """Group all changes by event type."""
-        by_type: Dict[str, List[Change]] = {}
+        by_type: dict[str, list[Change]] = {}
         for change in self.added + self.removed + self.changed:
             et = change.finding.event_type
             by_type.setdefault(et, []).append(change)
@@ -280,7 +280,7 @@ class ScanDiff:
     @staticmethod
     def compare(baseline: ScanSnapshot,
                 current: ScanSnapshot, *,
-                ignore_types: Optional[Set[str]] = None
+                ignore_types: Optional[set[str]] = None
                 ) -> DiffResult:
         """Compare baseline and current scan snapshots.
 
@@ -351,12 +351,12 @@ class ScanDiff:
         return result
 
     @staticmethod
-    def compare_event_lists(baseline_events: List[dict],
-                            current_events: List[dict], *,
+    def compare_event_lists(baseline_events: list[dict],
+                            current_events: list[dict], *,
                             baseline_id: str = "baseline",
                             current_id: str = "current",
                             target: str = "",
-                            ignore_types: Optional[Set[str]] = None
+                            ignore_types: Optional[set[str]] = None
                             ) -> DiffResult:
         """Convenience: compare raw event lists directly."""
         snap_a = ScanSnapshot.from_events(

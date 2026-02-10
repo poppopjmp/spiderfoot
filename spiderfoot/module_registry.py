@@ -47,12 +47,13 @@ from typing import (
     Any,
     Dict,
     FrozenSet,
-    Iterable,
     List,
     Optional,
     Set,
     Tuple,
 )
+
+from collections.abc import Iterable
 
 log = logging.getLogger("spiderfoot.module_registry")
 
@@ -89,28 +90,28 @@ class ModuleDescriptor:
     filename: str
     """Absolute path to the ``.py`` source file."""
 
-    watched_events: FrozenSet[str]
+    watched_events: frozenset[str]
     """Event types this module subscribes to."""
 
-    produced_events: FrozenSet[str]
+    produced_events: frozenset[str]
     """Event types this module can emit."""
 
-    categories: Tuple[str, ...]
+    categories: tuple[str, ...]
     """Functional groupings (``DNS``, ``Search Engines``, …)."""
 
-    flags: Tuple[str, ...]
+    flags: tuple[str, ...]
     """Tags: ``apikey``, ``slow``, ``errorprone``, ``invasive``, ``tool``."""
 
-    use_cases: Tuple[str, ...]
+    use_cases: tuple[str, ...]
     """``Footprint``, ``Investigate``, ``Passive``."""
 
-    opts: Dict[str, Any]
+    opts: dict[str, Any]
     """Default option values (shallow copy of the class attribute)."""
 
-    optdescs: Dict[str, str]
+    optdescs: dict[str, str]
     """Human descriptions for each option key."""
 
-    data_source: Optional[Dict[str, Any]]
+    data_source: Optional[dict[str, Any]]
     """``meta['dataSource']`` dict if present."""
 
     priority: int
@@ -155,7 +156,7 @@ class ModuleDescriptor:
             or any(q in c.lower() for c in self.categories)
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "display_name": self.display_name,
@@ -191,18 +192,18 @@ class ModuleRegistry:
     """
 
     def __init__(self) -> None:
-        self._descriptors: Dict[str, ModuleDescriptor] = {}
+        self._descriptors: dict[str, ModuleDescriptor] = {}
         self._lock = threading.RLock()
 
         # Inverted indices — rebuilt after discover()
-        self._by_produced_event: Dict[str, Set[str]] = defaultdict(set)
-        self._by_watched_event: Dict[str, Set[str]] = defaultdict(set)
-        self._by_category: Dict[str, Set[str]] = defaultdict(set)
-        self._by_flag: Dict[str, Set[str]] = defaultdict(set)
-        self._by_usecase: Dict[str, Set[str]] = defaultdict(set)
+        self._by_produced_event: dict[str, set[str]] = defaultdict(set)
+        self._by_watched_event: dict[str, set[str]] = defaultdict(set)
+        self._by_category: dict[str, set[str]] = defaultdict(set)
+        self._by_flag: dict[str, set[str]] = defaultdict(set)
+        self._by_usecase: dict[str, set[str]] = defaultdict(set)
 
         # Module class cache (only populated on demand)
-        self._classes: Dict[str, type] = {}
+        self._classes: dict[str, type] = {}
 
         # Discovery metadata
         self._discovered_at: Optional[float] = None
@@ -251,7 +252,7 @@ class ModuleRegistry:
 
             loaded = 0
             failed = 0
-            errors: List[Tuple[str, str]] = []
+            errors: list[tuple[str, str]] = []
 
             pattern = os.path.join(modules_dir, "sfp_*.py")
             for filepath in sorted(glob.glob(pattern)):
@@ -332,7 +333,7 @@ class ModuleRegistry:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _introspect(filepath: str) -> Tuple[ModuleDescriptor, Optional[type]]:
+    def _introspect(filepath: str) -> tuple[ModuleDescriptor, Optional[type]]:
         """Import a module file and extract its descriptor + class."""
         mod_name = os.path.basename(filepath)[:-3]
 
@@ -440,7 +441,7 @@ class ModuleRegistry:
         )
 
     @property
-    def all_event_types(self) -> Set[str]:
+    def all_event_types(self) -> set[str]:
         """All event types across all modules (produced + watched)."""
         return set(self._by_produced_event.keys()) | set(
             self._by_watched_event.keys()
@@ -459,11 +460,11 @@ class ModuleRegistry:
     def __iter__(self):
         return iter(self._descriptors.values())
 
-    def list_names(self) -> List[str]:
+    def list_names(self) -> list[str]:
         """Sorted list of all module names."""
         return sorted(self._descriptors.keys())
 
-    def list_loaded(self) -> List[ModuleDescriptor]:
+    def list_loaded(self) -> list[ModuleDescriptor]:
         """All successfully-loaded descriptors, sorted by name."""
         return sorted(
             (d for d in self._descriptors.values()
@@ -471,7 +472,7 @@ class ModuleRegistry:
             key=lambda d: d.name,
         )
 
-    def list_failed(self) -> List[ModuleDescriptor]:
+    def list_failed(self) -> list[ModuleDescriptor]:
         """All descriptors with status FAILED."""
         return [
             d for d in self._descriptors.values()
@@ -480,43 +481,43 @@ class ModuleRegistry:
 
     # Indexed queries ---------------------------------------------------
 
-    def producers_of(self, event_type: str) -> List[str]:
+    def producers_of(self, event_type: str) -> list[str]:
         """Modules that produce a given event type."""
         return sorted(self._by_produced_event.get(event_type, set()))
 
-    def consumers_of(self, event_type: str) -> List[str]:
+    def consumers_of(self, event_type: str) -> list[str]:
         """Modules that watch / consume a given event type."""
         return sorted(self._by_watched_event.get(event_type, set()))
 
-    def by_category(self, category: str) -> List[str]:
+    def by_category(self, category: str) -> list[str]:
         """Modules in a specific category."""
         return sorted(self._by_category.get(category, set()))
 
-    def by_flag(self, flag: str) -> List[str]:
+    def by_flag(self, flag: str) -> list[str]:
         """Modules with a given flag (``apikey``, ``slow``, …)."""
         return sorted(self._by_flag.get(flag, set()))
 
-    def by_usecase(self, usecase: str) -> List[str]:
+    def by_usecase(self, usecase: str) -> list[str]:
         """Modules matching a use-case (``Footprint``, ``Investigate``, …)."""
         if usecase.lower() == "all":
             return self.list_names()
         return sorted(self._by_usecase.get(usecase, set()))
 
-    def categories(self) -> Dict[str, int]:
+    def categories(self) -> dict[str, int]:
         """All categories with module counts."""
         return {cat: len(mods) for cat, mods in sorted(self._by_category.items())}
 
-    def flags(self) -> Dict[str, int]:
+    def flags(self) -> dict[str, int]:
         """All flags with module counts."""
         return {f: len(mods) for f, mods in sorted(self._by_flag.items())}
 
-    def search(self, query: str) -> List[ModuleDescriptor]:
+    def search(self, query: str) -> list[ModuleDescriptor]:
         """Full-text search across name, display name, summary, categories."""
         return [d for d in self._descriptors.values() if d.matches_search(query)]
 
     # Dependency helpers ------------------------------------------------
 
-    def dependencies_of(self, module_name: str) -> Set[str]:
+    def dependencies_of(self, module_name: str) -> set[str]:
         """Modules that must run before *module_name*.
 
         A module depends on producers of the event types it watches.
@@ -525,32 +526,32 @@ class ModuleRegistry:
         if desc is None:
             return set()
 
-        deps: Set[str] = set()
+        deps: set[str] = set()
         for ev in desc.watched_events:
             deps.update(self._by_produced_event.get(ev, set()))
         deps.discard(module_name)
         return deps
 
-    def dependents_of(self, module_name: str) -> Set[str]:
+    def dependents_of(self, module_name: str) -> set[str]:
         """Modules that depend on *module_name*'s output."""
         desc = self.get(module_name)
         if desc is None:
             return set()
 
-        result: Set[str] = set()
+        result: set[str] = set()
         for ev in desc.produced_events:
             result.update(self._by_watched_event.get(ev, set()))
         result.discard(module_name)
         return result
 
-    def resolve_for_output(self, desired_types: Iterable[str]) -> Set[str]:
+    def resolve_for_output(self, desired_types: Iterable[str]) -> set[str]:
         """Minimal set of modules needed to produce *desired_types*.
 
         BFS backward through the event-type dependency graph.
         """
         from collections import deque
 
-        needed: Set[str] = set()
+        needed: set[str] = set()
         queue = deque()
 
         for event_type in desired_types:
@@ -575,7 +576,7 @@ class ModuleRegistry:
     def create_instance(
         self,
         module_name: str,
-        merged_opts: Optional[Dict[str, Any]] = None,
+        merged_opts: Optional[dict[str, Any]] = None,
         *,
         sf: Any = None,
         scan_id: Optional[str] = None,
@@ -664,7 +665,7 @@ class ModuleRegistry:
     # Bulk export (for backward compatibility)
     # ------------------------------------------------------------------
 
-    def as_modules_dict(self) -> Dict[str, Dict[str, Any]]:
+    def as_modules_dict(self) -> dict[str, dict[str, Any]]:
         """Return the catalog in the legacy ``config['__modules__']`` format.
 
         This allows the registry to be a drop-in replacement for the
@@ -700,7 +701,7 @@ class ModuleRegistry:
     # Miscellaneous
     # ------------------------------------------------------------------
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Summary statistics about the registry."""
         return {
             "total_modules": len(self._descriptors),
@@ -742,7 +743,7 @@ class DiscoveryResult:
     failed: int
     """Failed to load (import error, missing class, …)."""
 
-    errors: List[Tuple[str, str]]
+    errors: list[tuple[str, str]]
     """List of ``(module_name, error_message)`` pairs."""
 
     duration: float

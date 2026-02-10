@@ -72,8 +72,8 @@ class EventTypeMeta:
 class ModuleNode:
     """A node in the module dependency graph."""
     module_name: str
-    watches: FrozenSet[str] = field(default_factory=frozenset)
-    produces: FrozenSet[str] = field(default_factory=frozenset)
+    watches: frozenset[str] = field(default_factory=frozenset)
+    produces: frozenset[str] = field(default_factory=frozenset)
 
 
 class EventTypeRegistry:
@@ -84,8 +84,8 @@ class EventTypeRegistry:
     """
 
     def __init__(self) -> None:
-        self._types: Dict[str, EventTypeMeta] = {}
-        self._categories: Dict[str, List[str]] = {}
+        self._types: dict[str, EventTypeMeta] = {}
+        self._categories: dict[str, list[str]] = {}
 
     def register(self, event_type: str, description: str,
                  is_raw: bool = False,
@@ -134,7 +134,7 @@ class EventTypeRegistry:
         log.info("Loaded %d event types from SpiderFootDb", count)
         return count
 
-    def load_from_list(self, event_details: List[List]) -> int:
+    def load_from_list(self, event_details: list[list]) -> int:
         """Load event types from a list of [type, desc, raw, category].
 
         Args:
@@ -157,20 +157,20 @@ class EventTypeRegistry:
         """Check if an event type is registered."""
         return event_type in self._types
 
-    def get(self, event_type: str) -> Optional[EventTypeMeta]:
+    def get(self, event_type: str) -> EventTypeMeta | None:
         """Get metadata for an event type."""
         return self._types.get(event_type)
 
-    def all_types(self) -> List[str]:
+    def all_types(self) -> list[str]:
         """Get all registered event type strings."""
         return sorted(self._types.keys())
 
-    def by_category(self, category: str) -> List[str]:
+    def by_category(self, category: str) -> list[str]:
         """Get event types in a category."""
         return sorted(self._categories.get(category, []))
 
     @property
-    def categories(self) -> List[str]:
+    def categories(self) -> list[str]:
         """Get all categories."""
         return sorted(self._categories.keys())
 
@@ -181,8 +181,8 @@ class EventTypeRegistry:
         return event_type in self._types
 
     def validate_module_events(self, module_name: str,
-                               watched: List[str],
-                               produced: List[str]) -> List[str]:
+                               watched: list[str],
+                               produced: list[str]) -> list[str]:
         """Validate that a module's watched/produced events are all registered.
 
         Returns a list of warning messages for unknown event types.
@@ -201,8 +201,8 @@ class EventTypeRegistry:
         return warnings
 
     def build_module_graph(
-        self, modules: Dict[str, Dict[str, Any]]
-    ) -> Dict[str, ModuleNode]:
+        self, modules: dict[str, dict[str, Any]]
+    ) -> dict[str, ModuleNode]:
         """Build a module dependency graph from module metadata.
 
         Args:
@@ -215,7 +215,7 @@ class EventTypeRegistry:
         Returns:
             Dict of module_name -> ModuleNode
         """
-        graph: Dict[str, ModuleNode] = {}
+        graph: dict[str, ModuleNode] = {}
 
         for mod_name, mod_info in modules.items():
             produces = mod_info.get("provides") or mod_info.get("producedEvents", [])
@@ -231,8 +231,8 @@ class EventTypeRegistry:
 
     def find_producers(
         self, event_type: str,
-        graph: Dict[str, ModuleNode]
-    ) -> List[str]:
+        graph: dict[str, ModuleNode]
+    ) -> list[str]:
         """Find all modules that produce a given event type."""
         return sorted(
             name for name, node in graph.items()
@@ -241,8 +241,8 @@ class EventTypeRegistry:
 
     def find_consumers(
         self, event_type: str,
-        graph: Dict[str, ModuleNode]
-    ) -> List[str]:
+        graph: dict[str, ModuleNode]
+    ) -> list[str]:
         """Find all modules that watch a given event type."""
         return sorted(
             name for name, node in graph.items()
@@ -250,10 +250,10 @@ class EventTypeRegistry:
         )
 
     def find_orphaned_types(
-        self, graph: Dict[str, ModuleNode]
-    ) -> List[str]:
+        self, graph: dict[str, ModuleNode]
+    ) -> list[str]:
         """Find event types that are registered but never produced by any module."""
-        produced_types: Set[str] = set()
+        produced_types: set[str] = set()
         for node in graph.values():
             produced_types.update(node.produces)
 
@@ -263,10 +263,10 @@ class EventTypeRegistry:
         )
 
     def find_unregistered_types(
-        self, graph: Dict[str, ModuleNode]
-    ) -> List[str]:
+        self, graph: dict[str, ModuleNode]
+    ) -> list[str]:
         """Find event types used by modules but not in the registry."""
-        used_types: Set[str] = set()
+        used_types: set[str] = set()
         for node in graph.values():
             used_types.update(node.produces)
             used_types.update(node.watches)
@@ -277,16 +277,16 @@ class EventTypeRegistry:
 
     def get_dependency_chain(
         self, target_type: str,
-        graph: Dict[str, ModuleNode],
+        graph: dict[str, ModuleNode],
         max_depth: int = 10
-    ) -> List[List[str]]:
+    ) -> list[list[str]]:
         """Trace the chain of modules needed to produce a target event type.
 
         Returns a list of chains (paths), each is a list of module names.
         """
-        chains: List[List[str]] = []
+        chains: list[list[str]] = []
 
-        def _trace(evt_type: str, path: List[str], depth: int):
+        def _trace(evt_type: str, path: list[str], depth: int):
             if depth >= max_depth:
                 return
             producers = self.find_producers(evt_type, graph)
@@ -304,7 +304,7 @@ class EventTypeRegistry:
         _trace(target_type, [], 0)
         return chains
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Export the registry as a dict."""
         return {
             "total_types": len(self._types),
@@ -323,7 +323,7 @@ class EventTypeRegistry:
 
 
 # Singleton
-_registry: Optional[EventTypeRegistry] = None
+_registry: EventTypeRegistry | None = None
 
 
 def get_event_registry() -> EventTypeRegistry:

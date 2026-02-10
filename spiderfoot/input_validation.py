@@ -203,7 +203,7 @@ class InputValidator:
         return None
 
     @classmethod
-    def sanitize_module_options(cls, options: Dict[str, Any]) -> Dict[str, Any]:
+    def sanitize_module_options(cls, options: dict[str, Any]) -> dict[str, Any]:
         """Sanitize module configuration options.
 
         Args:
@@ -252,7 +252,7 @@ class InputValidator:
 
     @classmethod
     def validate_file_upload(cls, filename: str, content: bytes,
-                           allowed_extensions: List[str] = None,
+                           allowed_extensions: list[str] = None,
                            max_size: int = 1024 * 1024) -> bool:
         """Validate file upload.
 

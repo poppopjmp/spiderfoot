@@ -83,8 +83,8 @@ class TypeFilter(EventFilter):
 
     def __init__(
         self,
-        allowed_types: Optional[Set[str]] = None,
-        denied_types: Optional[Set[str]] = None,
+        allowed_types: Optional[set[str]] = None,
+        denied_types: Optional[set[str]] = None,
         name: str = "type_filter",
     ):
         super().__init__(name=name)
@@ -165,8 +165,8 @@ class ModuleFilter(EventFilter):
 
     def __init__(
         self,
-        allowed_modules: Optional[Set[str]] = None,
-        denied_modules: Optional[Set[str]] = None,
+        allowed_modules: Optional[set[str]] = None,
+        denied_modules: Optional[set[str]] = None,
         name: str = "module_filter",
     ):
         super().__init__(name=name)
@@ -202,7 +202,7 @@ class EventFilterChain:
     def __init__(self, mode: str = "all_pass", name: str = "default"):
         self.mode = mode  # "all_pass" or "any_pass"
         self.name = name
-        self._filters: List[EventFilter] = []
+        self._filters: list[EventFilter] = []
         self._lock = threading.Lock()
         self._total_checked = 0
         self._total_passed = 0
@@ -263,8 +263,8 @@ class EventFilterChain:
         return True
 
     def check_batch(
-        self, events: List[dict]
-    ) -> List[bool]:
+        self, events: list[dict]
+    ) -> list[bool]:
         """Check multiple events. Each dict should have 'event_type' and 'data'."""
         return [
             self.check(
@@ -293,7 +293,7 @@ class EventFilterChain:
                 "filters": [f.stats.to_dict() for f in self._filters],
             }
 
-    def get_filter_names(self) -> List[str]:
+    def get_filter_names(self) -> list[str]:
         with self._lock:
             return [f.name for f in self._filters]
 

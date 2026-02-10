@@ -81,7 +81,7 @@ class SecureSessionManager:
         return session_token
 
     def validate_session(self, session_token: str, user_agent: str = None,
-                        ip_address: str = None) -> Optional[Dict[str, Any]]:
+                        ip_address: str = None) -> Optional[dict[str, Any]]:
         """Validate and refresh session.
 
         Args:
@@ -218,7 +218,7 @@ class SecureSessionManager:
         """
         return hashlib.sha256(user_agent.encode()).hexdigest()
 
-    def _store_session(self, session_token: str, session_data: Dict[str, Any]) -> None:
+    def _store_session(self, session_token: str, session_data: dict[str, Any]) -> None:
         """Store session data.
 
         Args:
@@ -240,7 +240,7 @@ class SecureSessionManager:
             # Store in memory
             self._memory_sessions[session_token] = session_data
 
-    def _get_session(self, session_token: str) -> Optional[Dict[str, Any]]:
+    def _get_session(self, session_token: str) -> Optional[dict[str, Any]]:
         """Retrieve session data.
 
         Args:

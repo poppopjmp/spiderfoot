@@ -109,13 +109,13 @@ class ContextWindow:
     role: WindowRole = WindowRole.FULL_REPORT
     system_prompt: str = ""
     user_prompt: str = ""
-    sections: List[SectionAllocation] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    sections: list[SectionAllocation] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
     total_tokens: int = 0
     budget_tokens: int = 0
     utilization_pct: float = 0.0
 
-    def to_prompt(self) -> Dict[str, str]:
+    def to_prompt(self) -> dict[str, str]:
         """Return system + user prompt pair for LLM API."""
         return {
             "system": self.system_prompt,
@@ -126,7 +126,7 @@ class ContextWindow:
 @dataclass
 class WindowingResult:
     """Result of context windowing across a full report."""
-    windows: List[ContextWindow] = field(default_factory=list)
+    windows: list[ContextWindow] = field(default_factory=list)
     strategy: AllocationStrategy = AllocationStrategy.PRIORITY_WEIGHTED
     total_events: int = 0
     events_included: int = 0
@@ -142,7 +142,7 @@ class WindowingResult:
 # System prompts
 # ---------------------------------------------------------------------------
 
-_SYSTEM_PROMPTS: Dict[WindowRole, str] = {
+_SYSTEM_PROMPTS: dict[WindowRole, str] = {
     WindowRole.EXECUTIVE_SUMMARY: textwrap.dedent("""\
         You are a senior cybersecurity analyst writing an executive summary
         of an OSINT (Open Source Intelligence) scan. Be concise, highlight
@@ -185,7 +185,7 @@ def _estimate_tokens(text: str, chars_per_token: int = 4) -> int:
     return max(1, len(text) // chars_per_token)
 
 
-def _truncate_to_tokens(text: str, max_tokens: int, suffix: str = "") -> Tuple[str, bool]:
+def _truncate_to_tokens(text: str, max_tokens: int, suffix: str = "") -> tuple[str, bool]:
     """Truncate text to fit within a token budget.
 
     Returns:
@@ -213,7 +213,7 @@ class ContextWindowManager:
     ContextWindow objects, each fitting within the configured token budget.
     """
 
-    def __init__(self, config: Optional[WindowConfig] = None):
+    def __init__(self, config: WindowConfig | None = None):
         self.config = config or WindowConfig()
 
     @property
@@ -327,7 +327,7 @@ class ContextWindowManager:
     # Allocation strategies
     # -----------------------------------------------------------------------
 
-    def _allocate_tokens(self, sections: list) -> List[SectionAllocation]:
+    def _allocate_tokens(self, sections: list) -> list[SectionAllocation]:
         """Allocate token budget across sections using the configured strategy."""
         strategy = self.config.strategy
         budget = self.available_budget
@@ -343,7 +343,7 @@ class ContextWindowManager:
         else:
             return self._allocate_priority_weighted(sections, budget)
 
-    def _allocate_fixed(self, sections: list, budget: int) -> List[SectionAllocation]:
+    def _allocate_fixed(self, sections: list, budget: int) -> list[SectionAllocation]:
         """Equal allocation per section."""
         if not sections:
             return []
@@ -353,7 +353,7 @@ class ContextWindowManager:
             for s in sections
         ]
 
-    def _allocate_proportional(self, sections: list, budget: int) -> List[SectionAllocation]:
+    def _allocate_proportional(self, sections: list, budget: int) -> list[SectionAllocation]:
         """Allocate proportionally to event count."""
         total_events = sum(s.event_count for s in sections)
         if total_events == 0:
@@ -370,7 +370,7 @@ class ContextWindowManager:
             for s in sections
         ]
 
-    def _allocate_priority_weighted(self, sections: list, budget: int) -> List[SectionAllocation]:
+    def _allocate_priority_weighted(self, sections: list, budget: int) -> list[SectionAllocation]:
         """Weight allocation by section priority (higher priority = more tokens)."""
         total_priority = sum(s.priority for s in sections)
         if total_priority == 0:
@@ -389,7 +389,7 @@ class ContextWindowManager:
 
         return allocations
 
-    def _allocate_adaptive(self, sections: list, budget: int) -> List[SectionAllocation]:
+    def _allocate_adaptive(self, sections: list, budget: int) -> list[SectionAllocation]:
         """Adaptive allocation: starts with priority weighting, then redistributes
         unused budget from small sections to large ones."""
         # Start with priority-weighted
@@ -456,7 +456,7 @@ class ContextWindowManager:
 
     def _build_single_window(
         self,
-        allocations: List[SectionAllocation],
+        allocations: list[SectionAllocation],
         report_context: Any,
         role: WindowRole,
     ) -> ContextWindow:
@@ -507,12 +507,12 @@ class ContextWindowManager:
 
     def _build_multi_windows(
         self,
-        allocations: List[SectionAllocation],
+        allocations: list[SectionAllocation],
         report_context: Any,
-    ) -> List[ContextWindow]:
+    ) -> list[ContextWindow]:
         """Split allocations across multiple windows when content exceeds budget."""
         windows = []
-        current_allocs: List[SectionAllocation] = []
+        current_allocs: list[SectionAllocation] = []
         current_tokens = 0
         budget = self.available_budget
         window_id = 0

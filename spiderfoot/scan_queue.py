@@ -74,9 +74,9 @@ class QueueItem(Generic[T]):
     item_id: str = ""
     retries: int = 0
     max_retries: int = 3
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def __lt__(self, other: "QueueItem") -> bool:
+    def __lt__(self, other: QueueItem) -> bool:
         if self.priority != other.priority:
             return self.priority < other.priority
         return self.enqueued_at < other.enqueued_at
@@ -96,9 +96,9 @@ class QueueStats:
     dropped_total: int = 0
     dlq_depth: int = 0
     avg_wait_ms: float = 0.0
-    depth_by_priority: Dict[str, int] = field(default_factory=dict)
+    depth_by_priority: dict[str, int] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "depth": self.depth,
             "capacity": self.capacity,
@@ -134,18 +134,18 @@ class ScanQueue(Generic[T]):
         *,
         capacity: int = 10000,
         backpressure_action: BackpressureAction = BackpressureAction.BLOCK,
-        pressure_thresholds: Optional[Dict[PressureLevel, float]] = None,
+        pressure_thresholds: dict[PressureLevel, float] | None = None,
     ):
         self._capacity = max(1, capacity)
         self._action = backpressure_action
 
         # Three internal lists — one per priority lane
-        self._lanes: Dict[Priority, List[QueueItem[T]]] = {
+        self._lanes: dict[Priority, list[QueueItem[T]]] = {
             Priority.HIGH: [],
             Priority.NORMAL: [],
             Priority.LOW: [],
         }
-        self._dlq: List[QueueItem[T]] = []
+        self._dlq: list[QueueItem[T]] = []
 
         # Thresholds
         self._thresholds = pressure_thresholds or {
@@ -165,7 +165,7 @@ class ScanQueue(Generic[T]):
         self._wait_samples = 0
 
         # Callbacks
-        self._pressure_callbacks: List[Callable[[PressureLevel], None]] = []
+        self._pressure_callbacks: list[Callable[[PressureLevel], None]] = []
         self._last_pressure = PressureLevel.NONE
 
         # Synchronisation
@@ -184,8 +184,8 @@ class ScanQueue(Generic[T]):
         priority: Priority = Priority.NORMAL,
         item_id: str = "",
         max_retries: int = 3,
-        metadata: Optional[Dict[str, Any]] = None,
-        timeout: Optional[float] = None,
+        metadata: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> bool:
         """Enqueue an item.
 
@@ -201,7 +201,7 @@ class ScanQueue(Generic[T]):
         )
         return self._enqueue(item, timeout)
 
-    def _enqueue(self, item: QueueItem[T], timeout: Optional[float] = None) -> bool:
+    def _enqueue(self, item: QueueItem[T], timeout: float | None = None) -> bool:
         with self._not_full:
             while self._depth_unlocked() >= self._capacity:
                 if self._action == BackpressureAction.REJECT:
@@ -229,7 +229,7 @@ class ScanQueue(Generic[T]):
         self._check_pressure()
         return True
 
-    def get(self, timeout: Optional[float] = None) -> Optional[QueueItem[T]]:
+    def get(self, timeout: float | None = None) -> QueueItem[T] | None:
         """Dequeue the highest-priority item.
 
         Returns None if timeout elapses with no item available.
@@ -248,9 +248,9 @@ class ScanQueue(Generic[T]):
             self._check_pressure()
         return item
 
-    def get_batch(self, max_items: int = 10, timeout: Optional[float] = None) -> List[QueueItem[T]]:
+    def get_batch(self, max_items: int = 10, timeout: float | None = None) -> list[QueueItem[T]]:
         """Dequeue up to *max_items* in priority order."""
-        result: List[QueueItem[T]] = []
+        result: list[QueueItem[T]] = []
         with self._not_empty:
             if self._depth_unlocked() == 0:
                 self._not_empty.wait(timeout=timeout)
@@ -288,7 +288,7 @@ class ScanQueue(Generic[T]):
     def _depth_unlocked(self) -> int:
         return sum(len(lane) for lane in self._lanes.values())
 
-    def _dequeue_one(self) -> Optional[QueueItem[T]]:
+    def _dequeue_one(self) -> QueueItem[T] | None:
         """Pop highest-priority item (caller holds lock)."""
         for pri in Priority:
             lane = self._lanes[pri]
@@ -355,14 +355,14 @@ class ScanQueue(Generic[T]):
         with self._lock:
             return len(self._dlq)
 
-    def drain_dlq(self, limit: int = 100) -> List[QueueItem[T]]:
+    def drain_dlq(self, limit: int = 100) -> list[QueueItem[T]]:
         """Remove and return items from the dead-letter queue."""
         with self._lock:
             items = self._dlq[:limit]
             self._dlq = self._dlq[limit:]
             return items
 
-    def peek_dlq(self, limit: int = 10) -> List[QueueItem[T]]:
+    def peek_dlq(self, limit: int = 10) -> list[QueueItem[T]]:
         with self._lock:
             return list(self._dlq[:limit])
 
@@ -387,7 +387,7 @@ class ScanQueue(Generic[T]):
     def is_empty(self) -> bool:
         return self.depth == 0
 
-    def depth_by_priority(self) -> Dict[str, int]:
+    def depth_by_priority(self) -> dict[str, int]:
         with self._lock:
             return {p.name: len(lane) for p, lane in self._lanes.items()}
 

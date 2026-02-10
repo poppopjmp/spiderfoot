@@ -48,10 +48,10 @@ class NotificationManager:
 
     def __init__(
         self,
-        dispatcher: Optional[WebhookDispatcher] = None,
+        dispatcher: WebhookDispatcher | None = None,
     ):
         self._lock = threading.Lock()
-        self._webhooks: Dict[str, WebhookConfig] = {}
+        self._webhooks: dict[str, WebhookConfig] = {}
         self._dispatcher = dispatcher or WebhookDispatcher()
 
     # -- Webhook CRUD -----------------------------------------------------
@@ -73,11 +73,11 @@ class NotificationManager:
         with self._lock:
             return self._webhooks.pop(webhook_id, None) is not None
 
-    def get_webhook(self, webhook_id: str) -> Optional[WebhookConfig]:
+    def get_webhook(self, webhook_id: str) -> WebhookConfig | None:
         with self._lock:
             return self._webhooks.get(webhook_id)
 
-    def list_webhooks(self) -> List[WebhookConfig]:
+    def list_webhooks(self) -> list[WebhookConfig]:
         with self._lock:
             return list(self._webhooks.values())
 
@@ -99,8 +99,8 @@ class NotificationManager:
     def notify(
         self,
         event_type: str,
-        payload: Dict[str, Any],
-    ) -> List[DeliveryRecord]:
+        payload: dict[str, Any],
+    ) -> list[DeliveryRecord]:
         """Dispatch a notification to all matching webhooks.
 
         Returns a list of :class:`DeliveryRecord` for each delivery.
@@ -140,7 +140,7 @@ class NotificationManager:
     def notify_async(
         self,
         event_type: str,
-        payload: Dict[str, Any],
+        payload: dict[str, Any],
     ) -> None:
         """Fire-and-forget notification in a background thread."""
         t = threading.Thread(
@@ -150,7 +150,7 @@ class NotificationManager:
         )
         t.start()
 
-    def test_webhook(self, webhook_id: str) -> Optional[DeliveryRecord]:
+    def test_webhook(self, webhook_id: str) -> DeliveryRecord | None:
         """Send a test event to a specific webhook.
 
         Returns the delivery record, or None if webhook not found.
@@ -213,13 +213,13 @@ class NotificationManager:
 
     def get_delivery_history(
         self,
-        webhook_id: Optional[str] = None,
+        webhook_id: str | None = None,
         limit: int = 50,
-    ) -> List[DeliveryRecord]:
+    ) -> list[DeliveryRecord]:
         return self._dispatcher.get_history(webhook_id=webhook_id, limit=limit)
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         delivery = self._dispatcher.stats
         delivery["webhooks_registered"] = len(self._webhooks)
         delivery["webhooks_enabled"] = sum(
@@ -232,7 +232,7 @@ class NotificationManager:
 # Singleton
 # -----------------------------------------------------------------------
 
-_manager: Optional[NotificationManager] = None
+_manager: NotificationManager | None = None
 _manager_lock = threading.Lock()
 
 

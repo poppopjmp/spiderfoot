@@ -71,7 +71,7 @@ class SecretEntry:
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
     description: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     rotation_days: int = 0  # 0 = no auto-rotation
 
     @property
@@ -100,7 +100,7 @@ class SecretEntry:
         return d
 
     @classmethod
-    def from_dict(cls, data: dict) -> "SecretEntry":
+    def from_dict(cls, data: dict) -> SecretEntry:
         return cls(
             key=data["key"],
             value=data.get("value", ""),
@@ -120,7 +120,7 @@ class SecretBackend(ABC):
     """Abstract backend for secret storage."""
 
     @abstractmethod
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str) -> str | None:
         """Get a secret value by key."""
 
     @abstractmethod
@@ -132,7 +132,7 @@ class SecretBackend(ABC):
         """Delete a secret. Returns True if it existed."""
 
     @abstractmethod
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         """List all secret keys."""
 
     @abstractmethod
@@ -148,13 +148,13 @@ class MemorySecretBackend(SecretBackend):
     """In-memory secret storage (for development/testing)."""
 
     def __init__(self):
-        self._secrets: Dict[str, SecretEntry] = {}
+        self._secrets: dict[str, SecretEntry] = {}
 
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str) -> str | None:
         entry = self._secrets.get(key)
         return entry.value if entry else None
 
-    def get_entry(self, key: str) -> Optional[SecretEntry]:
+    def get_entry(self, key: str) -> SecretEntry | None:
         return self._secrets.get(key)
 
     def set(self, key: str, value: str, **kwargs: Any) -> None:
@@ -173,7 +173,7 @@ class MemorySecretBackend(SecretBackend):
     def delete(self, key: str) -> bool:
         return self._secrets.pop(key, None) is not None
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         return list(self._secrets.keys())
 
     def exists(self, key: str) -> bool:
@@ -196,7 +196,7 @@ class EnvSecretBackend(SecretBackend):
     def _env_key(self, key: str) -> str:
         return f"{self._prefix}{key.upper()}"
 
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str) -> str | None:
         return os.environ.get(self._env_key(key))
 
     def set(self, key: str, value: str, **kwargs: Any) -> None:
@@ -209,7 +209,7 @@ class EnvSecretBackend(SecretBackend):
             return True
         return False
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         prefix_len = len(self._prefix)
         return [
             k[prefix_len:].lower()
@@ -234,13 +234,13 @@ class FileSecretBackend(SecretBackend):
 
     def __init__(self, filepath: str = ".secrets.json"):
         self._filepath = filepath
-        self._secrets: Dict[str, SecretEntry] = {}
+        self._secrets: dict[str, SecretEntry] = {}
         self._load()
 
     def _load(self) -> None:
         if os.path.exists(self._filepath):
             try:
-                with open(self._filepath, "r", encoding="utf-8") as f:
+                with open(self._filepath, encoding="utf-8") as f:
                     data = json.load(f)
                 for item in data.get("secrets", []):
                     entry = SecretEntry.from_dict(item)
@@ -261,7 +261,7 @@ class FileSecretBackend(SecretBackend):
         except Exception as e:
             log.error("Failed to save secrets: %s", e)
 
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str) -> str | None:
         entry = self._secrets.get(key)
         return entry.value if entry else None
 
@@ -281,7 +281,7 @@ class FileSecretBackend(SecretBackend):
             return True
         return False
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         return list(self._secrets.keys())
 
     def exists(self, key: str) -> bool:
@@ -304,7 +304,7 @@ class EncryptedFileSecretBackend(SecretBackend):
                  encryption_key: str = ""):
         self._filepath = filepath
         self._derived_key = self._derive_key(encryption_key or "default-key")
-        self._secrets: Dict[str, SecretEntry] = {}
+        self._secrets: dict[str, SecretEntry] = {}
         self._load()
 
     def _derive_key(self, passphrase: str) -> bytes:
@@ -334,7 +334,7 @@ class EncryptedFileSecretBackend(SecretBackend):
         if not os.path.exists(self._filepath):
             return
         try:
-            with open(self._filepath, "r", encoding="utf-8") as f:
+            with open(self._filepath, encoding="utf-8") as f:
                 encrypted_data = f.read()
             plaintext = self._decrypt(encrypted_data)
             data = json.loads(plaintext)
@@ -358,7 +358,7 @@ class EncryptedFileSecretBackend(SecretBackend):
         except Exception as e:
             log.error("Failed to save encrypted secrets: %s", e)
 
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str) -> str | None:
         entry = self._secrets.get(key)
         return entry.value if entry else None
 
@@ -378,7 +378,7 @@ class EncryptedFileSecretBackend(SecretBackend):
             return True
         return False
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         return list(self._secrets.keys())
 
     def exists(self, key: str) -> bool:
@@ -396,14 +396,14 @@ class SecretManager:
     like access auditing, rotation warnings, and multi-backend fallback.
     """
 
-    def __init__(self, backend: Optional[SecretBackend] = None, **kwargs: Any):
+    def __init__(self, backend: SecretBackend | None = None, **kwargs: Any):
         if backend is None:
             backend_type = kwargs.pop("backend_type", "memory")
             backend = self._create_backend(backend_type, **kwargs)
         self._backend = backend
         self._lock = threading.Lock()
-        self._access_log: List[dict] = []
-        self._redacted_keys: Set[str] = set()
+        self._access_log: list[dict] = []
+        self._redacted_keys: set[str] = set()
 
     @staticmethod
     def _create_backend(backend_type: str, **kwargs: Any) -> SecretBackend:
@@ -422,7 +422,7 @@ class SecretManager:
 
     # --- CRUD ---
 
-    def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
+    def get(self, key: str, default: str | None = None) -> str | None:
         """Retrieve a secret value."""
         with self._lock:
             value = self._backend.get(key)
@@ -447,19 +447,19 @@ class SecretManager:
         with self._lock:
             return self._backend.exists(key)
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         """List all secret keys (not values)."""
         with self._lock:
             return self._backend.list_keys()
 
     # --- Bulk operations ---
 
-    def get_many(self, keys: List[str]) -> Dict[str, Optional[str]]:
+    def get_many(self, keys: list[str]) -> dict[str, str | None]:
         """Retrieve multiple secrets at once."""
         with self._lock:
             return {k: self._backend.get(k) for k in keys}
 
-    def set_many(self, secrets: Dict[str, str]) -> None:
+    def set_many(self, secrets: dict[str, str]) -> None:
         """Store multiple secrets at once."""
         with self._lock:
             for k, v in secrets.items():
@@ -467,7 +467,7 @@ class SecretManager:
 
     # --- Module helper ---
 
-    def get_module_secrets(self, module_name: str) -> Dict[str, Optional[str]]:
+    def get_module_secrets(self, module_name: str) -> dict[str, str | None]:
         """Get all secrets for a specific module.
 
         Looks for keys prefixed with the module name, e.g.,
@@ -478,7 +478,7 @@ class SecretManager:
         return self.get_many(keys)
 
     def inject_into_config(self, config: dict,
-                           key_mapping: Optional[Dict[str, str]] = None) -> dict:
+                           key_mapping: dict[str, str] | None = None) -> dict:
         """Inject secrets into a configuration dict.
 
         *key_mapping* maps config keys to secret keys, e.g.::
@@ -498,7 +498,7 @@ class SecretManager:
 
     # --- Rotation ---
 
-    def check_rotation(self) -> List[dict]:
+    def check_rotation(self) -> list[dict]:
         """Return list of secrets that need rotation."""
         warnings = []
         with self._lock:
@@ -532,7 +532,7 @@ class SecretManager:
         if len(self._access_log) > 10000:
             self._access_log = self._access_log[-5000:]
 
-    def access_log(self, limit: int = 100) -> List[dict]:
+    def access_log(self, limit: int = 100) -> list[dict]:
         """Return recent access log entries."""
         return self._access_log[-limit:]
 
@@ -551,7 +551,7 @@ class SecretManager:
 # Singleton
 # ------------------------------------------------------------------
 
-_manager: Optional[SecretManager] = None
+_manager: SecretManager | None = None
 _manager_lock = threading.Lock()
 
 

@@ -44,23 +44,23 @@ class RecurringSchedule:
     schedule_id: str = ""
     name: str = ""
     target: str = ""
-    modules: List[str] = field(default_factory=list)
-    type_filter: List[str] = field(default_factory=list)
+    modules: list[str] = field(default_factory=list)
+    type_filter: list[str] = field(default_factory=list)
 
     # Timing
     interval_minutes: int = 0        # recurring: run every N minutes
-    run_at: Optional[float] = None   # one-shot: unix timestamp to run at
+    run_at: float | None = None   # one-shot: unix timestamp to run at
 
     # State
     status: RecurringStatus = RecurringStatus.ACTIVE
     created_at: float = 0.0
-    last_run_at: Optional[float] = None
-    next_run_at: Optional[float] = None
+    last_run_at: float | None = None
+    next_run_at: float | None = None
     run_count: int = 0
     max_runs: int = 0                # 0 = unlimited
     last_scan_id: str = ""
     description: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         if not self.schedule_id:
@@ -98,7 +98,7 @@ class RecurringSchedule:
         elif self.interval_minutes:
             self.next_run_at = time.time() + (self.interval_minutes * 60)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "schedule_id": self.schedule_id,
             "name": self.name,
@@ -123,12 +123,12 @@ class RecurringScheduler:
     """In-memory recurring scan scheduler with background check loop."""
 
     def __init__(self, check_interval: float = 30.0):
-        self._schedules: Dict[str, RecurringSchedule] = {}
+        self._schedules: dict[str, RecurringSchedule] = {}
         self._lock = threading.Lock()
         self._check_interval = check_interval
         self._running = False
-        self._thread: Optional[threading.Thread] = None
-        self._on_trigger: Optional[Callable] = None
+        self._thread: threading.Thread | None = None
+        self._on_trigger: Callable | None = None
 
     def set_trigger_callback(self, callback: Callable) -> None:
         """Set the callback invoked when a schedule fires.
@@ -143,12 +143,12 @@ class RecurringScheduler:
         name: str,
         target: str,
         interval_minutes: int = 0,
-        run_at: Optional[float] = None,
-        modules: Optional[List[str]] = None,
-        type_filter: Optional[List[str]] = None,
+        run_at: float | None = None,
+        modules: list[str] | None = None,
+        type_filter: list[str] | None = None,
         max_runs: int = 0,
         description: str = "",
-        tags: Optional[List[str]] = None,
+        tags: list[str] | None = None,
     ) -> RecurringSchedule:
         """Create and register a new recurring schedule."""
         schedule = RecurringSchedule(
@@ -168,7 +168,7 @@ class RecurringScheduler:
                  schedule.schedule_id, name, target, interval_minutes)
         return schedule
 
-    def get(self, schedule_id: str) -> Optional[RecurringSchedule]:
+    def get(self, schedule_id: str) -> RecurringSchedule | None:
         with self._lock:
             return self._schedules.get(schedule_id)
 
@@ -180,7 +180,7 @@ class RecurringScheduler:
                 return True
             return False
 
-    def list_all(self) -> List[RecurringSchedule]:
+    def list_all(self) -> list[RecurringSchedule]:
         with self._lock:
             return list(self._schedules.values())
 
@@ -246,7 +246,7 @@ class RecurringScheduler:
             with self._lock:
                 schedule.mark_run(scan_id)
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         with self._lock:
             statuses = {}
             for s in self._schedules.values():
@@ -263,7 +263,7 @@ class RecurringScheduler:
 # Singleton
 # -----------------------------------------------------------------------
 
-_scheduler: Optional[RecurringScheduler] = None
+_scheduler: RecurringScheduler | None = None
 _lock = threading.Lock()
 
 

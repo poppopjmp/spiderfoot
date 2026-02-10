@@ -78,7 +78,7 @@ def create_versioned_router() -> APIRouter:
 
 def mount_versioned_routers(
     app: FastAPI,
-    router_configs: List[Tuple[APIRouter, str, List[str]]],
+    router_configs: list[tuple[APIRouter, str, list[str]]],
     *,
     keep_legacy: bool = True,
 ) -> None:

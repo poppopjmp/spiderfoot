@@ -74,9 +74,9 @@ class ReportGeneratorConfig:
     report_format: ReportFormat = ReportFormat.MARKDOWN
 
     # Component configs
-    preprocessor_config: Optional[PreprocessorConfig] = None
-    window_config: Optional[WindowConfig] = None
-    llm_config: Optional[LLMConfig] = None
+    preprocessor_config: PreprocessorConfig | None = None
+    window_config: WindowConfig | None = None
+    llm_config: LLMConfig | None = None
 
     # Generation settings
     generate_executive_summary: bool = True
@@ -89,7 +89,7 @@ class ReportGeneratorConfig:
     language: str = "English"
 
     # Callbacks
-    on_section_complete: Optional[Callable[[str, str], None]] = None
+    on_section_complete: Callable[[str, str], None] | None = None
 
     def __post_init__(self):
         if self.preprocessor_config is None:
@@ -122,12 +122,12 @@ class GeneratedReport:
     title: str = ""
     scan_id: str = ""
     scan_target: str = ""
-    sections: List[GeneratedSection] = field(default_factory=list)
+    sections: list[GeneratedSection] = field(default_factory=list)
     executive_summary: str = ""
     recommendations: str = ""
     report_type: ReportType = ReportType.FULL
     format: ReportFormat = ReportFormat.MARKDOWN
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     generation_time_ms: float = 0.0
     total_tokens_used: int = 0
 
@@ -188,7 +188,7 @@ class GeneratedReport:
         return text
 
     @property
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """Serialize to dict for JSON output."""
         return {
             "title": self.title,
@@ -215,7 +215,7 @@ class GeneratedReport:
 # Prompt templates
 # ---------------------------------------------------------------------------
 
-_SECTION_PROMPTS: Dict[str, str] = {
+_SECTION_PROMPTS: dict[str, str] = {
     "Threat Intelligence": (
         "Analyze the threat intelligence findings below. Identify threat actors, "
         "attack patterns, and indicators of compromise (IOCs). Assess the severity "
@@ -292,14 +292,14 @@ class ReportGenerator:
     4. Assemble into a coherent report
     """
 
-    def __init__(self, config: Optional[ReportGeneratorConfig] = None):
+    def __init__(self, config: ReportGeneratorConfig | None = None):
         self.config = config or ReportGeneratorConfig()
         self._preprocessor = ReportPreprocessor(self.config.preprocessor_config)
         self._window_manager = ContextWindowManager(self.config.window_config)
         self._llm_client = LLMClient(self.config.llm_config)
 
     @classmethod
-    def from_env(cls) -> "ReportGenerator":
+    def from_env(cls) -> ReportGenerator:
         """Create a generator using environment variable configuration."""
         return cls(ReportGeneratorConfig(
             llm_config=LLMConfig.from_env(),
@@ -307,8 +307,8 @@ class ReportGenerator:
 
     def generate(
         self,
-        events: List[Dict[str, Any]],
-        scan_metadata: Optional[Dict[str, Any]] = None,
+        events: list[dict[str, Any]],
+        scan_metadata: dict[str, Any] | None = None,
     ) -> GeneratedReport:
         """Generate a complete report from raw scan events.
 
@@ -410,8 +410,8 @@ class ReportGenerator:
 
     def generate_executive_only(
         self,
-        events: List[Dict[str, Any]],
-        scan_metadata: Optional[Dict[str, Any]] = None,
+        events: list[dict[str, Any]],
+        scan_metadata: dict[str, Any] | None = None,
     ) -> str:
         """Generate only the executive summary.
 
@@ -432,8 +432,8 @@ class ReportGenerator:
 
     def generate_recommendations_only(
         self,
-        events: List[Dict[str, Any]],
-        scan_metadata: Optional[Dict[str, Any]] = None,
+        events: list[dict[str, Any]],
+        scan_metadata: dict[str, Any] | None = None,
     ) -> str:
         """Generate only recommendations.
 

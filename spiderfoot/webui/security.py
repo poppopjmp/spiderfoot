@@ -56,7 +56,7 @@ def setup_security_headers():
     })
 
 
-def setup_enhanced_security(config: Dict[str, Any]) -> Optional[Any]:
+def setup_enhanced_security(config: dict[str, Any]) -> Optional[Any]:
     """
     Set up enhanced security with the new security framework.
 
@@ -86,7 +86,7 @@ def setup_enhanced_security(config: Dict[str, Any]) -> Optional[Any]:
         return None
 
 
-def get_security_status() -> Dict[str, Any]:
+def get_security_status() -> dict[str, Any]:
     """
     Get current security status and capabilities.
 

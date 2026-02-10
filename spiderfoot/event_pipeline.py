@@ -30,8 +30,8 @@ class PipelineEvent:
     data: str
     module: str = ""
     source_event: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    tags: Set[str] = field(default_factory=set)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    tags: set[str] = field(default_factory=set)
     _dropped: bool = False
     _drop_reason: str = ""
 
@@ -117,7 +117,7 @@ class ValidatorStage(PipelineStage):
 
     def __init__(
         self,
-        allowed_types: Optional[Set[str]] = None,
+        allowed_types: Optional[set[str]] = None,
         max_data_size: Optional[int] = None,
         name: str = "validator",
     ):
@@ -158,9 +158,9 @@ class TransformStage(PipelineStage):
 class TaggingStage(PipelineStage):
     """Adds tags to events based on rules."""
 
-    def __init__(self, rules: Optional[Dict[str, str]] = None, name: str = "tagger"):
+    def __init__(self, rules: Optional[dict[str, str]] = None, name: str = "tagger"):
         super().__init__(name=name)
-        self._rules: Dict[str, str] = rules or {}
+        self._rules: dict[str, str] = rules or {}
 
     def add_rule(self, pattern: str, tag: str) -> "TaggingStage":
         self._rules[pattern] = tag
@@ -178,7 +178,7 @@ class RouterStage(PipelineStage):
 
     def __init__(self, name: str = "router"):
         super().__init__(name=name)
-        self._routes: List[Tuple[Callable[[PipelineEvent], bool], str]] = []
+        self._routes: list[tuple[Callable[[PipelineEvent], bool], str]] = []
 
     def add_route(self, predicate: Callable[[PipelineEvent], bool], destination: str) -> "RouterStage":
         self._routes.append((predicate, destination))
@@ -208,8 +208,8 @@ class EventPipeline:
 
     def __init__(self, name: str = "default"):
         self.name = name
-        self._stages: List[PipelineStage] = []
-        self._error_handlers: List[Callable[[PipelineEvent, PipelineStage, Exception], None]] = []
+        self._stages: list[PipelineStage] = []
+        self._error_handlers: list[Callable[[PipelineEvent, PipelineStage, Exception], None]] = []
         self._lock = threading.Lock()
         self._total_processed = 0
         self._total_passed = 0
@@ -276,7 +276,7 @@ class EventPipeline:
         self._total_passed += 1
         return StageResult.CONTINUE
 
-    def execute_batch(self, events: List[PipelineEvent]) -> List[Tuple[PipelineEvent, StageResult]]:
+    def execute_batch(self, events: list[PipelineEvent]) -> list[tuple[PipelineEvent, StageResult]]:
         """Execute the pipeline on multiple events."""
         return [(event, self.execute(event)) for event in events]
 
@@ -285,7 +285,7 @@ class EventPipeline:
         with self._lock:
             return len(self._stages)
 
-    def get_stage_names(self) -> List[str]:
+    def get_stage_names(self) -> list[str]:
         with self._lock:
             return [s.name for s in self._stages]
 

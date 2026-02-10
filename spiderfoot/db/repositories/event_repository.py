@@ -34,7 +34,7 @@ class EventRepository(AbstractRepository):
         *,
         source_module: Optional[str] = None,
         filter_fp: bool = False,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """Get scan result events.
 
         Args:
@@ -59,7 +59,7 @@ class EventRepository(AbstractRepository):
         event_type: str = "ALL",
         *,
         filter_fp: bool = False,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """Get unique (de-duplicated) scan results."""
         return self.dbh.scanResultEventUnique(
             scan_id,
@@ -71,18 +71,18 @@ class EventRepository(AbstractRepository):
         self,
         scan_id: str,
         by: str = "type",
-    ) -> List[Any]:
+    ) -> list[Any]:
         """Get aggregated result summary."""
         return self.dbh.scanResultSummary(scan_id, by=by)
 
-    def get_result_history(self, scan_id: str) -> List[Any]:
+    def get_result_history(self, scan_id: str) -> list[Any]:
         """Get scan result history timeline."""
         return self.dbh.scanResultHistory(scan_id)
 
     def update_false_positive(
         self,
         scan_id: str,
-        result_hashes: List[str],
+        result_hashes: list[str],
         fp_flag: int,
     ) -> bool:
         """Mark/unmark results as false positive."""
@@ -91,10 +91,10 @@ class EventRepository(AbstractRepository):
     def get_element_sources(
         self,
         scan_id: str,
-        element_ids: List[str],
+        element_ids: list[str],
         *,
         recursive: bool = False,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """Get source elements for given element IDs.
 
         Args:
@@ -107,10 +107,10 @@ class EventRepository(AbstractRepository):
     def get_element_children(
         self,
         scan_id: str,
-        element_ids: List[str],
+        element_ids: list[str],
         *,
         recursive: bool = False,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """Get child elements for given element IDs."""
         if recursive:
             return self.dbh.scanElementChildrenAll(scan_id, element_ids)
@@ -118,10 +118,10 @@ class EventRepository(AbstractRepository):
 
     def search(
         self,
-        criteria: Dict[str, Any],
+        criteria: dict[str, Any],
         *,
         filter_fp: bool = False,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """Search events by criteria dict."""
         return self.dbh.search(criteria, filterFp=filter_fp)
 
@@ -135,6 +135,6 @@ class EventRepository(AbstractRepository):
         """Write a single log event."""
         self.dbh.scanLogEvent(scan_id, classification, message, component)
 
-    def log_events_batch(self, batch: List[Any]) -> bool:
+    def log_events_batch(self, batch: list[Any]) -> bool:
         """Write a batch of log events."""
         return self.dbh.scanLogEvents(batch)

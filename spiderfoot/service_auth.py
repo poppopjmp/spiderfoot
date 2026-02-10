@@ -65,9 +65,9 @@ class ServiceTokenIssuer:
 
     def __init__(
         self,
-        service_name: Optional[str] = None,
-        static_token: Optional[str] = None,
-        secret: Optional[str] = None,
+        service_name: str | None = None,
+        static_token: str | None = None,
+        secret: str | None = None,
         ttl: int = DEFAULT_TTL_ONE_HOUR,
     ) -> None:
         self.service_name = service_name or os.environ.get("SF_SERVICE_NAME", "unknown")
@@ -76,7 +76,7 @@ class ServiceTokenIssuer:
         self._ttl = int(os.environ.get("SF_SERVICE_TOKEN_TTL", str(ttl)))
 
         # Cache for HMAC tokens
-        self._cached_token: Optional[str] = None
+        self._cached_token: str | None = None
         self._cached_expires: float = 0.0
 
     def get_token(self) -> str:
@@ -100,7 +100,7 @@ class ServiceTokenIssuer:
         # No auth configured — return empty
         return ""
 
-    def auth_headers(self) -> Dict[str, str]:
+    def auth_headers(self) -> dict[str, str]:
         """Return HTTP headers for inter-service authentication."""
         token = self.get_token()
         if not token:
@@ -131,10 +131,10 @@ class ServiceTokenValidator:
 
     def __init__(
         self,
-        static_token: Optional[str] = None,
-        secret: Optional[str] = None,
+        static_token: str | None = None,
+        secret: str | None = None,
         ttl: int = DEFAULT_TTL_ONE_HOUR,
-        enabled: Optional[bool] = None,
+        enabled: bool | None = None,
     ) -> None:
         self._static_token = static_token or os.environ.get("SF_SERVICE_TOKEN", "")
         self._secret = secret or os.environ.get("SF_SERVICE_SECRET", "")

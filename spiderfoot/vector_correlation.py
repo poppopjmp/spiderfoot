@@ -57,7 +57,7 @@ class VectorCorrelationConfig:
     max_hops: int = 3
     rerank_top_k: int = 10
     min_cluster_size: int = 3
-    strategies: List[CorrelationStrategy] = field(
+    strategies: list[CorrelationStrategy] = field(
         default_factory=lambda: [CorrelationStrategy.SIMILARITY]
     )
 
@@ -79,7 +79,7 @@ class OSINTEvent:
     confidence: float = 100.0
     risk: int = 0           # 0=info, 1=low, 2=medium, 3=high, 4=critical
     timestamp: float = 0.0
-    extra: Dict[str, Any] = field(default_factory=dict)
+    extra: dict[str, Any] = field(default_factory=dict)
 
     def to_text(self) -> str:
         """Convert to text for embedding."""
@@ -94,7 +94,7 @@ class OSINTEvent:
                 parts.append(f"{k}:{v}")
         return " | ".join(parts)
 
-    def to_payload(self) -> Dict[str, Any]:
+    def to_payload(self) -> dict[str, Any]:
         """Convert to Qdrant payload."""
         return {
             "event_id": self.event_id,
@@ -115,10 +115,10 @@ class CorrelationHit:
 
     event: OSINTEvent
     score: float
-    rerank_score: Optional[float] = None
+    rerank_score: float | None = None
     strategy: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = {
             "event_id": self.event.event_id,
             "event_type": self.event.event_type,
@@ -139,14 +139,14 @@ class VectorCorrelationResult:
 
     query: str
     strategy: str
-    hits: List[CorrelationHit] = field(default_factory=list)
-    clusters: List[List[CorrelationHit]] = field(default_factory=list)
+    hits: list[CorrelationHit] = field(default_factory=list)
+    clusters: list[list[CorrelationHit]] = field(default_factory=list)
     rag_analysis: str = ""
     risk_assessment: str = ""
     confidence: float = 0.0
-    metrics: Dict[str, float] = field(default_factory=dict)
+    metrics: dict[str, float] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "query": self.query,
             "strategy": self.strategy,
@@ -190,7 +190,7 @@ class VectorCorrelationEngine:
         embeddings: Any = None,
         rag: Any = None,
         reranker: Any = None,
-        config: Optional[VectorCorrelationConfig] = None,
+        config: VectorCorrelationConfig | None = None,
     ) -> None:
         self._config = config or VectorCorrelationConfig()
         self._qdrant = qdrant
@@ -234,7 +234,7 @@ class VectorCorrelationEngine:
                 self._indexed_count += 1
         return count > 0
 
-    def index_events(self, events: List[OSINTEvent],
+    def index_events(self, events: list[OSINTEvent],
                      batch_size: int = 100) -> int:
         """Batch index OSINT events."""
         if not self._qdrant or not self._embeddings:
@@ -266,9 +266,9 @@ class VectorCorrelationEngine:
     # -----------------------------------------------------------------------
 
     def correlate(self, query: str,
-                  strategy: Optional[CorrelationStrategy] = None,
-                  scan_id: Optional[str] = None,
-                  event_type: Optional[str] = None) -> VectorCorrelationResult:
+                  strategy: CorrelationStrategy | None = None,
+                  scan_id: str | None = None,
+                  event_type: str | None = None) -> VectorCorrelationResult:
         """Run a vector correlation query."""
         strat = strategy or self._config.strategies[0]
         start = time.time()
@@ -289,8 +289,8 @@ class VectorCorrelationEngine:
         return result
 
     def _correlate_similarity(self, query: str,
-                              scan_id: Optional[str] = None,
-                              event_type: Optional[str] = None
+                              scan_id: str | None = None,
+                              event_type: str | None = None
                               ) -> VectorCorrelationResult:
         """Direct vector similarity search."""
         result = VectorCorrelationResult(query=query, strategy="similarity")
@@ -353,7 +353,7 @@ class VectorCorrelationEngine:
         return result
 
     def _correlate_cross_scan(self, query: str,
-                              scan_id: Optional[str] = None
+                              scan_id: str | None = None
                               ) -> VectorCorrelationResult:
         """Find entities that appear across multiple scans."""
         result = VectorCorrelationResult(query=query, strategy="cross_scan")
@@ -373,7 +373,7 @@ class VectorCorrelationEngine:
         )
 
         # Group by scan_id
-        scan_groups: Dict[str, List[CorrelationHit]] = {}
+        scan_groups: dict[str, list[CorrelationHit]] = {}
         for p in search_result.points:
             event = self._payload_to_event(p.payload)
             hit = CorrelationHit(event=event, score=p.score, strategy="cross_scan")
@@ -382,7 +382,7 @@ class VectorCorrelationEngine:
 
         # Only keep items found in 2+ scans
         multi_scan_hits = []
-        seen_data: Dict[str, Set[str]] = {}
+        seen_data: dict[str, set[str]] = {}
         for sid, hits in scan_groups.items():
             for h in hits:
                 key = f"{h.event.event_type}:{h.event.data}"
@@ -397,7 +397,7 @@ class VectorCorrelationEngine:
         result.hits = multi_scan_hits
 
         # Cluster by data value
-        clusters: Dict[str, List[CorrelationHit]] = {}
+        clusters: dict[str, list[CorrelationHit]] = {}
         for h in multi_scan_hits:
             key = f"{h.event.event_type}:{h.event.data}"
             clusters.setdefault(key, []).append(h)
@@ -412,8 +412,8 @@ class VectorCorrelationEngine:
         return result
 
     def _correlate_multi_hop(self, query: str,
-                             scan_id: Optional[str] = None,
-                             event_type: Optional[str] = None
+                             scan_id: str | None = None,
+                             event_type: str | None = None
                              ) -> VectorCorrelationResult:
         """Follow chains of related entities (multi-hop)."""
         result = VectorCorrelationResult(query=query, strategy="multi_hop")
@@ -421,8 +421,8 @@ class VectorCorrelationEngine:
         if not self._qdrant or not self._embeddings:
             return result
 
-        all_hits: List[CorrelationHit] = []
-        seen_ids: Set[str] = set()
+        all_hits: list[CorrelationHit] = []
+        seen_ids: set[str] = set()
         current_query = query
 
         for hop in range(self._config.max_hops):
@@ -463,7 +463,7 @@ class VectorCorrelationEngine:
         return result
 
     def _correlate_infrastructure(self, query: str,
-                                  scan_id: Optional[str] = None
+                                  scan_id: str | None = None
                                   ) -> VectorCorrelationResult:
         """Find shared infrastructure patterns."""
         result = VectorCorrelationResult(query=query, strategy="infrastructure")
@@ -505,7 +505,7 @@ class VectorCorrelationEngine:
     # Helpers
     # -----------------------------------------------------------------------
 
-    def _payload_to_event(self, payload: Dict[str, Any]) -> OSINTEvent:
+    def _payload_to_event(self, payload: dict[str, Any]) -> OSINTEvent:
         """Convert Qdrant payload back to OSINTEvent."""
         return OSINTEvent(
             event_id=payload.get("event_id", ""),
@@ -520,7 +520,7 @@ class VectorCorrelationEngine:
         )
 
     def _rerank_hits(self, query: str,
-                     hits: List[CorrelationHit]) -> List[CorrelationHit]:
+                     hits: list[CorrelationHit]) -> list[CorrelationHit]:
         """Rerank correlation hits using the reranker service."""
         from spiderfoot.reranker_service import RerankItem
         items = [
@@ -547,7 +547,7 @@ class VectorCorrelationEngine:
         return reranked
 
     def _rag_analyze(self, query: str,
-                     hits: List[CorrelationHit]) -> str:
+                     hits: list[CorrelationHit]) -> str:
         """Run RAG analysis on correlation hits."""
         from spiderfoot.rag_pipeline import RetrievedChunk, MockRetriever
 
@@ -567,7 +567,7 @@ class VectorCorrelationEngine:
         response = self._rag.query(query)
         return response.answer
 
-    def _compute_confidence(self, hits: List[CorrelationHit]) -> float:
+    def _compute_confidence(self, hits: list[CorrelationHit]) -> float:
         """Compute overall confidence from hit scores."""
         if not hits:
             return 0.0
@@ -575,7 +575,7 @@ class VectorCorrelationEngine:
         count_factor = min(1.0, len(hits) / 10.0)
         return avg_score * 0.7 + count_factor * 0.3
 
-    def _assess_risk(self, hits: List[CorrelationHit]) -> str:
+    def _assess_risk(self, hits: list[CorrelationHit]) -> str:
         """Assess overall risk level from hits."""
         if not hits:
             return "INFO"
@@ -587,8 +587,8 @@ class VectorCorrelationEngine:
     # Stats
     # -----------------------------------------------------------------------
 
-    def stats(self) -> Dict[str, Any]:
-        s: Dict[str, Any] = {
+    def stats(self) -> dict[str, Any]:
+        s: dict[str, Any] = {
             "indexed_count": self._indexed_count,
             "collection": self._config.collection_name,
             "strategies": [s.value for s in self._config.strategies],

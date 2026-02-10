@@ -83,7 +83,7 @@ class APIVersion:
     deprecated_at: str = ""     # ISO date when deprecated
     sunset_at: str = ""         # ISO date when removed
     changelog: str = ""         # description of changes
-    breaking_changes: List[str] = field(default_factory=list)
+    breaking_changes: list[str] = field(default_factory=list)
 
     @property
     def is_available(self) -> bool:
@@ -124,8 +124,8 @@ class VersionedRoute:
     deprecated_in: str = "" # version when deprecated
     removed_in: str = ""    # version when removed
     description: str = ""
-    response_schema: Optional[dict] = None
-    transforms: List[Callable] = field(default_factory=list)
+    response_schema: dict | None = None
+    transforms: list[Callable] = field(default_factory=list)
 
     @property
     def full_path(self) -> str:
@@ -153,7 +153,7 @@ class VersionNegotiator:
     """Extracts the requested API version from a request."""
 
     def __init__(self, *,
-                 strategies: Optional[List[VersionStrategy]] = None,
+                 strategies: list[VersionStrategy] | None = None,
                  default_version: str = "v1",
                  header_name: str = "X-API-Version",
                  query_param: str = "version",
@@ -166,8 +166,8 @@ class VersionNegotiator:
 
     def negotiate(self, *,
                   path: str = "",
-                  headers: Optional[Dict[str, str]] = None,
-                  query_params: Optional[Dict[str, str]] = None) -> str:
+                  headers: dict[str, str] | None = None,
+                  query_params: dict[str, str] | None = None) -> str:
         """Determine the version from the request context.
 
         Tries each strategy in order and returns the first match.
@@ -192,11 +192,11 @@ class VersionNegotiator:
 
         return self._default
 
-    def _from_url(self, path: str) -> Optional[str]:
+    def _from_url(self, path: str) -> str | None:
         m = re.match(r"/api/(v\d+)/", path)
         return m.group(1) if m else None
 
-    def _from_accept(self, accept: str) -> Optional[str]:
+    def _from_accept(self, accept: str) -> str | None:
         # application/vnd.spiderfoot.v2+json
         m = re.search(
             rf"{re.escape(self._vendor_type)}\.(v\d+)",
@@ -214,15 +214,15 @@ class APIVersionManager:
 
     def __init__(self, *,
                  default_version: str = "v1",
-                 strategies: Optional[List[VersionStrategy]] = None):
-        self._versions: Dict[str, APIVersion] = {}
-        self._routes: Dict[str, List[VersionedRoute]] = {}  # version -> routes
+                 strategies: list[VersionStrategy] | None = None):
+        self._versions: dict[str, APIVersion] = {}
+        self._routes: dict[str, list[VersionedRoute]] = {}  # version -> routes
         self._default = default_version
         self._negotiator = VersionNegotiator(
             default_version=default_version,
             strategies=strategies or [VersionStrategy.URL_PREFIX],
         )
-        self._transforms: Dict[Tuple[str, str], List[Callable]] = {}
+        self._transforms: dict[tuple[str, str], list[Callable]] = {}
         # (from_version, to_version) -> transform chain
 
     # --- Version CRUD ---
@@ -235,16 +235,16 @@ class APIVersionManager:
         log.info("Registered API version %s (%s)",
                  version.version, version.status.value)
 
-    def get_version(self, version: str) -> Optional[APIVersion]:
+    def get_version(self, version: str) -> APIVersion | None:
         return self._versions.get(version)
 
-    def list_versions(self, *, include_sunset: bool = False) -> List[APIVersion]:
+    def list_versions(self, *, include_sunset: bool = False) -> list[APIVersion]:
         versions = list(self._versions.values())
         if not include_sunset:
             versions = [v for v in versions if v.is_available]
         return sorted(versions, key=lambda v: v.numeric)
 
-    def current_version(self) -> Optional[APIVersion]:
+    def current_version(self) -> APIVersion | None:
         for v in self._versions.values():
             if v.status == VersionStatus.CURRENT:
                 return v
@@ -280,16 +280,16 @@ class APIVersionManager:
             self._routes[route.version] = []
         self._routes[route.version].append(route)
 
-    def add_routes(self, routes: List[VersionedRoute]) -> None:
+    def add_routes(self, routes: list[VersionedRoute]) -> None:
         for r in routes:
             self.add_route(r)
 
-    def get_routes(self, version: str) -> List[VersionedRoute]:
+    def get_routes(self, version: str) -> list[VersionedRoute]:
         """Get all routes for a version."""
         return list(self._routes.get(version, []))
 
     def find_route(self, version: str, path: str,
-                   method: str) -> Optional[VersionedRoute]:
+                   method: str) -> VersionedRoute | None:
         """Find a specific route."""
         method_upper = method.upper()
         for r in self._routes.get(version, []):
@@ -298,7 +298,7 @@ class APIVersionManager:
         return None
 
     def copy_routes(self, from_version: str, to_version: str,
-                    *, exclude: Optional[Set[str]] = None) -> int:
+                    *, exclude: set[str] | None = None) -> int:
         """Copy all routes from one version to another.
 
         Returns count of copied routes.
@@ -349,8 +349,8 @@ class APIVersionManager:
     # --- Negotiation ---
 
     def negotiate(self, *, path: str = "",
-                  headers: Optional[Dict[str, str]] = None,
-                  query_params: Optional[Dict[str, str]] = None) -> str:
+                  headers: dict[str, str] | None = None,
+                  query_params: dict[str, str] | None = None) -> str:
         """Determine the requested API version."""
         version = self._negotiator.negotiate(
             path=path, headers=headers, query_params=query_params
@@ -363,7 +363,7 @@ class APIVersionManager:
 
     # --- Deprecation headers ---
 
-    def deprecation_headers(self, version: str) -> Dict[str, str]:
+    def deprecation_headers(self, version: str) -> dict[str, str]:
         """Generate deprecation-related HTTP headers."""
         v = self._versions.get(version)
         if v is None or not v.is_deprecated:

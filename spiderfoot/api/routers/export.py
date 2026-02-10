@@ -174,7 +174,7 @@ async def export_scan_sarif(scan_id: str):
 )
 async def export_scan_stream(
     scan_id: str,
-    event_type: Optional[str] = Query(None, description="Filter by event type"),
+    event_type: str | None = Query(None, description="Filter by event type"),
     chunk_size: int = Query(500, ge=100, le=5000, description="Events per chunk"),
 ):
     """Stream scan events as newline-delimited JSON (JSONL).

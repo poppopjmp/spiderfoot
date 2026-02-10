@@ -221,14 +221,14 @@ class EventStore:
         """Get distinct event types, optionally for a scan."""
         if scan_id:
             events = self.query(EventQuery(scan_id=scan_id))
-            return sorted(set(e.event_type for e in events))
+            return sorted({e.event_type for e in events})
         return sorted(self._type_index.keys())
 
     def get_modules(self, scan_id: Optional[str] = None) -> list[str]:
         """Get distinct modules, optionally for a scan."""
         if scan_id:
             events = self.query(EventQuery(scan_id=scan_id))
-            return sorted(set(e.module for e in events))
+            return sorted({e.module for e in events})
         return sorted(self._module_index.keys())
 
     def _remove_from_index(self, index: dict, key: str, event_id: str):

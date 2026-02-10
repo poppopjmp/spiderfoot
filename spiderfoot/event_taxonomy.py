@@ -48,8 +48,8 @@ class EventTypeInfo:
     risk_level: RiskLevel = RiskLevel.INFO
     is_raw: bool = False
     parent_type: Optional[str] = None
-    related_types: Set[str] = field(default_factory=set)
-    tags: Set[str] = field(default_factory=set)
+    related_types: set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
 
     def to_dict(self) -> dict:
         return {
@@ -65,7 +65,7 @@ class EventTypeInfo:
 
 
 # Default taxonomy mappings
-_DEFAULT_TAXONOMY: Dict[str, Dict[str, Any]] = {
+_DEFAULT_TAXONOMY: dict[str, dict[str, Any]] = {
     # Network
     "IP_ADDRESS": {"cat": EventCategory.NETWORK, "risk": RiskLevel.INFO, "desc": "IPv4/IPv6 address"},
     "IPV6_ADDRESS": {"cat": EventCategory.NETWORK, "risk": RiskLevel.INFO, "desc": "IPv6 address", "parent": "IP_ADDRESS"},
@@ -173,7 +173,7 @@ class EventTaxonomy:
     """
 
     def __init__(self, load_defaults: bool = True):
-        self._types: Dict[str, EventTypeInfo] = {}
+        self._types: dict[str, EventTypeInfo] = {}
         if load_defaults:
             self._load_defaults()
 
@@ -211,16 +211,16 @@ class EventTaxonomy:
         info = self._types.get(name)
         return info.risk_level if info else None
 
-    def get_by_category(self, category: EventCategory) -> List[EventTypeInfo]:
+    def get_by_category(self, category: EventCategory) -> list[EventTypeInfo]:
         return [t for t in self._types.values() if t.category == category]
 
-    def get_by_risk(self, risk: RiskLevel) -> List[EventTypeInfo]:
+    def get_by_risk(self, risk: RiskLevel) -> list[EventTypeInfo]:
         return [t for t in self._types.values() if t.risk_level == risk]
 
-    def get_children(self, parent_name: str) -> List[EventTypeInfo]:
+    def get_children(self, parent_name: str) -> list[EventTypeInfo]:
         return [t for t in self._types.values() if t.parent_type == parent_name]
 
-    def get_ancestors(self, name: str) -> List[str]:
+    def get_ancestors(self, name: str) -> list[str]:
         """Get the ancestor chain (parent, grandparent, ...)."""
         ancestors = []
         current = name
@@ -239,20 +239,20 @@ class EventTaxonomy:
         return ancestor in self.get_ancestors(child)
 
     @property
-    def all_types(self) -> List[str]:
+    def all_types(self) -> list[str]:
         return sorted(self._types.keys())
 
     @property
-    def categories(self) -> Dict[str, int]:
-        counts: Dict[str, int] = {}
+    def categories(self) -> dict[str, int]:
+        counts: dict[str, int] = {}
         for t in self._types.values():
             c = t.category.value
             counts[c] = counts.get(c, 0) + 1
         return counts
 
     @property
-    def risk_distribution(self) -> Dict[str, int]:
-        counts: Dict[str, int] = {}
+    def risk_distribution(self) -> dict[str, int]:
+        counts: dict[str, int] = {}
         for t in self._types.values():
             r = t.risk_level.value
             counts[r] = counts.get(r, 0) + 1
@@ -261,7 +261,7 @@ class EventTaxonomy:
     def validate_type(self, name: str) -> bool:
         return name in self._types
 
-    def search(self, query: str) -> List[EventTypeInfo]:
+    def search(self, query: str) -> list[EventTypeInfo]:
         """Search types by name or description substring."""
         q = query.lower()
         return [

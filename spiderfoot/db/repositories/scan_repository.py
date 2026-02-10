@@ -43,7 +43,7 @@ class ScanRecord:
             status=str(row[6]),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "scan_id": self.scan_id,
             "name": self.name,
@@ -82,7 +82,7 @@ class ScanRepository(AbstractRepository):
         except (ValueError, IndexError):
             return None
 
-    def list_scans(self) -> List[ScanRecord]:
+    def list_scans(self) -> list[ScanRecord]:
         """List all scan instances."""
         rows = self.dbh.scanInstanceList()
         results = []
@@ -116,7 +116,7 @@ class ScanRepository(AbstractRepository):
         """Store serialized scan configuration."""
         self.dbh.scanConfigSet(scan_id, config_data)
 
-    def get_config(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def get_config(self, scan_id: str) -> Optional[dict[str, Any]]:
         """Retrieve scan configuration."""
         return self.dbh.scanConfigGet(scan_id)
 
@@ -126,10 +126,10 @@ class ScanRepository(AbstractRepository):
         limit: Optional[int] = None,
         from_row: int = 0,
         reverse: bool = False,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """Retrieve scan log entries."""
         return self.dbh.scanLogs(scan_id, limit=limit, fromRowId=from_row, reverse=reverse)
 
-    def get_scan_errors(self, scan_id: str, limit: int = 0) -> List[Any]:
+    def get_scan_errors(self, scan_id: str, limit: int = 0) -> list[Any]:
         """Retrieve scan error entries."""
         return self.dbh.scanErrors(scan_id, limit=limit)

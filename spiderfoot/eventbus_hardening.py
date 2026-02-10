@@ -79,7 +79,7 @@ class AsyncCircuitBreaker:
         self._success_count = 0
         self._last_failure_time = 0.0
         self._half_open_calls = 0
-        self._state_change_callbacks: List[Callable] = []
+        self._state_change_callbacks: list[Callable] = []
 
     @property
     def state(self) -> CircuitState:
@@ -158,7 +158,7 @@ class AsyncCircuitBreaker:
         self._success_count = 0
         self._half_open_calls = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "state": self.state.value,
             "failure_count": self._failure_count,
@@ -188,7 +188,7 @@ class AsyncDeadLetterQueue:
 
     def __init__(self, max_size: int = 1000):
         self._max_size = max_size
-        self._items: List[DeadLetterEntry] = []
+        self._items: list[DeadLetterEntry] = []
         self._lock = asyncio.Lock()
         self._total_added = 0
 
@@ -203,7 +203,7 @@ class AsyncDeadLetterQueue:
         async with self._lock:
             return self._items.pop(0) if self._items else None
 
-    async def peek(self, n: int = 10) -> List[DeadLetterEntry]:
+    async def peek(self, n: int = 10) -> list[DeadLetterEntry]:
         async with self._lock:
             return list(self._items[-n:])
 
@@ -227,7 +227,7 @@ class AsyncDeadLetterQueue:
         Returns the number of successfully replayed events.
         """
         replayed = 0
-        remaining: List[DeadLetterEntry] = []
+        remaining: list[DeadLetterEntry] = []
 
         async with self._lock:
             items = list(self._items)
@@ -260,7 +260,7 @@ class EventBusMetrics:
 
     def __init__(self):
         self._lock = threading.Lock()
-        self._counters: Dict[str, int] = {
+        self._counters: dict[str, int] = {
             "published": 0,
             "publish_failed": 0,
             "consumed": 0,
@@ -271,7 +271,7 @@ class EventBusMetrics:
             "dlq_replayed": 0,
             "retries": 0,
         }
-        self._topic_counts: Dict[str, int] = {}
+        self._topic_counts: dict[str, int] = {}
         self._start_time = time.monotonic()
 
     def inc(self, counter: str, amount: int = 1) -> None:
@@ -282,7 +282,7 @@ class EventBusMetrics:
         with self._lock:
             self._topic_counts[topic] = self._topic_counts.get(topic, 0) + 1
 
-    def snapshot(self) -> Dict[str, Any]:
+    def snapshot(self) -> dict[str, Any]:
         with self._lock:
             uptime = time.monotonic() - self._start_time
             rate = (
@@ -328,10 +328,10 @@ class HealthCheckResult:
     connected: bool
     circuit_state: str
     dlq_size: int
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     checked_at: float = field(default_factory=time.time)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "status": self.status.value,
             "backend": self.backend,
@@ -602,7 +602,7 @@ class ResilientEventBus:
     # Metrics / introspection
     # ------------------------------------------------------------------
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Return a snapshot of all metrics."""
         return self.metrics.snapshot()
 

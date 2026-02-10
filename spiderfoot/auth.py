@@ -72,7 +72,7 @@ class Role(Enum):
 
 
 # Role permissions mapping
-ROLE_PERMISSIONS: Dict[Role, Set[str]] = {
+ROLE_PERMISSIONS: dict[Role, set[str]] = {
     Role.ADMIN: {
         "scan:create", "scan:read", "scan:delete", "scan:abort",
         "config:read", "config:write",
@@ -108,17 +108,17 @@ class AuthConfig:
     method: AuthMethod = AuthMethod.NONE
 
     # API keys (for API_KEY method)
-    api_keys: List[str] = field(default_factory=list)
+    api_keys: list[str] = field(default_factory=list)
 
     # Basic auth credentials {username: password_hash}
-    basic_credentials: Dict[str, str] = field(default_factory=dict)
+    basic_credentials: dict[str, str] = field(default_factory=dict)
 
     # JWT secret (for JWT method)
     jwt_secret: str = ""
     jwt_expiry: int = DEFAULT_TTL_ONE_HOUR  # seconds
 
     # Paths that don't require auth
-    public_paths: List[str] = field(default_factory=lambda: [
+    public_paths: list[str] = field(default_factory=lambda: [
         "/health", "/health/live", "/health/ready",
         "/health/startup", "/ping", "/metrics",
     ])
@@ -130,7 +130,7 @@ class AuthConfig:
     api_key_param: str = "api_key"
 
     # Role assignments {api_key_or_username: role}
-    role_assignments: Dict[str, str] = field(default_factory=dict)
+    role_assignments: dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def from_config(cls, opts: dict) -> "AuthConfig":
@@ -209,7 +209,7 @@ class AuthResult:
         self.identity = identity
         self.role = role
         self.error = error
-        self.permissions: Set[str] = (
+        self.permissions: set[str] = (
             ROLE_PERMISSIONS.get(role, set()) if authenticated else set()
         )
 
@@ -233,11 +233,11 @@ class AuthGuard:
 
     def __init__(self, config: AuthConfig):
         self.config = config
-        self._api_key_set: Set[str] = set(config.api_keys)
+        self._api_key_set: set[str] = set(config.api_keys)
 
-    def authenticate(self, headers: Dict[str, str],
+    def authenticate(self, headers: dict[str, str],
                      path: str = "/",
-                     query_params: Optional[Dict[str, str]] = None
+                     query_params: Optional[dict[str, str]] = None
                      ) -> AuthResult:
         """Authenticate a request.
 
@@ -278,8 +278,8 @@ class AuthGuard:
                 return True
         return False
 
-    def _check_api_key(self, headers: Dict[str, str],
-                       query_params: Optional[Dict[str, str]]
+    def _check_api_key(self, headers: dict[str, str],
+                       query_params: Optional[dict[str, str]]
                        ) -> AuthResult:
         """Validate API key from header or query parameter."""
         # Check header
@@ -299,7 +299,7 @@ class AuthGuard:
         return AuthResult(True, identity=f"apikey:{api_key[:8]}...",
                           role=role)
 
-    def _check_basic_auth(self, headers: Dict[str, str]) -> AuthResult:
+    def _check_basic_auth(self, headers: dict[str, str]) -> AuthResult:
         """Validate Basic auth credentials."""
         import base64
 
@@ -324,7 +324,7 @@ class AuthGuard:
         role = self._get_role(username)
         return AuthResult(True, identity=username, role=role)
 
-    def _check_jwt(self, headers: Dict[str, str]) -> AuthResult:
+    def _check_jwt(self, headers: dict[str, str]) -> AuthResult:
         """Validate JWT token (simplified, no external dependency)."""
         auth_header = headers.get("Authorization", "")
         if not auth_header.startswith("Bearer "):

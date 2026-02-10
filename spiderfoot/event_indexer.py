@@ -34,7 +34,7 @@ from typing import Any, Callable, Dict, List, Optional, Set
 log = logging.getLogger("spiderfoot.event_indexer")
 
 # Event types worth indexing (skip noisy / low-value types)
-INDEXABLE_TYPES: Set[str] = {
+INDEXABLE_TYPES: set[str] = {
     "IP_ADDRESS", "IPV6_ADDRESS", "INTERNET_NAME", "DOMAIN_NAME",
     "AFFILIATE_DOMAIN_NAME", "CO_HOSTED_SITE", "SIMILARITIES_DOMAIN",
     "EMAIL_ADDRESS", "EMAILADDR_COMPROMISED",
@@ -69,11 +69,11 @@ class IndexerConfig:
     max_queue_size: int = 10000
     worker_threads: int = 1
     collection_name: str = "osint_events"
-    indexable_types: Set[str] = field(default_factory=lambda: INDEXABLE_TYPES.copy())
+    indexable_types: set[str] = field(default_factory=lambda: INDEXABLE_TYPES.copy())
     enabled: bool = True
 
     @classmethod
-    def from_env(cls) -> "IndexerConfig":
+    def from_env(cls) -> IndexerConfig:
         """Load from environment variables."""
         import os
         return cls(
@@ -100,7 +100,7 @@ class IndexerMetrics:
     queue_high_water: int = 0
     last_flush_time: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "indexed": self.indexed,
             "skipped": self.skipped,
@@ -119,14 +119,14 @@ class BatchWriter:
     """Accumulates events and flushes in batches."""
 
     def __init__(self, config: IndexerConfig,
-                 flush_fn: Callable[[List[Any]], int],
+                 flush_fn: Callable[[list[Any]], int],
                  metrics: IndexerMetrics):
         self._config = config
         self._flush_fn = flush_fn
         self._metrics = metrics
         self._queue: deque = deque(maxlen=config.max_queue_size)
         self._lock = threading.Lock()
-        self._timer: Optional[threading.Timer] = None
+        self._timer: threading.Timer | None = None
         self._running = False
 
     def start(self) -> None:
@@ -165,7 +165,7 @@ class BatchWriter:
 
     def _flush_batch(self) -> int:
         """Flush up to batch_size events (caller holds lock)."""
-        batch: List[Any] = []
+        batch: list[Any] = []
         for _ in range(min(self._config.batch_size, len(self._queue))):
             batch.append(self._queue.popleft())
 
@@ -222,14 +222,14 @@ class EventIndexer:
 
     def __init__(
         self,
-        config: Optional[IndexerConfig] = None,
+        config: IndexerConfig | None = None,
         vector_engine: Any = None,
         event_bus: Any = None,
     ):
         self.config = config or IndexerConfig()
         self._vector_engine = vector_engine
         self._event_bus = event_bus
-        self._sub_ids: List[str] = []
+        self._sub_ids: list[str] = []
         self.metrics = IndexerMetrics()
         self._writer = BatchWriter(
             self.config, self._index_batch, self.metrics,
@@ -293,7 +293,7 @@ class EventIndexer:
             self.metrics.skipped += 1
             log.warning("Event queue full, dropping event")
 
-    def _index_batch(self, batch: List[Any]) -> int:
+    def _index_batch(self, batch: list[Any]) -> int:
         """Convert envelopes to OSINTEvents and index into Qdrant."""
         engine = self._get_vector_engine()
         if engine is None:
@@ -302,7 +302,7 @@ class EventIndexer:
 
         from spiderfoot.vector_correlation import OSINTEvent
 
-        osint_events: List[OSINTEvent] = []
+        osint_events: list[OSINTEvent] = []
         for env in batch:
             try:
                 evt = OSINTEvent(
@@ -354,7 +354,7 @@ class EventIndexer:
             log.error("Failed to init vector engine: %s", exc)
             return None
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Return indexer stats."""
         return {
             "started": self._started,

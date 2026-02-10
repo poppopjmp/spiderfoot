@@ -75,8 +75,8 @@ class ScanEventBridge:
         # Stats
         self._events_forwarded = 0
         self._events_throttled = 0
-        self._events_by_type: Dict[str, int] = defaultdict(int)
-        self._last_push: Dict[str, float] = {}  # event_type -> timestamp
+        self._events_by_type: dict[str, int] = defaultdict(int)
+        self._last_push: dict[str, float] = {}  # event_type -> timestamp
         self._start_time: float = 0.0
 
     # ------------------------------------------------------------------
@@ -199,7 +199,7 @@ class ScanEventBridge:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _serialize_event(sf_event: Any) -> Dict[str, Any]:
+    def _serialize_event(sf_event: Any) -> dict[str, Any]:
         """Convert a SpiderFootEvent to a JSON-safe dict.
 
         Extracts relevant attributes, truncating large data values
@@ -226,7 +226,7 @@ class ScanEventBridge:
     # ------------------------------------------------------------------
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Return bridge statistics."""
         with self._lock:
             return {
@@ -244,7 +244,7 @@ class ScanEventBridge:
 # Per-scan bridge registry
 # -----------------------------------------------------------------------
 
-_bridges: Dict[str, ScanEventBridge] = {}
+_bridges: dict[str, ScanEventBridge] = {}
 _bridges_lock = threading.Lock()
 
 
@@ -266,7 +266,7 @@ def create_scan_bridge(
         return bridge
 
 
-def get_scan_bridge(scan_id: str) -> Optional[ScanEventBridge]:
+def get_scan_bridge(scan_id: str) -> ScanEventBridge | None:
     """Get the bridge for a scan, or None."""
     with _bridges_lock:
         return _bridges.get(scan_id)
@@ -282,7 +282,7 @@ def teardown_scan_bridge(scan_id: str, status: str = "FINISHED") -> None:
         log.debug("Bridge torn down for scan %s", scan_id)
 
 
-def list_active_bridges() -> List[str]:
+def list_active_bridges() -> list[str]:
     """List scan IDs with active bridges."""
     with _bridges_lock:
         return list(_bridges.keys())

@@ -47,7 +47,7 @@ def _print_json(data: Any, indent: int = 2) -> None:
     print(json.dumps(data, indent=indent, default=str))
 
 
-def _print_table(rows: List[Dict[str, Any]], columns: List[str]) -> None:
+def _print_table(rows: list[dict[str, Any]], columns: list[str]) -> None:
     """Print data as a simple ASCII table."""
     if not rows:
         print("(no data)")
@@ -429,7 +429,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[List[str]] = None) -> None:
+def main(argv: Optional[list[str]] = None) -> None:
     """CLI entry point."""
     parser = build_parser()
     args = parser.parse_args(argv)

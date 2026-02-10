@@ -58,11 +58,11 @@ _CONFIGURED = False
 # ---------------------------------------------------------------------------
 
 def configure_logging(
-    config: Optional[Dict[str, Any]] = None,
+    config: dict[str, Any] | None = None,
     *,
-    force_json: Optional[bool] = None,
+    force_json: bool | None = None,
     force_text: bool = False,
-    log_dir: Optional[str] = None,
+    log_dir: str | None = None,
     enable_sqlite: bool = False,
     enable_vector: bool = False,
 ) -> logging.Logger:
@@ -221,7 +221,7 @@ def _running_in_container() -> bool:
     )
 
 
-def _resolve_log_dir(config: dict, explicit_dir: Optional[str]) -> Optional[str]:
+def _resolve_log_dir(config: dict, explicit_dir: str | None) -> str | None:
     """Resolve the log directory, creating it if needed."""
     log_dir = explicit_dir or config.get("_log_dir", "")
 

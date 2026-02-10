@@ -49,26 +49,26 @@ class ModuleDescriptor:
     """Metadata about a single module's event interface."""
 
     name: str
-    watched_events: List[str] = field(default_factory=list)
-    produced_events: List[str] = field(default_factory=list)
-    required_events: List[str] = field(default_factory=list)
-    optional_events: List[str] = field(default_factory=list)
+    watched_events: list[str] = field(default_factory=list)
+    produced_events: list[str] = field(default_factory=list)
+    required_events: list[str] = field(default_factory=list)
+    optional_events: list[str] = field(default_factory=list)
     category: str = ""
     description: str = ""
     version: str = ""
     filepath: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     enabled: bool = True
 
     @property
-    def watched_set(self) -> FrozenSet[str]:
+    def watched_set(self) -> frozenset[str]:
         return frozenset(self.watched_events)
 
     @property
-    def produced_set(self) -> FrozenSet[str]:
+    def produced_set(self) -> frozenset[str]:
         return frozenset(self.produced_events)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "watched_events": self.watched_events,
@@ -98,18 +98,18 @@ class ResolutionResult:
     """Outcome of a dependency resolution."""
 
     status: ResolveStatus
-    load_order: List[str] = field(default_factory=list)
-    selected_modules: Set[str] = field(default_factory=set)
-    missing_events: Dict[str, List[str]] = field(default_factory=dict)
+    load_order: list[str] = field(default_factory=list)
+    selected_modules: set[str] = field(default_factory=set)
+    missing_events: dict[str, list[str]] = field(default_factory=dict)
     # module → list of event types that have no producer
-    circular_chains: List[List[str]] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    circular_chains: list[list[str]] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
         return self.status == ResolveStatus.OK
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "status": self.status.value,
             "load_order": self.load_order,
@@ -146,11 +146,11 @@ class ModuleResolver:
     """
 
     def __init__(self) -> None:
-        self._modules: Dict[str, ModuleDescriptor] = {}
+        self._modules: dict[str, ModuleDescriptor] = {}
         # index: event_type → set of module names that produce it
-        self._producers: Dict[str, Set[str]] = {}
+        self._producers: dict[str, set[str]] = {}
         # index: event_type → set of module names that watch it
-        self._consumers: Dict[str, Set[str]] = {}
+        self._consumers: dict[str, set[str]] = {}
 
     # -------------------------------------------------------------------
     # Registration
@@ -164,7 +164,7 @@ class ModuleResolver:
         for evt in desc.watched_events:
             self._consumers.setdefault(evt, set()).add(desc.name)
 
-    def register_many(self, descriptors: List[ModuleDescriptor]) -> int:
+    def register_many(self, descriptors: list[ModuleDescriptor]) -> int:
         count = 0
         for d in descriptors:
             self.register(d)
@@ -181,10 +181,10 @@ class ModuleResolver:
             self._consumers.get(evt, set()).discard(name)
         return True
 
-    def get_module(self, name: str) -> Optional[ModuleDescriptor]:
+    def get_module(self, name: str) -> ModuleDescriptor | None:
         return self._modules.get(name)
 
-    def list_modules(self) -> List[ModuleDescriptor]:
+    def list_modules(self) -> list[ModuleDescriptor]:
         return sorted(self._modules.values(), key=lambda m: m.name)
 
     # -------------------------------------------------------------------
@@ -266,23 +266,23 @@ class ModuleResolver:
     # Indexes
     # -------------------------------------------------------------------
 
-    def producers_of(self, event_type: str) -> Set[str]:
+    def producers_of(self, event_type: str) -> set[str]:
         """Return module names that can produce the given event type."""
         return set(self._producers.get(event_type, set()))
 
-    def consumers_of(self, event_type: str) -> Set[str]:
+    def consumers_of(self, event_type: str) -> set[str]:
         """Return module names that watch the given event type."""
         return set(self._consumers.get(event_type, set()))
 
-    def all_event_types(self) -> Set[str]:
-        evts: Set[str] = set()
+    def all_event_types(self) -> set[str]:
+        evts: set[str] = set()
         for d in self._modules.values():
             evts.update(d.produced_events)
             evts.update(d.watched_events)
         return evts
 
-    def all_produced_events(self) -> Set[str]:
-        evts: Set[str] = set()
+    def all_produced_events(self) -> set[str]:
+        evts: set[str] = set()
         for d in self._modules.values():
             evts.update(d.produced_events)
         return evts
@@ -294,9 +294,9 @@ class ModuleResolver:
     def resolve(
         self,
         *,
-        target_events: Optional[List[str]] = None,
-        required_modules: Optional[List[str]] = None,
-        exclude_modules: Optional[Set[str]] = None,
+        target_events: list[str] | None = None,
+        required_modules: list[str] | None = None,
+        exclude_modules: set[str] | None = None,
         include_optional: bool = False,
     ) -> ResolutionResult:
         """Resolve the minimal set of modules and their load order.
@@ -313,9 +313,9 @@ class ModuleResolver:
             diagnostics.
         """
         exclude = exclude_modules or set()
-        selected: Set[str] = set()
-        missing: Dict[str, List[str]] = {}
-        warnings: List[str] = []
+        selected: set[str] = set()
+        missing: dict[str, list[str]] = {}
+        warnings: list[str] = []
 
         # Seed with required modules
         if required_modules:
@@ -326,7 +326,7 @@ class ModuleResolver:
         # Walk backwards from target events
         if target_events:
             queue = list(target_events)
-            visited_events: Set[str] = set()
+            visited_events: set[str] = set()
             while queue:
                 evt = queue.pop(0)
                 if evt in visited_events:
@@ -399,9 +399,9 @@ class ModuleResolver:
 
     def resolve_for_modules(
         self,
-        module_names: List[str],
+        module_names: list[str],
         *,
-        exclude_modules: Optional[Set[str]] = None,
+        exclude_modules: set[str] | None = None,
     ) -> ResolutionResult:
         """Resolve load order for a specific set of modules, pulling in
         any additional modules needed to satisfy their watched events."""
@@ -410,18 +410,18 @@ class ModuleResolver:
             exclude_modules=exclude_modules,
         )
 
-    def check_satisfaction(self, module_names: List[str]) -> Dict[str, List[str]]:
+    def check_satisfaction(self, module_names: list[str]) -> dict[str, list[str]]:
         """Check which watched events cannot be produced by the given module set.
 
         Returns a dict of ``{module_name: [unsatisfied_event_types]}``.
         """
-        available_events: Set[str] = set()
+        available_events: set[str] = set()
         for name in module_names:
             desc = self._modules.get(name)
             if desc:
                 available_events.update(desc.produced_events)
 
-        unsatisfied: Dict[str, List[str]] = {}
+        unsatisfied: dict[str, list[str]] = {}
         for name in module_names:
             desc = self._modules.get(name)
             if not desc:
@@ -439,15 +439,15 @@ class ModuleResolver:
 
     def _topological_sort(
         self,
-        module_names: Set[str],
-    ) -> Tuple[List[str], List[List[str]]]:
+        module_names: set[str],
+    ) -> tuple[list[str], list[list[str]]]:
         """Kahn's algorithm with cycle detection.
 
         Returns (sorted_list, cycles).
         """
         # Build adjacency from event dependencies
-        adj: Dict[str, Set[str]] = {m: set() for m in module_names}
-        in_degree: Dict[str, int] = {m: 0 for m in module_names}
+        adj: dict[str, set[str]] = {m: set() for m in module_names}
+        in_degree: dict[str, int] = {m: 0 for m in module_names}
 
         for mod_name in module_names:
             desc = self._modules.get(mod_name)
@@ -462,7 +462,7 @@ class ModuleResolver:
 
         queue = [m for m in module_names if in_degree.get(m, 0) == 0]
         queue.sort()
-        result: List[str] = []
+        result: list[str] = []
 
         while queue:
             node = queue.pop(0)
@@ -472,7 +472,7 @@ class ModuleResolver:
                 if in_degree[neighbor] == 0:
                     queue.append(neighbor)
 
-        cycles: List[List[str]] = []
+        cycles: list[list[str]] = []
         if len(result) < len(module_names):
             remaining = module_names - set(result)
             cycles.append(sorted(remaining))
@@ -483,7 +483,7 @@ class ModuleResolver:
     # Stats
     # -------------------------------------------------------------------
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "total_modules": len(self._modules),
             "total_event_types": len(self.all_event_types()),

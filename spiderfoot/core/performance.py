@@ -75,7 +75,7 @@ class PerformanceProfiler:
             if duration > 5.0:
                 self.logger.warning(f"Slow operation: {operation} took {duration:.2f}s")
 
-    def get_statistics(self, operation: str = None) -> Dict[str, Any]:
+    def get_statistics(self, operation: str = None) -> dict[str, Any]:
         """Get performance statistics."""
         with self.lock:
             if operation:
@@ -100,7 +100,7 @@ class PerformanceProfiler:
 class CacheManager:
     """Multi-layer caching system."""
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
         self.memory_cache = {}
         self.cache_stats = defaultdict(int)

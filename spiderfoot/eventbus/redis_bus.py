@@ -29,9 +29,9 @@ class RedisEventBus(EventBus):
         self._redis = None
         self._consumer_group = f"sf-workers-{uuid.uuid4().hex[:8]}"
         self._consumer_name = f"worker-{uuid.uuid4().hex[:8]}"
-        self._callbacks: Dict[str, Callable] = {}
-        self._sub_streams: Dict[str, str] = {}  # sub_id -> stream key
-        self._listen_tasks: Dict[str, asyncio.Task] = {}
+        self._callbacks: dict[str, Callable] = {}
+        self._sub_streams: dict[str, str] = {}  # sub_id -> stream key
+        self._listen_tasks: dict[str, asyncio.Task] = {}
 
     async def connect(self) -> None:
         """Connect to Redis."""

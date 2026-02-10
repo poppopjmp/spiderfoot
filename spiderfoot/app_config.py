@@ -96,7 +96,7 @@ class CoreConfig:
     debug: bool = False
     max_threads: int = 3
     logging_enabled: bool = True
-    output_filter: Optional[str] = None
+    output_filter: str | None = None
     user_agent: str = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) "
         "Gecko/20100101 Firefox/62.0"
@@ -145,7 +145,7 @@ class ApiConfig:
     """REST API server settings."""
     host: str = "127.0.0.1"
     port: int = DEFAULT_API_PORT
-    api_key: Optional[str] = None
+    api_key: str | None = None
     log_level: str = "INFO"
     log_file: str = ""
 
@@ -204,7 +204,7 @@ class ElasticsearchConfig:
 # ---------------------------------------------------------------------------
 
 # Maps legacy flat-dict key -> (section_attr, field_attr)
-_KEY_TO_FIELD: Dict[str, Tuple[str, str]] = {
+_KEY_TO_FIELD: dict[str, tuple[str, str]] = {
     # Core
     "_debug": ("core", "debug"),
     "_maxthreads": ("core", "max_threads"),
@@ -282,13 +282,13 @@ _KEY_TO_FIELD: Dict[str, Tuple[str, str]] = {
 }
 
 # Reverse mapping: (section, field) -> legacy key  (first occurrence wins)
-_FIELD_TO_KEY: Dict[Tuple[str, str], str] = {}
+_FIELD_TO_KEY: dict[tuple[str, str], str] = {}
 for _k, _sf in _KEY_TO_FIELD.items():
     if _sf not in _FIELD_TO_KEY:
         _FIELD_TO_KEY[_sf] = _k
 
 # Environment variable -> legacy key (mirrors config_service.ENV_MAP)
-_ENV_TO_KEY: Dict[str, str] = {
+_ENV_TO_KEY: dict[str, str] = {
     "SF_DEBUG": "_debug",
     "SF_LOG_LEVEL": "__loglevel",
     "SF_MAX_THREADS": "_maxthreads",
@@ -339,7 +339,7 @@ _ENV_TO_KEY: Dict[str, str] = {
 # Config field descriptions (for UI / docs)
 # ---------------------------------------------------------------------------
 
-FIELD_DESCRIPTIONS: Dict[str, str] = {
+FIELD_DESCRIPTIONS: dict[str, str] = {
     "_debug": "Enable debugging?",
     "_maxthreads": "Max number of modules to run concurrently",
     "_useragent": (
@@ -424,19 +424,19 @@ class AppConfig:
     )
 
     # Opaque containers for module / correlation data (no typed schema)
-    modules: Optional[Dict[str, Any]] = None
-    correlation_rules: Optional[List[Any]] = None
+    modules: dict[str, Any] | None = None
+    correlation_rules: list[Any] | None = None
     version: str = ""
 
     # ---- Extra keys not in any section (forward-compat) ----
-    _extra: Dict[str, Any] = field(default_factory=dict, repr=False)
+    _extra: dict[str, Any] = field(default_factory=dict, repr=False)
 
     # ------------------------------------------------------------------
     # Construction helpers
     # ------------------------------------------------------------------
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "AppConfig":
+    def from_dict(cls, d: dict[str, Any]) -> AppConfig:
         """Build an ``AppConfig`` from a legacy flat config dict.
 
         Unknown keys are preserved in ``_extra`` so nothing is lost
@@ -470,14 +470,14 @@ class AppConfig:
 
         return cfg
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Export back to a legacy flat config dict.
 
         Round-trips: ``AppConfig.from_dict(d).to_dict()`` preserves
         all keys from the original dict (mapped keys are re-exported
         under their canonical legacy name; extras are passed through).
         """
-        out: Dict[str, Any] = {}
+        out: dict[str, Any] = {}
 
         # Walk every mapped field and emit the canonical legacy key
         for (section_attr, field_attr), legacy_key in _FIELD_TO_KEY.items():
@@ -505,12 +505,12 @@ class AppConfig:
     # Environment variable overlay
     # ------------------------------------------------------------------
 
-    def apply_env_overrides(self) -> List[str]:
+    def apply_env_overrides(self) -> list[str]:
         """Read ``SF_*`` environment variables and override matching fields.
 
         Returns a list of keys that were overridden (for logging).
         """
-        overridden: List[str] = []
+        overridden: list[str] = []
 
         for env_var, legacy_key in _ENV_TO_KEY.items():
             raw = os.environ.get(env_var)
@@ -538,7 +538,7 @@ class AppConfig:
     # Merge / update
     # ------------------------------------------------------------------
 
-    def merge(self, overrides: Dict[str, Any]) -> None:
+    def merge(self, overrides: dict[str, Any]) -> None:
         """Apply a flat dict of overrides (same keys as legacy config).
 
         Useful for applying DB-stored user settings on top of defaults.
@@ -561,9 +561,9 @@ class AppConfig:
     # Validation
     # ------------------------------------------------------------------
 
-    def validate(self) -> List[ValidationError]:
+    def validate(self) -> list[ValidationError]:
         """Validate all fields. Returns a list of errors (empty = valid)."""
-        errors: List[ValidationError] = []
+        errors: list[ValidationError] = []
 
         # Core
         if self.core.max_threads < 1:
@@ -736,7 +736,7 @@ class AppConfig:
     # repr / summary
     # ------------------------------------------------------------------
 
-    def summary(self) -> Dict[str, Any]:
+    def summary(self) -> dict[str, Any]:
         """Return a concise overview suitable for logging."""
         return {
             "debug": self.core.debug,

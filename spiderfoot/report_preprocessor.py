@@ -84,8 +84,8 @@ class NormalizedEvent:
     category: str = "other"
     timestamp: float = 0.0
     source_event_id: str = ""
-    tags: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
     dedup_key: str = ""
 
     @property
@@ -104,8 +104,8 @@ class ReportSection:
     section_type: ReportSectionType
     title: str
     description: str = ""
-    events: List[NormalizedEvent] = field(default_factory=list)
-    subsections: List["ReportSection"] = field(default_factory=list)
+    events: list[NormalizedEvent] = field(default_factory=list)
+    subsections: list[ReportSection] = field(default_factory=list)
     token_estimate: int = 0
     priority: int = 0  # Higher = more important
     max_events: int = 50  # Cap per section for LLM context
@@ -145,8 +145,8 @@ class ReportContext:
     scan_target: str = ""
     scan_start: float = 0.0
     scan_end: float = 0.0
-    sections: List[ReportSection] = field(default_factory=list)
-    statistics: Dict[str, Any] = field(default_factory=dict)
+    sections: list[ReportSection] = field(default_factory=list)
+    statistics: dict[str, Any] = field(default_factory=dict)
     token_estimate: int = 0
     preprocessing_ms: float = 0.0
 
@@ -155,7 +155,7 @@ class ReportContext:
         return sum(s.event_count for s in self.sections)
 
     @property
-    def non_empty_sections(self) -> List[ReportSection]:
+    def non_empty_sections(self) -> list[ReportSection]:
         return [s for s in self.sections if s.has_content]
 
     def to_text(self, max_tokens: int = 0) -> str:
@@ -199,7 +199,7 @@ class PreprocessorConfig:
     dedup_normalize_emails: bool = True
 
     # Risk classification
-    risk_thresholds: Dict[str, int] = field(default_factory=lambda: {
+    risk_thresholds: dict[str, int] = field(default_factory=lambda: {
         "critical": 80,
         "high": 60,
         "medium": 40,
@@ -217,8 +217,8 @@ class PreprocessorConfig:
     # Filtering
     min_confidence: int = 0
     min_risk: int = 0
-    exclude_event_types: List[str] = field(default_factory=list)
-    include_categories: List[str] = field(default_factory=list)  # empty = all
+    exclude_event_types: list[str] = field(default_factory=list)
+    include_categories: list[str] = field(default_factory=list)  # empty = all
 
 
 @dataclass
@@ -231,8 +231,8 @@ class PreprocessorStats:
     filtered_low_confidence: int = 0
     filtered_low_risk: int = 0
     filtered_excluded_type: int = 0
-    events_by_risk: Dict[str, int] = field(default_factory=dict)
-    events_by_category: Dict[str, int] = field(default_factory=dict)
+    events_by_risk: dict[str, int] = field(default_factory=dict)
+    events_by_category: dict[str, int] = field(default_factory=dict)
     sections_populated: int = 0
     token_estimate: int = 0
 
@@ -242,7 +242,7 @@ class PreprocessorStats:
 # ---------------------------------------------------------------------------
 
 # Maps event type prefixes to report categories
-_CATEGORY_MAP: Dict[str, str] = {
+_CATEGORY_MAP: dict[str, str] = {
     "MALICIOUS": "threat",
     "VULNERABILITY": "vulnerability",
     "BLACKLISTED": "threat",
@@ -286,7 +286,7 @@ _CATEGORY_MAP: Dict[str, str] = {
 }
 
 # Maps categories to report sections
-_SECTION_MAP: Dict[str, ReportSectionType] = {
+_SECTION_MAP: dict[str, ReportSectionType] = {
     "threat": ReportSectionType.THREAT_INTELLIGENCE,
     "vulnerability": ReportSectionType.VULNERABILITY_ASSESSMENT,
     "network": ReportSectionType.NETWORK_TOPOLOGY,
@@ -308,7 +308,7 @@ def _estimate_tokens(text: str, chars_per_token: int = 4) -> int:
     return max(1, len(text) // chars_per_token)
 
 
-def _classify_risk(risk_value: int, thresholds: Dict[str, int]) -> RiskLevel:
+def _classify_risk(risk_value: int, thresholds: dict[str, int]) -> RiskLevel:
     """Classify a numeric risk value into a RiskLevel."""
     if risk_value >= thresholds.get("critical", 80):
         return RiskLevel.CRITICAL
@@ -370,7 +370,7 @@ def _make_dedup_key(event_type: str, data: str) -> str:
 # Section builders
 # ---------------------------------------------------------------------------
 
-_SECTION_DEFINITIONS: List[Tuple[ReportSectionType, str, str, int]] = [
+_SECTION_DEFINITIONS: list[tuple[ReportSectionType, str, str, int]] = [
     (ReportSectionType.EXECUTIVE_SUMMARY,
      "Executive Summary",
      "High-level overview of key findings across all categories.",
@@ -440,13 +440,13 @@ class ReportPreprocessor:
     8. Build ReportContext with statistics
     """
 
-    def __init__(self, config: Optional[PreprocessorConfig] = None):
+    def __init__(self, config: PreprocessorConfig | None = None):
         self.config = config or PreprocessorConfig()
 
     def process(
         self,
-        events: List[Dict[str, Any]],
-        scan_metadata: Optional[Dict[str, Any]] = None,
+        events: list[dict[str, Any]],
+        scan_metadata: dict[str, Any] | None = None,
     ) -> ReportContext:
         """Process raw scan events into a report context.
 
@@ -529,7 +529,7 @@ class ReportPreprocessor:
     # Internal steps
     # -----------------------------------------------------------------------
 
-    def _normalize_events(self, events: List[Dict[str, Any]]) -> List[NormalizedEvent]:
+    def _normalize_events(self, events: list[dict[str, Any]]) -> list[NormalizedEvent]:
         """Convert raw dicts to normalized events."""
         result = []
         for evt in events:
@@ -555,11 +555,11 @@ class ReportPreprocessor:
 
     def _deduplicate(
         self,
-        events: List[NormalizedEvent],
+        events: list[NormalizedEvent],
         stats: PreprocessorStats,
-    ) -> List[NormalizedEvent]:
+    ) -> list[NormalizedEvent]:
         """Remove duplicate events, keeping highest-confidence version."""
-        seen: Dict[str, NormalizedEvent] = {}
+        seen: dict[str, NormalizedEvent] = {}
         for evt in events:
             key = evt.dedup_key
             if key in seen:
@@ -574,9 +574,9 @@ class ReportPreprocessor:
 
     def _filter_events(
         self,
-        events: List[NormalizedEvent],
+        events: list[NormalizedEvent],
         stats: PreprocessorStats,
-    ) -> List[NormalizedEvent]:
+    ) -> list[NormalizedEvent]:
         """Filter events by confidence, risk, and exclusion rules."""
         result = []
         for evt in events:
@@ -601,10 +601,10 @@ class ReportPreprocessor:
 
         return result
 
-    def _build_sections(self, events: List[NormalizedEvent]) -> List[ReportSection]:
+    def _build_sections(self, events: list[NormalizedEvent]) -> list[ReportSection]:
         """Group events into report sections."""
         # Group events by category → section
-        categorized: Dict[ReportSectionType, List[NormalizedEvent]] = defaultdict(list)
+        categorized: dict[ReportSectionType, list[NormalizedEvent]] = defaultdict(list)
 
         for evt in events:
             section_type = _SECTION_MAP.get(evt.category, ReportSectionType.APPENDIX)

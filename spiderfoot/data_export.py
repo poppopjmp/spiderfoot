@@ -26,7 +26,7 @@ class ExportEvent:
     source_event: Optional[str] = None
     risk: int = 0
     timestamp: float = field(default_factory=time.time)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -47,8 +47,8 @@ class ExportOptions:
     include_raw: bool = False
     min_risk: int = 0
     max_results: Optional[int] = None
-    event_types: Optional[Set[str]] = None
-    modules: Optional[Set[str]] = None
+    event_types: Optional[set[str]] = None
+    modules: Optional[set[str]] = None
     pretty: bool = True
     timestamp_format: str = "iso"
 
@@ -60,7 +60,7 @@ class Exporter(ABC):
         self.name = name or self.__class__.__name__
 
     @abstractmethod
-    def export(self, events: List[ExportEvent], options: ExportOptions) -> str:
+    def export(self, events: list[ExportEvent], options: ExportOptions) -> str:
         """Export events to string format."""
         ...
 
@@ -79,7 +79,7 @@ class Exporter(ABC):
     def content_type(self) -> str:
         ...
 
-    def _filter_events(self, events: List[ExportEvent], options: ExportOptions) -> List[ExportEvent]:
+    def _filter_events(self, events: list[ExportEvent], options: ExportOptions) -> list[ExportEvent]:
         """Apply common filters to events."""
         filtered = events
 
@@ -119,7 +119,7 @@ class JsonExporter(Exporter):
     def content_type(self) -> str:
         return "application/json"
 
-    def export(self, events: List[ExportEvent], options: ExportOptions) -> str:
+    def export(self, events: list[ExportEvent], options: ExportOptions) -> str:
         filtered = self._filter_events(events, options)
         data = {
             "export_timestamp": time.time(),
@@ -153,7 +153,7 @@ class CsvExporter(Exporter):
     def content_type(self) -> str:
         return "text/csv"
 
-    def export(self, events: List[ExportEvent], options: ExportOptions) -> str:
+    def export(self, events: list[ExportEvent], options: ExportOptions) -> str:
         filtered = self._filter_events(events, options)
         output = io.StringIO()
         writer = csv.writer(output)
@@ -213,7 +213,7 @@ class StixExporter(Exporter):
             sco["x_source_module"] = event.module
         return sco
 
-    def export(self, events: List[ExportEvent], options: ExportOptions) -> str:
+    def export(self, events: list[ExportEvent], options: ExportOptions) -> str:
         filtered = self._filter_events(events, options)
         bundle = {
             "type": "bundle",
@@ -242,12 +242,12 @@ class SummaryExporter(Exporter):
     def content_type(self) -> str:
         return "text/plain"
 
-    def export(self, events: List[ExportEvent], options: ExportOptions) -> str:
+    def export(self, events: list[ExportEvent], options: ExportOptions) -> str:
         filtered = self._filter_events(events, options)
 
         # Aggregate stats
-        type_counts: Dict[str, int] = {}
-        module_counts: Dict[str, int] = {}
+        type_counts: dict[str, int] = {}
+        module_counts: dict[str, int] = {}
         max_risk = 0
         risk_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
 
@@ -306,7 +306,7 @@ class ExportRegistry:
     """
 
     def __init__(self):
-        self._exporters: Dict[str, Exporter] = {}
+        self._exporters: dict[str, Exporter] = {}
         # Register built-in exporters
         for exporter in [JsonExporter(), CsvExporter(), StixExporter(), SummaryExporter()]:
             self._exporters[exporter.name] = exporter
@@ -320,14 +320,14 @@ class ExportRegistry:
     def get(self, name: str) -> Optional[Exporter]:
         return self._exporters.get(name)
 
-    def export(self, format_name: str, events: List[ExportEvent], options: Optional[ExportOptions] = None) -> str:
+    def export(self, format_name: str, events: list[ExportEvent], options: Optional[ExportOptions] = None) -> str:
         exporter = self._exporters.get(format_name)
         if exporter is None:
             raise ValueError(f"Unknown export format: {format_name}")
         return exporter.export(events, options or ExportOptions())
 
     @property
-    def available_formats(self) -> List[str]:
+    def available_formats(self) -> list[str]:
         return sorted(self._exporters.keys())
 
     def to_dict(self) -> dict:

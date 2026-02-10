@@ -25,7 +25,7 @@ from spiderfoot.constants import DEFAULT_API_PORT
 class ServerManager:
     """Centralized server management for SpiderFoot."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize the server manager.
 
@@ -35,7 +35,7 @@ class ServerManager:
         self.config = config
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
 
-    def start_web_server(self, web_config: Dict[str, Any], logging_queue: Optional[mp.Queue] = None) -> None:
+    def start_web_server(self, web_config: dict[str, Any], logging_queue: Optional[mp.Queue] = None) -> None:
         """
         Start the CherryPy web server.
 
@@ -121,7 +121,7 @@ class ServerManager:
             self.log.critical(f"Unhandled exception in start_web_server: {e}", exc_info=True)
             sys.exit(-1)
 
-    def start_fastapi_server(self, api_config: Dict[str, Any], logging_queue: Optional[mp.Queue] = None) -> None:
+    def start_fastapi_server(self, api_config: dict[str, Any], logging_queue: Optional[mp.Queue] = None) -> None:
         """
         Start the FastAPI server.
 
@@ -178,7 +178,7 @@ class ServerManager:
             self.log.critical(f"Unhandled exception in start_fastapi_server: {e}", exc_info=True)
             sys.exit(-1)
 
-    def start_both_servers(self, web_config: Dict[str, Any], api_config: Dict[str, Any],
+    def start_both_servers(self, web_config: dict[str, Any], api_config: dict[str, Any],
                           logging_queue: Optional[mp.Queue] = None) -> None:
         """
         Start both web UI and FastAPI servers concurrently.
@@ -253,7 +253,7 @@ class ServerManager:
             self.log.critical(f"Unhandled exception in start_both_servers: {e}", exc_info=True)
             sys.exit(-1)
 
-    def _load_auth_secrets(self) -> Dict[str, str]:
+    def _load_auth_secrets(self) -> dict[str, str]:
         """
         Load authentication secrets from passwd file.
 
@@ -265,7 +265,7 @@ class ServerManager:
 
         if os.path.isfile(passwd_file):
             try:
-                with open(passwd_file, 'r', encoding='utf-8') as f:
+                with open(passwd_file, encoding='utf-8') as f:
                     for line in f:
                         line = line.strip()
                         if ':' in line:
@@ -297,7 +297,7 @@ class ServerManager:
 
         return False
 
-    def _setup_authentication(self, conf: Dict[str, Any], secrets: Dict[str, str]) -> None:
+    def _setup_authentication(self, conf: dict[str, Any], secrets: dict[str, str]) -> None:
         """
         Set up digest authentication.
 

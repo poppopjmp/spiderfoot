@@ -50,24 +50,24 @@ except ImportError:
 # In-memory tracker registry  (scan_id -> tracker)
 # -----------------------------------------------------------------------
 
-_trackers: Dict[str, "ScanProgressTracker"] = {}
+_trackers: dict[str, ScanProgressTracker] = {}
 _lock = threading.Lock()
 
 
-def register_tracker(scan_id: str, tracker: "ScanProgressTracker") -> None:
+def register_tracker(scan_id: str, tracker: ScanProgressTracker) -> None:
     """Register a progress tracker for a running scan."""
     with _lock:
         _trackers[scan_id] = tracker
     log.info("Tracker registered for scan %s", scan_id)
 
 
-def unregister_tracker(scan_id: str) -> Optional["ScanProgressTracker"]:
+def unregister_tracker(scan_id: str) -> ScanProgressTracker | None:
     """Remove and return the tracker for a completed/cancelled scan."""
     with _lock:
         return _trackers.pop(scan_id, None)
 
 
-def get_tracker(scan_id: str) -> Optional["ScanProgressTracker"]:
+def get_tracker(scan_id: str) -> ScanProgressTracker | None:
     """Look up a tracker by scan ID.  Returns ``None`` if not found."""
     with _lock:
         return _trackers.get(scan_id)

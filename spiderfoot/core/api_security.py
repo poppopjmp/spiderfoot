@@ -42,7 +42,7 @@ class APIKeyInfo:
     key_id: str
     hashed_key: str
     name: str
-    permissions: List[str]
+    permissions: list[str]
     rate_limits: RateLimitConfig
     created_at: datetime
     expires_at: Optional[datetime] = None
@@ -61,7 +61,7 @@ class AdvancedRateLimiter:
         self.logger = logging.getLogger('spiderfoot.ratelimit')
 
     def check_rate_limit(self, identifier: str, config: RateLimitConfig,
-                        request_weight: int = 1) -> tuple[bool, Dict[str, Any]]:
+                        request_weight: int = 1) -> tuple[bool, dict[str, Any]]:
         """Check rate limits with multiple strategies."""
         current_time = time.time()
 
@@ -160,11 +160,11 @@ class APIKeyManager:
 
     def __init__(self, secret_key: str):
         self.secret_key = secret_key
-        self.api_keys: Dict[str, APIKeyInfo] = {}
+        self.api_keys: dict[str, APIKeyInfo] = {}
         self.key_usage = defaultdict(int)
         self.lock = threading.Lock()
 
-    def generate_api_key(self, name: str, permissions: List[str],
+    def generate_api_key(self, name: str, permissions: list[str],
                         rate_limits: RateLimitConfig = None,
                         expires_in_days: int = None) -> tuple[str, str]:
         """Generate a new API key."""
@@ -245,7 +245,7 @@ class APIKeyManager:
                 return True
             return False
 
-    def list_api_keys(self) -> List[Dict[str, Any]]:
+    def list_api_keys(self) -> list[dict[str, Any]]:
         """List all API keys (without sensitive data)."""
         with self.lock:
             return [
@@ -287,7 +287,7 @@ class RequestValidator:
         self.compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.SUSPICIOUS_PATTERNS]
         self.logger = logging.getLogger('spiderfoot.validation')
 
-    def validate_request(self, data: Dict[str, Any], headers: Dict[str, str] = None) -> tuple[bool, List[str]]:
+    def validate_request(self, data: dict[str, Any], headers: dict[str, str] = None) -> tuple[bool, list[str]]:
         """Validate request data for security issues."""
         issues = []
 
@@ -300,7 +300,7 @@ class RequestValidator:
 
         return len(issues) == 0, issues
 
-    def _validate_headers(self, headers: Dict[str, str]) -> List[str]:
+    def _validate_headers(self, headers: dict[str, str]) -> list[str]:
         """Validate HTTP headers."""
         issues = []
 
@@ -317,7 +317,7 @@ class RequestValidator:
 
         return issues
 
-    def _validate_data(self, data: Any, path: str = "") -> List[str]:
+    def _validate_data(self, data: Any, path: str = "") -> list[str]:
         """Recursively validate data for suspicious patterns."""
         issues = []
 
@@ -336,7 +336,7 @@ class RequestValidator:
 
         return issues
 
-    def _validate_string(self, text: str, path: str) -> List[str]:
+    def _validate_string(self, text: str, path: str) -> list[str]:
         """Validate string for suspicious patterns."""
         issues = []
 
@@ -424,7 +424,7 @@ class DDoSProtection:
 class APISecurityMiddleware:
     """Comprehensive API security middleware."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.rate_limiter = AdvancedRateLimiter()
         self.api_key_manager = APIKeyManager(config.get('secret_key', 'default-secret'))
@@ -432,8 +432,8 @@ class APISecurityMiddleware:
         self.ddos_protection = DDoSProtection()
         self.logger = logging.getLogger('spiderfoot.api.security')
 
-    def process_request(self, request_data: Dict[str, Any], headers: Dict[str, str],
-                       client_ip: str) -> tuple[bool, Dict[str, Any]]:
+    def process_request(self, request_data: dict[str, Any], headers: dict[str, str],
+                       client_ip: str) -> tuple[bool, dict[str, Any]]:
         """Process and validate incoming request."""
         # DDoS protection
         ddos_ok, ddos_msg = self.ddos_protection.check_ddos_protection(
@@ -474,7 +474,7 @@ class APISecurityMiddleware:
         return True, {'status': 'ok'}
 
 
-def require_api_key(permissions: List[str] = None):
+def require_api_key(permissions: list[str] = None):
     """Decorator to require API key with specific permissions."""
     def decorator(func):
         @wraps(func)

@@ -43,11 +43,11 @@ if HAS_FASTAPI:
     class WebhookCreateRequest(BaseModel):
         url: str = Field(..., description="Webhook URL to POST to")
         secret: str = Field("", description="HMAC-SHA256 signing secret")
-        event_types: List[str] = Field(
+        event_types: list[str] = Field(
             default_factory=list,
             description="Event types to subscribe to (empty = all)",
         )
-        headers: Dict[str, str] = Field(
+        headers: dict[str, str] = Field(
             default_factory=dict,
             description="Custom HTTP headers",
         )
@@ -57,13 +57,13 @@ if HAS_FASTAPI:
         description: str = ""
 
     class WebhookUpdateRequest(BaseModel):
-        url: Optional[str] = None
-        secret: Optional[str] = None
-        event_types: Optional[List[str]] = None
-        enabled: Optional[bool] = None
-        timeout: Optional[float] = None
-        max_retries: Optional[int] = None
-        description: Optional[str] = None
+        url: str | None = None
+        secret: str | None = None
+        event_types: list[str] | None = None
+        enabled: bool | None = None
+        timeout: float | None = None
+        max_retries: int | None = None
+        description: str | None = None
 
 
 # -----------------------------------------------------------------------
@@ -128,7 +128,7 @@ else:
         description="Recent webhook delivery attempts.",
     )
     async def webhook_history(
-        webhook_id: Optional[str] = Query(None),
+        webhook_id: str | None = Query(None),
         limit: int = Query(50, ge=1, le=500),
     ):
         mgr = get_notification_manager()
@@ -191,7 +191,7 @@ else:
     # -------------------------------------------------------------------
 
     # All known webhook event types grouped by category
-    KNOWN_EVENT_TYPES: Dict[str, List[str]] = {
+    KNOWN_EVENT_TYPES: dict[str, list[str]] = {
         "scan": [
             "scan.created",
             "scan.started",
@@ -248,7 +248,7 @@ else:
         }
 
     class EventFilterUpdateRequest(BaseModel):
-        event_types: List[str] = Field(
+        event_types: list[str] = Field(
             ...,
             description="New list of event types to subscribe to (empty = all events)",
         )

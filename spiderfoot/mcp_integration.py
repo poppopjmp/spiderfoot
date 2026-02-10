@@ -36,7 +36,7 @@ class SpiderFootMCPClient:
         # CTI report templates
         self.report_templates = self._load_report_templates()
 
-    def _load_report_templates(self) -> Dict[str, dict]:
+    def _load_report_templates(self) -> dict[str, dict]:
         """Load CTI report templates."""
         return {
             'threat_assessment': {
@@ -79,7 +79,7 @@ class SpiderFootMCPClient:
         workspace: SpiderFootWorkspace,
         report_type: str = 'threat_assessment',
         custom_prompt: str = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate CTI report using MCP server.
 
         Args:
@@ -122,7 +122,7 @@ class SpiderFootMCPClient:
             self.log.error("Failed to generate CTI report: %s", e)
             raise
 
-    async def _prepare_workspace_data(self, workspace: SpiderFootWorkspace) -> Dict[str, Any]:
+    async def _prepare_workspace_data(self, workspace: SpiderFootWorkspace) -> dict[str, Any]:
         """Prepare workspace data for MCP analysis.
 
         Args:
@@ -234,10 +234,10 @@ class SpiderFootMCPClient:
 
     async def _prepare_mcp_request(
         self,
-        workspace_data: Dict[str, Any],
+        workspace_data: dict[str, Any],
         template: dict,
         custom_prompt: str = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Prepare MCP request payload.
 
         Args:
@@ -286,7 +286,7 @@ class SpiderFootMCPClient:
 
         return mcp_request
 
-    async def _send_mcp_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def _send_mcp_request(self, request: dict[str, Any]) -> dict[str, Any]:
         """Send request to MCP server.
 
         Args:
@@ -322,11 +322,11 @@ class SpiderFootMCPClient:
 
     async def _process_mcp_response(
         self,
-        response: Dict[str, Any],
+        response: dict[str, Any],
         workspace: SpiderFootWorkspace,
         template: dict,
         report_type: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Process MCP server response into structured report.
 
         Args:
@@ -372,7 +372,7 @@ class SpiderFootMCPClient:
 
         return cti_report
 
-    def _extract_data_sources(self, workspace: SpiderFootWorkspace) -> List[str]:
+    def _extract_data_sources(self, workspace: SpiderFootWorkspace) -> list[str]:
         """Extract data sources used in the workspace scans."""
         data_sources = set()
 
@@ -390,7 +390,7 @@ class SpiderFootMCPClient:
     async def _save_report_to_workspace(
         self,
         workspace: SpiderFootWorkspace,
-        report: Dict[str, Any]
+        report: dict[str, Any]
     ) -> None:
         """Save CTI report to workspace metadata.
 
@@ -417,7 +417,7 @@ class SpiderFootMCPClient:
 
         self.log.info("CTI report %s saved to workspace %s", report['report_id'], workspace.workspace_id)
 
-    async def list_available_templates(self) -> Dict[str, dict]:
+    async def list_available_templates(self) -> dict[str, dict]:
         """List available CTI report templates.
 
         Returns:
@@ -448,7 +448,7 @@ class CTIReportExporter:
 
     def export_report(
         self,
-        report: Dict[str, Any],
+        report: dict[str, Any],
         format: str = 'json',
         output_path: str = None
     ) -> str:
@@ -477,13 +477,13 @@ class CTIReportExporter:
         else:
             raise ValueError(f"Unsupported export format: {format}")
 
-    def _export_json(self, report: Dict[str, Any], output_path: str) -> str:
+    def _export_json(self, report: dict[str, Any], output_path: str) -> str:
         """Export report as JSON."""
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
         return output_path
 
-    def _export_html(self, report: Dict[str, Any], output_path: str) -> str:
+    def _export_html(self, report: dict[str, Any], output_path: str) -> str:
         """Export report as HTML."""
         html_template = """
         <!DOCTYPE html>
@@ -564,7 +564,7 @@ class CTIReportExporter:
             f.write(html_content)
         return output_path
 
-    def _export_pdf(self, report: Dict[str, Any], output_path: str) -> str:
+    def _export_pdf(self, report: dict[str, Any], output_path: str) -> str:
         """Export report as PDF."""
         # This would require a PDF library like reportlab
         # For now, export as HTML and suggest conversion
@@ -576,7 +576,7 @@ class CTIReportExporter:
 
         return html_path
 
-    def _export_docx(self, report: Dict[str, Any], output_path: str) -> str:
+    def _export_docx(self, report: dict[str, Any], output_path: str) -> str:
         """Export report as DOCX."""
         # This would require python-docx library
         # For now, export as HTML

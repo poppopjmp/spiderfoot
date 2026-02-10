@@ -45,7 +45,7 @@ class ValidationStats:
     total_events: int = 0
     valid_events: int = 0
     undeclared_events: int = 0
-    undeclared_types: Set[str] = field(default_factory=set)
+    undeclared_types: set[str] = field(default_factory=set)
 
 
 class ModuleOutputValidator:
@@ -72,9 +72,9 @@ class ModuleOutputValidator:
             self._mode = "warn"
 
         self._lock = Lock()
-        self._stats: Dict[str, ValidationStats] = defaultdict(ValidationStats)
+        self._stats: dict[str, ValidationStats] = defaultdict(ValidationStats)
         # Cache of producedEvents per module class to avoid repeated calls
-        self._produced_cache: Dict[str, Set[str]] = {}
+        self._produced_cache: dict[str, set[str]] = {}
 
         if self._mode == "off":
             log.debug("Module output validation is disabled")
@@ -137,7 +137,7 @@ class ModuleOutputValidator:
 
         return False
 
-    def get_stats(self, module_name: str | None = None) -> Dict[str, Any]:
+    def get_stats(self, module_name: str | None = None) -> dict[str, Any]:
         """Return validation statistics.
 
         Args:
@@ -170,7 +170,7 @@ class ModuleOutputValidator:
                     }
             return result
 
-    def get_all_stats(self) -> Dict[str, Any]:
+    def get_all_stats(self) -> dict[str, Any]:
         """Return full stats for every tracked module."""
         with self._lock:
             return {
@@ -197,12 +197,12 @@ class ModuleOutputValidator:
         cls = type(module)
         return f"{cls.__module__}.{cls.__qualname__}" if hasattr(cls, "__module__") else cls.__name__
 
-    def _get_produced_events(self, module_name: str, module: Any) -> Set[str]:
+    def _get_produced_events(self, module_name: str, module: Any) -> set[str]:
         """Get (and cache) the set of event types a module declares it produces."""
         if module_name in self._produced_cache:
             return self._produced_cache[module_name]
 
-        produced: Set[str] = set()
+        produced: set[str] = set()
         try:
             fn = getattr(module, "producedEvents", None)
             if callable(fn):
@@ -221,7 +221,7 @@ class ModuleOutputValidator:
 
 # ── Singleton ────────────────────────────────────────────────────────
 
-_instance: Optional[ModuleOutputValidator] = None
+_instance: ModuleOutputValidator | None = None
 _instance_lock = Lock()
 
 

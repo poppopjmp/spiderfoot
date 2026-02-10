@@ -43,9 +43,9 @@ class ErrorDetail(BaseModel):
     code: str
     message: str
     status: int
-    request_id: Optional[str] = None
+    request_id: str | None = None
     timestamp: float = 0.0
-    details: Optional[Any] = None
+    details: Any | None = None
 
 
 class ErrorResponse(BaseModel):
@@ -55,7 +55,7 @@ class ErrorResponse(BaseModel):
 
 # ── HTTP status → error code mapping ─────────────────────────────────
 
-_STATUS_CODES: Dict[int, str] = {
+_STATUS_CODES: dict[int, str] = {
     400: "BAD_REQUEST",
     401: "UNAUTHORIZED",
     403: "FORBIDDEN",
@@ -87,7 +87,7 @@ def _error_code_for(status: int, detail: str = "") -> str:
     return _STATUS_CODES.get(status, f"HTTP_{status}")
 
 
-def _get_request_id(request: Request) -> Optional[str]:
+def _get_request_id(request: Request) -> str | None:
     """Extract the request-tracing ID from the request state or headers."""
     # Set by request_tracing middleware
     rid = getattr(request.state, "request_id", None)
@@ -101,7 +101,7 @@ def _build_error_response(
     message: str,
     request: Request,
     details: Any = None,
-    code: Optional[str] = None,
+    code: str | None = None,
 ) -> JSONResponse:
     """Build a structured JSON error response."""
     error_code = code or _error_code_for(status, message)

@@ -31,8 +31,8 @@ log = logging.getLogger("spiderfoot.async_plugin")
 T = TypeVar("T")
 
 # Shared event loop for async plugins
-_shared_loop: Optional[asyncio.AbstractEventLoop] = None
-_loop_thread: Optional[Any] = None
+_shared_loop: asyncio.AbstractEventLoop | None = None
+_loop_thread: Any | None = None
 
 
 def get_event_loop() -> asyncio.AbstractEventLoop:
@@ -71,7 +71,7 @@ def shutdown_event_loop() -> None:
 class AsyncResult:
     """Container for async operation results."""
 
-    def __init__(self, data: Any = None, error: Optional[str] = None,
+    def __init__(self, data: Any = None, error: str | None = None,
                  duration: float = 0.0):
         self.data = data
         self.error = error
@@ -98,8 +98,8 @@ class SpiderFootAsyncPlugin(SpiderFootModernPlugin):
 
     def __init__(self):
         super().__init__()
-        self._semaphore: Optional[asyncio.Semaphore] = None
-        self._async_executor: Optional[ThreadPoolExecutor] = None
+        self._semaphore: asyncio.Semaphore | None = None
+        self._async_executor: ThreadPoolExecutor | None = None
 
     @property
     def _async_sem(self) -> asyncio.Semaphore:
@@ -198,9 +198,9 @@ class SpiderFootAsyncPlugin(SpiderFootModernPlugin):
     # Batch operations
     # ------------------------------------------------------------------
 
-    async def async_batch(self, items: List[Any],
+    async def async_batch(self, items: list[Any],
                           handler: Callable,
-                          max_concurrency: Optional[int] = None) -> List[AsyncResult]:
+                          max_concurrency: int | None = None) -> list[AsyncResult]:
         """Execute an async handler on a batch of items concurrently.
 
         Parameters
@@ -231,9 +231,9 @@ class SpiderFootAsyncPlugin(SpiderFootModernPlugin):
         tasks = [asyncio.create_task(_wrapped(item)) for item in items]
         return await asyncio.gather(*tasks)
 
-    def run_batch(self, items: List[Any],
+    def run_batch(self, items: list[Any],
                   handler: Callable,
-                  max_concurrency: Optional[int] = None) -> List[AsyncResult]:
+                  max_concurrency: int | None = None) -> list[AsyncResult]:
         """Synchronous wrapper for async_batch."""
         return self.run_async(
             self.async_batch(items, handler, max_concurrency)

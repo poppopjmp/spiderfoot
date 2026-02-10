@@ -53,10 +53,10 @@ class TypeStats:
     avg_confidence: float = 0.0
     avg_risk: float = 0.0
     max_risk: int = 0
-    modules: Set[str] = field(default_factory=set)
+    modules: set[str] = field(default_factory=set)
     _confidence_sum: float = 0.0
     _risk_sum: float = 0.0
-    _values: Set[str] = field(default_factory=set)
+    _values: set[str] = field(default_factory=set)
 
     def record(self, data: str, module: str, confidence: int,
                risk: int) -> None:
@@ -71,7 +71,7 @@ class TypeStats:
         if risk > self.max_risk:
             self.max_risk = risk
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "event_type": self.event_type,
             "count": self.count,
@@ -89,11 +89,11 @@ class ScanResultAggregator:
     def __init__(self, scan_id: str = "") -> None:
         self.scan_id = scan_id
         self.start_time = time.time()
-        self._events: List[EventRecord] = []
-        self._type_stats: Dict[str, TypeStats] = {}
-        self._module_counts: Dict[str, int] = defaultdict(int)
-        self._risk_events: List[EventRecord] = []
-        self._category_counts: Dict[str, int] = defaultdict(int)
+        self._events: list[EventRecord] = []
+        self._type_stats: dict[str, TypeStats] = {}
+        self._module_counts: dict[str, int] = defaultdict(int)
+        self._risk_events: list[EventRecord] = []
+        self._category_counts: dict[str, int] = defaultdict(int)
 
     # Category mapping for common event type prefixes
     _CATEGORY_MAP = {
@@ -137,7 +137,7 @@ class ScanResultAggregator:
 
     def add_event(self, event_type: str, data: str, module: str,
                   confidence: int = 100, risk: int = 0,
-                  timestamp: Optional[float] = None) -> None:
+                  timestamp: float | None = None) -> None:
         """Add an event to the aggregator.
 
         Args:
@@ -213,26 +213,26 @@ class ScanResultAggregator:
         raw = weighted_sum / total_weight
         return min(100.0, round(raw, 1))
 
-    def get_type_stats(self) -> Dict[str, Dict[str, Any]]:
+    def get_type_stats(self) -> dict[str, dict[str, Any]]:
         """Get statistics per event type."""
         return {
             name: stats.to_dict()
             for name, stats in sorted(self._type_stats.items())
         }
 
-    def get_module_stats(self) -> Dict[str, int]:
+    def get_module_stats(self) -> dict[str, int]:
         """Get event counts per module."""
         return dict(sorted(
             self._module_counts.items(), key=lambda x: x[1], reverse=True
         ))
 
-    def get_category_breakdown(self) -> Dict[str, int]:
+    def get_category_breakdown(self) -> dict[str, int]:
         """Get event counts per category."""
         return dict(sorted(
             self._category_counts.items(), key=lambda x: x[1], reverse=True
         ))
 
-    def get_top_risk_events(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_top_risk_events(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get the top N highest-risk events."""
         sorted_events = sorted(
             self._risk_events, key=lambda e: e.risk, reverse=True
@@ -248,9 +248,9 @@ class ScanResultAggregator:
             for e in sorted_events[:limit]
         ]
 
-    def get_top_entities(self, limit: int = 10) -> List[Tuple[str, int]]:
+    def get_top_entities(self, limit: int = 10) -> list[tuple[str, int]]:
         """Get the most frequently occurring data values."""
-        value_counts: Dict[str, int] = defaultdict(int)
+        value_counts: dict[str, int] = defaultdict(int)
         for evt in self._events:
             if len(evt.data) <= 200:  # skip raw/large data
                 value_counts[evt.data] += 1
@@ -259,7 +259,7 @@ class ScanResultAggregator:
             value_counts.items(), key=lambda x: x[1], reverse=True
         )[:limit]
 
-    def get_timeline(self, buckets: int = 10) -> List[Dict[str, Any]]:
+    def get_timeline(self, buckets: int = 10) -> list[dict[str, Any]]:
         """Get event discovery timeline in time buckets.
 
         Args:
@@ -299,7 +299,7 @@ class ScanResultAggregator:
 
         return timeline
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get a comprehensive scan summary."""
         return {
             "scan_id": self.scan_id,

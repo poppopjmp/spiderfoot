@@ -140,7 +140,7 @@ class RateLimiter:
         self.rate = rate
         self.burst = burst
         self._lock = threading.Lock()
-        self._clients: Dict[str, dict] = {}
+        self._clients: dict[str, dict] = {}
 
     def allow(self, client_id: str = "default") -> bool:
         """Check if a request from this client is allowed."""
@@ -198,10 +198,10 @@ class APIGateway:
                   SF_DEPLOYMENT_MODE env var if not specified.
         """
         self.mode = mode or os.environ.get("SF_DEPLOYMENT_MODE", "monolith")
-        self._circuit_breakers: Dict[str, CircuitBreaker] = {}
+        self._circuit_breakers: dict[str, CircuitBreaker] = {}
         self._rate_limiter = RateLimiter()
-        self._local_handlers: Dict[str, Dict[str, Callable]] = {}
-        self._clients: Dict[str, Any] = {}
+        self._local_handlers: dict[str, dict[str, Callable]] = {}
+        self._clients: dict[str, Any] = {}
 
     def register_local_handler(self, service: str, method: str,
                                handler: Callable[[dict], dict]) -> None:
@@ -217,8 +217,8 @@ class APIGateway:
         self._local_handlers[service][method] = handler
 
     def route(self, service: str, method: str,
-              payload: Dict[str, Any] = None,
-              client_id: str = "default") -> Dict[str, Any]:
+              payload: dict[str, Any] = None,
+              client_id: str = "default") -> dict[str, Any]:
         """Route a request to the appropriate service.
 
         Args:

@@ -12,10 +12,9 @@ import typing
 import netaddr
 
 
-if sys.version_info >= (3, 8):  # PEP 589 support (TypedDict)
-    TargetAlias = typing.TypedDict("TargetAlias", {"type": str, "value": str})
-else:
-    TargetAlias = typing.Dict[str, str]
+class TargetAlias(typing.TypedDict):
+        type: str
+        value: str
 
 
 class SpiderFootTarget():
@@ -28,14 +27,14 @@ class SpiderFootTarget():
         targetAliases (typing.List[TargetAlias]): target aliases
     """
 
-    _validTypes: typing.FrozenSet[str] = frozenset({
+    _validTypes: frozenset[str] = frozenset({
         "IP_ADDRESS", "IPV6_ADDRESS", "NETBLOCK_OWNER", "NETBLOCKV6_OWNER",
         "INTERNET_NAME", "EMAILADDR", "HUMAN_NAME", "BGP_AS_OWNER",
         "PHONE_NUMBER", "USERNAME", "BITCOIN_ADDRESS",
     })
     _targetType: str
     _targetValue: str
-    _targetAliases: typing.List[TargetAlias]
+    _targetAliases: list[TargetAlias]
 
     def __init__(self, targetValue: str, typeName: str) -> None:
         """Initialize SpiderFoot target.
@@ -82,11 +81,11 @@ class SpiderFootTarget():
         self._targetValue = targetValue
 
     @property
-    def targetAliases(self) -> typing.List[TargetAlias]:
+    def targetAliases(self) -> list[TargetAlias]:
         return self._targetAliases
 
     @targetAliases.setter
-    def targetAliases(self, value: typing.List[TargetAlias]) -> None:
+    def targetAliases(self, value: list[TargetAlias]) -> None:
         self._targetAliases = value
 
     def setAlias(self, value: str, typeName: str) -> None:
@@ -120,7 +119,7 @@ class SpiderFootTarget():
 
         self.targetAliases.append(alias)
 
-    def _getEquivalents(self, typeName: str) -> typing.List[str]:
+    def _getEquivalents(self, typeName: str) -> list[str]:
         """Get all aliases of the specfied target data type.
 
         Args:
@@ -129,13 +128,13 @@ class SpiderFootTarget():
         Returns:
             typing.List[str]: target aliases
         """
-        ret: typing.List[str] = list()
+        ret: list[str] = list()
         for item in self.targetAliases:
             if item['type'] == typeName:
                 ret.append(item['value'].lower())
         return ret
 
-    def getNames(self) -> typing.List[str]:
+    def getNames(self) -> list[str]:
         """Get all domains associated with the target.
 
         Returns:
@@ -145,7 +144,7 @@ class SpiderFootTarget():
         if self.targetType in ["INTERNET_NAME", "EMAILADDR"] and self.targetValue.lower() not in e:
             e.append(self.targetValue.lower())
 
-        names: typing.List[str] = list()
+        names: list[str] = list()
         for name in e:
             if isinstance(name, bytes):
                 names.append(name.decode("utf-8"))
@@ -154,7 +153,7 @@ class SpiderFootTarget():
 
         return names
 
-    def getAddresses(self) -> typing.List[str]:
+    def getAddresses(self) -> list[str]:
         """Get all IP subnet or IP address aliases associated with the target.
 
         Returns:

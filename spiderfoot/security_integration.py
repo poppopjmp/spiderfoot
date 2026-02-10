@@ -44,7 +44,7 @@ class SecurityIntegrator:
             'web_security': False
         }
 
-    def analyze_existing_setup(self) -> Dict[str, Any]:
+    def analyze_existing_setup(self) -> dict[str, Any]:
         """Analyze existing SpiderFoot setup for security gaps.
 
         Returns:
@@ -77,7 +77,7 @@ class SecurityIntegrator:
 
         return analysis
 
-    def _analyze_web_interface(self, analysis: Dict[str, Any]) -> None:
+    def _analyze_web_interface(self, analysis: dict[str, Any]) -> None:
         """Analyze web interface for security issues."""
         web_files = [
             'spiderfoot/sfwebui.py',
@@ -90,7 +90,7 @@ class SecurityIntegrator:
             if os.path.exists(full_path):
                 if file_path.endswith('.py'):
                     # Check Python web files
-                    with open(full_path, 'r', encoding='utf-8') as f:
+                    with open(full_path, encoding='utf-8') as f:
                         content = f.read()
 
                         # Check for CSRF protection
@@ -118,7 +118,7 @@ class SecurityIntegrator:
             'Add security headers to all responses'
         ])
 
-    def _analyze_templates(self, templates_dir: str, analysis: Dict[str, Any]) -> None:
+    def _analyze_templates(self, templates_dir: str, analysis: dict[str, Any]) -> None:
         """Analyze template files for security issues."""
         if not os.path.exists(templates_dir):
             return
@@ -128,7 +128,7 @@ class SecurityIntegrator:
                 if file.endswith(('.html', '.htm')):
                     file_path = os.path.join(root, file)
                     try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
+                        with open(file_path, encoding='utf-8') as f:
                             content = f.read()
 
                             # Check for XSS vulnerabilities
@@ -141,7 +141,7 @@ class SecurityIntegrator:
                     except Exception:
                         continue
 
-    def _analyze_api_endpoints(self, analysis: Dict[str, Any]) -> None:
+    def _analyze_api_endpoints(self, analysis: dict[str, Any]) -> None:
         """Analyze API endpoints for security issues."""
         api_files = [
             'spiderfoot/sfapi.py',
@@ -152,7 +152,7 @@ class SecurityIntegrator:
             full_path = os.path.join(self.spiderfoot_root, file_path)
             if os.path.exists(full_path):
                 if file_path.endswith('.py'):
-                    with open(full_path, 'r', encoding='utf-8') as f:
+                    with open(full_path, encoding='utf-8') as f:
                         content = f.read()
 
                         # Check for authentication
@@ -174,12 +174,12 @@ class SecurityIntegrator:
             'Add request/response validation'
         ])
 
-    def _analyze_database_setup(self, analysis: Dict[str, Any]) -> None:
+    def _analyze_database_setup(self, analysis: dict[str, Any]) -> None:
         """Analyze database setup for security issues."""
         db_file = os.path.join(self.spiderfoot_root, 'spiderfoot/db.py')
 
         if os.path.exists(db_file):
-            with open(db_file, 'r', encoding='utf-8') as f:
+            with open(db_file, encoding='utf-8') as f:
                 content = f.read()
 
                 # Check for SQL injection protection
@@ -196,7 +196,7 @@ class SecurityIntegrator:
 
         analysis['file_modifications_needed'].append('spiderfoot/db.py')
 
-    def _analyze_configuration_files(self, analysis: Dict[str, Any]) -> None:
+    def _analyze_configuration_files(self, analysis: dict[str, Any]) -> None:
         """Analyze configuration files for security issues."""
         config_patterns = ['*.conf', '*.config', '*.cfg', '*.ini', '*.json']
 
@@ -205,7 +205,7 @@ class SecurityIntegrator:
 
             for config_file in config_files:
                 try:
-                    with open(config_file, 'r', encoding='utf-8') as f:
+                    with open(config_file, encoding='utf-8') as f:
                         content = f.read().lower()
 
                         # Check for hardcoded secrets
@@ -226,7 +226,7 @@ class SecurityIntegrator:
             'Add configuration validation'
         ])
 
-    def _analyze_dependencies(self, analysis: Dict[str, Any]) -> None:
+    def _analyze_dependencies(self, analysis: dict[str, Any]) -> None:
         """Analyze dependencies for security requirements."""
         requirements_file = os.path.join(self.spiderfoot_root, 'requirements.txt')
 
@@ -241,7 +241,7 @@ class SecurityIntegrator:
 
         existing_deps = set()
         if os.path.exists(requirements_file):
-            with open(requirements_file, 'r', encoding='utf-8') as f:
+            with open(requirements_file, encoding='utf-8') as f:
                 for line in f:
                     if '==' in line or '>=' in line:
                         dep_name = line.split('==')[0].split('>=')[0].strip()
@@ -252,7 +252,7 @@ class SecurityIntegrator:
             if dep_name not in existing_deps:
                 analysis['new_dependencies'].append(dep)
 
-    def create_migration_plan(self) -> Dict[str, Any]:
+    def create_migration_plan(self) -> dict[str, Any]:
         """Create detailed migration plan for security implementation.
 
         Returns:
@@ -396,7 +396,7 @@ class SecurityIntegrator:
         return migration_plan
 
     def execute_migration(self, phase: str = 'phase_1_critical',
-                         dry_run: bool = True) -> Dict[str, Any]:
+                         dry_run: bool = True) -> dict[str, Any]:
         """Execute migration phase.
 
         Args:
@@ -491,7 +491,7 @@ class SecurityIntegrator:
                 os.makedirs(os.path.dirname(dest), exist_ok=True)
                 shutil.copy2(source, dest)
 
-    def _execute_task(self, task: Dict[str, Any]) -> None:
+    def _execute_task(self, task: dict[str, Any]) -> None:
         """Execute a specific migration task.
 
         Args:
@@ -568,7 +568,7 @@ class SecurityIntegrator:
         # This would add security event logging throughout the application
         pass
 
-    def validate_security_implementation(self) -> Dict[str, Any]:
+    def validate_security_implementation(self) -> dict[str, Any]:
         """Validate that security features are properly implemented.
 
         Returns:
@@ -625,36 +625,36 @@ class SecurityIntegrator:
 
         return validation_results
 
-    def _validate_csrf_implementation(self) -> Dict[str, Any]:
+    def _validate_csrf_implementation(self) -> dict[str, Any]:
         """Validate CSRF protection implementation."""
         # Check if CSRF protection is properly implemented
         return {'status': 'pending', 'message': 'CSRF validation not yet implemented'}
 
-    def _validate_input_validation(self) -> Dict[str, Any]:
+    def _validate_input_validation(self) -> dict[str, Any]:
         """Validate input validation implementation."""
         return {'status': 'pending', 'message': 'Input validation check not yet implemented'}
 
-    def _validate_rate_limiting(self) -> Dict[str, Any]:
+    def _validate_rate_limiting(self) -> dict[str, Any]:
         """Validate rate limiting implementation."""
         return {'status': 'pending', 'message': 'Rate limiting validation not yet implemented'}
 
-    def _validate_secure_sessions(self) -> Dict[str, Any]:
+    def _validate_secure_sessions(self) -> dict[str, Any]:
         """Validate secure session implementation."""
         return {'status': 'pending', 'message': 'Session security validation not yet implemented'}
 
-    def _validate_api_security(self) -> Dict[str, Any]:
+    def _validate_api_security(self) -> dict[str, Any]:
         """Validate API security implementation."""
         return {'status': 'pending', 'message': 'API security validation not yet implemented'}
 
-    def _validate_database_security(self) -> Dict[str, Any]:
+    def _validate_database_security(self) -> dict[str, Any]:
         """Validate database security implementation."""
         return {'status': 'pending', 'message': 'Database security validation not yet implemented'}
 
-    def _validate_configuration_security(self) -> Dict[str, Any]:
+    def _validate_configuration_security(self) -> dict[str, Any]:
         """Validate configuration security implementation."""
         return {'status': 'pending', 'message': 'Configuration security validation not yet implemented'}
 
-    def _validate_security_logging(self) -> Dict[str, Any]:
+    def _validate_security_logging(self) -> dict[str, Any]:
         """Validate security logging implementation."""
         return {'status': 'pending', 'message': 'Security logging validation not yet implemented'}
 

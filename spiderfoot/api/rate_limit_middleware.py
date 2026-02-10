@@ -37,7 +37,7 @@ log = logging.getLogger("spiderfoot.api.rate_limit")
 # -----------------------------------------------------------------------
 
 # Default tiers keyed by route prefix → (requests, window_seconds)
-DEFAULT_TIER_LIMITS: Dict[str, tuple] = {
+DEFAULT_TIER_LIMITS: dict[str, tuple] = {
     "scan": (30, 60.0),
     "data": (120, 60.0),
     "config": (30, 60.0),
@@ -47,7 +47,7 @@ DEFAULT_TIER_LIMITS: Dict[str, tuple] = {
 }
 
 # Paths exempt from rate limiting
-DEFAULT_EXEMPT_PATHS: Set[str] = {
+DEFAULT_EXEMPT_PATHS: set[str] = {
     "/api/health",
     "/api/health/ready",
     "/api/health/live",
@@ -57,7 +57,7 @@ DEFAULT_EXEMPT_PATHS: Set[str] = {
 }
 
 # Route prefix → tier name mapping
-ROUTE_TIER_MAP: Dict[str, str] = {
+ROUTE_TIER_MAP: dict[str, str] = {
     "/api/scans": "scan",
     "/api/scan": "scan",
     "/api/data": "data",
@@ -88,15 +88,15 @@ class RateLimitConfig:
     """
 
     enabled: bool = True
-    tier_limits: Dict[str, tuple] = field(default_factory=lambda: dict(DEFAULT_TIER_LIMITS))
-    endpoint_overrides: Dict[str, tuple] = field(default_factory=dict)
-    exempt_paths: Set[str] = field(default_factory=lambda: set(DEFAULT_EXEMPT_PATHS))
+    tier_limits: dict[str, tuple] = field(default_factory=lambda: dict(DEFAULT_TIER_LIMITS))
+    endpoint_overrides: dict[str, tuple] = field(default_factory=dict)
+    exempt_paths: set[str] = field(default_factory=lambda: set(DEFAULT_EXEMPT_PATHS))
     trust_forwarded: bool = True
     include_headers: bool = True
     log_rejections: bool = True
 
     @classmethod
-    def from_dict(cls, config: Dict[str, Any]) -> "RateLimitConfig":
+    def from_dict(cls, config: dict[str, Any]) -> RateLimitConfig:
         """Build from a flat SpiderFoot config dict.
 
         Per-endpoint overrides can be set via the environment variable
@@ -104,7 +104,7 @@ class RateLimitConfig:
         ``path=requests/window`` entries, e.g.:
             ``/api/scans=10/60;/api/scans/bulk/delete=5/60``
         """
-        overrides: Dict[str, tuple] = {}
+        overrides: dict[str, tuple] = {}
         env_overrides = os.environ.get("SF_API_RATE_LIMIT_ENDPOINTS", "")
         if env_overrides:
             for entry in env_overrides.split(";"):
@@ -131,8 +131,8 @@ class RateLimitConfig:
 # -----------------------------------------------------------------------
 
 def extract_client_identity(
-    scope: Dict[str, Any],
-    headers: Dict[str, str],
+    scope: dict[str, Any],
+    headers: dict[str, str],
     *,
     trust_forwarded: bool = True,
 ) -> str:
@@ -199,8 +199,8 @@ class RateLimitStats:
     total_requests: int = 0
     total_allowed: int = 0
     total_rejected: int = 0
-    rejections_by_tier: Dict[str, int] = field(default_factory=dict)
-    rejections_by_client: Dict[str, int] = field(default_factory=dict)
+    rejections_by_tier: dict[str, int] = field(default_factory=dict)
+    rejections_by_client: dict[str, int] = field(default_factory=dict)
     _start_time: float = field(default_factory=time.monotonic)
 
     @property
@@ -227,7 +227,7 @@ class RateLimitStats:
                 self.rejections_by_client.get(client, 0) + 1
             )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "total_requests": self.total_requests,
             "total_allowed": self.total_allowed,
@@ -251,15 +251,15 @@ class RateLimitStats:
 
 _stats = RateLimitStats()
 _limiter = None
-_config: Optional[RateLimitConfig] = None
+_config: RateLimitConfig | None = None
 
 
-def get_rate_limit_stats() -> Dict[str, Any]:
+def get_rate_limit_stats() -> dict[str, Any]:
     """Return current rate-limiting statistics (for health endpoint)."""
     return _stats.to_dict()
 
 
-def get_rate_limit_config() -> Dict[str, Any]:
+def get_rate_limit_config() -> dict[str, Any]:
     """Return the current rate limit configuration including per-endpoint overrides."""
     if _config is None:
         return {"enabled": False, "tiers": {}, "endpoint_overrides": {}}
@@ -354,7 +354,7 @@ if HAS_STARLETTE:
             self,
             app,
             *,
-            rate_config: Optional[RateLimitConfig] = None,
+            rate_config: RateLimitConfig | None = None,
         ):
             super().__init__(app)
             self._config = rate_config or RateLimitConfig()
@@ -490,7 +490,7 @@ if HAS_STARLETTE:
 
 def install_rate_limiting(
     app,
-    config: Optional[Dict[str, Any]] = None,
+    config: dict[str, Any] | None = None,
 ) -> bool:
     """Install rate-limiting middleware on a FastAPI/Starlette app.
 

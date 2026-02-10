@@ -91,7 +91,7 @@ class GrpcDataService(DataService):
     # Helpers
     # ------------------------------------------------------------------
 
-    def _scan_record_to_dict(self, record) -> Dict[str, Any]:
+    def _scan_record_to_dict(self, record) -> dict[str, Any]:
         """Convert a ScanRecord protobuf message to a dict."""
         return {
             "id": record.scan_id,
@@ -103,7 +103,7 @@ class GrpcDataService(DataService):
             "ended": record.finished_at.seconds if record.HasField("finished_at") else 0,
         }
 
-    def _event_record_to_dict(self, record) -> Dict[str, Any]:
+    def _event_record_to_dict(self, record) -> dict[str, Any]:
         """Convert an EventRecord protobuf message to a dict."""
         return {
             "hash": record.event_hash,
@@ -117,7 +117,7 @@ class GrpcDataService(DataService):
             "risk": 0,
         }
 
-    def _log_record_to_dict(self, record) -> Dict[str, Any]:
+    def _log_record_to_dict(self, record) -> dict[str, Any]:
         """Convert a LogRecord protobuf message to a dict."""
         return {
             "component": record.component,
@@ -146,7 +146,7 @@ class GrpcDataService(DataService):
             log.error("gRPC CreateScan failed: %s", e)
             return False
 
-    def scan_instance_get(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def scan_instance_get(self, scan_id: str) -> Optional[dict[str, Any]]:
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -157,7 +157,7 @@ class GrpcDataService(DataService):
             log.error("gRPC GetScan failed for %s: %s", scan_id, e)
             return None
 
-    def scan_instance_list(self) -> List[Dict[str, Any]]:
+    def scan_instance_list(self) -> list[dict[str, Any]]:
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -238,7 +238,7 @@ class GrpcDataService(DataService):
         scan_id: str,
         event_type: Optional[str] = None,
         limit: int = 0,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -257,7 +257,7 @@ class GrpcDataService(DataService):
         self,
         scan_id: str,
         event_type: str,
-    ) -> List[str]:
+    ) -> list[str]:
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -315,7 +315,7 @@ class GrpcDataService(DataService):
         limit: int = 0,
         offset: int = 0,
         log_type: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -336,7 +336,7 @@ class GrpcDataService(DataService):
     # ------------------------------------------------------------------
 
     def config_set(
-        self, config_data: Dict[str, str], scope: str = "GLOBAL"
+        self, config_data: dict[str, str], scope: str = "GLOBAL"
     ) -> bool:
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
@@ -352,7 +352,7 @@ class GrpcDataService(DataService):
             log.error("gRPC SetConfig failed: %s", e)
             return False
 
-    def config_get(self, scope: str = "GLOBAL") -> Dict[str, str]:
+    def config_get(self, scope: str = "GLOBAL") -> dict[str, str]:
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -364,7 +364,7 @@ class GrpcDataService(DataService):
             return {}
 
     def scan_config_set(
-        self, scan_id: str, config_data: Dict[str, str]
+        self, scan_id: str, config_data: dict[str, str]
     ) -> bool:
         # Reuse SetConfig — proto doesn't distinguish per-scan config
         return self.config_set(config_data, scope=scan_id)
@@ -383,7 +383,7 @@ class GrpcDataService(DataService):
         rule_risk: str,
         rule_descr: str,
         rule_logic: str,
-        event_hashes: List[str],
+        event_hashes: list[str],
     ) -> bool:
         # No correlation RPC in proto yet — log warning
         log.warning(
@@ -396,7 +396,7 @@ class GrpcDataService(DataService):
 
     def correlation_get_by_scan(
         self, scan_id: str
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         log.warning("gRPC correlation_get_by_scan not yet supported by proto")
         return []
 
@@ -404,11 +404,11 @@ class GrpcDataService(DataService):
     # Aggregate / Summary Operations
     # ------------------------------------------------------------------
 
-    def scan_result_summary(self, scan_id: str) -> Dict[str, int]:
+    def scan_result_summary(self, scan_id: str) -> dict[str, int]:
         # Derive from events — no dedicated RPC
         try:
             events = self.event_get_by_scan(scan_id)
-            summary: Dict[str, int] = {}
+            summary: dict[str, int] = {}
             for e in events:
                 et = e.get("type", "UNKNOWN")
                 summary[et] = summary.get(et, 0) + 1
@@ -417,7 +417,7 @@ class GrpcDataService(DataService):
             log.error("gRPC scan_result_summary failed: %s", e)
             return {}
 
-    def event_types_list(self) -> List[Dict[str, str]]:
+    def event_types_list(self) -> list[dict[str, str]]:
         # No dedicated RPC — return empty
         log.debug("gRPC event_types_list: no dedicated RPC available")
         return []

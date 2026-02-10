@@ -33,7 +33,9 @@ from spiderfoot.constants import DEFAULT_OLLAMA_BASE_URL, DEFAULT_OPENAI_BASE_UR
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+from collections.abc import Sequence
 
 log = logging.getLogger("spiderfoot.rag")
 
@@ -75,7 +77,7 @@ class RAGConfig:
     context_template: str = "osint_correlation"
 
     @classmethod
-    def from_env(cls, env: Optional[Dict[str, str]] = None) -> "RAGConfig":
+    def from_env(cls, env: dict[str, str] | None = None) -> RAGConfig:
         import os
         e = env or os.environ
         return cls(
@@ -102,11 +104,11 @@ class RetrievedChunk:
     id: str
     text: str
     score: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    rerank_score: Optional[float] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    rerank_score: float | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
             "id": self.id, "text": self.text,
             "score": round(self.score, 4),
             "metadata": self.metadata,
@@ -121,12 +123,12 @@ class RAGContext:
     """Assembled context for LLM generation."""
 
     query: str
-    chunks: List[RetrievedChunk] = field(default_factory=list)
+    chunks: list[RetrievedChunk] = field(default_factory=list)
     system_prompt: str = ""
     user_prompt: str = ""
     token_estimate: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "query": self.query,
             "num_chunks": len(self.chunks),
@@ -140,11 +142,11 @@ class RAGResponse:
 
     query: str
     answer: str
-    chunks: List[RetrievedChunk] = field(default_factory=list)
+    chunks: list[RetrievedChunk] = field(default_factory=list)
     model: str = ""
-    metrics: Dict[str, float] = field(default_factory=dict)
+    metrics: dict[str, float] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "query": self.query,
             "answer": self.answer,
@@ -166,7 +168,7 @@ class PipelineMetrics:
     chunks_retrieved: int = 0
     chunks_reranked: int = 0
 
-    def to_dict(self) -> Dict[str, float]:
+    def to_dict(self) -> dict[str, float]:
         return {
             "retrieval_ms": round(self.retrieval_ms, 2),
             "rerank_ms": round(self.rerank_ms, 2),
@@ -186,7 +188,7 @@ class LLMBackend(ABC):
     @abstractmethod
     def generate(self, system: str, user: str,
                  temperature: float = 0.1,
-                 max_tokens: int = 2048) -> Tuple[str, Dict[str, Any]]:
+                 max_tokens: int = 2048) -> tuple[str, dict[str, Any]]:
         """Returns (text, metadata)."""
         ...
 
@@ -200,7 +202,7 @@ class MockLLMBackend(LLMBackend):
 
     def generate(self, system: str, user: str,
                  temperature: float = 0.1,
-                 max_tokens: int = 2048) -> Tuple[str, Dict[str, Any]]:
+                 max_tokens: int = 2048) -> tuple[str, dict[str, Any]]:
         # Extract evidence count from user prompt for realistic output
         chunks_mentioned = user.count("[Evidence")
         answer = (
@@ -239,7 +241,7 @@ class OpenAILLMBackend(LLMBackend):
 
     def generate(self, system: str, user: str,
                  temperature: float = 0.1,
-                 max_tokens: int = 2048) -> Tuple[str, Dict[str, Any]]:
+                 max_tokens: int = 2048) -> tuple[str, dict[str, Any]]:
         import urllib.request
         url = f"{self._api_base}/chat/completions"
         body = json.dumps({
@@ -288,7 +290,7 @@ class OllamaLLMBackend(LLMBackend):
 
     def generate(self, system: str, user: str,
                  temperature: float = 0.1,
-                 max_tokens: int = 2048) -> Tuple[str, Dict[str, Any]]:
+                 max_tokens: int = 2048) -> tuple[str, dict[str, Any]]:
         import urllib.request
         url = f"{self._api_base}/api/chat"
         body = json.dumps({
@@ -328,7 +330,7 @@ class OllamaLLMBackend(LLMBackend):
 # Prompt templates
 # ---------------------------------------------------------------------------
 
-PROMPT_TEMPLATES: Dict[str, Dict[str, str]] = {
+PROMPT_TEMPLATES: dict[str, dict[str, str]] = {
     "osint_correlation": {
         "system": (
             "You are an expert OSINT analyst. Your task is to analyze "
@@ -386,7 +388,7 @@ PROMPT_TEMPLATES: Dict[str, Dict[str, str]] = {
 }
 
 
-def _format_evidence(chunks: List[RetrievedChunk]) -> str:
+def _format_evidence(chunks: list[RetrievedChunk]) -> str:
     """Format retrieved chunks as evidence text."""
     parts = []
     for i, c in enumerate(chunks, 1):
@@ -415,15 +417,15 @@ class Retriever(ABC):
     @abstractmethod
     def retrieve(self, query: str, top_k: int = 20,
                  score_threshold: float = 0.3,
-                 filter_metadata: Optional[Dict[str, Any]] = None
-                 ) -> List[RetrievedChunk]:
+                 filter_metadata: dict[str, Any] | None = None
+                 ) -> list[RetrievedChunk]:
         ...
 
 
 class MockRetriever(Retriever):
     """Mock retriever with pre-loaded chunks for testing."""
 
-    def __init__(self, chunks: Optional[List[RetrievedChunk]] = None) -> None:
+    def __init__(self, chunks: list[RetrievedChunk] | None = None) -> None:
         self._chunks = chunks or []
 
     def add_chunk(self, chunk: RetrievedChunk) -> None:
@@ -431,8 +433,8 @@ class MockRetriever(Retriever):
 
     def retrieve(self, query: str, top_k: int = 20,
                  score_threshold: float = 0.3,
-                 filter_metadata: Optional[Dict[str, Any]] = None
-                 ) -> List[RetrievedChunk]:
+                 filter_metadata: dict[str, Any] | None = None
+                 ) -> list[RetrievedChunk]:
         result = []
         for c in self._chunks:
             if filter_metadata:
@@ -451,24 +453,24 @@ class Reranker(ABC):
     """Abstract reranker for retrieved chunks."""
 
     @abstractmethod
-    def rerank(self, query: str, chunks: List[RetrievedChunk],
-               top_k: int = 5) -> List[RetrievedChunk]:
+    def rerank(self, query: str, chunks: list[RetrievedChunk],
+               top_k: int = 5) -> list[RetrievedChunk]:
         ...
 
 
 class PassthroughReranker(Reranker):
     """No-op reranker that just truncates to top_k."""
 
-    def rerank(self, query: str, chunks: List[RetrievedChunk],
-               top_k: int = 5) -> List[RetrievedChunk]:
+    def rerank(self, query: str, chunks: list[RetrievedChunk],
+               top_k: int = 5) -> list[RetrievedChunk]:
         return chunks[:top_k]
 
 
 class MockReranker(Reranker):
     """Mock cross-encoder reranker for testing."""
 
-    def rerank(self, query: str, chunks: List[RetrievedChunk],
-               top_k: int = 5) -> List[RetrievedChunk]:
+    def rerank(self, query: str, chunks: list[RetrievedChunk],
+               top_k: int = 5) -> list[RetrievedChunk]:
         # Simulate reranking by boosting chunks whose text contains query words
         query_words = set(query.lower().split())
         scored = []
@@ -500,10 +502,10 @@ class RAGPipeline:
 
     def __init__(
         self,
-        config: Optional[RAGConfig] = None,
-        retriever: Optional[Retriever] = None,
-        reranker: Optional[Reranker] = None,
-        llm: Optional[LLMBackend] = None,
+        config: RAGConfig | None = None,
+        retriever: Retriever | None = None,
+        reranker: Reranker | None = None,
+        llm: LLMBackend | None = None,
     ) -> None:
         self._config = config or RAGConfig()
         self._retriever = retriever or MockRetriever()
@@ -530,8 +532,8 @@ class RAGPipeline:
             return MockLLMBackend()
 
     def query(self, query: str,
-              filter_metadata: Optional[Dict[str, Any]] = None,
-              template: Optional[str] = None) -> RAGResponse:
+              filter_metadata: dict[str, Any] | None = None,
+              template: str | None = None) -> RAGResponse:
         """Execute the full RAG pipeline."""
         metrics = PipelineMetrics()
         total_start = time.time()
@@ -583,8 +585,8 @@ class RAGPipeline:
         )
 
     def _build_context(self, query: str,
-                       chunks: List[RetrievedChunk],
-                       template: Optional[str] = None) -> RAGContext:
+                       chunks: list[RetrievedChunk],
+                       template: str | None = None) -> RAGContext:
         """Build the prompt context from retrieved chunks."""
         tmpl_name = template or self._config.context_template
         tmpl = PROMPT_TEMPLATES.get(tmpl_name, PROMPT_TEMPLATES["osint_correlation"])

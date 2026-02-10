@@ -51,7 +51,7 @@ class ModuleHealth:
     last_error_time: float = 0.0
     last_error_type: str = ""
     start_time: float = field(default_factory=time.monotonic)
-    error_types: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
+    error_types: dict[str, int] = field(default_factory=lambda: defaultdict(int))
 
     @property
     def avg_duration(self) -> float:
@@ -120,7 +120,7 @@ class ModuleHealth:
             return HealthStatus.DEGRADED
         return HealthStatus.UNHEALTHY
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "module_name": self.module_name,
             "status": self.status.value,
@@ -149,10 +149,10 @@ class ModuleHealthMonitor:
         stall_threshold : float
             Seconds of inactivity before marking a module as stalled.
         """
-        self._modules: Dict[str, ModuleHealth] = {}
+        self._modules: dict[str, ModuleHealth] = {}
         self._lock = threading.Lock()
         self._stall_threshold = stall_threshold
-        self._callbacks: List = []
+        self._callbacks: list = []
 
     def register_module(self, module_name: str) -> None:
         """Register a module for health tracking."""
@@ -188,12 +188,12 @@ class ModuleHealthMonitor:
         # Fire callbacks if threshold breached
         self._check_alerts(module_name)
 
-    def get_health(self, module_name: str) -> Optional[ModuleHealth]:
+    def get_health(self, module_name: str) -> ModuleHealth | None:
         """Get health for a specific module."""
         with self._lock:
             return self._modules.get(module_name)
 
-    def get_report(self) -> Dict[str, Any]:
+    def get_report(self) -> dict[str, Any]:
         """Get a full health report for all modules."""
         with self._lock:
             modules = {
@@ -218,7 +218,7 @@ class ModuleHealthMonitor:
             "modules": modules,
         }
 
-    def get_stalled_modules(self) -> List[str]:
+    def get_stalled_modules(self) -> list[str]:
         """Get list of modules that appear stalled."""
         with self._lock:
             return [
@@ -226,7 +226,7 @@ class ModuleHealthMonitor:
                 if h.status == HealthStatus.STALLED
             ]
 
-    def get_unhealthy_modules(self) -> List[str]:
+    def get_unhealthy_modules(self) -> list[str]:
         """Get list of unhealthy modules."""
         with self._lock:
             return [
@@ -267,7 +267,7 @@ class ModuleHealthMonitor:
 
 
 # Singleton
-_monitor: Optional[ModuleHealthMonitor] = None
+_monitor: ModuleHealthMonitor | None = None
 
 
 def get_health_monitor() -> ModuleHealthMonitor:

@@ -96,7 +96,7 @@ class HttpDataService(DataService):
         """Build full URL from a relative API path."""
         return f"{self._base_url}/{path.lstrip('/')}"
 
-    def _get(self, path: str, params: Optional[Dict] = None) -> Any:
+    def _get(self, path: str, params: Optional[dict] = None) -> Any:
         """HTTP GET returning parsed JSON."""
         session = self._get_session()
         resp = session.get(
@@ -105,7 +105,7 @@ class HttpDataService(DataService):
         resp.raise_for_status()
         return resp.json()
 
-    def _post(self, path: str, json_data: Optional[Dict] = None) -> Any:
+    def _post(self, path: str, json_data: Optional[dict] = None) -> Any:
         """HTTP POST returning parsed JSON."""
         session = self._get_session()
         resp = session.post(
@@ -114,7 +114,7 @@ class HttpDataService(DataService):
         resp.raise_for_status()
         return resp.json()
 
-    def _put(self, path: str, json_data: Optional[Dict] = None) -> Any:
+    def _put(self, path: str, json_data: Optional[dict] = None) -> Any:
         """HTTP PUT returning parsed JSON."""
         session = self._get_session()
         resp = session.put(
@@ -123,7 +123,7 @@ class HttpDataService(DataService):
         resp.raise_for_status()
         return resp.json()
 
-    def _patch(self, path: str, json_data: Optional[Dict] = None) -> Any:
+    def _patch(self, path: str, json_data: Optional[dict] = None) -> Any:
         """HTTP PATCH returning parsed JSON."""
         session = self._get_session()
         resp = session.patch(
@@ -162,7 +162,7 @@ class HttpDataService(DataService):
             log.error("Failed to create scan via HTTP: %s", e)
             return False
 
-    def scan_instance_get(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def scan_instance_get(self, scan_id: str) -> Optional[dict[str, Any]]:
         try:
             data = self._get(f"/scans/{scan_id}")
             return data.get("scan") or data
@@ -170,7 +170,7 @@ class HttpDataService(DataService):
             log.error("Failed to get scan %s via HTTP: %s", scan_id, e)
             return None
 
-    def scan_instance_list(self) -> List[Dict[str, Any]]:
+    def scan_instance_list(self) -> list[dict[str, Any]]:
         try:
             data = self._get("/scans")
             return data.get("scans", data) if isinstance(data, dict) else data
@@ -247,9 +247,9 @@ class HttpDataService(DataService):
         scan_id: str,
         event_type: Optional[str] = None,
         limit: int = 0,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         try:
-            params: Dict[str, Any] = {}
+            params: dict[str, Any] = {}
             if event_type:
                 params["event_type"] = event_type
             if limit > 0:
@@ -264,7 +264,7 @@ class HttpDataService(DataService):
         self,
         scan_id: str,
         event_type: str,
-    ) -> List[str]:
+    ) -> list[str]:
         try:
             data = self._get(
                 f"/scans/{scan_id}/events/unique",
@@ -321,9 +321,9 @@ class HttpDataService(DataService):
         limit: int = 0,
         offset: int = 0,
         log_type: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         try:
-            params: Dict[str, Any] = {}
+            params: dict[str, Any] = {}
             if limit > 0:
                 params["limit"] = limit
             if offset > 0:
@@ -341,7 +341,7 @@ class HttpDataService(DataService):
     # ------------------------------------------------------------------
 
     def config_set(
-        self, config_data: Dict[str, str], scope: str = "GLOBAL"
+        self, config_data: dict[str, str], scope: str = "GLOBAL"
     ) -> bool:
         try:
             self._post(
@@ -353,7 +353,7 @@ class HttpDataService(DataService):
             log.error("Failed to set config via HTTP: %s", e)
             return False
 
-    def config_get(self, scope: str = "GLOBAL") -> Dict[str, str]:
+    def config_get(self, scope: str = "GLOBAL") -> dict[str, str]:
         try:
             data = self._get("/config", params={"scope": scope})
             return data.get("config", data) if isinstance(data, dict) else data
@@ -362,7 +362,7 @@ class HttpDataService(DataService):
             return {}
 
     def scan_config_set(
-        self, scan_id: str, config_data: Dict[str, str]
+        self, scan_id: str, config_data: dict[str, str]
     ) -> bool:
         try:
             self._post(
@@ -388,7 +388,7 @@ class HttpDataService(DataService):
         rule_risk: str,
         rule_descr: str,
         rule_logic: str,
-        event_hashes: List[str],
+        event_hashes: list[str],
     ) -> bool:
         try:
             self._post(
@@ -411,7 +411,7 @@ class HttpDataService(DataService):
 
     def correlation_get_by_scan(
         self, scan_id: str
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         try:
             data = self._get(f"/scans/{scan_id}/correlations")
             return data.get("correlations", data) if isinstance(data, dict) else data
@@ -423,7 +423,7 @@ class HttpDataService(DataService):
     # Aggregate / Summary Operations
     # ------------------------------------------------------------------
 
-    def scan_result_summary(self, scan_id: str) -> Dict[str, int]:
+    def scan_result_summary(self, scan_id: str) -> dict[str, int]:
         try:
             data = self._get(f"/scans/{scan_id}/summary")
             return data.get("summary", data) if isinstance(data, dict) else data
@@ -431,7 +431,7 @@ class HttpDataService(DataService):
             log.error("Failed to get scan summary via HTTP: %s", e)
             return {}
 
-    def event_types_list(self) -> List[Dict[str, str]]:
+    def event_types_list(self) -> list[dict[str, str]]:
         try:
             data = self._get("/data/entity-types")
             return data.get("entity_types", data) if isinstance(data, dict) else data

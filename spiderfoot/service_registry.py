@@ -49,8 +49,8 @@ class ServiceRegistry:
     """
 
     def __init__(self):
-        self._services: Dict[str, Any] = {}
-        self._factories: Dict[str, Callable[[], Any]] = {}
+        self._services: dict[str, Any] = {}
+        self._factories: dict[str, Callable[[], Any]] = {}
         self._lock = threading.RLock()
         self._initialized = False
         self.log = logging.getLogger("spiderfoot.registry")
@@ -156,7 +156,7 @@ class ServiceRegistry:
                 self.log.debug("Unregistered service: %s", name)
             return service
 
-    def list_services(self) -> List[str]:
+    def list_services(self) -> list[str]:
         """List all registered service names.
 
         Returns:
@@ -174,7 +174,7 @@ class ServiceRegistry:
             self._factories.clear()
             self.log.debug("Registry cleared")
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get registry statistics."""
         with self._lock:
             return {
@@ -217,7 +217,7 @@ def reset_registry() -> None:
         _global_registry = None
 
 
-def initialize_services(sf_config: Dict[str, Any]) -> ServiceRegistry:
+def initialize_services(sf_config: dict[str, Any]) -> ServiceRegistry:
     """Initialize all services from SpiderFoot configuration.
 
     Creates and registers all core services based on the provided

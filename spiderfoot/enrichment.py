@@ -32,11 +32,11 @@ class EnrichmentContext:
     data: str
     module: str = ""
     scan_id: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    enrichments: Dict[str, Any] = field(default_factory=dict)
-    tags: Set[str] = field(default_factory=set)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    enrichments: dict[str, Any] = field(default_factory=dict)
+    tags: set[str] = field(default_factory=set)
     skip_remaining: bool = False  # If True, stop pipeline early
-    _timings: Dict[str, float] = field(default_factory=dict)
+    _timings: dict[str, float] = field(default_factory=dict)
 
     def add_enrichment(self, key: str, value: Any) -> None:
         """Add an enrichment result."""
@@ -72,7 +72,7 @@ class Enricher(ABC):
         self,
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
-        event_types: Optional[Set[str]] = None,
+        event_types: Optional[set[str]] = None,
     ):
         self.name = name or self.__class__.__name__
         self.priority = priority
@@ -124,7 +124,7 @@ class FunctionEnricher(Enricher):
         func: Callable[[EnrichmentContext], EnrichmentContext],
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
-        event_types: Optional[Set[str]] = None,
+        event_types: Optional[set[str]] = None,
     ):
         super().__init__(name=name or func.__name__, priority=priority, event_types=event_types)
         self._func = func
@@ -156,11 +156,11 @@ class EnrichmentPipeline:
 
     def __init__(self, name: str = "default"):
         self.name = name
-        self._enrichers: List[Enricher] = []
+        self._enrichers: list[Enricher] = []
         self._lock = threading.Lock()
         self._total_processed = 0
         self._total_errors = 0
-        self._error_handlers: List[Callable] = []
+        self._error_handlers: list[Callable] = []
 
     def add(
         self,
@@ -180,7 +180,7 @@ class EnrichmentPipeline:
         func: Callable[[EnrichmentContext], EnrichmentContext],
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
-        event_types: Optional[Set[str]] = None,
+        event_types: Optional[set[str]] = None,
     ) -> "EnrichmentPipeline":
         """Add a function as an enricher (chainable)."""
         return self.add(FunctionEnricher(func, name, priority, event_types))
@@ -189,7 +189,7 @@ class EnrichmentPipeline:
         self,
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
-        event_types: Optional[Set[str]] = None,
+        event_types: Optional[set[str]] = None,
     ):
         """Decorator to register a function as an enricher."""
         def decorator(func):
@@ -236,8 +236,8 @@ class EnrichmentPipeline:
         return ctx
 
     def process_batch(
-        self, contexts: List[EnrichmentContext]
-    ) -> List[EnrichmentContext]:
+        self, contexts: list[EnrichmentContext]
+    ) -> list[EnrichmentContext]:
         """Process multiple events through the pipeline."""
         return [self.process(ctx) for ctx in contexts]
 
@@ -273,11 +273,11 @@ class EnrichmentPipeline:
                 "enrichers": [e.stats for e in self._enrichers],
             }
 
-    def get_enricher_names(self) -> List[str]:
+    def get_enricher_names(self) -> list[str]:
         with self._lock:
             return [e.name for e in self._enrichers]
 
-    def list_enrichers(self) -> List[dict]:
+    def list_enrichers(self) -> list[dict]:
         """List all enrichers with their configuration."""
         with self._lock:
             return [

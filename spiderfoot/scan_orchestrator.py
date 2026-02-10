@@ -48,7 +48,7 @@ class PhaseResult:
     events_produced: int = 0
     modules_run: int = 0
     errors: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -58,7 +58,7 @@ class ModuleSchedule:
     phase: ScanPhase
     priority: int = 0
     timeout_seconds: Optional[float] = None
-    depends_on: Set[str] = field(default_factory=set)
+    depends_on: set[str] = field(default_factory=set)
 
 
 class ScanOrchestrator:
@@ -89,20 +89,20 @@ class ScanOrchestrator:
         self._lock = threading.Lock()
 
         # Module scheduling
-        self._modules: Dict[str, ModuleSchedule] = {}
-        self._phase_modules: Dict[ScanPhase, List[str]] = defaultdict(list)
-        self._completed_modules: Set[str] = set()
-        self._failed_modules: Set[str] = set()
-        self._running_modules: Set[str] = set()
+        self._modules: dict[str, ModuleSchedule] = {}
+        self._phase_modules: dict[ScanPhase, list[str]] = defaultdict(list)
+        self._completed_modules: set[str] = set()
+        self._failed_modules: set[str] = set()
+        self._running_modules: set[str] = set()
 
         # Tracking
-        self._phase_results: List[PhaseResult] = []
+        self._phase_results: list[PhaseResult] = []
         self._total_events = 0
         self._total_errors = 0
 
         # Callbacks
-        self._phase_callbacks: List[Callable[[ScanPhase, ScanPhase], None]] = []
-        self._completion_callbacks: List[Callable[["ScanOrchestrator"], None]] = []
+        self._phase_callbacks: list[Callable[[ScanPhase, ScanPhase], None]] = []
+        self._completion_callbacks: list[Callable[["ScanOrchestrator"], None]] = []
 
     def register_module(
         self,
@@ -110,7 +110,7 @@ class ScanOrchestrator:
         phase: ScanPhase,
         priority: int = 0,
         timeout_seconds: Optional[float] = None,
-        depends_on: Optional[Set[str]] = None,
+        depends_on: Optional[set[str]] = None,
     ) -> "ScanOrchestrator":
         """Register a module to run in a specific phase."""
         schedule = ModuleSchedule(
@@ -248,7 +248,7 @@ class ScanOrchestrator:
     def total_errors(self) -> int:
         return self._total_errors
 
-    def get_phase_modules(self, phase: ScanPhase) -> List[str]:
+    def get_phase_modules(self, phase: ScanPhase) -> list[str]:
         """Get modules scheduled for a phase, sorted by priority."""
         modules = self._phase_modules.get(phase, [])
         return sorted(
@@ -256,7 +256,7 @@ class ScanOrchestrator:
             key=lambda m: -(self._modules[m].priority if m in self._modules else 0),
         )
 
-    def get_pending_modules(self) -> List[str]:
+    def get_pending_modules(self) -> list[str]:
         all_done = self._completed_modules | self._failed_modules
         return [m for m in self._modules if m not in all_done]
 
@@ -278,7 +278,7 @@ class ScanOrchestrator:
             return False
         return schedule.depends_on.issubset(self._completed_modules)
 
-    def get_phase_results(self) -> List[PhaseResult]:
+    def get_phase_results(self) -> list[PhaseResult]:
         return list(self._phase_results)
 
     def summary(self) -> dict:

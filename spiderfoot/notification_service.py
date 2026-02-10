@@ -68,7 +68,7 @@ log = logging.getLogger("spiderfoot.notification_service")
 class Notification:
     """A notification to be sent."""
     topic: str
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     title: str = ""
     message: str = ""
     severity: str = "info"  # info, warning, error, critical
@@ -212,7 +212,7 @@ class WebhookChannel(NotificationChannel):
     def __init__(self, url: str, *,
                  channel_id: str = "",
                  name: str = "Webhook",
-                 headers: Optional[Dict[str, str]] = None,
+                 headers: Optional[dict[str, str]] = None,
                  method: str = "POST",
                  enabled: bool = True):
         super().__init__(channel_id=channel_id or "webhook-default",
@@ -267,7 +267,7 @@ class EmailChannel(NotificationChannel):
 
     def __init__(self, smtp_host: str, smtp_port: int = 587, *,
                  username: str = "", password: str = "",
-                 from_addr: str = "", to_addrs: Optional[List[str]] = None,
+                 from_addr: str = "", to_addrs: Optional[list[str]] = None,
                  use_tls: bool = True,
                  channel_id: str = "",
                  name: str = "Email",
@@ -395,8 +395,8 @@ class NotificationService:
 
     def __init__(self, *, async_dispatch: bool = True,
                  max_queue_size: int = 1000):
-        self._channels: Dict[str, NotificationChannel] = {}
-        self._subscriptions: Dict[str, Set[str]] = {}  # topic → channel_ids
+        self._channels: dict[str, NotificationChannel] = {}
+        self._subscriptions: dict[str, set[str]] = {}  # topic → channel_ids
         self._lock = threading.Lock()
         self._async = async_dispatch
         self._queue: queue.Queue = queue.Queue(maxsize=max_queue_size)
@@ -431,7 +431,7 @@ class NotificationService:
                     ) -> Optional[NotificationChannel]:
         return self._channels.get(channel_id)
 
-    def list_channels(self) -> List[dict]:
+    def list_channels(self) -> list[dict]:
         return [ch.to_dict() for ch in self._channels.values()]
 
     # ------------------------------------------------------------------
@@ -459,7 +459,7 @@ class NotificationService:
                 return True
         return False
 
-    def list_subscriptions(self) -> Dict[str, List[str]]:
+    def list_subscriptions(self) -> dict[str, list[str]]:
         with self._lock:
             return {
                 topic: sorted(channels)
@@ -470,7 +470,7 @@ class NotificationService:
     # Notify
     # ------------------------------------------------------------------
 
-    def notify(self, topic: str, data: Optional[Dict[str, Any]] = None,
+    def notify(self, topic: str, data: Optional[dict[str, Any]] = None,
                *, title: str = "", message: str = "",
                severity: str = "info") -> int:
         """Send a notification to all channels subscribed to this topic.
@@ -503,7 +503,7 @@ class NotificationService:
 
         return len(target_channels)
 
-    def _resolve_channels(self, topic: str) -> Set[str]:
+    def _resolve_channels(self, topic: str) -> set[str]:
         """Find channels subscribed to this topic (with wildcard)."""
         matched = set()
         with self._lock:
@@ -530,7 +530,7 @@ class NotificationService:
             return topic.startswith(prefix + ".") or topic == prefix
         return False
 
-    def _dispatch_sync(self, channel_ids: Set[str],
+    def _dispatch_sync(self, channel_ids: set[str],
                        notification: Notification) -> None:
         for ch_id in channel_ids:
             channel = self._channels.get(ch_id)

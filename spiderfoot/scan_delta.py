@@ -97,32 +97,32 @@ class ScanDeltaAnalyzer:
     def __init__(
         self,
         risk_threshold: int = 0,
-        ignore_types: Optional[Set[str]] = None,
+        ignore_types: Optional[set[str]] = None,
         track_modules: bool = True,
     ):
         self.risk_threshold = risk_threshold
         self.ignore_types = ignore_types or set()
         self.track_modules = track_modules
-        self._history: List[TrendPoint] = []
+        self._history: list[TrendPoint] = []
 
     def analyze(
         self,
-        baseline: List[Finding],
-        current: List[Finding],
+        baseline: list[Finding],
+        current: list[Finding],
     ) -> "DeltaResult":
         """Analyze delta between baseline and current findings."""
         # Build fingerprint maps
-        base_map: Dict[str, Finding] = {}
+        base_map: dict[str, Finding] = {}
         for f in baseline:
             if f.event_type not in self.ignore_types:
                 base_map[f.fingerprint] = f
 
-        curr_map: Dict[str, Finding] = {}
+        curr_map: dict[str, Finding] = {}
         for f in current:
             if f.event_type not in self.ignore_types:
                 curr_map[f.fingerprint] = f
 
-        deltas: List[Delta] = []
+        deltas: list[Delta] = []
 
         # Check current against baseline
         for fp, curr_f in curr_map.items():
@@ -171,8 +171,8 @@ class ScanDeltaAnalyzer:
 
     def analyze_series(
         self,
-        scans: List[Tuple[str, List[Finding]]],
-    ) -> List["DeltaResult"]:
+        scans: list[tuple[str, list[Finding]]],
+    ) -> list["DeltaResult"]:
         """Analyze a series of scans for trend detection.
 
         Args:
@@ -199,7 +199,7 @@ class ScanDeltaAnalyzer:
 
         return results
 
-    def get_trend(self) -> List[dict]:
+    def get_trend(self) -> list[dict]:
         """Get recorded trend history."""
         return [
             {
@@ -218,34 +218,34 @@ class DeltaResult:
 
     def __init__(
         self,
-        deltas: List[Delta],
-        baseline: List[Finding],
-        current: List[Finding],
+        deltas: list[Delta],
+        baseline: list[Finding],
+        current: list[Finding],
     ):
         self._deltas = deltas
         self._baseline = baseline
         self._current = current
 
     @property
-    def deltas(self) -> List[Delta]:
+    def deltas(self) -> list[Delta]:
         return list(self._deltas)
 
-    def new_findings(self) -> List[Delta]:
+    def new_findings(self) -> list[Delta]:
         return [d for d in self._deltas if d.kind == DeltaKind.NEW_FINDING]
 
-    def resolved(self) -> List[Delta]:
+    def resolved(self) -> list[Delta]:
         return [d for d in self._deltas if d.kind == DeltaKind.RESOLVED]
 
-    def risk_increased(self) -> List[Delta]:
+    def risk_increased(self) -> list[Delta]:
         return [d for d in self._deltas if d.kind == DeltaKind.RISK_INCREASED]
 
-    def risk_decreased(self) -> List[Delta]:
+    def risk_decreased(self) -> list[Delta]:
         return [d for d in self._deltas if d.kind == DeltaKind.RISK_DECREASED]
 
-    def stable(self) -> List[Delta]:
+    def stable(self) -> list[Delta]:
         return [d for d in self._deltas if d.kind == DeltaKind.STABLE]
 
-    def new_risks(self, min_risk: int = 1) -> List[Delta]:
+    def new_risks(self, min_risk: int = 1) -> list[Delta]:
         """Get new findings with risk >= min_risk."""
         return [
             d for d in self._deltas
@@ -253,7 +253,7 @@ class DeltaResult:
             and d.finding.risk >= min_risk
         ]
 
-    def resolved_risks(self, min_risk: int = 1) -> List[Delta]:
+    def resolved_risks(self, min_risk: int = 1) -> list[Delta]:
         """Get resolved findings that had risk >= min_risk."""
         return [
             d for d in self._deltas
@@ -261,7 +261,7 @@ class DeltaResult:
             and d.finding.risk >= min_risk
         ]
 
-    def by_type(self, event_type: str) -> List[Delta]:
+    def by_type(self, event_type: str) -> list[Delta]:
         return [d for d in self._deltas if d.finding.event_type == event_type]
 
     @property

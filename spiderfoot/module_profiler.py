@@ -43,7 +43,7 @@ class MethodProfile:
     total_time: float = 0.0
     min_time: float = float("inf")
     max_time: float = 0.0
-    _samples: List[float] = field(default_factory=list)
+    _samples: list[float] = field(default_factory=list)
     _max_samples: int = 10000
 
     def record(self, duration: float) -> None:
@@ -101,7 +101,7 @@ class MethodProfile:
             return 0.0
         return statistics.stdev(self._samples)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "method": self.method_name,
             "calls": self.call_count,
@@ -120,8 +120,8 @@ class MethodProfile:
 class ModuleProfile:
     """Aggregated profile for a module."""
     module_name: str
-    methods: Dict[str, MethodProfile] = field(default_factory=dict)
-    _snapshots: List[Dict[str, Any]] = field(default_factory=list)
+    methods: dict[str, MethodProfile] = field(default_factory=dict)
+    _snapshots: list[dict[str, Any]] = field(default_factory=list)
     start_time: float = field(default_factory=time.monotonic)
     memory_peak_kb: float = 0.0
     memory_current_kb: float = 0.0
@@ -141,21 +141,21 @@ class ModuleProfile:
         return sum(m.total_time for m in self.methods.values())
 
     @property
-    def hottest_method(self) -> Optional[str]:
+    def hottest_method(self) -> str | None:
         """Return the method consuming the most total time."""
         if not self.methods:
             return None
         return max(self.methods.values(), key=lambda m: m.total_time).method_name
 
     @property
-    def slowest_method(self) -> Optional[str]:
+    def slowest_method(self) -> str | None:
         """Return the method with the highest average time."""
         methods_with_calls = [m for m in self.methods.values() if m.call_count > 0]
         if not methods_with_calls:
             return None
         return max(methods_with_calls, key=lambda m: m.avg_time).method_name
 
-    def take_snapshot(self, label: str = "") -> Dict[str, Any]:
+    def take_snapshot(self, label: str = "") -> dict[str, Any]:
         """Take a point-in-time snapshot of the profile."""
         snap = {
             "timestamp": time.time(),
@@ -172,7 +172,7 @@ class ModuleProfile:
         self._snapshots.append(snap)
         return snap
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "module_name": self.module_name,
             "total_calls": self.total_calls,
@@ -197,7 +197,7 @@ class ModuleProfiler:
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._modules: Dict[str, ModuleProfile] = {}
+        self._modules: dict[str, ModuleProfile] = {}
         self._enabled = True
 
     @property
@@ -280,13 +280,13 @@ class ModuleProfiler:
             if peak_kb > profile.memory_peak_kb:
                 profile.memory_peak_kb = peak_kb
 
-    def snapshot(self, module_name: str, label: str = "") -> Dict[str, Any]:
+    def snapshot(self, module_name: str, label: str = "") -> dict[str, Any]:
         """Take a snapshot of a module's profile."""
         with self._lock:
             profile = self._get_or_create(module_name)
             return profile.take_snapshot(label)
 
-    def get_profile(self, module_name: str) -> Optional[Dict[str, Any]]:
+    def get_profile(self, module_name: str) -> dict[str, Any] | None:
         """Get the profile for a specific module."""
         with self._lock:
             profile = self._modules.get(module_name)
@@ -294,7 +294,7 @@ class ModuleProfiler:
                 return profile.to_dict()
             return None
 
-    def get_all_profiles(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_profiles(self) -> dict[str, dict[str, Any]]:
         """Get profiles for all modules."""
         with self._lock:
             return {
@@ -303,7 +303,7 @@ class ModuleProfiler:
             }
 
     def get_top_modules(self, by: str = "total_time",
-                        limit: int = 10) -> List[Dict[str, Any]]:
+                        limit: int = 10) -> list[dict[str, Any]]:
         """Get the top N modules by a metric.
 
         Args:
@@ -325,7 +325,7 @@ class ModuleProfiler:
         return [p.to_dict() for p in profiles[:limit]]
 
     def get_slow_methods(self, threshold_ms: float = 1000.0,
-                         limit: int = 20) -> List[Dict[str, Any]]:
+                         limit: int = 20) -> list[dict[str, Any]]:
         """Find methods exceeding a latency threshold.
 
         Args:
@@ -348,7 +348,7 @@ class ModuleProfiler:
 
     def compare_snapshots(self, module_name: str,
                           idx_a: int = -2,
-                          idx_b: int = -1) -> Optional[Dict[str, Any]]:
+                          idx_b: int = -1) -> dict[str, Any] | None:
         """Compare two snapshots for a module.
 
         By default compares the last two snapshots.
@@ -394,7 +394,7 @@ class ModuleProfiler:
             "methods": method_deltas,
         }
 
-    def reset(self, module_name: Optional[str] = None) -> None:
+    def reset(self, module_name: str | None = None) -> None:
         """Reset profiling data.
 
         Args:
@@ -406,7 +406,7 @@ class ModuleProfiler:
             else:
                 self._modules.clear()
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get a compact summary across all modules."""
         with self._lock:
             total_calls = sum(p.total_calls for p in self._modules.values())
@@ -423,7 +423,7 @@ class ModuleProfiler:
 
 
 # Singleton
-_profiler: Optional[ModuleProfiler] = None
+_profiler: ModuleProfiler | None = None
 
 
 def get_module_profiler() -> ModuleProfiler:

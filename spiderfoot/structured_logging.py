@@ -43,7 +43,7 @@ class StructuredFormatter(logging.Formatter):
         include_timestamp: bool = True,
         include_hostname: bool = True,
         include_caller: bool = False,
-        extra_fields: Optional[Dict[str, Any]] = None,
+        extra_fields: Optional[dict[str, Any]] = None,
     ):
         """Initialize the structured formatter.
 

@@ -735,9 +735,9 @@ class DbCore:
                 dbh = sqlite3.connect(database_path)
             except Exception as e:
                 self._log_db_error(f"Error connecting to internal database {database_path}", e)
-                raise IOError(f"Error connecting to internal database {database_path}") from e
+                raise OSError(f"Error connecting to internal database {database_path}") from e
             if dbh is None:
-                raise IOError(f"Could not connect to internal database, and could not create {database_path}")
+                raise OSError(f"Could not connect to internal database, and could not create {database_path}")
             dbh.text_factory = str
             self.conn = dbh
             self.dbh = dbh.cursor()
@@ -750,7 +750,7 @@ class DbCore:
                     self.create()
                 except Exception as e:
                     self._log_db_error("Tried to set up the SpiderFoot database schema, but failed", e)
-                    raise IOError("Tried to set up the SpiderFoot database schema, but failed") from e
+                    raise OSError("Tried to set up the SpiderFoot database schema, but failed") from e
                 try:
                     self.dbh.execute("SELECT COUNT(*) FROM tbl_event_types")
                     if self.dbh.fetchone()[0] == 0:
@@ -772,7 +772,7 @@ class DbCore:
                         self.conn.commit()
                 except Exception as e:
                     self._log_db_error("Failed to populate event types", e)
-                    raise IOError("Failed to populate event types") from e
+                    raise OSError("Failed to populate event types") from e
         elif self.db_type == 'postgresql':
             try:
                 import psycopg2.extras
@@ -780,13 +780,13 @@ class DbCore:
                 self.dbh = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             except Exception as e:
                 self._log_db_error(f"Error connecting to PostgreSQL database {database_path}", e)
-                raise IOError(f"Error connecting to PostgreSQL database {database_path}") from e
+                raise OSError(f"Error connecting to PostgreSQL database {database_path}") from e
             with self.dbhLock:
                 try:
                     self.create()
                 except Exception as e:
                     self._log_db_error("Tried to set up the SpiderFoot database schema, but failed", e)
-                    raise IOError("Tried to set up the SpiderFoot database schema, but failed") from e
+                    raise OSError("Tried to set up the SpiderFoot database schema, but failed") from e
                 try:
                     self.dbh.execute("SELECT COUNT(*) FROM tbl_event_types")
                     if self.dbh.fetchone()[0] == 0:
@@ -808,7 +808,7 @@ class DbCore:
                         self.conn.commit()
                 except Exception as e:
                     self._log_db_error("Failed to populate event types", e)
-                    raise IOError("Failed to populate event types") from e
+                    raise OSError("Failed to populate event types") from e
         else:
             raise ValueError(f"Unsupported database type: {self.db_type}")
 
@@ -840,7 +840,7 @@ class DbCore:
                     if is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("Unable to set schema version") from e
+                    raise OSError("Unable to set schema version") from e
 
     def create(self) -> None:
         """
@@ -874,7 +874,7 @@ class DbCore:
                     if is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when setting up database") from e
+                    raise OSError("SQL error encountered when setting up database") from e
 
     def close(self) -> None:
         """
@@ -912,7 +912,7 @@ class DbCore:
                     if is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when vacuuming the database") from e
+                    raise OSError("SQL error encountered when vacuuming the database") from e
         return False
 
     def eventTypes(self) -> list:
@@ -930,4 +930,4 @@ class DbCore:
                 self.dbh.execute(qry)
                 return self.dbh.fetchall()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when retrieving event types") from e
+                raise OSError("SQL error encountered when retrieving event types") from e

@@ -61,13 +61,13 @@ class EventResponse(BaseModel):
     risk: int = 0
     false_positive: bool = False
     generated: float = Field(default_factory=time.time, description="Epoch timestamp")
-    source_data: Optional[str] = None
-    scan_id: Optional[str] = None
+    source_data: str | None = None
+    scan_id: str | None = None
 
     model_config = {"from_attributes": True}
 
     @classmethod
-    def from_db_row(cls, row: tuple, *, scan_id: Optional[str] = None) -> "EventResponse":
+    def from_db_row(cls, row: tuple, *, scan_id: str | None = None) -> EventResponse:
         """Create from a legacy positional DB row tuple.
 
         Standard row layout (from SpiderFootDb):
@@ -105,7 +105,7 @@ class EventSummary(BaseModel):
     """Aggregated event type summary for a scan."""
     event_type: str
     count: int = 0
-    last_seen: Optional[float] = None
+    last_seen: float | None = None
 
     model_config = {"from_attributes": True}
 
@@ -116,9 +116,9 @@ class ScanCreate(BaseModel):
     """Request payload for creating a new scan."""
     name: str = Field(..., min_length=1, max_length=512, description="Human-readable scan name")
     target: str = Field(..., min_length=1, description="Scan target (domain, IP, etc.)")
-    modules: Optional[List[str]] = Field(None, description="Module list (None = all)")
-    type_filter: Optional[List[str]] = Field(None, description="Event type filter")
-    options: Optional[Dict[str, Any]] = Field(None, description="Scan-specific config overrides")
+    modules: list[str] | None = Field(None, description="Module list (None = all)")
+    type_filter: list[str] | None = Field(None, description="Event type filter")
+    options: dict[str, Any] | None = Field(None, description="Scan-specific config overrides")
 
     @field_validator("target")
     @classmethod
@@ -141,7 +141,7 @@ class ScanResponse(BaseModel):
     model_config = {"from_attributes": True}
 
     @classmethod
-    def from_db_row(cls, row: tuple) -> "ScanResponse":
+    def from_db_row(cls, row: tuple) -> ScanResponse:
         """Create from a ScanRecord-style tuple/row."""
         return cls(
             scan_id=str(row[0]),
@@ -156,7 +156,7 @@ class ScanResponse(BaseModel):
 
 class ScanListResponse(BaseModel):
     """Paginated list of scans."""
-    scans: List[ScanResponse]
+    scans: list[ScanResponse]
     total: int
     page: int = 1
     page_size: int = 50
@@ -188,15 +188,15 @@ class ConfigEntry(BaseModel):
     """Single configuration key-value pair."""
     key: str = Field(..., min_length=1)
     value: Any = None
-    section: Optional[str] = None
-    description: Optional[str] = None
+    section: str | None = None
+    description: str | None = None
 
     model_config = {"from_attributes": True}
 
 
 class ConfigUpdate(BaseModel):
     """Batch configuration update payload."""
-    entries: List[ConfigEntry]
+    entries: list[ConfigEntry]
     merge: bool = Field(True, description="Merge with existing (True) or replace (False)")
 
 
@@ -208,8 +208,8 @@ class CorrelationResult(BaseModel):
     rule_name: str
     severity: str = "info"
     description: str = ""
-    matched_events: List[str] = Field(default_factory=list, description="Event hashes")
-    metadata: Optional[Dict[str, Any]] = None
+    matched_events: list[str] = Field(default_factory=list, description="Event hashes")
+    metadata: dict[str, Any] | None = None
 
     model_config = {"from_attributes": True}
 
@@ -219,7 +219,7 @@ class CorrelationSummary(BaseModel):
     scan_id: str
     total_rules_evaluated: int = 0
     total_matches: int = 0
-    results: List[CorrelationResult] = Field(default_factory=list)
+    results: list[CorrelationResult] = Field(default_factory=list)
 
 
 # ── Pagination ───────────────────────────────────────────────────────
@@ -232,7 +232,7 @@ class PaginationMeta(BaseModel):
     total_pages: int = 0
 
     @classmethod
-    def compute(cls, total: int, page: int = 1, page_size: int = 50) -> "PaginationMeta":
+    def compute(cls, total: int, page: int = 1, page_size: int = 50) -> PaginationMeta:
         return cls(
             page=page,
             page_size=page_size,
@@ -243,7 +243,7 @@ class PaginationMeta(BaseModel):
 
 class PaginatedResponse(BaseModel):
     """Generic paginated wrapper."""
-    data: List[Any]
+    data: list[Any]
     pagination: PaginationMeta
 
 
@@ -277,7 +277,7 @@ class ScanStopResponse(BaseModel):
 
 class ScanMetadataResponse(BaseModel):
     """Scan metadata wrapper."""
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
 
 
 class ScanNotesResponse(BaseModel):
@@ -306,7 +306,7 @@ class FalsePositiveResponse(BaseModel):
 class ScanTagsResponse(BaseModel):
     """Response containing scan tags."""
     scan_id: str
-    tags: List[str] = []
+    tags: list[str] = []
     message: str = ""
 
 
@@ -317,7 +317,7 @@ class WorkspaceCreateResponse(BaseModel):
     workspace_id: str
     name: str
     description: str = ""
-    created_time: Optional[str] = None
+    created_time: str | None = None
     message: str = "Workspace created successfully"
 
 
@@ -326,8 +326,8 @@ class WorkspaceDetailResponse(BaseModel):
     workspace_id: str
     name: str
     description: str = ""
-    created_time: Optional[str] = None
-    modified_time: Optional[str] = None
+    created_time: str | None = None
+    modified_time: str | None = None
     targets: list = []
     scans: list = []
     metadata: dict = {}
@@ -336,8 +336,8 @@ class WorkspaceDetailResponse(BaseModel):
 class WorkspaceUpdateResponse(BaseModel):
     """Response after updating a workspace."""
     workspace_id: str
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: str | None = None
+    description: str | None = None
     message: str = "Workspace updated"
 
 
@@ -374,7 +374,7 @@ class TargetDeleteResponse(BaseModel):
 
 class EntityTypesResponse(BaseModel):
     """Response for listing entity/event types."""
-    entity_types: List[Dict[str, Any]] = []
+    entity_types: list[dict[str, Any]] = []
     count: int = 0
 
 
@@ -388,11 +388,11 @@ class ModuleDetailResponse(BaseModel):
     """Detailed information about a single module."""
     name: str
     descr: str = ""
-    provides: List[str] = []
-    consumes: List[str] = []
-    meta: Dict[str, Any] = {}
+    provides: list[str] = []
+    consumes: list[str] = []
+    meta: dict[str, Any] = {}
 
 
 class RiskLevelsResponse(BaseModel):
     """Response for listing risk levels."""
-    risk_levels: List[str] = []
+    risk_levels: list[str] = []

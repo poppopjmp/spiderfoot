@@ -25,11 +25,11 @@ class InMemoryEventBus(EventBus):
 
     def __init__(self, config: Optional[EventBusConfig] = None):
         super().__init__(config)
-        self._queues: Dict[str, asyncio.Queue] = {}
-        self._callbacks: Dict[str, Callable] = {}  # sub_id -> callback
-        self._topic_subs: Dict[str, Set[str]] = defaultdict(set)  # topic -> set of sub_ids
-        self._sub_topics: Dict[str, str] = {}  # sub_id -> topic
-        self._dispatch_tasks: Dict[str, asyncio.Task] = {}
+        self._queues: dict[str, asyncio.Queue] = {}
+        self._callbacks: dict[str, Callable] = {}  # sub_id -> callback
+        self._topic_subs: dict[str, set[str]] = defaultdict(set)  # topic -> set of sub_ids
+        self._sub_topics: dict[str, str] = {}  # sub_id -> topic
+        self._dispatch_tasks: dict[str, asyncio.Task] = {}
         self._lock = asyncio.Lock()
 
     async def connect(self) -> None:

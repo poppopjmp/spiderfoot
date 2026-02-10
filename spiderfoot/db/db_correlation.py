@@ -49,7 +49,7 @@ class CorrelationManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("Unable to create correlation result in database") from e
+                    raise OSError("Unable to create correlation result in database") from e
             correlationId = correlation_id
             if isinstance(eventHashes, str):
                 eventHashes = [eventHashes]
@@ -65,7 +65,7 @@ class CorrelationManager:
                         if self._is_transient_error(e) and attempt < 2:
                             time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                             continue
-                        raise IOError("Unable to create correlation result events in database") from e
+                        raise OSError("Unable to create correlation result events in database") from e
             for attempt in range(3):
                 try:
                     self.conn.commit()
@@ -75,7 +75,7 @@ class CorrelationManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("Unable to commit correlation result events") from e
+                    raise OSError("Unable to commit correlation result events") from e
         return str(correlationId)
 
     def scanCorrelationSummary(self, instanceId: str, by: str = "rule") -> list:
@@ -101,7 +101,7 @@ class CorrelationManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when fetching correlation summary") from e
+                    raise OSError("SQL error encountered when fetching correlation summary") from e
 
     def scanCorrelationList(self, instanceId: str) -> list:
         if not isinstance(instanceId, str):
@@ -119,7 +119,7 @@ class CorrelationManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when fetching correlation list") from e
+                    raise OSError("SQL error encountered when fetching correlation list") from e
 
     def close(self):
         if hasattr(self, 'dbh') and self.dbh:

@@ -64,7 +64,7 @@ class ConfigManager:
         self._config = deepcopy(self.DEFAULT_CONFIG)
         self._initialized = False
 
-    def initialize(self) -> Dict[str, Any]:
+    def initialize(self) -> dict[str, Any]:
         """
         Initialize configuration with runtime values.
 
@@ -97,7 +97,7 @@ class ConfigManager:
             self.log.error("Failed to initialize configuration: %s", e)
             raise
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         """
         Get the current configuration.
 
@@ -108,7 +108,7 @@ class ConfigManager:
             return self.initialize()
         return deepcopy(self._config)
 
-    def update_config(self, updates: Dict[str, Any]) -> None:
+    def update_config(self, updates: dict[str, Any]) -> None:
         """
         Update configuration with new values.
 
@@ -149,7 +149,7 @@ class ConfigManager:
             raise SystemExit(-1)
 
     def get_web_config(self, host: str = '127.0.0.1', port: int = DEFAULT_WEB_PORT,
-                      root: str = '/', cors_origins: Optional[list] = None) -> Dict[str, Any]:
+                      root: str = '/', cors_origins: Optional[list] = None) -> dict[str, Any]:
         """
         Get web server configuration.
 
@@ -171,7 +171,7 @@ class ConfigManager:
 
     def get_api_config(self, host: str = '127.0.0.1', port: int = DEFAULT_API_PORT,
                       workers: int = 1, log_level: str = 'info',
-                      reload: bool = False) -> Dict[str, Any]:
+                      reload: bool = False) -> dict[str, Any]:
         """
         Get API server configuration.
 

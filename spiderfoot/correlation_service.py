@@ -81,10 +81,10 @@ class CorrelationServiceConfig:
     subscribe_events: bool = True
 
     # Rule IDs to exclude
-    excluded_rules: List[str] = field(default_factory=list)
+    excluded_rules: list[str] = field(default_factory=list)
 
     # Risk levels to include (empty = all)
-    risk_filter: List[str] = field(default_factory=list)
+    risk_filter: list[str] = field(default_factory=list)
 
     @classmethod
     def from_config(cls, opts: dict) -> "CorrelationServiceConfig":
@@ -131,7 +131,7 @@ class CorrelationResult:
     risk: str
     scan_id: str
     event_count: int
-    events: List[str] = field(default_factory=list)  # event hashes
+    events: list[str] = field(default_factory=list)  # event hashes
     timestamp: float = field(default_factory=time.time)
 
 
@@ -147,14 +147,14 @@ class CorrelationService:
 
     def __init__(self, config: CorrelationServiceConfig):
         self.config = config
-        self._rules: List[dict] = []
+        self._rules: list[dict] = []
         self._lock = threading.Lock()
         self._running = False
         self._worker_thread: Optional[threading.Thread] = None
         self._queue: queue.Queue = queue.Queue()
         self._event_bus_sub = None
-        self._results_cache: Dict[str, List[CorrelationResult]] = {}
-        self._callbacks: List[Callable[[CorrelationResult], None]] = []
+        self._results_cache: dict[str, list[CorrelationResult]] = {}
+        self._callbacks: list[Callable[[CorrelationResult], None]] = []
 
     @classmethod
     def from_config(cls, opts: dict) -> "CorrelationService":
@@ -254,7 +254,7 @@ class CorrelationService:
         return len(self._rules)
 
     @property
-    def rules(self) -> List[dict]:
+    def rules(self) -> list[dict]:
         """Currently loaded rules."""
         return list(self._rules)
 
@@ -319,9 +319,9 @@ class CorrelationService:
         risk: Optional[str] = None,
         enabled: Optional[bool] = None,
         tag: Optional[str] = None,
-    ) -> List[dict]:
+    ) -> list[dict]:
         """Return rules matching optional filters."""
-        out: List[dict] = []
+        out: list[dict] = []
         for r in self._rules:
             if risk and r.get("risk", r.get("meta", {}).get("risk", "")).upper() != risk.upper():
                 continue
@@ -337,8 +337,8 @@ class CorrelationService:
     # ------------------------------------------------------------------
 
     def run_for_scan(self, scan_id: str,
-                     rule_ids: Optional[List[str]] = None,
-                     dbh=None) -> List[CorrelationResult]:
+                     rule_ids: Optional[list[str]] = None,
+                     dbh=None) -> list[CorrelationResult]:
         """Run correlations for a specific scan.
 
         Args:
@@ -403,11 +403,11 @@ class CorrelationService:
         return results
 
     def submit_scan(self, scan_id: str,
-                    rule_ids: Optional[List[str]] = None) -> None:
+                    rule_ids: Optional[list[str]] = None) -> None:
         """Submit a scan for async correlation (queued)."""
         self._queue.put(("scan", scan_id, rule_ids))
 
-    def get_results(self, scan_id: str) -> List[CorrelationResult]:
+    def get_results(self, scan_id: str) -> list[CorrelationResult]:
         """Get cached results for a scan."""
         return self._results_cache.get(scan_id, [])
 
@@ -531,7 +531,7 @@ class CorrelationService:
             return None
 
     def _record_metrics(self, scan_id: str,
-                        results: List[CorrelationResult]) -> None:
+                        results: list[CorrelationResult]) -> None:
         """Record Prometheus metrics."""
         try:
             from spiderfoot.metrics import Counter, get_registry

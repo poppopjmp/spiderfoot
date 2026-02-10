@@ -52,7 +52,7 @@ def hashstring(string: str) -> str:
 def cachePut(label: str, data: str) -> None:
     pathLabel = hashlib.sha224(label.encode('utf-8')).hexdigest()
     cacheFile = f"{SpiderFootHelpers.cachePath()}/{pathLabel}"
-    with io.open(cacheFile, "w", encoding="utf-8", errors="ignore") as fp:
+    with open(cacheFile, "w", encoding="utf-8", errors="ignore") as fp:
         if isinstance(data, list):
             for line in data:
                 if isinstance(line, str):
@@ -77,7 +77,7 @@ def cacheGet(label: str, timeoutHrs: int) -> str:
     if cache_stat.st_size == 0:
         return None
     if cache_stat.st_mtime > time.time() - timeoutHrs * 3600 or timeoutHrs == 0:
-        with open(cacheFile, "r", encoding='utf-8') as fp:
+        with open(cacheFile, encoding='utf-8') as fp:
             return fp.read()
     return None
 

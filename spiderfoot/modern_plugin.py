@@ -187,12 +187,12 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
     # ------------------------------------------------------------------
 
     def fetch_url(self, url: str, method: str = "GET",
-                  headers: Optional[Dict] = None,
+                  headers: Optional[dict] = None,
                   data: Optional[Any] = None,
                   timeout: int = 30,
                   use_cache: bool = True,
                   cache_ttl: int = DEFAULT_TTL_ONE_HOUR,
-                  **kwargs) -> Optional[Dict]:
+                  **kwargs) -> Optional[dict]:
         """Fetch a URL using HttpService (or fallback to self.sf.fetchUrl).
 
         Accepts all legacy fetchUrl kwargs (useragent, postData, etc.)
@@ -228,7 +228,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
 
         return None
 
-    def resolve_host(self, hostname: str) -> List[str]:
+    def resolve_host(self, hostname: str) -> list[str]:
         """Resolve a hostname to IPv4 addresses."""
         try:
             if self.dns is not None:
@@ -242,7 +242,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
 
         return []
 
-    def resolve_host6(self, hostname: str) -> List[str]:
+    def resolve_host6(self, hostname: str) -> list[str]:
         """Resolve a hostname to IPv6 addresses."""
         try:
             if self.dns is not None:
@@ -256,7 +256,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
 
         return []
 
-    def reverse_resolve(self, ip_address: str) -> List[str]:
+    def reverse_resolve(self, ip_address: str) -> list[str]:
         """Reverse-resolve an IP address."""
         try:
             if self.dns is not None:

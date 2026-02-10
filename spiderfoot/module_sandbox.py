@@ -42,11 +42,11 @@ class SandboxResult:
     module_name: str
     state: SandboxState
     events_produced: int = 0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     duration_seconds: float = 0.0
     output: str = ""
     exception: Optional[str] = None
-    resource_usage: Dict[str, Any] = field(default_factory=dict)
+    resource_usage: dict[str, Any] = field(default_factory=dict)
 
     @property
     def success(self) -> bool:
@@ -150,7 +150,7 @@ class ModuleSandbox:
         self._state = SandboxState.IDLE
         self._tracker = ResourceTracker(self.limits)
         self._lock = threading.Lock()
-        self._callbacks: List[Callable[[SandboxResult], None]] = []
+        self._callbacks: list[Callable[[SandboxResult], None]] = []
 
     @property
     def state(self) -> SandboxState:
@@ -179,7 +179,7 @@ class ModuleSandbox:
 
         self._tracker = ResourceTracker(self.limits)
         self._tracker.start()
-        errors: List[str] = []
+        errors: list[str] = []
         events = 0
 
         try:
@@ -224,7 +224,7 @@ class ModuleSandbox:
 
     def execute_with_timeout(self, func: Callable[..., Any], **kwargs: Any) -> SandboxResult:
         """Execute with enforced timeout using a thread."""
-        result_holder: List[SandboxResult] = []
+        result_holder: list[SandboxResult] = []
 
         def _run():
             r = self.execute(func, **kwargs)
@@ -257,7 +257,7 @@ class ModuleSandbox:
         self,
         state: SandboxState,
         events: int = 0,
-        errors: Optional[List[str]] = None,
+        errors: Optional[list[str]] = None,
         exception: Optional[str] = None,
     ) -> SandboxResult:
         return SandboxResult(
@@ -300,8 +300,8 @@ class SandboxManager:
 
     def __init__(self, default_limits: Optional[ResourceLimits] = None):
         self.default_limits = default_limits or ResourceLimits()
-        self._sandboxes: Dict[str, ModuleSandbox] = {}
-        self._results: List[SandboxResult] = []
+        self._sandboxes: dict[str, ModuleSandbox] = {}
+        self._results: list[SandboxResult] = []
         self._lock = threading.Lock()
 
     def get_sandbox(
@@ -324,7 +324,7 @@ class SandboxManager:
         with self._lock:
             self._results.append(result)
 
-    def get_results(self, module_name: Optional[str] = None) -> List[SandboxResult]:
+    def get_results(self, module_name: Optional[str] = None) -> list[SandboxResult]:
         with self._lock:
             if module_name:
                 return [r for r in self._results if r.module_name == module_name]
@@ -336,11 +336,11 @@ class SandboxManager:
             return len(self._sandboxes)
 
     @property
-    def module_names(self) -> List[str]:
+    def module_names(self) -> list[str]:
         with self._lock:
             return sorted(self._sandboxes.keys())
 
-    def get_failed_modules(self) -> List[str]:
+    def get_failed_modules(self) -> list[str]:
         with self._lock:
             return [
                 name for name, sb in self._sandboxes.items()

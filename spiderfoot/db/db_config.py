@@ -55,7 +55,7 @@ class ConfigManager:
                         if self._is_transient_error(e) and attempt < 2:
                             time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                             continue
-                        raise IOError("SQL error encountered when storing config, aborting") from e
+                        raise OSError("SQL error encountered when storing config, aborting") from e
             for attempt in range(3):
                 try:
                     self.conn.commit()
@@ -65,7 +65,7 @@ class ConfigManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when storing config, aborting") from e
+                    raise OSError("SQL error encountered when storing config, aborting") from e
         return True
 
     def configGet(self) -> dict:
@@ -87,7 +87,7 @@ class ConfigManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when fetching configuration") from e
+                    raise OSError("SQL error encountered when fetching configuration") from e
 
     def configClear(self) -> None:
         ph = get_placeholder(self.db_type)
@@ -103,7 +103,7 @@ class ConfigManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("Unable to clear configuration from the database") from e
+                    raise OSError("Unable to clear configuration from the database") from e
 
     def scanConfigSet(self, scan_id, optMap=dict()) -> None:
         if not isinstance(optMap, dict):
@@ -129,7 +129,7 @@ class ConfigManager:
                         if self._is_transient_error(e) and attempt < 2:
                             time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                             continue
-                        raise IOError("SQL error encountered when storing config, aborting") from e
+                        raise OSError("SQL error encountered when storing config, aborting") from e
             for attempt in range(3):
                 try:
                     self.conn.commit()
@@ -139,7 +139,7 @@ class ConfigManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when storing config, aborting") from e
+                    raise OSError("SQL error encountered when storing config, aborting") from e
 
     def scanConfigGet(self, instanceId: str) -> dict:
         ph = get_placeholder(self.db_type)
@@ -161,7 +161,7 @@ class ConfigManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("SQL error encountered when fetching configuration") from e
+                    raise OSError("SQL error encountered when fetching configuration") from e
 
     def scanConfigClear(self, instanceId: str) -> None:
         ph = get_placeholder(self.db_type)
@@ -178,7 +178,7 @@ class ConfigManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("Unable to clear scan configuration from the database") from e
+                    raise OSError("Unable to clear scan configuration from the database") from e
 
     def close(self):
         if hasattr(self, 'dbh') and self.dbh:

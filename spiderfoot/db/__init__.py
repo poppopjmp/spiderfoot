@@ -34,7 +34,7 @@ log = logging.getLogger(__name__)
 from spiderfoot.db.db_correlation import CorrelationManager
 
 
-def get_schema_queries(db_type: str) -> List[str]:
+def get_schema_queries(db_type: str) -> list[str]:
     """
     Return a list of schema creation queries appropriate for the backend.
     """
@@ -442,10 +442,10 @@ class SpiderFootDb:
             try:
                 dbh = sqlite3.connect(database_path)
             except Exception as e:
-                raise IOError(
+                raise OSError(
                     f"Error connecting to internal database {database_path}") from e
             if dbh is None:
-                raise IOError(
+                raise OSError(
                     f"Could not connect to internal database, and could not create {database_path}") from None
             dbh.text_factory = str
             self.conn = dbh
@@ -468,7 +468,7 @@ class SpiderFootDb:
                             self.dbh.execute(query)
                         self.conn.commit()
                     except Exception as e:
-                        raise IOError(
+                        raise OSError(
                             "Tried to set up the SpiderFoot database schema, but failed") from e
                 try:
                     self.dbh.execute(
@@ -480,7 +480,7 @@ class SpiderFootDb:
                                 self.dbh.execute(query)
                         self.conn.commit()
                     except sqlite3.Error:
-                        raise IOError("Looks like you are running a pre-4.0 database. Unfortunately "
+                        raise OSError("Looks like you are running a pre-4.0 database. Unfortunately "
                                       "SpiderFoot wasn't able to migrate you, so you'll need to delete "
                                       "your SpiderFoot database in order to proceed.") from None
                 if init:
@@ -504,7 +504,7 @@ class SpiderFootDb:
                 self.dbh = self.conn.cursor(
                     cursor_factory=psycopg2.extras.DictCursor)
             except Exception as e:
-                raise IOError(
+                raise OSError(
                     f"Error connecting to PostgreSQL database {opts['__database']}") from e
             with self.dbhLock:
                 try:
@@ -516,7 +516,7 @@ class SpiderFootDb:
                             self.dbh.execute(query)
                         self.conn.commit()
                     except Exception as e:
-                        raise IOError(
+                        raise OSError(
                             "Tried to set up the SpiderFoot database schema, but failed") from e
                 if init:
                     for row in self.eventDetails:
@@ -552,7 +552,7 @@ class SpiderFootDb:
                     password=self.dbpass
                 )
             else:
-                raise ValueError("Unsupported database type: {}".format(self.dbtype))
+                raise ValueError(f"Unsupported database type: {self.dbtype}")
 
             self.cursor = self.conn.cursor()
             self._setup_managers()
@@ -715,7 +715,7 @@ class SpiderFootDb:
         return self._correlation.scanCorrelationList(instanceId)
 
     # --- Backend-aware schema generation ---
-    def get_schema_queries(self, db_type: str) -> List[str]:
+    def get_schema_queries(self, db_type: str) -> list[str]:
         """
         Generate schema DDL queries for the specified backend.
         Args:

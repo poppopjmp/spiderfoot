@@ -48,7 +48,7 @@ def _get_registry():
         return None
 
 
-def _check_database() -> Dict[str, Any]:
+def _check_database() -> dict[str, Any]:
     """Deep database connectivity check (executes SELECT 1)."""
     try:
         registry = _get_registry()
@@ -70,7 +70,7 @@ def _check_database() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_eventbus() -> Dict[str, Any]:
+def _check_eventbus() -> dict[str, Any]:
     """EventBus health including circuit breaker and DLQ state."""
     try:
         registry = _get_registry()
@@ -110,7 +110,7 @@ def _check_eventbus() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_vector() -> Dict[str, Any]:
+def _check_vector() -> dict[str, Any]:
     """Vector.dev log pipeline health."""
     try:
         from spiderfoot.vector_bootstrap import VectorBootstrap
@@ -132,7 +132,7 @@ def _check_vector() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_modules() -> Dict[str, Any]:
+def _check_modules() -> dict[str, Any]:
     """Module health aggregation from ModuleHealthMonitor."""
     try:
         from spiderfoot.module_health import get_health_monitor
@@ -168,7 +168,7 @@ def _check_modules() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_report_storage() -> Dict[str, Any]:
+def _check_report_storage() -> dict[str, Any]:
     """Report storage backend health."""
     try:
         from spiderfoot.report_storage import ReportStore, StoreConfig
@@ -186,7 +186,7 @@ def _check_report_storage() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_app_config() -> Dict[str, Any]:
+def _check_app_config() -> dict[str, Any]:
     """Application config validation."""
     try:
         from spiderfoot.app_config import AppConfig
@@ -204,7 +204,7 @@ def _check_app_config() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_data_service() -> Dict[str, Any]:
+def _check_data_service() -> dict[str, Any]:
     """DataService backend health — checks local, HTTP, or gRPC connectivity."""
     try:
         registry = _get_registry()
@@ -263,7 +263,7 @@ def _check_data_service() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_service_auth() -> Dict[str, Any]:
+def _check_service_auth() -> dict[str, Any]:
     """Inter-service authentication health."""
     try:
         from spiderfoot.service_auth import ServiceTokenIssuer
@@ -284,7 +284,7 @@ def _check_service_auth() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_scan_hooks() -> Dict[str, Any]:
+def _check_scan_hooks() -> dict[str, Any]:
     """Scan lifecycle hooks health and statistics."""
     try:
         from spiderfoot.scan_hooks import get_scan_hooks
@@ -302,7 +302,7 @@ def _check_scan_hooks() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_module_timeout() -> Dict[str, Any]:
+def _check_module_timeout() -> dict[str, Any]:
     """Module timeout guard health and statistics."""
     try:
         from spiderfoot.module_timeout import get_timeout_guard
@@ -321,7 +321,7 @@ def _check_module_timeout() -> Dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_output_validator() -> Dict[str, Any]:
+def _check_output_validator() -> dict[str, Any]:
     """Module output validator health and statistics."""
     try:
         from spiderfoot.module_output_validator import get_output_validator
@@ -379,9 +379,9 @@ _startup_time = time.time()
 _startup_complete = False
 
 
-def run_all_checks() -> Dict[str, Any]:
+def run_all_checks() -> dict[str, Any]:
     """Execute all registered subsystem checks and aggregate."""
-    components: Dict[str, Any] = {}
+    components: dict[str, Any] = {}
     overall = "up"
 
     for name, check_fn in _SUBSYSTEM_CHECKS.items():
@@ -407,7 +407,7 @@ def run_all_checks() -> Dict[str, Any]:
     }
 
 
-def run_single_check(name: str) -> Optional[Dict[str, Any]]:
+def run_single_check(name: str) -> dict[str, Any] | None:
     """Run a single named check. Returns None if not found."""
     check_fn = _SUBSYSTEM_CHECKS.get(name)
     if check_fn is None:

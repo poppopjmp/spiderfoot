@@ -46,9 +46,9 @@ class SpiderFootModuleProtocol(Protocol):
     """
 
     # ── Required class / instance attributes ──
-    meta: Dict[str, Any]
-    opts: Dict[str, Any]
-    optdescs: Dict[str, str]
+    meta: dict[str, Any]
+    opts: dict[str, Any]
+    optdescs: dict[str, str]
     errorState: bool
 
     # ── Lifecycle ──
@@ -56,11 +56,11 @@ class SpiderFootModuleProtocol(Protocol):
         """Initialise the module with the SpiderFoot facade and user options."""
         ...
 
-    def watchedEvents(self) -> List[str]:
+    def watchedEvents(self) -> list[str]:
         """Return event types this module subscribes to."""
         ...
 
-    def producedEvents(self) -> List[str]:
+    def producedEvents(self) -> list[str]:
         """Return event types this module can emit."""
         ...
 
@@ -106,13 +106,13 @@ class SpiderFootModuleProtocol(Protocol):
 
 class DataSourceModel(BaseModel):
     """Optional data-source declaration for modules that call external APIs."""
-    website: Optional[str] = None
-    model: Optional[str] = None
-    references: List[str] = Field(default_factory=list)
-    apiKeyInstructions: Optional[str] = None
-    favIcon: Optional[str] = None
-    logo: Optional[str] = None
-    description: Optional[str] = None
+    website: str | None = None
+    model: str | None = None
+    references: list[str] = Field(default_factory=list)
+    apiKeyInstructions: str | None = None
+    favIcon: str | None = None
+    logo: str | None = None
+    description: str | None = None
 
 
 class ModuleMeta(BaseModel):
@@ -130,16 +130,16 @@ class ModuleMeta(BaseModel):
     """
     name: str = Field(..., min_length=1, description="Human-readable module name")
     summary: str = Field("", description="One-line description")
-    flags: List[str] = Field(default_factory=list, description="Module flags: apikey, slow, errorprone, etc.")
-    useCases: List[str] = Field(default_factory=list, description="Use-case categories")
-    categories: List[str] = Field(default_factory=list, description="Module categories")
-    dataSource: Optional[DataSourceModel] = None
+    flags: list[str] = Field(default_factory=list, description="Module flags: apikey, slow, errorprone, etc.")
+    useCases: list[str] = Field(default_factory=list, description="Use-case categories")
+    categories: list[str] = Field(default_factory=list, description="Module categories")
+    dataSource: DataSourceModel | None = None
     # Legacy fields that some modules still use
-    descr: Optional[str] = Field(None, description="Legacy description field")
+    descr: str | None = Field(None, description="Legacy description field")
 
     @field_validator("flags", mode="before")
     @classmethod
-    def ensure_flags_list(cls, v: Any) -> List[str]:
+    def ensure_flags_list(cls, v: Any) -> list[str]:
         if v is None:
             return []
         if isinstance(v, str):
@@ -148,7 +148,7 @@ class ModuleMeta(BaseModel):
 
     @field_validator("useCases", mode="before")
     @classmethod
-    def ensure_use_cases_list(cls, v: Any) -> List[str]:
+    def ensure_use_cases_list(cls, v: Any) -> list[str]:
         if v is None:
             return []
         if isinstance(v, str):
@@ -157,7 +157,7 @@ class ModuleMeta(BaseModel):
 
     @field_validator("categories", mode="before")
     @classmethod
-    def ensure_categories_list(cls, v: Any) -> List[str]:
+    def ensure_categories_list(cls, v: Any) -> list[str]:
         if v is None:
             return []
         if isinstance(v, str):
@@ -174,19 +174,19 @@ class ModuleValidationResult:
     """Result of validating a module against the contract."""
     module_name: str
     is_valid: bool = True
-    protocol_errors: List[str] = field(default_factory=list)
-    meta_errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    protocol_errors: list[str] = field(default_factory=list)
+    meta_errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
     @property
-    def all_errors(self) -> List[str]:
+    def all_errors(self) -> list[str]:
         return self.protocol_errors + self.meta_errors
 
 
 def validate_module(
     module_class_or_instance: Any,
     *,
-    name: Optional[str] = None,
+    name: str | None = None,
     strict: bool = False,
 ) -> ModuleValidationResult:
     """Validate a module class or instance against the interface contract.
@@ -271,10 +271,10 @@ def validate_module(
 
 
 def validate_module_batch(
-    modules: Dict[str, Any],
+    modules: dict[str, Any],
     *,
     strict: bool = False,
-) -> List[ModuleValidationResult]:
+) -> list[ModuleValidationResult]:
     """Validate a batch of modules, returning results for each.
 
     Args:

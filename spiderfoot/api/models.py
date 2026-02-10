@@ -8,8 +8,8 @@ from datetime import datetime
 class ScanRequest(BaseModel):
     name: str = Field(..., description="Scan name")
     target: str = Field(..., description="Target to scan")
-    modules: Optional[List[str]] = Field(default=None, description="List of modules to use")
-    type_filter: Optional[List[str]] = Field(default=None, description="Event types to collect")
+    modules: Optional[list[str]] = Field(default=None, description="List of modules to use")
+    type_filter: Optional[list[str]] = Field(default=None, description="Event types to collect")
     @field_validator('name')
     @classmethod
     def name_must_not_be_empty(cls, v):
@@ -42,18 +42,18 @@ class WorkspaceResponse(BaseModel):
     description: str
     created_time: str
     modified_time: str
-    targets: List[Dict[str, Any]]
-    scans: List[Dict[str, Any]]
+    targets: list[dict[str, Any]]
+    scans: list[dict[str, Any]]
 
 class TargetRequest(BaseModel):
     target: str = Field(..., description="Target value")
     target_type: str = Field(..., description="Target type")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    metadata: Optional[dict[str, Any]] = Field(default_factory=dict)
 
 class MultiScanRequest(BaseModel):
-    targets: Optional[List[str]] = Field(default=None)
-    modules: List[str] = Field(..., description="Modules to use")
-    scan_options: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    targets: Optional[list[str]] = Field(default=None)
+    modules: list[str] = Field(..., description="Modules to use")
+    scan_options: Optional[dict[str, Any]] = Field(default_factory=dict)
 
 class CTIReportRequest(BaseModel):
     report_type: str = Field(default="threat_assessment")
@@ -77,12 +77,12 @@ class ModuleInfo(BaseModel):
     name: str
     category: str
     description: str
-    flags: List[str]
-    dependencies: List[str]
+    flags: list[str]
+    dependencies: list[str]
     documentation_url: Optional[str] = None
 
 class ApiKeyModel(BaseModel):
     key: str = Field(..., description="API key")
 
 class ConfigUpdate(BaseModel):
-    config: Dict[str, Any] = Field(..., description="Configuration updates")
+    config: dict[str, Any] = Field(..., description="Configuration updates")

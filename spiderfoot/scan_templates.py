@@ -32,11 +32,11 @@ class ScanTemplate:
     name: str
     description: str = ""
     category: TemplateCategory = TemplateCategory.CUSTOM
-    modules: Set[str] = field(default_factory=set)
-    excluded_modules: Set[str] = field(default_factory=set)
-    event_types: Set[str] = field(default_factory=set)
-    options: Dict[str, Any] = field(default_factory=dict)
-    tags: Set[str] = field(default_factory=set)
+    modules: set[str] = field(default_factory=set)
+    excluded_modules: set[str] = field(default_factory=set)
+    event_types: set[str] = field(default_factory=set)
+    options: dict[str, Any] = field(default_factory=dict)
+    tags: set[str] = field(default_factory=set)
     author: str = ""
     version: str = "1.0.0"
     created_at: float = field(default_factory=time.time)
@@ -57,7 +57,7 @@ class ScanTemplate:
         self.options[key] = value
         return self
 
-    def get_effective_modules(self) -> Set[str]:
+    def get_effective_modules(self) -> set[str]:
         """Get modules minus exclusions."""
         return self.modules - self.excluded_modules
 
@@ -191,7 +191,7 @@ class TemplateRegistry:
     """
 
     def __init__(self, load_defaults: bool = True):
-        self._templates: Dict[str, ScanTemplate] = {}
+        self._templates: dict[str, ScanTemplate] = {}
         if load_defaults:
             self._load_defaults()
 
@@ -210,13 +210,13 @@ class TemplateRegistry:
     def get(self, name: str) -> Optional[ScanTemplate]:
         return self._templates.get(name)
 
-    def list_templates(self) -> List[str]:
+    def list_templates(self) -> list[str]:
         return sorted(self._templates.keys())
 
-    def get_by_category(self, category: TemplateCategory) -> List[ScanTemplate]:
+    def get_by_category(self, category: TemplateCategory) -> list[ScanTemplate]:
         return [t for t in self._templates.values() if t.category == category]
 
-    def search(self, query: str) -> List[ScanTemplate]:
+    def search(self, query: str) -> list[ScanTemplate]:
         q = query.lower()
         return [
             t for t in self._templates.values()
@@ -225,7 +225,7 @@ class TemplateRegistry:
         ]
 
     def summary(self) -> dict:
-        cats: Dict[str, int] = {}
+        cats: dict[str, int] = {}
         for t in self._templates.values():
             c = t.category.value
             cats[c] = cats.get(c, 0) + 1

@@ -28,7 +28,7 @@ class RepositoryFactory:
             scans = repo.list_scans()
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         """
         Args:
             config: SpiderFoot config dict (passed to ``SpiderFootDb``).
@@ -94,7 +94,7 @@ def get_repository_factory() -> Optional[RepositoryFactory]:
 
 
 def init_repository_factory(
-    config: Optional[Dict[str, Any]] = None,
+    config: Optional[dict[str, Any]] = None,
 ) -> RepositoryFactory:
     """Initialize the global ``RepositoryFactory``.
 

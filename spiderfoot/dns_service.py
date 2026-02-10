@@ -47,7 +47,7 @@ class DnsServiceConfig:
         doh_enabled: Use DNS-over-HTTPS
         doh_url: DoH resolver URL
     """
-    nameservers: List[str] = field(default_factory=list)
+    nameservers: list[str] = field(default_factory=list)
     timeout: float = 5.0
     lifetime: float = 10.0
     cache_enabled: bool = True
@@ -56,7 +56,7 @@ class DnsServiceConfig:
     doh_url: str = DEFAULT_DOH_URL
 
     @classmethod
-    def from_sf_config(cls, opts: Dict[str, Any]) -> "DnsServiceConfig":
+    def from_sf_config(cls, opts: dict[str, Any]) -> "DnsServiceConfig":
         """Create config from SpiderFoot options dict."""
         nameservers = []
         ns_str = opts.get("_dnsserver", "")
@@ -83,7 +83,7 @@ class DnsService:
     def __init__(self, config: Optional[DnsServiceConfig] = None):
         self.config = config or DnsServiceConfig()
         self.log = logging.getLogger("spiderfoot.dns_service")
-        self._cache: Dict[str, Tuple[float, Any]] = {}
+        self._cache: dict[str, tuple[float, Any]] = {}
         self._query_count = 0
         self._cache_hits = 0
 
@@ -121,7 +121,7 @@ class DnsService:
 
     # --- Forward DNS ---
 
-    def resolve(self, hostname: str, rdtype: str = "A") -> List[str]:
+    def resolve(self, hostname: str, rdtype: str = "A") -> list[str]:
         """Resolve a hostname to IP addresses.
 
         Args:
@@ -161,7 +161,7 @@ class DnsService:
                     results = list(addrs)
                 elif rdtype == "AAAA":
                     infos = socket.getaddrinfo(hostname, None, socket.AF_INET6)
-                    results = list(set(info[4][0] for info in infos))
+                    results = list({info[4][0] for info in infos})
                 else:
                     self.log.warning(
                         f"Record type {rdtype} requires dnspython; falling back to A"
@@ -176,7 +176,7 @@ class DnsService:
         self._cache_set(cache_key, results)
         return results
 
-    def resolve_host(self, hostname: str) -> List[str]:
+    def resolve_host(self, hostname: str) -> list[str]:
         """Resolve a hostname to IPv4 addresses (convenience method).
 
         Args:
@@ -187,7 +187,7 @@ class DnsService:
         """
         return self.resolve(hostname, "A")
 
-    def resolve_host6(self, hostname: str) -> List[str]:
+    def resolve_host6(self, hostname: str) -> list[str]:
         """Resolve a hostname to IPv6 addresses.
 
         Args:
@@ -200,7 +200,7 @@ class DnsService:
 
     # --- Reverse DNS ---
 
-    def reverse_resolve(self, ip_address: str) -> List[str]:
+    def reverse_resolve(self, ip_address: str) -> list[str]:
         """Reverse-resolve an IP address to hostnames.
 
         Args:
@@ -242,7 +242,7 @@ class DnsService:
 
     # --- Record Type Queries ---
 
-    def resolve_mx(self, domain: str) -> List[Dict[str, Any]]:
+    def resolve_mx(self, domain: str) -> list[dict[str, Any]]:
         """Resolve MX records for a domain.
 
         Args:
@@ -279,7 +279,7 @@ class DnsService:
         self._cache_set(cache_key, results)
         return results
 
-    def resolve_txt(self, domain: str) -> List[str]:
+    def resolve_txt(self, domain: str) -> list[str]:
         """Resolve TXT records for a domain.
 
         Args:
@@ -290,7 +290,7 @@ class DnsService:
         """
         return self.resolve(domain, "TXT")
 
-    def resolve_ns(self, domain: str) -> List[str]:
+    def resolve_ns(self, domain: str) -> list[str]:
         """Resolve NS records for a domain.
 
         Args:
@@ -302,7 +302,7 @@ class DnsService:
         results = self.resolve(domain, "NS")
         return [r.rstrip(".") for r in results]
 
-    def resolve_cname(self, hostname: str) -> List[str]:
+    def resolve_cname(self, hostname: str) -> list[str]:
         """Resolve CNAME records for a hostname.
 
         Args:
@@ -314,7 +314,7 @@ class DnsService:
         results = self.resolve(hostname, "CNAME")
         return [r.rstrip(".") for r in results]
 
-    def resolve_soa(self, domain: str) -> Optional[Dict[str, Any]]:
+    def resolve_soa(self, domain: str) -> Optional[dict[str, Any]]:
         """Resolve SOA record for a domain.
 
         Args:
@@ -384,7 +384,7 @@ class DnsService:
         results = self.resolve_host(test_domain)
         return len(results) > 0
 
-    def check_zone_transfer(self, domain: str) -> Optional[List[Dict[str, str]]]:
+    def check_zone_transfer(self, domain: str) -> Optional[list[dict[str, str]]]:
         """Attempt a DNS zone transfer (AXFR).
 
         Args:
@@ -439,7 +439,7 @@ class DnsService:
 
     # --- Metrics ---
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get service statistics.
 
         Returns:

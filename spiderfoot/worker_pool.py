@@ -58,7 +58,7 @@ class WorkerPoolConfig:
     module_timeout: float = 300.0  # 5 min per event
 
     @classmethod
-    def from_sf_config(cls, opts: Dict[str, Any]) -> "WorkerPoolConfig":
+    def from_sf_config(cls, opts: dict[str, Any]) -> "WorkerPoolConfig":
         """Create config from SpiderFoot options dict."""
         strategy_str = opts.get("_worker_strategy", "thread")
         try:
@@ -102,7 +102,7 @@ class WorkerInfo:
             return 0
         return time.time() - self.started_at
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "module_name": self.module_name,
             "state": self.state.value,
@@ -150,7 +150,7 @@ class ModuleWorker:
         self.info.state = WorkerState.STOPPING
         self._stop_event.set()
 
-    def process_event(self, event: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
+    def process_event(self, event: dict[str, Any]) -> Optional[list[dict[str, Any]]]:
         """Process a single event through the module.
 
         Args:
@@ -227,9 +227,9 @@ class WorkerPool:
     def __init__(self, config: Optional[WorkerPoolConfig] = None):
         self.config = config or WorkerPoolConfig()
         self.log = logging.getLogger("spiderfoot.worker_pool")
-        self._workers: Dict[str, ModuleWorker] = {}
+        self._workers: dict[str, ModuleWorker] = {}
         self._executor: Optional[concurrent.futures.Executor] = None
-        self._futures: Dict[str, concurrent.futures.Future] = {}
+        self._futures: dict[str, concurrent.futures.Future] = {}
         self._lock = threading.RLock()
         self._running = False
         self._monitor_thread: Optional[threading.Thread] = None
@@ -307,7 +307,7 @@ class WorkerPool:
                 f"max_workers={max_workers}"
             )
 
-    def submit_event(self, module_name: str, event: Dict[str, Any]) -> bool:
+    def submit_event(self, module_name: str, event: dict[str, Any]) -> bool:
         """Submit an event to a specific module worker.
 
         Args:
@@ -330,7 +330,7 @@ class WorkerPool:
                 self.log.warning("Queue full for %s, event dropped", module_name)
                 return False
 
-    def broadcast_event(self, event: Dict[str, Any]) -> int:
+    def broadcast_event(self, event: dict[str, Any]) -> int:
         """Broadcast an event to all workers.
 
         Args:
@@ -406,14 +406,14 @@ class WorkerPool:
                             self.log.error("Worker %s crashed: %s", name, exc)
                             worker.info.state = WorkerState.ERROR
 
-    def get_worker_info(self, module_name: str) -> Optional[Dict[str, Any]]:
+    def get_worker_info(self, module_name: str) -> Optional[dict[str, Any]]:
         """Get info about a specific worker."""
         worker = self._workers.get(module_name)
         if worker:
             return worker.info.to_dict()
         return None
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get pool-wide statistics."""
         with self._lock:
             workers_info = {}

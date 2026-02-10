@@ -78,7 +78,7 @@ class AuditEvent:
     resource: str = ""
     resource_id: str = ""
     source_ip: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
     event_id: str = ""
 
@@ -145,7 +145,7 @@ class AuditBackend:
     def write(self, event: AuditEvent) -> bool:
         raise NotImplementedError
 
-    def query(self, **filters) -> List[AuditEvent]:
+    def query(self, **filters) -> list[AuditEvent]:
         raise NotImplementedError
 
     def count(self, **filters) -> int:
@@ -164,14 +164,14 @@ class MemoryAuditBackend(AuditBackend):
             self._events.append(event)
         return True
 
-    def query(self, **filters) -> List[AuditEvent]:
+    def query(self, **filters) -> list[AuditEvent]:
         with self._lock:
             events = list(self._events)
 
         return self._apply_filters(events, **filters)
 
-    def _apply_filters(self, events: List[AuditEvent],
-                       **filters) -> List[AuditEvent]:
+    def _apply_filters(self, events: list[AuditEvent],
+                       **filters) -> list[AuditEvent]:
         category = filters.get("category")
         action = filters.get("action")
         actor = filters.get("actor")
@@ -220,13 +220,13 @@ class FileAuditBackend(AuditBackend):
             log.error("Failed to write audit log: %s", e)
             return False
 
-    def query(self, **filters) -> List[AuditEvent]:
+    def query(self, **filters) -> list[AuditEvent]:
         events = []
         try:
             if not os.path.exists(self._filepath):
                 return events
 
-            with open(self._filepath, "r", encoding="utf-8") as f:
+            with open(self._filepath, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -255,13 +255,13 @@ class AuditLogger:
     callback hooks for real-time audit event processing.
     """
 
-    def __init__(self, backends: Optional[List[AuditBackend]] = None):
+    def __init__(self, backends: Optional[list[AuditBackend]] = None):
         """
         Args:
             backends: List of audit backends. Defaults to memory backend.
         """
         self._backends = backends or [MemoryAuditBackend()]
-        self._hooks: List[Callable[[AuditEvent], None]] = []
+        self._hooks: list[Callable[[AuditEvent], None]] = []
         self._lock = threading.Lock()
         self._total_events = 0
 
@@ -361,7 +361,7 @@ class AuditLogger:
     # Query
     # ------------------------------------------------------------------
 
-    def query(self, **filters) -> List[AuditEvent]:
+    def query(self, **filters) -> list[AuditEvent]:
         """Query audit events from the first backend."""
         if not self._backends:
             return []

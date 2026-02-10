@@ -56,7 +56,7 @@ class DbProvider:
     # Cached ApiClient singleton (shared across requests in proxy mode)
     _api_client_instance = None
 
-    def _get_dbh(self, config: Optional[Dict[str, Any]] = None) -> Any:
+    def _get_dbh(self, config: Optional[dict[str, Any]] = None) -> Any:
         """Create and return a data access handle.
 
         In local mode: returns a ``SpiderFootDb`` instance.

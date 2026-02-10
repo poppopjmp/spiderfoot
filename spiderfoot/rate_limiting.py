@@ -122,7 +122,7 @@ class RateLimiter:
 
         return f"rate_limit:{limit_type}:{window_type}:{client_hash}:{window}"
 
-    def _check_redis_limit(self, client_id: str, limit_type: str) -> Tuple[bool, Dict]:
+    def _check_redis_limit(self, client_id: str, limit_type: str) -> tuple[bool, dict]:
         """Check rate limit using Redis backend.
 
         Args:
@@ -170,7 +170,7 @@ class RateLimiter:
 
         return allowed, info
 
-    def _check_memory_limit(self, client_id: str, limit_type: str) -> Tuple[bool, Dict]:
+    def _check_memory_limit(self, client_id: str, limit_type: str) -> tuple[bool, dict]:
         """Check rate limit using in-memory storage (fallback).
 
         Args:
@@ -230,7 +230,7 @@ class RateLimiter:
 
         return allowed, info
 
-    def check_rate_limit(self, limit_type: str = 'api') -> Tuple[bool, Dict]:
+    def check_rate_limit(self, limit_type: str = 'api') -> tuple[bool, dict]:
         """Check if request is within rate limits.
 
         Args:
@@ -262,7 +262,7 @@ class RateLimiter:
         allowed, _ = self.check_rate_limit(limit_type)
         return not allowed
 
-    def get_rate_limit_info(self, limit_type: str = 'api') -> Dict:
+    def get_rate_limit_info(self, limit_type: str = 'api') -> dict:
         """Get rate limit information without incrementing counters.
 
         Args:

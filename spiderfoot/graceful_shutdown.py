@@ -55,8 +55,8 @@ class ShutdownResult:
     handlers_executed: int = 0
     handlers_failed: int = 0
     total_duration: float = 0.0
-    errors: List[Tuple[str, str]] = field(default_factory=list)
-    signal_received: Optional[str] = None
+    errors: list[tuple[str, str]] = field(default_factory=list)
+    signal_received: str | None = None
 
 
 class ShutdownCoordinator:
@@ -86,7 +86,7 @@ class ShutdownCoordinator:
             drain_timeout: Seconds to wait for in-flight work after signal.
             force_timeout: Max total shutdown time before forced exit.
         """
-        self._handlers: List[ShutdownHandler] = []
+        self._handlers: list[ShutdownHandler] = []
         self._lock = threading.Lock()
         self._shutting_down = threading.Event()
         self._shutdown_complete = threading.Event()
@@ -94,7 +94,7 @@ class ShutdownCoordinator:
         self._force_timeout = force_timeout
         self._in_flight = 0
         self._in_flight_lock = threading.Lock()
-        self._result: Optional[ShutdownResult] = None
+        self._result: ShutdownResult | None = None
         self._signals_installed = False
 
     # ── Registration ──────────────────────────────────────────────
@@ -289,7 +289,7 @@ class ShutdownCoordinator:
 
     # ── Info ───────────────────────────────────────────────────────
 
-    def handler_summary(self) -> List[Dict[str, Any]]:
+    def handler_summary(self) -> list[dict[str, Any]]:
         """Return registered handlers for diagnostics."""
         with self._lock:
             return [
@@ -302,12 +302,12 @@ class ShutdownCoordinator:
                 for h in self._handlers
             ]
 
-    def registered_services(self) -> List[str]:
+    def registered_services(self) -> list[str]:
         """Return names of registered shutdown handlers."""
         with self._lock:
             return [h.name for h in self._handlers]
 
-    def status(self) -> Dict[str, Any]:
+    def status(self) -> dict[str, Any]:
         """Return shutdown manager status dict (compat with ShutdownManager API)."""
         return {
             "shutting_down": self._shutting_down,
@@ -318,7 +318,7 @@ class ShutdownCoordinator:
 
 # ── Singleton ─────────────────────────────────────────────────────
 
-_coordinator: Optional[ShutdownCoordinator] = None
+_coordinator: ShutdownCoordinator | None = None
 _coordinator_lock = threading.Lock()
 
 

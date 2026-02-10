@@ -53,10 +53,10 @@ class Requirement:
 class ModuleCapabilityDeclaration:
     """Complete capability declaration for a module."""
     module_name: str
-    provides: Set[Capability] = field(default_factory=set)
-    requires: Set[Requirement] = field(default_factory=set)
-    conflicts_with: Set[str] = field(default_factory=set)  # Module names
-    tags: Set[str] = field(default_factory=set)
+    provides: set[Capability] = field(default_factory=set)
+    requires: set[Requirement] = field(default_factory=set)
+    conflicts_with: set[str] = field(default_factory=set)  # Module names
+    tags: set[str] = field(default_factory=set)
     priority: int = 50  # 0=highest, 100=lowest
 
     def add_capability(
@@ -91,15 +91,15 @@ class ModuleCapabilityDeclaration:
         return self
 
     @property
-    def capability_names(self) -> Set[str]:
+    def capability_names(self) -> set[str]:
         return {c.name for c in self.provides}
 
     @property
-    def required_names(self) -> Set[str]:
+    def required_names(self) -> set[str]:
         return {r.name for r in self.requires if r.required}
 
     @property
-    def optional_names(self) -> Set[str]:
+    def optional_names(self) -> set[str]:
         return {r.name for r in self.requires if not r.required}
 
     def to_dict(self) -> dict:
@@ -141,8 +141,8 @@ class CapabilityRegistry:
     """
 
     def __init__(self):
-        self._declarations: Dict[str, ModuleCapabilityDeclaration] = {}
-        self._capability_index: Dict[str, Set[str]] = {}  # cap_name → module_names
+        self._declarations: dict[str, ModuleCapabilityDeclaration] = {}
+        self._capability_index: dict[str, set[str]] = {}  # cap_name → module_names
         self._lock = threading.Lock()
 
     def register(self, declaration: ModuleCapabilityDeclaration) -> None:
@@ -170,12 +170,12 @@ class CapabilityRegistry:
         with self._lock:
             return self._declarations.get(module_name)
 
-    def find_providers(self, capability_name: str) -> List[str]:
+    def find_providers(self, capability_name: str) -> list[str]:
         """Find modules that provide a specific capability."""
         with self._lock:
             return sorted(self._capability_index.get(capability_name, set()))
 
-    def find_by_category(self, category: CapabilityCategory) -> List[str]:
+    def find_by_category(self, category: CapabilityCategory) -> list[str]:
         """Find modules with capabilities in a specific category."""
         with self._lock:
             result = set()
@@ -185,7 +185,7 @@ class CapabilityRegistry:
                         result.add(decl.module_name)
             return sorted(result)
 
-    def find_by_tag(self, tag: str) -> List[str]:
+    def find_by_tag(self, tag: str) -> list[str]:
         """Find modules with a specific tag."""
         with self._lock:
             return sorted(
@@ -193,7 +193,7 @@ class CapabilityRegistry:
                 if tag in decl.tags
             )
 
-    def find_conflicts(self, module_names: List[str]) -> List[Tuple[str, str]]:
+    def find_conflicts(self, module_names: list[str]) -> list[tuple[str, str]]:
         """Find conflicting pairs among a set of modules.
 
         Returns list of (module_a, module_b) conflict pairs.
@@ -212,8 +212,8 @@ class CapabilityRegistry:
             return conflicts
 
     def check_requirements(
-        self, module_names: List[str]
-    ) -> Dict[str, List[str]]:
+        self, module_names: list[str]
+    ) -> dict[str, list[str]]:
         """Check which requirements are unmet for each module.
 
         Returns dict of module_name → list of unmet required requirement names.
@@ -238,7 +238,7 @@ class CapabilityRegistry:
                         unmet[name] = missing
             return unmet
 
-    def get_dependency_order(self, module_names: List[str]) -> List[str]:
+    def get_dependency_order(self, module_names: list[str]) -> list[str]:
         """Order modules by priority (lower priority number = earlier).
 
         Modules with fewer requirements are scheduled earlier.
@@ -253,7 +253,7 @@ class CapabilityRegistry:
             decorated.sort()
             return [name for _, _, name in decorated]
 
-    def get_all_capabilities(self) -> Dict[str, List[str]]:
+    def get_all_capabilities(self) -> dict[str, list[str]]:
         """Get all registered capabilities and their providers."""
         with self._lock:
             return {
@@ -261,10 +261,10 @@ class CapabilityRegistry:
                 for cap, providers in self._capability_index.items()
             }
 
-    def get_all_tags(self) -> Dict[str, int]:
+    def get_all_tags(self) -> dict[str, int]:
         """Get all tags and their usage counts."""
         with self._lock:
-            tags: Dict[str, int] = {}
+            tags: dict[str, int] = {}
             for decl in self._declarations.values():
                 for tag in decl.tags:
                     tags[tag] = tags.get(tag, 0) + 1

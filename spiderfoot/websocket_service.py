@@ -83,7 +83,7 @@ class WebSocketClient:
         self.client_id = client_id
         self._send = send_func
         self.connected_at = time.time()
-        self.subscriptions: Set[str] = {ChannelType.BROADCAST.value}
+        self.subscriptions: set[str] = {ChannelType.BROADCAST.value}
         self._queue: asyncio.Queue = asyncio.Queue(maxsize=max_queue)
         self._dropped = 0
         self._sent = 0
@@ -145,8 +145,8 @@ class WebSocketHub:
 
     def __init__(self, *, max_clients: int = 500,
                  max_queue_per_client: int = 1000):
-        self._clients: Dict[str, WebSocketClient] = {}
-        self._scan_channels: Dict[str, Set[str]] = defaultdict(set)
+        self._clients: dict[str, WebSocketClient] = {}
+        self._scan_channels: dict[str, set[str]] = defaultdict(set)
         self._max_clients = max_clients
         self._max_queue = max_queue_per_client
         self._total_messages = 0

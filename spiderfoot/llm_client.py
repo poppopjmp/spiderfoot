@@ -34,7 +34,9 @@ import urllib.request
 import urllib.error
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+from collections.abc import Generator
 
 from spiderfoot.constants import (
     DEFAULT_OLLAMA_BASE_URL,
@@ -74,7 +76,7 @@ class LLMConfig:
     top_p: float = 1.0
     frequency_penalty: float = 0.0
     presence_penalty: float = 0.0
-    stop: Optional[List[str]] = None
+    stop: list[str] | None = None
 
     # Client behavior
     timeout: float = 120.0
@@ -90,7 +92,7 @@ class LLMConfig:
     azure_api_version: str = "2024-02-01"
 
     @classmethod
-    def from_env(cls) -> "LLMConfig":
+    def from_env(cls) -> LLMConfig:
         """Create config from environment variables."""
         provider_str = os.environ.get("SF_LLM_PROVIDER", "openai").lower()
         provider_map = {
@@ -149,7 +151,7 @@ class LLMConfig:
         return f"{base}/chat/completions"
 
     @property
-    def headers(self) -> Dict[str, str]:
+    def headers(self) -> dict[str, str]:
         """Build request headers."""
         h = {"Content-Type": "application/json"}
 
@@ -189,7 +191,7 @@ class LLMResponse:
     usage: LLMUsage = field(default_factory=LLMUsage)
     finish_reason: str = ""
     latency_ms: float = 0.0
-    raw: Dict[str, Any] = field(default_factory=dict)
+    raw: dict[str, Any] = field(default_factory=dict)
     error: str = ""
     success: bool = True
 
@@ -241,7 +243,7 @@ class _MockGenerator:
     """Generates mock responses for testing."""
 
     @staticmethod
-    def generate(messages: List[Dict[str, str]], model: str) -> LLMResponse:
+    def generate(messages: list[dict[str, str]], model: str) -> LLMResponse:
         user_msg = ""
         for m in reversed(messages):
             if m.get("role") == "user":
@@ -287,7 +289,7 @@ class LLMClient:
     - Detailed error classification
     """
 
-    def __init__(self, config: Optional[LLMConfig] = None):
+    def __init__(self, config: LLMConfig | None = None):
         self.config = config or LLMConfig()
         self._total_requests = 0
         self._total_tokens = 0
@@ -295,7 +297,7 @@ class LLMClient:
         self._total_latency_ms = 0.0
 
     @classmethod
-    def from_env(cls) -> "LLMClient":
+    def from_env(cls) -> LLMClient:
         """Create client from environment variables."""
         return cls(LLMConfig.from_env())
 
@@ -327,7 +329,7 @@ class LLMClient:
 
     def chat_messages(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         **kwargs: Any,
     ) -> LLMResponse:
         """Send a multi-turn chat request.
@@ -346,9 +348,9 @@ class LLMClient:
 
     def chat_stream(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         **kwargs: Any,
-    ) -> Generator[StreamChunk, None, None]:
+    ) -> Generator[StreamChunk]:
         """Send a streaming chat request.
 
         Yields:
@@ -373,7 +375,7 @@ class LLMClient:
     # -------------------------------------------------------------------
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get client usage statistics."""
         return {
             "total_requests": self._total_requests,
@@ -399,12 +401,12 @@ class LLMClient:
 
     def _build_request_body(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         stream: bool = False,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Build the API request body."""
-        body: Dict[str, Any] = {
+        body: dict[str, Any] = {
             "model": kwargs.get("model", self.config.model),
             "messages": messages,
             "temperature": kwargs.get("temperature", self.config.temperature),
@@ -424,7 +426,7 @@ class LLMClient:
 
     def _call_with_retry(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         **kwargs: Any,
     ) -> LLMResponse:
         """Make API call with retry logic."""
@@ -471,7 +473,7 @@ class LLMClient:
 
     def _make_request(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         **kwargs: Any,
     ) -> LLMResponse:
         """Make a single API request."""
@@ -546,9 +548,9 @@ class LLMClient:
 
     def _stream_request(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         **kwargs: Any,
-    ) -> Generator[StreamChunk, None, None]:
+    ) -> Generator[StreamChunk]:
         """Make a streaming API request."""
         body = self._build_request_body(messages, stream=True, **kwargs)
         data = json.dumps(body).encode("utf-8")

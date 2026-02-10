@@ -77,9 +77,9 @@ class Condition:
 class CorrelationMatch:
     """Records a correlation rule match."""
     rule_name: str
-    events: List[dict]
+    events: list[dict]
     timestamp: float = field(default_factory=time.time)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class CorrelationRule:
@@ -109,14 +109,14 @@ class CorrelationRule:
         self._enabled = enabled
         self.priority = priority
 
-        self._conditions: List[Condition] = []
+        self._conditions: list[Condition] = []
         self._threshold_count: int = 1
         self._window_seconds: Optional[float] = None
         self._group_by: Optional[str] = None
 
         # Tracking matched events
-        self._matched_events: List[Tuple[float, dict]] = []
-        self._group_counts: Dict[str, List[Tuple[float, dict]]] = defaultdict(list)
+        self._matched_events: list[tuple[float, dict]] = []
+        self._group_counts: dict[str, list[tuple[float, dict]]] = defaultdict(list)
         self._fire_count = 0
 
     def add_condition(self, condition: Condition) -> "CorrelationRule":
@@ -259,9 +259,9 @@ class CorrelationEngine:
     """
 
     def __init__(self):
-        self._rules: Dict[str, CorrelationRule] = {}
-        self._callbacks: List[Callable[[CorrelationMatch], None]] = []
-        self._matches: List[CorrelationMatch] = []
+        self._rules: dict[str, CorrelationRule] = {}
+        self._callbacks: list[Callable[[CorrelationMatch], None]] = []
+        self._matches: list[CorrelationMatch] = []
         self._events_processed = 0
         self._lock = threading.Lock()
 
@@ -280,7 +280,7 @@ class CorrelationEngine:
     def on_match(self, callback: Callable[[CorrelationMatch], None]) -> None:
         self._callbacks.append(callback)
 
-    def process(self, event: dict) -> List[CorrelationMatch]:
+    def process(self, event: dict) -> list[CorrelationMatch]:
         """Process an event against all rules. Returns any matches."""
         self._events_processed += 1
         matches = []
@@ -301,7 +301,7 @@ class CorrelationEngine:
 
         return matches
 
-    def process_batch(self, events: List[dict]) -> List[CorrelationMatch]:
+    def process_batch(self, events: list[dict]) -> list[CorrelationMatch]:
         """Process multiple events. Returns all matches."""
         all_matches = []
         for event in events:
@@ -314,7 +314,7 @@ class CorrelationEngine:
             return len(self._rules)
 
     @property
-    def rule_names(self) -> List[str]:
+    def rule_names(self) -> list[str]:
         with self._lock:
             return sorted(self._rules.keys())
 
@@ -326,7 +326,7 @@ class CorrelationEngine:
     def total_matches(self) -> int:
         return len(self._matches)
 
-    def get_matches(self, rule_name: Optional[str] = None) -> List[CorrelationMatch]:
+    def get_matches(self, rule_name: Optional[str] = None) -> list[CorrelationMatch]:
         if rule_name:
             return [m for m in self._matches if m.rule_name == rule_name]
         return list(self._matches)

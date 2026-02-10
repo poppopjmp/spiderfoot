@@ -101,7 +101,7 @@ class ScannerNode:
     endpoint: str
     state: NodeState = NodeState.ONLINE
     capacity: int = 5        # max concurrent scans
-    tags: List[str] = field(default_factory=list)  # e.g. ["gpu", "high-mem"]
+    tags: list[str] = field(default_factory=list)  # e.g. ["gpu", "high-mem"]
     weight: int = 1          # for weighted round-robin
 
     # Runtime state (managed by coordinator)
@@ -144,10 +144,10 @@ class ScanWork:
 
     scan_id: str
     target: str
-    modules: List[str] = field(default_factory=list)
-    options: Dict[str, Any] = field(default_factory=dict)
+    modules: list[str] = field(default_factory=list)
+    options: dict[str, Any] = field(default_factory=dict)
     priority: int = 0       # higher = more urgent
-    required_tags: List[str] = field(default_factory=list)
+    required_tags: list[str] = field(default_factory=list)
     timeout_seconds: int = DEFAULT_TTL_ONE_HOUR
     max_retries: int = 2
 
@@ -170,14 +170,14 @@ class WorkAssignment:
 
     work_id: str
     work: ScanWork
-    node_id: Optional[str] = None
+    node_id: str | None = None
     state: WorkState = WorkState.PENDING
     assigned_at: float = 0.0
     started_at: float = 0.0
     completed_at: float = 0.0
     retries: int = 0
     error: str = ""
-    result: Optional[dict] = None
+    result: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -211,21 +211,21 @@ class ScanCoordinator:
                  heartbeat_timeout: float = 90.0,
                  auto_monitor: bool = False):
         self._lock = threading.Lock()
-        self._nodes: Dict[str, ScannerNode] = {}
-        self._work: Dict[str, WorkAssignment] = {}
-        self._pending_queue: List[str] = []  # work_ids ordered by priority
+        self._nodes: dict[str, ScannerNode] = {}
+        self._work: dict[str, WorkAssignment] = {}
+        self._pending_queue: list[str] = []  # work_ids ordered by priority
         self._strategy = strategy
         self._heartbeat_interval = heartbeat_interval
         self._heartbeat_timeout = heartbeat_timeout
         self._rr_index = 0  # round-robin counter
-        self._callbacks: Dict[str, List[Callable]] = {
+        self._callbacks: dict[str, list[Callable]] = {
             "work_assigned": [],
             "work_completed": [],
             "work_failed": [],
             "node_offline": [],
             "node_online": [],
         }
-        self._monitor_thread: Optional[threading.Thread] = None
+        self._monitor_thread: threading.Thread | None = None
         self._running = False
 
         if auto_monitor:
@@ -245,7 +245,7 @@ class ScanCoordinator:
             self._fire("node_online", node)
 
     def unregister_node(self, node_id: str, *,
-                        reassign: bool = True) -> Optional[ScannerNode]:
+                        reassign: bool = True) -> ScannerNode | None:
         """Remove a node, optionally reassigning its active work."""
         with self._lock:
             node = self._nodes.pop(node_id, None)
@@ -256,11 +256,11 @@ class ScanCoordinator:
             log.info("Unregistered node %s", node_id)
             return node
 
-    def get_node(self, node_id: str) -> Optional[ScannerNode]:
+    def get_node(self, node_id: str) -> ScannerNode | None:
         with self._lock:
             return self._nodes.get(node_id)
 
-    def list_nodes(self) -> List[ScannerNode]:
+    def list_nodes(self) -> list[ScannerNode]:
         with self._lock:
             return list(self._nodes.values())
 
@@ -279,7 +279,7 @@ class ScanCoordinator:
             return True
 
     def heartbeat(self, node_id: str, *,
-                  active_work: Optional[int] = None) -> bool:
+                  active_work: int | None = None) -> bool:
         """Record a heartbeat from a node."""
         with self._lock:
             node = self._nodes.get(node_id)
@@ -343,13 +343,13 @@ class ScanCoordinator:
             log.info("Cancelled work %s", work_id)
             return True
 
-    def get_work_status(self, work_id: str) -> Optional[dict]:
+    def get_work_status(self, work_id: str) -> dict | None:
         """Get status of a work item."""
         with self._lock:
             a = self._work.get(work_id)
             return a.to_dict() if a else None
 
-    def list_work(self, *, state: Optional[WorkState] = None) -> List[dict]:
+    def list_work(self, *, state: WorkState | None = None) -> list[dict]:
         """List all work items, optionally filtered by state."""
         with self._lock:
             items = self._work.values()
@@ -372,7 +372,7 @@ class ScanCoordinator:
             return True
 
     def report_completed(self, work_id: str,
-                         result: Optional[dict] = None) -> bool:
+                         result: dict | None = None) -> bool:
         """Scanner reports work completed successfully."""
         with self._lock:
             a = self._work.get(work_id)
@@ -435,7 +435,7 @@ class ScanCoordinator:
     # ------------------------------------------------------------------
 
     def _select_node(self, work: ScanWork,
-                     exclude: Optional[Set[str]] = None) -> Optional[ScannerNode]:
+                     exclude: set[str] | None = None) -> ScannerNode | None:
         """Select the best node for the work based on strategy."""
         exclude = exclude or set()
         candidates = [
@@ -466,7 +466,7 @@ class ScanCoordinator:
         return candidates[0]
 
     def _matches_tags(self, node: ScannerNode,
-                      required: List[str]) -> bool:
+                      required: list[str]) -> bool:
         """Check that node has all required tags."""
         if not required:
             return True
@@ -665,7 +665,7 @@ class ScanCoordinator:
 # Singleton
 # ------------------------------------------------------------------
 
-_coordinator: Optional[ScanCoordinator] = None
+_coordinator: ScanCoordinator | None = None
 _coordinator_lock = threading.Lock()
 
 

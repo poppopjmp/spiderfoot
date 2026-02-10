@@ -58,7 +58,7 @@ def pretty_table(data, titlemap=None):
             out.append(" " * sdiff)
     out.append('\n')
     for i, c in enumerate(cols):
-        out.append("-" * ((maxsize[c] + spaces)))
+        out.append("-" * (maxsize[c] + spaces))
         if i < len(cols) - 1:
             out.append("+")
     out.append("\n")

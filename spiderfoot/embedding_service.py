@@ -30,7 +30,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from spiderfoot.constants import DEFAULT_OPENAI_BASE_URL
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+from collections.abc import Sequence
 
 log = logging.getLogger("spiderfoot.embeddings")
 
@@ -63,7 +65,7 @@ class EmbeddingConfig:
     timeout: float = 30.0
 
     @classmethod
-    def from_env(cls, env: Optional[Dict[str, str]] = None) -> "EmbeddingConfig":
+    def from_env(cls, env: dict[str, str] | None = None) -> EmbeddingConfig:
         import os
         e = env or os.environ
         return cls(
@@ -87,13 +89,13 @@ class EmbeddingConfig:
 class EmbeddingResult:
     """Result from embedding one or more texts."""
 
-    vectors: List[List[float]]
+    vectors: list[list[float]]
     model: str = ""
     dimensions: int = 0
     token_count: int = 0
     elapsed_ms: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "count": len(self.vectors),
             "model": self.model,
@@ -111,7 +113,7 @@ class EmbeddingBackend(ABC):
     """Abstract embedding provider."""
 
     @abstractmethod
-    def embed(self, texts: List[str]) -> EmbeddingResult:
+    def embed(self, texts: list[str]) -> EmbeddingResult:
         ...
 
     @abstractmethod
@@ -137,7 +139,7 @@ class MockEmbeddingBackend(EmbeddingBackend):
     def __init__(self, dims: int = 384) -> None:
         self._dims = dims
 
-    def embed(self, texts: List[str]) -> EmbeddingResult:
+    def embed(self, texts: list[str]) -> EmbeddingResult:
         start = time.time()
         vectors = []
         for text in texts:
@@ -150,7 +152,7 @@ class MockEmbeddingBackend(EmbeddingBackend):
             token_count=sum(len(t.split()) for t in texts),
         )
 
-    def _text_to_vector(self, text: str) -> List[float]:
+    def _text_to_vector(self, text: str) -> list[float]:
         h = hashlib.sha256(text.encode()).hexdigest()
         raw = []
         for i in range(self._dims):
@@ -197,7 +199,7 @@ class SentenceTransformerBackend(EmbeddingBackend):
                         self._model = "UNAVAILABLE"
         return self._model
 
-    def embed(self, texts: List[str]) -> EmbeddingResult:
+    def embed(self, texts: list[str]) -> EmbeddingResult:
         start = time.time()
         model = self._get_model()
         if model == "UNAVAILABLE":
@@ -235,7 +237,7 @@ class OpenAIEmbeddingBackend(EmbeddingBackend):
         self._dims = dims
         self._timeout = timeout
 
-    def embed(self, texts: List[str]) -> EmbeddingResult:
+    def embed(self, texts: list[str]) -> EmbeddingResult:
         import urllib.request
         start = time.time()
 
@@ -291,7 +293,7 @@ class HuggingFaceEmbeddingBackend(EmbeddingBackend):
         self._dims = dims
         self._timeout = timeout
 
-    def embed(self, texts: List[str]) -> EmbeddingResult:
+    def embed(self, texts: list[str]) -> EmbeddingResult:
         import urllib.request
         start = time.time()
 
@@ -331,7 +333,7 @@ class HuggingFaceEmbeddingBackend(EmbeddingBackend):
 # Utilities
 # ---------------------------------------------------------------------------
 
-def _normalize(vec: List[float]) -> List[float]:
+def _normalize(vec: list[float]) -> list[float]:
     """L2-normalize a vector to unit length."""
     norm = math.sqrt(sum(x * x for x in vec))
     if norm == 0:
@@ -356,8 +358,8 @@ class _EmbeddingCache:
 
     def __init__(self, max_size: int = 10_000) -> None:
         self._max = max_size
-        self._cache: Dict[str, List[float]] = {}
-        self._order: List[str] = []
+        self._cache: dict[str, list[float]] = {}
+        self._order: list[str] = []
         self._lock = threading.Lock()
         self._hits = 0
         self._misses = 0
@@ -365,7 +367,7 @@ class _EmbeddingCache:
     def _key(self, text: str, model: str) -> str:
         return hashlib.md5(f"{model}:{text}".encode()).hexdigest()
 
-    def get(self, text: str, model: str) -> Optional[List[float]]:
+    def get(self, text: str, model: str) -> list[float] | None:
         k = self._key(text, model)
         with self._lock:
             if k in self._cache:
@@ -374,7 +376,7 @@ class _EmbeddingCache:
             self._misses += 1
             return None
 
-    def put(self, text: str, model: str, vector: List[float]) -> None:
+    def put(self, text: str, model: str, vector: list[float]) -> None:
         k = self._key(text, model)
         with self._lock:
             if k in self._cache:
@@ -393,7 +395,7 @@ class _EmbeddingCache:
             self._misses = 0
 
     @property
-    def stats(self) -> Dict[str, int]:
+    def stats(self) -> dict[str, int]:
         return {
             "size": len(self._cache),
             "max_size": self._max,
@@ -416,7 +418,7 @@ class EmbeddingService:
         single = svc.embed_text("single query")
     """
 
-    def __init__(self, config: Optional[EmbeddingConfig] = None) -> None:
+    def __init__(self, config: EmbeddingConfig | None = None) -> None:
         self._config = config or EmbeddingConfig()
         self._backend = self._create_backend()
         self._cache = _EmbeddingCache(self._config.cache_max_size) \
@@ -441,12 +443,12 @@ class EmbeddingService:
             return MockEmbeddingBackend(cfg.dimensions)
 
     # Public API
-    def embed_text(self, text: str) -> List[float]:
+    def embed_text(self, text: str) -> list[float]:
         """Embed a single text string. Returns a vector."""
         result = self.embed_texts([text])
         return result[0] if result else []
 
-    def embed_texts(self, texts: List[str]) -> List[List[float]]:
+    def embed_texts(self, texts: list[str]) -> list[list[float]]:
         """Embed multiple texts, using cache and batching."""
         if not texts:
             return []
@@ -454,8 +456,8 @@ class EmbeddingService:
         processed = [_truncate(t, self._config.max_tokens) for t in texts]
 
         # Check cache for hits
-        results: List[Optional[List[float]]] = [None] * len(processed)
-        uncached_indices: List[int] = []
+        results: list[list[float] | None] = [None] * len(processed)
+        uncached_indices: list[int] = []
         model = self._backend.model_name()
 
         if self._cache:
@@ -473,7 +475,7 @@ class EmbeddingService:
             uncached_texts = [processed[i] for i in uncached_indices]
             batch_size = self._config.batch_size
 
-            all_vectors: List[List[float]] = []
+            all_vectors: list[list[float]] = []
             for batch_start in range(0, len(uncached_texts), batch_size):
                 batch = uncached_texts[batch_start:batch_start + batch_size]
                 embed_result = self._backend.embed(batch)
@@ -509,13 +511,13 @@ class EmbeddingService:
         if self._cache:
             self._cache.clear()
 
-    def cache_stats(self) -> Dict[str, int]:
+    def cache_stats(self) -> dict[str, int]:
         if self._cache:
             return self._cache.stats
         return {"size": 0, "max_size": 0, "hits": 0, "misses": 0}
 
     # Stats
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "provider": self._config.provider.value,
             "model": self.model,
@@ -528,7 +530,7 @@ class EmbeddingService:
 # Singleton
 # ---------------------------------------------------------------------------
 
-_instance: Optional[EmbeddingService] = None
+_instance: EmbeddingService | None = None
 _instance_lock = threading.Lock()
 
 

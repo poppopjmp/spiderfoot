@@ -113,7 +113,7 @@ class RetentionCandidate:
     age_days: float = 0.0
     size_bytes: int = 0
     created_at: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -133,7 +133,7 @@ class RetentionResult:
     items_failed: int = 0
     bytes_freed: int = 0
     dry_run: bool = False
-    details: List[str] = field(default_factory=list)
+    details: list[str] = field(default_factory=list)
     timestamp: float = field(default_factory=time.time)
 
     def to_dict(self) -> dict:
@@ -155,7 +155,7 @@ class RetentionResult:
 class ResourceAdapter:
     """Interface for listing and removing resources."""
 
-    def list_items(self, resource: str) -> List[RetentionCandidate]:
+    def list_items(self, resource: str) -> list[RetentionCandidate]:
         """List all items for a resource type."""
         raise NotImplementedError
 
@@ -169,13 +169,13 @@ class ResourceAdapter:
 class FileResourceAdapter(ResourceAdapter):
     """Adapter for file-based resources (logs, exports, cache)."""
 
-    def __init__(self, directories: Optional[Dict[str, str]] = None):
+    def __init__(self, directories: Optional[dict[str, str]] = None):
         self._dirs = directories or {}
 
     def set_directory(self, resource: str, path: str) -> None:
         self._dirs[resource] = path
 
-    def list_items(self, resource: str) -> List[RetentionCandidate]:
+    def list_items(self, resource: str) -> list[RetentionCandidate]:
         directory = self._dirs.get(resource, "")
         if not directory or not os.path.isdir(directory):
             return []
@@ -227,13 +227,13 @@ class InMemoryResourceAdapter(ResourceAdapter):
     """Adapter that operates on in-memory item lists (for testing)."""
 
     def __init__(self):
-        self._items: Dict[str, List[RetentionCandidate]] = {}
+        self._items: dict[str, list[RetentionCandidate]] = {}
 
     def add_items(self, resource: str,
-                  items: List[RetentionCandidate]) -> None:
+                  items: list[RetentionCandidate]) -> None:
         self._items.setdefault(resource, []).extend(items)
 
-    def list_items(self, resource: str) -> List[RetentionCandidate]:
+    def list_items(self, resource: str) -> list[RetentionCandidate]:
         items = self._items.get(resource, [])
         return sorted(items, key=lambda c: c.created_at)
 
@@ -257,10 +257,10 @@ class RetentionManager:
     """Manages and enforces data retention policies."""
 
     def __init__(self, adapter: Optional[ResourceAdapter] = None):
-        self._rules: Dict[str, RetentionRule] = {}
+        self._rules: dict[str, RetentionRule] = {}
         self._adapter = adapter or InMemoryResourceAdapter()
         self._lock = threading.Lock()
-        self._history: List[RetentionResult] = []
+        self._history: list[RetentionResult] = []
 
     @property
     def adapter(self) -> ResourceAdapter:
@@ -283,7 +283,7 @@ class RetentionManager:
     def get_rule(self, name: str) -> Optional[RetentionRule]:
         return self._rules.get(name)
 
-    def list_rules(self) -> List[RetentionRule]:
+    def list_rules(self) -> list[RetentionRule]:
         return list(self._rules.values())
 
     # ------------------------------------------------------------------
@@ -291,17 +291,17 @@ class RetentionManager:
     # ------------------------------------------------------------------
 
     def preview(self, rule_name: Optional[str] = None
-                ) -> List[RetentionResult]:
+                ) -> list[RetentionResult]:
         """Preview what would be cleaned up (dry run)."""
         return self._run(dry_run=True, rule_name=rule_name)
 
     def enforce(self, rule_name: Optional[str] = None
-                ) -> List[RetentionResult]:
+                ) -> list[RetentionResult]:
         """Execute retention policies."""
         return self._run(dry_run=False, rule_name=rule_name)
 
     def _run(self, dry_run: bool = True,
-             rule_name: Optional[str] = None) -> List[RetentionResult]:
+             rule_name: Optional[str] = None) -> list[RetentionResult]:
         rules = []
         if rule_name:
             rule = self._rules.get(rule_name)
@@ -360,8 +360,8 @@ class RetentionManager:
         return result
 
     def _apply_rule_criteria(self, rule: RetentionRule,
-                             items: List[RetentionCandidate]
-                             ) -> List[RetentionCandidate]:
+                             items: list[RetentionCandidate]
+                             ) -> list[RetentionCandidate]:
         """Determine which items should be cleaned up."""
         candidates = []
 
@@ -424,7 +424,7 @@ class RetentionManager:
     # ------------------------------------------------------------------
 
     @property
-    def history(self) -> List[RetentionResult]:
+    def history(self) -> list[RetentionResult]:
         return list(self._history)
 
     @property

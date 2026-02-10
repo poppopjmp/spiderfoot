@@ -69,17 +69,17 @@ class ScanProfile:
     version: str = "1.0"
 
     # Module selection criteria
-    use_cases: List[str] = field(default_factory=list)
-    include_flags: List[str] = field(default_factory=list)
-    exclude_flags: List[str] = field(default_factory=list)
-    include_modules: List[str] = field(default_factory=list)
-    exclude_modules: List[str] = field(default_factory=list)
-    include_categories: List[str] = field(default_factory=list)
-    required_event_types: List[str] = field(default_factory=list)
+    use_cases: list[str] = field(default_factory=list)
+    include_flags: list[str] = field(default_factory=list)
+    exclude_flags: list[str] = field(default_factory=list)
+    include_modules: list[str] = field(default_factory=list)
+    exclude_modules: list[str] = field(default_factory=list)
+    include_categories: list[str] = field(default_factory=list)
+    required_event_types: list[str] = field(default_factory=list)
 
     # Option overrides
-    option_overrides: Dict[str, Any] = field(default_factory=dict)
-    module_options: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    option_overrides: dict[str, Any] = field(default_factory=dict)
+    module_options: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     # Execution settings
     max_threads: int = 0       # 0 = use global default
@@ -88,10 +88,10 @@ class ScanProfile:
 
     # Metadata
     author: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     created_at: float = field(default_factory=time.time)
 
-    def resolve_modules(self, all_modules: Dict[str, dict]) -> List[str]:
+    def resolve_modules(self, all_modules: dict[str, dict]) -> list[str]:
         """Resolve the set of modules to enable based on criteria.
 
         Args:
@@ -101,7 +101,7 @@ class ScanProfile:
         Returns:
             Sorted list of module names to enable.
         """
-        selected: Set[str] = set()
+        selected: set[str] = set()
 
         for mod_name, mod_info in all_modules.items():
             meta = mod_info.get("meta", {})
@@ -247,7 +247,7 @@ class ProfileManager:
     """
 
     def __init__(self):
-        self._profiles: Dict[str, ScanProfile] = {}
+        self._profiles: dict[str, ScanProfile] = {}
         self._register_builtins()
 
     def _register_builtins(self) -> None:
@@ -437,7 +437,7 @@ class ProfileManager:
         return self._profiles.pop(name, None) is not None
 
     def list_profiles(self, category: Optional[ProfileCategory] = None
-                      ) -> List[ScanProfile]:
+                      ) -> list[ScanProfile]:
         """List all profiles, optionally filtered by category."""
         profiles = self._profiles.values()
         if category:
@@ -445,7 +445,7 @@ class ProfileManager:
                         if p.category == category]
         return sorted(profiles, key=lambda p: p.name)
 
-    def list_names(self) -> List[str]:
+    def list_names(self) -> list[str]:
         """List all profile names."""
         return sorted(self._profiles.keys())
 
@@ -470,7 +470,7 @@ class ProfileManager:
     def load_from_file(self, filepath: str) -> Optional[ScanProfile]:
         """Load a profile from a JSON file."""
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
             profile = ScanProfile.from_dict(data)
             self.register(profile)
@@ -498,7 +498,7 @@ class ProfileManager:
         log.info("Loaded %d profiles from %s", count, dir_path)
         return count
 
-    def export_all(self) -> List[dict]:
+    def export_all(self) -> list[dict]:
         """Export all profiles as dicts."""
         return [p.to_dict() for p in self.list_profiles()]
 

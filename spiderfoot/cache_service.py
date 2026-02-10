@@ -48,7 +48,7 @@ class CacheConfig:
     key_prefix: str = "sf:"
 
     @classmethod
-    def from_sf_config(cls, opts: Dict[str, Any]) -> "CacheConfig":
+    def from_sf_config(cls, opts: dict[str, Any]) -> "CacheConfig":
         """Create config from SpiderFoot options dict."""
         backend_str = opts.get("_cache_backend", "file")
         try:
@@ -155,7 +155,7 @@ class CacheService(ABC):
         """
         return hashlib.sha224(data.encode("utf-8", errors="replace")).hexdigest()
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         total = self._hits + self._misses
         return {
@@ -177,7 +177,7 @@ class MemoryCache(CacheService):
 
     def __init__(self, config: Optional[CacheConfig] = None):
         super().__init__(config)
-        self._store: Dict[str, tuple] = {}  # key -> (expire_time, value)
+        self._store: dict[str, tuple] = {}  # key -> (expire_time, value)
         self._lock = threading.RLock()
 
     def get(self, key: str) -> Optional[Any]:
@@ -290,7 +290,7 @@ class FileCache(CacheService):
                 return None
 
         try:
-            with open(path, "r", encoding="utf-8", errors="replace") as f:
+            with open(path, encoding="utf-8", errors="replace") as f:
                 content = f.read()
 
             # Try JSON deserialization
@@ -510,7 +510,7 @@ def create_cache(config: Optional[CacheConfig] = None) -> CacheService:
         raise ValueError(f"Unknown cache backend: {config.backend}")
 
 
-def create_cache_from_config(sf_config: Dict[str, Any]) -> CacheService:
+def create_cache_from_config(sf_config: dict[str, Any]) -> CacheService:
     """Create cache from SpiderFoot configuration dict."""
     config = CacheConfig.from_sf_config(sf_config)
     return create_cache(config)

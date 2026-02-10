@@ -48,11 +48,11 @@ class RuleLoader:
             if not fname.endswith('.yaml'):
                 continue
             path = os.path.join(self.rule_dir, fname)
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, encoding='utf-8') as f:
                 try:
                     rule = yaml.safe_load(f)
                     jsonschema.validate(instance=rule, schema=RULE_SCHEMA)
-                    rule['rawYaml'] = open(path, 'r', encoding='utf-8').read()
+                    rule['rawYaml'] = open(path, encoding='utf-8').read()
                     rule['filename'] = fname
                     self.rules.append(rule)
                 except Exception as e:

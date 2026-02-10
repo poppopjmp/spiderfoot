@@ -222,7 +222,7 @@ table:not(.meta-table) th {
 class ReportFormatter:
     """Renders GeneratedReport objects into various output formats."""
 
-    def __init__(self, config: Optional[FormatterConfig] = None):
+    def __init__(self, config: FormatterConfig | None = None):
         self.config = config or FormatterConfig()
 
     # -----------------------------------------------------------------------
@@ -238,7 +238,7 @@ class ReportFormatter:
             Theme.AUTO: "theme-auto",
         }[self.config.theme]
 
-        parts: List[str] = []
+        parts: list[str] = []
         parts.append("<!DOCTYPE html>")
         parts.append(f'<html lang="en" class="{theme_class}">')
         parts.append("<head>")
@@ -364,7 +364,7 @@ class ReportFormatter:
         h2 = "#" * (2 + offset)
         h3 = "#" * (3 + offset)
 
-        parts: List[str] = []
+        parts: list[str] = []
         parts.append(f"{h1} {report.title}")
         parts.append("")
 
@@ -449,7 +449,7 @@ class ReportFormatter:
 
     def to_json(self, report: GeneratedReport) -> str:
         """Render report as structured JSON with schema metadata."""
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "schema_version": "1.0.0",
             "generator": self.config.company_name,
             "report": {
@@ -495,7 +495,7 @@ class ReportFormatter:
 
     def to_plain_text(self, report: GeneratedReport) -> str:
         """Render report as clean plain text with no markup."""
-        parts: List[str] = []
+        parts: list[str] = []
         width = 72
 
         parts.append("=" * width)

@@ -83,13 +83,13 @@ class MessageBus:
     """
 
     def __init__(self):
-        self._subscribers: Dict[str, List[Callable]] = {}
-        self._channel_stats: Dict[str, ChannelStats] = {}
+        self._subscribers: dict[str, list[Callable]] = {}
+        self._channel_stats: dict[str, ChannelStats] = {}
         self._lock = threading.Lock()
-        self._message_log: List[Message] = []
+        self._message_log: list[Message] = []
         self._max_log = 10000
         self._enabled = True
-        self._filters: Dict[str, List[Callable]] = {}
+        self._filters: dict[str, list[Callable]] = {}
 
     def subscribe(
         self,
@@ -246,7 +246,7 @@ class MessageBus:
                 self._filters[channel] = []
             self._filters[channel].append(filter_fn)
 
-    def get_channels(self) -> List[str]:
+    def get_channels(self) -> list[str]:
         """Get all registered channels."""
         with self._lock:
             return sorted(self._subscribers.keys())
@@ -256,7 +256,7 @@ class MessageBus:
         with self._lock:
             return self._channel_stats.get(channel)
 
-    def get_all_stats(self) -> Dict[str, dict]:
+    def get_all_stats(self) -> dict[str, dict]:
         """Get stats for all channels."""
         with self._lock:
             return {
@@ -264,7 +264,7 @@ class MessageBus:
                 for ch, stats in self._channel_stats.items()
             }
 
-    def get_message_log(self, channel: Optional[str] = None, limit: int = 100) -> List[dict]:
+    def get_message_log(self, channel: Optional[str] = None, limit: int = 100) -> list[dict]:
         """Get recent message log, optionally filtered by channel."""
         with self._lock:
             msgs = self._message_log

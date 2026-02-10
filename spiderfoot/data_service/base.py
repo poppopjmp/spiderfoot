@@ -36,7 +36,7 @@ class DataServiceConfig:
     api_key: str = ""
     timeout: float = 30.0
     max_retries: int = 3
-    db_config: Dict[str, Any] = field(default_factory=dict)
+    db_config: dict[str, Any] = field(default_factory=dict)
 
 
 class DataService(ABC):
@@ -68,7 +68,7 @@ class DataService(ABC):
         ...
 
     @abstractmethod
-    def scan_instance_get(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def scan_instance_get(self, scan_id: str) -> Optional[dict[str, Any]]:
         """Get a scan instance by ID.
 
         Args:
@@ -80,7 +80,7 @@ class DataService(ABC):
         ...
 
     @abstractmethod
-    def scan_instance_list(self) -> List[Dict[str, Any]]:
+    def scan_instance_list(self) -> list[dict[str, Any]]:
         """List all scan instances.
 
         Returns:
@@ -156,7 +156,7 @@ class DataService(ABC):
         scan_id: str,
         event_type: Optional[str] = None,
         limit: int = 0,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get events for a scan, optionally filtered by type.
 
         Args:
@@ -174,7 +174,7 @@ class DataService(ABC):
         self,
         scan_id: str,
         event_type: str,
-    ) -> List[str]:
+    ) -> list[str]:
         """Get unique event data values for a scan and type.
 
         Args:
@@ -235,7 +235,7 @@ class DataService(ABC):
         limit: int = 0,
         offset: int = 0,
         log_type: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get scan log entries.
 
         Args:
@@ -252,7 +252,7 @@ class DataService(ABC):
     # --- Config Operations ---
 
     @abstractmethod
-    def config_set(self, config_data: Dict[str, str], scope: str = "GLOBAL") -> bool:
+    def config_set(self, config_data: dict[str, str], scope: str = "GLOBAL") -> bool:
         """Set configuration values.
 
         Args:
@@ -265,7 +265,7 @@ class DataService(ABC):
         ...
 
     @abstractmethod
-    def config_get(self, scope: str = "GLOBAL") -> Dict[str, str]:
+    def config_get(self, scope: str = "GLOBAL") -> dict[str, str]:
         """Get configuration values for a scope.
 
         Args:
@@ -277,7 +277,7 @@ class DataService(ABC):
         ...
 
     @abstractmethod
-    def scan_config_set(self, scan_id: str, config_data: Dict[str, str]) -> bool:
+    def scan_config_set(self, scan_id: str, config_data: dict[str, str]) -> bool:
         """Save scan-specific configuration.
 
         Args:
@@ -302,7 +302,7 @@ class DataService(ABC):
         rule_risk: str,
         rule_descr: str,
         rule_logic: str,
-        event_hashes: List[str],
+        event_hashes: list[str],
     ) -> bool:
         """Store a correlation result.
 
@@ -323,7 +323,7 @@ class DataService(ABC):
         ...
 
     @abstractmethod
-    def correlation_get_by_scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def correlation_get_by_scan(self, scan_id: str) -> list[dict[str, Any]]:
         """Get all correlations for a scan.
 
         Args:
@@ -340,7 +340,7 @@ class DataService(ABC):
     def scan_result_summary(
         self,
         scan_id: str,
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         """Get event type counts for a scan.
 
         Args:
@@ -352,7 +352,7 @@ class DataService(ABC):
         ...
 
     @abstractmethod
-    def event_types_list(self) -> List[Dict[str, str]]:
+    def event_types_list(self) -> list[dict[str, str]]:
         """List all registered event types.
 
         Returns:

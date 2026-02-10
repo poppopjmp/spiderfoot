@@ -16,11 +16,11 @@ log = logging.getLogger("spiderfoot.db.repositories.config")
 class ConfigRepository(AbstractRepository):
     """Global/scoped configuration persistence."""
 
-    def set_config(self, config_data: Dict[str, Any]) -> None:
+    def set_config(self, config_data: dict[str, Any]) -> None:
         """Persist configuration dict."""
         self.dbh.configSet(config_data)
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         """Retrieve the stored configuration."""
         return self.dbh.configGet() or {}
 

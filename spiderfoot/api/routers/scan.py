@@ -61,8 +61,8 @@ optional_auth_dep = Depends(optional_auth)
 class ScanRequest(BaseModel):
     name: str = Field(..., description="Name of the scan")
     target: str = Field(..., description="Target for the scan")
-    modules: Optional[List[str]] = Field(None, description="List of module names to run")
-    type_filter: Optional[List[str]] = Field(None, description="List of event types to include")
+    modules: list[str] | None = Field(None, description="List of module names to run")
+    type_filter: list[str] | None = Field(None, description="List of event types to include")
 
 
 class ScheduleCreateRequest(BaseModel):
@@ -70,12 +70,12 @@ class ScheduleCreateRequest(BaseModel):
     name: str = Field(..., description="Schedule name")
     target: str = Field(..., description="Scan target")
     interval_minutes: int = Field(0, ge=0, description="Run every N minutes (0 = one-shot)")
-    run_at: Optional[float] = Field(None, description="Unix timestamp for one-shot execution")
-    modules: Optional[List[str]] = Field(None, description="Module list")
-    type_filter: Optional[List[str]] = Field(None, description="Event type filter")
+    run_at: float | None = Field(None, description="Unix timestamp for one-shot execution")
+    modules: list[str] | None = Field(None, description="Module list")
+    type_filter: list[str] | None = Field(None, description="Event type filter")
     max_runs: int = Field(0, ge=0, description="Max runs (0 = unlimited)")
     description: str = ""
-    tags: Optional[List[str]] = None
+    tags: list[str] | None = None
 
 
 # -----------------------------------------------------------------------
@@ -248,7 +248,7 @@ async def rerun_scan_multi(
 
 class BulkScanRequest(BaseModel):
     """Request body for bulk scan operations."""
-    scan_ids: List[str] = Field(..., description="List of scan IDs to operate on", min_length=1, max_length=100)
+    scan_ids: list[str] = Field(..., description="List of scan IDs to operate on", min_length=1, max_length=100)
 
 
 @router.post("/scans/bulk/stop")
@@ -483,14 +483,14 @@ async def list_scans(
 
 @router.get("/scans/search")
 async def search_scans(
-    target: Optional[str] = Query(None, description="Filter by target (substring match)"),
-    status: Optional[str] = Query(None, description="Filter by status (RUNNING, FINISHED, ABORTED, etc.)"),
-    tag: Optional[str] = Query(None, description="Filter by tag"),
-    started_after: Optional[str] = Query(None, description="Scans started after this ISO timestamp"),
-    started_before: Optional[str] = Query(None, description="Scans started before this ISO timestamp"),
-    module: Optional[str] = Query(None, description="Scans that used this module"),
-    sort_by: Optional[str] = Query("started", description="Sort field: started, target, status"),
-    sort_order: Optional[str] = Query("desc", description="Sort order: asc or desc"),
+    target: str | None = Query(None, description="Filter by target (substring match)"),
+    status: str | None = Query(None, description="Filter by status (RUNNING, FINISHED, ABORTED, etc.)"),
+    tag: str | None = Query(None, description="Filter by tag"),
+    started_after: str | None = Query(None, description="Scans started after this ISO timestamp"),
+    started_before: str | None = Query(None, description="Scans started before this ISO timestamp"),
+    module: str | None = Query(None, description="Scans that used this module"),
+    sort_by: str | None = Query("started", description="Sort field: started, target, status"),
+    sort_order: str | None = Query("desc", description="Sort order: asc or desc"),
     limit: int = Query(50, ge=1, le=500, description="Max results"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     api_key: str = optional_auth_dep,
@@ -994,7 +994,7 @@ async def export_scan_logs(
 async def get_scan_timeline(
     scan_id: str,
     limit: int = Query(200, ge=1, le=5000, description="Max timeline entries"),
-    event_type: Optional[str] = Query(None, description="Filter by event type"),
+    event_type: str | None = Query(None, description="Filter by event type"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ):
@@ -1414,7 +1414,7 @@ async def delete_event_annotation(
 @router.post("/scans/{scan_id}/results/falsepositive")
 async def set_results_false_positive(
     scan_id: str,
-    resultids: List[str] = Body(...),
+    resultids: list[str] = Body(...),
     fp: str = Body(...),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1573,7 +1573,7 @@ async def get_scan_tags(
 @router.put("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def set_scan_tags(
     scan_id: str,
-    tags: List[str] = Body(..., description="Complete list of tags to set"),
+    tags: list[str] = Body(..., description="Complete list of tags to set"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ):
@@ -1582,7 +1582,7 @@ async def set_scan_tags(
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
     # Normalize: strip, lowercase, deduplicate, remove empty
-    clean = sorted(set(t.strip().lower() for t in tags if t.strip()))
+    clean = sorted({t.strip().lower() for t in tags if t.strip()})
     if len(clean) > 50:
         raise HTTPException(status_code=422, detail="Maximum 50 tags per scan")
     meta = svc.get_metadata(scan_id) or {}
@@ -1594,7 +1594,7 @@ async def set_scan_tags(
 @router.post("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def add_scan_tags(
     scan_id: str,
-    tags: List[str] = Body(..., description="Tags to add"),
+    tags: list[str] = Body(..., description="Tags to add"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ):
@@ -1604,7 +1604,7 @@ async def add_scan_tags(
         raise HTTPException(status_code=404, detail="Scan not found")
     meta = svc.get_metadata(scan_id) or {}
     existing = set(meta.get(_TAGS_KEY, []))
-    new_tags = set(t.strip().lower() for t in tags if t.strip())
+    new_tags = {t.strip().lower() for t in tags if t.strip()}
     merged = sorted(existing | new_tags)
     if len(merged) > 50:
         raise HTTPException(status_code=422, detail="Maximum 50 tags per scan")
@@ -1620,7 +1620,7 @@ async def add_scan_tags(
 @router.delete("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def remove_scan_tags(
     scan_id: str,
-    tags: List[str] = Body(..., description="Tags to remove"),
+    tags: list[str] = Body(..., description="Tags to remove"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ):
@@ -1630,7 +1630,7 @@ async def remove_scan_tags(
         raise HTTPException(status_code=404, detail="Scan not found")
     meta = svc.get_metadata(scan_id) or {}
     existing = set(meta.get(_TAGS_KEY, []))
-    to_remove = set(t.strip().lower() for t in tags if t.strip())
+    to_remove = {t.strip().lower() for t in tags if t.strip()}
     remaining = sorted(existing - to_remove)
     removed = sorted(existing & to_remove)
     meta[_TAGS_KEY] = remaining
@@ -1689,8 +1689,8 @@ async def compare_scans(
                 return (e.get("type", e.get("eventType", "")), str(e.get("data", "")))
             return (getattr(e, "eventType", ""), str(getattr(e, "data", "")))
 
-        set_a = set(_event_key(e) for e in events_a)
-        set_b = set(_event_key(e) for e in events_b)
+        set_a = {_event_key(e) for e in events_a}
+        set_b = {_event_key(e) for e in events_b}
 
         only_a = set_a - set_b
         only_b = set_b - set_a
@@ -1704,8 +1704,8 @@ async def compare_scans(
             return grouped
 
         # Type-level summary
-        types_a = set(t for t, _ in set_a)
-        types_b = set(t for t, _ in set_b)
+        types_a = {t for t, _ in set_a}
+        types_b = {t for t, _ in set_b}
 
         return {
             "scan_a": {"id": scan_a, "total_events": len(events_a)},

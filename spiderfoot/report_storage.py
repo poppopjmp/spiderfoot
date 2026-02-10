@@ -79,7 +79,7 @@ class LRUCache:
         self._hits = 0
         self._misses = 0
 
-    def get(self, key: str) -> Optional[Dict[str, Any]]:
+    def get(self, key: str) -> dict[str, Any] | None:
         """Get item from cache. Returns None if not found or expired."""
         with self._lock:
             if key not in self._cache:
@@ -98,7 +98,7 @@ class LRUCache:
             self._hits += 1
             return data
 
-    def put(self, key: str, data: Dict[str, Any]) -> None:
+    def put(self, key: str, data: dict[str, Any]) -> None:
         """Add or update item in cache."""
         with self._lock:
             if key in self._cache:
@@ -130,7 +130,7 @@ class LRUCache:
             return len(self._cache)
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         with self._lock:
             total = self._hits + self._misses
             return {
@@ -193,7 +193,7 @@ class SQLiteBackend:
             self._local.conn.execute("PRAGMA journal_mode=WAL")
         return self._local.conn
 
-    def save(self, data: Dict[str, Any]) -> None:
+    def save(self, data: dict[str, Any]) -> None:
         """Insert or update a report."""
         conn = self._get_conn()
         now = time.time()
@@ -224,7 +224,7 @@ class SQLiteBackend:
         )
         conn.commit()
 
-    def get(self, report_id: str) -> Optional[Dict[str, Any]]:
+    def get(self, report_id: str) -> dict[str, Any] | None:
         """Retrieve a report by ID."""
         conn = self._get_conn()
         row = conn.execute(
@@ -245,15 +245,15 @@ class SQLiteBackend:
 
     def list_reports(
         self,
-        scan_id: Optional[str] = None,
-        status: Optional[str] = None,
+        scan_id: str | None = None,
+        status: str | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List reports with optional filters."""
         conn = self._get_conn()
         query = "SELECT * FROM reports"
-        params: List[Any] = []
+        params: list[Any] = []
         conditions = []
 
         if scan_id:
@@ -272,7 +272,7 @@ class SQLiteBackend:
         rows = conn.execute(query, params).fetchall()
         return [self._row_to_dict(row) for row in rows]
 
-    def count(self, scan_id: Optional[str] = None) -> int:
+    def count(self, scan_id: str | None = None) -> int:
         """Count reports, optionally filtered by scan_id."""
         conn = self._get_conn()
         if scan_id:
@@ -302,7 +302,7 @@ class SQLiteBackend:
             self._local.conn = None
 
     @staticmethod
-    def _row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
+    def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
         """Convert a SQLite row to a report dict."""
         d = dict(row)
         # Parse JSON fields
@@ -319,17 +319,17 @@ class MemoryBackend:
     """In-memory report storage (for testing)."""
 
     def __init__(self):
-        self._store: Dict[str, Dict[str, Any]] = {}
+        self._store: dict[str, dict[str, Any]] = {}
         self._lock = threading.Lock()
 
-    def save(self, data: Dict[str, Any]) -> None:
+    def save(self, data: dict[str, Any]) -> None:
         with self._lock:
             data["updated_at"] = time.time()
             if "created_at" not in data:
                 data["created_at"] = time.time()
             self._store[data["report_id"]] = data.copy()
 
-    def get(self, report_id: str) -> Optional[Dict[str, Any]]:
+    def get(self, report_id: str) -> dict[str, Any] | None:
         with self._lock:
             d = self._store.get(report_id)
             return d.copy() if d else None
@@ -340,11 +340,11 @@ class MemoryBackend:
 
     def list_reports(
         self,
-        scan_id: Optional[str] = None,
-        status: Optional[str] = None,
+        scan_id: str | None = None,
+        status: str | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         with self._lock:
             reports = list(self._store.values())
 
@@ -356,7 +356,7 @@ class MemoryBackend:
         reports.sort(key=lambda r: r.get("created_at", 0), reverse=True)
         return [r.copy() for r in reports[offset: offset + limit]]
 
-    def count(self, scan_id: Optional[str] = None) -> int:
+    def count(self, scan_id: str | None = None) -> int:
         with self._lock:
             if scan_id:
                 return sum(1 for r in self._store.values() if r.get("scan_id") == scan_id)
@@ -390,7 +390,7 @@ class ReportStore:
     for fast reads.
     """
 
-    def __init__(self, config: Optional[StoreConfig] = None):
+    def __init__(self, config: StoreConfig | None = None):
         self.config = config or StoreConfig(backend=StorageBackend.MEMORY)
 
         # Initialize cache
@@ -411,7 +411,7 @@ class ReportStore:
             self.config.cache_max_size,
         )
 
-    def save(self, data: Dict[str, Any]) -> str:
+    def save(self, data: dict[str, Any]) -> str:
         """Save a report. Returns the report_id.
 
         Args:
@@ -425,7 +425,7 @@ class ReportStore:
         self._cache.put(report_id, data)
         return report_id
 
-    def get(self, report_id: str) -> Optional[Dict[str, Any]]:
+    def get(self, report_id: str) -> dict[str, Any] | None:
         """Retrieve a report by ID. Uses cache first."""
         # Check cache
         cached = self._cache.get(report_id)
@@ -438,7 +438,7 @@ class ReportStore:
             self._cache.put(report_id, data)
         return data
 
-    def update(self, report_id: str, updates: Dict[str, Any]) -> bool:
+    def update(self, report_id: str, updates: dict[str, Any]) -> bool:
         """Update specific fields of a report.
 
         Args:
@@ -464,17 +464,17 @@ class ReportStore:
 
     def list_reports(
         self,
-        scan_id: Optional[str] = None,
-        status: Optional[str] = None,
+        scan_id: str | None = None,
+        status: str | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List reports with optional filters."""
         return self._backend.list_reports(
             scan_id=scan_id, status=status, limit=limit, offset=offset
         )
 
-    def count(self, scan_id: Optional[str] = None) -> int:
+    def count(self, scan_id: str | None = None) -> int:
         """Count reports."""
         return self._backend.count(scan_id=scan_id)
 
@@ -489,7 +489,7 @@ class ReportStore:
         return count
 
     @property
-    def cache_stats(self) -> Dict[str, Any]:
+    def cache_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         return self._cache.stats
 

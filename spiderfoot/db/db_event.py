@@ -110,7 +110,7 @@ class EventManager:
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
-                    raise IOError("Error in scanLogEvent") from e
+                    raise OSError("Error in scanLogEvent") from e
 
     def scanLogs(self, instanceId: str, limit: int = None, fromRowId: int = 0, reverse: bool = False) -> list:
         if not isinstance(instanceId, str):
@@ -134,7 +134,7 @@ class EventManager:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when fetching scan logs") from e
+                raise OSError("SQL error encountered when fetching scan logs") from e
 
     def scanErrors(self, instanceId: str, limit: int = 0) -> list:
         if not isinstance(instanceId, str):
@@ -151,7 +151,7 @@ class EventManager:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when fetching scan errors") from e
+                raise OSError("SQL error encountered when fetching scan errors") from e
 
     def scanResultEvent(self, instanceId: str, eventType: str = 'ALL', srcModule: str = None, data: list = None, sourceId: list = None, correlationId: str = None, filterFp: bool = False) -> list:
         if not isinstance(instanceId, str):
@@ -202,7 +202,7 @@ class EventManager:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when fetching result events") from e
+                raise OSError("SQL error encountered when fetching result events") from e
 
     def scanResultEventUnique(self, instanceId: str, eventType: str = 'ALL', filterFp: bool = False) -> list:
         if not isinstance(instanceId, str):
@@ -222,7 +222,7 @@ class EventManager:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when fetching unique result events") from e
+                raise OSError("SQL error encountered when fetching unique result events") from e
 
     def scanResultSummary(self, instanceId: str, by: str = "type") -> list:
         if not isinstance(instanceId, str):
@@ -243,7 +243,7 @@ class EventManager:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when fetching result summary") from e
+                raise OSError("SQL error encountered when fetching result summary") from e
 
     def scanResultHistory(self, instanceId: str) -> list:
         if not isinstance(instanceId, str):
@@ -255,7 +255,7 @@ class EventManager:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError(f"SQL error encountered when fetching history for scan {instanceId}") from e
+                raise OSError(f"SQL error encountered when fetching history for scan {instanceId}") from e
 
     def scanResultsUpdateFP(self, instanceId: str, resultHashes: list, fpFlag: int) -> bool:
         if not isinstance(instanceId, str):
@@ -269,11 +269,11 @@ class EventManager:
                 try:
                     self.dbh.execute(qry, qvars)
                 except (sqlite3.Error, psycopg2.Error) as e:
-                    raise IOError("SQL error encountered when updating false-positive") from e
+                    raise OSError("SQL error encountered when updating false-positive") from e
             try:
                 self.conn.commit()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when updating false-positive") from e
+                raise OSError("SQL error encountered when updating false-positive") from e
         return True
 
     def scanEventStore(self, instanceId: str, sfEvent, truncateSize: int = 0) -> None:
@@ -329,7 +329,7 @@ class EventManager:
                 self.dbh.execute(qry, qvals)
                 self.conn.commit()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError(f"SQL error encountered when storing event data ({self.dbh})") from e
+                raise OSError(f"SQL error encountered when storing event data ({self.dbh})") from e
 
     def scanElementSourcesDirect(self, instanceId: str, elementIdList: list) -> list:
         if not isinstance(instanceId, str):
@@ -350,7 +350,7 @@ class EventManager:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when getting source element IDs") from e
+                raise OSError("SQL error encountered when getting source element IDs") from e
 
     def scanElementChildrenDirect(self, instanceId: str, elementIdList: list) -> list:
         if not isinstance(instanceId, str):
@@ -371,7 +371,7 @@ class EventManager:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when getting child element IDs") from e
+                raise OSError("SQL error encountered when getting child element IDs") from e
 
     def scanElementSourcesAll(self, instanceId: str, childData: list) -> list:
         if not isinstance(instanceId, str):
@@ -467,7 +467,7 @@ class EventManager:
                     })
                 return sources
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when fetching event sources") from e
+                raise OSError("SQL error encountered when fetching event sources") from e
 
     def get_entities(self, scan_id: str, event_hash: str) -> list:
         qry = """
@@ -496,7 +496,7 @@ class EventManager:
                     })
                 return entities
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when fetching entity events") from e
+                raise OSError("SQL error encountered when fetching entity events") from e
 
     def search(self, criteria: dict, filterFp: bool = False) -> list:
         """
@@ -546,7 +546,7 @@ class EventManager:
                 self.dbh.execute(qry, qvars)
                 return self.dbh.fetchall()
             except (sqlite3.Error, psycopg2.Error) as e:
-                raise IOError("SQL error encountered when searching events") from e
+                raise OSError("SQL error encountered when searching events") from e
 
     def close(self):
         if hasattr(self, 'dbh') and self.dbh:

@@ -38,20 +38,20 @@ log = logging.getLogger("spiderfoot.tracing")
 # Context variable — available anywhere in the async/sync call stack
 # -----------------------------------------------------------------------
 
-_request_id_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+_request_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "request_id", default=None,
 )
 
 # Additional context variables for richer tracing
-_request_method_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+_request_method_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "request_method", default=None,
 )
-_request_path_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+_request_path_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "request_path", default=None,
 )
 
 
-def get_request_id() -> Optional[str]:
+def get_request_id() -> str | None:
     """Get the current request ID from context.
 
     Returns ``None`` if called outside a request context.
@@ -64,13 +64,13 @@ def set_request_id(request_id: str) -> contextvars.Token:
     return _request_id_var.set(request_id)
 
 
-def get_request_context() -> Dict[str, Any]:
+def get_request_context() -> dict[str, Any]:
     """Get all tracing context variables as a dict.
 
     Useful for propagating context to background threads or
     downstream service calls.
     """
-    ctx: Dict[str, Any] = {}
+    ctx: dict[str, Any] = {}
     rid = _request_id_var.get()
     if rid:
         ctx["request_id"] = rid

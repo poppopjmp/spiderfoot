@@ -23,7 +23,7 @@ class ModuleManager:
         self.modules = {}
         self.correlation_rules = []
 
-    def load_modules(self, modules_dir: Optional[str] = None) -> Dict[str, Any]:
+    def load_modules(self, modules_dir: Optional[str] = None) -> dict[str, Any]:
         """
         Load all SpiderFoot modules from the modules directory.
 
@@ -50,7 +50,7 @@ class ModuleManager:
             # Fall back to custom loader
             return self._load_modules_custom(modules_dir)
 
-    def _load_modules_custom(self, modules_dir: str) -> Dict[str, Any]:
+    def _load_modules_custom(self, modules_dir: str) -> dict[str, Any]:
         """
         Custom module loader as fallback.
 
@@ -116,7 +116,7 @@ class ModuleManager:
         self.modules = sf_modules
         return sf_modules
 
-    def load_correlation_rules(self, correlations_dir: Optional[str] = None) -> List[Dict[str, Any]]:
+    def load_correlation_rules(self, correlations_dir: Optional[str] = None) -> list[dict[str, Any]]:
         """
         Load correlation rules from the correlations directory.
 
@@ -154,7 +154,7 @@ class ModuleManager:
             self.correlation_rules = []
             return []
 
-    def get_modules(self) -> Dict[str, Any]:
+    def get_modules(self) -> dict[str, Any]:
         """
         Get the currently loaded modules.
 
@@ -163,7 +163,7 @@ class ModuleManager:
         """
         return self.modules
 
-    def get_correlation_rules(self) -> List[Dict[str, Any]]:
+    def get_correlation_rules(self) -> list[dict[str, Any]]:
         """
         Get the currently loaded correlation rules.
 
@@ -172,7 +172,7 @@ class ModuleManager:
         """
         return self.correlation_rules
 
-    def list_modules(self) -> List[str]:
+    def list_modules(self) -> list[str]:
         """
         List all available module names.
 
@@ -181,7 +181,7 @@ class ModuleManager:
         """
         return sorted(self.modules.keys())
 
-    def get_module_info(self, module_name: str) -> Optional[Dict[str, Any]]:
+    def get_module_info(self, module_name: str) -> Optional[dict[str, Any]]:
         """
         Get information about a specific module.
 
@@ -193,7 +193,7 @@ class ModuleManager:
         """
         return self.modules.get(module_name)
 
-    def get_modules_by_group(self, group: str) -> List[str]:
+    def get_modules_by_group(self, group: str) -> list[str]:
         """
         Get modules by group.
 
@@ -208,7 +208,7 @@ class ModuleManager:
             if info.get('group', '').lower() == group.lower()
         ]
 
-    def get_modules_by_usecase(self, usecase: str) -> List[str]:
+    def get_modules_by_usecase(self, usecase: str) -> list[str]:
         """
         Get modules by use case.
 
@@ -237,7 +237,7 @@ class ModuleManager:
 
         return matching_modules
 
-    def validate_modules(self, module_list: List[str]) -> List[str]:
+    def validate_modules(self, module_list: list[str]) -> list[str]:
         """
         Validate that all modules in the list exist.
 
