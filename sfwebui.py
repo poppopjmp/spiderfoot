@@ -113,7 +113,7 @@ class SpiderFootWebUi(WebUiRoutes):
         self.log.info("SpiderFootWebUi initialized successfully")
     
     
-    def _validate_configuration(self):
+    def _validate_configuration(self) -> None:
         """Validate the configuration and fix common issues."""
         try:
             # Validate and set default values for required configuration keys
@@ -157,7 +157,7 @@ class SpiderFootWebUi(WebUiRoutes):
             self.log.error(f"Configuration validation failed: {e}")
             raise
     
-    def _setup_additional_security_headers(self):
+    def _setup_additional_security_headers(self) -> None:
         """Set up additional security headers if the secure module is available."""
         if not secure:
             self.log.warning("Security headers not available (secure module not installed)")
@@ -508,7 +508,7 @@ class SpiderFootWebUiApp:
         
         self.log.info("SpiderFootWebUiApp initialized successfully")
     
-    def _validate_and_setup_config(self, config: dict[str, Any]):
+    def _validate_and_setup_config(self, config: dict[str, Any]) -> None:
         """Validate and setup configuration with enhanced error checking."""
         from copy import deepcopy
         
@@ -529,7 +529,7 @@ class SpiderFootWebUiApp:
         # Validate and fix module configuration
         self._fix_module_configuration()
     
-    def _fix_module_configuration(self):
+    def _fix_module_configuration(self) -> None:
         """Fix and validate module configuration."""
         if '__modules__' in self.config:
             modules = self.config['__modules__']
@@ -542,7 +542,7 @@ class SpiderFootWebUiApp:
                     for m in modules
                 ]
     
-    def _setup_logging(self, loggingQueue: mp.Queue | None):
+    def _setup_logging(self, loggingQueue: mp.Queue | None) -> None:
         """Setup logging with proper error handling."""
         if loggingQueue is None:
             self.loggingQueue = mp.Queue()
@@ -553,7 +553,7 @@ class SpiderFootWebUiApp:
         logWorkerSetup(self.loggingQueue)
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
     
-    def _setup_templates(self):
+    def _setup_templates(self) -> None:
         """Setup template lookup with validation."""
         template_dirs = ['spiderfoot/templates']
         
@@ -564,7 +564,7 @@ class SpiderFootWebUiApp:
         
         self.lookup = TemplateLookup(directories=template_dirs)
     
-    def _initialize_endpoints(self):
+    def _initialize_endpoints(self) -> None:
         """Initialize all endpoint classes with enhanced error handling."""
         try:
             # Scan endpoints
@@ -595,7 +595,7 @@ class SpiderFootWebUiApp:
             self.log.error(f"Failed to initialize endpoints: {e}")
             raise
     
-    def _configure_endpoint(self, endpoint):
+    def _configure_endpoint(self, endpoint) -> None:
         """Configure an endpoint with common settings."""
         endpoint.config = self.config
         endpoint.docroot = self.docroot
@@ -605,7 +605,7 @@ class SpiderFootWebUiApp:
         if hasattr(endpoint, 'log'):
             endpoint.log = self.log
     
-    def _setup_security(self):
+    def _setup_security(self) -> None:
         """Setup security headers and policies with enhanced configuration."""
         if not secure:
             self.log.warning("Security headers not available (secure module not installed)")
@@ -649,7 +649,7 @@ class SpiderFootWebUiApp:
         except Exception as e:
             self.log.error(f"Failed to setup security headers: {e}")
     
-    def mount(self):
+    def mount(self) -> None:
         """Mount all endpoints with proper error handling and validation."""
         try:
             # Mount endpoints with proper paths
@@ -674,11 +674,11 @@ class SpiderFootWebUiApp:
             self.log.error(f"Failed to mount endpoints: {e}")
             raise
     
-    def _error_page_401(self, status, message, traceback, version):
+    def _error_page_401(self, status, message, traceback, version) -> str:
         """Enhanced 401 error page."""
         return ""
     
-    def _error_page_404(self, status, message, traceback, version):
+    def _error_page_404(self, status, message, traceback, version) -> str:
         """Enhanced 404 error page with better user experience."""
         try:
             from mako.template import Template
@@ -696,7 +696,7 @@ class SpiderFootWebUiApp:
         except Exception:
             return f"<html><body><h1>404 - Page Not Found</h1><p>Status: {status}</p></body></html>"
     
-    def _error_page_500(self, status, message, traceback, version):
+    def _error_page_500(self, status, message, traceback, version) -> str:
         """Enhanced 500 error page with debugging info."""
         try:
             if self.config.get('_debug'):
@@ -707,7 +707,7 @@ class SpiderFootWebUiApp:
         except Exception:
             return "<html><body><h1>500 - Internal Server Error</h1></body></html>"
     
-    def _error_page(self):
+    def _error_page(self) -> None:
         """Enhanced generic error page."""
         cherrypy.response.status = 500
         if self.config.get('_debug'):

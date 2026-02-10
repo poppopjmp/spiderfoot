@@ -115,7 +115,7 @@ class DnsService:
         self._cache_hits += 1
         return value
 
-    def _cache_set(self, key: str, value: Any):
+    def _cache_set(self, key: str, value: Any) -> None:
         """Store value in DNS cache."""
         if not self.config.cache_enabled:
             return
@@ -431,7 +431,7 @@ class DnsService:
 
     # --- Cache Management ---
 
-    def cache_clear(self):
+    def cache_clear(self) -> None:
         """Clear the DNS cache."""
         self._cache.clear()
 

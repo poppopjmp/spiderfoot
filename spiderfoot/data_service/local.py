@@ -35,7 +35,7 @@ class LocalDataService(DataService):
         self._dbh = None
         self._initialized = False
 
-    def _ensure_db(self):
+    def _ensure_db(self) -> None:
         """Lazily initialize the database handle."""
         if self._initialized:
             return
@@ -49,7 +49,7 @@ class LocalDataService(DataService):
             self.log.error("Failed to initialize database: %s", e)
             raise
 
-    def set_db_handle(self, dbh):
+    def set_db_handle(self, dbh) -> None:
         """Set an existing database handle directly.
 
         Useful when integrating with existing code that already

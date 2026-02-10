@@ -25,7 +25,7 @@ from spiderfoot.data_service.base import DataService, DataServiceConfig
 log = logging.getLogger("spiderfoot.dataservice.grpc")
 
 
-def _ensure_grpc():
+def _ensure_grpc() -> bool:
     """Validate grpc deps are available; raise ImportError if not."""
     try:
         import grpc  # noqa: F401

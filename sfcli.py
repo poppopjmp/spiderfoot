@@ -10,6 +10,8 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 import argparse
 import sys
 import os
@@ -67,7 +69,7 @@ class SpiderFootCli(cmd.Cmd):
         self._init_dynamic_completions()
         self._init_inline_help()
 
-    def _init_dynamic_completions(self):
+    def _init_dynamic_completions(self) -> None:
         """Initialize dynamic completion lists by querying the API."""
         try:
             # Preload modules, types, workspaces, targets, scan IDs
@@ -94,7 +96,7 @@ class SpiderFootCli(cmd.Cmd):
             return []
         return []
 
-    def _init_inline_help(self):
+    def _init_inline_help(self) -> None:
         """Prepare inline help mapping for commands."""
         self.inline_help = {}
         for cmd, entry in self.registry.commands.items():
@@ -175,7 +177,7 @@ class SpiderFootCli(cmd.Cmd):
             f.close()
 
     # Shortcut commands
-    def do_debug(self, line):
+    def do_debug(self, line) -> None:
         """Debug Short-cut command for set cli.debug = 1."""
         if self.config['cli.debug']:
             val = "0"
@@ -183,7 +185,7 @@ class SpiderFootCli(cmd.Cmd):
             val = "1"
         return self.do_set("cli.debug = " + val)
 
-    def do_spool(self, line):
+    def do_spool(self, line) -> None:
         """Spool Short-cut command for set cli.spool = 1/0."""
         if self.config['cli.spool']:
             val = "0"
@@ -198,7 +200,7 @@ class SpiderFootCli(cmd.Cmd):
 
         return None
 
-    def do_history(self, line):
+    def do_history(self, line) -> None:
         """History [-l] Short-cut command for set cli.history = 1/0.
 
         Add -l to just list the history.
@@ -220,7 +222,7 @@ class SpiderFootCli(cmd.Cmd):
         return self.do_set("cli.history = " + val)
 
     # Run before all commands to handle history and spooling
-    def precmd(self, line):
+    def precmd(self, line) -> str:
         # Show inline help for the command as the user types
         if hasattr(self, 'inline_help') and readline and line:
             try:
@@ -245,11 +247,11 @@ class SpiderFootCli(cmd.Cmd):
         return line
 
     # Debug print
-    def ddprint(self, msg):
+    def ddprint(self, msg) -> None:
         self.dprint(msg, deb=True)
 
     # Error print
-    def edprint(self, msg):
+    def edprint(self, msg) -> None:
         self.dprint(msg, err=True)
         # If the error is about an unknown command, suggest similar ones
         if isinstance(msg, str) and msg.startswith("[!] Unknown command"):
@@ -260,7 +262,7 @@ class SpiderFootCli(cmd.Cmd):
                     self.dprint(f"Did you mean: {', '.join(suggestions)}?", err=True)
 
     # Print nice tables.
-    def pretty(self, data, titlemap=None):
+    def pretty(self, data, titlemap=None) -> str:
         if not data:
             return ""
 
@@ -380,7 +382,7 @@ class SpiderFootCli(cmd.Cmd):
         return ''.join(out)
 
     # Make a request to the SpiderFoot server
-    def request(self, url, post=None):
+    def request(self, url, post=None) -> str | None:
         from spiderfoot.cli.network import SpiderFootApiClient
         api_client = SpiderFootApiClient(self.config)
         # Show progress indicator for long-running API calls
@@ -413,7 +415,7 @@ class SpiderFootCli(cmd.Cmd):
             self.edprint(f"Failed communicating with server: {url}")
         return result
 
-    def emptyline(self):
+    def emptyline(self) -> None:
         return
 
     def completedefault(self, text, line, begidx, endidx):
@@ -479,7 +481,7 @@ class SpiderFootCli(cmd.Cmd):
 
     # Send the command output to the user, processing the pipes
     # that may have been used.
-    def send_output(self, data, cmd, titles=None, total=True, raw=False):
+    def send_output(self, data, cmd, titles=None, total=True, raw=False) -> None:
         from spiderfoot.cli.output import pretty_table
         out = None
         try:
@@ -574,7 +576,7 @@ class SpiderFootCli(cmd.Cmd):
         self.dprint(newout, plain=True)
 
     # Modular command dispatch
-    def default(self, line):
+    def default(self, line) -> None:
         try:
             cmd, *args = shlex.split(line)
         except Exception as e:
@@ -590,14 +592,14 @@ class SpiderFootCli(cmd.Cmd):
             self.edprint(self.nohelp % cmd)
 
     # Legacy command methods for backward compatibility (can be removed if not needed)
-    def do_ping(self, line):
+    def do_ping(self, line) -> None:
         entry = self.registry.get("ping")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "ping")
 
-    def do_scans(self, line):
+    def do_scans(self, line) -> None:
         entry = self.registry.get("scans")
         if entry:
             entry['func'](self, line)
@@ -625,91 +627,91 @@ class SpiderFootCli(cmd.Cmd):
         else:
             self.edprint(self.nohelp % "correlationrules")
 
-    def do_data(self, line):
+    def do_data(self, line) -> None:
         entry = self.registry.get("data")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "data")
 
-    def do_export(self, line):
+    def do_export(self, line) -> None:
         entry = self.registry.get("export")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "export")
 
-    def do_logs(self, line):
+    def do_logs(self, line) -> None:
         entry = self.registry.get("logs")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "logs")
 
-    def do_start(self, line):
+    def do_start(self, line) -> None:
         entry = self.registry.get("start")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "start")
 
-    def do_stop(self, line):
+    def do_stop(self, line) -> None:
         entry = self.registry.get("stop")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "stop")
 
-    def do_delete(self, line):
+    def do_delete(self, line) -> None:
         entry = self.registry.get("delete")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "delete")
 
-    def do_scaninfo(self, line):
+    def do_scaninfo(self, line) -> None:
         entry = self.registry.get("scaninfo")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "scaninfo")
 
-    def do_correlations(self, line):
+    def do_correlations(self, line) -> None:
         entry = self.registry.get("correlations")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "correlations")
 
-    def do_summary(self, line):
+    def do_summary(self, line) -> None:
         entry = self.registry.get("summary")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "summary")
 
-    def do_find(self, line):
+    def do_find(self, line) -> None:
         entry = self.registry.get("find")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "find")
 
-    def do_query(self, line):
+    def do_query(self, line) -> None:
         entry = self.registry.get("query")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "query")
 
-    def do_set(self, line):
+    def do_set(self, line) -> None:
         entry = self.registry.get("set")
         if entry:
             entry['func'](self, line)
         else:
             self.edprint(self.nohelp % "set")
 
-    def do_help(self, line):
+    def do_help(self, line) -> None:
         entry = self.registry.get("help")
         if entry:
             entry['func'](self, line)
@@ -717,27 +719,27 @@ class SpiderFootCli(cmd.Cmd):
             self.edprint(self.nohelp % "help")
 
     # Execute a shell command locally and return the output
-    def do_shell(self, line):
+    def do_shell(self, line) -> None:
         """Shell Run a shell command locally."""
         self.dprint("Running shell command:" + str(line))
         self.dprint(os.popen(line).read(), plain=True)  # noqa: DUO106
 
-    def do_clear(self, line):
+    def do_clear(self, line) -> None:
         """Clear Clear the screen."""
         sys.stderr.write("\x1b[2J\x1b[H")
 
     # Exit the CLI
-    def do_exit(self, line):
+    def do_exit(self, line) -> bool:
         """Exit Exit the SpiderFoot CLI."""
         return True
 
     # Ctrl-D
-    def do_EOF(self, line):
+    def do_EOF(self, line) -> bool:
         """EOF (Ctrl-D) Exit the SpiderFoot CLI."""
         print("\n")
         return True
 
-    def preloop(self):
+    def preloop(self) -> None:
         # Backward compatibility: load history if enabled and readline is available
         if hasattr(self.config, 'get') and self.config.get('cli.history', True) and readline:
             try:
@@ -748,7 +750,7 @@ class SpiderFootCli(cmd.Cmd):
                 pass
         super().preloop()
 
-    def postcmd(self, stop, line):
+    def postcmd(self, stop, line) -> bool:
         # Backward compatibility: save history if enabled and readline is available
         if hasattr(self.config, 'get') and self.config.get('cli.history', True) and readline and line.strip():
             try:
@@ -758,7 +760,7 @@ class SpiderFootCli(cmd.Cmd):
                 pass
         return super().postcmd(stop, line)
 
-    def cmdloop(self, intro=None):
+    def cmdloop(self, intro=None) -> None:
         # Guarantee interactive CLI experience
         if sys.stdin.isatty():
             super().cmdloop(intro=intro)
