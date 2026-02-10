@@ -517,7 +517,7 @@ async def get_module_dependencies(
                 for et in (consumes or []):
                     event_type_map.setdefault(et, {"producers": [], "consumers": []})
                     event_type_map[et]["consumers"].append(name)
-        except Exception:
+        except (KeyError, TypeError, AttributeError):
             pass
 
     # Build edges: producer_module -> consumer_module via event_type

@@ -275,7 +275,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
             if self.pg_conn:
                 try:
                     self.pg_conn.rollback()
-                except Exception:
+                except (OSError, psycopg2.Error):
                     pass
             # Fall back to SQLite storage
             self.debug("Falling back to SQLite storage")

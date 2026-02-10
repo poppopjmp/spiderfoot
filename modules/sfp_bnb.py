@@ -76,7 +76,7 @@ class sfp_bnb(SpiderFootModernPlugin):
             if value < self.opts.get("min_value", 0.0):
                 self.debug(f"Event value {value} below min_value {self.opts['min_value']}, skipping.")
                 return None
-        except Exception:
+        except (ValueError, TypeError):
             pass
         # Stub: would process and emit events here
         self.debug("Stub: would process and emit BNB events here.")

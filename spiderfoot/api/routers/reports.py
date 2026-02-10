@@ -238,7 +238,7 @@ def clear_store() -> None:
                 # MemoryBackend
                 backend._store.clear()
             _persistent_store._cache.clear()
-        except Exception:
+        except (OSError, AttributeError):
             pass
         _persistent_store = None
     _report_store.clear()

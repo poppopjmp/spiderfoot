@@ -118,7 +118,7 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
             try:
                 if not os.path.isfile(output_file.name):
                     os.unlink(output_file.name)
-            except Exception:
+            except OSError:
                 pass
 
     def run_remote_tool(self, target_url):
@@ -330,5 +330,5 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
             # Clean up the temporary file
             try:
                 os.unlink(output_file)
-            except Exception:
+            except OSError:
                 pass

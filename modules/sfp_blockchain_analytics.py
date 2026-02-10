@@ -177,7 +177,7 @@ class BlockchainAnalyzer:
                             'confirmations': 0  # Not provided by this API
                         })
                         
-            except Exception as e:
+            except (ConnectionError, ValueError, KeyError):
                 pass
         
         return transactions
@@ -214,7 +214,7 @@ class BlockchainAnalyzer:
                             'gas_used': int(tx.get('gasUsed', '0'))
                         })
                         
-            except Exception as e:
+            except (ConnectionError, ValueError, KeyError):
                 pass
         
         return transactions
