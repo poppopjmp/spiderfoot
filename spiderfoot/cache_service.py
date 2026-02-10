@@ -302,7 +302,7 @@ class FileCache(CacheService):
             self._hits += 1
             return value
         except OSError as e:
-            self.log.debug(f"Cache read error for {key}: {e}")
+            self.log.debug("Cache read error for %s: %s", key, e)
             self._misses += 1
             return None
     
@@ -322,7 +322,7 @@ class FileCache(CacheService):
             self._sets += 1
             return True
         except (OSError, TypeError, ValueError) as e:
-            self.log.error(f"Cache write error for {key}: {e}")
+            self.log.error("Cache write error for %s: %s", key, e)
             return False
     
     def delete(self, key: str) -> bool:
@@ -333,7 +333,7 @@ class FileCache(CacheService):
         except FileNotFoundError:
             return False
         except OSError as e:
-            self.log.error(f"Cache delete error for {key}: {e}")
+            self.log.error("Cache delete error for %s: %s", key, e)
             return False
     
     def exists(self, key: str) -> bool:
@@ -355,7 +355,7 @@ class FileCache(CacheService):
                     os.unlink(fpath)
                     count += 1
         except OSError as e:
-            self.log.error(f"Cache clear error: {e}")
+            self.log.error("Cache clear error: %s", e)
         return count
     
     def size(self) -> int:
@@ -391,9 +391,9 @@ class RedisCache(CacheService):
                 decode_responses=True,
             )
             self._client.ping()
-            self.log.info(f"Connected to Redis cache: {self.config.redis_url}")
+            self.log.info("Connected to Redis cache: %s", self.config.redis_url)
         except Exception as e:
-            self.log.error(f"Redis connection failed: {e}")
+            self.log.error("Redis connection failed: %s", e)
             raise
     
     def get(self, key: str) -> Optional[Any]:
@@ -415,7 +415,7 @@ class RedisCache(CacheService):
             self._hits += 1
             return result
         except Exception as e:
-            self.log.error(f"Redis get error for {key}: {e}")
+            self.log.error("Redis get error for %s: %s", key, e)
             self._misses += 1
             return None
     
@@ -438,7 +438,7 @@ class RedisCache(CacheService):
             self._sets += 1
             return True
         except Exception as e:
-            self.log.error(f"Redis set error for {key}: {e}")
+            self.log.error("Redis set error for %s: %s", key, e)
             return False
     
     def delete(self, key: str) -> bool:
@@ -448,7 +448,7 @@ class RedisCache(CacheService):
         try:
             return self._client.delete(full_key) > 0
         except Exception as e:
-            self.log.error(f"Redis delete error for {key}: {e}")
+            self.log.error("Redis delete error for %s: %s", key, e)
             return False
     
     def exists(self, key: str) -> bool:
@@ -458,7 +458,7 @@ class RedisCache(CacheService):
         try:
             return self._client.exists(full_key) > 0
         except Exception as e:
-            self.log.error(f"Redis exists error for {key}: {e}")
+            self.log.error("Redis exists error for %s: %s", key, e)
             return False
     
     def clear(self) -> int:
@@ -471,7 +471,7 @@ class RedisCache(CacheService):
                 return self._client.delete(*keys)
             return 0
         except Exception as e:
-            self.log.error(f"Redis clear error: {e}")
+            self.log.error("Redis clear error: %s", e)
             return 0
     
     def size(self) -> int:
@@ -484,7 +484,7 @@ class RedisCache(CacheService):
                 count += 1
             return count
         except Exception as e:
-            self.log.error(f"Redis size error: {e}")
+            self.log.error("Redis size error: %s", e)
             return 0
 
 

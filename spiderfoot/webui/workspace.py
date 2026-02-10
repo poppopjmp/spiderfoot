@@ -20,7 +20,7 @@ class WorkspaceEndpoints:
                 from spiderfoot.csrf_protection import csrf_token as get_csrf_token
                 csrf_token = get_csrf_token()
         except Exception as e:
-            self.log.warning(f"Could not generate CSRF token: {e}")
+            self.log.warning("Could not generate CSRF token: %s", e)
             csrf_token = "disabled"
         
         templ = Template(filename='spiderfoot/templates/workspaces.tmpl', lookup=self.lookup)
@@ -136,8 +136,8 @@ class WorkspaceEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacemultiscan(self, workspace_id, targets, modules, scan_name_prefix, enable_correlation='false'):
-        self.log.info(f"[MULTISCAN] Starting multi-target scan for workspace: {workspace_id}")
-        self.log.debug(f"[MULTISCAN] Input parameters - targets: {targets}, modules: {modules}, prefix: {scan_name_prefix}")
+        self.log.info("[MULTISCAN] Starting multi-target scan for workspace: %s", workspace_id)
+        self.log.debug("[MULTISCAN] Input parameters - targets: %s, modules: %s, prefix: %s", targets, modules, scan_name_prefix)
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             target_list = [t.strip() for t in targets.split(',') if t.strip()]
@@ -204,7 +204,7 @@ class WorkspaceEndpoints:
                     from spiderfoot.csrf_protection import csrf_token as get_csrf_token
                     csrf_token = get_csrf_token()
             except Exception as e:
-                self.log.warning(f"Could not generate CSRF token: {e}")
+                self.log.warning("Could not generate CSRF token: %s", e)
                 csrf_token = "disabled"
             
             # Load scans for the workspace
@@ -212,7 +212,7 @@ class WorkspaceEndpoints:
             try:
                 scan_details = ws.get_scans()
             except Exception as e:
-                self.log.warning(f"Could not load scans for workspace {workspace_id}: {e}")
+                self.log.warning("Could not load scans for workspace %s: %s", workspace_id, e)
             
             # Use the template
             templ = Template(filename='spiderfoot/templates/workspace_details.tmpl', lookup=self.lookup)

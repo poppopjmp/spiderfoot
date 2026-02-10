@@ -100,7 +100,7 @@ def create_data_service_from_config(sf_config: Dict[str, Any]) -> DataService:
     try:
         backend = DataServiceBackend(backend_str.lower())
     except ValueError:
-        log.warning(f"Unknown backend '{backend_str}', defaulting to local")
+        log.warning("Unknown backend '%s', defaulting to local", backend_str)
         backend = DataServiceBackend.LOCAL
     
     config = DataServiceConfig(
@@ -136,7 +136,7 @@ def create_data_service_from_env() -> DataService:
     try:
         backend = DataServiceBackend(backend_str.lower())
     except ValueError:
-        log.warning(f"Unknown backend '{backend_str}', defaulting to local")
+        log.warning("Unknown backend '%s', defaulting to local", backend_str)
         backend = DataServiceBackend.LOCAL
     
     config = DataServiceConfig(
@@ -242,7 +242,7 @@ class DataServiceBridge:
         if by == "type":
             summary = self._ds.scan_result_summary(instanceId)
             return [(k, "", "", v, 0) for k, v in summary.items()]
-        self.log.warning(f"scanResultSummary by='{by}' not fully supported via bridge")
+        self.log.warning("scanResultSummary by='%s' not fully supported via bridge", by)
         return []
     
     # --- Legacy log methods ---

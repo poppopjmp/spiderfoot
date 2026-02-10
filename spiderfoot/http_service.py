@@ -288,16 +288,16 @@ class HttpService:
                 result["content"] = resp.text
             
         except requests.exceptions.Timeout:
-            self.log.warning(f"Timeout fetching {url}")
+            self.log.warning("Timeout fetching %s", url)
             result["status"] = "Timeout"
         except requests.exceptions.ConnectionError as e:
-            self.log.warning(f"Connection error fetching {url}: {e}")
+            self.log.warning("Connection error fetching %s: %s", url, e)
             result["status"] = "Connection Error"
         except requests.exceptions.RequestException as e:
-            self.log.warning(f"Request error fetching {url}: {e}")
+            self.log.warning("Request error fetching %s: %s", url, e)
             result["status"] = str(e)
         except Exception as e:
-            self.log.error(f"Unexpected error fetching {url}: {e}")
+            self.log.error("Unexpected error fetching %s: %s", url, e)
             result["status"] = str(e)
         finally:
             session.close()
@@ -534,7 +534,7 @@ class HttpService:
                 )
             
         except Exception as e:
-            self.log.error(f"Certificate parsing failed: {e}")
+            self.log.error("Certificate parsing failed: %s", e)
         
         return result
     

@@ -144,15 +144,15 @@ class DnsService:
                 answers = self._resolver.resolve(hostname, rdtype)
                 results = [str(rdata) for rdata in answers]
             except dns.resolver.NXDOMAIN:
-                self.log.debug(f"NXDOMAIN: {hostname}")
+                self.log.debug("NXDOMAIN: %s", hostname)
             except dns.resolver.NoAnswer:
-                self.log.debug(f"No {rdtype} records: {hostname}")
+                self.log.debug("No %s records: %s", rdtype, hostname)
             except dns.resolver.NoNameservers:
-                self.log.warning(f"No nameservers available for {hostname}")
+                self.log.warning("No nameservers available for %s", hostname)
             except dns.exception.Timeout:
-                self.log.warning(f"DNS timeout resolving {hostname}")
+                self.log.warning("DNS timeout resolving %s", hostname)
             except Exception as e:
-                self.log.warning(f"DNS resolve error for {hostname}: {e}")
+                self.log.warning("DNS resolve error for %s: %s", hostname, e)
         else:
             # Fallback to socket
             try:
@@ -169,9 +169,9 @@ class DnsService:
                     _, _, addrs = socket.gethostbyname_ex(hostname)
                     results = list(addrs)
             except socket.gaierror as e:
-                self.log.debug(f"Socket resolve failed for {hostname}: {e}")
+                self.log.debug("Socket resolve failed for %s: %s", hostname, e)
             except Exception as e:
-                self.log.warning(f"Socket resolve error for {hostname}: {e}")
+                self.log.warning("Socket resolve error for %s: %s", hostname, e)
         
         self._cache_set(cache_key, results)
         return results
@@ -223,19 +223,19 @@ class DnsService:
                 answers = self._resolver.resolve(rev_name, "PTR")
                 results = [str(rdata).rstrip(".") for rdata in answers]
             except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-                self.log.debug(f"No PTR for {ip_address}")
+                self.log.debug("No PTR for %s", ip_address)
             except dns.exception.Timeout:
-                self.log.warning(f"DNS timeout reverse-resolving {ip_address}")
+                self.log.warning("DNS timeout reverse-resolving %s", ip_address)
             except Exception as e:
-                self.log.warning(f"Reverse DNS error for {ip_address}: {e}")
+                self.log.warning("Reverse DNS error for %s: %s", ip_address, e)
         else:
             try:
                 hostname, _, _ = socket.gethostbyaddr(ip_address)
                 results = [hostname]
             except socket.herror:
-                self.log.debug(f"No reverse DNS for {ip_address}")
+                self.log.debug("No reverse DNS for %s", ip_address)
             except Exception as e:
-                self.log.warning(f"Socket reverse DNS error for {ip_address}: {e}")
+                self.log.warning("Socket reverse DNS error for %s: %s", ip_address, e)
         
         self._cache_set(cache_key, results)
         return results
@@ -274,7 +274,7 @@ class DnsService:
         except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
             pass
         except Exception as e:
-            self.log.warning(f"MX resolve error for {domain}: {e}")
+            self.log.warning("MX resolve error for %s: %s", domain, e)
         
         self._cache_set(cache_key, results)
         return results
@@ -348,7 +348,7 @@ class DnsService:
                 self._cache_set(cache_key, result)
                 return result
         except Exception as e:
-            self.log.debug(f"SOA resolve error for {domain}: {e}")
+            self.log.debug("SOA resolve error for %s: %s", domain, e)
         
         return None
     

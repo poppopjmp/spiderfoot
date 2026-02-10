@@ -81,7 +81,7 @@ class InMemoryEventBus(EventBus):
                     await self._queues[sub_id].put(envelope)
                     delivered = True
                 except Exception as e:
-                    self.log.error(f"Failed to deliver event to {sub_id}: {e}")
+                    self.log.error("Failed to deliver event to %s: %s", sub_id, e)
         
         return delivered
     
@@ -107,7 +107,7 @@ class InMemoryEventBus(EventBus):
         task = asyncio.create_task(self._dispatch_loop(sub_id))
         self._dispatch_tasks[sub_id] = task
         
-        self.log.debug(f"Subscribed {sub_id} to topic '{topic}'")
+        self.log.debug("Subscribed %s to topic '%s'", sub_id, topic)
         return sub_id
     
     async def unsubscribe(self, subscription_id: str) -> None:
@@ -130,7 +130,7 @@ class InMemoryEventBus(EventBus):
             self._callbacks.pop(subscription_id, None)
             self._queues.pop(subscription_id, None)
         
-        self.log.debug(f"Unsubscribed {subscription_id}")
+        self.log.debug("Unsubscribed %s", subscription_id)
     
     async def _dispatch_loop(self, sub_id: str) -> None:
         """Background task that dispatches events to a subscriber's callback."""
@@ -151,7 +151,7 @@ class InMemoryEventBus(EventBus):
                 except asyncio.CancelledError:
                     break
                 except Exception as e:
-                    self.log.error(f"Error in dispatch loop for {sub_id}: {e}")
+                    self.log.error("Error in dispatch loop for %s: %s", sub_id, e)
         except asyncio.CancelledError:
             pass
     

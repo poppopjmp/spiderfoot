@@ -58,7 +58,7 @@ class ServerManager:
                 'server.socket_port': int(web_port)
             })
 
-            self.log.info(f"Starting web server at {web_host}:{web_port}")
+            self.log.info("Starting web server at %s:%s", web_host, web_port)
 
             # Enable access to static files via the web directory
             conf = {
@@ -102,8 +102,8 @@ class ServerManager:
             self.log.info("")
             self.log.info("*************************************************************")
             self.log.info(" Use SpiderFoot by starting your web browser of choice and ")
-            self.log.info(f" browse to {url}")
-            self.log.info(f" Server running {auth_info}")
+            self.log.info(" browse to %s", url)
+            self.log.info(" Server running %s", auth_info)
             self.log.info("*************************************************************")
             self.log.info("")
 
@@ -147,7 +147,7 @@ class ServerManager:
             api_log_level = api_config.get('log_level', 'info')
             api_reload = api_config.get('reload', False)
 
-            self.log.info(f"Starting FastAPI server at {api_host}:{api_port}")
+            self.log.info("Starting FastAPI server at %s:%s", api_host, api_port)
 
             # Check if sfapi.py exists
             sfapi_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../sfapi.py')
@@ -158,8 +158,8 @@ class ServerManager:
             self.log.info("")
             self.log.info("*************************************************************")
             self.log.info(" SpiderFoot FastAPI server is starting...")
-            self.log.info(f" API will be available at: http://{api_host}:{api_port}")
-            self.log.info(f" API documentation at: http://{api_host}:{api_port}/api/docs")
+            self.log.info(" API will be available at: http://%s:%s", api_host, api_port)
+            self.log.info(" API documentation at: http://%s:%s/api/docs", api_host, api_port)
             self.log.info("*************************************************************")
             self.log.info("")
 
@@ -207,14 +207,14 @@ class ServerManager:
             api_host = api_config.get('host', '127.0.0.1')
             api_port = api_config.get('port', DEFAULT_API_PORT)
 
-            self.log.info(f"Starting both servers - Web UI: {web_host}:{web_port}, API: {api_host}:{api_port}")
+            self.log.info("Starting both servers - Web UI: %s:%s, API: %s:%s", web_host, web_port, api_host, api_port)
 
             self.log.info("")
             self.log.info("*************************************************************")
             self.log.info(" SpiderFoot is starting both servers...")
-            self.log.info(f" Web UI: http://{web_host}:{web_port}")
-            self.log.info(f" FastAPI: http://{api_host}:{api_port}")
-            self.log.info(f" API Docs: http://{api_host}:{api_port}/api/docs")
+            self.log.info(" Web UI: http://%s:%s", web_host, web_port)
+            self.log.info(" FastAPI: http://%s:%s", api_host, api_port)
+            self.log.info(" API Docs: http://%s:%s/api/docs", api_host, api_port)
             self.log.info("*************************************************************")
             self.log.info("")
 
@@ -237,7 +237,7 @@ class ServerManager:
                         access_log=True
                     )
                 except Exception as e:
-                    self.log.error(f"FastAPI server error: {e}")
+                    self.log.error("FastAPI server error: %s", e)
 
             # Start FastAPI in background thread
             fastapi_thread = threading.Thread(target=run_fastapi, daemon=True)
@@ -271,9 +271,9 @@ class ServerManager:
                         if ':' in line:
                             username, password = line.split(':', 1)
                             secrets[username] = password
-                self.log.info(f"Loaded {len(secrets)} authentication credentials")
+                self.log.info("Loaded %s authentication credentials", len(secrets))
             except Exception as e:
-                self.log.error(f"Failed to load authentication file: {e}")
+                self.log.error("Failed to load authentication file: %s", e)
         
         return secrets
 

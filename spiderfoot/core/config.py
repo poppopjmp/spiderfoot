@@ -79,7 +79,7 @@ class ConfigManager:
                 )
                 self._config['__database'] = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
             except Exception as e:
-                self.log.error(f"Failed to initialize SpiderFootHelpers configuration: {e}")
+                self.log.error("Failed to initialize SpiderFootHelpers configuration: %s", e)
                 # Use fallback values
                 self._config['_genericusers'] = ""
                 default_data_path = Path.home() / '.spiderfoot'
@@ -94,7 +94,7 @@ class ConfigManager:
             return deepcopy(self._config)
             
         except Exception as e:
-            self.log.error(f"Failed to initialize configuration: {e}")
+            self.log.error("Failed to initialize configuration: %s", e)
             raise
     
     def get_config(self) -> Dict[str, Any]:
@@ -119,7 +119,7 @@ class ConfigManager:
             raise TypeError("Updates must be a dictionary")
         
         self._config.update(updates)
-        self.log.debug(f"Configuration updated with {len(updates)} changes")
+        self.log.debug("Configuration updated with %s changes", len(updates))
     
     def validate_legacy_files(self) -> None:
         """

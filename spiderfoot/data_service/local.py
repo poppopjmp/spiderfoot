@@ -44,7 +44,7 @@ class LocalDataService(DataService):
             self._initialized = True
             self.log.debug("LocalDataService: database initialized")
         except Exception as e:
-            self.log.error(f"Failed to initialize database: {e}")
+            self.log.error("Failed to initialize database: %s", e)
             raise
     
     def set_db_handle(self, dbh):
@@ -73,7 +73,7 @@ class LocalDataService(DataService):
             self.dbh.scanInstanceCreate(scan_id, scan_name, target)
             return True
         except Exception as e:
-            self.log.error(f"scan_instance_create failed: {e}")
+            self.log.error("scan_instance_create failed: %s", e)
             return False
     
     def scan_instance_get(self, scan_id: str) -> Optional[Dict[str, Any]]:
@@ -99,7 +99,7 @@ class LocalDataService(DataService):
                 "status": row[5],
             }
         except Exception as e:
-            self.log.error(f"scan_instance_get failed: {e}")
+            self.log.error("scan_instance_get failed: %s", e)
             return None
     
     def scan_instance_list(self) -> List[Dict[str, Any]]:
@@ -121,7 +121,7 @@ class LocalDataService(DataService):
                 })
             return results
         except Exception as e:
-            self.log.error(f"scan_instance_list failed: {e}")
+            self.log.error("scan_instance_list failed: %s", e)
             return []
     
     def scan_instance_delete(self, scan_id: str) -> bool:
@@ -130,7 +130,7 @@ class LocalDataService(DataService):
             self.dbh.scanInstanceDelete(scan_id)
             return True
         except Exception as e:
-            self.log.error(f"scan_instance_delete failed: {e}")
+            self.log.error("scan_instance_delete failed: %s", e)
             return False
     
     def scan_status_set(self, scan_id: str, status: str,
@@ -146,7 +146,7 @@ class LocalDataService(DataService):
             )
             return True
         except Exception as e:
-            self.log.error(f"scan_status_set failed: {e}")
+            self.log.error("scan_status_set failed: %s", e)
             return False
     
     # --- Event Operations ---
@@ -189,7 +189,7 @@ class LocalDataService(DataService):
                 self.dbh.conn.commit()
             return True
         except Exception as e:
-            self.log.error(f"event_store failed: {e}")
+            self.log.error("event_store failed: %s", e)
             return False
     
     def event_store_obj(self, scan_id: str, sf_event) -> bool:
@@ -208,7 +208,7 @@ class LocalDataService(DataService):
             self.dbh.scanEventStore(scan_id, sf_event)
             return True
         except Exception as e:
-            self.log.error(f"event_store_obj failed: {e}")
+            self.log.error("event_store_obj failed: %s", e)
             return False
     
     def event_get_by_scan(
@@ -243,7 +243,7 @@ class LocalDataService(DataService):
             
             return results
         except Exception as e:
-            self.log.error(f"event_get_by_scan failed: {e}")
+            self.log.error("event_get_by_scan failed: %s", e)
             return []
     
     def event_get_unique(
@@ -257,7 +257,7 @@ class LocalDataService(DataService):
             # Returns (data, type, count)
             return [row[0] for row in rows]
         except Exception as e:
-            self.log.error(f"event_get_unique failed: {e}")
+            self.log.error("event_get_unique failed: %s", e)
             return []
     
     def event_exists(
@@ -273,7 +273,7 @@ class LocalDataService(DataService):
             )
             return len(rows) > 0
         except Exception as e:
-            self.log.error(f"event_exists failed: {e}")
+            self.log.error("event_exists failed: %s", e)
             return False
     
     # --- Log Operations ---
@@ -292,7 +292,7 @@ class LocalDataService(DataService):
             )
             return True
         except Exception as e:
-            self.log.error(f"scan_log_event failed: {e}")
+            self.log.error("scan_log_event failed: %s", e)
             return False
     
     def scan_log_get(
@@ -326,7 +326,7 @@ class LocalDataService(DataService):
             
             return results
         except Exception as e:
-            self.log.error(f"scan_log_get failed: {e}")
+            self.log.error("scan_log_get failed: %s", e)
             return []
     
     # --- Config Operations ---
@@ -342,7 +342,7 @@ class LocalDataService(DataService):
                 self.dbh.configSet(scoped)
             return True
         except Exception as e:
-            self.log.error(f"config_set failed: {e}")
+            self.log.error("config_set failed: %s", e)
             return False
     
     def config_get(self, scope: str = "GLOBAL") -> Dict[str, str]:
@@ -361,7 +361,7 @@ class LocalDataService(DataService):
                     if k.startswith(prefix)
                 }
         except Exception as e:
-            self.log.error(f"config_get failed: {e}")
+            self.log.error("config_get failed: %s", e)
             return {}
     
     def scan_config_set(self, scan_id: str, config_data: Dict[str, str]) -> bool:
@@ -370,7 +370,7 @@ class LocalDataService(DataService):
             self.dbh.scanConfigSet(scan_id, config_data)
             return True
         except Exception as e:
-            self.log.error(f"scan_config_set failed: {e}")
+            self.log.error("scan_config_set failed: %s", e)
             return False
     
     # --- Correlation Operations ---
@@ -404,7 +404,7 @@ class LocalDataService(DataService):
             )
             return True
         except Exception as e:
-            self.log.error(f"correlation_store failed: {e}")
+            self.log.error("correlation_store failed: %s", e)
             return False
     
     def correlation_get_by_scan(self, scan_id: str) -> List[Dict[str, Any]]:
@@ -426,7 +426,7 @@ class LocalDataService(DataService):
                 })
             return results
         except Exception as e:
-            self.log.error(f"correlation_get_by_scan failed: {e}")
+            self.log.error("correlation_get_by_scan failed: %s", e)
             return []
     
     # --- Summary Operations ---
@@ -438,7 +438,7 @@ class LocalDataService(DataService):
             # (type, description, last_in, total, unique_total)
             return {row[0]: row[3] for row in rows}
         except Exception as e:
-            self.log.error(f"scan_result_summary failed: {e}")
+            self.log.error("scan_result_summary failed: %s", e)
             return {}
     
     def event_types_list(self) -> List[Dict[str, str]]:
@@ -456,5 +456,5 @@ class LocalDataService(DataService):
                 })
             return results
         except Exception as e:
-            self.log.error(f"event_types_list failed: {e}")
+            self.log.error("event_types_list failed: %s", e)
             return []

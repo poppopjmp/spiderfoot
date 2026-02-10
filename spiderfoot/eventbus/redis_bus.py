@@ -52,7 +52,7 @@ class RedisEventBus(EventBus):
         # Verify connection
         await self._redis.ping()
         self._running = True
-        self.log.info(f"Redis event bus connected to {self.config.redis_url}")
+        self.log.info("Redis event bus connected to %s", self.config.redis_url)
     
     async def disconnect(self) -> None:
         """Disconnect from Redis."""
@@ -103,7 +103,7 @@ class RedisEventBus(EventBus):
                 )
                 return True
             except Exception as e:
-                self.log.warning(f"Publish attempt {attempt+1} failed: {e}")
+                self.log.warning("Publish attempt %s failed: %s", attempt+1, e)
                 if attempt < self.config.max_retry - 1:
                     await asyncio.sleep(self.config.retry_delay * (attempt + 1))
         
@@ -145,7 +145,7 @@ class RedisEventBus(EventBus):
         )
         self._listen_tasks[sub_id] = task
         
-        self.log.debug(f"Subscribed {sub_id} to Redis stream '{stream_key}'")
+        self.log.debug("Subscribed %s to Redis stream '%s'", sub_id, stream_key)
         return sub_id
     
     async def unsubscribe(self, subscription_id: str) -> None:
@@ -186,12 +186,12 @@ class RedisEventBus(EventBus):
                                     stream_key, self._consumer_group, msg_id
                                 )
                             except Exception as e:
-                                self.log.error(f"Error processing message {msg_id}: {e}")
+                                self.log.error("Error processing message %s: %s", msg_id, e)
                 
                 except asyncio.CancelledError:
                     break
                 except Exception as e:
-                    self.log.error(f"Error in listen loop: {e}")
+                    self.log.error("Error in listen loop: %s", e)
                     await asyncio.sleep(self.config.retry_delay)
         
         except asyncio.CancelledError:

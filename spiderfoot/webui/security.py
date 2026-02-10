@@ -80,7 +80,7 @@ def setup_enhanced_security(config: Dict[str, Any]) -> Optional[Any]:
         return security_middleware
         
     except Exception as e:
-        log.error(f"Failed to install enhanced security middleware: {e}")
+        log.error("Failed to install enhanced security middleware: %s", e)
         log.info("Falling back to basic security headers")
         setup_security_headers()
         return None

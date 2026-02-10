@@ -76,7 +76,7 @@ async def get_config_endpoint(api_key: str = optional_auth_dep):
             version=cfg.app_config.version,
         )
     except Exception as e:
-        log.error(f"Failed to get config: {e}")
+        log.error("Failed to get config: %s", e)
         raise HTTPException(status_code=500, detail="Failed to get configuration") from e
 
 
@@ -105,7 +105,7 @@ async def update_config(body: ConfigUpdateRequest, api_key: str = optional_auth_
     except HTTPException:
         raise
     except Exception as e:
-        log.error(f"Failed to update config: {e}")
+        log.error("Failed to update config: %s", e)
         raise HTTPException(status_code=500, detail="Failed to update config") from e
 
 
@@ -130,7 +130,7 @@ async def update_config_endpoint(
         config.update_config(new_config)
         return {"status": "success"}
     except Exception as e:
-        log.error(f"Failed to update config: {e}")
+        log.error("Failed to update config: %s", e)
         raise HTTPException(status_code=500, detail="Failed to update configuration") from e
 
 
@@ -168,7 +168,7 @@ async def get_modules(api_key: str = optional_auth_dep):
             modules_list.append(module_info)
         return {"modules": sorted(modules_list, key=lambda x: x['name'])}
     except Exception as e:
-        log.error(f"Failed to get modules: {e}")
+        log.error("Failed to get modules: %s", e)
         raise HTTPException(status_code=500, detail="Failed to get modules") from e
 
 
@@ -205,7 +205,7 @@ async def update_module_options(module_name: str, options: dict = config_body, a
     except HTTPException:
         raise
     except Exception as e:
-        log.error(f"Failed to update module options: {e}")
+        log.error("Failed to update module options: %s", e)
         raise HTTPException(status_code=500, detail="Failed to update module options") from e
 
 
@@ -229,7 +229,7 @@ async def get_event_types(api_key: str = optional_auth_dep,
         event_types = config_repo.get_event_types()
         return {"event_types": event_types}
     except Exception as e:
-        log.error(f"Failed to get event types: {e}")
+        log.error("Failed to get event types: %s", e)
         raise HTTPException(status_code=500, detail="Failed to get event types") from e
 
 
@@ -258,7 +258,7 @@ async def get_module_config(
     except HTTPException:
         raise
     except Exception as e:
-        log.error(f"Failed to get module config: {e}")
+        log.error("Failed to get module config: %s", e)
         raise HTTPException(status_code=500, detail="Failed to get module configuration") from e
 
 
@@ -285,7 +285,7 @@ async def update_module_config(
         config.update_module_config(module_name, new_config)
         return {"status": "success"}
     except Exception as e:
-        log.error(f"Failed to update module config: {e}")
+        log.error("Failed to update module config: %s", e)
         raise HTTPException(status_code=500, detail="Failed to update module configuration") from e
 
 
@@ -300,7 +300,7 @@ async def reload_config(api_key: str = Depends(optional_auth)):
         cfg.reload()
         return {"status": "reloaded", "summary": cfg.config_summary()}
     except Exception as e:
-        log.error(f"Failed to reload config: {e}")
+        log.error("Failed to reload config: %s", e)
         raise HTTPException(status_code=500, detail="Failed to reload configuration") from e
 
 
@@ -322,7 +322,7 @@ async def validate_config(body: ConfigValidateRequest, api_key: str = optional_a
         )
         return resp
     except Exception as e:
-        log.error(f"Failed to validate config: {e}")
+        log.error("Failed to validate config: %s", e)
         raise HTTPException(status_code=500, detail="Failed to validate config") from e
 
 
@@ -336,7 +336,7 @@ async def get_scan_defaults(api_key: str = optional_auth_dep):
         defaults = config.get_scan_defaults()
         return {"scan_defaults": defaults}
     except Exception as e:
-        log.error(f"Failed to get scan defaults: {e}")
+        log.error("Failed to get scan defaults: %s", e)
         raise HTTPException(status_code=500, detail="Failed to get scan defaults") from e
 
 
@@ -351,7 +351,7 @@ async def update_scan_defaults(options: dict = config_body, api_key: str = optio
         config.save_config()
         return {"success": True, "message": "Scan defaults updated"}
     except Exception as e:
-        log.error(f"Failed to update scan defaults: {e}")
+        log.error("Failed to update scan defaults: %s", e)
         raise HTTPException(status_code=500, detail="Failed to update scan defaults") from e
 
 
@@ -365,7 +365,7 @@ async def get_workspace_defaults(api_key: str = optional_auth_dep):
         defaults = config.get_workspace_defaults()
         return {"workspace_defaults": defaults}
     except Exception as e:
-        log.error(f"Failed to get workspace defaults: {e}")
+        log.error("Failed to get workspace defaults: %s", e)
         raise HTTPException(status_code=500, detail="Failed to get workspace defaults") from e
 
 
@@ -380,7 +380,7 @@ async def update_workspace_defaults(options: dict = config_body, api_key: str = 
         config.save_config()
         return {"success": True, "message": "Workspace defaults updated"}
     except Exception as e:
-        log.error(f"Failed to update workspace defaults: {e}")
+        log.error("Failed to update workspace defaults: %s", e)
         raise HTTPException(status_code=500, detail="Failed to update workspace defaults") from e
 
 
@@ -394,7 +394,7 @@ async def list_api_keys(api_key: str = optional_auth_dep):
         keys = config.get_api_keys()
         return {"api_keys": keys}
     except Exception as e:
-        log.error(f"Failed to list API keys: {e}")
+        log.error("Failed to list API keys: %s", e)
         raise HTTPException(status_code=500, detail="Failed to list API keys") from e
 
 @router.post("/config/api-keys")
@@ -408,7 +408,7 @@ async def add_api_key(key_data: dict = config_body, api_key: str = optional_auth
         config.save_config()
         return {"success": True, "message": "API key added"}
     except Exception as e:
-        log.error(f"Failed to add API key: {e}")
+        log.error("Failed to add API key: %s", e)
         raise HTTPException(status_code=500, detail="Failed to add API key") from e
 
 @router.delete("/config/api-keys/{key_id}")
@@ -422,7 +422,7 @@ async def delete_api_key(key_id: str, api_key: str = optional_auth_dep):
         config.save_config()
         return {"success": True, "message": "API key deleted"}
     except Exception as e:
-        log.error(f"Failed to delete API key: {e}")
+        log.error("Failed to delete API key: %s", e)
         raise HTTPException(status_code=500, detail="Failed to delete API key") from e
 
 
@@ -477,7 +477,7 @@ async def rotate_api_key(key_id: str, api_key: str = optional_auth_dep):
     except HTTPException:
         raise
     except Exception as e:
-        log.error(f"Failed to rotate API key: {e}")
+        log.error("Failed to rotate API key: %s", e)
         raise HTTPException(status_code=500, detail="Failed to rotate API key") from e
 
 
@@ -623,7 +623,7 @@ async def list_credentials(api_key: str = optional_auth_dep):
         creds = config.get_credentials()
         return {"credentials": creds}
     except Exception as e:
-        log.error(f"Failed to list credentials: {e}")
+        log.error("Failed to list credentials: %s", e)
         raise HTTPException(status_code=500, detail="Failed to list credentials") from e
 
 @router.post("/config/credentials")
@@ -637,7 +637,7 @@ async def add_credential(cred_data: dict = config_body, api_key: str = optional_
         config.save_config()
         return {"success": True, "message": "Credential added"}
     except Exception as e:
-        log.error(f"Failed to add credential: {e}")
+        log.error("Failed to add credential: %s", e)
         raise HTTPException(status_code=500, detail="Failed to add credential") from e
 
 @router.delete("/config/credentials/{cred_id}")
@@ -651,7 +651,7 @@ async def delete_credential(cred_id: str, api_key: str = optional_auth_dep):
         config.save_config()
         return {"success": True, "message": "Credential deleted"}
     except Exception as e:
-        log.error(f"Failed to delete credential: {e}")
+        log.error("Failed to delete credential: %s", e)
         raise HTTPException(status_code=500, detail="Failed to delete credential") from e
 
 @router.get("/config/export")
@@ -663,7 +663,7 @@ async def export_config(api_key: str = optional_auth_dep):
         config = get_app_config()
         return config.get_config()
     except Exception as e:
-        log.error(f"Failed to export config: {e}")
+        log.error("Failed to export config: %s", e)
         raise HTTPException(status_code=500, detail="Failed to export config") from e
 
 
@@ -721,7 +721,7 @@ async def get_config_summary(api_key: str = optional_auth_dep):
             "version": ac.version,
         }
     except Exception as e:
-        log.error(f"Failed to get config summary: {e}")
+        log.error("Failed to get config summary: %s", e)
         raise HTTPException(status_code=500, detail="Failed to get config summary") from e
 
 @router.post("/config/import")
@@ -735,7 +735,7 @@ async def import_config(new_config: dict = config_body, api_key: str = optional_
         config.save_config()
         return {"success": True, "message": "Config imported"}
     except Exception as e:
-        log.error(f"Failed to import config: {e}")
+        log.error("Failed to import config: %s", e)
         raise HTTPException(status_code=500, detail="Failed to import config") from e
 
 
@@ -815,7 +815,7 @@ async def get_config_sources(
             detail="ConfigService not available — source tracing requires v5.51.0+",
         )
     except Exception as e:
-        log.error(f"Failed to get config sources: {e}")
+        log.error("Failed to get config sources: %s", e)
         raise HTTPException(status_code=500, detail="Failed to get config sources") from e
 
 
@@ -844,7 +844,7 @@ async def get_config_environment(api_key: str = optional_auth_dep):
             detail="ConfigService not available — environment tracing requires v5.51.0+",
         )
     except Exception as e:
-        log.error(f"Failed to get environment info: {e}")
+        log.error("Failed to get environment info: %s", e)
         raise HTTPException(status_code=500, detail="Failed to get environment info") from e
 
 

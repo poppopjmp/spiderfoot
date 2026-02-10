@@ -65,9 +65,9 @@ class ServiceRegistry:
         """
         with self._lock:
             if name in self._services:
-                self.log.warning(f"Overwriting existing service: {name}")
+                self.log.warning("Overwriting existing service: %s", name)
             self._services[name] = service
-            self.log.debug(f"Registered service: {name} ({type(service).__name__})")
+            self.log.debug("Registered service: %s (%s)", name, type(service).__name__)
     
     def register_factory(self, name: str, factory: Callable[[], Any]) -> None:
         """Register a lazy service factory.
@@ -80,7 +80,7 @@ class ServiceRegistry:
         """
         with self._lock:
             self._factories[name] = factory
-            self.log.debug(f"Registered factory: {name}")
+            self.log.debug("Registered factory: %s", name)
     
     def get(self, name: str) -> Any:
         """Get a service by name.
@@ -104,7 +104,7 @@ class ServiceRegistry:
             
             # Try factory
             if name in self._factories:
-                self.log.debug(f"Creating service from factory: {name}")
+                self.log.debug("Creating service from factory: %s", name)
                 service = self._factories[name]()
                 self._services[name] = service
                 del self._factories[name]
@@ -154,7 +154,7 @@ class ServiceRegistry:
             service = self._services.pop(name, None)
             self._factories.pop(name, None)
             if service:
-                self.log.debug(f"Unregistered service: {name}")
+                self.log.debug("Unregistered service: %s", name)
             return service
     
     def list_services(self) -> List[str]:
@@ -239,7 +239,7 @@ def initialize_services(sf_config: Dict[str, Any]) -> ServiceRegistry:
             from spiderfoot.eventbus.factory import create_event_bus_from_config
             return create_event_bus_from_config(sf_config)
         except Exception as e:
-            log.warning(f"EventBus creation failed, using in-memory: {e}")
+            log.warning("EventBus creation failed, using in-memory: %s", e)
             from spiderfoot.eventbus.memory import InMemoryEventBus
             return InMemoryEventBus()
     
@@ -251,7 +251,7 @@ def initialize_services(sf_config: Dict[str, Any]) -> ServiceRegistry:
             from spiderfoot.data_service.factory import create_data_service_from_config
             return create_data_service_from_config(sf_config)
         except Exception as e:
-            log.error(f"DataService creation failed: {e}")
+            log.error("DataService creation failed: %s", e)
             raise
     
     registry.register_factory(SERVICE_DATA, _create_data_service)

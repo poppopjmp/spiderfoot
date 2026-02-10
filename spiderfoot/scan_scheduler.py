@@ -248,7 +248,7 @@ class ScanScheduler:
             for i, req in enumerate(self._pending):
                 if req.scan_id == scan_id:
                     self._pending.pop(i)
-                    self.log.info(f"Pending scan removed: {scan_id}")
+                    self.log.info("Pending scan removed: %s", scan_id)
                     return True
             
             # Check active scans
@@ -256,10 +256,10 @@ class ScanScheduler:
             if status:
                 status.state = ScanState.STOPPING
                 status.error_message = reason or "Abort requested"
-                self.log.info(f"Scan abort requested: {scan_id}")
+                self.log.info("Scan abort requested: %s", scan_id)
                 return True
         
-        self.log.warning(f"Scan not found for abort: {scan_id}")
+        self.log.warning("Scan not found for abort: %s", scan_id)
         return False
     
     def pause_scan(self, scan_id: str) -> bool:
@@ -358,7 +358,7 @@ class ScanScheduler:
                 self._process_pending()
                 self._check_timeouts()
             except Exception as e:
-                self.log.error(f"Scheduler loop error: {e}")
+                self.log.error("Scheduler loop error: %s", e)
             
             time.sleep(self.config.scan_poll_interval)
     
@@ -382,7 +382,7 @@ class ScanScheduler:
         )
         
         self._active[request.scan_id] = status
-        self.log.info(f"Starting scan: {request.scan_id} -> {request.target}")
+        self.log.info("Starting scan: %s -> %s", request.scan_id, request.target)
         
         # Launch scan in a thread
         thread = threading.Thread(
@@ -416,7 +416,7 @@ class ScanScheduler:
             # via complete_scan() or error_scan()
             
         except Exception as e:
-            self.log.error(f"Scan {request.scan_id} failed: {e}")
+            self.log.error("Scan %s failed: %s", request.scan_id, e)
             status.state = ScanState.FAILED
             status.error_message = str(e)
             status.ended_at = time.time()
@@ -453,7 +453,7 @@ class ScanScheduler:
                 status.error_message = error
                 status.ended_at = time.time()
                 self._move_to_completed(scan_id)
-                self.log.error(f"Scan errored: {scan_id} — {error}")
+                self.log.error("Scan errored: %s — %s", scan_id, error)
     
     def update_scan_progress(
         self,

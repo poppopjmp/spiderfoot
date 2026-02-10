@@ -223,7 +223,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 return result
 
         except Exception as e:
-            self.log.error(f"fetch_url error: {e}")
+            self.log.error("fetch_url error: %s", e)
             self._record_http_metric(method, 0, t0)
 
         return None
@@ -238,7 +238,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 return self.sf.resolveHost(hostname) or []
 
         except Exception as e:
-            self.log.error(f"resolve_host error: {e}")
+            self.log.error("resolve_host error: %s", e)
 
         return []
 
@@ -252,7 +252,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 return self.sf.resolveHost6(hostname) or []
 
         except Exception as e:
-            self.log.error(f"resolve_host6 error: {e}")
+            self.log.error("resolve_host6 error: %s", e)
 
         return []
 
@@ -266,7 +266,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 return self.sf.resolveIP(ip_address) or []
 
         except Exception as e:
-            self.log.error(f"reverse_resolve error: {e}")
+            self.log.error("reverse_resolve error: %s", e)
 
         return []
 
@@ -280,7 +280,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 return self.sf.cacheGet(key, 24)
 
         except (KeyError, OSError) as e:
-            self.log.debug(f"cache_get error for {key}: {e}")
+            self.log.debug("cache_get error for %s: %s", key, e)
 
         return None
 
@@ -296,7 +296,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 return True
 
         except (TypeError, ValueError, OSError) as e:
-            self.log.debug(f"cache_put error for {key}: {e}")
+            self.log.debug("cache_put error for %s: %s", key, e)
 
         return False
 
@@ -315,7 +315,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
 
             # Legacy: scan engine handles storage
         except Exception as e:
-            self.log.error(f"store_event error: {e}")
+            self.log.error("store_event error: %s", e)
 
     def publish_event(self, topic: str, data: Any) -> None:
         """Publish an event to the event bus."""
@@ -323,7 +323,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
             if self.event_bus is not None:
                 self.event_bus.publish(topic, data)
         except (AttributeError, RuntimeError) as e:
-            self.log.debug(f"publish_event error for {topic}: {e}")
+            self.log.debug("publish_event error for %s: %s", topic, e)
 
     # ------------------------------------------------------------------
     # Enhanced event dispatch with metrics
@@ -427,7 +427,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                 self.handleEvent(sfEvent)
                 self._record_module_duration(time.monotonic() - t0)
             except Exception as e:
-                self.log.error(f"Module {self.__name__} failed: {e}")
+                self.log.error("Module %s failed: %s", self.__name__, e)
                 self._record_module_error(type(e).__name__)
                 self.errorState = True
 

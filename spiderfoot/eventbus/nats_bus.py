@@ -60,7 +60,7 @@ class NatsEventBus(EventBus):
             pass  # Stream may already exist
         
         self._running = True
-        self.log.info(f"NATS event bus connected to {self.config.nats_url}")
+        self.log.info("NATS event bus connected to %s", self.config.nats_url)
     
     async def disconnect(self) -> None:
         """Disconnect from NATS."""
@@ -116,7 +116,7 @@ class NatsEventBus(EventBus):
                 ack = await self._js.publish(subject, data)
                 return True
             except Exception as e:
-                self.log.warning(f"NATS publish attempt {attempt+1} failed: {e}")
+                self.log.warning("NATS publish attempt %s failed: %s", attempt+1, e)
                 if attempt < self.config.max_retry - 1:
                     await asyncio.sleep(self.config.retry_delay * (attempt + 1))
         
@@ -162,7 +162,7 @@ class NatsEventBus(EventBus):
                 
                 await msg.ack()
             except Exception as e:
-                self.log.error(f"Error processing NATS message: {e}")
+                self.log.error("Error processing NATS message: %s", e)
                 await msg.nak()
         
         sub = await self._js.subscribe(
@@ -175,7 +175,7 @@ class NatsEventBus(EventBus):
         self._subscriptions[sub_id] = sub
         self._callbacks[sub_id] = callback
         
-        self.log.debug(f"Subscribed {sub_id} to NATS subject '{subject}'")
+        self.log.debug("Subscribed %s to NATS subject '%s'", sub_id, subject)
         return sub_id
     
     async def unsubscribe(self, subscription_id: str) -> None:
@@ -185,6 +185,6 @@ class NatsEventBus(EventBus):
             try:
                 await sub.unsubscribe()
             except Exception as e:
-                self.log.warning(f"Error unsubscribing {subscription_id}: {e}")
+                self.log.warning("Error unsubscribing %s: %s", subscription_id, e)
         
         self._callbacks.pop(subscription_id, None)

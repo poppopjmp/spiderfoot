@@ -92,7 +92,7 @@ class SpiderFootMCPClient:
             Generated CTI report
         """
         try:
-            self.log.info(f"Generating CTI report for workspace {workspace.workspace_id}")
+            self.log.info("Generating CTI report for workspace %s", workspace.workspace_id)
             
             # Prepare workspace data for analysis
             workspace_data = await self._prepare_workspace_data(workspace)
@@ -116,11 +116,11 @@ class SpiderFootMCPClient:
             # Save report to workspace
             await self._save_report_to_workspace(workspace, cti_report)
             
-            self.log.info(f"CTI report generated successfully for workspace {workspace.workspace_id}")
+            self.log.info("CTI report generated successfully for workspace %s", workspace.workspace_id)
             return cti_report
             
         except Exception as e:
-            self.log.error(f"Failed to generate CTI report: {e}")
+            self.log.error("Failed to generate CTI report: %s", e)
             raise
     
     async def _prepare_workspace_data(self, workspace: SpiderFootWorkspace) -> Dict[str, Any]:
@@ -315,10 +315,10 @@ class SpiderFootMCPClient:
                 return response.json()
                 
             except httpx.HTTPError as e:
-                self.log.error(f"HTTP error communicating with MCP server: {e}")
+                self.log.error("HTTP error communicating with MCP server: %s", e)
                 raise
             except Exception as e:
-                self.log.error(f"Error communicating with MCP server: {e}")
+                self.log.error("Error communicating with MCP server: %s", e)
                 raise
     
     async def _process_mcp_response(
@@ -416,7 +416,7 @@ class SpiderFootMCPClient:
         
         workspace.save_workspace()
         
-        self.log.info(f"CTI report {report['report_id']} saved to workspace {workspace.workspace_id}")
+        self.log.info("CTI report %s saved to workspace %s", report['report_id'], workspace.workspace_id)
     
     async def list_available_templates(self) -> Dict[str, dict]:
         """List available CTI report templates.
@@ -437,7 +437,7 @@ class SpiderFootMCPClient:
                 response = await client.get(f"{self.server_url}/health")
                 return response.status_code == 200
         except Exception as e:
-            self.log.error(f"MCP server connection test failed: {e}")
+            self.log.error("MCP server connection test failed: %s", e)
             return False
 
 
@@ -572,7 +572,7 @@ class CTIReportExporter:
         html_path = output_path.replace('.pdf', '.html')
         self._export_html(report, html_path)
         
-        self.log.warning(f"PDF export not implemented. HTML version created at {html_path}")
+        self.log.warning("PDF export not implemented. HTML version created at %s", html_path)
         self.log.warning("Consider using wkhtmltopdf or similar tool to convert HTML to PDF")
         
         return html_path
@@ -584,7 +584,7 @@ class CTIReportExporter:
         html_path = output_path.replace('.docx', '.html')
         self._export_html(report, html_path)
         
-        self.log.warning(f"DOCX export not implemented. HTML version created at {html_path}")
+        self.log.warning("DOCX export not implemented. HTML version created at %s", html_path)
         self.log.warning("Consider using pandoc or python-docx to convert HTML to DOCX")
         
         return html_path

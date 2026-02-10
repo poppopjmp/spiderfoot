@@ -134,7 +134,7 @@ class VectorSink:
             name="vector-sink-flush"
         )
         self._flush_thread.start()
-        self.log.info(f"Vector.dev sink started → {self.config.endpoint}")
+        self.log.info("Vector.dev sink started → %s", self.config.endpoint)
     
     def stop(self) -> None:
         """Stop the sink, flushing remaining events."""
@@ -301,7 +301,7 @@ class VectorSink:
         
         self._stats["errors"] += 1
         self._stats["events_dropped"] += len(batch)
-        self.log.error(f"Failed to send {len(batch)} events to Vector.dev after {self.config.max_retries} attempts")
+        self.log.error("Failed to send %s events to Vector.dev after %s attempts", len(batch), self.config.max_retries)
     
     @property
     def stats(self) -> Dict[str, int]:

@@ -129,7 +129,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             self.log.info("Additional security headers configured successfully")
             
         except Exception as e:
-            self.log.error(f"Error configuring security headers: {e}")
+            self.log.error("Error configuring security headers: %s", e)
 
     def error_page(self):
         cherrypy.response.status = 500
@@ -174,7 +174,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return code
 
         if not os.path.isdir(doc_dir):
-            self.log.error(f"Documentation directory not found: {doc_dir}")
+            self.log.error("Documentation directory not found: %s", doc_dir)
             content = '<div class="alert alert-danger">Documentation directory not found.</div>'
             from mako.template import Template
             templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
@@ -260,7 +260,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                     if hasattr(markdown, 'toc'):
                         toc_html = getattr(markdown, 'toc', '')
                 except Exception as e:
-                    self.log.error(f"Error loading documentation file {abs_selected}: {e}")
+                    self.log.error("Error loading documentation file %s: %s", abs_selected, e)
                     content = f'<div class="alert alert-danger">Error loading documentation: {e}</div>'
             else:
                 content = '<div class="alert alert-warning">Documentation file not found.</div>'
@@ -292,7 +292,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                 self.log.exception("Template rendering error in documentation endpoint")
                 return '<p>An error occurred while rendering this page. Please check the server logs.</p>'
         except Exception as e:
-            self.log.error(f"Documentation endpoint error: {e}")
+            self.log.error("Documentation endpoint error: %s", e)
             from mako.template import Template
             templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
             try:

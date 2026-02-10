@@ -143,7 +143,7 @@ class ModuleWorker:
         """Start processing events."""
         self.info.state = WorkerState.RUNNING
         self.info.started_at = time.time()
-        self.log.debug(f"Worker started: {self.module_name}")
+        self.log.debug("Worker started: %s", self.module_name)
     
     def stop(self):
         """Signal the worker to stop."""
@@ -179,7 +179,7 @@ class ModuleWorker:
             
         except Exception as e:
             self.info.events_errored += 1
-            self.log.error(f"Module {self.module_name} error: {e}")
+            self.log.error("Module %s error: %s", self.module_name, e)
             return None
     
     def run_loop(self):
@@ -199,12 +199,12 @@ class ModuleWorker:
             except queue.Empty:
                 continue
             except Exception as e:
-                self.log.error(f"Worker loop error: {e}")
+                self.log.error("Worker loop error: %s", e)
                 self.info.state = WorkerState.ERROR
                 break
         
         self.info.state = WorkerState.STOPPED
-        self.log.debug(f"Worker stopped: {self.module_name}")
+        self.log.debug("Worker stopped: %s", self.module_name)
 
 
 class WorkerPool:
@@ -258,7 +258,7 @@ class WorkerPool:
                 config=self.config,
             )
             self._workers[module_name] = worker
-            self.log.debug(f"Registered module worker: {module_name}")
+            self.log.debug("Registered module worker: %s", module_name)
             return worker
     
     def unregister_module(self, module_name: str) -> None:
@@ -320,14 +320,14 @@ class WorkerPool:
         with self._lock:
             worker = self._workers.get(module_name)
             if not worker:
-                self.log.warning(f"No worker for module: {module_name}")
+                self.log.warning("No worker for module: %s", module_name)
                 return False
             
             try:
                 worker.input_queue.put(event, timeout=5.0)
                 return True
             except queue.Full:
-                self.log.warning(f"Queue full for {module_name}, event dropped")
+                self.log.warning("Queue full for %s, event dropped", module_name)
                 return False
     
     def broadcast_event(self, event: Dict[str, Any]) -> int:
@@ -347,7 +347,7 @@ class WorkerPool:
                         worker.input_queue.put_nowait(event)
                         count += 1
                     except queue.Full:
-                        self.log.warning(f"Queue full for {name}, skipping")
+                        self.log.warning("Queue full for %s, skipping", name)
         return count
     
     def shutdown(self, wait: bool = True) -> None:
@@ -403,7 +403,7 @@ class WorkerPool:
                     if future and future.done():
                         exc = future.exception()
                         if exc:
-                            self.log.error(f"Worker {name} crashed: {exc}")
+                            self.log.error("Worker %s crashed: %s", name, exc)
                             worker.info.state = WorkerState.ERROR
     
     def get_worker_info(self, module_name: str) -> Optional[Dict[str, Any]]:

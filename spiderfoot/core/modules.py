@@ -37,16 +37,16 @@ class ModuleManager:
             script_dir = os.path.dirname(os.path.abspath(__file__))
             modules_dir = os.path.join(script_dir, '../../modules')
         
-        self.log.info(f"Loading modules from: {modules_dir}")
+        self.log.info("Loading modules from: %s", modules_dir)
         
         try:
             # Try using SpiderFootHelpers first
             modules = SpiderFootHelpers.loadModulesAsDict(modules_dir, ['sfp_template.py'])
             self.modules = modules
-            self.log.info(f"Successfully loaded {len(modules)} modules using SpiderFootHelpers")
+            self.log.info("Successfully loaded %s modules using SpiderFootHelpers", len(modules))
             return modules
         except Exception as e:
-            self.log.warning(f"SpiderFootHelpers.loadModulesAsDict failed: {e}")
+            self.log.warning("SpiderFootHelpers.loadModulesAsDict failed: %s", e)
             # Fall back to custom loader
             return self._load_modules_custom(modules_dir)
     
@@ -71,7 +71,7 @@ class ModuleManager:
             module_files = [f for f in os.listdir(modules_dir) 
                            if f.startswith('sfp_') and f.endswith('.py') and f != 'sfp_template.py']
             
-            self.log.info(f"Custom loader: attempting to load {len(module_files)} modules")
+            self.log.info("Custom loader: attempting to load %s modules", len(module_files))
             
             loaded_count = 0
             failed_count = 0
@@ -98,17 +98,17 @@ class ModuleManager:
                                 }
                                 loaded_count += 1
                             else:
-                                self.log.warning(f"Module {module_name} has no documentation")
+                                self.log.warning("Module %s has no documentation", module_name)
                                 failed_count += 1
                         else:
-                            self.log.warning(f"Module {module_name} has no matching class")
+                            self.log.warning("Module %s has no matching class", module_name)
                             failed_count += 1
                             
                 except Exception as e:
-                    self.log.error(f"Failed to load module {module_file}: {e}")
+                    self.log.error("Failed to load module %s: %s", module_file, e)
                     failed_count += 1
             
-            self.log.info(f"Custom loader results: {loaded_count} loaded, {failed_count} failed")
+            self.log.info("Custom loader results: %s loaded, %s failed", loaded_count, failed_count)
             
         except Exception as e:
             self.log.exception("Custom module loader failed")
@@ -141,16 +141,16 @@ class ModuleManager:
                 
                 if errors:
                     for fname, err in errors:
-                        self.log.warning(f"Failed to load correlation rule {fname}: {err}")
+                        self.log.warning("Failed to load correlation rule %s: %s", fname, err)
                         
                 correlation_rules = rules
                 
             self.correlation_rules = correlation_rules
-            self.log.info(f"Loaded {len(correlation_rules)} correlation rules")
+            self.log.info("Loaded %s correlation rules", len(correlation_rules))
             return correlation_rules
             
         except Exception as e:
-            self.log.warning(f"Failed to load correlation rules: {e}")
+            self.log.warning("Failed to load correlation rules: %s", e)
             self.correlation_rules = []
             return []
     
@@ -252,6 +252,6 @@ class ModuleManager:
             if module_name in self.modules:
                 valid_modules.append(module_name)
             else:
-                self.log.warning(f"Module '{module_name}' not found")
+                self.log.warning("Module '%s' not found", module_name)
         
         return valid_modules

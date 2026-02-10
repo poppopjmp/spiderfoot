@@ -25,11 +25,11 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
         from collections import defaultdict
         
         log = logging.getLogger("spiderfoot.correlation.strategy")
-        log.debug(f"Processing rule {rule.get('id', 'unknown')} for scans {scan_ids}")
+        log.debug("Processing rule %s for scans %s", rule.get('id', 'unknown'), scan_ids)
         
         # Step 1: Collect data based on rule collections
         collected_events = self._collect_events(dbh, rule, scan_ids)
-        log.debug(f"Collected {len(collected_events)} events")
+        log.debug("Collected %s events", len(collected_events))
         
         if not collected_events:
             log.debug("No events collected, skipping rule")
@@ -42,11 +42,11 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
         
         # Step 2: Apply aggregation if specified
         aggregated_groups = self._aggregate_events(collected_events, rule.get('aggregation', {}))
-        log.debug(f"Created {len(aggregated_groups)} aggregated groups")
+        log.debug("Created %s aggregated groups", len(aggregated_groups))
         
         # Step 3: Apply analysis if specified  
         filtered_groups = self._analyze_groups(aggregated_groups, rule.get('analysis', []), rule)
-        log.debug(f"Analysis filtered to {len(filtered_groups)} groups")
+        log.debug("Analysis filtered to %s groups", len(filtered_groups))
         
         # Step 4: Create correlation results for valid groups
         correlations_created = 0
@@ -54,7 +54,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             correlation_id = self._create_correlation_result(dbh, rule, scan_ids, group_key, events)
             if correlation_id:
                 correlations_created += 1
-                log.debug(f"Created correlation {correlation_id} for group {group_key}")
+                log.debug("Created correlation %s for group %s", correlation_id, group_key)
         
         return {
             'meta': rule['meta'],
@@ -146,18 +146,18 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                 }
                 events.append(event)
             
-            log.debug(f"Retrieved {len(events)} base events for scan {scan_id}")
+            log.debug("Retrieved %s base events for scan %s", len(events), scan_id)
             
             # Apply collection filters
             filtered_events = events
             for collect_rule in collect_rules:
                 filtered_events = self._apply_collection_filter(filtered_events, collect_rule)
-                log.debug(f"After filter {collect_rule}, {len(filtered_events)} events remain")
+                log.debug("After filter %s, %s events remain", collect_rule, len(filtered_events))
             
             return filtered_events
             
         except Exception as e:
-            log.error(f"Error collecting events for scan {scan_id}: {e}")
+            log.error("Error collecting events for scan %s: %s", scan_id, e)
             return []
     
     def _apply_collection_filter(self, events, collect_rule):
@@ -300,12 +300,12 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                     correlationTitle=correlation_title,
                     eventHashes=event_hashes
                 )
-                log.info(f"Created correlation {correlation_id} for rule {rule_id}: {correlation_title}")
+                log.info("Created correlation %s for rule %s: %s", correlation_id, rule_id, correlation_title)
                 return correlation_id
             # For tests, just return a mock correlation ID
             import uuid
             correlation_id = str(uuid.uuid4())
-            log.info(f"Test mode: Mock correlation {correlation_id} for rule {rule_id}: {correlation_title}")
+            log.info("Test mode: Mock correlation %s for rule %s: %s", correlation_id, rule_id, correlation_title)
             return correlation_id
             
         except Exception as e:
@@ -355,7 +355,7 @@ class RuleExecutor:
                     hook(rule, rule_result, self.scan_ids)
                 self.results[rule.get('id', rule.get('meta', {}).get('name', 'unknown'))] = rule_result
             except Exception as e:
-                self.log.error(f"Error processing rule {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}: {e}")
+                self.log.error("Error processing rule {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}: %s", e)
         return self.results
 
     def process_rule(self, rule):

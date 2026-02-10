@@ -271,11 +271,11 @@ from spiderfoot.scan_state_map import (
 
             }
             
-            self.log.info(f"Started scan {scan_id} for target {target}")
+            self.log.info("Started scan %s for target %s", scan_id, target)
             return scan_id
             
         except Exception as e:
-            self.log.error(f"Failed to start scan: {e}")
+            self.log.error("Failed to start scan: %s", e)
             raise RuntimeError(f"Scan execution failed: {e}")
     
     def monitor_scan(self, scan_id: str, timeout: int = 0) -> Dict[str, Any]:
@@ -311,7 +311,7 @@ from spiderfoot.scan_state_map import (
                     process = self.active_scans[scan_id]['process']
                     process.join(timeout=60)
                     if process.is_alive():
-                        self.log.warning(f"Process for scan {scan_id} didn't terminate, killing it")
+                        self.log.warning("Process for scan %s didn't terminate, killing it", scan_id)
                         process.terminate()
                     del self.active_scans[scan_id]
                 
@@ -349,11 +349,11 @@ from spiderfoot.scan_state_map import (
                     process.join(timeout=10)
                 del self.active_scans[scan_id]
             
-            self.log.info(f"Stopped scan {scan_id}")
+            self.log.info("Stopped scan %s", scan_id)
             return True
             
         except Exception as e:
-            self.log.error(f"Failed to stop scan {scan_id}: {e}")
+            self.log.error("Failed to stop scan %s: %s", scan_id, e)
             return False
     
     def get_scan_status(self, scan_id: str) -> Optional[Dict[str, Any]]:
@@ -384,7 +384,7 @@ from spiderfoot.scan_state_map import (
             }
             
         except Exception as e:
-            self.log.error(f"Failed to get scan status for {scan_id}: {e}")
+            self.log.error("Failed to get scan status for %s: %s", scan_id, e)
             return None
     
     def setup_signal_handler(self, scan_id: str) -> None:
@@ -395,7 +395,7 @@ from spiderfoot.scan_state_map import (
             scan_id: Scan ID to handle interruption for
         """
         def handle_abort(signum, frame):
-            self.log.info(f"Received interrupt signal, stopping scan {scan_id}")
+            self.log.info("Received interrupt signal, stopping scan %s", scan_id)
             self.stop_scan(scan_id)
             sys.exit(-1)
         

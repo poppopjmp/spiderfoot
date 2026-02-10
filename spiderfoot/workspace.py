@@ -82,7 +82,7 @@ class SpiderFootWorkspace:
                 self.db.conn.commit()
                 
         except Exception as e:
-            self.log.error(f"Failed to ensure workspace table: {e}")
+            self.log.error("Failed to ensure workspace table: %s", e)
             raise
 
     def _generate_workspace_id(self) -> str:
@@ -142,13 +142,13 @@ class SpiderFootWorkspace:
                     self.db.conn.commit()
                     
                 except Exception as e:
-                    self.log.error(f"Failed to create workspace table/data: {e}")
+                    self.log.error("Failed to create workspace table/data: %s", e)
                     raise
             
-            self.log.info(f"Created workspace {self.workspace_id}: {self.name}")
+            self.log.info("Created workspace %s: %s", self.workspace_id, self.name)
             
         except Exception as e:
-            self.log.error(f"Failed to create workspace: {e}")
+            self.log.error("Failed to create workspace: %s", e)
             raise
 
     def load_workspace(self) -> None:
@@ -172,10 +172,10 @@ class SpiderFootWorkspace:
             self.scans = json.loads(workspace_data[6] or "[]")
             self.metadata = json.loads(workspace_data[7] or "{}")
             
-            self.log.info(f"Loaded workspace {self.workspace_id}: {self.name}")
+            self.log.info("Loaded workspace %s: %s", self.workspace_id, self.name)
             
         except Exception as e:
-            self.log.error(f"Failed to load workspace: {e}")
+            self.log.error("Failed to load workspace: %s", e)
             raise
 
     def save_workspace(self) -> None:
@@ -199,10 +199,10 @@ class SpiderFootWorkspace:
             with self.db.dbhLock:
                 self.db.dbh.execute(query, values)
                 self.db.conn.commit()
-            self.log.info(f"Saved workspace {self.workspace_id}")
+            self.log.info("Saved workspace %s", self.workspace_id)
             
         except Exception as e:
-            self.log.error(f"Failed to save workspace: {e}")
+            self.log.error("Failed to save workspace: %s", e)
             raise
 
     def add_target(self, target: str, target_type: str = None, metadata: dict = None) -> str:
@@ -234,7 +234,7 @@ class SpiderFootWorkspace:
         self.targets.append(target_data)
         self.save_workspace()
         
-        self.log.info(f"Added target {target} ({target_type}) to workspace {self.workspace_id}")
+        self.log.info("Added target %s (%s) to workspace %s", target, target_type, self.workspace_id)
         return target_id
 
     def add_scan(self, scan_id: str, target_id: str = None, metadata: dict = None) -> None:
@@ -262,7 +262,7 @@ class SpiderFootWorkspace:
         self.scans.append(scan_data)
         self.save_workspace()
         
-        self.log.info(f"Added scan {scan_id} to workspace {self.workspace_id}")
+        self.log.info("Added scan %s to workspace %s", scan_id, self.workspace_id)
 
     def import_single_scan(self, scan_id: str, metadata: dict = None) -> bool:
         """Import an existing single scan into the workspace.
@@ -283,7 +283,7 @@ class SpiderFootWorkspace:
             # Check if scan is already in workspace
             existing_scan = next((s for s in self.scans if s['scan_id'] == scan_id), None)
             if existing_scan:
-                self.log.warning(f"Scan {scan_id} already exists in workspace")
+                self.log.warning("Scan %s already exists in workspace", scan_id)
                 return False            # Extract target information from scan
             # scanInstanceGet returns: [name, seed_target, created, started, ended, status]
             if len(scan_info) < 6:
@@ -322,11 +322,11 @@ class SpiderFootWorkspace:
             
             self.add_scan(scan_id, target_id, import_metadata)
             
-            self.log.info(f"Successfully imported scan {scan_id} into workspace {self.workspace_id}")
+            self.log.info("Successfully imported scan %s into workspace %s", scan_id, self.workspace_id)
             return True
             
         except Exception as e:
-            self.log.error(f"Failed to import scan {scan_id}: {e}")
+            self.log.error("Failed to import scan %s: %s", scan_id, e)
             return False
 
     def bulk_import_scans(self, scan_ids: List[str], metadata: dict = None) -> Dict[str, bool]:
@@ -346,7 +346,7 @@ class SpiderFootWorkspace:
                 success = self.import_single_scan(scan_id, metadata)
                 results[scan_id] = success
             except Exception as e:
-                self.log.error(f"Failed to import scan {scan_id}: {e}")
+                self.log.error("Failed to import scan %s: %s", scan_id, e)
                 results[scan_id] = False
         
         return results
@@ -379,7 +379,7 @@ class SpiderFootWorkspace:
             # Also remove associated scans
             self.scans = [s for s in self.scans if s.get('target_id') != target_id]
             self.save_workspace()
-            self.log.info(f"Removed target {target_id} from workspace {self.workspace_id}")
+            self.log.info("Removed target %s from workspace %s", target_id, self.workspace_id)
             return True
         
         return False
@@ -398,7 +398,7 @@ class SpiderFootWorkspace:
         
         if len(self.scans) < original_count:
             self.save_workspace()
-            self.log.info(f"Removed scan {scan_id} from workspace {self.workspace_id}")
+            self.log.info("Removed scan %s from workspace %s", scan_id, self.workspace_id)
             return True
         
         return False
@@ -410,10 +410,10 @@ class SpiderFootWorkspace:
             with self.db.dbhLock:
                 self.db.dbh.execute(query, [self.workspace_id])
                 self.db.conn.commit()
-            self.log.info(f"Deleted workspace {self.workspace_id}")
+            self.log.info("Deleted workspace %s", self.workspace_id)
             
         except Exception as e:
-            self.log.error(f"Failed to delete workspace: {e}")
+            self.log.error("Failed to delete workspace: %s", e)
             raise
 
     @classmethod
@@ -709,7 +709,7 @@ class SpiderFootWorkspace:
         cloned_workspace.metadata = cloned_metadata
         cloned_workspace.save_workspace()
         
-        self.log.info(f"Cloned workspace {self.workspace_id} to {cloned_workspace.workspace_id}")
+        self.log.info("Cloned workspace %s to %s", self.workspace_id, cloned_workspace.workspace_id)
         return cloned_workspace
 
     def merge_workspace(self, other_workspace: 'SpiderFootWorkspace') -> bool:
@@ -744,11 +744,11 @@ class SpiderFootWorkspace:
                     self.metadata[key].extend(value)
             
             self.save_workspace()
-            self.log.info(f"Successfully merged workspace {other_workspace.workspace_id} into {self.workspace_id}")
+            self.log.info("Successfully merged workspace %s into %s", other_workspace.workspace_id, self.workspace_id)
             return True
             
         except Exception as e:
-            self.log.error(f"Failed to merge workspace: {e}")
+            self.log.error("Failed to merge workspace: %s", e)
             return False
 
     def update_workspace_metadata(self, workspace_id: str, metadata_updates: dict) -> bool:
@@ -778,5 +778,5 @@ class SpiderFootWorkspace:
             return True
             
         except Exception as e:
-            self.log.error(f"Failed to update workspace metadata: {e}")
+            self.log.error("Failed to update workspace metadata: %s", e)
             return False

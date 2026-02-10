@@ -153,7 +153,7 @@ class EventBusBridge:
         try:
             self._loop.run_until_complete(self._async_main())
         except Exception as e:
-            self.log.error(f"Bridge loop error: {e}")
+            self.log.error("Bridge loop error: %s", e)
         finally:
             self._loop.close()
     
@@ -180,7 +180,7 @@ class EventBusBridge:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                self.log.error(f"Bridge error: {e}")
+                self.log.error("Bridge error: %s", e)
                 await asyncio.sleep(0.1)
         
         # Cleanup subscriptions
@@ -192,7 +192,7 @@ class EventBusBridge:
         try:
             self.incoming_queue.put_nowait(envelope)
         except queue.Full:
-            self.log.warning(f"Incoming queue full for {self.module_name}, dropping event")
+            self.log.warning("Incoming queue full for %s, dropping event", self.module_name)
     
     async def _publish_event(self, event_data: Any) -> None:
         """Publish an event from the outgoing queue to the event bus."""
@@ -213,7 +213,7 @@ class EventBusBridge:
         elif isinstance(event_data, EventEnvelope):
             envelope = event_data
         else:
-            self.log.warning(f"Unknown event type: {type(event_data)}")
+            self.log.warning("Unknown event type: %s", type(event_data))
             return
         
         await self.event_bus.publish(envelope)
