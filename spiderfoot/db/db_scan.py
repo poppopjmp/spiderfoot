@@ -148,7 +148,7 @@ class ScanManager:
                     raise OSError("SQL error encountered when deleting scan") from e
         return True
 
-    def close(self):
+    def close(self) -> None:
         if hasattr(self, 'dbh') and self.dbh:
             try:
                 self.dbh.close()

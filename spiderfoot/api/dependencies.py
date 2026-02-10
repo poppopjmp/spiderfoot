@@ -276,7 +276,7 @@ def reset_app_config() -> None:
     app_config = None
 
 
-async def get_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def get_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str | None:
     if not credentials:
         return None
     config = get_app_config()
@@ -289,7 +289,7 @@ async def get_api_key(credentials: HTTPAuthorizationCredentials = Depends(securi
     return credentials.credentials
 
 
-async def optional_auth(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def optional_auth(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str | None:
     if not credentials:
         return None
     return await get_api_key(credentials)

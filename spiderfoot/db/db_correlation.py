@@ -121,7 +121,7 @@ class CorrelationManager:
                         continue
                     raise OSError("SQL error encountered when fetching correlation list") from e
 
-    def close(self):
+    def close(self) -> None:
         if hasattr(self, 'dbh') and self.dbh:
             try:
                 self.dbh.close()

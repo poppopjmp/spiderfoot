@@ -555,7 +555,7 @@ class EventManager:
             except (sqlite3.Error, psycopg2.Error) as e:
                 raise OSError("SQL error encountered when searching events") from e
 
-    def close(self):
+    def close(self) -> None:
         if hasattr(self, 'dbh') and self.dbh:
             try:
                 self.dbh.close()

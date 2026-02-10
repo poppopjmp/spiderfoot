@@ -17,6 +17,7 @@ import hashlib
 import secrets
 import jwt
 import logging
+from collections.abc import Callable
 from typing import Any, List
 from datetime import datetime, timedelta
 from functools import wraps
@@ -476,7 +477,7 @@ class APISecurityMiddleware:
         return True, {'status': 'ok'}
 
 
-def require_api_key(permissions: list[str] = None):
+def require_api_key(permissions: list[str] = None) -> Callable:
     """Decorator to require API key with specific permissions."""
     def decorator(func):
         @wraps(func)

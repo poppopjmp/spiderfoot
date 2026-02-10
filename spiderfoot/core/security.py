@@ -15,6 +15,7 @@ import hashlib
 import secrets
 import time
 import threading
+from collections.abc import Callable
 from typing import Dict, Any, Union, Optional, List
 from datetime import datetime, timedelta
 import logging
@@ -341,7 +342,7 @@ class AuthenticationManager:
 
             return attempts['count'] < 5  # Allow 5 failed attempts
 
-    def record_failed_attempt(self, identifier: str):
+    def record_failed_attempt(self, identifier: str) -> None:
         """Record failed authentication attempt."""
         with self.lock:
             if identifier not in self.failed_attempts:
@@ -391,7 +392,7 @@ class DataProtection:
         return data[:2] + mask_char * (len(data) - 4) + data[-2:]
 
 
-def security_header_middleware(response):
+def security_header_middleware(response) -> object:
     """Add security headers to response."""
     headers = {
         'X-Content-Type-Options': 'nosniff',
@@ -409,7 +410,7 @@ def security_header_middleware(response):
     return response
 
 
-def require_authentication(auth_manager: AuthenticationManager):
+def require_authentication(auth_manager: AuthenticationManager) -> Callable:
     """Decorator for requiring authentication."""
     def decorator(func):
         @wraps(func)

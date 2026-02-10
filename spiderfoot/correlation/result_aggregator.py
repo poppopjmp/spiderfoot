@@ -8,13 +8,15 @@
 # Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+from __future__ import annotations
+
 import logging
 
 class ResultAggregator:
     def __init__(self) -> None:
         self.log = logging.getLogger("spiderfoot.correlation.aggregator")
 
-    def aggregate(self, results, method='count'):
+    def aggregate(self, results, method='count') -> int | list:
         # Example: aggregate results by method
         if method == 'count':
             return len(results)

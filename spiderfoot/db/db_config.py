@@ -184,7 +184,7 @@ class ConfigManager:
                         continue
                     raise OSError("Unable to clear scan configuration from the database") from e
 
-    def close(self):
+    def close(self) -> None:
         if hasattr(self, 'dbh') and self.dbh:
             try:
                 self.dbh.close()

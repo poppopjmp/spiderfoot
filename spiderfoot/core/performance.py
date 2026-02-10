@@ -37,7 +37,7 @@ class PerformanceProfiler:
         self.lock = threading.Lock()
         self.logger = logging.getLogger('spiderfoot.performance')
 
-    def profile_function(self, func_name: str = None):
+    def profile_function(self, func_name: str = None) -> Callable:
         """Decorator to profile function execution."""
         def decorator(func):
             name = func_name or f"{func.__module__}.{func.__name__}"
@@ -121,7 +121,7 @@ class CacheManager:
                 logging.warning(f"Redis connection failed: {e}")
                 self.redis_client = None
 
-    def cache_result(self, ttl: int = DEFAULT_TTL_ONE_HOUR, use_redis: bool = False):
+    def cache_result(self, ttl: int = DEFAULT_TTL_ONE_HOUR, use_redis: bool = False) -> Callable:
         """Decorator for caching function results."""
         def decorator(func):
             @wraps(func)
@@ -206,7 +206,7 @@ class CacheManager:
         for key in expired_keys:
             del self.memory_cache[key]
 
-    def invalidate_cache(self, pattern: str = None):
+    def invalidate_cache(self, pattern: str = None) -> None:
         """Invalidate cache entries."""
         if pattern:
             # Invalidate specific pattern
@@ -236,7 +236,7 @@ class DatabaseOptimizer:
         self.pool_lock = threading.Lock()
         self.max_connections = 10
 
-    def get_connection(self):
+    def get_connection(self) -> sqlite3.Connection:
         """Get database connection from pool."""
         with self.pool_lock:
             if self.connection_pool:
@@ -249,7 +249,7 @@ class DatabaseOptimizer:
                 conn.execute("PRAGMA temp_store=MEMORY")
                 return conn
 
-    def return_connection(self, conn):
+    def return_connection(self, conn) -> None:
         """Return connection to pool."""
         with self.pool_lock:
             if len(self.connection_pool) < self.max_connections:
@@ -257,7 +257,7 @@ class DatabaseOptimizer:
             else:
                 conn.close()
 
-    def optimize_database(self):
+    def optimize_database(self) -> None:
         """Run database optimization tasks."""
         conn = self.get_connection()
         try:
@@ -385,7 +385,7 @@ class BatchProcessor:
         self.batch_size = batch_size
         self.max_workers = max_workers or min(32, (os.cpu_count() or 1) + 4)
 
-    def process_batch(self, items: list, processor_func: Callable, **kwargs):
+    def process_batch(self, items: list, processor_func: Callable, **kwargs) -> list:
         """Process items in batches with parallel execution."""
         results = []
 
@@ -429,11 +429,11 @@ class MemoryManager:
         self.tracked_objects = weakref.WeakSet()
         self.logger = logging.getLogger('spiderfoot.memory')
 
-    def track_object(self, obj):
+    def track_object(self, obj) -> None:
         """Track object for memory monitoring."""
         self.tracked_objects.add(obj)
 
-    def force_garbage_collection(self):
+    def force_garbage_collection(self) -> None:
         """Force garbage collection and log memory usage."""
         import gc
 
@@ -457,7 +457,7 @@ class MemoryManager:
 
 
 # Performance optimization decorator
-def optimize_performance(cache_ttl: int = DEFAULT_TTL_ONE_HOUR, profile: bool = True, use_async: bool = False):
+def optimize_performance(cache_ttl: int = DEFAULT_TTL_ONE_HOUR, profile: bool = True, use_async: bool = False) -> Callable:
     """Comprehensive performance optimization decorator."""
     def decorator(func):
         # Apply profiling

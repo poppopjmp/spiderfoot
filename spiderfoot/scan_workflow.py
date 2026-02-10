@@ -95,7 +95,7 @@ class WorkflowStep:
         self._result = StepResult(step_name=self.name, status=StepStatus.COMPLETED)
         return self._result
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset step to pending state."""
         self._status = StepStatus.PENDING
         self._result = None
@@ -182,7 +182,7 @@ class SequenceStep(WorkflowStep):
         )
         return self._result
 
-    def reset(self):
+    def reset(self) -> None:
         super().reset()
         for step in self.steps:
             step.reset()
@@ -227,7 +227,7 @@ class ParallelStep(WorkflowStep):
         )
         return self._result
 
-    def reset(self):
+    def reset(self) -> None:
         super().reset()
         for step in self.steps:
             step.reset()
@@ -289,7 +289,7 @@ class ConditionalStep(WorkflowStep):
         )
         return self._result
 
-    def reset(self):
+    def reset(self) -> None:
         super().reset()
         if self.if_true:
             self.if_true.reset()
@@ -388,7 +388,7 @@ class ScanWorkflow:
     def results(self) -> list[StepResult]:
         return self._results
 
-    def reset(self):
+    def reset(self) -> None:
         self._root.reset()
         self._results.clear()
         self._status = StepStatus.PENDING

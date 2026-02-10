@@ -8,18 +8,19 @@
 # Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+from __future__ import annotations
+
 import logging
-from copy import deepcopy
 from collections import defaultdict
 from spiderfoot.correlation.rule_loader import RuleLoader
 
 class RuleExecutionStrategy:
     """Base class for pluggable rule execution strategies."""
-    def execute(self, dbh, rule, scan_ids):
+    def execute(self, dbh, rule, scan_ids) -> dict:
         raise NotImplementedError
 
 class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
-    def execute(self, dbh, rule, scan_ids):
+    def execute(self, dbh, rule, scan_ids) -> dict:
         """Execute correlation rule and save results to database."""
         import uuid
         from collections import defaultdict
@@ -322,11 +323,11 @@ class RuleExecutor:
     }
 
     @classmethod
-    def register_strategy(cls, rule_type, strategy):
+    def register_strategy(cls, rule_type, strategy) -> None:
         cls._strategy_registry[rule_type] = strategy
 
     @classmethod
-    def register_event_hook(cls, hook_name, func):
+    def register_event_hook(cls, hook_name, func) -> None:
         if hook_name in cls._event_hooks:
             cls._event_hooks[hook_name].append(func)
 
@@ -338,7 +339,7 @@ class RuleExecutor:
         self.results = {}
         self.debug = debug
 
-    def run(self):
+    def run(self) -> dict:
         for rule in self.rules:
             if not rule.get('enabled', True):
                 self.log.info(f"Skipping disabled rule: {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}")
@@ -358,7 +359,7 @@ class RuleExecutor:
                 self.log.error("Error processing rule {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}: %s", e)
         return self.results
 
-    def process_rule(self, rule):
+    def process_rule(self, rule) -> dict:
         rule_type = rule.get('meta', {}).get('type', 'default')
         strategy = self._strategy_registry.get(rule_type, DefaultRuleExecutionStrategy())
         if self.debug:

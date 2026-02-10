@@ -392,7 +392,7 @@ def create_gateway_router():
     gateway = APIGateway()
 
     @router.post("/route/{service}/{method}")
-    async def route_request(service: str, method: str, request: Request):
+    async def route_request(service: str, method: str, request: Request) -> JSONResponse:
         try:
             body = await request.json()
         except Exception:

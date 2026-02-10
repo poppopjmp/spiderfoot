@@ -14,13 +14,13 @@ class ScanRequest(BaseModel):
     type_filter: list[str] | None = Field(default=None, description="Event types to collect")
     @field_validator('name')
     @classmethod
-    def name_must_not_be_empty(cls, v):
+    def name_must_not_be_empty(cls, v) -> str:
         if not v.strip():
             raise ValueError('Scan name cannot be empty')
         return v
     @field_validator('target')
     @classmethod
-    def target_must_not_be_empty(cls, v):
+    def target_must_not_be_empty(cls, v) -> str:
         if not v.strip():
             raise ValueError('Target cannot be empty')
         return v

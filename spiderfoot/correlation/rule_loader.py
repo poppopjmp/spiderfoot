@@ -43,7 +43,7 @@ class RuleLoader:
         self.rules = []
         self.errors = []
 
-    def load_rules(self):
+    def load_rules(self) -> list:
         for fname in os.listdir(self.rule_dir):
             if not fname.endswith('.yaml'):
                 continue
@@ -59,8 +59,8 @@ class RuleLoader:
                     self.errors.append((fname, str(e)))
         return self.rules
 
-    def get_errors(self):
+    def get_errors(self) -> list:
         return self.errors
 
-    def get_rules(self):
+    def get_rules(self) -> list:
         return self.rules

@@ -614,7 +614,7 @@ from spiderfoot.scan_state_map import (
             self.sharedThreadPool.submit(
                 callback, *args, taskName=f"{getattr(self, '__name__', self.__class__.__name__)}_threadWorker", maxThreads=self.maxThreads, **kwargs)
 
-    def threadPool(self, *args, **kwargs):
+    def threadPool(self, *args, **kwargs) -> SpiderFootThreadPool:
         return SpiderFootThreadPool(*args, **kwargs)
 
     def setSharedThreadPool(self, sharedThreadPool: 'SpiderFootThreadPool') -> None:

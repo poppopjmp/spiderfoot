@@ -17,6 +17,7 @@ from typing import List, Optional, Tuple
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 
 log = logging.getLogger("spiderfoot.api.versioning")
 
@@ -37,7 +38,7 @@ class ApiVersionMiddleware(BaseHTTPMiddleware):
     3. Recognises Accept-Version header for future version negotiation.
     """
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next) -> Response:
         path = request.url.path
 
         # Skip non-API routes

@@ -67,7 +67,7 @@ class CompressionMiddleware(BaseHTTPMiddleware):
         self.min_size = min_size
         self.level = max(1, min(9, level))
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next) -> Response:
         # Check if client accepts gzip
         accept_encoding = request.headers.get("accept-encoding", "")
         if "gzip" not in accept_encoding.lower():

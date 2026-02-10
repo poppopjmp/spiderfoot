@@ -812,7 +812,7 @@ class DbCore:
         else:
             raise ValueError(f"Unsupported database type: {self.db_type}")
 
-    def get_schema_version(self):
+    def get_schema_version(self) -> int:
         """Return the current schema version (int) or 0 if not set."""
         with self.dbhLock:
             try:
@@ -823,7 +823,7 @@ class DbCore:
             except Exception:
                 return 0
 
-    def set_schema_version(self, version=None):
+    def set_schema_version(self, version=None) -> None:
         """Set the schema version to the given value (or current if None)."""
         if version is None:
             version = self.SCHEMA_VERSION

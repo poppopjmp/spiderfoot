@@ -5,6 +5,8 @@ Routes are mounted under both /api/v1/... (canonical) and /api/... (legacy,
 backwards-compatible).  The ApiVersionMiddleware adds X-API-Version and
 Deprecation headers so clients can migrate at their own pace.
 """
+from __future__ import annotations
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -94,7 +96,7 @@ app = FastAPI(
 )
 
 # Initialize security (will be done by main application, but provide fallback)
-def initialize_security(config):
+def initialize_security(config) -> object | None:
     """Initialize security middleware for FastAPI."""
     try:
         return install_fastapi_security(app, config)
