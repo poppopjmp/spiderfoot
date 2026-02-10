@@ -38,9 +38,11 @@ class Finding:
 
     @property
     def fingerprint(self) -> str:
+        """Return a unique fingerprint for this finding."""
         return f"{self.event_type}|{self.data}"
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "event_type": self.event_type,
             "data": self.data,
@@ -61,6 +63,7 @@ class Delta:
     note: str = ""
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         d = {
             "kind": self.kind.value,
             "finding": self.finding.to_dict(),
@@ -102,6 +105,7 @@ class ScanDeltaAnalyzer:
         ignore_types: set[str] | None = None,
         track_modules: bool = True,
     ) -> None:
+        """Initialize the ScanDeltaAnalyzer."""
         self.risk_threshold = risk_threshold
         self.ignore_types = ignore_types or set()
         self.track_modules = track_modules
@@ -224,27 +228,34 @@ class DeltaResult:
         baseline: list[Finding],
         current: list[Finding],
     ) -> None:
+        """Initialize the DeltaResult."""
         self._deltas = deltas
         self._baseline = baseline
         self._current = current
 
     @property
     def deltas(self) -> list[Delta]:
+        """Return a copy of all deltas."""
         return list(self._deltas)
 
     def new_findings(self) -> list[Delta]:
+        """Return deltas for newly discovered findings."""
         return [d for d in self._deltas if d.kind == DeltaKind.NEW_FINDING]
 
     def resolved(self) -> list[Delta]:
+        """Return deltas for resolved findings."""
         return [d for d in self._deltas if d.kind == DeltaKind.RESOLVED]
 
     def risk_increased(self) -> list[Delta]:
+        """Return deltas where risk has increased."""
         return [d for d in self._deltas if d.kind == DeltaKind.RISK_INCREASED]
 
     def risk_decreased(self) -> list[Delta]:
+        """Return deltas where risk has decreased."""
         return [d for d in self._deltas if d.kind == DeltaKind.RISK_DECREASED]
 
     def stable(self) -> list[Delta]:
+        """Return deltas for stable unchanged findings."""
         return [d for d in self._deltas if d.kind == DeltaKind.STABLE]
 
     def new_risks(self, min_risk: int = 1) -> list[Delta]:
@@ -264,6 +275,7 @@ class DeltaResult:
         ]
 
     def by_type(self, event_type: str) -> list[Delta]:
+        """Filter deltas by event type."""
         return [d for d in self._deltas if d.finding.event_type == event_type]
 
     @property
@@ -275,6 +287,7 @@ class DeltaResult:
 
     @property
     def summary(self) -> dict:
+        """Return a summary of the delta analysis."""
         return {
             "new_findings": len(self.new_findings()),
             "resolved": len(self.resolved()),
@@ -288,6 +301,7 @@ class DeltaResult:
         }
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "summary": self.summary,
             "deltas": [d.to_dict() for d in self._deltas],

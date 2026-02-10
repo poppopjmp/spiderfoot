@@ -57,6 +57,7 @@ class StoreConfig:
     auto_cleanup_days: int = 90  # Auto-delete reports older than N days (0=disable)
 
     def __post_init__(self) -> None:
+        """Perform post-initialization validation."""
         if not self.db_path and self.backend == StorageBackend.SQLITE:
             self.db_path = os.path.join(
                 os.environ.get("SF_DATA_DIR", "."),
@@ -72,6 +73,7 @@ class LRUCache:
     """Thread-safe LRU cache with TTL expiration."""
 
     def __init__(self, max_size: int = 100, ttl_seconds: float = DEFAULT_TTL_ONE_HOUR) -> None:
+        """Initialize the LRUCache."""
         self._max_size = max(1, max_size)
         self._ttl = ttl_seconds
         self._cache: OrderedDict[str, tuple] = OrderedDict()  # key -> (data, timestamp)
@@ -126,11 +128,13 @@ class LRUCache:
 
     @property
     def size(self) -> int:
+        """Return the number of cached items."""
         with self._lock:
             return len(self._cache)
 
     @property
     def stats(self) -> dict[str, Any]:
+        """Return cache hit/miss statistics."""
         with self._lock:
             total = self._hits + self._misses
             return {
@@ -175,6 +179,7 @@ class SQLiteBackend:
     """SQLite-based report storage."""
 
     def __init__(self, db_path: str) -> None:
+        """Initialize the SQLiteBackend."""
         self._db_path = db_path
         self._local = threading.local()
         # Initialize schema
@@ -319,10 +324,12 @@ class MemoryBackend:
     """In-memory report storage (for testing)."""
 
     def __init__(self) -> None:
+        """Initialize the MemoryBackend."""
         self._store: dict[str, dict[str, Any]] = {}
         self._lock = threading.Lock()
 
     def save(self, data: dict[str, Any]) -> None:
+        """Save a report to memory."""
         with self._lock:
             data["updated_at"] = time.time()
             if "created_at" not in data:
@@ -330,11 +337,13 @@ class MemoryBackend:
             self._store[data["report_id"]] = data.copy()
 
     def get(self, report_id: str) -> dict[str, Any] | None:
+        """Retrieve a report by ID."""
         with self._lock:
             d = self._store.get(report_id)
             return d.copy() if d else None
 
     def delete(self, report_id: str) -> bool:
+        """Delete a report by ID."""
         with self._lock:
             return self._store.pop(report_id, None) is not None
 
@@ -345,6 +354,7 @@ class MemoryBackend:
         limit: int = 50,
         offset: int = 0,
     ) -> list[dict[str, Any]]:
+        """List reports with optional filters."""
         with self._lock:
             reports = list(self._store.values())
 
@@ -357,12 +367,14 @@ class MemoryBackend:
         return [r.copy() for r in reports[offset: offset + limit]]
 
     def count(self, scan_id: str | None = None) -> int:
+        """Count stored reports."""
         with self._lock:
             if scan_id:
                 return sum(1 for r in self._store.values() if r.get("scan_id") == scan_id)
             return len(self._store)
 
     def cleanup_old(self, max_age_days: int) -> int:
+        """Delete reports older than max_age_days."""
         if max_age_days <= 0:
             return 0
         cutoff = time.time() - (max_age_days * 86400)
@@ -376,6 +388,7 @@ class MemoryBackend:
             return len(to_delete)
 
     def close(self) -> None:
+        """Close the memory backend."""
         pass
 
 
@@ -391,6 +404,7 @@ class ReportStore:
     """
 
     def __init__(self, config: StoreConfig | None = None) -> None:
+        """Initialize the ReportStore."""
         self.config = config or StoreConfig(backend=StorageBackend.MEMORY)
 
         # Initialize cache

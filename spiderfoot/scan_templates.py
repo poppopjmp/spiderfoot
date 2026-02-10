@@ -44,18 +44,22 @@ class ScanTemplate:
     created_at: float = field(default_factory=time.time)
 
     def add_modules(self, *modules: str) -> "ScanTemplate":
+        """Add modules to the template."""
         self.modules.update(modules)
         return self
 
     def exclude_modules(self, *modules: str) -> "ScanTemplate":
+        """Exclude modules from the template."""
         self.excluded_modules.update(modules)
         return self
 
     def add_event_types(self, *types: str) -> "ScanTemplate":
+        """Add event types to the template."""
         self.event_types.update(types)
         return self
 
     def set_option(self, key: str, value: Any) -> "ScanTemplate":
+        """Set a configuration option."""
         self.options[key] = value
         return self
 
@@ -71,6 +75,7 @@ class ScanTemplate:
         return cloned
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "name": self.name,
             "description": self.description,
@@ -86,6 +91,7 @@ class ScanTemplate:
 
     @classmethod
     def from_dict(cls, data: dict) -> "ScanTemplate":
+        """Create a ScanTemplate from a dictionary."""
         return cls(
             name=data["name"],
             description=data.get("description", ""),
@@ -193,6 +199,7 @@ class TemplateRegistry:
     """
 
     def __init__(self, load_defaults: bool = True) -> None:
+        """Initialize the TemplateRegistry."""
         self._templates: dict[str, ScanTemplate] = {}
         if load_defaults:
             self._load_defaults()
@@ -203,22 +210,28 @@ class TemplateRegistry:
             self._templates[t.name] = t
 
     def register(self, template: ScanTemplate) -> "TemplateRegistry":
+        """Register a scan template."""
         self._templates[template.name] = template
         return self
 
     def unregister(self, name: str) -> bool:
+        """Unregister a scan template by name."""
         return self._templates.pop(name, None) is not None
 
     def get(self, name: str) -> ScanTemplate | None:
+        """Get a template by name."""
         return self._templates.get(name)
 
     def list_templates(self) -> list[str]:
+        """List all registered template names."""
         return sorted(self._templates.keys())
 
     def get_by_category(self, category: TemplateCategory) -> list[ScanTemplate]:
+        """Get templates filtered by category."""
         return [t for t in self._templates.values() if t.category == category]
 
     def search(self, query: str) -> list[ScanTemplate]:
+        """Search templates by query string."""
         q = query.lower()
         return [
             t for t in self._templates.values()
@@ -227,6 +240,7 @@ class TemplateRegistry:
         ]
 
     def summary(self) -> dict:
+        """Return a summary of registered templates."""
         cats: dict[str, int] = {}
         for t in self._templates.values():
             c = t.category.value
@@ -238,6 +252,7 @@ class TemplateRegistry:
         }
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             name: t.to_dict()
             for name, t in sorted(self._templates.items())

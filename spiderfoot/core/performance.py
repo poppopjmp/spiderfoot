@@ -34,6 +34,7 @@ class PerformanceProfiler:
     """Performance profiling and monitoring."""
 
     def __init__(self) -> None:
+        """Initialize the PerformanceProfiler."""
         self.metrics = defaultdict(list)
         self.current_operations = {}
         self.lock = threading.Lock()
@@ -42,10 +43,12 @@ class PerformanceProfiler:
     def profile_function(self, func_name: str = None) -> Callable:
         """Decorator to profile function execution."""
         def decorator(func: Callable) -> Callable:
+            """Wrap a function with performance profiling."""
             name = func_name or f"{func.__module__}.{func.__name__}"
 
             @wraps(func)
             def wrapper(*args, **kwargs) -> Any:
+                """Execute the function with profiling."""
                 start_time = time.perf_counter()
                 start_memory = psutil.Process().memory_info().rss
 
@@ -103,6 +106,7 @@ class CacheManager:
     """Multi-layer caching system."""
 
     def __init__(self, config: dict[str, Any] = None) -> None:
+        """Initialize the CacheManager."""
         self.config = config or {}
         self.memory_cache = {}
         self.cache_stats = defaultdict(int)
@@ -126,8 +130,10 @@ class CacheManager:
     def cache_result(self, ttl: int = DEFAULT_TTL_ONE_HOUR, use_redis: bool = False) -> Callable:
         """Decorator for caching function results."""
         def decorator(func: Callable) -> Callable:
+            """Wrap a function with result caching."""
             @wraps(func)
             def wrapper(*args, **kwargs) -> Any:
+                """Execute the function with caching."""
                 # Create cache key
                 cache_key = self._create_cache_key(func.__name__, args, kwargs)
 
@@ -233,6 +239,7 @@ class DatabaseOptimizer:
     """Database performance optimization."""
 
     def __init__(self, db_path: str) -> None:
+        """Initialize the DatabaseOptimizer."""
         self.db_path = db_path
         self.connection_pool = []
         self.pool_lock = threading.Lock()
@@ -281,11 +288,13 @@ class AsyncHTTPManager:
     """Asynchronous HTTP request manager for better performance."""
 
     def __init__(self, max_concurrent: int = 100, timeout: int = 30) -> None:
+        """Initialize the AsyncHTTPManager."""
         self.max_concurrent = max_concurrent
         self.timeout = timeout
         self.session = None
 
     async def __aenter__(self) -> AsyncHTTPManager:
+        """Enter the context manager."""
         connector = aiohttp.TCPConnector(
             limit=self.max_concurrent,
             limit_per_host=20,
@@ -307,6 +316,7 @@ class AsyncHTTPManager:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
+        """Exit the context manager."""
         if self.session:
             await self.session.close()
 
@@ -342,6 +352,7 @@ class ResourceMonitor:
     """Monitor system resources and throttle operations."""
 
     def __init__(self, cpu_threshold: float = 80.0, memory_threshold: float = 80.0) -> None:
+        """Initialize the ResourceMonitor."""
         self.cpu_threshold = cpu_threshold
         self.memory_threshold = memory_threshold
         self.logger = logging.getLogger('spiderfoot.resources')
@@ -389,6 +400,7 @@ class BatchProcessor:
     """Batch processing for improved efficiency."""
 
     def __init__(self, batch_size: int = 100, max_workers: int = None) -> None:
+        """Initialize the BatchProcessor."""
         self.batch_size = batch_size
         self.max_workers = max_workers or min(32, (os.cpu_count() or 1) + 4)
 
@@ -433,6 +445,7 @@ class MemoryManager:
     """Memory management and optimization."""
 
     def __init__(self) -> None:
+        """Initialize the MemoryManager."""
         self.tracked_objects = weakref.WeakSet()
         self.logger = logging.getLogger('spiderfoot.memory')
 
@@ -471,6 +484,7 @@ def optimize_performance(
 ) -> Callable:
     """Comprehensive performance optimization decorator."""
     def decorator(func: Callable) -> Callable:
+        """Wrap a function with performance optimizations."""
         # Apply profiling
         if profile:
             profiler = PerformanceProfiler()
@@ -482,6 +496,7 @@ def optimize_performance(
 
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
+            """Execute the function with resource monitoring."""
             # Resource monitoring
             resource_monitor = ResourceMonitor()
             if resource_monitor.should_throttle():

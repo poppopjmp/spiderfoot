@@ -67,6 +67,7 @@ class MethodProfile:
 
     @property
     def avg_time(self) -> float:
+        """Return the average method execution time."""
         if self.call_count == 0:
             return 0.0
         return self.total_time / self.call_count
@@ -85,23 +86,28 @@ class MethodProfile:
 
     @property
     def p50(self) -> float:
+        """Return the 50th percentile latency."""
         return self.percentile(50)
 
     @property
     def p95(self) -> float:
+        """Return the 95th percentile latency."""
         return self.percentile(95)
 
     @property
     def p99(self) -> float:
+        """Return the 99th percentile latency."""
         return self.percentile(99)
 
     @property
     def stddev(self) -> float:
+        """Return the standard deviation of sample times."""
         if len(self._samples) < 2:
             return 0.0
         return statistics.stdev(self._samples)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "method": self.method_name,
             "calls": self.call_count,
@@ -134,10 +140,12 @@ class ModuleProfile:
 
     @property
     def total_calls(self) -> int:
+        """Return the total number of method calls across all methods."""
         return sum(m.call_count for m in self.methods.values())
 
     @property
     def total_time(self) -> float:
+        """Return the total execution time across all methods."""
         return sum(m.total_time for m in self.methods.values())
 
     @property
@@ -173,6 +181,7 @@ class ModuleProfile:
         return snap
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "module_name": self.module_name,
             "total_calls": self.total_calls,
@@ -196,16 +205,19 @@ class ModuleProfiler:
     """
 
     def __init__(self) -> None:
+        """Initialize the ModuleProfiler."""
         self._lock = threading.Lock()
         self._modules: dict[str, ModuleProfile] = {}
         self._enabled = True
 
     @property
     def enabled(self) -> bool:
+        """Return whether profiling is enabled."""
         return self._enabled
 
     @enabled.setter
     def enabled(self, value: bool) -> None:
+        """Set whether profiling is enabled."""
         self._enabled = value
 
     def _get_or_create(self, module_name: str) -> ModuleProfile:
@@ -261,10 +273,12 @@ class ModuleProfiler:
                 ...
         """
         def decorator(func: Callable) -> Callable:
+            """Wrap a function with profiling."""
             name = method_name or func.__qualname__
 
             @functools.wraps(func)
             def wrapper(*args, **kwargs) -> Any:
+                """Execute the function with profiling."""
                 with self.trace(module_name, name):
                     return func(*args, **kwargs)
 

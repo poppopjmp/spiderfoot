@@ -46,12 +46,14 @@ __all__ = [
 # Miscellaneous helpers, hash, etc.
 
 def hashstring(string: str) -> str:
+    """Return a SHA-256 hex digest of the given string."""
     s = string
     if type(string) in [list, dict]:
         s = str(string)
     return hashlib.sha256(s.encode('raw_unicode_escape')).hexdigest()
 
 def cachePut(label: str, data: str) -> None:
+    """Write data to the cache file identified by label."""
     pathLabel = hashlib.sha224(label.encode('utf-8')).hexdigest()
     cacheFile = f"{SpiderFootHelpers.cachePath()}/{pathLabel}"
     with open(cacheFile, "w", encoding="utf-8", errors="ignore") as fp:
@@ -68,6 +70,7 @@ def cachePut(label: str, data: str) -> None:
             fp.write(data)
 
 def cacheGet(label: str, timeoutHrs: int) -> str:
+    """Retrieve cached data by label if not expired."""
     if not label:
         return None
     pathLabel = hashlib.sha224(label.encode('utf-8')).hexdigest()
@@ -84,6 +87,7 @@ def cacheGet(label: str, timeoutHrs: int) -> str:
     return None
 
 def removeUrlCreds(url: str) -> str:
+    """Redact credentials from a URL query string."""
     pats = {
         r'key=\S+': "key=XXX",
         r'pass=\S+': "pass=XXX",
@@ -96,6 +100,7 @@ def removeUrlCreds(url: str) -> str:
     return ret
 
 def isValidLocalOrLoopbackIp(ip: str) -> bool:
+    """Check if an IP address is private or loopback."""
     if not validIP(ip) and not validIP6(ip):
         return False
     import netaddr
@@ -118,6 +123,7 @@ def isValidLocalOrLoopbackIp(ip: str) -> bool:
     return False
 
 def domainKeyword(domain: str, tldList: list) -> str:
+    """Extract the primary keyword from a domain name."""
     if not domain:
         return None
     dom = hostDomain(domain.lower(), tldList)
@@ -130,12 +136,14 @@ def domainKeyword(domain: str, tldList: list) -> str:
     return ret
 
 def domainKeywords(domainList: list, tldList: list) -> set:
+    """Extract unique keywords from a list of domain names."""
     if not domainList:
         return set()
     keywords = [domainKeyword(domain, tldList) for domain in domainList]
     return {k for k in keywords if k}
 
 def hostDomain(hostname: str, tldList: list) -> str:
+    """Return the registrable domain for a hostname."""
     if not tldList:
         return None
     if not hostname:
@@ -144,6 +152,7 @@ def hostDomain(hostname: str, tldList: list) -> str:
     return ps.privatesuffix(hostname)
 
 def validHost(hostname: str, tldList: str) -> bool:
+    """Check if hostname is a valid FQDN with a known TLD."""
     if not tldList:
         return False
     if not hostname:
@@ -157,6 +166,7 @@ def validHost(hostname: str, tldList: str) -> bool:
     return sfx is not None
 
 def isDomain(hostname: str, tldList: list) -> bool:
+    """Check if hostname is a registrable domain (not a subdomain)."""
     if not tldList:
         return False
     if not hostname:
@@ -166,16 +176,19 @@ def isDomain(hostname: str, tldList: list) -> bool:
     return sfx == hostname
 
 def validIP(address: str) -> bool:
+    """Check if address is a valid IPv4 address."""
     if not address:
         return False
     return netaddr.valid_ipv4(address)
 
 def validIP6(address: str) -> bool:
+    """Check if address is a valid IPv6 address."""
     if not address:
         return False
     return netaddr.valid_ipv6(address)
 
 def validIpNetwork(cidr: str) -> bool:
+    """Check if the string is a valid IP network in CIDR notation."""
     if not isinstance(cidr, str):
         return False
     if '/' not in cidr:
@@ -186,6 +199,7 @@ def validIpNetwork(cidr: str) -> bool:
         return False
 
 def isPublicIpAddress(ip: str) -> bool:
+    """Check if an IP address is a public unicast address."""
     if not isinstance(ip, (str, netaddr.IPAddress)):
         return False
     if not validIP(ip) and not validIP6(ip):

@@ -36,6 +36,7 @@ class CacheEntry:
 
     @property
     def is_expired(self) -> bool:
+        """Return whether this cache entry has expired."""
         return (time.time() - self.created_at) > self.ttl_seconds
 
     def touch(self) -> None:
@@ -44,6 +45,7 @@ class CacheEntry:
         self.access_count += 1
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "key": self.key,
             "created_at": self.created_at,
@@ -65,15 +67,18 @@ class CacheStats:
 
     @property
     def total_requests(self) -> int:
+        """Return the total number of cache requests."""
         return self.hits + self.misses
 
     @property
     def hit_rate(self) -> float:
+        """Return the cache hit rate as a fraction."""
         if self.total_requests == 0:
             return 0.0
         return self.hits / self.total_requests
 
     def reset(self) -> None:
+        """Reset all statistics to zero."""
         self.hits = 0
         self.misses = 0
         self.evictions = 0
@@ -81,6 +86,7 @@ class CacheStats:
         self.sets = 0
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "hits": self.hits,
             "misses": self.misses,
@@ -109,6 +115,7 @@ class ResultCache:
         default_ttl: float = 300.0,
         eviction_policy: EvictionPolicy = EvictionPolicy.LRU,
     ) -> None:
+        """Initialize the ResultCache."""
         self.max_size = max_size
         self.default_ttl = default_ttl
         self.eviction_policy = eviction_policy
@@ -119,6 +126,7 @@ class ResultCache:
 
     @property
     def stats(self) -> CacheStats:
+        """Return the cache statistics tracker."""
         return self._stats
 
     def _make_key(self, *args, **kwargs) -> str:
@@ -274,6 +282,7 @@ class ScanResultCache:
     """
 
     def __init__(self, max_size: int = 5000, default_ttl: float = 600.0) -> None:
+        """Initialize the ScanResultCache."""
         self._cache = ResultCache(
             max_size=max_size,
             default_ttl=default_ttl,
@@ -297,6 +306,7 @@ class ScanResultCache:
         return self._cache.get(key)
 
     def has_result(self, scan_id: str, module: str) -> bool:
+        """Check if a cached result exists for the given scan and module."""
         key = self._key(scan_id, module)
         return self._cache.has(key)
 
@@ -316,15 +326,19 @@ class ScanResultCache:
 
     @property
     def stats(self) -> CacheStats:
+        """Return the cache statistics."""
         return self._cache.stats
 
     def clear(self) -> None:
+        """Clear all cached results."""
         self._cache.clear()
 
     def size(self) -> int:
+        """Return the number of cached entries."""
         return self._cache.size()
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "type": "ScanResultCache",
             **self._cache.to_dict(),
