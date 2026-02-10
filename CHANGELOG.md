@@ -3,6 +3,31 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.140.0] — RC Cycle 61: os.path → pathlib Conversion
+
+### Changed
+- Converted `openapi_spec.py` `_read_version()` from `os.path` to `pathlib.Path`
+- Converted `helpers.py` `loadCorrelationRulesRaw()` from `os.listdir`/`os.path.join` to `Path.glob()`
+- Removed unused `os` import from `openapi_spec.py`
+
+## [5.139.0] — RC Cycle 60: Remove Redundant Coding Declarations
+
+### Changed
+- Removed `# -*- coding: utf-8 -*-` from 65 Python files (redundant in Python 3)
+
+## [5.138.0] — RC Cycle 59: Add `__repr__` to Core Classes
+
+### Added
+- `SpiderFootTarget.__repr__()` → `SpiderFootTarget('example.com', 'INTERNET_NAME')`
+- `SpiderFootPlugin.__repr__()` → `SpiderFootPlugin('sfp_dns')`
+
+## [5.137.0] — RC Cycle 58: Explicit File Encoding
+
+### Fixed
+- Added `encoding='utf-8'` to 10 bare `open()` calls across 7 files
+- Fixed file handle leak in `logger.py` (bare `open().close()` → `with` block)
+- Files fixed: secret_manager.py (4), logger.py (1), helpers.py (1), openapi_spec.py (1), db_migrate.py (1), security_integration.py (1), core/server.py (1)
+
 ## [5.136.0] — RC Cycle 56: TODO Comment Cleanup
 
 ### Changed
