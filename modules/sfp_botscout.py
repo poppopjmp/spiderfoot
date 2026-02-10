@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: botscout."""
+
 import urllib.error
 import urllib.parse
 import urllib.request

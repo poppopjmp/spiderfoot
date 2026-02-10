@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: networksdb."""
+
 import json
 import time
 import urllib.error

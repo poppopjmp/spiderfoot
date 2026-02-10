@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: accounts."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_accounts

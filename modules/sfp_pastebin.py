@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: pastebin."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_pastebin

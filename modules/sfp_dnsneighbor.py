@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: dnsneighbor."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_dnsneighbor

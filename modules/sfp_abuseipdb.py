@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: abuseipdb."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_abuseipdb

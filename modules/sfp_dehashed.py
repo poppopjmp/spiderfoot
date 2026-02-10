@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: dehashed."""
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_dehashed
 # Purpose:     Gather breach data from Dehashed API.

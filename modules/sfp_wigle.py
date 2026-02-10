@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: wigle."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_wigle
 # Purpose:      Query wigle.net to identify nearby WiFi access points.

@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: countryname."""
+
 import re
 
 import phonenumbers

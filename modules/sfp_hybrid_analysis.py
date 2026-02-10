@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: hybrid_analysis."""
+
 import json
 import time
 

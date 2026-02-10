@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: example."""
+
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_example(SpiderFootModernPlugin):

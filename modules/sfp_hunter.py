@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: hunter."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_hunter
 # Purpose:      Query hunter.io using their API.

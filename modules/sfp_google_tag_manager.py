@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: google_tag_manager."""
+
 import re
 import urllib.error
 import urllib.parse

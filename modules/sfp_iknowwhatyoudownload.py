@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: iknowwhatyoudownload."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_iknowwhatyoudownload
 # Purpose:      Query iknowwhatyoudownload.com for IP addresses using torrents.

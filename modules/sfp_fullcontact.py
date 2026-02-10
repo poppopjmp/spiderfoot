@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: fullcontact."""
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_fullcontact
 # Purpose:     Gather domain and e-mail information from FullContact.com API.

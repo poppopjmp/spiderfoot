@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: builtwith."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_builtwith
 # Purpose:      Query builtwith.com using their API.

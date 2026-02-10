@@ -10,6 +10,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: netlas."""
+
 import json
 import time
 import urllib

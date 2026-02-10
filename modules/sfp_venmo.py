@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: venmo."""
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_venmo
 # Purpose:     Gather user information from Venmo API.

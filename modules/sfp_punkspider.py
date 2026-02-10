@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: punkspider."""
+
 import hashlib
 import json
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: twitter."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_twitter
 # Purpose:      Query Twitter for name and location information.

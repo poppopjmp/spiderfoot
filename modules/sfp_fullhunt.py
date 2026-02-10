@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: fullhunt."""
+
 import json
 
 from spiderfoot import SpiderFootEvent

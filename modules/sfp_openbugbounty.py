@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: openbugbounty."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_openbugbounty
 # Purpose:      Query the Open Bug Bounty database to see if our target appears.

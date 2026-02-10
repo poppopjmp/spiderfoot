@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: wifimapio."""
+
 from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 

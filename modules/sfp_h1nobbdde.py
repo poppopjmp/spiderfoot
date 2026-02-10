@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: h1nobbdde."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_h1.nobbd.de
 # Purpose:      Query the the unofficial HackerOne disclosure timeline database

@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: fofa."""
+
 import json
 import time
 import urllib.parse

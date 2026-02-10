@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: myspace."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_myspace
 # Purpose:      Query MySpace for username and location information.

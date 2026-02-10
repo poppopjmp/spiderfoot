@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: slideshare."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_slideshare
 # Purpose:      Query SlideShare for name and location information.

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: gravatar."""
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_gravatar
 # Purpose:     SpiderFoot plug-in to search Gravatar API for an email address

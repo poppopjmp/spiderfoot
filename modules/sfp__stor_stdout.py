@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: _stor_stdout."""
+
 import json
 
 from spiderfoot.modern_plugin import SpiderFootModernPlugin

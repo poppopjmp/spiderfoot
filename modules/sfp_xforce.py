@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: xforce."""
+
 import base64
 import json
 import time

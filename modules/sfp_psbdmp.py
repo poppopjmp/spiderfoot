@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: psbdmp."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_psbdmp
 # Purpose:      Query psbdmp.cc for potentially hacked e-mail addresses.

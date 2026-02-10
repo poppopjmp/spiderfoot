@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""SpiderFoot plug-in module: haveibeenpwned."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_haveibeenpwned
 # Purpose:      Query haveibeenpwned.com to see if an e-mail account has been hacked.
