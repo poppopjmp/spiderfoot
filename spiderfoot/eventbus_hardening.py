@@ -73,6 +73,7 @@ class AsyncCircuitBreaker:
         recovery_timeout: float = 30.0,
         half_open_max: int = 1,
     ) -> None:
+        """Initialize the AsyncCircuitBreaker with the given thresholds."""
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.half_open_max = half_open_max
@@ -87,6 +88,7 @@ class AsyncCircuitBreaker:
 
     @property
     def state(self) -> CircuitState:
+        """Return the current circuit breaker state."""
         if self._state == CircuitState.OPEN:
             if time.monotonic() - self._last_failure_time >= self.recovery_timeout:
                 return CircuitState.HALF_OPEN
@@ -107,6 +109,7 @@ class AsyncCircuitBreaker:
             return False  # OPEN
 
     async def record_success(self) -> None:
+        """Record a successful request and close the circuit if recovering."""
         async with self._lock:
             self._success_count += 1
             old = self._state
@@ -120,6 +123,7 @@ class AsyncCircuitBreaker:
             self._failure_count = 0
 
     async def record_failure(self) -> None:
+        """Record a failed request and open the circuit if threshold is reached."""
         async with self._lock:
             self._failure_count += 1
             self._last_failure_time = time.monotonic()
@@ -157,12 +161,14 @@ class AsyncCircuitBreaker:
         self._state_change_callbacks.append(callback)
 
     def reset(self) -> None:
+        """Reset the circuit breaker to closed state."""
         self._state = CircuitState.CLOSED
         self._failure_count = 0
         self._success_count = 0
         self._half_open_calls = 0
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "state": self.state.value,
             "failure_count": self._failure_count,
@@ -191,12 +197,14 @@ class AsyncDeadLetterQueue:
     """Bounded async-safe dead-letter queue."""
 
     def __init__(self, max_size: int = 1000) -> None:
+        """Initialize the AsyncDeadLetterQueue with a maximum size."""
         self._max_size = max_size
         self._items: list[DeadLetterEntry] = []
         self._lock = asyncio.Lock()
         self._total_added = 0
 
     async def add(self, entry: DeadLetterEntry) -> None:
+        """Add a failed event entry to the dead-letter queue."""
         async with self._lock:
             if len(self._items) >= self._max_size:
                 self._items.pop(0)  # drop oldest
@@ -204,14 +212,17 @@ class AsyncDeadLetterQueue:
             self._total_added += 1
 
     async def pop(self) -> DeadLetterEntry | None:
+        """Remove and return the oldest entry, or None if empty."""
         async with self._lock:
             return self._items.pop(0) if self._items else None
 
     async def peek(self, n: int = 10) -> list[DeadLetterEntry]:
+        """Return the most recent n entries without removing them."""
         async with self._lock:
             return list(self._items[-n:])
 
     async def clear(self) -> int:
+        """Clear all entries and return the count removed."""
         async with self._lock:
             count = len(self._items)
             self._items.clear()
@@ -219,10 +230,12 @@ class AsyncDeadLetterQueue:
 
     @property
     def size(self) -> int:
+        """Return the current number of entries in the queue."""
         return len(self._items)
 
     @property
     def total_added(self) -> int:
+        """Return the total number of entries ever added."""
         return self._total_added
 
     async def replay(self, publish_fn: Callable) -> int:
@@ -263,6 +276,7 @@ class EventBusMetrics:
     """Thread-safe metrics collector for EventBus operations."""
 
     def __init__(self) -> None:
+        """Initialize the EventBusMetrics."""
         self._lock = threading.Lock()
         self._counters: dict[str, int] = {
             "published": 0,
@@ -279,14 +293,17 @@ class EventBusMetrics:
         self._start_time = time.monotonic()
 
     def inc(self, counter: str, amount: int = 1) -> None:
+        """Increment a named counter by the given amount."""
         with self._lock:
             self._counters[counter] = self._counters.get(counter, 0) + amount
 
     def inc_topic(self, topic: str) -> None:
+        """Increment the publish count for a topic."""
         with self._lock:
             self._topic_counts[topic] = self._topic_counts.get(topic, 0) + 1
 
     def snapshot(self) -> dict[str, Any]:
+        """Return a snapshot of all counters and topic statistics."""
         with self._lock:
             uptime = time.monotonic() - self._start_time
             rate = (
@@ -306,6 +323,7 @@ class EventBusMetrics:
             }
 
     def reset(self) -> None:
+        """Reset all counters and topic statistics to zero."""
         with self._lock:
             for k in self._counters:
                 self._counters[k] = 0
@@ -337,6 +355,7 @@ class HealthCheckResult:
     checked_at: float = field(default_factory=time.time)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "status": self.status.value,
             "backend": self.backend,
@@ -396,6 +415,7 @@ class ResilientEventBus:
         inner: EventBus,
         config: ResilientConfig | None = None,
     ) -> None:
+        """Initialize the ResilientEventBus wrapping an inner EventBus."""
         self._inner = inner
         self._config = config or ResilientConfig()
 
@@ -437,10 +457,12 @@ class ResilientEventBus:
 
     @property
     def is_connected(self) -> bool:
+        """Return whether the underlying EventBus is connected."""
         return self._inner.is_connected
 
     @property
     def inner(self) -> EventBus:
+        """Return the wrapped inner EventBus instance."""
         return self._inner
 
     # ------------------------------------------------------------------
@@ -540,6 +562,7 @@ class ResilientEventBus:
         return await self._inner.subscribe(topic, _instrumented)
 
     async def unsubscribe(self, subscription_id: str) -> None:
+        """Unsubscribe from the inner EventBus by subscription ID."""
         await self._inner.unsubscribe(subscription_id)
 
     # ------------------------------------------------------------------
@@ -647,6 +670,7 @@ class ResilientEventBus:
     # ------------------------------------------------------------------
 
     def __repr__(self) -> str:
+        """Return a string representation of the ResilientEventBus."""
         return (
             f"<ResilientEventBus inner={type(self._inner).__name__} "
             f"circuit={self.circuit.state.value} dlq={self.dlq.size}>"

@@ -52,9 +52,11 @@ class SandboxResult:
 
     @property
     def success(self) -> bool:
+        """Return whether the sandbox execution completed successfully."""
         return self.state == SandboxState.COMPLETED
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "module": self.module_name,
             "state": self.state.value,
@@ -71,6 +73,7 @@ class ResourceTracker:
     """Tracks resource usage within a sandbox."""
 
     def __init__(self, limits: ResourceLimits) -> None:
+        """Initialize the ResourceTracker with the given limits."""
         self.limits = limits
         self._event_count = 0
         self._error_count = 0
@@ -79,10 +82,12 @@ class ResourceTracker:
         self._lock = threading.Lock()
 
     def start(self) -> None:
+        """Mark the start time for resource tracking."""
         self._start_time = time.monotonic()
 
     @property
     def elapsed(self) -> float:
+        """Return the elapsed time in seconds since start."""
         if self._start_time == 0:
             return 0.0
         return time.monotonic() - self._start_time
@@ -123,6 +128,7 @@ class ResourceTracker:
         return None
 
     def get_usage(self) -> dict:
+        """Return a dictionary of current resource usage."""
         with self._lock:
             return {
                 "events": self._event_count,
@@ -147,6 +153,7 @@ class ModuleSandbox:
         module_name: str,
         limits: ResourceLimits | None = None,
     ) -> None:
+        """Initialize the ModuleSandbox for the given module."""
         self.module_name = module_name
         self.limits = limits or ResourceLimits()
         self._state = SandboxState.IDLE
@@ -156,13 +163,16 @@ class ModuleSandbox:
 
     @property
     def state(self) -> SandboxState:
+        """Return the current sandbox state."""
         return self._state
 
     @property
     def tracker(self) -> ResourceTracker:
+        """Return the resource tracker for this sandbox."""
         return self._tracker
 
     def on_complete(self, callback: Callable[[SandboxResult], None]) -> None:
+        """Register a callback to be called when execution completes."""
         self._callbacks.append(callback)
 
     def execute(self, func: Callable[..., Any], **kwargs: Any) -> SandboxResult:
@@ -273,11 +283,13 @@ class ModuleSandbox:
         )
 
     def reset(self) -> None:
+        """Reset the sandbox to idle state."""
         with self._lock:
             self._state = SandboxState.IDLE
             self._tracker = ResourceTracker(self.limits)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "module": self.module_name,
             "state": self._state.value,
@@ -301,6 +313,7 @@ class SandboxManager:
     """
 
     def __init__(self, default_limits: ResourceLimits | None = None) -> None:
+        """Initialize the SandboxManager with optional default limits."""
         self.default_limits = default_limits or ResourceLimits()
         self._sandboxes: dict[str, ModuleSandbox] = {}
         self._results: list[SandboxResult] = []
@@ -311,6 +324,7 @@ class SandboxManager:
         module_name: str,
         limits: ResourceLimits | None = None,
     ) -> ModuleSandbox:
+        """Return the sandbox for a module, creating one if needed."""
         with self._lock:
             if module_name not in self._sandboxes:
                 self._sandboxes[module_name] = ModuleSandbox(
@@ -319,14 +333,17 @@ class SandboxManager:
             return self._sandboxes[module_name]
 
     def remove_sandbox(self, module_name: str) -> bool:
+        """Remove a sandbox by module name and return whether it existed."""
         with self._lock:
             return self._sandboxes.pop(module_name, None) is not None
 
     def record_result(self, result: SandboxResult) -> None:
+        """Record a sandbox execution result."""
         with self._lock:
             self._results.append(result)
 
     def get_results(self, module_name: str | None = None) -> list[SandboxResult]:
+        """Return execution results, optionally filtered by module name."""
         with self._lock:
             if module_name:
                 return [r for r in self._results if r.module_name == module_name]
@@ -334,15 +351,18 @@ class SandboxManager:
 
     @property
     def sandbox_count(self) -> int:
+        """Return the number of active sandboxes."""
         with self._lock:
             return len(self._sandboxes)
 
     @property
     def module_names(self) -> list[str]:
+        """Return a sorted list of sandboxed module names."""
         with self._lock:
             return sorted(self._sandboxes.keys())
 
     def get_failed_modules(self) -> list[str]:
+        """Return a list of module names that failed or timed out."""
         with self._lock:
             return [
                 name for name, sb in self._sandboxes.items()
@@ -350,6 +370,7 @@ class SandboxManager:
             ]
 
     def summary(self) -> dict:
+        """Return a summary of all sandboxes and their states."""
         with self._lock:
             states = {}
             for sb in self._sandboxes.values():
@@ -363,6 +384,7 @@ class SandboxManager:
             }
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         with self._lock:
             return {
                 "sandboxes": {name: sb.to_dict() for name, sb in self._sandboxes.items()},

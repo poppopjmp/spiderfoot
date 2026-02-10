@@ -71,6 +71,7 @@ class CacheService(ABC):
     """Abstract cache service interface."""
 
     def __init__(self, config: CacheConfig | None = None) -> None:
+        """Initialize the CacheService with the given configuration."""
         self.config = config or CacheConfig()
         self.log = logging.getLogger(f"spiderfoot.cache.{self.config.backend.value}")
         self._hits = 0
@@ -178,11 +179,13 @@ class MemoryCache(CacheService):
     """
 
     def __init__(self, config: CacheConfig | None = None) -> None:
+        """Initialize the MemoryCache."""
         super().__init__(config)
         self._store: dict[str, tuple] = {}  # key -> (expire_time, value)
         self._lock = threading.RLock()
 
     def get(self, key: str) -> Any | None:
+        """Retrieve a value from the in-memory cache."""
         full_key = self._make_key(key)
         with self._lock:
             entry = self._store.get(full_key)
@@ -200,6 +203,7 @@ class MemoryCache(CacheService):
             return value
 
     def put(self, key: str, value: Any, ttl: int | None = None) -> bool:
+        """Store a value in the in-memory cache."""
         full_key = self._make_key(key)
         _ttl = ttl if ttl is not None else self.config.ttl
         expire_time = time.time() + _ttl if _ttl > 0 else 0
@@ -215,20 +219,24 @@ class MemoryCache(CacheService):
         return True
 
     def delete(self, key: str) -> bool:
+        """Delete a value from the in-memory cache."""
         full_key = self._make_key(key)
         with self._lock:
             return self._store.pop(full_key, None) is not None
 
     def exists(self, key: str) -> bool:
+        """Check if a key exists and is not expired in the in-memory cache."""
         return self.get(key) is not None
 
     def clear(self) -> int:
+        """Clear all entries from the in-memory cache."""
         with self._lock:
             count = len(self._store)
             self._store.clear()
             return count
 
     def size(self) -> int:
+        """Return the number of entries in the in-memory cache."""
         with self._lock:
             return len(self._store)
 
@@ -262,6 +270,7 @@ class FileCache(CacheService):
     """
 
     def __init__(self, config: CacheConfig | None = None) -> None:
+        """Initialize the FileCache."""
         super().__init__(config)
         self._cache_dir = self.config.cache_dir or os.path.join(
             os.path.expanduser("~"), ".spiderfoot", "cache"
@@ -274,6 +283,7 @@ class FileCache(CacheService):
         return os.path.join(self._cache_dir, hashed)
 
     def get(self, key: str) -> Any | None:
+        """Retrieve a value from the file-based cache."""
         path = self._file_path(key)
 
         if not os.path.isfile(path):
@@ -309,6 +319,7 @@ class FileCache(CacheService):
             return None
 
     def put(self, key: str, value: Any, ttl: int | None = None) -> bool:
+        """Store a value in the file-based cache."""
         path = self._file_path(key)
 
         try:
@@ -328,6 +339,7 @@ class FileCache(CacheService):
             return False
 
     def delete(self, key: str) -> bool:
+        """Delete a value from the file-based cache."""
         path = self._file_path(key)
         try:
             os.unlink(path)
@@ -339,6 +351,7 @@ class FileCache(CacheService):
             return False
 
     def exists(self, key: str) -> bool:
+        """Check if a key exists and is not expired in the file-based cache."""
         path = self._file_path(key)
         if not os.path.isfile(path):
             return False
@@ -349,6 +362,7 @@ class FileCache(CacheService):
         return True
 
     def clear(self) -> int:
+        """Clear all entries from the file-based cache."""
         count = 0
         try:
             for fname in os.listdir(self._cache_dir):
@@ -361,6 +375,7 @@ class FileCache(CacheService):
         return count
 
     def size(self) -> int:
+        """Return the number of entries in the file-based cache."""
         try:
             return len([
                 f for f in os.listdir(self._cache_dir)
@@ -399,6 +414,7 @@ class RedisCache(CacheService):
             raise
 
     def get(self, key: str) -> Any | None:
+        """Retrieve a value from the Redis cache."""
         self._ensure_client()
         full_key = self._make_key(key)
 
@@ -422,6 +438,7 @@ class RedisCache(CacheService):
             return None
 
     def put(self, key: str, value: Any, ttl: int | None = None) -> bool:
+        """Store a value in the Redis cache."""
         self._ensure_client()
         full_key = self._make_key(key)
         _ttl = ttl if ttl is not None else self.config.ttl
@@ -444,6 +461,7 @@ class RedisCache(CacheService):
             return False
 
     def delete(self, key: str) -> bool:
+        """Delete a value from the Redis cache."""
         self._ensure_client()
         full_key = self._make_key(key)
 
@@ -454,6 +472,7 @@ class RedisCache(CacheService):
             return False
 
     def exists(self, key: str) -> bool:
+        """Check if a key exists in the Redis cache."""
         self._ensure_client()
         full_key = self._make_key(key)
 
@@ -464,6 +483,7 @@ class RedisCache(CacheService):
             return False
 
     def clear(self) -> int:
+        """Clear all entries matching the key prefix from Redis."""
         self._ensure_client()
         pattern = f"{self.config.key_prefix}*"
 
@@ -477,6 +497,7 @@ class RedisCache(CacheService):
             return 0
 
     def size(self) -> int:
+        """Return the number of entries matching the key prefix in Redis."""
         self._ensure_client()
         pattern = f"{self.config.key_prefix}*"
 

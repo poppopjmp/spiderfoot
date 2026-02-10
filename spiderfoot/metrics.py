@@ -71,22 +71,27 @@ class _LabeledValue:
     """Thread-safe labeled numeric value."""
 
     def __init__(self) -> None:
+        """Initialize the _LabeledValue."""
         self._lock = threading.Lock()
         self._value = 0.0
 
     @property
     def value(self) -> float:
+        """Return the current numeric value."""
         return self._value
 
     def inc(self, amount: float = 1.0) -> None:
+        """Increment the value by the given amount."""
         with self._lock:
             self._value += amount
 
     def dec(self, amount: float = 1.0) -> None:
+        """Decrement the value by the given amount."""
         with self._lock:
             self._value -= amount
 
     def set(self, value: float) -> None:
+        """Set the value to the given number."""
         with self._lock:
             self._value = value
 
@@ -96,6 +101,7 @@ class Counter:
 
     def __init__(self, name: str, help_text: str = "",
                  label_names: list[str] | None = None) -> None:
+        """Initialize the Counter with a name, help text, and optional labels."""
         self.name = name
         self.help_text = help_text
         self.label_names = label_names or []
@@ -106,6 +112,7 @@ class Counter:
             self._values[""] = _LabeledValue()
 
     def labels(self, **kwargs) -> _LabeledValue:
+        """Return a labeled value instance for the given label set."""
         key = _label_key(kwargs)
         with self._lock:
             if key not in self._values:
@@ -119,6 +126,7 @@ class Counter:
             self._values[""].inc(amount)
 
     def expose(self) -> str:
+        """Render this counter in Prometheus text exposition format."""
         lines: list[str] = []
         if self.help_text:
             lines.append(f"# HELP {self.name} {self.help_text}")
@@ -139,6 +147,7 @@ class Gauge:
 
     def __init__(self, name: str, help_text: str = "",
                  label_names: list[str] | None = None) -> None:
+        """Initialize the Gauge with a name, help text, and optional labels."""
         self.name = name
         self.help_text = help_text
         self.label_names = label_names or []
@@ -148,6 +157,7 @@ class Gauge:
             self._values[""] = _LabeledValue()
 
     def labels(self, **kwargs) -> _LabeledValue:
+        """Return a labeled value instance for the given label set."""
         key = _label_key(kwargs)
         with self._lock:
             if key not in self._values:
@@ -156,18 +166,22 @@ class Gauge:
             return self._values[key]
 
     def set(self, value: float) -> None:
+        """Set the no-label gauge to the given value."""
         if "" in self._values:
             self._values[""].set(value)
 
     def inc(self, amount: float = 1.0) -> None:
+        """Increment the no-label gauge by the given amount."""
         if "" in self._values:
             self._values[""].inc(amount)
 
     def dec(self, amount: float = 1.0) -> None:
+        """Decrement the no-label gauge by the given amount."""
         if "" in self._values:
             self._values[""].dec(amount)
 
     def expose(self) -> str:
+        """Render this gauge in Prometheus text exposition format."""
         lines: list[str] = []
         if self.help_text:
             lines.append(f"# HELP {self.name} {self.help_text}")
@@ -192,6 +206,7 @@ class Histogram:
     def __init__(self, name: str, help_text: str = "",
                  buckets: Sequence[float] | None = None,
                  label_names: list[str] | None = None) -> None:
+        """Initialize the Histogram with a name, help text, and optional buckets."""
         self.name = name
         self.help_text = help_text
         self.buckets = sorted(buckets or self.DEFAULT_BUCKETS)
@@ -218,6 +233,7 @@ class Histogram:
         return _HistogramTimer(self)
 
     def expose(self) -> str:
+        """Render this histogram in Prometheus text exposition format."""
         lines: list[str] = []
         if self.help_text:
             lines.append(f"# HELP {self.name} {self.help_text}")
@@ -238,14 +254,17 @@ class Histogram:
 class _HistogramTimer:
     """Context manager for timing observations in a Histogram."""
     def __init__(self, histogram: Histogram) -> None:
+        """Initialize the _HistogramTimer for the given histogram."""
         self._histogram = histogram
         self._start = None
 
     def __enter__(self) -> _HistogramTimer:
+        """Start timing the observation."""
         self._start = time.monotonic()
         return self
 
     def __exit__(self, *args) -> None:
+        """Stop timing and record the observed duration."""
         self._histogram.observe(time.monotonic() - self._start)
 
 
@@ -257,6 +276,7 @@ class MetricsRegistry:
     """Global registry of all metrics."""
 
     def __init__(self) -> None:
+        """Initialize the MetricsRegistry."""
         self._lock = threading.Lock()
         self._metrics: dict[str, object] = {}
 
@@ -266,6 +286,7 @@ class MetricsRegistry:
             self._metrics[metric.name] = metric
 
     def unregister(self, name: str) -> None:
+        """Remove a metric from the registry by name."""
         with self._lock:
             self._metrics.pop(name, None)
 
@@ -279,6 +300,7 @@ class MetricsRegistry:
         return "\n\n".join(parts) + "\n"
 
     def clear(self) -> None:
+        """Remove all metrics from the registry."""
         with self._lock:
             self._metrics.clear()
 
@@ -288,6 +310,7 @@ _registry = MetricsRegistry()
 
 
 def get_registry() -> MetricsRegistry:
+    """Return the global singleton MetricsRegistry."""
     return _registry
 
 

@@ -48,6 +48,7 @@ class GrpcDataService(DataService):
     """
 
     def __init__(self, config: DataServiceConfig | None = None, **kwargs) -> None:
+        """Initialize the GrpcDataService with the given configuration."""
         super().__init__(config)
         _ensure_grpc()
         self._target = self.config.api_url
@@ -136,6 +137,7 @@ class GrpcDataService(DataService):
     def scan_instance_create(
         self, scan_id: str, scan_name: str, target: str
     ) -> bool:
+        """Create a new scan instance via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -149,6 +151,7 @@ class GrpcDataService(DataService):
             return False
 
     def scan_instance_get(self, scan_id: str) -> dict[str, Any] | None:
+        """Retrieve a scan instance by ID via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -160,6 +163,7 @@ class GrpcDataService(DataService):
             return None
 
     def scan_instance_list(self) -> list[dict[str, Any]]:
+        """List all scan instances via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -173,6 +177,7 @@ class GrpcDataService(DataService):
             return []
 
     def scan_instance_delete(self, scan_id: str) -> bool:
+        """Delete a scan instance by ID via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -190,6 +195,7 @@ class GrpcDataService(DataService):
         started: int | None = None,
         ended: int | None = None,
     ) -> bool:
+        """Set scan status via gRPC (not yet supported by proto)."""
         # The proto DataService doesn't have a dedicated UpdateScanStatus RPC.
         # Fall back to CreateScan re-call or log warning.
         log.warning(
@@ -216,6 +222,7 @@ class GrpcDataService(DataService):
         visibility: int = 100,
         risk: int = 0,
     ) -> bool:
+        """Store an event for a scan via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -241,6 +248,7 @@ class GrpcDataService(DataService):
         event_type: str | None = None,
         limit: int = 0,
     ) -> list[dict[str, Any]]:
+        """Retrieve events for a scan via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -260,6 +268,7 @@ class GrpcDataService(DataService):
         scan_id: str,
         event_type: str,
     ) -> list[str]:
+        """Retrieve unique event types for a scan via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -278,6 +287,7 @@ class GrpcDataService(DataService):
         event_type: str,
         data: str,
     ) -> bool:
+        """Check if an event with the given type and data exists for a scan."""
         # No dedicated RPC in proto — fetch events and check
         try:
             events = self.event_get_by_scan(scan_id, event_type=event_type)
@@ -296,6 +306,7 @@ class GrpcDataService(DataService):
         message: str,
         component: str | None = None,
     ) -> bool:
+        """Log a scan event via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -318,6 +329,7 @@ class GrpcDataService(DataService):
         offset: int = 0,
         log_type: str | None = None,
     ) -> list[dict[str, Any]]:
+        """Retrieve scan logs via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -340,6 +352,7 @@ class GrpcDataService(DataService):
     def config_set(
         self, config_data: dict[str, str], scope: str = "GLOBAL"
     ) -> bool:
+        """Set configuration key-value pairs via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -355,6 +368,7 @@ class GrpcDataService(DataService):
             return False
 
     def config_get(self, scope: str = "GLOBAL") -> dict[str, str]:
+        """Retrieve configuration key-value pairs via gRPC."""
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -368,6 +382,7 @@ class GrpcDataService(DataService):
     def scan_config_set(
         self, scan_id: str, config_data: dict[str, str]
     ) -> bool:
+        """Set per-scan configuration via gRPC."""
         # Reuse SetConfig — proto doesn't distinguish per-scan config
         return self.config_set(config_data, scope=scan_id)
 
@@ -387,6 +402,7 @@ class GrpcDataService(DataService):
         rule_logic: str,
         event_hashes: list[str],
     ) -> bool:
+        """Store a correlation result via gRPC (not yet supported by proto)."""
         # No correlation RPC in proto yet — log warning
         log.warning(
             "gRPC correlation_store not yet supported by proto; "
@@ -399,6 +415,7 @@ class GrpcDataService(DataService):
     def correlation_get_by_scan(
         self, scan_id: str
     ) -> list[dict[str, Any]]:
+        """Retrieve correlations for a scan via gRPC (not yet supported)."""
         log.warning("gRPC correlation_get_by_scan not yet supported by proto")
         return []
 
@@ -407,6 +424,7 @@ class GrpcDataService(DataService):
     # ------------------------------------------------------------------
 
     def scan_result_summary(self, scan_id: str) -> dict[str, int]:
+        """Return a summary of event type counts for a scan."""
         # Derive from events — no dedicated RPC
         try:
             events = self.event_get_by_scan(scan_id)
@@ -420,6 +438,7 @@ class GrpcDataService(DataService):
             return {}
 
     def event_types_list(self) -> list[dict[str, str]]:
+        """List available event types (not yet supported by proto)."""
         # No dedicated RPC — return empty
         log.debug("gRPC event_types_list: no dedicated RPC available")
         return []
@@ -436,7 +455,9 @@ class GrpcDataService(DataService):
             self._stub = None
 
     def __del__(self) -> None:
+        """Clean up the gRPC channel on garbage collection."""
         self.close()
 
     def __repr__(self) -> str:
+        """Return a string representation of the GrpcDataService."""
         return f"GrpcDataService(target={self._target!r})"
