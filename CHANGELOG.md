@@ -3,6 +3,23 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.157.0] — RC Cycle 84: Module Exports & Safety Fixes
+
+### Added
+- Added `__all__` to `constants.py` (18 public constants)
+- Added `__all__` to `logging_config.py` (6 constants + 3 public functions)
+- Added `__all__` to `scan_state_map.py` (10 constants + 6 public functions)
+
+### Changed
+- Replaced bare `assert` with `TypeError` in `threadpool.py` stop setter
+- Removed unguarded `sys.path.insert` hack in `security_integration.py`
+
+## [5.156.0] — RC Cycle 83: Modernize test/ & Top-level Typing
+
+### Changed
+- Ran `pyupgrade --py39-plus` on 10 test files and 7 top-level Python files
+- Modernized type annotations to Python 3.9+ syntax (22 files, 41 ins, 54 del)
+
 ## [5.155.0] — RC Cycle 81: Modernize Typing Annotations
 
 ### Changed
