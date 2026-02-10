@@ -274,8 +274,8 @@ async def bulk_stop_scans(
             if _hooks:
                 try:
                     _hooks.on_stopped(scan_id)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug("on_stopped hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
             logger.error("Bulk stop failed for %s: %s", scan_id, e)
             results["errors"].append({"scan_id": scan_id, "error": str(e)})
@@ -309,8 +309,8 @@ async def bulk_delete_scans(
             if _hooks:
                 try:
                     _hooks.on_deleted(scan_id)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug("on_deleted hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
             logger.error("Bulk delete failed for %s: %s", scan_id, e)
             results["errors"].append({"scan_id": scan_id, "error": str(e)})
@@ -343,8 +343,8 @@ async def bulk_archive_scans(
             if _hooks:
                 try:
                     _hooks.on_archived(scan_id)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug("on_archived hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
             logger.error("Bulk archive failed for %s: %s", scan_id, e)
             results["errors"].append({"scan_id": scan_id, "error": str(e)})
@@ -643,8 +643,8 @@ async def create_scan(
         if _hooks:
             try:
                 _hooks.on_created(scan_id, scan_request.name, scan_request.target)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("on_created hook failed for scan %s: %s", scan_id, e)
 
 
 @router.get("/scans/{scan_id}")
@@ -660,8 +660,8 @@ async def get_scan(
     result = record.to_dict()
     try:
         result["state_machine"] = svc.get_scan_state(scan_id)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Failed to retrieve state machine for scan %s: %s", scan_id, e)
     return result
 
 
@@ -679,8 +679,8 @@ async def delete_scan(
     if _hooks:
         try:
             _hooks.on_deleted(scan_id)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("on_deleted hook failed for scan %s: %s", scan_id, e)
     return ScanDeleteResponse()
 
 
@@ -713,8 +713,8 @@ async def stop_scan(
         if _hooks:
             try:
                 _hooks.on_aborted(scan_id, reason="API stop request")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("on_aborted hook failed for scan %s: %s", scan_id, e)
         return ScanStopResponse(message="Scan stopped successfully", status=new_status)
     except ScanServiceError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
@@ -758,8 +758,8 @@ async def retry_scan(
         if dbh and hasattr(dbh, 'scanConfigGet'):
             try:
                 scan_config = dbh.scanConfigGet(scan_id) or {}
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to retrieve scan config for %s: %s", scan_id, e)
 
         new_scan_id = SpiderFootHelpers.genScanInstanceId()
 
@@ -778,14 +778,14 @@ async def retry_scan(
                 retry_meta["_retry_of"] = scan_id
                 retry_meta["_retry_reason"] = status
                 svc.set_metadata(new_scan_id, retry_meta)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Failed to copy metadata from scan %s to %s: %s", scan_id, new_scan_id, e)
 
         if _hooks:
             try:
                 _hooks.on_created(new_scan_id, original_target)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("on_created hook failed for retry scan %s: %s", new_scan_id, e)
 
         return {
             "original_scan_id": scan_id,
@@ -967,8 +967,9 @@ async def export_scan_logs(
     """Export scan logs as CSV."""
     try:
         data = svc.get_scan_logs(scan_id)
-    except Exception:
-        raise HTTPException(status_code=404, detail="Scan ID not found")
+    except Exception as e:
+        logger.debug("Failed to export scan logs for %s: %s", scan_id, e)
+        raise HTTPException(status_code=404, detail="Scan ID not found") from e
 
     if not data:
         raise HTTPException(status_code=404, detail="No scan logs found")
