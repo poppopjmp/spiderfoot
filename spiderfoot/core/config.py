@@ -135,19 +135,19 @@ class ConfigManager:
         # Check for legacy database files
         legacy_db_path = os.path.join(script_dir, '../../../spiderfoot.db')
         if os.path.exists(legacy_db_path):
-            print(f"ERROR: spiderfoot.db file exists in {os.path.dirname(legacy_db_path)}")
-            print("SpiderFoot no longer supports loading the spiderfoot.db database from the application directory.")
-            print(f"The database is now loaded from your home directory: {SpiderFootHelpers.dataPath()}/spiderfoot.db")
-            print(f"This message will go away once you move or remove spiderfoot.db from {os.path.dirname(legacy_db_path)}")
+            self.log.error("spiderfoot.db file exists in %s", os.path.dirname(legacy_db_path))
+            self.log.error("SpiderFoot no longer supports loading the spiderfoot.db database from the application directory.")
+            self.log.error("The database is now loaded from your home directory: %s/spiderfoot.db", SpiderFootHelpers.dataPath())
+            self.log.error("This message will go away once you move or remove spiderfoot.db from %s", os.path.dirname(legacy_db_path))
             raise SystemExit(-1)
 
         # Check for legacy passwd files
         legacy_passwd_path = os.path.join(script_dir, '../../../passwd')
         if os.path.exists(legacy_passwd_path):
-            print(f"ERROR: passwd file exists in {os.path.dirname(legacy_passwd_path)}")
-            print("SpiderFoot no longer supports loading credentials from the application directory.")
-            print(f"The passwd file is now loaded from your home directory: {SpiderFootHelpers.dataPath()}/passwd")
-            print(f"This message will go away once you move or remove passwd from {os.path.dirname(legacy_passwd_path)}")
+            self.log.error("passwd file exists in %s", os.path.dirname(legacy_passwd_path))
+            self.log.error("SpiderFoot no longer supports loading credentials from the application directory.")
+            self.log.error("The passwd file is now loaded from your home directory: %s/passwd", SpiderFootHelpers.dataPath())
+            self.log.error("This message will go away once you move or remove passwd from %s", os.path.dirname(legacy_passwd_path))
             raise SystemExit(-1)
 
     def get_web_config(self, host: str = '127.0.0.1', port: int = DEFAULT_WEB_PORT,

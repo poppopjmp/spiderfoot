@@ -35,7 +35,7 @@ class ValidationUtils:
         """
         if sys.version_info < min_version:
             version_str = ".".join(map(str, min_version))
-            print(f"SpiderFoot requires Python {version_str} or higher.")
+            sys.stderr.write(f"SpiderFoot requires Python {version_str} or higher.\n")
             sys.exit(-1)
 
     @staticmethod

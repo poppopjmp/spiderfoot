@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+"""CherryPy-based web UI application for SpiderFoot."""
+
 # Core SpiderFoot imports
 from spiderfoot.webui.routes import WebUiRoutes
 from spiderfoot import SpiderFootDb, SpiderFoot

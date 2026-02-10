@@ -5,6 +5,7 @@ Provides comprehensive API security including authentication, authorization, and
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 import time
 import hmac
@@ -244,7 +245,7 @@ class APIKeyManager:
             self.db = SpiderFootDb(config, init=True)
             self._ensure_api_keys_table()
         except Exception as e:
-            print(f"Failed to initialize APIKeyManager database: {e}")
+            logging.getLogger(__name__).error("Failed to initialize APIKeyManager database: %s", e)
             self.db = None
 
     def _ensure_api_keys_table(self) -> None:

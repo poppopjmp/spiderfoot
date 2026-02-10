@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+"""Command-line interface for managing SpiderFoot scans, modules, and results."""
+
 import argparse
 import sys
 import os
