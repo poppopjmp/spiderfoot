@@ -302,6 +302,19 @@ class ShutdownCoordinator:
                 for h in self._handlers
             ]
 
+    def registered_services(self) -> List[str]:
+        """Return names of registered shutdown handlers."""
+        with self._lock:
+            return [h.name for h in self._handlers]
+
+    def status(self) -> Dict[str, Any]:
+        """Return shutdown manager status dict (compat with ShutdownManager API)."""
+        return {
+            "shutting_down": self._shutting_down,
+            "in_flight_requests": self._in_flight,
+            "handlers": self.handler_summary(),
+        }
+
 
 # ── Singleton ─────────────────────────────────────────────────────
 

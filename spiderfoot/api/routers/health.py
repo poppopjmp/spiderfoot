@@ -560,8 +560,8 @@ else:
         description="Shows registered services and shutdown state.",
     )
     async def shutdown_status():
-        from spiderfoot.shutdown_manager import get_shutdown_manager
-        mgr = get_shutdown_manager()
+        from spiderfoot.graceful_shutdown import get_shutdown_coordinator
+        mgr = get_shutdown_coordinator()
         return mgr.status()
 
 

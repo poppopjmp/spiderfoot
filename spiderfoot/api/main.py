@@ -40,7 +40,7 @@ from spiderfoot.api.compression_middleware import install_compression
 from spiderfoot.api.versioning import mount_versioned_routers, install_api_versioning
 
 # Graceful shutdown
-from spiderfoot.shutdown_manager import get_shutdown_manager
+from spiderfoot.graceful_shutdown import get_shutdown_coordinator
 
 _log = logging.getLogger("spiderfoot.api")
 
@@ -48,8 +48,8 @@ _log = logging.getLogger("spiderfoot.api")
 @asynccontextmanager
 async def _lifespan(application: FastAPI):
     """FastAPI lifespan: register background services for graceful shutdown."""
-    mgr = get_shutdown_manager()
-    _log.info("API startup — shutdown manager has %d registered services",
+    mgr = get_shutdown_coordinator()
+    _log.info("API startup — shutdown coordinator has %d registered services",
               len(mgr.registered_services()))
     yield
     # On shutdown, run all registered cleanup callbacks
