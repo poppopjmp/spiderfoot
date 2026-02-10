@@ -85,7 +85,7 @@ class sfp_abstractapi(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from Abstract API.")
@@ -129,7 +129,7 @@ class sfp_abstractapi(SpiderFootModernPlugin):
 
         return None
 
-    def queryCompanyEnrichment(self, qry: str):
+    def queryCompanyEnrichment(self, qry: str) -> dict | None:
         """Enrich domain with company information.
 
         Args:
@@ -166,7 +166,7 @@ class sfp_abstractapi(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryPhoneValidation(self, qry: str):
+    def queryPhoneValidation(self, qry: str) -> dict | None:
         """Verify phone number and enrich with carrier and location
         information.
 
@@ -204,7 +204,7 @@ class sfp_abstractapi(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryIpGeolocation(self, qry: str):
+    def queryIpGeolocation(self, qry: str) -> dict | None:
         """Enrich IP address with geolocation information.
 
         Args:

@@ -133,7 +133,7 @@ class sfp_xforce(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def query(self, qry: str, querytype: str):
+    def query(self, qry: str, querytype: str) -> dict:
         """Query the data source."""
         if querytype not in ["ipr/malware", "ipr/history", "resolve"]:
             querytype = "ipr/malware"
@@ -160,7 +160,7 @@ class sfp_xforce(SpiderFootModernPlugin):
 
     # Parse API Response from X-Force Exchange
     # https://exchange.xforce.ibmcloud.com/api/doc/
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from X-Force Exchange.")

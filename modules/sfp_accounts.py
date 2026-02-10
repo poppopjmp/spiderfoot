@@ -218,7 +218,7 @@ class sfp_accounts(SpiderFootModernPlugin):
 
         return [site for site, found in self.siteResults.items() if found]
 
-    def generatePermutations(self, username: str):
+    def generatePermutations(self, username: str) -> list:
         """GeneratePermutations."""
         permutations = list()
         prefixsuffix = ['_', '-']

@@ -90,7 +90,7 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
             "MALICIOUS_NETBLOCK",
         ]
 
-    def query(self, qry: str, targetType: str):
+    def query(self, qry: str, targetType: str) -> str | None:
         """Query the data source."""
         cid = "_emergingthreats"
         url = "https://rules.emergingthreats.net/blockrules/compromised-ips.txt"

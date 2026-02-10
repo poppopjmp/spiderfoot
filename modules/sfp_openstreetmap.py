@@ -73,7 +73,7 @@ class sfp_openstreetmap(SpiderFootModernPlugin):
 
     # Search for address
     # https://operations.osmfoundation.org/policies/nominatim/
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         params = {
             'q': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),

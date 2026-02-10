@@ -70,7 +70,7 @@ class sfp_pgp(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC", "AFFILIATE_EMAILADDR", "PGP_KEY"]
 
-    def queryDomain(self, keyserver_search_url: str, qry: str):
+    def queryDomain(self, keyserver_search_url: str, qry: str) -> dict | None:
         """Query Domain."""
         res = self.fetch_url(
             keyserver_search_url + qry,
@@ -89,7 +89,7 @@ class sfp_pgp(SpiderFootModernPlugin):
 
         return res
 
-    def queryEmail(self, keyserver_fetch_url: str, qry: str):
+    def queryEmail(self, keyserver_fetch_url: str, qry: str) -> dict | None:
         """Query Email."""
         res = self.fetch_url(
             keyserver_fetch_url + qry,

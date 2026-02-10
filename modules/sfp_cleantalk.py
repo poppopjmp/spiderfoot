@@ -96,7 +96,7 @@ class sfp_cleantalk(SpiderFootModernPlugin):
             "MALICIOUS_SUBNET",
         ]
 
-    def query(self, qry: str, targetType: str):
+    def query(self, qry: str, targetType: str) -> str | None:
         """Query the data source."""
         cid = "_cleantalk"
         url = "https://iplists.firehol.org/files/cleantalk_7d.ipset"

@@ -114,7 +114,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
 
         return False
 
-    def retrieveProxyList(self):
+    def retrieveProxyList(self) -> list | None:
         """RetrieveProxyList."""
         proxy_list = self.cache_get('multiproxyopenproxies', 24)
 
@@ -142,7 +142,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
 
         return self.parseProxyList(res['content'])
 
-    def parseProxyList(self, proxy_list: str):
+    def parseProxyList(self, proxy_list: str) -> list:
         """Parse plaintext open proxy list.
 
         Args:

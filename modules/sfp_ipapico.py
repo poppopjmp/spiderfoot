@@ -77,7 +77,7 @@ class sfp_ipapico(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         queryString = f"https://ipapi.co/{qry}/json/"
 

@@ -106,7 +106,7 @@ class sfp_hostio(SpiderFootModernPlugin):
         self.info(
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         res = self.fetch_url(
             f"https://host.io/api/full/{qry}",

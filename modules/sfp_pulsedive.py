@@ -116,7 +116,7 @@ class sfp_pulsedive(SpiderFootModernPlugin):
                 'TCP_PORT_OPEN']
 
     # https://pulsedive.com/api/
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         params = {
             'indicator': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),

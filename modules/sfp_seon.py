@@ -104,7 +104,7 @@ class sfp_seon(SpiderFootModernPlugin):
             "PROXY_HOST",
         ]
 
-    def query(self, qry: str, eventName: str):
+    def query(self, qry: str, eventName: str) -> dict | None:
         """Query the data source."""
         if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
             queryString = f"https://api.seon.io/SeonRestService/ip-api/v1.0/{qry}"

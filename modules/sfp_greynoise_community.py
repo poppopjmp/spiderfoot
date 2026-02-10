@@ -93,7 +93,7 @@ class sfp_greynoise_community(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def queryIP(self, qry: str, qry_type: str):
+    def queryIP(self, qry: str, qry_type: str) -> dict | None:
         """Query IP."""
         gn_community_url = "https://api.greynoise.io/v3/community/"
 

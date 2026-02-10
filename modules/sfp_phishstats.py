@@ -96,7 +96,7 @@ class sfp_phishstats(SpiderFootModernPlugin):
 
     # Check whether the IP address is malicious using PhishStats API
     # https://phishstats.info/
-    def queryIPAddress(self, qry: str):
+    def queryIPAddress(self, qry: str) -> dict | None:
         """Query IPAddress."""
         params = {
             '_where': f"(ip,eq,{qry})",

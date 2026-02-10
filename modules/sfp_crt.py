@@ -80,7 +80,7 @@ class sfp_crt(SpiderFootModernPlugin):
             "CO_HOSTED_SITE_DOMAIN"
         ]
 
-    def queryDomain(self, qry: str):
+    def queryDomain(self, qry: str) -> dict:
         """Query Domain."""
         params = {
             'q': '%.' + qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
@@ -97,7 +97,7 @@ class sfp_crt(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from crt.sh")

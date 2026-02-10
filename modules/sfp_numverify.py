@@ -87,7 +87,7 @@ class sfp_numverify(SpiderFootModernPlugin):
 
     # Query numverify API for the specified phone number
     # https://numverify.com/documentation
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         number = qry.strip('+').strip('(').strip(')')
 

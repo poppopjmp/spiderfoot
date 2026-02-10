@@ -90,7 +90,7 @@ class sfp_stevenblack_hosts(SpiderFootModernPlugin):
 
         return False
 
-    def retrieveBlocklist(self):
+    def retrieveBlocklist(self) -> list | None:
         """RetrieveBlocklist."""
         blocklist = self.cache_get('stevenblack_hosts', 24)
 
@@ -119,7 +119,7 @@ class sfp_stevenblack_hosts(SpiderFootModernPlugin):
 
         return self.parseBlocklist(res['content'])
 
-    def parseBlocklist(self, blocklist: str):
+    def parseBlocklist(self, blocklist: str) -> list:
         """Parse plaintext block list.
 
         Args:

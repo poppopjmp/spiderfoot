@@ -100,7 +100,7 @@ class sfp_textmagic(SpiderFootModernPlugin):
         self.error(
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
-    def queryPhoneNumber(self, qry: str):
+    def queryPhoneNumber(self, qry: str) -> dict | None:
         """Query PhoneNumber."""
         headers = {
             'X-TM-Username': self.opts['api_key_username'],

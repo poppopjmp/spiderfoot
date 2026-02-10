@@ -246,7 +246,7 @@ class sfp_spider(SpiderFootModernPlugin):
         return list(returnLinks.keys())
 
     # Notify listening modules about links
-    def linkNotify(self, url: str, parentEvent: SpiderFootEvent = None):
+    def linkNotify(self, url: str, parentEvent: SpiderFootEvent = None) -> SpiderFootEvent:
         """LinkNotify."""
         if not isinstance(url, str):
             url = str(url, "utf-8", errors='replace')

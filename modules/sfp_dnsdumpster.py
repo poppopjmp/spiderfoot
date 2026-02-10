@@ -58,7 +58,7 @@ class sfp_dnsdumpster(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def query(self, domain: str):
+    def query(self, domain: str) -> list:
         """Query the data source."""
         ret = []
         # first, get the CSRF tokens

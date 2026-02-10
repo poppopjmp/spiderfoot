@@ -62,7 +62,7 @@ class sfp_psbdmp(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["LEAKSITE_URL", "LEAKSITE_CONTENT"]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> list | None:
         """Query the data source."""
         ret = None
 

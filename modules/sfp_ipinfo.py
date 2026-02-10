@@ -80,7 +80,7 @@ class sfp_ipinfo(SpiderFootModernPlugin):
         return ["GEOINFO"]
 
     # https://ipinfo.io/developers
-    def queryIP(self, ip: str):
+    def queryIP(self, ip: str) -> dict | None:
         """Query IP."""
         headers = {
             'Authorization': "Bearer " + self.opts['api_key']

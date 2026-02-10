@@ -70,7 +70,7 @@ class sfp_debounce(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def queryEmailAddr(self, qry: str):
+    def queryEmailAddr(self, qry: str) -> dict | None:
         """Query EmailAddr."""
         res = self.fetch_url(
             f"https://disposable.debounce.io?email={qry}",

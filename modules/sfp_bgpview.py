@@ -92,7 +92,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
             'RAW_RIR_DATA'
         ]
 
-    def queryAsn(self, qry: str):
+    def queryAsn(self, qry: str) -> dict | None:
         """
         Query BGPView for ASN information.
 
@@ -128,7 +128,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
 
         return data
 
-    def queryIp(self, qry: str):
+    def queryIp(self, qry: str) -> dict | None:
         """
         Query BGPView for IP address information.
 
@@ -164,7 +164,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
 
         return data
 
-    def queryNetblock(self, qry: str):
+    def queryNetblock(self, qry: str) -> dict | None:
         """
         Query BGPView for netblock information.
 

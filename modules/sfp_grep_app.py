@@ -78,7 +78,7 @@ class sfp_grep_app(SpiderFootModernPlugin):
                 "INTERNET_NAME", "RAW_RIR_DATA",
                 "INTERNET_NAME_UNRESOLVED", "LINKED_URL_INTERNAL"]
 
-    def query(self, qry: str, page: int):
+    def query(self, qry: str, page: int) -> dict | None:
         """Query the data source."""
         params = {
             'q': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),

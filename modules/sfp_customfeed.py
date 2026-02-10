@@ -88,7 +88,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
                 "MALICIOUS_COHOST"]
 
     # Look up 'list' type resources
-    def resourceList(self, replaceme_id: str, target: str, targetType: str):
+    def resourceList(self, replaceme_id: str, target: str, targetType: str) -> str | None:
         """ResourceList."""
         targetDom = ''
         # Get the base domain if we're supplied a domain

@@ -91,11 +91,11 @@ class sfp_uceprotect(SpiderFootModernPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr: str):
+    def reverseAddr(self, ipaddr: str) -> str:
         """ReverseAddr."""
         return '.'.join(reversed(ipaddr.split('.')))
 
-    def queryDnsblLevel1(self, qaddr: str):
+    def queryDnsblLevel1(self, qaddr: str) -> list | None:
         """Query UCEPROTECT DNS Level 1 for an IPv4 address.
 
         Args:
@@ -117,7 +117,7 @@ class sfp_uceprotect(SpiderFootModernPlugin):
 
         return None
 
-    def queryDnsblLevel2(self, qaddr: str):
+    def queryDnsblLevel2(self, qaddr: str) -> list | None:
         """Query UCEPROTECT DNS Level 2 for an IPv4 address.
 
         Args:

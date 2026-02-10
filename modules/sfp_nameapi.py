@@ -80,7 +80,7 @@ class sfp_nameapi(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def queryEmailAddr(self, qry: str):
+    def queryEmailAddr(self, qry: str) -> dict | None:
         """Query EmailAddr."""
         res = self.fetch_url(
             f"http://api.nameapi.org/rest/v5.3/email/disposableemailaddressdetector?apiKey={self.opts['api_key']}&emailAddress={qry}",

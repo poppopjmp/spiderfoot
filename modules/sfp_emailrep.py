@@ -76,7 +76,7 @@ class sfp_emailrep(SpiderFootModernPlugin):
         return ['RAW_RIR_DATA', 'EMAILADDR_COMPROMISED', 'MALICIOUS_EMAILADDR']
 
     # https://emailrep.io/docs/
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         headers = {
             'Accept': "application/json"

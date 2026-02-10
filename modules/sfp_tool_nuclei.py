@@ -271,7 +271,7 @@ class sfp_tool_nuclei(SpiderFootModernPlugin):
             self.error(f"Nuclei content: {content}")
             return
 
-    def run_remote_tool(self, target: str, template_path: str):
+    def run_remote_tool(self, target: str, template_path: str) -> str | None:
         """
         Execute the Nuclei tool remotely via SSH.
 

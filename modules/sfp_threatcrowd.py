@@ -95,7 +95,7 @@ class sfp_threatcrowd(SpiderFootModernPlugin):
                 "MALICIOUS_AFFILIATE_IPADDR", "MALICIOUS_NETBLOCK",
                 "MALICIOUS_SUBNET", "MALICIOUS_EMAILADDR"]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         url = None
 

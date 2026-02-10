@@ -78,7 +78,7 @@ class sfp_botscout(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["MALICIOUS_IPADDR", "BLACKLISTED_IPADDR", "MALICIOUS_EMAILADDR"]
 
-    def queryIp(self, ip: str):
+    def queryIp(self, ip: str) -> dict | None:
         """Query Ip."""
         if not self.sf.validIP(ip):
             return None
@@ -96,7 +96,7 @@ class sfp_botscout(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryEmail(self, email: str):
+    def queryEmail(self, email: str) -> dict | None:
         """Query Email."""
         if not SpiderFootHelpers.validEmail(email):
             return None
@@ -114,7 +114,7 @@ class sfp_botscout(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> str | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from BotScout.")

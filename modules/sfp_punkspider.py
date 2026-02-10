@@ -70,7 +70,7 @@ class sfp_punkspider(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["VULNERABILITY_GENERAL"]
 
-    def query(self, domain: str):
+    def query(self, domain: str) -> dict:
         """Query the data source."""
         domain_hash = hashlib.md5(domain.encode('utf-8', errors='replace').lower()).hexdigest()  # noqa: DUO130
         url = f"https://api.punkspider.org/api/partial-hash/{domain_hash}"
@@ -79,7 +79,7 @@ class sfp_punkspider(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from PunkSpider.")

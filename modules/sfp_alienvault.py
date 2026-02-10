@@ -149,7 +149,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
         ]
 
     # Parse API response
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from AlienVault OTX.")
@@ -178,7 +178,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
         return None
 
-    def queryReputation(self, qry: str):
+    def queryReputation(self, qry: str) -> dict | None:
         """Query Reputation."""
         if ":" in qry:
             target_type = "IPv6"
@@ -201,7 +201,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryPassiveDns(self, qry: str):
+    def queryPassiveDns(self, qry: str) -> dict | None:
         """Query PassiveDns."""
         if ":" in qry:
             target_type = "IPv6"
@@ -224,7 +224,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryDomainUrlList(self, qry: str, page: int = 1, per_page: int = 50):
+    def queryDomainUrlList(self, qry: str, page: int = 1, per_page: int = 50) -> dict:
         """Query DomainUrlList."""
         params = urllib.parse.urlencode({
             'page': page,
@@ -243,7 +243,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHostnameUrlList(self, qry: str, page: int = 1, per_page: int = 50):
+    def queryHostnameUrlList(self, qry: str, page: int = 1, per_page: int = 50) -> dict:
         """Query HostnameUrlList."""
         params = urllib.parse.urlencode({
             'page': page,

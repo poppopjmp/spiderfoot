@@ -81,7 +81,7 @@ class sfp_focsec(SpiderFootModernPlugin):
             "TOR_EXIT_NODE",
         ]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Retrieve IP address information from Focsec.
 
         Args:

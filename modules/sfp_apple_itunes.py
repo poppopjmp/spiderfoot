@@ -70,7 +70,7 @@ class sfp_apple_itunes(SpiderFootModernPlugin):
             'RAW_RIR_DATA'
         ]
 
-    def query(self, qry: str, limit: int = 100):
+    def query(self, qry: str, limit: int = 100) -> list | None:
         """Query the data source."""
         params = urllib.parse.urlencode({
             'media': 'software',

@@ -120,7 +120,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
             "DOMAIN_NAME"
         ]
 
-    def queryIp(self, qry: str):
+    def queryIp(self, qry: str) -> dict | None:
         """Query Ip."""
         params = urllib.parse.urlencode({
             'ip': qry,
@@ -149,7 +149,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
 
         return None
 
-    def queryDomain(self, qry: str):
+    def queryDomain(self, qry: str) -> dict | None:
         """Query Domain."""
         params = urllib.parse.urlencode({
             'domain': qry,

@@ -84,7 +84,7 @@ class sfp_rocketreach(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def query(self, query_value: str, query_type: str):
+    def query(self, query_value: str, query_type: str) -> dict | None:
         """Query the data source."""
         if self.errorState:
             return None

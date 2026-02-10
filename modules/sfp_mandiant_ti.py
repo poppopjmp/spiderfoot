@@ -76,7 +76,7 @@ class sfp_mandiant_ti(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ['THREAT_INTELLIGENCE']
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         headers = {
             'Authorization': f'Bearer {self.opts["api_key"]}',

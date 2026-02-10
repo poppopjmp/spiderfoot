@@ -116,7 +116,7 @@ class sfp_fraudguard(SpiderFootModernPlugin):
             "MALICIOUS_NETBLOCK"
         ]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query IP address.
 
         Args:

@@ -125,12 +125,12 @@ class sfp_honeypot(SpiderFootModernPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr: str):
+    def reverseAddr(self, ipaddr: str) -> str:
         """ReverseAddr."""
         return '.'.join(reversed(ipaddr.split('.')))
 
     # Returns text about the IP status returned from DNS
-    def parseDNS(self, addr: str):
+    def parseDNS(self, addr: str) -> str | None:
         """Parse DNS."""
         bits = addr.split(".")
         if int(bits[1]) > self.opts['timelimit']:

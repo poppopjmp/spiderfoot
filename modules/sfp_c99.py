@@ -101,7 +101,7 @@ class sfp_c99(SpiderFootModernPlugin):
             "CO_HOSTED_SITE"
         ]
 
-    def query(self, path: str, queryParam: str, queryData: str):
+    def query(self, path: str, queryParam: str, queryData: str) -> dict | None:
         """Query the data source."""
         res = self.fetch_url(
             f"https://api.c99.nl/{path}?key={self.opts['api_key']}&{queryParam}={queryData}&json",

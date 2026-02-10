@@ -96,7 +96,7 @@ class sfp_openphish(SpiderFootModernPlugin):
 
         return False
 
-    def retrieveBlacklist(self):
+    def retrieveBlacklist(self) -> list | None:
         """RetrieveBlacklist."""
         blacklist = self.cache_get('openphish', 24)
 
@@ -124,7 +124,7 @@ class sfp_openphish(SpiderFootModernPlugin):
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist: str):
+    def parseBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:

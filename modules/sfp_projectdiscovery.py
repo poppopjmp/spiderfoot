@@ -76,7 +76,7 @@ class sfp_projectdiscovery(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         headers = {"Accept": "application/json",
                    "Authorization": self.opts["api_key"]}

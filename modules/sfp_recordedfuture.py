@@ -76,7 +76,7 @@ class sfp_recordedfuture(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ['VULNERABILITY_DISCLOSURE']
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         headers = {
             'X-RFToken': self.opts['api_key']

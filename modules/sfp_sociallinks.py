@@ -89,7 +89,7 @@ class sfp_sociallinks(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def query(self, queryString: str):
+    def query(self, queryString: str) -> dict | None:
         """Query the data source."""
         headers = {
             'Accept': "application/json",
@@ -121,7 +121,7 @@ class sfp_sociallinks(SpiderFootModernPlugin):
             return None
         return json.loads(res['content'])
 
-    def queryTelegram(self, qry: str, eventName: str):
+    def queryTelegram(self, qry: str, eventName: str) -> dict:
         """Query Telegram."""
         if eventName == "PHONE_NUMBER":
             queryString = f"https://osint.rest/api/telegram/user_by_phone?query={qry}"
@@ -130,19 +130,19 @@ class sfp_sociallinks(SpiderFootModernPlugin):
 
         return self.query(queryString)
 
-    def queryFlickr(self, qry: str):
+    def queryFlickr(self, qry: str) -> dict:
         """Query Flickr."""
         queryString = f"https://osint.rest/api/flickr/email?email={qry}"
 
         return self.query(queryString)
 
-    def querySkype(self, qry: str):
+    def querySkype(self, qry: str) -> dict:
         """Query Skype."""
         queryString = f"https://osint.rest/api/skype/search/v2?query={qry}"
 
         return self.query(queryString)
 
-    def queryLinkedin(self, qry: str):
+    def queryLinkedin(self, qry: str) -> dict:
         """Query Linkedin."""
         queryString = f"https://osint.rest/api/linkedin/lookup_by_email/v2?query={qry}"
 

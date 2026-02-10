@@ -77,7 +77,7 @@ class sfp_ipregistry(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["GEOINFO", "MALICIOUS_IPADDR", "PHYSICAL_COORDINATES", "RAW_RIR_DATA"]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         qs = urllib.parse.urlencode({"key": self.opts["api_key"]})
         res = self.fetch_url(

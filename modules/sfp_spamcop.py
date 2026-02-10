@@ -92,14 +92,14 @@ class sfp_spamcop(SpiderFootModernPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr: str):
+    def reverseAddr(self, ipaddr: str) -> str | None:
         """ReverseAddr."""
         if not self.sf.validIP(ipaddr):
             self.debug(f"Invalid IPv4 address {ipaddr}")
             return None
         return '.'.join(reversed(ipaddr.split('.')))
 
-    def queryAddr(self, qaddr: str):
+    def queryAddr(self, qaddr: str) -> list | None:
         """Query SpamCop DNS for an IPv4 address.
 
         Args:

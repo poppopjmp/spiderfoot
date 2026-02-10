@@ -83,7 +83,7 @@ class sfp_haveibeenpwned(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["EMAILADDR_COMPROMISED", "PHONE_NUMBER_COMPROMISED", "LEAKSITE_CONTENT", "LEAKSITE_URL"]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         if self.opts['api_key']:
             version = "3"
@@ -128,7 +128,7 @@ class sfp_haveibeenpwned(SpiderFootModernPlugin):
 
         return None
 
-    def queryPaste(self, qry: str):
+    def queryPaste(self, qry: str) -> dict | None:
         """Query Paste."""
         url = f"https://haveibeenpwned.com/api/v3/pasteaccount/{qry}"
         headers = {

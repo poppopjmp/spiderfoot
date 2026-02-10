@@ -90,7 +90,7 @@ class sfp_maltiverse(SpiderFootModernPlugin):
 
     # Check whether the IP Address is malicious using Maltiverse API
     # https://app.swaggerhub.com/apis-docs/maltiverse/api/1.0.0-oas3#/IPv4/getIP
-    def queryIPAddress(self, qry: str):
+    def queryIPAddress(self, qry: str) -> dict | None:
 
         """Query IPAddress."""
         headers = {

@@ -80,7 +80,7 @@ class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["MALICIOUS_BITCOIN_ADDRESS", "RAW_RIR_DATA"]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         qs = urllib.parse.urlencode({"address": qry})
         res = self.fetch_url(

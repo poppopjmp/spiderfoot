@@ -89,7 +89,7 @@ class sfp_arin(SpiderFootModernPlugin):
         """
         return ["RAW_RIR_DATA", "HUMAN_NAME"]
 
-    def fetchRir(self, url: str):
+    def fetchRir(self, url: str) -> dict | None:
         """
         Fetch content from ARIN and return the response if available.
 
@@ -110,7 +110,7 @@ class sfp_arin(SpiderFootModernPlugin):
             return res
         return None
 
-    def query(self, qtype: str, value: str):
+    def query(self, qtype: str, value: str) -> dict | None:
         """
         Query ARIN for information based on type and value.
 

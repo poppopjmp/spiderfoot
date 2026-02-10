@@ -128,7 +128,7 @@ class sfp_deepinfo(SpiderFootModernPlugin):
             return None
 
     # Search Deepinfo for Passive DNS
-    def query_passive_dns(self, qry: str):
+    def query_passive_dns(self, qry: str) -> dict | None:
         """Query passive dns."""
         url = f"https://api.deepinfo.com/v1/discovery/passive-dns?domain={qry}"
         headers = {"apikey": self.opts['api_key']}

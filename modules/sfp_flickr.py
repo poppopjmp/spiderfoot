@@ -89,7 +89,7 @@ class sfp_flickr(SpiderFootModernPlugin):
                 "DOMAIN_NAME", "LINKED_URL_INTERNAL"]
 
     # Retrieve API key
-    def retrieveApiKey(self):
+    def retrieveApiKey(self) -> str | None:
         """RetrieveApiKey."""
         res = self.fetch_url(
             "https://www.flickr.com/", timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
@@ -106,7 +106,7 @@ class sfp_flickr(SpiderFootModernPlugin):
         return keys[0]
 
     # Query the REST API
-    def query(self, qry: str, api_key: str, page: int = 1, per_page: int = 200):
+    def query(self, qry: str, api_key: str, page: int = 1, per_page: int = 200) -> dict | None:
         """Query the data source."""
         params = {
             "sort": "relevance",

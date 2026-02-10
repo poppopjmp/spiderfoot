@@ -91,7 +91,7 @@ class sfp_netlas(SpiderFootModernPlugin):
         """
         return ["RAW_RIR_DATA", "GEOINFO", "PHYSICAL_COORDINATES", "PROVIDER_TELCO"]
 
-    def queryNetlas(self, qry: str, qryType: str):
+    def queryNetlas(self, qry: str, qryType: str) -> dict | None:
         """Query Netlas API for information.
 
         Args:
@@ -128,7 +128,7 @@ class sfp_netlas(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse the API response from Netlas.
 
         Args:

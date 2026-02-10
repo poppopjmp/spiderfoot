@@ -74,7 +74,7 @@ class sfp_wikipediaedits(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["WIKIPEDIA_PAGE_EDIT"]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> set | None:
         """Query the data source."""
         params = {
             "action": "feedcontributions",

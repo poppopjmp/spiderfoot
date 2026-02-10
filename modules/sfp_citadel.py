@@ -93,7 +93,7 @@ class sfp_citadel(SpiderFootModernPlugin):
 
     # Query email address
     # https://leak-lookup.com/api
-    def queryEmail(self, email: str):
+    def queryEmail(self, email: str) -> dict | None:
         """Query Email."""
         apikey = self.opts['api_key']
 

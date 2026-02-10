@@ -63,7 +63,7 @@ class sfp_bitcoin(SpiderFootModernPlugin):
             n = n * 58 + digits58.index(char)
         return self.to_bytes(n, length)
 
-    def check_bc(self, bc: str):
+    def check_bc(self, bc: str) -> bool:
         """Check bc."""
         bcbytes = self.decode_base58(bc, 25)
         return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]

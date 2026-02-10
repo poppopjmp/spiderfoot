@@ -76,7 +76,7 @@ class sfp_threatfox(SpiderFootModernPlugin):
             "MALICIOUS_AFFILIATE_IPADDR",
         ]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query IOCs.
 
         Args:

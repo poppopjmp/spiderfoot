@@ -83,7 +83,7 @@ class sfp_cisco_umbrella(SpiderFootModernPlugin):
             "GEOINFO",
         ]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         if self.errorState:
             return None

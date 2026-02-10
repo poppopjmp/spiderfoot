@@ -130,7 +130,7 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
             except OSError:
                 pass
 
-    def run_remote_tool(self, target_url: str):
+    def run_remote_tool(self, target_url: str) -> dict | None:
         """Run remote tool."""
         host = self.opts.get("remote_host")
         user = self.opts.get("remote_user")

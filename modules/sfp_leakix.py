@@ -89,7 +89,7 @@ class sfp_leakix(SpiderFootModernPlugin):
 
     # Query host
     # https://leakix.net/api-documentation
-    def queryApi(self, qryType: str, qry: str):
+    def queryApi(self, qryType: str, qry: str) -> dict:
         """Query Api."""
         headers = {
             "Accept": "application/json",
@@ -107,7 +107,7 @@ class sfp_leakix(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     # Parse API response
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from LeakIX.")

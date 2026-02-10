@@ -107,7 +107,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
             "PHYSICAL_COORDINATES",
         ]
 
-    def query(self, endpoint: str, ip: str, page: int = 1):
+    def query(self, endpoint: str, ip: str, page: int = 1) -> list | None:
         """Query the data source."""
         retarr = list()
 

@@ -77,7 +77,7 @@ class sfp_crxcavator(SpiderFootModernPlugin):
             'RAW_RIR_DATA'
         ]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         params = urllib.parse.urlencode({
             'q': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
@@ -106,7 +106,7 @@ class sfp_crxcavator(SpiderFootModernPlugin):
 
         return data
 
-    def queryExtension(self, extension_id: str):
+    def queryExtension(self, extension_id: str) -> dict | None:
         """Query Extension."""
         res = self.fetch_url(
             f"https://api.crxcavator.io/v1/report/{extension_id}",

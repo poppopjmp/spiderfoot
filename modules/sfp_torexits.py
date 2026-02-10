@@ -99,7 +99,7 @@ class sfp_torexits(SpiderFootModernPlugin):
 
         return False
 
-    def retrieveExitNodes(self):
+    def retrieveExitNodes(self) -> list | None:
         """RetrieveExitNodes."""
         exit_addresses = self.cache_get(
             'torexitnodes', self.opts.get('cacheperiod', 1))
@@ -128,7 +128,7 @@ class sfp_torexits(SpiderFootModernPlugin):
 
         return self.parseExitNodes(res['content'])
 
-    def parseExitNodes(self, data: str):
+    def parseExitNodes(self, data: str) -> list | None:
         """Extract exit node IP addresses from TOR relay search results.
 
         Args:

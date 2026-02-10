@@ -232,7 +232,7 @@ class sfp_template(SpiderFootModernPlugin):
 
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
 
         # This is an example of querying SHODAN. Note that the fetch timeout
         # is inherited from global options (options prefixed with _ will come

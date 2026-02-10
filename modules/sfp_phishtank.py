@@ -96,7 +96,7 @@ class sfp_phishtank(SpiderFootModernPlugin):
 
         return None
 
-    def retrieveBlacklist(self):
+    def retrieveBlacklist(self) -> list | None:
         """RetrieveBlacklist."""
         blacklist = self.cache_get('phishtank', 24)
 
@@ -124,7 +124,7 @@ class sfp_phishtank(SpiderFootModernPlugin):
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist: str):
+    def parseBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:

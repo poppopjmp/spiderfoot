@@ -87,7 +87,7 @@ class sfp_snov(SpiderFootModernPlugin):
         return ["EMAILADDR", "EMAILADDR_GENERIC"]
 
     # Get Authentication token from Snov.IO API
-    def queryAccessToken(self):
+    def queryAccessToken(self) -> str | None:
         """Query AccessToken."""
         params = {
             'grant_type': "client_credentials",

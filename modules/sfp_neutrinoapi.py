@@ -97,7 +97,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     # Query the phone-validate REST API
     # https://www.neutrinoapi.com/api/phone-validate/
-    def queryPhoneValidate(self, qry: str):
+    def queryPhoneValidate(self, qry: str) -> dict:
         """Query PhoneValidate."""
         res = self.fetch_url(
             'https://neutrinoapi.com/phone-validate',
@@ -111,7 +111,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     # Query the ip-info REST API
     # https://www.neutrinoapi.com/api/ip-info/
-    def queryIpInfo(self, qry: str):
+    def queryIpInfo(self, qry: str) -> dict:
         """Query IpInfo."""
         res = self.fetch_url(
             "https://neutrinoapi.com/ip-info",
@@ -125,7 +125,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     # Query the ip-blocklist REST API
     # https://www.neutrinoapi.com/api/ip-blocklist/
-    def queryIpBlocklist(self, qry: str):
+    def queryIpBlocklist(self, qry: str) -> dict:
         """Query IpBlocklist."""
         res = self.fetch_url(
             "https://neutrinoapi.com/ip-blocklist",
@@ -139,7 +139,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     # Query the host-reputation REST API
     # https://www.neutrinoapi.com/api/host-reputation/
-    def queryHostReputation(self, qry: str):
+    def queryHostReputation(self, qry: str) -> dict:
         """Query HostReputation."""
         res = self.fetch_url(
             "https://neutrinoapi.com/host-reputation",
@@ -152,7 +152,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     # Parse API response
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from NeutrinoAPI.")

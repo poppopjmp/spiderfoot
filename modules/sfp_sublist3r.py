@@ -60,7 +60,7 @@ class sfp_sublist3r(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def query(self, domain: str):
+    def query(self, domain: str) -> list:
         """Query the data source."""
         url = f"https://api.sublist3r.com/search.php?domain={domain}"
         ret = []

@@ -94,7 +94,7 @@ class sfp_shodan(SpiderFootModernPlugin):
                 'VULNERABILITY_CVE_HIGH', 'VULNERABILITY_CVE_MEDIUM',
                 'VULNERABILITY_CVE_LOW', 'VULNERABILITY_GENERAL']
 
-    def queryHost(self, qry: str):
+    def queryHost(self, qry: str) -> dict | None:
         """Query Host."""
         res = self.fetch_url(
             f"https://api.shodan.io/shodan/host/{qry}?key={self.opts['api_key']}",
@@ -125,7 +125,7 @@ class sfp_shodan(SpiderFootModernPlugin):
 
         return None
 
-    def searchHosts(self, qry: str):
+    def searchHosts(self, qry: str) -> dict | None:
         """Search for Hosts."""
         params = {
             'query': f"hostname:{qry}",
@@ -161,7 +161,7 @@ class sfp_shodan(SpiderFootModernPlugin):
 
         return None
 
-    def searchHtml(self, qry: str):
+    def searchHtml(self, qry: str) -> dict | None:
         """Search for Html."""
         params = {
             'query': 'http.html:"' + qry.encode('raw_unicode_escape').decode("ascii", errors='replace') + '"',

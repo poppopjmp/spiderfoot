@@ -92,7 +92,7 @@ class sfp_metadefender(SpiderFootModernPlugin):
 
     # Query domain REST API
     # https://onlinehelp.opswat.com/mdcloud/4.5_Domain_Reputation.html
-    def queryDomain(self, qry: str):
+    def queryDomain(self, qry: str) -> dict:
         """Query Domain."""
         headers = {
             'Accept': 'application/json',
@@ -109,7 +109,7 @@ class sfp_metadefender(SpiderFootModernPlugin):
 
     # Query ip REST API
     # https://onlinehelp.opswat.com/mdcloud/4.1_IP_Reputation.html
-    def queryIp(self, qry: str):
+    def queryIp(self, qry: str) -> dict:
         """Query Ip."""
         headers = {
             'Accept': 'application/json',
@@ -125,7 +125,7 @@ class sfp_metadefender(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     # Parse API response
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from MetaDefender.")

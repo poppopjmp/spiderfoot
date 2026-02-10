@@ -113,7 +113,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
         self.error(
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
-    def query(self, qry: str, eventName: str):
+    def query(self, qry: str, eventName: str) -> dict | None:
         """Query the data source."""
         queryString = ""
         if eventName == "PHONE_NUMBER":
@@ -145,7 +145,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
 
         return None
 
-    def getGeoInfo(self, data: dict):
+    def getGeoInfo(self, data: dict) -> dict:
         """Get GeoInfo."""
         geoInfo = ""
 

@@ -88,7 +88,7 @@ class sfp_hunter(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC", "RAW_RIR_DATA"]
 
-    def query(self, qry: str, offset: int = 0, limit: int = 10):
+    def query(self, qry: str, offset: int = 0, limit: int = 10) -> dict | None:
         """Query the data source."""
         params = {
             "domain": qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),

@@ -89,7 +89,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
 
         return False
 
-    def retrieveBlacklist(self):
+    def retrieveBlacklist(self) -> list | None:
         """RetrieveBlacklist."""
         blacklist = self.cache_get('botvrij', 24)
 
@@ -117,7 +117,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist: str):
+    def parseBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:

@@ -65,7 +65,7 @@ class sfp_venmo(SpiderFootModernPlugin):
         return ['RAW_RIR_DATA', 'HUMAN_NAME']
 
     # Query Venmo API
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         res = self.fetch_url('https://api.venmo.com/v1/users/' + qry,
                                timeout=self.opts['_fetchtimeout'],

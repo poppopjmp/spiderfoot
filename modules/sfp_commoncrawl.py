@@ -67,7 +67,7 @@ class sfp_commoncrawl(SpiderFootModernPlugin):
         self.results = self.tempStorage()
         self.indexBase = list()
         self.errorState = False
-    def search(self, target: str):
+    def search(self, target: str) -> str | None:
         """Search the data source."""
         ret = list()
         for index in self.indexBase:
@@ -89,7 +89,7 @@ class sfp_commoncrawl(SpiderFootModernPlugin):
 
         return ret
 
-    def getLatestIndexes(self):
+    def getLatestIndexes(self) -> list:
         """Get LatestIndexes."""
         url = "https://index.commoncrawl.org/"
         res = self.fetch_url(url, timeout=60,

@@ -103,7 +103,7 @@ class sfp_vxvault(SpiderFootModernPlugin):
 
         return False
 
-    def retrieveBlacklist(self):
+    def retrieveBlacklist(self) -> list | None:
         """RetrieveBlacklist."""
         blacklist = self.cache_get('vxvault', 24)
 
@@ -131,7 +131,7 @@ class sfp_vxvault(SpiderFootModernPlugin):
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist: str):
+    def parseBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:

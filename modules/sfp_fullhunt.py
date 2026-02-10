@@ -82,7 +82,7 @@ class sfp_fullhunt(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def queryDomainDetails(self, qry: str):
+    def queryDomainDetails(self, qry: str) -> dict:
         """Search for hosts on a domain.
 
         Args:

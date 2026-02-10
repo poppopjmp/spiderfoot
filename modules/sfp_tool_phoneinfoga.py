@@ -97,7 +97,7 @@ class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
             "CARRIER_TYPE",
         ]
 
-    def run_remote_tool(self, phone_number: str):
+    def run_remote_tool(self, phone_number: str) -> dict | None:
         """Run the tool remotely via SSH and return parsed JSON output."""
         import paramiko
         import io
@@ -144,7 +144,7 @@ class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
             self.error(f"SSH connection or execution failed: {e}")
             return None
 
-    def query_api(self, phone_number: str):
+    def query_api(self, phone_number: str) -> dict | None:
         """Query api."""
         if self.opts.get("remote_enabled"):
             return self.run_remote_tool(phone_number)

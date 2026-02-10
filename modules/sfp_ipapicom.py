@@ -87,7 +87,7 @@ class sfp_ipapicom(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         queryString = f"http://api.ipapi.com/api/{qry}?access_key={self.opts['api_key']}"
 

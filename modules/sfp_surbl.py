@@ -102,14 +102,14 @@ class sfp_surbl(SpiderFootModernPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr: str):
+    def reverseAddr(self, ipaddr: str) -> str | None:
         """ReverseAddr."""
         if not self.sf.validIP(ipaddr):
             self.debug(f"Invalid IPv4 address {ipaddr}")
             return None
         return '.'.join(reversed(ipaddr.split('.')))
 
-    def query(self, qaddr: str):
+    def query(self, qaddr: str) -> list | None:
         """Query SURBL DNS.
 
         Args:

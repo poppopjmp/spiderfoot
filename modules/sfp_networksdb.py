@@ -96,7 +96,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
 
     # Query IP Address Info
     # https://networksdb.io/api/docs#ipinfo
-    def queryIpInfo(self, qry: str):
+    def queryIpInfo(self, qry: str) -> dict:
         """Query IpInfo."""
         params = {
             'ip': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
@@ -118,7 +118,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
 
     # Query IP Geolocation
     # https://networksdb.io/api/docs#geoip
-    def queryIpGeo(self, qry: str):
+    def queryIpGeo(self, qry: str) -> dict:
         """Query IpGeo."""
         params = {
             'ip': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
@@ -140,7 +140,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
 
     # Query Domains on IP (Reverse DNS)
     # https://networksdb.io/api/docs#revdns
-    def queryReverseDns(self, qry: str):
+    def queryReverseDns(self, qry: str) -> dict:
         """Query ReverseDns."""
         params = {
             'ip': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
@@ -162,7 +162,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
 
     # Query IPs for Domain (Forward DNS)
     # https://networksdb.io/api/docs#fwddns
-    def queryForwardDns(self, qry: str):
+    def queryForwardDns(self, qry: str) -> dict:
         """Query ForwardDns."""
         params = {
             'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
@@ -185,7 +185,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
     # Query Autonomous System Info
     # https://networksdb.io/api/docs#asinfo
     # Note: currently unused
-    def queryAsnInfo(self, qry: str):
+    def queryAsnInfo(self, qry: str) -> dict:
         """Query AsnInfo."""
         params = {
             'asn': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
@@ -208,7 +208,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
     # Query Autonomous System Networks
     # https://networksdb.io/api/docs#asnets
     # Note: currently unused
-    def queryAsnNetworks(self, qry: str):
+    def queryAsnNetworks(self, qry: str) -> dict:
         """Query AsnNetworks."""
         params = {
             'asn': qry,
@@ -230,7 +230,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
 
     # Parse API response
     # https://networksdb.io/api/plans
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from NetworksDB.")

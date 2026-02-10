@@ -82,7 +82,7 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "INTERNET_NAME", "DOMAIN_NAME", "LINKED_URL_INTERNAL"]
 
-    def queryDomain(self, qry: str):
+    def queryDomain(self, qry: str) -> dict:
         """Query a domain.
 
         Args:
@@ -111,7 +111,7 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHost(self, qry: str):
+    def queryHost(self, qry: str) -> dict:
         """Query a host.
 
         Args:
@@ -140,7 +140,7 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHash(self, qry: str):
+    def queryHash(self, qry: str) -> dict:
         """Query a hash.
 
         Args:
@@ -169,7 +169,7 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse HTTP response from API.
 
         Args:

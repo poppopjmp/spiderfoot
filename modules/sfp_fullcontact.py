@@ -142,7 +142,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
 
         return ret
 
-    def queryCompany(self, domain: str):
+    def queryCompany(self, domain: str) -> dict | None:
         """Query Company."""
         url = "https://api.fullcontact.com/v3/company.enrich"
 
@@ -151,7 +151,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
 
         return self.query(url, {"domain": domain})
 
-    def queryPersonByEmail(self, email: str):
+    def queryPersonByEmail(self, email: str) -> dict | None:
         """Query PersonByEmail."""
         url = "https://api.fullcontact.com/v3/person.enrich"
 
@@ -160,7 +160,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
 
         return self.query(url, {'email': email})
 
-    def queryPersonByName(self, name: str):
+    def queryPersonByName(self, name: str) -> dict | None:
         """Query PersonByName."""
         url = "https://api.fullcontact.com/v3/person.enrich"
 

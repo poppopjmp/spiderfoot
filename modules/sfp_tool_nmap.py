@@ -246,7 +246,7 @@ class sfp_tool_nmap(SpiderFootModernPlugin):
                 self.error(f"Couldn't parse the output of Nmap: {e}")
                 return
 
-    def run_remote_tool(self, target: str):
+    def run_remote_tool(self, target: str) -> str | None:
         """Run remote tool."""
         host = self.opts.get("remote_host")
         user = self.opts.get("remote_user")

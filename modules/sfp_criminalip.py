@@ -79,7 +79,7 @@ class sfp_criminalip(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from CriminalIP API.")
@@ -123,7 +123,7 @@ class sfp_criminalip(SpiderFootModernPlugin):
 
         return None
 
-    def queryCriminalIP(self, qry: str, endpoint: str):
+    def queryCriminalIP(self, qry: str, endpoint: str) -> dict | None:
         """Query CriminalIP API.
 
         Args:

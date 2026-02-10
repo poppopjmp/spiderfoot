@@ -82,7 +82,7 @@ class sfp_zonefiles(SpiderFootModernPlugin):
             "SOFTWARE_USED",
         ]
 
-    def queryDomain(self, qry: str):
+    def queryDomain(self, qry: str) -> dict:
         """Query a domain.
 
         Args:
@@ -106,7 +106,7 @@ class sfp_zonefiles(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from ZoneFiles.")

@@ -128,7 +128,7 @@ class sfp_fsecure_riddler(SpiderFootModernPlugin):
         self.token = token
 
     # https://riddler.io/help/search
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         params = {
             'query': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')

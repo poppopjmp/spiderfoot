@@ -99,7 +99,7 @@ class sfp_abuseipdb(SpiderFootModernPlugin):
             "MALICIOUS_AFFILIATE_IPADDR",
         ]
 
-    def queryBlacklist(self):
+    def queryBlacklist(self) -> list | None:
         """Query Blacklist."""
         blacklist = self.cache_get('abuseipdb', 24)
 
@@ -151,7 +151,7 @@ class sfp_abuseipdb(SpiderFootModernPlugin):
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist: str):
+    def parseBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:
@@ -175,7 +175,7 @@ class sfp_abuseipdb(SpiderFootModernPlugin):
 
         return ips
 
-    def queryIpAddress(self, ip: str):
+    def queryIpAddress(self, ip: str) -> dict | None:
         """Query API for an IPv4 or IPv6 address.
 
         Note: Currently unused.
@@ -229,7 +229,7 @@ class sfp_abuseipdb(SpiderFootModernPlugin):
 
         return None
 
-    def queryNetblock(self, ip: str):
+    def queryNetblock(self, ip: str) -> dict | None:
         """Query API for a netblock.
 
         Note: Currently unused.

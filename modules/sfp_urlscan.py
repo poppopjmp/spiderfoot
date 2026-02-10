@@ -79,7 +79,7 @@ class sfp_urlscan(SpiderFootModernPlugin):
                 'BGP_AS_MEMBER', 'WEBSERVER_BANNER']
 
     # https://urlscan.io/about-api/
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         params = {
             'q': 'domain:' + qry.encode('raw_unicode_escape').decode("ascii", errors='replace')

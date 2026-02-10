@@ -85,7 +85,7 @@ class sfp_etherscan(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         queryString = f"https://api.etherscan.io/api?module=account&action=balance&address={qry}&tag=latest&apikey={self.opts['api_key']}"
         # Wallet balance

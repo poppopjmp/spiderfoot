@@ -86,7 +86,7 @@ class sfp_dnsgrep(SpiderFootModernPlugin):
         return ["INTERNET_NAME", "INTERNET_NAME_UNRESOLVED", "RAW_RIR_DATA"]
 
     # Query the DNSGrep REST API
-    def query(self, qry: str):
+    def query(self, qry: str) -> dict | None:
         """Query the data source."""
         params = {
             'q': '.' + qry.encode('raw_unicode_escape').decode("ascii", errors='replace')

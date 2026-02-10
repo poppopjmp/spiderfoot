@@ -90,7 +90,7 @@ class sfp_jsonwhoiscom(SpiderFootModernPlugin):
 
     # Query domain
     # https://jsonwhois.com/docs
-    def queryDomain(self, qry: str):
+    def queryDomain(self, qry: str) -> dict:
         """Query Domain."""
         params = {
             'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
@@ -112,7 +112,7 @@ class sfp_jsonwhoiscom(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     # Parse API response
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from JsonWHOIS.com.")

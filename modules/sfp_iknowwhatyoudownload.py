@@ -79,7 +79,7 @@ class sfp_iknowwhatyoudownload(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["MALICIOUS_IPADDR"]
 
-    def query(self, qry: str):
+    def query(self, qry: str) -> str | None:
         """Search iknowwhatyoudownload.com for an IPv4/IPv6 address.
 
         Args:

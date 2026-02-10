@@ -84,7 +84,7 @@ class sfp_koodous(SpiderFootModernPlugin):
             'RAW_RIR_DATA'
         ]
 
-    def queryPackageName(self, qry: str, cursor: int = ''):
+    def queryPackageName(self, qry: str, cursor: int = '') -> dict:
         """Query PackageName."""
         package_name = qry.encode('raw_unicode_escape').decode(
             "ascii", errors='replace')
@@ -106,7 +106,7 @@ class sfp_koodous(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from Koodous.")

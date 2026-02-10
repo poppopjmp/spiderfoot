@@ -113,7 +113,7 @@ class sfp_censys(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def queryHosts(self, qry: str):
+    def queryHosts(self, qry: str) -> dict:
         """Query Hosts."""
         secret = self.opts['censys_api_key_uid'] + \
             ':' + self.opts['censys_api_key_secret']
@@ -135,7 +135,7 @@ class sfp_censys(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHostsSearch(self, qry: str):
+    def queryHostsSearch(self, qry: str) -> dict:
         """Query HostsSearch."""
         secret = self.opts['censys_api_key_uid'] + \
             ':' + self.opts['censys_api_key_secret']
@@ -161,7 +161,7 @@ class sfp_censys(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
         if not res:
             self.error("No response from Censys.io.")

@@ -112,7 +112,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return res
 
     # Get the netblock the IP resides in
-    def ipNetblock(self, ipaddr: str):
+    def ipNetblock(self, ipaddr: str) -> str | None:
         """IpNetblock."""
         prefix = None
 
@@ -154,7 +154,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return None
 
     # Get the AS owning the netblock
-    def netblockAs(self, prefix: str):
+    def netblockAs(self, prefix: str) -> str | None:
         """NetblockAs."""
         whois = self.queryWhois(prefix)
 
@@ -182,7 +182,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return str(asn)
 
     # Owner information about an AS or netblock
-    def entityOwnerInfo(self, entity: str):
+    def entityOwnerInfo(self, entity: str) -> dict | None:
         """EntityOwnerInfo."""
         whois = self.queryWhois(entity)
 
@@ -220,7 +220,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return ownerinfo
 
     # Netblocks owned by an AS
-    def asNetblocks(self, asn: str):
+    def asNetblocks(self, asn: str) -> list | None:
         """AsNetblocks."""
         res = self.fetchRir(
             f"https://stat.ripe.net/data/announced-prefixes/data.json?resource=AS{asn}")
@@ -245,7 +245,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return netblocks
 
     # Neighbours to an AS
-    def asNeighbours(self, asn: str):
+    def asNeighbours(self, asn: str) -> list | None:
         """AsNeighbours."""
         res = self.fetchRir(
             f"https://stat.ripe.net/data/asn-neighbours/data.json?resource=AS{asn}")
