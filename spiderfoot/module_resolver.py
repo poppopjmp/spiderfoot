@@ -63,13 +63,16 @@ class ModuleDescriptor:
 
     @property
     def watched_set(self) -> frozenset[str]:
+        """Return watched events as a frozenset."""
         return frozenset(self.watched_events)
 
     @property
     def produced_set(self) -> frozenset[str]:
+        """Return produced events as a frozenset."""
         return frozenset(self.produced_events)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "name": self.name,
             "watched_events": self.watched_events,
@@ -108,9 +111,11 @@ class ResolutionResult:
 
     @property
     def ok(self) -> bool:
+        """Return True if the resolution was successful."""
         return self.status == ResolveStatus.OK
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "status": self.status.value,
             "load_order": self.load_order,
@@ -147,6 +152,7 @@ class ModuleResolver:
     """
 
     def __init__(self) -> None:
+        """Initialize the ModuleResolver."""
         self._modules: dict[str, ModuleDescriptor] = {}
         # index: event_type → set of module names that produce it
         self._producers: dict[str, set[str]] = {}
@@ -166,6 +172,7 @@ class ModuleResolver:
             self._consumers.setdefault(evt, set()).add(desc.name)
 
     def register_many(self, descriptors: list[ModuleDescriptor]) -> int:
+        """Register multiple module descriptors at once."""
         count = 0
         for d in descriptors:
             self.register(d)
@@ -173,6 +180,7 @@ class ModuleResolver:
         return count
 
     def unregister(self, name: str) -> bool:
+        """Remove a module descriptor by name."""
         desc = self._modules.pop(name, None)
         if not desc:
             return False
@@ -183,9 +191,11 @@ class ModuleResolver:
         return True
 
     def get_module(self, name: str) -> ModuleDescriptor | None:
+        """Return the module descriptor for the given name."""
         return self._modules.get(name)
 
     def list_modules(self) -> list[ModuleDescriptor]:
+        """Return all registered module descriptors sorted by name."""
         return sorted(self._modules.values(), key=lambda m: m.name)
 
     # -------------------------------------------------------------------
@@ -276,6 +286,7 @@ class ModuleResolver:
         return set(self._consumers.get(event_type, set()))
 
     def all_event_types(self) -> set[str]:
+        """Return all event types across all registered modules."""
         evts: set[str] = set()
         for d in self._modules.values():
             evts.update(d.produced_events)
@@ -283,6 +294,7 @@ class ModuleResolver:
         return evts
 
     def all_produced_events(self) -> set[str]:
+        """Return all produced event types across all registered modules."""
         evts: set[str] = set()
         for d in self._modules.values():
             evts.update(d.produced_events)
@@ -485,6 +497,7 @@ class ModuleResolver:
     # -------------------------------------------------------------------
 
     def stats(self) -> dict[str, Any]:
+        """Return summary statistics about the resolver state."""
         return {
             "total_modules": len(self._modules),
             "total_event_types": len(self.all_event_types()),

@@ -67,6 +67,7 @@ class WebSocketMessage:
     scan_id: str | None = None
 
     def to_json(self) -> str:
+        """Serialize the message to a JSON string."""
         return json.dumps({
             "channel": self.channel,
             "event": self.event_type,
@@ -82,6 +83,7 @@ class WebSocketClient:
     def __init__(self, client_id: str,
                  send_func: Callable, *,
                  max_queue: int = 1000) -> None:
+        """Initialize the WebSocketClient."""
         self.client_id = client_id
         self._send = send_func
         self.connected_at = time.time()
@@ -92,13 +94,16 @@ class WebSocketClient:
         self._task: asyncio.Task | None = None
 
     def subscribe(self, channel: str) -> None:
+        """Subscribe this client to a channel."""
         self.subscriptions.add(channel)
         log.debug("Client %s subscribed to %s", self.client_id, channel)
 
     def unsubscribe(self, channel: str) -> None:
+        """Unsubscribe this client from a channel."""
         self.subscriptions.discard(channel)
 
     def is_subscribed(self, channel: str) -> bool:
+        """Check if this client is subscribed to a channel."""
         return channel in self.subscriptions
 
     async def enqueue(self, message: WebSocketMessage) -> bool:
@@ -127,6 +132,7 @@ class WebSocketClient:
 
     @property
     def stats(self) -> dict:
+        """Return client connection statistics."""
         return {
             "client_id": self.client_id,
             "connected_at": self.connected_at,
@@ -147,6 +153,7 @@ class WebSocketHub:
 
     def __init__(self, *, max_clients: int = 500,
                  max_queue_per_client: int = 1000) -> None:
+        """Initialize the WebSocketHub."""
         self._clients: dict[str, WebSocketClient] = {}
         self._scan_channels: dict[str, set[str]] = defaultdict(set)
         self._max_clients = max_clients
@@ -157,6 +164,7 @@ class WebSocketHub:
 
     @classmethod
     def get_instance(cls, **kwargs) -> "WebSocketHub":
+        """Return the singleton WebSocketHub instance."""
         if cls._instance is None:
             cls._instance = cls(**kwargs)
         return cls._instance
@@ -397,6 +405,7 @@ class WebSocketHub:
 
     @property
     def stats(self) -> dict:
+        """Return hub-wide statistics and per-client details."""
         return {
             "connected_clients": len(self._clients),
             "max_clients": self._max_clients,
@@ -409,6 +418,7 @@ class WebSocketHub:
 
     @property
     def client_count(self) -> int:
+        """Return the number of connected clients."""
         return len(self._clients)
 
 

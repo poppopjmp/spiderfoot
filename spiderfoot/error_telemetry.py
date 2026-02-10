@@ -74,6 +74,7 @@ class ErrorRecord:
     extra: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "fingerprint": self.fingerprint,
             "exception_type": self.exception_type,
@@ -108,6 +109,7 @@ class ErrorGroup:
     affected_scans: set[str] = field(default_factory=set)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "fingerprint": self.fingerprint,
             "exception_type": self.exception_type,
@@ -202,11 +204,13 @@ class _SlidingWindow:
     """Fixed-window error counter for rate computation."""
 
     def __init__(self, window_seconds: float = 60.0) -> None:
+        """Initialize the _SlidingWindow."""
         self._window = window_seconds
         self._timestamps: list[float] = []
         self._lock = threading.Lock()
 
     def record(self, ts: float | None = None) -> None:
+        """Record a timestamp for rate calculation."""
         ts = ts or time.time()
         with self._lock:
             self._timestamps.append(ts)
@@ -223,6 +227,7 @@ class _SlidingWindow:
         return count * (60.0 / self._window)
 
     def count(self, now: float | None = None) -> int:
+        """Return the number of events within the current window."""
         now = now or time.time()
         cutoff = now - self._window
         with self._lock:
@@ -252,6 +257,7 @@ class ErrorTelemetry:
         ring_size: int = 1000,
         window_seconds: float = 60.0,
     ) -> None:
+        """Initialize the ErrorTelemetry."""
         self._ring_size = ring_size
         self._window_seconds = window_seconds
 
@@ -430,10 +436,12 @@ class ErrorTelemetry:
         return groups[:limit]
 
     def get_group(self, fingerprint: str) -> ErrorGroup | None:
+        """Return the error group for the given fingerprint."""
         with self._lock:
             return self._groups.get(fingerprint)
 
     def groups_for_module(self, module_name: str) -> list[ErrorGroup]:
+        """Return all error groups for the specified module."""
         with self._lock:
             return [
                 g for g in self._groups.values()
@@ -441,6 +449,7 @@ class ErrorTelemetry:
             ]
 
     def groups_for_scan(self, scan_id: str) -> list[ErrorGroup]:
+        """Return all error groups affecting the specified scan."""
         with self._lock:
             return [
                 g for g in self._groups.values()
@@ -465,6 +474,7 @@ class ErrorTelemetry:
         self._alerts.append(rule)
 
     def remove_alert(self, name: str) -> bool:
+        """Remove an alert rule by name."""
         before = len(self._alerts)
         self._alerts = [a for a in self._alerts if a.name != name]
         return len(self._alerts) < before
@@ -493,6 +503,7 @@ class ErrorTelemetry:
                         log.debug("Alert callback error: %s", e, exc_info=True)
 
     def alert_history(self, limit: int = 50) -> list[AlertEvent]:
+        """Return recent alert events up to the specified limit."""
         return self._alert_history[-limit:]
 
     # -------------------------------------------------------------------
@@ -500,6 +511,7 @@ class ErrorTelemetry:
     # -------------------------------------------------------------------
 
     def clear(self) -> None:
+        """Clear all error records, groups, and alert history."""
         with self._lock:
             self._records.clear()
             self._groups.clear()
@@ -508,6 +520,7 @@ class ErrorTelemetry:
             self._alert_history.clear()
 
     def stats(self) -> dict[str, Any]:
+        """Return summary statistics about captured errors."""
         with self._lock:
             return {
                 "total_records": len(self._records),

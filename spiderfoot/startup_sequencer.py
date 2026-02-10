@@ -57,6 +57,7 @@ class StartupResult:
     role: str = "standalone"
 
     def summary(self) -> str:
+        """Return a human-readable summary of all probe results."""
         ready = sum(1 for p in self.probes if p.ready)
         total = len(self.probes)
         status = "READY" if self.all_ready else "NOT READY"
@@ -76,6 +77,7 @@ class DependencyProbe(ABC):
     """Base class for dependency health probes."""
 
     def __init__(self, name: str, *, required: bool = True) -> None:
+        """Initialize the DependencyProbe."""
         self.name = name
         self.required = required
 
@@ -90,12 +92,14 @@ class TcpProbe(DependencyProbe):
 
     def __init__(self, name: str, host: str, port: int, *,
                  required: bool = True, timeout: float = 5.0) -> None:
+        """Initialize the TcpProbe."""
         super().__init__(name, required=required)
         self.host = host
         self.port = port
         self.timeout = timeout
 
     async def check(self) -> bool:
+        """Check TCP connectivity to the configured host and port."""
         loop = asyncio.get_event_loop()
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -114,11 +118,13 @@ class HttpProbe(DependencyProbe):
 
     def __init__(self, name: str, url: str, *,
                  required: bool = True, timeout: float = 5.0) -> None:
+        """Initialize the HttpProbe."""
         super().__init__(name, required=required)
         self.url = url
         self.timeout = timeout
 
     async def check(self) -> bool:
+        """Check that the HTTP endpoint returns a 2xx status."""
         loop = asyncio.get_event_loop()
         try:
             import urllib.request
@@ -136,10 +142,12 @@ class PostgresProbe(DependencyProbe):
     """Probe that verifies Postgres connectivity."""
 
     def __init__(self, dsn: str | None = None, *, required: bool = True) -> None:
+        """Initialize the PostgresProbe."""
         super().__init__("postgres", required=required)
         self.dsn = dsn or os.environ.get("POSTGRES_DSN", "")
 
     async def check(self) -> bool:
+        """Verify connectivity to the Postgres database."""
         if not self.dsn:
             return False
         loop = asyncio.get_event_loop()
@@ -161,10 +169,12 @@ class RedisProbe(DependencyProbe):
     """Probe that verifies Redis connectivity."""
 
     def __init__(self, url: str | None = None, *, required: bool = True) -> None:
+        """Initialize the RedisProbe."""
         super().__init__("redis", required=required)
         self.url = url or os.environ.get("SF_REDIS_URL", "")
 
     async def check(self) -> bool:
+        """Verify connectivity to the Redis server."""
         if not self.url:
             return False
         loop = asyncio.get_event_loop()
@@ -181,10 +191,12 @@ class NatsProbe(DependencyProbe):
     """Probe that verifies NATS connectivity."""
 
     def __init__(self, url: str | None = None, *, required: bool = True) -> None:
+        """Initialize the NatsProbe."""
         super().__init__("nats", required=required)
         self.url = url or os.environ.get("SF_EVENTBUS_NATS_URL", "")
 
     async def check(self) -> bool:
+        """Verify connectivity to the NATS server."""
         if not self.url:
             return False
         try:
@@ -249,6 +261,7 @@ class StartupSequencer:
         retry_interval: float = 2.0,
         max_retries: int = 30,
     ) -> None:
+        """Initialize the StartupSequencer."""
         self.role = role
         self.retry_interval = retry_interval
         self.max_retries = max_retries

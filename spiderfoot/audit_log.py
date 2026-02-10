@@ -85,6 +85,7 @@ class AuditEvent:
     event_id: str = ""
 
     def __post_init__(self) -> None:
+        """Perform post-initialization validation."""
         if not self.event_id:
             # Generate deterministic ID
             raw = f"{self.timestamp}:{self.category}:{self.action}:{self.actor}"
@@ -92,6 +93,7 @@ class AuditEvent:
                 raw.encode()).hexdigest()[:16]
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "event_id": self.event_id,
             "timestamp": self.timestamp,
@@ -110,6 +112,7 @@ class AuditEvent:
 
     @classmethod
     def from_dict(cls, data: dict) -> "AuditEvent":
+        """Create an AuditEvent from a dictionary."""
         cat = data.get("category", "system")
         try:
             cat = AuditCategory(cat)
@@ -145,12 +148,15 @@ class AuditBackend:
     """Base class for audit log storage."""
 
     def write(self, event: AuditEvent) -> bool:
+        """Write an audit event to the backend."""
         raise NotImplementedError
 
     def query(self, **filters) -> list[AuditEvent]:
+        """Query audit events matching the given filters."""
         raise NotImplementedError
 
     def count(self, **filters) -> int:
+        """Return the count of audit events matching the given filters."""
         return len(self.query(**filters))
 
 
@@ -158,15 +164,18 @@ class MemoryAuditBackend(AuditBackend):
     """In-memory audit log with bounded buffer."""
 
     def __init__(self, max_events: int = 10000) -> None:
+        """Initialize the MemoryAuditBackend."""
         self._events: deque = deque(maxlen=max_events)
         self._lock = threading.Lock()
 
     def write(self, event: AuditEvent) -> bool:
+        """Write an audit event to the in-memory buffer."""
         with self._lock:
             self._events.append(event)
         return True
 
     def query(self, **filters) -> list[AuditEvent]:
+        """Query audit events from the in-memory buffer."""
         with self._lock:
             events = list(self._events)
 
@@ -208,10 +217,12 @@ class FileAuditBackend(AuditBackend):
     """Append-only file audit log (JSON lines)."""
 
     def __init__(self, filepath: str = "audit.log") -> None:
+        """Initialize the FileAuditBackend."""
         self._filepath = filepath
         self._lock = threading.Lock()
 
     def write(self, event: AuditEvent) -> bool:
+        """Write an audit event to the log file."""
         try:
             line = json.dumps(event.to_dict(), default=str) + "\n"
             with self._lock:
@@ -223,6 +234,7 @@ class FileAuditBackend(AuditBackend):
             return False
 
     def query(self, **filters) -> list[AuditEvent]:
+        """Query audit events from the log file."""
         events = []
         try:
             if not os.path.exists(self._filepath):
@@ -371,6 +383,7 @@ class AuditLogger:
 
     @property
     def stats(self) -> dict:
+        """Return audit logger statistics."""
         return {
             "total_events": self._total_events,
             "backends": len(self._backends),

@@ -77,6 +77,7 @@ class QueueItem(Generic[T]):
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __lt__(self, other: QueueItem) -> bool:
+        """Compare items by priority and enqueue time."""
         if self.priority != other.priority:
             return self.priority < other.priority
         return self.enqueued_at < other.enqueued_at
@@ -99,6 +100,7 @@ class QueueStats:
     depth_by_priority: dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "depth": self.depth,
             "capacity": self.capacity,
@@ -136,6 +138,7 @@ class ScanQueue(Generic[T]):
         backpressure_action: BackpressureAction = BackpressureAction.BLOCK,
         pressure_thresholds: dict[PressureLevel, float] | None = None,
     ) -> None:
+        """Initialize the ScanQueue."""
         self._capacity = max(1, capacity)
         self._action = backpressure_action
 
@@ -323,6 +326,7 @@ class ScanQueue(Generic[T]):
 
     @property
     def pressure_level(self) -> PressureLevel:
+        """Return the current coarse pressure level."""
         p = self.pressure
         level = PressureLevel.NONE
         for lvl in [PressureLevel.CRITICAL, PressureLevel.HIGH,
@@ -352,6 +356,7 @@ class ScanQueue(Generic[T]):
 
     @property
     def dlq_depth(self) -> int:
+        """Return the number of items in the dead-letter queue."""
         with self._lock:
             return len(self._dlq)
 
@@ -363,6 +368,7 @@ class ScanQueue(Generic[T]):
             return items
 
     def peek_dlq(self, limit: int = 10) -> list[QueueItem[T]]:
+        """Return items from the dead-letter queue without removing them."""
         with self._lock:
             return list(self._dlq[:limit])
 
@@ -372,22 +378,27 @@ class ScanQueue(Generic[T]):
 
     @property
     def depth(self) -> int:
+        """Return the current total queue depth."""
         with self._lock:
             return self._depth_unlocked()
 
     @property
     def capacity(self) -> int:
+        """Return the maximum queue capacity."""
         return self._capacity
 
     @property
     def is_full(self) -> bool:
+        """Return True if the queue is at capacity."""
         return self.depth >= self._capacity
 
     @property
     def is_empty(self) -> bool:
+        """Return True if the queue has no items."""
         return self.depth == 0
 
     def depth_by_priority(self) -> dict[str, int]:
+        """Return the queue depth broken down by priority lane."""
         with self._lock:
             return {p.name: len(lane) for p, lane in self._lanes.items()}
 
@@ -401,12 +412,14 @@ class ScanQueue(Generic[T]):
             return total
 
     def clear_dlq(self) -> int:
+        """Clear the dead-letter queue and return the number of items removed."""
         with self._lock:
             n = len(self._dlq)
             self._dlq.clear()
             return n
 
     def stats(self) -> QueueStats:
+        """Return a snapshot of queue metrics."""
         with self._lock:
             depth = self._depth_unlocked()
             by_pri = {p.name: len(lane) for p, lane in self._lanes.items()}

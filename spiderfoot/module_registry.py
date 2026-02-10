@@ -124,18 +124,22 @@ class ModuleDescriptor:
 
     @property
     def requires_apikey(self) -> bool:
+        """Return True if the module requires an API key."""
         return "apikey" in self.flags
 
     @property
     def is_invasive(self) -> bool:
+        """Return True if the module is flagged as invasive."""
         return "invasive" in self.flags
 
     @property
     def is_slow(self) -> bool:
+        """Return True if the module is flagged as slow."""
         return "slow" in self.flags
 
     @property
     def data_source_model(self) -> str | None:
+        """Return the data source model name, if any."""
         if self.data_source:
             return self.data_source.get("model")
         return None
@@ -151,6 +155,7 @@ class ModuleDescriptor:
         )
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "name": self.name,
             "display_name": self.display_name,
@@ -186,6 +191,7 @@ class ModuleRegistry:
     """
 
     def __init__(self) -> None:
+        """Initialize the ModuleRegistry."""
         self._descriptors: dict[str, ModuleDescriptor] = {}
         self._lock = threading.RLock()
 
@@ -425,10 +431,12 @@ class ModuleRegistry:
 
     @property
     def module_count(self) -> int:
+        """Return the total number of registered modules."""
         return len(self._descriptors)
 
     @property
     def loaded_count(self) -> int:
+        """Return the number of successfully loaded modules."""
         return sum(
             1 for d in self._descriptors.values()
             if d.status == ModuleStatus.LOADED
@@ -446,12 +454,15 @@ class ModuleRegistry:
         return self._descriptors.get(name)
 
     def __contains__(self, name: str) -> bool:
+        """Check if a module name is in the registry."""
         return name in self._descriptors
 
     def __len__(self) -> int:
+        """Return the number of modules in the registry."""
         return len(self._descriptors)
 
     def __iter__(self) -> Iterator[ModuleDescriptor]:
+        """Iterate over all module descriptors."""
         return iter(self._descriptors.values())
 
     def list_names(self) -> list[str]:
@@ -713,6 +724,7 @@ class ModuleRegistry:
         }
 
     def __repr__(self) -> str:
+        """Return a string representation of the registry."""
         return (
             f"<ModuleRegistry modules={len(self._descriptors)} "
             f"loaded={self.loaded_count}>"
@@ -744,6 +756,7 @@ class DiscoveryResult:
     """Wall-clock seconds for the discovery scan."""
 
     def __repr__(self) -> str:
+        """Return a string representation of the discovery result."""
         return (
             f"<DiscoveryResult total={self.total} loaded={self.loaded} "
             f"failed={self.failed} duration={self.duration:.2f}s>"
