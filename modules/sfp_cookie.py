@@ -67,7 +67,7 @@ class sfp_cookie(SpiderFootModernPlugin):
 
         try:
             data = json.loads(eventData)
-        except Exception:
+        except Exception as e:
             self.error(
                 "Received HTTP headers from another module in an unexpected format.")
             return

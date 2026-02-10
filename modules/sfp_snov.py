@@ -115,7 +115,7 @@ class sfp_snov(SpiderFootModernPlugin):
                 return None
 
             return str(accessToken)
-        except Exception:
+        except Exception as e:
             self.error(
                 "No access token received from snov.io for the provided Client ID and/or Client Secret")
             self.errorState = True
@@ -195,7 +195,7 @@ class sfp_snov(SpiderFootModernPlugin):
 
             try:
                 data = json.loads(data)
-            except Exception:
+            except Exception as e:
                 self.debug("No email address found for target domain")
                 break
 

@@ -44,7 +44,7 @@ class TestSpiderFootCliEnhanced(TestModuleBase):
         if hasattr(self.cli, 'output') and self.cli.output:
             try:
                 self.cli.output.close()
-            except Exception:
+            except Exception as e:
                 pass
 
     # =============================================================================
@@ -247,7 +247,7 @@ class TestSpiderFootCliEnhanced(TestModuleBase):
         finally:
             try:
                 os.unlink(temp_file)
-            except Exception:
+            except Exception as e:
                 pass
 
     def test_ddprint_debug_enabled(self):

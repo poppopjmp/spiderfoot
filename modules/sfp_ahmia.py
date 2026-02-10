@@ -165,7 +165,7 @@ class sfp_ahmia(SpiderFootModernPlugin):
             try:
                 startIndex = res['content'].index(eventData) - 120
                 endIndex = startIndex + len(eventData) + 240
-            except Exception:
+            except Exception as e:
                 self.debug(f"String '{eventData}' not found in content.")
                 continue
 

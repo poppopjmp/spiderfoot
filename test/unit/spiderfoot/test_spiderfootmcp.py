@@ -28,7 +28,7 @@ class TestMCPIntegrationSmoke(TestModuleBase):
             # Optionally, call main with dummy args and check for no crash
             try:
                 mcp.main([])
-            except Exception:
+            except Exception as e:
                 pass  # Accept any exception for now
 
     def test_public_classes_instantiable(self):
@@ -38,7 +38,7 @@ class TestMCPIntegrationSmoke(TestModuleBase):
                 try:
                     instance = obj()
                     self.assertIsInstance(instance, obj)
-                except Exception:
+                except Exception as e:
                     pass  # Accept any exception for now
 
 if __name__ == "__main__":

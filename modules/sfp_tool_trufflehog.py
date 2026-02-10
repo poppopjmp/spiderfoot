@@ -100,7 +100,7 @@ class sfp_tool_trufflehog(SpiderFootModernPlugin):
                 hostname = urlparse(url).hostname
                 if hostname not in ["github.com", "gitlab.com", "bitbucket.org"]:
                     return
-            except Exception:
+            except Exception as e:
                 self.debug("Unable to extract repository URL, skipping.")
                 return
 
@@ -110,7 +110,7 @@ class sfp_tool_trufflehog(SpiderFootModernPlugin):
                 hostname = urlparse(url).hostname
                 if hostname not in ["github.com", "gitlab.com", "bitbucket.org"]:
                     return
-            except Exception:
+            except Exception as e:
                 self.debug("Unable to extract repository URL, skipping.")
                 return
 

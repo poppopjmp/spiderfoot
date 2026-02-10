@@ -170,7 +170,7 @@ class sfp_s3bucket(SpiderFootModernPlugin):
                 if b in self.opts["endpoints"]:
                     try:
                         b += "/" + eventData.split(b + "/")[1].split("/")[0]
-                    except Exception:
+                    except Exception as e:
                         # Not a proper bucket path
                         return
                 evt = SpiderFootEvent(

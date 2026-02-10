@@ -84,7 +84,7 @@ class sfp_comodo(SpiderFootModernPlugin):
         try:
             addrs = res.resolve(qaddr)
             self.debug(f"Addresses returned: {addrs}")
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
             return False
 

@@ -114,7 +114,7 @@ class sfp_apileak(SpiderFootModernPlugin):
                                 content = file_resp.json().get("content", "")
                                 try:
                                     decoded = base64.b64decode(content).decode(errors='ignore')
-                                except Exception:
+                                except Exception as e:
                                     decoded = content
                                 for pattern in self.patterns:
                                     for match in pattern.findall(decoded):

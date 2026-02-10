@@ -145,7 +145,7 @@ class sfp_tool_testsslsh(SpiderFootModernPlugin):
                         self.debug(
                             f"Skipping {eventData} as already within a scanned range.")
                         return
-                except Exception:
+                except Exception as e:
                     # self.results will also contain hostnames
                     continue
 

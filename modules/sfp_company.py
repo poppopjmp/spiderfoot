@@ -95,7 +95,7 @@ class sfp_company(SpiderFootModernPlugin):
         try:
             if eventName == "SSL_CERTIFICATE_ISSUED":
                 eventData = eventData.split("O=")[1]
-        except Exception:
+        except Exception as e:
             self.debug(
                 "Couldn't strip out 'O=' from certificate issuer, proceeding anyway...")
 

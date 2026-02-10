@@ -574,7 +574,7 @@ class TestSpiderFootWebUiAppEnhanced(TestModuleBase):
             try:
                 result = app.validate_system()
                 self.assertIsInstance(result, dict)
-            except Exception:
+            except Exception as e:
                 # May fail due to missing dependencies
                 pass
 
@@ -591,7 +591,7 @@ class TestSpiderFootWebUiAppEnhanced(TestModuleBase):
             try:
                 result = app.get_system_info()
                 self.assertIsInstance(result, dict)
-            except Exception:
+            except Exception as e:
                 # May fail due to missing dependencies
                 pass
 

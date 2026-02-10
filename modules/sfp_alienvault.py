@@ -418,7 +418,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
                                     self.debug(
                                         f"Passive DNS record {host} found for {eventData} is too old ({last_dt}), skipping.")
                                     continue
-                            except Exception:
+                            except Exception as e:
                                 self.info(
                                     "Could not parse date from AlienVault data, so ignoring cohost_age_limit_days")
 
@@ -492,7 +492,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
                                 self.debug(
                                     f"Reputation record found for {addr} is too old ({created_dt}), skipping.")
                                 continue
-                        except Exception:
+                        except Exception as e:
                             self.info(
                                 "Could not parse date from AlienVault data, so ignoring reputation_age_limit_days")
 

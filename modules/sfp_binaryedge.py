@@ -463,7 +463,7 @@ class sfp_binaryedge(SpiderFootModernPlugin):
                                 # We don't want the content after HTTP banners
                                 banner = banner.split('\\r\\n\\r\\n')[0]
                                 banner = banner.replace("\\r\\n", "\n")
-                        except Exception:
+                        except Exception as e:
                             self.debug("No banner information found.")
                             continue
 

@@ -154,7 +154,7 @@ class sfp_voipbl(SpiderFootModernPlugin):
             try:
                 for ip in IPNetwork(cidr):
                     ips.append(str(ip))
-            except Exception:
+            except Exception as e:
                 continue
 
         return ips

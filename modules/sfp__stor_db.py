@@ -178,7 +178,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
             cursor.fetchone()
             cursor.close()
             return True
-        except Exception:
+        except Exception as e:
             return False
 
     def watchedEvents(self):

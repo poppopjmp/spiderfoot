@@ -142,7 +142,7 @@ class TestModuleBase(TestModuleBase):
                     emitter.stop()
                 if hasattr(emitter, 'cleanup'):
                     emitter.cleanup()
-            except Exception:
+            except Exception as e:
                 # Suppress any cleanup errors from event emitters
                 pass
 
@@ -163,7 +163,7 @@ class TestModuleBase(TestModuleBase):
         try:
             import shutil
             shutil.rmtree(self._temp_dir, ignore_errors=True)
-        except Exception:
+        except Exception as e:
             # Suppress any filesystem cleanup errors
             pass
 

@@ -387,7 +387,7 @@ class TestScannerBase(unittest.TestCase):
             try:
                 import shutil
                 shutil.rmtree(self._temp_dir, ignore_errors=True)
-            except Exception:
+            except Exception as e:
                 # Suppress any filesystem cleanup errors
                 pass
             

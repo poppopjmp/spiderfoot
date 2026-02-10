@@ -63,7 +63,7 @@ class LeakDetector:
                 import psutil
                 process = psutil.Process()
                 self._baseline_files = set(f.path for f in process.open_files())
-            except Exception:
+            except Exception as e:
                 self._baseline_files = set()
             
             # Record memory usage
@@ -71,7 +71,7 @@ class LeakDetector:
                 import psutil
                 process = psutil.Process()
                 self._baseline_memory = process.memory_info().rss
-            except Exception:
+            except Exception as e:
                 self._baseline_memory = None
             
             self._start_time = time.time()
@@ -174,7 +174,7 @@ class LeakDetector:
                     )
                     leaks.append(leak_info)
         
-        except Exception:
+        except Exception as e:
             # psutil not available or error occurred
             pass
         
@@ -217,7 +217,7 @@ class LeakDetector:
                 )
                 leaks.append(leak_info)
         
-        except Exception:
+        except Exception as e:
             pass
         
         return leaks
@@ -350,7 +350,7 @@ class LeakDetector:
                             if not thread.is_alive():
                                 cleaned += 1
                         break
-            except Exception:
+            except Exception as e:
                 pass
         
         # Cleanup file leaks
@@ -361,7 +361,7 @@ class LeakDetector:
                 # This is a bit tricky since we only have the path
                 # In practice, forcing GC often helps
                 pass
-            except Exception:
+            except Exception as e:
                 pass
         
         # Force garbage collection
@@ -375,7 +375,7 @@ class LeakDetector:
                     # Remove from tracking (assuming it's been cleaned up)
                     self._tracked_resources.pop(leak.resource_id, None)
                     cleaned += 1
-                except Exception:
+                except Exception as e:
                     pass
         
         return cleaned

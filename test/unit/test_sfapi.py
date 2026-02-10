@@ -130,7 +130,7 @@ class TestSpiderFootAPICore(TestModuleBase):
                 result = self.sfapi.build_excel(test_data, columns)
                 # Function was called - that's what matters for coverage
                 self.assertTrue(True)
-            except Exception:
+            except Exception as e:
                 # Function may fail due to mocking complexity
                 self.assertTrue(True)  # We still achieved coverage
     
@@ -162,7 +162,7 @@ class TestSpiderFootAPICore(TestModuleBase):
             scan_req = self.sfapi.ScanRequest(name="test", target="example.com")
             self.assertEqual(scan_req.name, "test")
             self.assertEqual(scan_req.target, "example.com")
-        except Exception:
+        except Exception as e:
             # Model validation may fail, but we've exercised the code
             pass
     

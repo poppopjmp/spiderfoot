@@ -72,7 +72,7 @@ class sfp_adguard_dns(SpiderFootModernPlugin):
 
         try:
             return res.resolve(qaddr)
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
 
         return None
@@ -83,7 +83,7 @@ class sfp_adguard_dns(SpiderFootModernPlugin):
 
         try:
             return res.resolve(qaddr)
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
 
         return None

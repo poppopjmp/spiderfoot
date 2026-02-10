@@ -103,7 +103,7 @@ def emergency_shared_pool_cleanup():
                 ('SpiderFoot' in str(obj.__class__) or 
                  'Scanner' in str(obj.__class__))):
                 spiderfoot_objects.append(obj)
-        except Exception:
+        except Exception as e:
             continue
     
     print(f"🔍 Found {len(spiderfoot_objects)} SpiderFoot-related objects")
@@ -131,7 +131,7 @@ def emergency_shared_pool_cleanup():
                         # Clear the reference
                         with suppress(Exception):
                             setattr(obj, attr, None)
-        except Exception:
+        except Exception as e:
             continue
     
     # Step 2: Force cleanup of shared pool threads

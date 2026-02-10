@@ -105,7 +105,7 @@ class TestModuleVirustotal(TestModuleBase):
             module.errorState = False
             try:
                 module.handleEvent(event)
-            except Exception:
+            except Exception as e:
                 pass
             # Should not set errorState unless JSON decode fails
 

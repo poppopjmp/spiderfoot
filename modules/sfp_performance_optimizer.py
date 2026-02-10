@@ -207,7 +207,7 @@ class ResourceMonitor:
             
             return sample
             
-        except Exception:
+        except Exception as e:
             return {'timestamp': time.time(), 'memory_mb': 0, 'gc_count': 0}
     
     def get_memory_trend(self) -> str:

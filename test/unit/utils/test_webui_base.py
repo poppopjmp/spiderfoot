@@ -193,7 +193,7 @@ class EnhancedWebUITestBase(helper.CPWebCase, TestModuleBase):
         try:
             process = psutil.Process()
             return len(process.connections())
-        except Exception:
+        except Exception as e:
             return 0
     
     def _force_cleanup(self):
@@ -231,7 +231,7 @@ class EnhancedWebUITestBase(helper.CPWebCase, TestModuleBase):
                         if hasattr(socket, 'fromfd'):
                             sock = socket.fromfd(conn.fd, socket.AF_INET, socket.SOCK_STREAM)
                             sock.close()
-        except Exception:
+        except Exception as e:
             pass
     
     def tearDown(self):

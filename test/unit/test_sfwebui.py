@@ -858,7 +858,7 @@ class TestSpiderFootWebUi(EnhancedWebUITestBase):
             # Either succeeds with psutil or fails gracefully
             self.assertIsInstance(result, dict)
             self.assertIn('success', result)
-        except Exception:
+        except Exception as e:
             # If get_performance_metrics doesn't exist or fails, that's expected
             self.assertTrue(True)
     

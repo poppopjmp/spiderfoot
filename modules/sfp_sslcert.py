@@ -91,7 +91,7 @@ class sfp_sslcert(SpiderFootModernPlugin):
                 if u.port:
                     port = u.port
                 fqdn = self.sf.urlFQDN(eventData.lower())
-            except Exception:
+            except Exception as e:
                 self.debug("Couldn't parse URL: " + eventData)
                 return
         else:

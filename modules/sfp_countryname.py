@@ -69,14 +69,14 @@ class sfp_countryname(SpiderFootModernPlugin):
 
         try:
             phoneNumber = phonenumbers.parse(srcPhoneNumber)
-        except Exception:
+        except Exception as e:
             self.debug(f"Skipped invalid phone number: {srcPhoneNumber}")
             return None
 
         try:
             countryCode = region_code_for_country_code(
                 phoneNumber.country_code)
-        except Exception:
+        except Exception as e:
             self.debug(
                 f"Lookup of region code failed for phone number: {srcPhoneNumber}")
             return None

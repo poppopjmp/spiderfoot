@@ -467,7 +467,7 @@ class TestSpiderFootDbComprehensive(TestModuleBase):
             # If no exception, verify the event wasn't stored
             events = self.db.scanEventGet(non_existent_scan, "IP_ADDRESS")
             # Behavior may vary - some implementations might create scan automatically
-        except Exception:
+        except Exception as e:
             # Expected behavior for non-existent scan
             pass
     
@@ -488,7 +488,7 @@ class TestSpiderFootDbComprehensive(TestModuleBase):
             invalid_event = SpiderFootEvent("INVALID_TYPE", "test_data", "test_module")
             self.db.scanEventStore(self.test_scan_id, invalid_event)
             # Some implementations might allow this
-        except Exception:
+        except Exception as e:
             pass  # Might reject invalid types
     
     def test_database_connection_errors(self):
@@ -503,7 +503,7 @@ class TestSpiderFootDbComprehensive(TestModuleBase):
             invalid_db = SpiderFootDb(invalid_opts, init=True)
             # If this succeeds, try an operation
             invalid_db.eventTypes()
-        except Exception:
+        except Exception as e:
             # Expected behavior for invalid database
             pass
     

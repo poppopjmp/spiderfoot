@@ -134,7 +134,7 @@ class sfp_dnsgrep(SpiderFootModernPlugin):
             for r in fdns:
                 try:
                     ip, domain = r.split(',')
-                except Exception:
+                except Exception as e:
                     continue
 
                 domains.append(domain)
@@ -145,7 +145,7 @@ class sfp_dnsgrep(SpiderFootModernPlugin):
             for r in rdns:
                 try:
                     ip, domain = r.split(',')
-                except Exception:
+                except Exception as e:
                     continue
 
                 domains.append(domain)

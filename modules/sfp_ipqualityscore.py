@@ -92,7 +92,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
     def handle_error_response(self, qry, res):
         try:
             error_info = json.loads(res["content"])
-        except Exception:
+        except Exception as e:
             error_info = None
         if error_info:
             error_message = error_info.get("message")

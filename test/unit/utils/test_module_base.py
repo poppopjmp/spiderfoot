@@ -369,7 +369,7 @@ class TestModuleBase(unittest.TestCase):
                 emitter.shutdown()
             if hasattr(emitter, 'close'):
                 emitter.close()
-        except Exception:
+        except Exception as e:
             pass  # Ignore cleanup errors
     
     def _cleanup_mock(self, mock: Any):
@@ -379,7 +379,7 @@ class TestModuleBase(unittest.TestCase):
                 mock.reset_mock()
             if hasattr(mock, 'stop'):
                 mock.stop()
-        except Exception:
+        except Exception as e:
             pass  # Ignore cleanup errors
     
     def _cleanup_patcher(self, patcher: Any):
@@ -387,7 +387,7 @@ class TestModuleBase(unittest.TestCase):
         try:
             if hasattr(patcher, 'stop'):
                 patcher.stop()
-        except Exception:
+        except Exception as e:
             pass  # Ignore cleanup errors
 
     # ...existing code...

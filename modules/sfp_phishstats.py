@@ -189,7 +189,7 @@ class sfp_phishstats(SpiderFootModernPlugin):
             # NOTE: co-host extraction from multiple hosts not yet implemented
             try:
                 maliciousIP = data[0].get('ip')
-            except Exception:
+            except Exception as e:
                 # If ArrayIndex is out of bounds then data doesn't exist
                 continue
 

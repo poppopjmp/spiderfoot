@@ -81,7 +81,7 @@ class TestSpiderFootDb(TestModuleBase):
         try:
             self.db.close()
             result = True
-        except Exception:
+        except Exception as e:
             result = False
         self.assertTrue(result)
 
@@ -90,7 +90,7 @@ class TestSpiderFootDb(TestModuleBase):
         try:
             self.db.vacuumDB()
             result = True
-        except Exception:
+        except Exception as e:
             result = False
         self.assertTrue(result)
 
@@ -109,7 +109,7 @@ class TestSpiderFootDb(TestModuleBase):
             result = self.db.search(criteria)
             # Result should be a list
             self.assertIsInstance(result, list)
-        except Exception:
+        except Exception as e:
             self.fail("Search with multiple criteria raised an exception")
 
     def test_schema_tables_exist(self):
@@ -300,7 +300,7 @@ class TestSpiderFootDb(TestModuleBase):
         event = SpiderFootEvent('IP_ADDRESS', '1.2.3.4', 'testmod')
         try:
             self.db.scanEventStore(scan_id, event)
-        except Exception:
+        except Exception as e:
             pass
         results = self.db.scanResultEvent(scan_id, eventType='IP_ADDRESS')
         self.assertEqual(len(results), 0)
@@ -528,7 +528,7 @@ class TestSpiderFootDbIntegration(TestModuleBase):
         event = SpiderFootEvent('IP_ADDRESS', '1.2.3.4', 'testmod')
         try:
             self.db.scanEventStore('invalid_scan', event)
-        except Exception:
+        except Exception as e:
             pass
         results = self.db.scanResultEvent('invalid_scan', eventType='IP_ADDRESS')
         self.assertEqual(len(results), 0)
@@ -648,7 +648,7 @@ class TestSpiderFootDbSchemaBackend(TestModuleBase):
                 self.assertIn(t, tables)
             cursor.close()
             conn.close()
-        except Exception:
+        except Exception as e:
             self.skipTest("PostgreSQL test DB not available or not configured.")
 
     def tearDown(self):
@@ -656,6 +656,6 @@ class TestSpiderFootDbSchemaBackend(TestModuleBase):
         if hasattr(self, 'sqlite_opts') and self.sqlite_opts.get('__database'):
             try:
                 os.remove(self.sqlite_opts['__database'])
-            except Exception:
+            except Exception as e:
                 pass
         super().tearDown()

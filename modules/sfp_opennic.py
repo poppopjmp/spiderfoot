@@ -81,7 +81,7 @@ class sfp_opennic(SpiderFootModernPlugin):
 
         try:
             return res.resolve(qaddr)
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
 
         return None

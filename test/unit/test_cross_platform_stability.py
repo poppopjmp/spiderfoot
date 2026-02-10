@@ -173,7 +173,7 @@ class TestCrossPlatformStability(TestModuleBase):
                 else:
                     # Different ValueError, re-raise
                     raise
-            except Exception:
+            except Exception as e:
                 # Other exceptions are acceptable during shutdown
                 success = True
             
@@ -190,7 +190,7 @@ class TestCrossPlatformStability(TestModuleBase):
                 else:
                     # Different ValueError, consider it handled
                     del_success = True
-            except Exception:
+            except Exception as e:
                 # Other exceptions during __del__ are acceptable
                 del_success = True
             
@@ -277,7 +277,7 @@ sys.exit(0)
             else:
                 # Different error, consider it handled
                 resilient = True
-        except Exception:
+        except Exception as e:
             # Other exceptions are acceptable
             resilient = True
         

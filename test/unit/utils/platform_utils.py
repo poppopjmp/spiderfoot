@@ -131,7 +131,7 @@ class ThreadManager:
                 kernel32.CloseHandle(thread_handle)
                 return bool(result)
         
-        except Exception:
+        except Exception as e:
             pass
         
         return False
@@ -158,7 +158,7 @@ class ThreadManager:
                 
                 return not thread.is_alive()
         
-        except Exception:
+        except Exception as e:
             pass
         
         return False
@@ -181,7 +181,7 @@ class ThreadManager:
             frame = sys._current_frames().get(thread.ident)
             if frame:
                 return ''.join(traceback.format_stack(frame))
-        except Exception:
+        except Exception as e:
             pass
         
         return None
@@ -247,7 +247,7 @@ class ProcessManager:
         except ImportError:
             # psutil not available
             pass
-        except Exception:
+        except Exception as e:
             # Error getting process info
             pass
         
@@ -275,7 +275,7 @@ class ProcessManager:
                 os.kill(os.getpid(), signal.SIGTERM)
                 time.sleep(1.0)
                 os.kill(os.getpid(), signal.SIGKILL)
-            except Exception:
+            except Exception as e:
                 os._exit(1)
     
     @staticmethod
@@ -331,13 +331,13 @@ class FileManager:
                         fd = file_info.fd
                         os.close(fd)
                         closed += 1
-                    except Exception:
+                    except Exception as e:
                         pass
         
         except ImportError:
             # psutil not available
             pass
-        except Exception:
+        except Exception as e:
             # Error occurred
             pass
         
@@ -376,13 +376,13 @@ class FileManager:
                     elif os.path.isdir(temp_file):
                         os.rmdir(temp_file)
                         cleaned += 1
-                except Exception:
+                except Exception as e:
                     pass
             
             if cleaned > 0:
                 print(f"🧹 Cleaned up {cleaned} temporary files")
         
-        except Exception:
+        except Exception as e:
             pass
 
 
@@ -440,13 +440,13 @@ class NetworkManager:
                         if hasattr(conn, 'close'):
                             conn.close()
                             closed += 1
-                except Exception:
+                except Exception as e:
                     pass
         
         except ImportError:
             # psutil not available
             pass
-        except Exception:
+        except Exception as e:
             pass
         
         return closed

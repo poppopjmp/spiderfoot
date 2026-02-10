@@ -261,7 +261,7 @@ class sfp_pulsedive(SpiderFootModernPlugin):
                         self.debug(
                             f"Threat found but too old ({created_dt}), skipping.")
                         continue
-                except Exception:
+                except Exception as e:
                     self.debug(
                         "Couldn't parse date from Pulsedive so assuming it's OK.")
                 e = SpiderFootEvent(evtType, descr, self.__name__, event)

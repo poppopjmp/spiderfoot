@@ -111,7 +111,7 @@ class sfp_tool_whatweb(SpiderFootModernPlugin):
                 aggression = 4
             if aggression < 1:
                 aggression = 1
-        except Exception:
+        except Exception as e:
             aggression = 1
 
         # Run WhatWeb

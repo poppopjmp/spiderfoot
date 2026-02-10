@@ -109,7 +109,7 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
             sock = self.sf.safeSocket(ip, port, self.opts['timeout'])
             with self.lock:
                 self.portResults[peer] = True
-        except Exception:
+        except Exception as e:
             with self.lock:
                 self.portResults[peer] = False
             return
@@ -118,7 +118,7 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
         try:
             with self.lock:
                 self.portResults[peer] = sock.recv(4096)
-        except Exception:
+        except Exception as e:
             sock.close()
             return
         else:

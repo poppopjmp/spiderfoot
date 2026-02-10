@@ -97,7 +97,7 @@ class sfp_myspace(SpiderFootModernPlugin):
             try:
                 matches = re.findall(r'<a href=\"\/([a-zA-Z0-9_]+)\".*[\&; :\"\#\*\(\"\'\;\,\>\.\?\!]+' +
                                      email + r'[\&; :\"\#\*\)\"\'\;\,\<\.\?\!]+', profile, re.IGNORECASE)
-            except Exception:
+            except Exception as e:
                 self.debug("Malformed e-mail address, skipping.")
                 return
 

@@ -75,7 +75,7 @@ class sfp_dns_for_family(SpiderFootModernPlugin):
 
         try:
             return res.resolve(qaddr)
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
 
         return None

@@ -809,7 +809,7 @@ class TestSpiderFootScanner(TestScannerBase):
                         'SpiderFootScanner' in str(var_value.__class__)):
                         with suppress(Exception):
                             self._stop_scanner_safely(var_value)
-        except Exception:
+        except Exception as e:
             pass
         
         # Method 3: Use garbage collector to find any remaining scanner instances
@@ -820,7 +820,7 @@ class TestSpiderFootScanner(TestScannerBase):
                     hasattr(obj, '_thread')):
                     with suppress(Exception):
                         self._stop_scanner_safely(obj)
-            except Exception:
+            except Exception as e:
                 pass
     
     def _stop_scanner_safely(self, scanner):

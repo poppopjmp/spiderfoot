@@ -72,7 +72,7 @@ class sfp_dideo(SpiderFootModernPlugin):
             return
         try:
             max_videos = int(self.opts.get("max_videos", 10))
-        except Exception:
+        except Exception as e:
             max_videos = 10
         for keyword in [k.strip() for k in keywords.split(",") if k.strip()]:
             url = f"https://www.dideo.ir/search/{self.sf.urlFuzz(keyword)}"

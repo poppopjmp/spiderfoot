@@ -161,7 +161,7 @@ class sfp_tool_nuclei(SpiderFootModernPlugin):
                             self.debug(
                                 f"Skipping {eventData} as already within a scanned range.")
                             return
-                    except Exception:
+                    except Exception as e:
                         continue
             self.results[eventData] = True
             timeout = 240

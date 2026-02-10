@@ -158,7 +158,7 @@ class sfp_similar(SpiderFootModernPlugin):
                             "SIMILARDOMAIN", f"{d}{tld}", self.__name__, event)
                         self.notifyListeners(evt)
                         break
-            except Exception:
+            except Exception as e:
                 continue
 
 # End of sfp_similar class

@@ -96,7 +96,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
             if self.resolve_host(name) or self.resolve_host6(name):
                 with self.lock:
                     self.hostResults[name] = True
-        except Exception:
+        except Exception as e:
             with self.lock:
                 self.hostResults[name] = False
 

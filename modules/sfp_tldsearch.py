@@ -88,7 +88,7 @@ class sfp_tldsearch(SpiderFootModernPlugin):
             else:
                 with self.lock:
                     self.tldResults[target] = True
-        except Exception:
+        except Exception as e:
             with self.lock:
                 self.tldResults[target] = False
 

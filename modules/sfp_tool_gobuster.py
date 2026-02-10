@@ -290,7 +290,7 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
 
             try:
                 results = json.loads(output)
-            except Exception:
+            except Exception as e:
                 self.error(f"Could not parse gobuster output as JSON: {output}")
                 results = {"results": []}
 

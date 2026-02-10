@@ -87,7 +87,7 @@ class sfp_yandexdns(SpiderFootModernPlugin):
 
         try:
             return res.resolve(qaddr)
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
 
         return None

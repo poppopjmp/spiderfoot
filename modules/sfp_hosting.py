@@ -73,7 +73,7 @@ class sfp_hosting(SpiderFootModernPlugin):
                 continue
             try:
                 [start, end, title, url] = line.split(",")
-            except Exception:
+            except Exception as e:
                 continue
 
             try:

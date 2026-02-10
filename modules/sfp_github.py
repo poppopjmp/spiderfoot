@@ -115,7 +115,7 @@ class sfp_github(SpiderFootModernPlugin):
             try:
                 urlParts = url.split("/")
                 username = urlParts[len(urlParts) - 1]
-            except Exception:
+            except Exception as e:
                 self.debug(f"Couldn't get a username out of {url}")
                 return
 
@@ -235,7 +235,7 @@ class sfp_github(SpiderFootModernPlugin):
                     self.error(
                         f"Unable to process empty response from Github for: {username}")
                     failed = True
-            except Exception:
+            except Exception as e:
                 self.error(
                     f"Unable to process invalid response from Github for: {username}")
                 failed = True

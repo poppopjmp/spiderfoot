@@ -706,7 +706,7 @@ class TestAdvancedStorageModule(TestModuleBase):
         # Should handle error gracefully
         try:
             self.module._process_event_buffer()
-        except Exception:
+        except Exception as e:
             pass  # Expected to fail for testing
         
         # Verify no crash occurred

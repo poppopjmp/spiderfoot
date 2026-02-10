@@ -500,7 +500,7 @@ class TestModuleStor_db(TestModuleBase):
             del module
             # If we get here without exception, graceful shutdown worked
             shutdown_successful = True
-        except Exception:
+        except Exception as e:
             shutdown_successful = False
             
         self.assertTrue(shutdown_successful, "Module should shutdown gracefully")

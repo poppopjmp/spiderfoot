@@ -262,7 +262,7 @@ class sfp__stor_elasticsearch(SpiderFootModernPlugin):
             return False
         try:
             return self.es.ping()
-        except Exception:
+        except Exception as e:
             return False
 
     def shutdown(self):

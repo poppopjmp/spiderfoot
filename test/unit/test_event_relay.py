@@ -466,7 +466,7 @@ class TestWebSocketEndpoint(unittest.TestCase):
                     messages.append(data)
                     if data.get("type") in ("stream_end", "scan_completed"):
                         break
-            except Exception:
+            except Exception as e:
                 pass
 
         t.join(timeout=3)

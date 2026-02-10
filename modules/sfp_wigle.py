@@ -149,7 +149,7 @@ class sfp_wigle(SpiderFootModernPlugin):
         try:
             if base64.b64encode(base64.b64decode(api_key)).decode('utf-8') != api_key:
                 return False
-        except Exception:
+        except Exception as e:
             return False
 
         return True

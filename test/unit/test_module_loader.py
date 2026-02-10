@@ -861,7 +861,7 @@ class TestScannerIntegration:
             try:
                 from spiderfoot.service_integration import _wire_module_loader
                 _wire_module_loader(scanner)
-            except Exception:
+            except Exception as e:
                 pass  # The real impl catches internally
 
 

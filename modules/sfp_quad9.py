@@ -80,7 +80,7 @@ class sfp_quad9(SpiderFootModernPlugin):
         try:
             addrs = res.resolve(qry)
             self.debug(f"Addresses returned: {addrs}")
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qry}")
             return False
 
