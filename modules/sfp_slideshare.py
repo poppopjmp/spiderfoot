@@ -69,7 +69,7 @@ class sfp_slideshare(SpiderFootModernPlugin):
         return ["RAW_RIR_DATA", "GEOINFO"]
 
     # Extract meta property contents from HTML
-    def extractMeta(self, meta_property, html):
+    def extractMeta(self, meta_property: str, html: str):
         """Extract Meta."""
         return re.findall(r'<meta property="' + meta_property + r'"\s+content="(.+)" />', html)
 

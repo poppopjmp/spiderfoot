@@ -133,7 +133,7 @@ class sfp_xforce(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def query(self, qry: str, querytype):
+    def query(self, qry: str, querytype: str):
         """Query the data source."""
         if querytype not in ["ipr/malware", "ipr/history", "resolve"]:
             querytype = "ipr/malware"

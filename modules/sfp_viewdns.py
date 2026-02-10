@@ -93,7 +93,7 @@ class sfp_viewdns(SpiderFootModernPlugin):
             'CO_HOSTED_SITE'
         ]
 
-    def query(self, qry: str, querytype, page=1) -> None:
+    def query(self, qry: str, querytype: str, page: int = 1) -> None:
         """Query the data source."""
         if querytype == "reverseip":
             attr = "host"

@@ -130,7 +130,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
         return '.'.join(reversed(ipaddr.split('.')))
 
     # Returns text about the IP status returned from DNS
-    def parseDNS(self, addr):
+    def parseDNS(self, addr: str):
         """Parse DNS."""
         bits = addr.split(".")
         if int(bits[1]) > self.opts['timelimit']:
@@ -144,7 +144,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
 
         return f"{self.statuses[bits[3]]}\nLast Activity: {bits[1]} days ago\nThreat Level: {bits[2]}"
 
-    def queryAddr(self, qaddr: str, parentEvent) -> None:
+    def queryAddr(self, qaddr: str, parentEvent: SpiderFootEvent) -> None:
         """Query Addr."""
         eventName = parentEvent.eventType
 

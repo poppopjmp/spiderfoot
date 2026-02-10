@@ -91,7 +91,7 @@ class sfp_netlas(SpiderFootModernPlugin):
         """
         return ["RAW_RIR_DATA", "GEOINFO", "PHYSICAL_COORDINATES", "PROVIDER_TELCO"]
 
-    def queryNetlas(self, qry: str, qryType):
+    def queryNetlas(self, qry: str, qryType: str):
         """Query Netlas API for information.
 
         Args:
@@ -202,7 +202,7 @@ class sfp_netlas(SpiderFootModernPlugin):
 
         self.results[eventData] = True
         emitted = set()
-        def emit(evt_type, data) -> None:
+        def emit(evt_type: str, data: str) -> None:
             """Emit."""
             key = (evt_type, str(data))
             if key in emitted:

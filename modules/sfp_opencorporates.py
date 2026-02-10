@@ -79,7 +79,7 @@ class sfp_opencorporates(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["COMPANY_NAME", "PHYSICAL_ADDRESS", "RAW_RIR_DATA"]
 
-    def searchCompany(self, qry):
+    def searchCompany(self, qry: str):
         """Search for company name.
 
         Args:
@@ -127,7 +127,7 @@ class sfp_opencorporates(SpiderFootModernPlugin):
 
         return data['results']
 
-    def retrieveCompanyDetails(self, jurisdiction_code, company_number):
+    def retrieveCompanyDetails(self, jurisdiction_code: str, company_number: str):
         """RetrieveCompanyDetails."""
         url = f"https://api.opencorporates.com/companies/{jurisdiction_code}/{company_number}"
 
@@ -160,7 +160,7 @@ class sfp_opencorporates(SpiderFootModernPlugin):
         return data['results']
 
     # Extract company address, previous names, and officer names
-    def extractCompanyDetails(self, company, sevt) -> None:
+    def extractCompanyDetails(self, company: dict, sevt: SpiderFootEvent) -> None:
 
         # Extract registered address
         """Extract CompanyDetails."""

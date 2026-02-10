@@ -128,7 +128,7 @@ class sfp_torexits(SpiderFootModernPlugin):
 
         return self.parseExitNodes(res['content'])
 
-    def parseExitNodes(self, data):
+    def parseExitNodes(self, data: str):
         """Extract exit node IP addresses from TOR relay search results.
 
         Args:

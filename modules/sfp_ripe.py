@@ -98,7 +98,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         ]
 
     # Fetch content and notify of the raw data
-    def fetchRir(self, url):
+    def fetchRir(self, url: str):
         """Fetch Rir."""
         if url in self.memCache:
             return self.memCache[url]
@@ -112,7 +112,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return res
 
     # Get the netblock the IP resides in
-    def ipNetblock(self, ipaddr):
+    def ipNetblock(self, ipaddr: str):
         """IpNetblock."""
         prefix = None
 
@@ -154,7 +154,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return None
 
     # Get the AS owning the netblock
-    def netblockAs(self, prefix):
+    def netblockAs(self, prefix: str):
         """NetblockAs."""
         whois = self.queryWhois(prefix)
 
@@ -182,7 +182,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return str(asn)
 
     # Owner information about an AS or netblock
-    def entityOwnerInfo(self, entity):
+    def entityOwnerInfo(self, entity: str):
         """EntityOwnerInfo."""
         whois = self.queryWhois(entity)
 
@@ -220,7 +220,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return ownerinfo
 
     # Netblocks owned by an AS
-    def asNetblocks(self, asn):
+    def asNetblocks(self, asn: str):
         """AsNetblocks."""
         res = self.fetchRir(
             f"https://stat.ripe.net/data/announced-prefixes/data.json?resource=AS{asn}")
@@ -245,7 +245,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return netblocks
 
     # Neighbours to an AS
-    def asNeighbours(self, asn):
+    def asNeighbours(self, asn: str):
         """AsNeighbours."""
         res = self.fetchRir(
             f"https://stat.ripe.net/data/asn-neighbours/data.json?resource=AS{asn}")
@@ -269,7 +269,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # Determine whether there is a textual link between the target
     # and the string supplied.
-    def findName(self, string) -> bool:
+    def findName(self, string: str) -> bool:
         # Simplest check to perform..
         """FindName."""
         for n in self.getTarget().getNames():
@@ -306,7 +306,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return False
 
     # Owns the AS or not?
-    def ownsAs(self, asn) -> bool:
+    def ownsAs(self, asn: str) -> bool:
         # Determine whether the AS is owned by our target
         """OwnsAs."""
         ownerinfo = self.entityOwnerInfo(asn)
@@ -323,7 +323,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return False
 
     # Owns the netblock or not?
-    def ownsNetblock(self, netblock) -> bool:
+    def ownsNetblock(self, netblock: str) -> bool:
         # Determine whether the netblock is owned by our target
         """OwnsNetblock."""
         ownerinfo = self.entityOwnerInfo(netblock)

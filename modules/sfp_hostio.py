@@ -89,7 +89,7 @@ class sfp_hostio(SpiderFootModernPlugin):
 
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
-    def handle_error_response(self, qry, res) -> None:
+    def handle_error_response(self, qry: str, res: dict) -> None:
         """Handle error response."""
         try:
             error_info = json.loads(res["content"])

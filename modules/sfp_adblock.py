@@ -83,7 +83,7 @@ class sfp_adblock(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["URL_ADBLOCKED_INTERNAL", "URL_ADBLOCKED_EXTERNAL"]
 
-    def retrieveBlocklist(self, blocklist_url):
+    def retrieveBlocklist(self, blocklist_url: str):
         """RetrieveBlocklist."""
         if not blocklist_url:
             return None
@@ -111,7 +111,7 @@ class sfp_adblock(SpiderFootModernPlugin):
 
         return self.setBlocklistRules(res['content'])
 
-    def setBlocklistRules(self, blocklist) -> None:
+    def setBlocklistRules(self, blocklist: str) -> None:
         """Parse AdBlock Plus blocklist and set blocklist rules.
 
         Args:

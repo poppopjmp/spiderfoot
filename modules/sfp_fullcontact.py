@@ -92,7 +92,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
             "PHYSICAL_ADDRESS"
         ]
 
-    def query(self, url: str, data, failcount=0):
+    def query(self, url: str, data: str, failcount: int = 0):
         """Query the data source."""
         headers = {
             'Authorization': f"Bearer {self.opts['api_key']}"
@@ -160,7 +160,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
 
         return self.query(url, {'email': email})
 
-    def queryPersonByName(self, name):
+    def queryPersonByName(self, name: str):
         """Query PersonByName."""
         url = "https://api.fullcontact.com/v3/person.enrich"
 

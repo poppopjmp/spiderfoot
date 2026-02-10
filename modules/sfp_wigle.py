@@ -95,7 +95,7 @@ class sfp_wigle(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["WIFI_ACCESS_POINT"]
 
-    def getnetworks(self, coords):
+    def getnetworks(self, coords: str):
         """Get networks."""
         params = {
             'onlymine': 'false',
@@ -150,7 +150,7 @@ class sfp_wigle(SpiderFootModernPlugin):
             self.error(f"Error processing JSON response from WiGLE: {e}")
             return None
 
-    def validApiKey(self, api_key) -> bool:
+    def validApiKey(self, api_key: str) -> bool:
         """ValidApiKey."""
         if not api_key:
             return False

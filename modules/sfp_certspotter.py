@@ -101,7 +101,7 @@ class sfp_certspotter(SpiderFootModernPlugin):
         ]
 
     # Query CertSpotter issuances API endpoint
-    def queryIssuances(self, domain: str, after=None):
+    def queryIssuances(self, domain: str, after: int = None):
         """Query Issuances."""
         params = {
             'domain': domain.encode('raw_unicode_escape').decode("ascii", errors='replace'),

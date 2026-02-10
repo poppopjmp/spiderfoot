@@ -86,7 +86,7 @@ class sfp_whoisology(SpiderFootModernPlugin):
         return ['AFFILIATE_INTERNET_NAME', 'AFFILIATE_DOMAIN_NAME']
 
     # Search Whoisology
-    def query(self, qry: str, querytype):
+    def query(self, qry: str, querytype: str):
         """Query the data source."""
         url = "https://whoisology.com/api?auth=" + \
             self.opts['api_key'] + "&request=flat"

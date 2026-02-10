@@ -75,7 +75,7 @@ class sfp_junkfiles(SpiderFootModernPlugin):
         return ["JUNK_FILE"]
 
     # Test how trustworthy a result is
-    def checkValidity(self, junkUrl) -> bool:
+    def checkValidity(self, junkUrl: str) -> bool:
         # Try and fetch an obviously missing version of the junk file
         """Check Validity."""
         fetch = junkUrl + str(random.SystemRandom().randint(0, 99999999))

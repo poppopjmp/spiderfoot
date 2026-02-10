@@ -104,7 +104,7 @@ class sfp_mnemonic(SpiderFootModernPlugin):
             'DOMAIN_NAME'
         ]
 
-    def query(self, qry: str, limit=500, offset=0):
+    def query(self, qry: str, limit: int = 500, offset: int = 0):
         """Query the Mnemonic PassiveDNS v3 API.
 
         Args:

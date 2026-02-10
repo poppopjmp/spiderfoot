@@ -79,7 +79,7 @@ class sfp_googlemaps(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["PHYSICAL_ADDRESS", "PHYSICAL_COORDINATES", "RAW_RIR_DATA"]
 
-    def query(self, address):
+    def query(self, address: str):
         """Query the data source."""
         params = urllib.parse.urlencode({
             'key': self.opts['api_key'],

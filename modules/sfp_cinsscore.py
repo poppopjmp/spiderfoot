@@ -86,7 +86,7 @@ class sfp_cinsscore(SpiderFootModernPlugin):
             "MALICIOUS_NETBLOCK",
         ]
 
-    def query(self, qry: str, targetType):
+    def query(self, qry: str, targetType: str):
         """Query the data source."""
         cid = "_cinsscore"
         url = "https://cinsscore.com/list/ci-badguys.txt"

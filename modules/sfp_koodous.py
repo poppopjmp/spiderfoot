@@ -84,7 +84,7 @@ class sfp_koodous(SpiderFootModernPlugin):
             'RAW_RIR_DATA'
         ]
 
-    def queryPackageName(self, qry: str, cursor=''):
+    def queryPackageName(self, qry: str, cursor: int = ''):
         """Query PackageName."""
         package_name = qry.encode('raw_unicode_escape').decode(
             "ascii", errors='replace')

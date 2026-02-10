@@ -63,7 +63,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
         self.domresults = self.tempStorage()
         self.hostresults = self.tempStorage()
         self.__dataSource__ = "DNS"
-    def enrichTarget(self, target) -> None:
+    def enrichTarget(self, target: SpiderFootTarget) -> None:
         """Enrich the target with additional data."""
         ret = list()
         # If it's an IP, get the hostname it reverse resolves to
@@ -98,7 +98,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
 
         return target
 
-    def resolveTargets(self, target, validateReverse: bool) -> list:
+    def resolveTargets(self, target: SpiderFootTarget, validateReverse: bool) -> list:
         """Resolve alternative names for a given target.
 
         Args:
@@ -487,7 +487,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
                     offset = data.find(name, start + len(chunkhost))
 
     # Process a host/IP, parentEvent is the event that represents this entity
-    def processHost(self, host, parentEvent, affiliate=None) -> None:
+    def processHost(self, host: str, parentEvent: SpiderFootEvent, affiliate: bool = None) -> None:
         """Process Host."""
         parentHash = self.sf.hashstring(parentEvent.data)
         if host in self.hostresults:
@@ -589,7 +589,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
                 return
             self.processDomain(dom, evt, True, host)
 
-    def processDomain(self, domainName, parentEvent, affil=False, host=None) -> None:
+    def processDomain(self, domainName: str, parentEvent: SpiderFootEvent, affil: bool = False, host: str = None) -> None:
         """Process Domain."""
         if domainName in self.domresults:
             self.debug(f"Skipping domain, {domainName}, already processed.")

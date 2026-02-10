@@ -106,7 +106,7 @@ class sfp_crxcavator(SpiderFootModernPlugin):
 
         return data
 
-    def queryExtension(self, extension_id):
+    def queryExtension(self, extension_id: str):
         """Query Extension."""
         res = self.fetch_url(
             f"https://api.crxcavator.io/v1/report/{extension_id}",

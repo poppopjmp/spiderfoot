@@ -90,7 +90,7 @@ class sfp_leakcheck(SpiderFootModernPlugin):
         ]
 
     # Query LeakCheck
-    def query(self, event):
+    def query(self, event: SpiderFootEvent):
         """Query the data source."""
         if event.eventType == "EMAILADDR":
             queryString = f"https://leakcheck.io/api/v2/query/{event.data}?type=email"

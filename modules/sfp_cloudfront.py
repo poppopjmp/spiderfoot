@@ -96,7 +96,7 @@ class sfp_cloudfront(SpiderFootModernPlugin):
             self.debug(f"DNS resolution failed for {domain}: {e}")
             return None
 
-    def checkHeaders(self, domain) -> bool:
+    def checkHeaders(self, domain: str) -> bool:
         """Check if domain's HTTP headers indicate CloudFront usage."""
         url = f"https://{domain}"
         res = self.fetch_url(

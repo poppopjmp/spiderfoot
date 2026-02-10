@@ -65,7 +65,7 @@ class sfp_gleif(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["COMPANY_NAME", "LEI", "PHYSICAL_ADDRESS", "RAW_RIR_DATA"]
 
-    def searchLegalName(self, qry):
+    def searchLegalName(self, qry: str):
         """Fuzzy search for legal entity by name.
 
         Args:
@@ -109,7 +109,7 @@ class sfp_gleif(SpiderFootModernPlugin):
 
         return data
 
-    def searchAutocompletions(self, qry):
+    def searchAutocompletions(self, qry: str):
         """Search for legal entity name autocompletions.
 
         Args:
@@ -153,7 +153,7 @@ class sfp_gleif(SpiderFootModernPlugin):
 
         return data
 
-    def retrieveRecord(self, lei):
+    def retrieveRecord(self, lei: str):
         """RetrieveRecord."""
         headers = {
             'Accept': 'application/vnd.api+json'

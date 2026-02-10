@@ -99,7 +99,7 @@ class sfp_securitytrails(SpiderFootModernPlugin):
                 "PROVIDER_HOSTING"]
 
     # Search SecurityTrails
-    def query(self, qry: str, querytype, page=1, accum=None):
+    def query(self, qry: str, querytype: str, page: int = 1, accum: list = None):
         """Query the data source."""
         info = None
 

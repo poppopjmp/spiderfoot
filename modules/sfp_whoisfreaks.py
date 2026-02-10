@@ -90,7 +90,7 @@ class sfp_whoisfreaks(SpiderFootModernPlugin):
         ]
 
     # Search WhoisFreaks
-    def query(self, qry: str, querytype, page=1, accum=None):
+    def query(self, qry: str, querytype: str, page: int = 1, accum: list = None):
         """Query the data source."""
         url = "https://api.whoisfreaks.com/v1.0/whois?whois=reverse&mode=mini&apiKey=" + \
             self.opts['api_key']

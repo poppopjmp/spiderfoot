@@ -78,7 +78,7 @@ class sfp_searchcode(SpiderFootModernPlugin):
             'RAW_RIR_DATA',
         ]
 
-    def query(self, qry: str, page=1, per_page=100):
+    def query(self, qry: str, page: int = 1, per_page: int = 100):
         """Query the data source."""
         params = urllib.parse.urlencode({
             'q': qry,

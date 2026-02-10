@@ -130,7 +130,7 @@ class sfp_snov(SpiderFootModernPlugin):
             return None
 
     # Fetch email addresses related to target domain
-    def queryDomainName(self, qry: str, accessToken, currentLastId):
+    def queryDomainName(self, qry: str, accessToken: str, currentLastId: int):
         """Query DomainName."""
         params = {
             'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),

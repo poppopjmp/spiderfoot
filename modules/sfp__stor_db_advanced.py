@@ -651,7 +651,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
 
     def _setup_graceful_shutdown(self):
         """Set up graceful shutdown handlers."""
-        def shutdown_handler(signum, frame) -> None:
+        def shutdown_handler(signum: int, frame: object) -> None:
             """Shutdown handler."""
             self.debug("Received shutdown signal, cleaning up...")
             self._graceful_shutdown()

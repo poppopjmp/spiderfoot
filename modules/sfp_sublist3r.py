@@ -87,7 +87,7 @@ class sfp_sublist3r(SpiderFootModernPlugin):
 
         return list(set(ret))
 
-    def sendEvent(self, source, host) -> None:
+    def sendEvent(self, source: str, host: str) -> None:
         """SendEvent."""
         if self.resolve_host(host) or self.resolve_host6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)

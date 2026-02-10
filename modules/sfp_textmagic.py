@@ -83,7 +83,7 @@ class sfp_textmagic(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def handle_error_response(self, qry, res) -> None:
+    def handle_error_response(self, qry: str, res: dict) -> None:
         """Handle error response."""
         try:
             error_info = json.loads(res["content"])

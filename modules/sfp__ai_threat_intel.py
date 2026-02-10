@@ -37,11 +37,11 @@ import re
 import statistics
 
 # Lightweight numpy-like functions for basic operations
-def mean(values):
+def mean(values: list):
     """Calculate mean of values."""
     return sum(values) / len(values) if values else 0
 
-def std_dev(values):
+def std_dev(values: list):
     """Calculate standard deviation."""
     if not values or len(values) < 2:
         return 0
@@ -60,15 +60,15 @@ except ImportError:
         """Advanced AI/ML-powered threat intelligence with pattern recognition, predictive analytics, and automated IOC correlation."""
 
         @staticmethod
-        def array(data):
+        def array(data: list):
             """Array."""
             return data
         @staticmethod
-        def mean(data):
+        def mean(data: list):
             """Mean."""
             return mean(data) if isinstance(data, list) else mean([data])
         @staticmethod
-        def std(data):
+        def std(data: list):
             """Std."""
             return std_dev(data) if isinstance(data, list) else 0
 

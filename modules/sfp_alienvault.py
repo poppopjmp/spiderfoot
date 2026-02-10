@@ -224,7 +224,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryDomainUrlList(self, qry: str, page=1, per_page=50):
+    def queryDomainUrlList(self, qry: str, page: int = 1, per_page: int = 50):
         """Query DomainUrlList."""
         params = urllib.parse.urlencode({
             'page': page,
@@ -243,7 +243,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHostnameUrlList(self, qry: str, page=1, per_page=50):
+    def queryHostnameUrlList(self, qry: str, page: int = 1, per_page: int = 50):
         """Query HostnameUrlList."""
         params = urllib.parse.urlencode({
             'page': page,

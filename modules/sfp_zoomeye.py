@@ -87,7 +87,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def query(self, qry: str, querytype, page=1):
+    def query(self, qry: str, querytype: str, page: int = 1):
         """
         Query ZoomEye API for the given query and query type (host or web).
         Handle pagination based on the total number of results and page size.
@@ -155,7 +155,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-    def queryHost(self, qry: str, page=1, pageSize=20):
+    def queryHost(self, qry: str, page: int = 1, pageSize: int = 20):
         """Query ZoomEye for host information."""
         headers = {
             'API-KEY': self.opts['api_key'],
@@ -228,7 +228,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
         self.results[eventData] = True
         emitted = set()
 
-        def emit(evt_type, data) -> None:
+        def emit(evt_type: str, data: str) -> None:
             """Emit."""
             key = (evt_type, data)
             if key in emitted:

@@ -89,7 +89,7 @@ class sfp_leakix(SpiderFootModernPlugin):
 
     # Query host
     # https://leakix.net/api-documentation
-    def queryApi(self, qryType, qry: str):
+    def queryApi(self, qryType: str, qry: str):
         """Query Api."""
         headers = {
             "Accept": "application/json",

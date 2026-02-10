@@ -84,7 +84,7 @@ class sfp_rocketreach(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def query(self, query_value, query_type):
+    def query(self, query_value: str, query_type: str):
         """Query the data source."""
         if self.errorState:
             return None
@@ -156,7 +156,7 @@ class sfp_rocketreach(SpiderFootModernPlugin):
         self.results[eventData] = True
         emitted = set()
 
-        def emit(evt_type, data) -> None:
+        def emit(evt_type: str, data: str) -> None:
             """Emit."""
             key = (evt_type, data)
             if key in emitted:

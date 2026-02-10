@@ -91,7 +91,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
             "HUMAN_NAME"
         ]
 
-    def query(self, qry: str, qryType):
+    def query(self, qry: str, qryType: str):
         # The StackOverflow excerpts endpoint will search the site for mentions of a keyword and returns a snippet of relevant results
         """Query the data source."""
         if qryType == "excerpts":
@@ -142,7 +142,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-    def extractUsername(self, questionId):
+    def extractUsername(self, questionId: str):
         # Need to query the questions endpoint with the question_id to find the username
         """Extract Username."""
         query_results = self.query(questionId, "questions")
@@ -158,7 +158,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
 
         return str(username)
 
-    def extractIP4s(self, text):
+    def extractIP4s(self, text: str):
         """Extract IP4s."""
         ips = list()
 
@@ -173,7 +173,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
 
         return list(set(ips))
 
-    def extractIP6s(self, text):
+    def extractIP6s(self, text: str):
         """Extract IP6s."""
         ips = list()
 

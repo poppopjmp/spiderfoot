@@ -119,7 +119,7 @@ class sfp_stevenblack_hosts(SpiderFootModernPlugin):
 
         return self.parseBlocklist(res['content'])
 
-    def parseBlocklist(self, blocklist):
+    def parseBlocklist(self, blocklist: str):
         """Parse plaintext block list.
 
         Args:

@@ -150,7 +150,7 @@ class sfp_dnsneighbor(SpiderFootModernPlugin):
                 else:
                     self.processHost(addr, parent, True)
 
-    def processHost(self, host, parentEvent, affiliate=None):
+    def processHost(self, host: str, parentEvent: SpiderFootEvent, affiliate: bool = None):
         """Process Host."""
         parentHash = self.sf.hashstring(parentEvent.data)
         if host not in self.hostresults:

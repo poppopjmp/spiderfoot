@@ -116,7 +116,7 @@ class sfp_abusech(SpiderFootModernPlugin):
             "MALICIOUS_NETBLOCK"
         ]
 
-    def queryFeodoTrackerBlacklist(self, target: str, targetType) -> bool:
+    def queryFeodoTrackerBlacklist(self, target: str, targetType: str) -> bool:
         """Query FeodoTrackerBlacklist."""
         blacklist = self.retrieveFeodoTrackerBlacklist()
 
@@ -166,7 +166,7 @@ class sfp_abusech(SpiderFootModernPlugin):
 
         return self.parseFeodoTrackerBlacklist(res['content'])
 
-    def parseFeodoTrackerBlacklist(self, blacklist):
+    def parseFeodoTrackerBlacklist(self, blacklist: str):
         """Parse plaintext blacklist.
 
         Args:
@@ -192,7 +192,7 @@ class sfp_abusech(SpiderFootModernPlugin):
 
         return ips
 
-    def querySslBlacklist(self, target: str, targetType) -> bool:
+    def querySslBlacklist(self, target: str, targetType: str) -> bool:
         """Query SslBlacklist."""
         blacklist = self.retrieveSslBlacklist()
 
@@ -242,7 +242,7 @@ class sfp_abusech(SpiderFootModernPlugin):
 
         return self.parseSslBlacklist(res['content'])
 
-    def parseSslBlacklist(self, blacklist):
+    def parseSslBlacklist(self, blacklist: str):
         """Parse plaintext blacklist.
 
         Args:
@@ -272,7 +272,7 @@ class sfp_abusech(SpiderFootModernPlugin):
 
         return ips
 
-    def queryUrlHausBlacklist(self, target: str, targetType) -> bool:
+    def queryUrlHausBlacklist(self, target: str, targetType: str) -> bool:
         """Query UrlHausBlacklist."""
         blacklist = self.retrieveUrlHausBlacklist()
 
@@ -327,7 +327,7 @@ class sfp_abusech(SpiderFootModernPlugin):
 
         return self.parseUrlHausBlacklist(res['content'])
 
-    def parseUrlHausBlacklist(self, blacklist):
+    def parseUrlHausBlacklist(self, blacklist: str):
         """Parse plaintext blacklist.
 
         Args:

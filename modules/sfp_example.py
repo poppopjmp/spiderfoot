@@ -24,24 +24,24 @@ class sfp_example(SpiderFootModernPlugin):
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ['ROOT']
-    def enrichTarget(self, target) -> None:
+    def enrichTarget(self, target: SpiderFootTarget) -> None:
         """Enrich the target with additional data."""
         return None
-    def setup(self, sf, opts) -> None:
+    def setup(self, sf: SpiderFoot, opts: dict) -> None:
         """Set up the module."""
         pass
     def clearListeners(self) -> None:
         """ClearListeners."""
         pass
-    def setScanId(self, scan_id) -> None:
+    def setScanId(self, scan_id: str) -> None:
         """Set ScanId."""
         pass
-    def setSharedThreadPool(self, pool) -> None:
+    def setSharedThreadPool(self, pool: object) -> None:
         """Set SharedThreadPool."""
         pass
-    def setDbh(self, dbh) -> None:
+    def setDbh(self, dbh: object) -> None:
         """Set Dbh."""
         pass
-    def setTarget(self, target) -> None:
+    def setTarget(self, target: SpiderFootTarget) -> None:
         """Set Target."""
         pass

@@ -106,7 +106,7 @@ class sfp_flickr(SpiderFootModernPlugin):
         return keys[0]
 
     # Query the REST API
-    def query(self, qry: str, api_key, page=1, per_page=200):
+    def query(self, qry: str, api_key: str, page: int = 1, per_page: int = 200):
         """Query the data source."""
         params = {
             "sort": "relevance",

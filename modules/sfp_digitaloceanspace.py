@@ -77,7 +77,7 @@ class sfp_digitaloceanspace(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["CLOUD_STORAGE_BUCKET", "CLOUD_STORAGE_BUCKET_OPEN"]
 
-    def checkSite(self, url) -> None:
+    def checkSite(self, url: str) -> None:
         """Check Site."""
         res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
@@ -100,7 +100,7 @@ class sfp_digitaloceanspace(SpiderFootModernPlugin):
                 with self.lock:
                     self.s3results[url] = 0
 
-    def threadSites(self, siteList) -> None:
+    def threadSites(self, siteList: list) -> None:
         """ThreadSites."""
         self.s3results = dict()
         running = True
@@ -138,7 +138,7 @@ class sfp_digitaloceanspace(SpiderFootModernPlugin):
         # Return once the scanning has completed
         return self.s3results
 
-    def batchSites(self, sites) -> None:
+    def batchSites(self, sites: list) -> None:
         """BatchSites."""
         i = 0
         res = list()

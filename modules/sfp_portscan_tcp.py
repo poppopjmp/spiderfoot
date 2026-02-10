@@ -109,7 +109,7 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["TCP_PORT_OPEN", "TCP_PORT_OPEN_BANNER"]
 
-    def tryPort(self, ip, port) -> None:
+    def tryPort(self, ip: str, port: int) -> None:
         """TryPort."""
         peer = f"{ip}:{port}"
 
@@ -136,7 +136,7 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
 
         sock.close()
 
-    def tryPortWrapper(self, ip, portList):
+    def tryPortWrapper(self, ip: str, portList: list):
         """TryPortWrapper."""
         self.portResults = dict()
         running = True
@@ -166,7 +166,7 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
         return self.portResults
 
     # Generate TCP_PORT_OPEN_BANNER event
-    def sendEvent(self, resArray, srcEvent) -> None:
+    def sendEvent(self, resArray: list, srcEvent: SpiderFootEvent) -> None:
         """SendEvent."""
         for cp in resArray:
             if not resArray[cp]:

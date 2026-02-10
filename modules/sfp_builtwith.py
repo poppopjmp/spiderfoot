@@ -92,7 +92,7 @@ class sfp_builtwith(SpiderFootModernPlugin):
                 "WEBSERVER_TECHNOLOGY", "PHONE_NUMBER", "DOMAIN_NAME",
                 "CO_HOSTED_SITE", "IP_ADDRESS", "WEB_ANALYTICS_ID"]
 
-    def queryRelationships(self, t):
+    def queryRelationships(self, t: str):
         """Query Relationships."""
         url = f"https://api.builtwith.com/rv1/api.json?LOOKUP={t}&KEY={self.opts['api_key']}"
 
@@ -113,7 +113,7 @@ class sfp_builtwith(SpiderFootModernPlugin):
 
         return None
 
-    def queryDomainInfo(self, t):
+    def queryDomainInfo(self, t: str):
         """Query DomainInfo."""
         url = f"https://api.builtwith.com/rv1/api.json?LOOKUP={t}&KEY={self.opts['api_key']}"
 

@@ -108,7 +108,7 @@ class sfp_accounts(SpiderFootModernPlugin):
         return ["USERNAME", "ACCOUNT_EXTERNAL_OWNED",
                 "SIMILAR_ACCOUNT_EXTERNAL"]
 
-    def checkSite(self, name, site) -> None:
+    def checkSite(self, name: str, site: dict) -> None:
         """Check Site."""
         if 'uri_check' not in site:
             return
@@ -169,9 +169,9 @@ class sfp_accounts(SpiderFootModernPlugin):
         with self.lock:
             self.siteResults[retname] = True
 
-    def checkSites(self, username, sites=None) -> list | None:
+    def checkSites(self, username: str, sites: list = None) -> list | None:
         """Check Sites."""
-        def processSiteQueue(username, queue) -> None:
+        def processSiteQueue(username: str, queue: list) -> None:
             """Process SiteQueue."""
             try:
                 while True:
@@ -218,7 +218,7 @@ class sfp_accounts(SpiderFootModernPlugin):
 
         return [site for site, found in self.siteResults.items() if found]
 
-    def generatePermutations(self, username):
+    def generatePermutations(self, username: str):
         """GeneratePermutations."""
         permutations = list()
         prefixsuffix = ['_', '-']

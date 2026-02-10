@@ -91,7 +91,7 @@ class sfp_grayhatwarfare(SpiderFootModernPlugin):
         ]
 
     # Query Grayhat Warfare
-    def query(self, keyword, start):
+    def query(self, keyword: str, start: int):
         """Query the data source."""
         params = urllib.parse.urlencode({
             'keywords': keyword.encode('raw_unicode_escape'),

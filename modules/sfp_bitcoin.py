@@ -50,12 +50,12 @@ class sfp_bitcoin(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["BITCOIN_ADDRESS"]
 
-    def to_bytes(self, n, length):
+    def to_bytes(self, n: int, length: int):
         """Convert to bytes."""
         h = '%x' % n
         return codecs.decode(('0' * (len(h) % 2) + h).zfill(length * 2), "hex")
 
-    def decode_base58(self, bc, length):
+    def decode_base58(self, bc: str, length: int):
         """Decode base58."""
         digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
         n = 0
@@ -63,7 +63,7 @@ class sfp_bitcoin(SpiderFootModernPlugin):
             n = n * 58 + digits58.index(char)
         return self.to_bytes(n, length)
 
-    def check_bc(self, bc):
+    def check_bc(self, bc: str):
         """Check bc."""
         bcbytes = self.decode_base58(bc, 25)
         return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]

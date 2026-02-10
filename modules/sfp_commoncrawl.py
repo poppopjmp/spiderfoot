@@ -67,7 +67,7 @@ class sfp_commoncrawl(SpiderFootModernPlugin):
         self.results = self.tempStorage()
         self.indexBase = list()
         self.errorState = False
-    def search(self, target):
+    def search(self, target: str):
         """Search the data source."""
         ret = list()
         for index in self.indexBase:

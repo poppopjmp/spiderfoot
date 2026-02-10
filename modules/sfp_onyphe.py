@@ -107,7 +107,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
             "PHYSICAL_COORDINATES",
         ]
 
-    def query(self, endpoint, ip: str, page=1):
+    def query(self, endpoint: str, ip: str, page: int = 1):
         """Query the data source."""
         retarr = list()
 
@@ -180,7 +180,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
 
         return retarr
 
-    def emitLocationEvent(self, location, eventData, event) -> None:
+    def emitLocationEvent(self, location: dict, eventData: str, event: SpiderFootEvent) -> None:
         """EmitLocationEvent."""
         if location is None:
             return
@@ -190,7 +190,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
                               location, self.__name__, event)
         self.notifyListeners(evt)
 
-    def emitDomainData(self, response, eventData, event) -> None:
+    def emitDomainData(self, response: dict, eventData: str, event: SpiderFootEvent) -> None:
         """EmitDomainData."""
         domains = set()
         if response.get("domain") is not None and isinstance(
@@ -237,7 +237,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
                 self.notifyListeners(evt)
                 self.cohostcount += 1
 
-    def isFreshEnough(self, result) -> bool:
+    def isFreshEnough(self, result: dict) -> bool:
         """IsFreshEnough."""
         limit = self.opts["age_limit_days"]
         if limit <= 0:

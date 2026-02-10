@@ -79,7 +79,7 @@ class sfp_twilio(SpiderFootModernPlugin):
 
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
-    def queryPhoneNumber(self, phoneNumber):
+    def queryPhoneNumber(self, phoneNumber: str):
 
         """Query PhoneNumber."""
         token = (base64.b64encode(self.opts['api_key_account_sid'].encode(

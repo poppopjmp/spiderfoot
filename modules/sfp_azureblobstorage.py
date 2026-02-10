@@ -78,7 +78,7 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["CLOUD_STORAGE_BUCKET"]
 
-    def checkSite(self, url) -> None:
+    def checkSite(self, url: str) -> None:
         """Check Site."""
         res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
@@ -87,7 +87,7 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
             with self.lock:
                 self.s3results[url] = True
 
-    def threadSites(self, siteList) -> None:
+    def threadSites(self, siteList: list) -> None:
         """ThreadSites."""
         self.s3results = dict()
         running = True
@@ -125,7 +125,7 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
         # Return once the scanning has completed
         return self.s3results
 
-    def batchSites(self, sites) -> None:
+    def batchSites(self, sites: list) -> None:
         """BatchSites."""
         i = 0
         res = list()

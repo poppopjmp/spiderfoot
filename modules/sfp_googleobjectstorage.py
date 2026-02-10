@@ -78,7 +78,7 @@ class sfp_googleobjectstorage(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["CLOUD_STORAGE_BUCKET", "CLOUD_STORAGE_BUCKET_OPEN"]
 
-    def checkSite(self, url) -> None:
+    def checkSite(self, url: str) -> None:
         """Check Site."""
         res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
@@ -101,7 +101,7 @@ class sfp_googleobjectstorage(SpiderFootModernPlugin):
                 with self.lock:
                     self.gosresults[url] = 0
 
-    def threadSites(self, siteList) -> None:
+    def threadSites(self, siteList: list) -> None:
         """ThreadSites."""
         self.gosresults = dict()
         running = True
@@ -139,7 +139,7 @@ class sfp_googleobjectstorage(SpiderFootModernPlugin):
         # Return once the scanning has completed
         return self.gosresults
 
-    def batchSites(self, sites) -> None:
+    def batchSites(self, sites: list) -> None:
         """BatchSites."""
         i = 0
         res = list()

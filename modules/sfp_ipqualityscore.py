@@ -96,7 +96,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def handle_error_response(self, qry, res) -> None:
+    def handle_error_response(self, qry: str, res: dict) -> None:
         """Handle error response."""
         try:
             error_info = json.loads(res["content"])
@@ -113,7 +113,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
         self.error(
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
-    def query(self, qry: str, eventName):
+    def query(self, qry: str, eventName: str):
         """Query the data source."""
         queryString = ""
         if eventName == "PHONE_NUMBER":
@@ -145,7 +145,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
 
         return None
 
-    def getGeoInfo(self, data):
+    def getGeoInfo(self, data: dict):
         """Get GeoInfo."""
         geoInfo = ""
 

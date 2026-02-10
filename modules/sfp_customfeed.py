@@ -88,7 +88,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
                 "MALICIOUS_COHOST"]
 
     # Look up 'list' type resources
-    def resourceList(self, replaceme_id, target, targetType):
+    def resourceList(self, replaceme_id: str, target: str, targetType: str):
         """ResourceList."""
         targetDom = ''
         # Get the base domain if we're supplied a domain
@@ -172,7 +172,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
 
         return None
 
-    def lookupItem(self, resourceId, itemType, target):
+    def lookupItem(self, resourceId: str, itemType: str, target: str):
         """Look up Item."""
         for check in list(malchecks.keys()):
             cid = malchecks[check]['id']

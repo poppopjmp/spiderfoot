@@ -89,7 +89,7 @@ class sfp_sociallinks(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def query(self, queryString):
+    def query(self, queryString: str):
         """Query the data source."""
         headers = {
             'Accept': "application/json",
@@ -121,7 +121,7 @@ class sfp_sociallinks(SpiderFootModernPlugin):
             return None
         return json.loads(res['content'])
 
-    def queryTelegram(self, qry: str, eventName):
+    def queryTelegram(self, qry: str, eventName: str):
         """Query Telegram."""
         if eventName == "PHONE_NUMBER":
             queryString = f"https://osint.rest/api/telegram/user_by_phone?query={qry}"

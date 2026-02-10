@@ -83,7 +83,7 @@ class sfp_deepinfo(SpiderFootModernPlugin):
         return ["DOMAIN_NAME", "INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
     # Search Deepinfo
-    def query(self, qry: str, page=1, accum=None):
+    def query(self, qry: str, page: int = 1, accum: list = None):
         """Query the data source."""
         url = f"https://api.deepinfo.com/v1/discovery/subdomain-finder?domain={qry}&page={page}"
         request = None

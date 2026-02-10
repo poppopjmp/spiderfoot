@@ -90,7 +90,7 @@ class sfp_greensnow(SpiderFootModernPlugin):
             "MALICIOUS_SUBNET",
         ]
 
-    def query(self, qry: str, targetType):
+    def query(self, qry: str, targetType: str):
         """Query the data source."""
         cid = "_greensnow"
         url = "https://blocklist.greensnow.co/greensnow.txt"

@@ -86,7 +86,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
             ),
         }
 
-    def retrieveDataFromFeed(self, url):
+    def retrieveDataFromFeed(self, url: str):
         """
         Retrieve and cache data from a Bambenek feed URL.
 
@@ -121,7 +121,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
             self.error(f"Error processing Bambenek data: {str(e)}")
             return []
 
-    def parseData(self, data):
+    def parseData(self, data: str):
         """
         Parse feed data into a list of items.
 
@@ -180,7 +180,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
         ]
 
     # Check if an IP or domain is malicious
-    def queryFeed(self, qry: str, feed_type):
+    def queryFeed(self, qry: str, feed_type: str):
         """
         Check if a query value is present in the specified feed type.
 

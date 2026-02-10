@@ -91,7 +91,7 @@ class sfp_alienvaultiprep(SpiderFootModernPlugin):
             "MALICIOUS_NETBLOCK",
         ]
 
-    def queryBlacklist(self, target: str, targetType) -> bool:
+    def queryBlacklist(self, target: str, targetType: str) -> bool:
         """Query Blacklist."""
         blacklist = self.retrieveBlacklist()
 
@@ -142,7 +142,7 @@ class sfp_alienvaultiprep(SpiderFootModernPlugin):
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist):
+    def parseBlacklist(self, blacklist: str):
         """Parse plaintext blacklist.
 
         Args:

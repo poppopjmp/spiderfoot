@@ -127,7 +127,7 @@ class sfp_binaryedge(SpiderFootModernPlugin):
             "MALICIOUS_IPADDR"
         ]
 
-    def query(self, qry: str, querytype, page=1):
+    def query(self, qry: str, querytype: str, page: int = 1):
         """Query the data source."""
         retarr = list()
 

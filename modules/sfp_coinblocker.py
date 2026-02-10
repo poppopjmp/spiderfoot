@@ -125,7 +125,7 @@ class sfp_coinblocker(SpiderFootModernPlugin):
 
         return self.parseBlocklist(res['content'])
 
-    def parseBlocklist(self, blocklist):
+    def parseBlocklist(self, blocklist: str):
         """Parse plaintext CoinBlocker list.
 
         Args:

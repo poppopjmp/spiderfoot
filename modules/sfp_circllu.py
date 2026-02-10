@@ -102,7 +102,7 @@ class sfp_circllu(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["IP_ADDRESS", "SSL_CERTIFICATE_ISSUED", "CO_HOSTED_SITE"]
 
-    def query(self, qry: str, qtype):
+    def query(self, qry: str, qtype: str):
         """Query the data source."""
         if self.errorState:
             return None

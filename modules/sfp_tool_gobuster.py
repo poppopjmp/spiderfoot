@@ -102,7 +102,7 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["URL_DIRECTORY", "URL_FILE"]
 
-    def execute_command(self, cmd):
+    def execute_command(self, cmd: str):
         """Execute an external command and return the output."""
         self.debug(f"Executing command: {' '.join(cmd)}")
         output_file = tempfile.NamedTemporaryFile(mode="w+", delete=False)
@@ -130,7 +130,7 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
             except OSError:
                 pass
 
-    def run_remote_tool(self, target_url):
+    def run_remote_tool(self, target_url: str):
         """Run remote tool."""
         host = self.opts.get("remote_host")
         user = self.opts.get("remote_user")

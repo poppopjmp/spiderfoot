@@ -70,7 +70,7 @@ class sfp_github(SpiderFootModernPlugin):
         return ["RAW_RIR_DATA", "GEOINFO", "PUBLIC_CODE_REPO"]
 
     # Build up repo info for use as an event
-    def buildRepoInfo(self, item):
+    def buildRepoInfo(self, item: dict):
         # Get repos matching the name
         """Build RepoInfo."""
         name = item.get('name')

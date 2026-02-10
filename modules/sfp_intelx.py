@@ -112,7 +112,7 @@ class sfp_intelx(SpiderFootModernPlugin):
                 "INTERNET_NAME", "DOMAIN_NAME",
                 "EMAILADDR", "EMAILADDR_GENERIC"]
 
-    def query(self, qry: str, qtype):
+    def query(self, qry: str, qtype: str):
         """Query the data source."""
         retdata = list()
 

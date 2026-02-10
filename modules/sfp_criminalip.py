@@ -123,7 +123,7 @@ class sfp_criminalip(SpiderFootModernPlugin):
 
         return None
 
-    def queryCriminalIP(self, qry: str, endpoint):
+    def queryCriminalIP(self, qry: str, endpoint: str):
         """Query CriminalIP API.
 
         Args:

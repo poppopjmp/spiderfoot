@@ -91,7 +91,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
             "MALICIOUS_SUBNET",
         ]
 
-    def queryProxyList(self, target: str, targetType) -> bool:
+    def queryProxyList(self, target: str, targetType: str) -> bool:
         """Query ProxyList."""
         proxy_list = self.retrieveProxyList()
 
@@ -142,7 +142,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
 
         return self.parseProxyList(res['content'])
 
-    def parseProxyList(self, proxy_list):
+    def parseProxyList(self, proxy_list: str):
         """Parse plaintext open proxy list.
 
         Args:

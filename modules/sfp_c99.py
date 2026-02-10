@@ -101,7 +101,7 @@ class sfp_c99(SpiderFootModernPlugin):
             "CO_HOSTED_SITE"
         ]
 
-    def query(self, path, queryParam, queryData):
+    def query(self, path: str, queryParam: str, queryData: str):
         """Query the data source."""
         res = self.fetch_url(
             f"https://api.c99.nl/{path}?key={self.opts['api_key']}&{queryParam}={queryData}&json",
@@ -135,12 +135,12 @@ class sfp_c99(SpiderFootModernPlugin):
 
         return info
 
-    def emitRawRirData(self, data, event) -> None:
+    def emitRawRirData(self, data: dict, event: SpiderFootEvent) -> None:
         """EmitRawRirData."""
         evt = SpiderFootEvent("RAW_RIR_DATA", str(data), "sfp_c99", event)
         self.notifyListeners(evt)
 
-    def emitPhoneData(self, phoneData, event) -> None:
+    def emitPhoneData(self, phoneData: dict, event: SpiderFootEvent) -> None:
         """EmitPhoneData."""
         provider = phoneData.get("provider")
         carrier = phoneData.get("carrier")
@@ -172,7 +172,7 @@ class sfp_c99(SpiderFootModernPlugin):
         if found:
             self.emitRawRirData(phoneData, event)
 
-    def emitSubDomainData(self, subDomainData, event) -> None:
+    def emitSubDomainData(self, subDomainData: dict, event: SpiderFootEvent) -> None:
         """EmitSubDomainData."""
         found = False
 
@@ -189,7 +189,7 @@ class sfp_c99(SpiderFootModernPlugin):
         if found:
             self.emitRawRirData(subDomainData, event)
 
-    def emitDomainHistoryData(self, domainHistoryData, event) -> None:
+    def emitDomainHistoryData(self, domainHistoryData: dict, event: SpiderFootEvent) -> None:
         """EmitDomainHistoryData."""
         found = False
 
@@ -212,7 +212,7 @@ class sfp_c99(SpiderFootModernPlugin):
         if found:
             self.emitRawRirData(domainHistoryData, event)
 
-    def emitIpToSkypeData(self, data, event) -> None:
+    def emitIpToSkypeData(self, data: dict, event: SpiderFootEvent) -> None:
         """EmitIpToSkypeData."""
         skype = data.get("skype")
 
@@ -235,7 +235,7 @@ class sfp_c99(SpiderFootModernPlugin):
 
             self.emitRawRirData(data, event)
 
-    def emitIpToDomainsData(self, data, event) -> None:
+    def emitIpToDomainsData(self, data: dict, event: SpiderFootEvent) -> None:
         """EmitIpToDomainsData."""
         domains = data.get("domains")
         found = False
@@ -253,7 +253,7 @@ class sfp_c99(SpiderFootModernPlugin):
         if found:
             self.emitRawRirData(data, event)
 
-    def emitProxyDetectionData(self, data, event) -> None:
+    def emitProxyDetectionData(self, data: dict, event: SpiderFootEvent) -> None:
         """EmitProxyDetectionData."""
         isProxy = data.get("proxy")
 
@@ -267,7 +267,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.notifyListeners(evt)
             self.emitRawRirData(data, event)
 
-    def emitGeoIPData(self, data, event) -> None:
+    def emitGeoIPData(self, data: dict, event: SpiderFootEvent) -> None:
         """EmitGeoIPData."""
         found = False
 
@@ -321,7 +321,7 @@ class sfp_c99(SpiderFootModernPlugin):
         # Always emit RAW_RIR_DATA, even if not found
         self.emitRawRirData(data, event)
 
-    def emitSkypeResolverData(self, data, event) -> None:
+    def emitSkypeResolverData(self, data: dict, event: SpiderFootEvent) -> None:
         """EmitSkypeResolverData."""
         ip = data.get("ip")
         ips = data.get("ips")
@@ -354,7 +354,7 @@ class sfp_c99(SpiderFootModernPlugin):
         if found:
             self.emitRawRirData(data, event)
 
-    def emitWafDetectorData(self, data, event) -> None:
+    def emitWafDetectorData(self, data: dict, event: SpiderFootEvent) -> None:
         """EmitWafDetectorData."""
         firewall = data.get("result")
 
@@ -368,7 +368,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.notifyListeners(evt)
             self.emitRawRirData(data, event)
 
-    def emitHostname(self, data, event) -> None:
+    def emitHostname(self, data: dict, event: SpiderFootEvent) -> None:
         """EmitHostname."""
         if not self.sf.validHost(data, self.opts['_internettlds']):
             return

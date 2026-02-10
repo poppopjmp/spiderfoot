@@ -120,7 +120,7 @@ class sfp_phone(SpiderFootModernPlugin):
             # else:
             #     self.debug("No location information found for " + eventData)
 
-    def registerEventEmitter(self, emitter) -> None:
+    def registerEventEmitter(self, emitter: str) -> None:
         """Register event emitter"""
         self.eventEmitter = emitter
 

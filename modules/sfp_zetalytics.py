@@ -70,7 +70,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["INTERNET_NAME", "AFFILIATE_DOMAIN_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def emit(self, etype, data, pevent) -> None:
+    def emit(self, etype: str, data: str, pevent: SpiderFootEvent) -> None:
         """Emit."""
         if self.checkForStop():
             return None
@@ -78,7 +78,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         self.notifyListeners(evt)
         return evt
 
-    def verify_emit_internet_name(self, hostname, pevent) -> bool:
+    def verify_emit_internet_name(self, hostname: str, pevent: SpiderFootEvent) -> bool:
         """Verify emit internet name."""
         if f"INTERNET_NAME:{hostname}" in self.results:
             return False
@@ -97,7 +97,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
 
         return True
 
-    def request(self, path, params):
+    def request(self, path: str, params: dict):
         """Request."""
         params = {**params, "token": self.opts["api_key"]}
         qs = urlencode(params)
@@ -129,11 +129,11 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         """Query email domain."""
         return self.request("/email_domain", {"q": email_domain})
 
-    def query_email_address(self, email_address):
+    def query_email_address(self, email_address: str):
         """Query email address."""
         return self.request("/email_address", {"q": email_address})
 
-    def generate_subdomains_events(self, data, pevent):
+    def generate_subdomains_events(self, data: dict, pevent: SpiderFootEvent):
         """Generate subdomains events."""
         if not isinstance(data, dict):
             return False
@@ -152,7 +152,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
 
         return events_generated  # noqa R504
 
-    def generate_hostname_events(self, data, pevent):
+    def generate_hostname_events(self, data: dict, pevent: SpiderFootEvent):
         """Generate hostname events."""
         if not isinstance(data, dict):
             return False
@@ -174,7 +174,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
 
         return events_generated  # noqa R504
 
-    def generate_email_events(self, data, pevent):
+    def generate_email_events(self, data: dict, pevent: SpiderFootEvent):
         """Generate email events."""
         if not isinstance(data, dict):
             return False
@@ -192,7 +192,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
 
         return events_generated  # noqa R504
 
-    def generate_email_domain_events(self, data, pevent):
+    def generate_email_domain_events(self, data: dict, pevent: SpiderFootEvent):
         """Generate email domain events."""
         if not isinstance(data, dict):
             return False

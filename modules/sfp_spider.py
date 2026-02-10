@@ -246,7 +246,7 @@ class sfp_spider(SpiderFootModernPlugin):
         return list(returnLinks.keys())
 
     # Notify listening modules about links
-    def linkNotify(self, url: str, parentEvent=None):
+    def linkNotify(self, url: str, parentEvent: SpiderFootEvent = None):
         """LinkNotify."""
         if not isinstance(url, str):
             url = str(url, "utf-8", errors='replace')
@@ -260,7 +260,7 @@ class sfp_spider(SpiderFootModernPlugin):
         return event
 
     # Notify listening modules about raw data and others
-    def contentNotify(self, url: str, httpresult: dict, parentEvent=None) -> None:
+    def contentNotify(self, url: str, httpresult: dict, parentEvent: SpiderFootEvent = None) -> None:
         """ContentNotify."""
         if not isinstance(httpresult, dict):
             return

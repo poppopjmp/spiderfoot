@@ -100,7 +100,7 @@ class sfp_dehashed(SpiderFootModernPlugin):
         ]
 
     # Query Dehashed
-    def query(self, event, per_page, start):
+    def query(self, event: SpiderFootEvent, per_page: int, start: int):
         """Query the data source."""
         if event.eventType == "EMAILADDR":
             queryString = f"https://api.dehashed.com/search?query=email:\"{event.data}\"&page={start}&size={self.opts['per_page']}"

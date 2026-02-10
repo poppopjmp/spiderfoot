@@ -101,14 +101,14 @@ class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
 
         return None
 
-    def emit(self, etype, data, pevent, notify=True) -> None:
+    def emit(self, etype: str, data: str, pevent: SpiderFootEvent, notify: bool = True) -> None:
         """Emit."""
         evt = SpiderFootEvent(etype, data, self.__name__, pevent)
         if notify:
             self.notifyListeners(evt)
         return evt
 
-    def generate_events(self, data, pevent) -> bool:
+    def generate_events(self, data: dict, pevent: SpiderFootEvent) -> bool:
         """Generate events."""
         if not isinstance(data, dict):
             return False

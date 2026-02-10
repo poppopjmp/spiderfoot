@@ -69,7 +69,7 @@ class sfp_crobat_api(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def queryDomain(self, qry: str, page=0):
+    def queryDomain(self, qry: str, page: int = 0):
         """Query Domain."""
         headers = {
             "Accept": "application/json"

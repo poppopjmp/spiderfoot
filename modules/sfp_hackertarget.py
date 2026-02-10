@@ -106,7 +106,7 @@ class sfp_hackertarget(SpiderFootModernPlugin):
             'AFFILIATE_INTERNET_NAME_UNRESOLVED'
         ]
 
-    def httpHeaders(self, ip):
+    def httpHeaders(self, ip: str):
         """Retrieve HTTP headers for IP address.
 
         Args:
@@ -150,7 +150,7 @@ class sfp_hackertarget(SpiderFootModernPlugin):
 
         return headers
 
-    def zoneTransfer(self, ip):
+    def zoneTransfer(self, ip: str):
         """Retrieve DNS zone transfer.
 
         Args:
@@ -190,7 +190,7 @@ class sfp_hackertarget(SpiderFootModernPlugin):
 
         return records
 
-    def reverseIpLookup(self, ip):
+    def reverseIpLookup(self, ip: str):
         """Reverse lookup hosts on the same IP address.
 
         Args:

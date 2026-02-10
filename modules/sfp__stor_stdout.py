@@ -68,7 +68,7 @@ class sfp__stor_stdout(SpiderFootModernPlugin):
     # can store all events for later analysis.    def watchedEvents(self):
         return ["*"]
 
-    def output(self, event) -> None:
+    def output(self, event: SpiderFootEvent) -> None:
         # If the module is disabled, do not output anything
         """Output."""
         if not self.opts.get('enabled', True):

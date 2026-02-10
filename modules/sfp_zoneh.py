@@ -92,7 +92,7 @@ class sfp_zoneh(SpiderFootModernPlugin):
                 "DEFACED_AFFILIATE_INTERNET_NAME",
                 "DEFACED_COHOST", "DEFACED_AFFILIATE_IPADDR"]
 
-    def lookupItem(self, target, content):
+    def lookupItem(self, target: str, content: str):
         """Look up Item."""
         grps = re.findall(
             r"<title><\!\[CDATA\[(.[^\]]*)\]\]></title>\s+<link><\!\[CDATA\[(.[^\]]*)\]\]></link>", content)

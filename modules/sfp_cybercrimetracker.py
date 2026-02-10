@@ -129,7 +129,7 @@ class sfp_cybercrimetracker(SpiderFootModernPlugin):
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist):
+    def parseBlacklist(self, blacklist: str):
         """Parse plaintext blacklist.
 
         Args:

@@ -101,7 +101,7 @@ class sfp_threatminer(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["INTERNET_NAME", "CO_HOSTED_SITE"]
 
-    def query(self, qry: str, querytype):
+    def query(self, qry: str, querytype: str):
         """Query the data source."""
         if self.sf.validIP(qry):
             tgttype = "host"

@@ -125,7 +125,7 @@ class sfp_shodan(SpiderFootModernPlugin):
 
         return None
 
-    def searchHosts(self, qry):
+    def searchHosts(self, qry: str):
         """Search for Hosts."""
         params = {
             'query': f"hostname:{qry}",
@@ -161,7 +161,7 @@ class sfp_shodan(SpiderFootModernPlugin):
 
         return None
 
-    def searchHtml(self, qry):
+    def searchHtml(self, qry: str):
         """Search for Html."""
         params = {
             'query': 'http.html:"' + qry.encode('raw_unicode_escape').decode("ascii", errors='replace') + '"',

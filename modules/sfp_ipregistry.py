@@ -99,13 +99,13 @@ class sfp_ipregistry(SpiderFootModernPlugin):
 
         return None
 
-    def emit(self, etype, data, pevent) -> None:
+    def emit(self, etype: str, data: str, pevent: SpiderFootEvent) -> None:
         """Emit."""
         evt = SpiderFootEvent(etype, data, self.__name__, pevent)
         self.notifyListeners(evt)
         return evt
 
-    def generate_location_events(self, location, pevent) -> None:
+    def generate_location_events(self, location: dict, pevent: SpiderFootEvent) -> None:
         """Generate location events."""
         if not isinstance(location, dict):
             return
@@ -141,7 +141,7 @@ class sfp_ipregistry(SpiderFootModernPlugin):
         if physical_location:
             self.emit("PHYSICAL_COORDINATES", physical_location, pevent)
 
-    def generate_security_events(self, security, pevent) -> None:
+    def generate_security_events(self, security: dict, pevent: SpiderFootEvent) -> None:
         """Generate security events."""
         if not isinstance(security, dict):
             return
@@ -152,7 +152,7 @@ class sfp_ipregistry(SpiderFootModernPlugin):
             self.emit("MALICIOUS_IPADDR",
                       f"ipregistry [{pevent.data}]", pevent)
 
-    def generate_events(self, data, pevent) -> None:
+    def generate_events(self, data: dict, pevent: SpiderFootEvent) -> None:
         """Generate events."""
         if not isinstance(data, dict):
             return

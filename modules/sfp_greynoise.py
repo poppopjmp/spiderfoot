@@ -111,7 +111,7 @@ class sfp_greynoise(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def queryIP(self, qry: str, qry_type):
+    def queryIP(self, qry: str, qry_type: str):
         """Query IP."""
         gn_context_url = "https://api.greynoise.io/v2/noise/context/"
         gn_gnql_url = "https://api.greynoise.io/v2/experimental/gnql?query="

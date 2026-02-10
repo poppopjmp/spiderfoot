@@ -87,7 +87,7 @@ class sfp_whoxy(SpiderFootModernPlugin):
         return ['AFFILIATE_INTERNET_NAME', 'AFFILIATE_DOMAIN_NAME']
 
     # Search Whoxy
-    def query(self, qry: str, querytype, page=1, accum=None):
+    def query(self, qry: str, querytype: str, page: int = 1, accum: list = None):
         """Query the data source."""
         info = None
 

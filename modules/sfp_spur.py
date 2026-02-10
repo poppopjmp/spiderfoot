@@ -106,7 +106,7 @@ class sfp_spur(SpiderFootModernPlugin):
 
     # Check whether the IP Address is malicious using spur.us API
     # https://spur.us/app/docs
-    def queryIPAddress(self, ipAddr):
+    def queryIPAddress(self, ipAddr: str):
 
         """Query IPAddress."""
         headers = {

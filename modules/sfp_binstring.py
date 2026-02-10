@@ -64,7 +64,7 @@ class sfp_binstring(SpiderFootModernPlugin):
         self.__dataSource__ = "Target Website"
 
         self.d = SpiderFootHelpers.dictionaryWordsFromWordlists()
-    def getStrings(self, content):
+    def getStrings(self, content: str):
         """Get Strings."""
         words = list()
         result = ""
