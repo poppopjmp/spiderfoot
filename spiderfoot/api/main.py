@@ -14,7 +14,6 @@ from spiderfoot import __version__
 
 # Security imports
 from spiderfoot.security_middleware import install_fastapi_security
-from spiderfoot.secure_config import SecureConfigManager
 
 # Request tracing
 from spiderfoot.request_tracing import install_tracing_middleware

@@ -14,7 +14,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from spiderfoot.db import SpiderFootDb
 from spiderfoot.sflib.core import SpiderFoot
 from spiderfoot.helpers import SpiderFootHelpers
-from spiderfoot.app_config import AppConfig, ValidationError
+from spiderfoot.app_config import AppConfig
 import multiprocessing as mp
 import logging
 from typing import Any, Dict, List, Optional, Tuple

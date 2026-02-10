@@ -11,7 +11,7 @@ from typing import Optional, List, Dict, Any
 import logging
 from datetime import datetime
 
-from ..dependencies import get_app_config, optional_auth, get_correlation_svc
+from ..dependencies import optional_auth, get_correlation_svc
 from ..pagination import PaginationParams, PaginatedResponse, paginate
 from spiderfoot.correlation_service import CorrelationService, CorrelationResult
 from pydantic import BaseModel, Field

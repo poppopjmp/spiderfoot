@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, BackgroundTasks, Query, HTTPException, Body, UploadFile, File
+from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException, Body, UploadFile, File
 from fastapi.responses import StreamingResponse
 import json
 from io import BytesIO
