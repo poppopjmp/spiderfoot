@@ -54,6 +54,7 @@ class EventTypeInfo:
     tags: set[str] = field(default_factory=set)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "name": self.name,
             "description": self.description,
@@ -217,6 +218,7 @@ class EventTaxonomy:
     """
 
     def __init__(self, load_defaults: bool = True) -> None:
+        """Initialize the EventTaxonomy."""
         self._types: dict[str, EventTypeInfo] = {}
         if load_defaults:
             self._load_defaults()
@@ -239,29 +241,37 @@ class EventTaxonomy:
         return self
 
     def unregister(self, name: str) -> bool:
+        """Unregister an event type and return whether it existed."""
         return self._types.pop(name, None) is not None
 
     def get(self, name: str) -> EventTypeInfo | None:
+        """Return the event type info for the given name, or None."""
         return self._types.get(name)
 
     def exists(self, name: str) -> bool:
+        """Check whether the given event type is registered."""
         return name in self._types
 
     def get_category(self, name: str) -> EventCategory | None:
+        """Return the category of the given event type, or None."""
         info = self._types.get(name)
         return info.category if info else None
 
     def get_risk(self, name: str) -> RiskLevel | None:
+        """Return the risk level of the given event type, or None."""
         info = self._types.get(name)
         return info.risk_level if info else None
 
     def get_by_category(self, category: EventCategory) -> list[EventTypeInfo]:
+        """Return all event types belonging to the given category."""
         return [t for t in self._types.values() if t.category == category]
 
     def get_by_risk(self, risk: RiskLevel) -> list[EventTypeInfo]:
+        """Return all event types with the given risk level."""
         return [t for t in self._types.values() if t.risk_level == risk]
 
     def get_children(self, parent_name: str) -> list[EventTypeInfo]:
+        """Return all event types that have the given parent type."""
         return [t for t in self._types.values() if t.parent_type == parent_name]
 
     def get_ancestors(self, name: str) -> list[str]:
@@ -280,14 +290,17 @@ class EventTaxonomy:
         return ancestors
 
     def is_descendant(self, child: str, ancestor: str) -> bool:
+        """Check whether the child event type descends from the ancestor."""
         return ancestor in self.get_ancestors(child)
 
     @property
     def all_types(self) -> list[str]:
+        """Return a sorted list of all registered event type names."""
         return sorted(self._types.keys())
 
     @property
     def categories(self) -> dict[str, int]:
+        """Return event type counts grouped by category."""
         counts: dict[str, int] = {}
         for t in self._types.values():
             c = t.category.value
@@ -296,6 +309,7 @@ class EventTaxonomy:
 
     @property
     def risk_distribution(self) -> dict[str, int]:
+        """Return event type counts grouped by risk level."""
         counts: dict[str, int] = {}
         for t in self._types.values():
             r = t.risk_level.value
@@ -303,6 +317,7 @@ class EventTaxonomy:
         return counts
 
     def validate_type(self, name: str) -> bool:
+        """Check whether the given event type name is valid."""
         return name in self._types
 
     def search(self, query: str) -> list[EventTypeInfo]:
@@ -314,6 +329,7 @@ class EventTaxonomy:
         ]
 
     def summary(self) -> dict:
+        """Return a summary of registered types, categories, and risk distribution."""
         return {
             "total_types": len(self._types),
             "categories": self.categories,
@@ -321,6 +337,7 @@ class EventTaxonomy:
         }
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             name: info.to_dict()
             for name, info in sorted(self._types.items())

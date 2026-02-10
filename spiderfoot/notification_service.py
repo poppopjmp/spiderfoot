@@ -102,6 +102,7 @@ class NotificationChannel(ABC):
 
     def __init__(self, channel_id: str = "", name: str = "",
                  enabled: bool = True) -> None:
+        """Initialize the NotificationChannel."""
         self.channel_id = channel_id or self._default_id()
         self.name = name or self.channel_id
         self.enabled = enabled
@@ -119,6 +120,7 @@ class NotificationChannel(ABC):
         ...
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "channel_id": self.channel_id,
             "name": self.name,
@@ -149,6 +151,7 @@ class SlackChannel(NotificationChannel):
                  username: str = "SpiderFoot",
                  icon_emoji: str = ":spider:",
                  enabled: bool = True) -> None:
+        """Initialize the SlackChannel with the given webhook URL."""
         super().__init__(channel_id=channel_id or "slack-default",
                         name=name, enabled=enabled)
         self.webhook_url = webhook_url
@@ -159,6 +162,7 @@ class SlackChannel(NotificationChannel):
         return "slack-default"
 
     def send(self, notification: Notification) -> bool:
+        """Send a notification to Slack via incoming webhook."""
         color = self.SEVERITY_COLORS.get(
             notification.severity, "#2196F3")
 
@@ -217,6 +221,7 @@ class WebhookChannel(NotificationChannel):
                  headers: dict[str, str] | None = None,
                  method: str = "POST",
                  enabled: bool = True) -> None:
+        """Initialize the WebhookChannel with the given URL."""
         super().__init__(channel_id=channel_id or "webhook-default",
                         name=name, enabled=enabled)
         self.url = url
@@ -227,6 +232,7 @@ class WebhookChannel(NotificationChannel):
         return "webhook-default"
 
     def send(self, notification: Notification) -> bool:
+        """Send a notification via generic HTTP webhook."""
         payload = {
             "topic": notification.topic,
             "title": notification.auto_title(),
@@ -274,6 +280,7 @@ class EmailChannel(NotificationChannel):
                  channel_id: str = "",
                  name: str = "Email",
                  enabled: bool = True) -> None:
+        """Initialize the EmailChannel with SMTP configuration."""
         super().__init__(channel_id=channel_id or "email-default",
                         name=name, enabled=enabled)
         self.smtp_host = smtp_host
@@ -288,6 +295,7 @@ class EmailChannel(NotificationChannel):
         return "email-default"
 
     def send(self, notification: Notification) -> bool:
+        """Send a notification via SMTP email."""
         if not self.to_addrs:
             self.last_error = "No recipients configured"
             self.error_count += 1
@@ -369,6 +377,7 @@ class LogChannel(NotificationChannel):
     def __init__(self, channel_id: str = "log-default",
                  name: str = "Logger", enabled: bool = True,
                  logger: logging.Logger | None = None) -> None:
+        """Initialize the LogChannel."""
         super().__init__(channel_id=channel_id, name=name,
                         enabled=enabled)
         self._logger = logger or log
@@ -377,6 +386,7 @@ class LogChannel(NotificationChannel):
         return "log-default"
 
     def send(self, notification: Notification) -> bool:
+        """Send a notification by logging it."""
         self._logger.info(
             "[%s] %s: %s | data=%s",
             notification.severity.upper(),
@@ -397,6 +407,7 @@ class NotificationService:
 
     def __init__(self, *, async_dispatch: bool = True,
                  max_queue_size: int = 1000) -> None:
+        """Initialize the NotificationService."""
         self._channels: dict[str, NotificationChannel] = {}
         self._subscriptions: dict[str, set[str]] = {}  # topic → channel_ids
         self._lock = threading.Lock()
@@ -422,6 +433,7 @@ class NotificationService:
                 channel.channel_id, channel.__class__.__name__)
 
     def remove_channel(self, channel_id: str) -> bool:
+        """Remove a notification channel by its ID."""
         with self._lock:
             removed = self._channels.pop(channel_id, None) is not None
             # Remove from subscriptions
@@ -431,9 +443,11 @@ class NotificationService:
 
     def get_channel(self, channel_id: str
                     ) -> NotificationChannel | None:
+        """Return the notification channel with the given ID, or None."""
         return self._channels.get(channel_id)
 
     def list_channels(self) -> list[dict]:
+        """Return a list of all registered channels as dictionaries."""
         return [ch.to_dict() for ch in self._channels.values()]
 
     # ------------------------------------------------------------------
@@ -454,6 +468,7 @@ class NotificationService:
         return True
 
     def unsubscribe(self, topic: str, channel_id: str) -> bool:
+        """Unsubscribe a channel from a topic."""
         with self._lock:
             channels = self._subscriptions.get(topic)
             if channels:
@@ -462,6 +477,7 @@ class NotificationService:
         return False
 
     def list_subscriptions(self) -> dict[str, list[str]]:
+        """Return all topic-to-channel subscriptions."""
         with self._lock:
             return {
                 topic: sorted(channels)
@@ -590,6 +606,7 @@ class NotificationService:
 
     @property
     def stats(self) -> dict:
+        """Return notification service statistics."""
         return {
             "channels": len(self._channels),
             "subscriptions": sum(

@@ -31,6 +31,7 @@ class SemanticVersion:
     patch: int = 0
 
     def __str__(self) -> str:
+        """Return the version as a string."""
         return f"{self.major}.{self.minor}.{self.patch}"
 
     def bump(self, bump_type: VersionBump) -> "SemanticVersion":
@@ -56,6 +57,7 @@ class SemanticVersion:
         return SemanticVersion(int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {"major": self.major, "minor": self.minor, "patch": self.patch, "string": str(self)}
 
 
@@ -90,6 +92,7 @@ class VersionConstraint:
         return False
 
     def __str__(self) -> str:
+        """Return the constraint as a string."""
         return f"{self.operator}{self.version}"
 
     @staticmethod
@@ -114,6 +117,7 @@ class ChangelogEntry:
     breaking: bool = False
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "version": str(self.version),
             "description": self.description,
@@ -132,6 +136,7 @@ class ModuleVersionInfo:
     """
 
     def __init__(self, module_name: str, current_version: SemanticVersion | None = None) -> None:
+        """Initialize the ModuleVersionInfo."""
         self.module_name = module_name
         self.current_version = current_version or SemanticVersion(1, 0, 0)
         self._changelog: list[ChangelogEntry] = []
@@ -158,6 +163,7 @@ class ModuleVersionInfo:
         return self
 
     def remove_dependency(self, module_name: str) -> bool:
+        """Remove a dependency by module name and return whether it existed."""
         return self._dependencies.pop(module_name, None) is not None
 
     def check_dependency(self, module_name: str, version: SemanticVersion) -> bool:
@@ -168,23 +174,28 @@ class ModuleVersionInfo:
         return constraint.check(version)
 
     def deprecate(self, message: str = "") -> "ModuleVersionInfo":
+        """Mark this module as deprecated."""
         self._deprecated = True
         self._deprecation_message = message or f"{self.module_name} is deprecated"
         return self
 
     @property
     def is_deprecated(self) -> bool:
+        """Return whether this module is deprecated."""
         return self._deprecated
 
     @property
     def changelog(self) -> list[ChangelogEntry]:
+        """Return the changelog entries."""
         return list(self._changelog)
 
     @property
     def dependencies(self) -> dict[str, VersionConstraint]:
+        """Return the dependency constraints."""
         return dict(self._dependencies)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "module_name": self.module_name,
             "current_version": str(self.current_version),
@@ -203,6 +214,7 @@ class ModuleVersionRegistry:
     """
 
     def __init__(self) -> None:
+        """Initialize the ModuleVersionRegistry."""
         self._modules: dict[str, ModuleVersionInfo] = {}
 
     def register(self, module_name: str, version: str | None = None) -> ModuleVersionInfo:
@@ -213,15 +225,19 @@ class ModuleVersionRegistry:
         return info
 
     def get(self, module_name: str) -> ModuleVersionInfo | None:
+        """Return the version info for a module, or None if not registered."""
         return self._modules.get(module_name)
 
     def unregister(self, module_name: str) -> bool:
+        """Unregister a module and return whether it existed."""
         return self._modules.pop(module_name, None) is not None
 
     def list_modules(self) -> list[str]:
+        """Return a sorted list of registered module names."""
         return sorted(self._modules.keys())
 
     def get_deprecated(self) -> list[str]:
+        """Return the names of all deprecated modules."""
         return [name for name, info in self._modules.items() if info.is_deprecated]
 
     def check_compatibility(self, module_name: str, dep_name: str, dep_version: str) -> bool:
@@ -239,6 +255,7 @@ class ModuleVersionRegistry:
         ]
 
     def summary(self) -> dict:
+        """Return a summary of all registered modules and their versions."""
         return {
             "total_modules": len(self._modules),
             "deprecated": len(self.get_deprecated()),
@@ -246,6 +263,7 @@ class ModuleVersionRegistry:
         }
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "modules": {name: info.to_dict() for name, info in self._modules.items()},
             "summary": self.summary(),

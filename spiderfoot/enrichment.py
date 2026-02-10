@@ -49,12 +49,15 @@ class EnrichmentContext:
         self.tags.add(tag)
 
     def has_enrichment(self, key: str) -> bool:
+        """Check whether an enrichment with the given key exists."""
         return key in self.enrichments
 
     def get_enrichment(self, key: str, default: Any = None) -> Any:
+        """Return the enrichment value for the given key, or a default."""
         return self.enrichments.get(key, default)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "event_type": self.event_type,
             "data": self.data,
@@ -76,6 +79,7 @@ class Enricher(ABC):
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
         event_types: set[str] | None = None,
     ) -> None:
+        """Initialize the Enricher."""
         self.name = name or self.__class__.__name__
         self.priority = priority
         self.event_types = event_types  # None = all types
@@ -96,17 +100,21 @@ class Enricher(ABC):
         return event_type in self.event_types
 
     def enable(self) -> None:
+        """Enable this enricher."""
         self._enabled = True
 
     def disable(self) -> None:
+        """Disable this enricher."""
         self._enabled = False
 
     @property
     def is_enabled(self) -> bool:
+        """Return whether this enricher is enabled."""
         return self._enabled
 
     @property
     def stats(self) -> dict:
+        """Return runtime statistics for this enricher."""
         return {
             "name": self.name,
             "calls": self._call_count,
@@ -128,10 +136,12 @@ class FunctionEnricher(Enricher):
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
         event_types: set[str] | None = None,
     ) -> None:
+        """Initialize the FunctionEnricher with the given callable."""
         super().__init__(name=name or func.__name__, priority=priority, event_types=event_types)
         self._func = func
 
     def enrich(self, ctx: EnrichmentContext) -> EnrichmentContext:
+        """Enrich the context by invoking the wrapped function."""
         return self._func(ctx)
 
 
@@ -157,6 +167,7 @@ class EnrichmentPipeline:
     """
 
     def __init__(self, name: str = "default") -> None:
+        """Initialize the EnrichmentPipeline."""
         self.name = name
         self._enrichers: list[Enricher] = []
         self._lock = threading.Lock()
@@ -261,6 +272,7 @@ class EnrichmentPipeline:
 
     @property
     def enricher_count(self) -> int:
+        """Return the number of registered enrichers."""
         with self._lock:
             return len(self._enrichers)
 
@@ -276,6 +288,7 @@ class EnrichmentPipeline:
             }
 
     def get_enricher_names(self) -> list[str]:
+        """Return the names of all registered enrichers."""
         with self._lock:
             return [e.name for e in self._enrichers]
 
@@ -314,12 +327,14 @@ class TagEnricher(Enricher):
     }
 
     def __init__(self) -> None:
+        """Initialize the TagEnricher."""
         super().__init__(
             name="tag_enricher",
             priority=EnrichmentPriority.CRITICAL,
         )
 
     def enrich(self, ctx: EnrichmentContext) -> EnrichmentContext:
+        """Enrich the context by adding tags based on event type patterns."""
         for pattern, tag in self.TAG_RULES.items():
             if ctx.event_type.startswith(pattern) or ctx.event_type == pattern:
                 ctx.add_tag(tag)
@@ -330,12 +345,14 @@ class DataSizeEnricher(Enricher):
     """Adds data size metadata."""
 
     def __init__(self) -> None:
+        """Initialize the DataSizeEnricher."""
         super().__init__(
             name="data_size_enricher",
             priority=EnrichmentPriority.CRITICAL,
         )
 
     def enrich(self, ctx: EnrichmentContext) -> EnrichmentContext:
+        """Enrich the context with data length and emptiness metadata."""
         ctx.add_enrichment("data_length", len(ctx.data))
         ctx.add_enrichment("data_is_empty", len(ctx.data.strip()) == 0)
         return ctx

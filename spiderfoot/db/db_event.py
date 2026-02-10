@@ -34,6 +34,7 @@ class EventManager:
     """
 
     def __init__(self, dbh: Any, conn: Any, dbhLock: RLock, db_type: str) -> None:
+        """Initialize the EventManager with database connection details."""
         self.dbh = dbh
         self.conn = conn
         self.dbhLock = dbhLock
@@ -46,6 +47,7 @@ class EventManager:
         return is_transient_error(exc)
 
     def scanLogEvents(self, batch: list) -> bool:
+        """Insert a batch of scan log events into the database."""
         inserts = []
         for item in batch:
             if len(item) != 5:
@@ -97,6 +99,7 @@ class EventManager:
                     return False
 
     def scanLogEvent(self, instanceId: str, classification: str, message: str, component: str = None) -> None:
+        """Insert a single scan log event into the database."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(classification, str):
@@ -123,6 +126,7 @@ class EventManager:
                     raise OSError("Error in scanLogEvent") from e
 
     def scanLogs(self, instanceId: str, limit: int = None, fromRowId: int = 0, reverse: bool = False) -> list:
+        """Retrieve scan log entries for a given scan instance."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         qry = "SELECT generated AS generated, component, type, message, rowid FROM tbl_scan_log WHERE scan_instance_id = ?"
@@ -147,6 +151,7 @@ class EventManager:
                 raise OSError("SQL error encountered when fetching scan logs") from e
 
     def scanErrors(self, instanceId: str, limit: int = 0) -> list:
+        """Retrieve error log entries for a given scan instance."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(limit, int):
@@ -169,6 +174,7 @@ class EventManager:
         sourceId: list = None, correlationId: str = None,
         filterFp: bool = False,
     ) -> list:
+        """Retrieve scan result events matching the given filters."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(eventType, str) and not isinstance(eventType, list):
@@ -220,6 +226,7 @@ class EventManager:
                 raise OSError("SQL error encountered when fetching result events") from e
 
     def scanResultEventUnique(self, instanceId: str, eventType: str = 'ALL', filterFp: bool = False) -> list:
+        """Retrieve unique scan result events grouped by type and data."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(eventType, str):
@@ -240,6 +247,7 @@ class EventManager:
                 raise OSError("SQL error encountered when fetching unique result events") from e
 
     def scanResultSummary(self, instanceId: str, by: str = "type") -> list:
+        """Return a summary of scan results grouped by type, module, or entity."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(by, str):
@@ -261,6 +269,7 @@ class EventManager:
                 raise OSError("SQL error encountered when fetching result summary") from e
 
     def scanResultHistory(self, instanceId: str) -> list:
+        """Retrieve scan result counts grouped by time and event type."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         qry = "SELECT STRFTIME('%H:%M %w', generated, 'unixepoch') AS hourmin, type, COUNT(*) FROM tbl_scan_results WHERE scan_instance_id = ? GROUP BY hourmin, type"
@@ -273,6 +282,7 @@ class EventManager:
                 raise OSError(f"SQL error encountered when fetching history for scan {instanceId}") from e
 
     def scanResultsUpdateFP(self, instanceId: str, resultHashes: list, fpFlag: int) -> bool:
+        """Update the false-positive flag for the specified result hashes."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(resultHashes, list):
@@ -292,6 +302,7 @@ class EventManager:
         return True
 
     def scanEventStore(self, instanceId: str, sfEvent: SpiderFootEvent, truncateSize: int = 0) -> None:
+        """Store a scan event in the database."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not instanceId:
@@ -351,6 +362,7 @@ class EventManager:
                 raise OSError(f"SQL error encountered when storing event data ({self.dbh})") from e
 
     def scanElementSourcesDirect(self, instanceId: str, elementIdList: list) -> list:
+        """Retrieve the direct source events for the given element hashes."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(elementIdList, list):
@@ -372,6 +384,7 @@ class EventManager:
                 raise OSError("SQL error encountered when getting source element IDs") from e
 
     def scanElementChildrenDirect(self, instanceId: str, elementIdList: list) -> list:
+        """Retrieve the direct child events for the given element hashes."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(elementIdList, list):
@@ -393,6 +406,7 @@ class EventManager:
                 raise OSError("SQL error encountered when getting child element IDs") from e
 
     def scanElementSourcesAll(self, instanceId: str, childData: list) -> list:
+        """Recursively retrieve all ancestor source events for the given children."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(childData, list):
@@ -435,6 +449,7 @@ class EventManager:
         return [datamap, pc]
 
     def scanElementChildrenAll(self, instanceId: str, parentIds: list) -> list:
+        """Recursively retrieve all descendant child events for the given parents."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(parentIds, list):
@@ -460,6 +475,7 @@ class EventManager:
         return datamap
 
     def get_sources(self, scan_id: str, event_hash: str) -> list:
+        """Retrieve the source events for a given event hash."""
         qry = """
             SELECT s.hash, s.type, s.data, s.module, s.generated, s.source_event_hash
             FROM tbl_scan_results c
@@ -489,6 +505,7 @@ class EventManager:
                 raise OSError("SQL error encountered when fetching event sources") from e
 
     def get_entities(self, scan_id: str, event_hash: str) -> list:
+        """Retrieve entity-type child events for a given event hash."""
         qry = """
             SELECT c.hash, c.type, c.data, c.module, c.generated, c.source_event_hash
             FROM tbl_scan_results c
@@ -568,6 +585,7 @@ class EventManager:
                 raise OSError("SQL error encountered when searching events") from e
 
     def close(self) -> None:
+        """Close the database cursor and connection."""
         if hasattr(self, 'dbh') and self.dbh:
             try:
                 self.dbh.close()
