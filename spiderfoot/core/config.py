@@ -12,6 +12,7 @@ from typing import Dict, Any, Optional
 from copy import deepcopy
 
 from spiderfoot import SpiderFootHelpers
+from spiderfoot.constants import DEFAULT_WEB_PORT, DEFAULT_API_PORT
 
 
 class ConfigManager:
@@ -147,7 +148,7 @@ class ConfigManager:
             print(f"This message will go away once you move or remove passwd from {os.path.dirname(legacy_passwd_path)}")
             raise SystemExit(-1)
     
-    def get_web_config(self, host: str = '127.0.0.1', port: int = 5001, 
+    def get_web_config(self, host: str = '127.0.0.1', port: int = DEFAULT_WEB_PORT, 
                       root: str = '/', cors_origins: Optional[list] = None) -> Dict[str, Any]:
         """
         Get web server configuration.
@@ -168,7 +169,7 @@ class ConfigManager:
             'cors_origins': cors_origins or [],
         }
     
-    def get_api_config(self, host: str = '127.0.0.1', port: int = 8001, 
+    def get_api_config(self, host: str = '127.0.0.1', port: int = DEFAULT_API_PORT, 
                       workers: int = 1, log_level: str = 'info', 
                       reload: bool = False) -> Dict[str, Any]:
         """

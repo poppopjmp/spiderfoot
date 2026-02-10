@@ -10,6 +10,7 @@ import sys
 import logging
 import re
 from typing import Dict, Any, List, Optional, Tuple, Union
+from spiderfoot.constants import DEFAULT_WEB_PORT
 
 
 class ValidationUtils:
@@ -71,7 +72,7 @@ class ValidationUtils:
     
     @staticmethod
     def parse_host_port(host_port: str, default_host: str = '127.0.0.1', 
-                       default_port: int = 5001) -> Tuple[str, int]:
+                       default_port: int = DEFAULT_WEB_PORT) -> Tuple[str, int]:
         """
         Parse host:port string into components.
         

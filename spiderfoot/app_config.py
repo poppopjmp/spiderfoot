@@ -43,7 +43,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field, fields, asdict
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
-from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+from spiderfoot.constants import DEFAULT_WEB_PORT, DEFAULT_API_PORT, DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger("spiderfoot.app_config")
 
@@ -137,14 +137,14 @@ class DatabaseConfig:
 class WebConfig:
     """Web UI server settings."""
     host: str = "127.0.0.1"
-    port: int = 5001
+    port: int = DEFAULT_WEB_PORT
 
 
 @dataclass
 class ApiConfig:
     """REST API server settings."""
     host: str = "127.0.0.1"
-    port: int = 8001
+    port: int = DEFAULT_API_PORT
     api_key: Optional[str] = None
     log_level: str = "INFO"
     log_file: str = ""

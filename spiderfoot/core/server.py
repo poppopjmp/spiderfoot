@@ -19,6 +19,7 @@ from cherrypy.lib import auth_digest
 
 from spiderfoot import SpiderFootHelpers
 from sfwebui import SpiderFootWebUi
+from spiderfoot.constants import DEFAULT_API_PORT
 
 
 class ServerManager:
@@ -141,7 +142,7 @@ class ServerManager:
                 sys.exit(-1)
 
             api_host = api_config.get('host', '127.0.0.1')
-            api_port = api_config.get('port', 8001)
+            api_port = api_config.get('port', DEFAULT_API_PORT)
             api_workers = api_config.get('workers', 1)
             api_log_level = api_config.get('log_level', 'info')
             api_reload = api_config.get('reload', False)
@@ -204,7 +205,7 @@ class ServerManager:
             web_host = web_config.get('host', '127.0.0.1')
             web_port = web_config.get('port', 5001)
             api_host = api_config.get('host', '127.0.0.1')
-            api_port = api_config.get('port', 8001)
+            api_port = api_config.get('port', DEFAULT_API_PORT)
 
             self.log.info(f"Starting both servers - Web UI: {web_host}:{web_port}, API: {api_host}:{api_port}")
 
