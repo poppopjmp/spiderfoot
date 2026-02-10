@@ -300,7 +300,7 @@ class APIKeyManager:
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 """, [key_id, key_hash, user_id, name, description, ','.join(scopes), expires_at])
             except Exception as e:
-                raise Exception(f"Failed to create API key: {e}")
+                raise Exception(f"Failed to create API key: {e}") from e
 
         return key_id, api_key
 

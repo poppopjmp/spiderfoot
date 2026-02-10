@@ -323,7 +323,7 @@ class APIKeyManager:
                 return key_id, api_key
 
         except Exception as e:
-            raise RuntimeError(f"Failed to store API key: {e}")
+            raise RuntimeError(f"Failed to store API key: {e}") from e
 
     def revoke_api_key(self, key_id: str, user_id: str = None) -> bool:
         """Revoke API key.

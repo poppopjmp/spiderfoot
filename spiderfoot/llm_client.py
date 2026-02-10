@@ -500,10 +500,10 @@ class LLMClient:
             self._classify_and_raise(e.code, body_text)
         except urllib.error.URLError as e:
             if "timed out" in str(e.reason).lower():
-                raise LLMTimeoutError(f"Request timed out: {e.reason}")
-            raise LLMError(f"Connection error: {e.reason}")
-        except TimeoutError:
-            raise LLMTimeoutError("Request timed out")
+                raise LLMTimeoutError(f"Request timed out: {e.reason}") from e
+            raise LLMError(f"Connection error: {e.reason}") from e
+        except TimeoutError as e:
+            raise LLMTimeoutError("Request timed out") from e
 
         latency_ms = (time.monotonic() - t0) * 1000
 
@@ -570,7 +570,7 @@ class LLMClient:
                 log.debug("Failed to read HTTP error response body (streaming): %s", read_err)
             self._classify_and_raise(e.code, body_text)
         except urllib.error.URLError as e:
-            raise LLMError(f"Connection error: {e.reason}")
+            raise LLMError(f"Connection error: {e.reason}") from e
 
         try:
             for line in resp:
