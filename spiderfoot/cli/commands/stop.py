@@ -2,6 +2,9 @@
 Stop command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def stop_command(cli, line) -> None:
     """Stop a running scan using the SpiderFoot API."""
     import shlex

@@ -2,6 +2,9 @@
 Query command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def query_command(cli, line) -> None:
     """Run SQL against the SpiderFoot API (if enabled)."""
     import shlex

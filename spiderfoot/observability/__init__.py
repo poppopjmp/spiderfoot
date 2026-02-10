@@ -11,6 +11,8 @@ Usage::
     from spiderfoot.observability.metrics import SCANS_TOTAL
 """
 
+from __future__ import annotations
+
 # Re-export from flat module locations (backward compat)
 from spiderfoot.metrics import *  # noqa: F401,F403
 from spiderfoot.structured_logging import *  # noqa: F401,F403

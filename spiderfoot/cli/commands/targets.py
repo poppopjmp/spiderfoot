@@ -2,6 +2,8 @@
 Target management commands for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
 import shlex
 
 def targets_command(cli, line) -> None:

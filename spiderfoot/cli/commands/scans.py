@@ -2,6 +2,9 @@
 Scans command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def scans_command(cli, line) -> None:
     """List all scans using the SpiderFoot API."""
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + '/api/scans'

@@ -1,6 +1,9 @@
 """
 Banner and copyright info for SpiderFoot CLI.
 """
+
+from __future__ import annotations
+
 ASCII_LOGO = r"""
   _________      .__    .___          ___________            __
  /   _____/_____ |__| __| _/__________\_   _____/___   _____/  |_

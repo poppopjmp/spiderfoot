@@ -9,6 +9,8 @@ Usage::
     from spiderfoot.security.auth import require_auth
 """
 
+from __future__ import annotations
+
 __all__ = [
     "auth",
     "api_security",

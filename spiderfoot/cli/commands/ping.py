@@ -2,6 +2,9 @@
 Ping command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def ping_command(cli, line) -> None:
     """Ping the SpiderFoot API server."""
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + '/api/health'

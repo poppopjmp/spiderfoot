@@ -2,6 +2,9 @@
 Summary command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def summary_command(cli, line) -> None:
     """Summary of a scan using the API."""
     import shlex

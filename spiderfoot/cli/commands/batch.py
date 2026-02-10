@@ -2,6 +2,8 @@
 Batch operations commands for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
 import shlex
 import json
 import time

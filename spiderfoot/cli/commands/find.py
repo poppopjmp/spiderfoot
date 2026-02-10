@@ -2,6 +2,9 @@
 Find command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def find_command(cli, line) -> None:
     """Search for data in scan events using the API."""
     import shlex

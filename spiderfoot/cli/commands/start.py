@@ -2,6 +2,9 @@
 Start command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def start_command(cli, line) -> None:
     """Start a new scan using the SpiderFoot API."""
     import shlex, json

@@ -6,6 +6,8 @@ Usage::
     from spiderfoot.reporting import report_generator
 """
 
+from __future__ import annotations
+
 __all__ = [
     "report_generator",
     "report_formatter",

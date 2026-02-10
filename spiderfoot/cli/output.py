@@ -2,6 +2,9 @@
 Output formatting and color utilities for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 class bcolors:
     """ANSI color code constants for terminal output."""
     GREYBLUE = '\x1b[38;5;25m'

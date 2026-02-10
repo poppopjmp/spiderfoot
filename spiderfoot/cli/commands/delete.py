@@ -2,6 +2,9 @@
 Delete command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def delete_command(cli, line) -> None:
     """Delete a scan using the SpiderFoot API."""
     import shlex

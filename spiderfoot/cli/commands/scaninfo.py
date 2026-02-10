@@ -2,6 +2,9 @@
 Scaninfo command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def scaninfo_command(cli, line) -> None:
     """Get scan info and config from the API."""
     import shlex

@@ -7,6 +7,8 @@ This enables modules to run as independent services without
 holding database connections.
 """
 
+from __future__ import annotations
+
 from spiderfoot.data_service.base import DataService, DataServiceConfig, DataServiceBackend
 from spiderfoot.data_service.local import LocalDataService
 from spiderfoot.data_service.http_client import HttpDataService

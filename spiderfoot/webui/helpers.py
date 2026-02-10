@@ -1,5 +1,7 @@
 """Utility methods for WebUI input sanitization, Excel generation, and template rendering."""
 
+from __future__ import annotations
+
 import html
 import openpyxl
 import string

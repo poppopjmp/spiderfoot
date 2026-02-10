@@ -2,6 +2,8 @@
 Workspace management commands for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
 import shlex
 
 def workspaces_command(cli, line) -> None:

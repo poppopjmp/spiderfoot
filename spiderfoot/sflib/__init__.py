@@ -15,6 +15,8 @@ serialisation helpers and common utility functions used across the entire
 codebase.
 """
 
+from __future__ import annotations
+
 from .core import SpiderFoot
 from .config import configSerialize, configUnserialize
 from .helpers import *  # Expose other helpers as needed

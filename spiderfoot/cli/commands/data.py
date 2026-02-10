@@ -2,6 +2,9 @@
 Data command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def data_command(cli, line) -> None:
     """Show the data from a scan using the API."""
     import shlex

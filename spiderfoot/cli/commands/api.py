@@ -2,6 +2,9 @@
 API command for SpiderFoot CLI: interact with the API directly.
 """
 
+from __future__ import annotations
+
+
 def api_command(cli, line) -> None:
     """
     Usage: api <endpoint> [POST <json_data>]

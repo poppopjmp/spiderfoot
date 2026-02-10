@@ -8,6 +8,8 @@ Usage::
     from spiderfoot.module_mgmt import module_loader, module_registry
 """
 
+from __future__ import annotations
+
 __all__ = [
     "module_caps",
     "module_comms",

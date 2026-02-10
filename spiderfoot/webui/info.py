@@ -1,5 +1,7 @@
 """WebUI endpoints for listing event types and module information."""
 
+from __future__ import annotations
+
 import cherrypy
 from typing import Any
 from operator import itemgetter

@@ -2,6 +2,9 @@
 Help command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def help_command(cli, line) -> None:
     """Show help for all commands or a specific command."""
     c = cli.myparseline(line)

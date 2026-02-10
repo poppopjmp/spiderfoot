@@ -9,6 +9,8 @@ Usage::
     from spiderfoot.scan.state import ScanStateMachine
 """
 
+from __future__ import annotations
+
 # Re-export key scan classes for convenience
 from spiderfoot.scan_state import ScanState, ScanStateMachine  # noqa: F401
 from spiderfoot.scan_state_map import (  # noqa: F401

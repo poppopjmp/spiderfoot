@@ -1,5 +1,7 @@
 """WebUI endpoints for documentation pages and miscellaneous template rendering."""
 
+from __future__ import annotations
+
 import cherrypy
 from mako.template import Template
 from spiderfoot import __version__

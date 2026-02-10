@@ -2,6 +2,9 @@
 Logs command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def logs_command(cli, line) -> None:
     """Show logs for a scan using the API."""
     import shlex

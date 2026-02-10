@@ -2,6 +2,9 @@
 Set command for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
+
 def set_command(cli, line) -> None:
     """Set a configuration variable in SpiderFoot."""
     c = cli.myparseline(line, replace=False)
