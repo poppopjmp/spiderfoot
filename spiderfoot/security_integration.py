@@ -249,7 +249,7 @@ class SecurityIntegrator:
         
         existing_deps = set()
         if os.path.exists(requirements_file):
-            with open(requirements_file, 'r') as f:
+            with open(requirements_file, 'r', encoding='utf-8') as f:
                 for line in f:
                     if '==' in line or '>=' in line:
                         dep_name = line.split('==')[0].split('>=')[0].strip()

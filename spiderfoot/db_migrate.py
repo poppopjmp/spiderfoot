@@ -540,7 +540,7 @@ def downgrade(db, dialect):
     # db.execute("DROP TABLE ...")
     pass
 '''
-        with open(fpath, "w") as f:
+        with open(fpath, "w", encoding="utf-8") as f:
             f.write(content)
 
         # Register it

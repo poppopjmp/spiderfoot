@@ -133,7 +133,8 @@ class SpiderFootSqliteLogHandler(logging.Handler):
                         os.rename(sfn, dfn)
                 dfn = self.log_file + ".1"
                 os.rename(self.log_file, dfn)
-                open(self.log_file, 'w').close()
+                with open(self.log_file, 'w', encoding='utf-8'):
+                    pass
 
     def filter(self, record: 'logging.LogRecord') -> bool:
         """Filter log records based on log levels.

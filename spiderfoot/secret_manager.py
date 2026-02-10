@@ -241,7 +241,7 @@ class FileSecretBackend(SecretBackend):
     def _load(self) -> None:
         if os.path.exists(self._filepath):
             try:
-                with open(self._filepath, "r") as f:
+                with open(self._filepath, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 for item in data.get("secrets", []):
                     entry = SecretEntry.from_dict(item)
@@ -257,7 +257,7 @@ class FileSecretBackend(SecretBackend):
                     e.to_dict(include_value=True) for e in self._secrets.values()
                 ]
             }
-            with open(self._filepath, "w") as f:
+            with open(self._filepath, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
             log.error("Failed to save secrets: %s", e)
@@ -335,7 +335,7 @@ class EncryptedFileSecretBackend(SecretBackend):
         if not os.path.exists(self._filepath):
             return
         try:
-            with open(self._filepath, "r") as f:
+            with open(self._filepath, "r", encoding="utf-8") as f:
                 encrypted_data = f.read()
             plaintext = self._decrypt(encrypted_data)
             data = json.loads(plaintext)
@@ -354,7 +354,7 @@ class EncryptedFileSecretBackend(SecretBackend):
             }
             plaintext = json.dumps(data)
             encrypted = self._encrypt(plaintext)
-            with open(self._filepath, "w") as f:
+            with open(self._filepath, "w", encoding="utf-8") as f:
                 f.write(encrypted)
         except Exception as e:
             log.error("Failed to save encrypted secrets: %s", e)

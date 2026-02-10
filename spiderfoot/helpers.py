@@ -306,7 +306,7 @@ class SpiderFootHelpers():
             
             try:
                 import yaml
-                with open(file_path, 'r') as f:
+                with open(file_path, 'r', encoding='utf-8') as f:
                     rule_data = yaml.safe_load(f)
                     if rule_data:
                         rules.append(rule_data)

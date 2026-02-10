@@ -265,7 +265,7 @@ class ServerManager:
         
         if os.path.isfile(passwd_file):
             try:
-                with open(passwd_file, 'r') as f:
+                with open(passwd_file, 'r', encoding='utf-8') as f:
                     for line in f:
                         line = line.strip()
                         if ':' in line:
