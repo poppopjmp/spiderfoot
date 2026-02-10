@@ -3,6 +3,34 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.136.0] — RC Cycle 56: TODO Comment Cleanup
+
+### Changed
+- Converted 3 remaining TODO/Todo comments to tracked `NOTE(v6)` / `Note: Future:` comments
+- target.py, sflib/helpers.py, helpers.py — zero TODO/FIXME/HACK/XXX in production code
+
+## [5.135.0] — RC Cycle 55: Shutdown Module Consolidation
+
+### Removed
+- Deleted `shutdown_manager.py` (superseded by `graceful_shutdown.py`)
+
+### Changed
+- Migrated api/main.py and api/routers/health.py to `get_shutdown_coordinator()`
+- Added `registered_services()` and `status()` compat methods to `ShutdownCoordinator`
+
+## [5.134.0] — RC Cycle 54: Logger Naming Standardization
+
+### Changed
+- Renamed `logger` → `log` in 12 files (142 replacements) for codebase consistency
+- Fixed logger name collision: `shutdown_manager.py` and `graceful_shutdown.py` both used `"spiderfoot.shutdown"`
+
+## [5.133.0] — RC Cycle 53: Scan State Enum Deduplication
+
+### Changed
+- Replaced local `ScanState` enum in `scan_scheduler.py` with import from canonical `scan_state.py`
+- Removed unused `ScanStatus` enum from `api/schemas.py`
+- Mapped scheduler's local enum values (ABORT_REQUESTED→STOPPING, ABORTED→CANCELLED, FINISHED→COMPLETED, ERROR→FAILED)
+
 ## [5.132.0] — RC Cycle 51: Database Type Annotations
 
 ### Changed
