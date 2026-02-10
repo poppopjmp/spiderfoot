@@ -98,13 +98,13 @@ class ServerManager:
                 'cors.preflight.origins': cors_origins
             })
 
-            print("")
-            print("*************************************************************")
-            print(" Use SpiderFoot by starting your web browser of choice and ")
-            print(f" browse to {url}")
-            print(f" Server running {auth_info}")
-            print("*************************************************************")
-            print("")
+            self.log.info("")
+            self.log.info("*************************************************************")
+            self.log.info(" Use SpiderFoot by starting your web browser of choice and ")
+            self.log.info(f" browse to {url}")
+            self.log.info(f" Server running {auth_info}")
+            self.log.info("*************************************************************")
+            self.log.info("")
 
             # Disable auto-reloading of content
             cherrypy.engine.autoreload.unsubscribe()
@@ -154,13 +154,13 @@ class ServerManager:
                 self.log.error("sfapi.py not found. FastAPI server cannot start.")
                 sys.exit(-1)
 
-            print("")
-            print("*************************************************************")
-            print(" SpiderFoot FastAPI server is starting...")
-            print(f" API will be available at: http://{api_host}:{api_port}")
-            print(f" API documentation at: http://{api_host}:{api_port}/api/docs")
-            print("*************************************************************")
-            print("")
+            self.log.info("")
+            self.log.info("*************************************************************")
+            self.log.info(" SpiderFoot FastAPI server is starting...")
+            self.log.info(f" API will be available at: http://{api_host}:{api_port}")
+            self.log.info(f" API documentation at: http://{api_host}:{api_port}/api/docs")
+            self.log.info("*************************************************************")
+            self.log.info("")
 
             # Run FastAPI server
             uvicorn.run(
@@ -208,14 +208,14 @@ class ServerManager:
 
             self.log.info(f"Starting both servers - Web UI: {web_host}:{web_port}, API: {api_host}:{api_port}")
 
-            print("")
-            print("*************************************************************")
-            print(" SpiderFoot is starting both servers...")
-            print(f" Web UI: http://{web_host}:{web_port}")
-            print(f" FastAPI: http://{api_host}:{api_port}")
-            print(f" API Docs: http://{api_host}:{api_port}/api/docs")
-            print("*************************************************************")
-            print("")
+            self.log.info("")
+            self.log.info("*************************************************************")
+            self.log.info(" SpiderFoot is starting both servers...")
+            self.log.info(f" Web UI: http://{web_host}:{web_port}")
+            self.log.info(f" FastAPI: http://{api_host}:{api_port}")
+            self.log.info(f" API Docs: http://{api_host}:{api_port}/api/docs")
+            self.log.info("*************************************************************")
+            self.log.info("")
 
             # Start FastAPI server in a separate thread
             def run_fastapi():
