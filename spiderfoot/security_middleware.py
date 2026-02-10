@@ -31,7 +31,6 @@ from .security_logging import SecurityLogger, SecurityEventType
 from .secure_config import SecureConfigManager
 
 
-
 class SecurityConfigDefaults:
     """Default security configuration values."""
 

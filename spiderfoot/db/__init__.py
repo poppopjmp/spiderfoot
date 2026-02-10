@@ -37,7 +37,6 @@ log = logging.getLogger(__name__)
 from spiderfoot.db.db_correlation import CorrelationManager
 
 
-
 def get_schema_queries(db_type: str) -> List[str]:
     """
     Return a list of schema creation queries appropriate for the backend.
