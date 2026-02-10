@@ -79,12 +79,14 @@ class sfp_robtex(SpiderFootModernPlugin):
     cohostcount = 0
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
         self.cohostcount = 0
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -96,10 +98,12 @@ class sfp_robtex(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["CO_HOSTED_SITE", "IP_ADDRESS", "IPV6_ADDRESS", "RAW_RIR_DATA"]
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

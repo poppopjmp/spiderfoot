@@ -63,6 +63,7 @@ class sfp_textmagic(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         if userOpts is None:
             userOpts = {}
         super().setup(sfc, userOpts or {})
@@ -70,17 +71,20 @@ class sfp_textmagic(SpiderFootModernPlugin):
         self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "PHONE_NUMBER"
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "PHONE_NUMBER_TYPE",
             "RAW_RIR_DATA"
         ]
 
     def handle_error_response(self, qry, res):
+        """Handle error response."""
         try:
             error_info = json.loads(res["content"])
         except Exception as e:
@@ -97,6 +101,7 @@ class sfp_textmagic(SpiderFootModernPlugin):
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
     def queryPhoneNumber(self, qry):
+        """Query PhoneNumber."""
         headers = {
             'X-TM-Username': self.opts['api_key_username'],
             'X-TM-Key': self.opts['api_key']
@@ -125,6 +130,7 @@ class sfp_textmagic(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

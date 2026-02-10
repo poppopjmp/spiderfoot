@@ -58,16 +58,20 @@ class sfp_pgp(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['INTERNET_NAME', "EMAILADDR", "DOMAIN_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC", "AFFILIATE_EMAILADDR", "PGP_KEY"]
 
     def queryDomain(self, keyserver_search_url, qry):
+        """Query Domain."""
         res = self.fetch_url(
             keyserver_search_url + qry,
             timeout=self.opts['_fetchtimeout'],
@@ -86,6 +90,7 @@ class sfp_pgp(SpiderFootModernPlugin):
         return res
 
     def queryEmail(self, keyserver_fetch_url, qry):
+        """Query Email."""
         res = self.fetch_url(
             keyserver_fetch_url + qry,
             timeout=self.opts['_fetchtimeout'],
@@ -104,6 +109,7 @@ class sfp_pgp(SpiderFootModernPlugin):
         return res
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

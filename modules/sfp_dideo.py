@@ -40,6 +40,7 @@ class sfp_dideo(SpiderFootModernPlugin):
     }
 
     def __init__(self) -> None:
+        """Initialize the sfp dideo."""
         super().__init__()
         self.sf = None
 
@@ -56,9 +57,11 @@ class sfp_dideo(SpiderFootModernPlugin):
         self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["DIDEO_VIDEO"]
 
     def handleEvent(self, event):

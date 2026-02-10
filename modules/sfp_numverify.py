@@ -71,20 +71,24 @@ class sfp_numverify(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['PHONE_NUMBER']
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ['RAW_RIR_DATA', 'GEOINFO', 'PROVIDER_TELCO']
 
     # Query numverify API for the specified phone number
     # https://numverify.com/documentation
     def query(self, qry):
+        """Query the data source."""
         number = qry.strip('+').strip('(').strip(')')
 
         params = {
@@ -134,6 +138,7 @@ class sfp_numverify(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

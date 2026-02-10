@@ -66,18 +66,22 @@ class sfp_twilio(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["PHONE_NUMBER"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["COMPANY_NAME", "RAW_RIR_DATA"]
 
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
     def queryPhoneNumber(self, phoneNumber):
 
+        """Query PhoneNumber."""
         token = (base64.b64encode(self.opts['api_key_account_sid'].encode(
             'utf8') + ":".encode('utf-8') + self.opts['api_key_auth_token'].encode('utf-8'))).decode('utf-8')
 
@@ -117,6 +121,7 @@ class sfp_twilio(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

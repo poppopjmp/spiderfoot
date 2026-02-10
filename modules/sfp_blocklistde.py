@@ -65,10 +65,12 @@ class sfp_blocklistde(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -81,6 +83,7 @@ class sfp_blocklistde(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -93,6 +96,7 @@ class sfp_blocklistde(SpiderFootModernPlugin):
         ]
 
     def queryBlacklist(self, target, targetType):
+        """Query Blacklist."""
         blacklist = self.retrieveBlacklist()
 
         if not blacklist:
@@ -114,6 +118,7 @@ class sfp_blocklistde(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
+        """RetrieveBlacklist."""
         blacklist = self.cache_get('blocklistde', 24)
 
         if blacklist is not None:
@@ -165,6 +170,7 @@ class sfp_blocklistde(SpiderFootModernPlugin):
         return ips
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

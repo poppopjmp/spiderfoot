@@ -73,15 +73,18 @@ class sfp_certspotter(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME']
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'INTERNET_NAME',
             'INTERNET_NAME_UNRESOLVED',
@@ -99,6 +102,7 @@ class sfp_certspotter(SpiderFootModernPlugin):
 
     # Query CertSpotter issuances API endpoint
     def queryIssuances(self, domain, after=None):
+        """Query Issuances."""
         params = {
             'domain': domain.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'include_subdomains': 'true',
@@ -147,6 +151,7 @@ class sfp_certspotter(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

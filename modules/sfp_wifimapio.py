@@ -39,6 +39,7 @@ class sfp_wifimapio(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
@@ -54,12 +55,15 @@ class sfp_wifimapio(SpiderFootModernPlugin):
             raise ValueError("output_format must be 'summary' or 'full'.")
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "GEOINFO"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["WIFIMAPIO_HOTSPOT"]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         # Stub event filtering logic
         if event.eventType not in self.watchedEvents():
@@ -69,4 +73,5 @@ class sfp_wifimapio(SpiderFootModernPlugin):
         return None
 
     def shutdown(self):
+        """Shutdown."""
         self.debug("[shutdown] Shutting down WiFiMap.io module.")

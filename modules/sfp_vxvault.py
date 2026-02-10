@@ -62,11 +62,13 @@ class sfp_vxvault(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "IP_ADDRESS",
@@ -79,6 +81,7 @@ class sfp_vxvault(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "MALICIOUS_IPADDR",
             "MALICIOUS_INTERNET_NAME",
@@ -88,6 +91,7 @@ class sfp_vxvault(SpiderFootModernPlugin):
         ]
 
     def queryBlacklist(self, target):
+        """Query Blacklist."""
         blacklist = self.retrieveBlacklist()
 
         if not blacklist:
@@ -100,6 +104,7 @@ class sfp_vxvault(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
+        """RetrieveBlacklist."""
         blacklist = self.cache_get('vxvault', 24)
 
         if blacklist is not None:
@@ -161,6 +166,7 @@ class sfp_vxvault(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

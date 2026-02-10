@@ -70,15 +70,18 @@ class sfp_metadefender(SpiderFootModernPlugin):
 
     # Initialize module and module options
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS', 'INTERNET_NAME']
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'MALICIOUS_IPADDR',
             'MALICIOUS_INTERNET_NAME',
@@ -90,6 +93,7 @@ class sfp_metadefender(SpiderFootModernPlugin):
     # Query domain REST API
     # https://onlinehelp.opswat.com/mdcloud/4.5_Domain_Reputation.html
     def queryDomain(self, qry):
+        """Query Domain."""
         headers = {
             'Accept': 'application/json',
             'apikey': self.opts['api_key']
@@ -106,6 +110,7 @@ class sfp_metadefender(SpiderFootModernPlugin):
     # Query ip REST API
     # https://onlinehelp.opswat.com/mdcloud/4.1_IP_Reputation.html
     def queryIp(self, qry):
+        """Query Ip."""
         headers = {
             'Accept': 'application/json',
             'apikey': self.opts['api_key']
@@ -121,6 +126,7 @@ class sfp_metadefender(SpiderFootModernPlugin):
 
     # Parse API response
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from MetaDefender.")
             return None
@@ -152,6 +158,7 @@ class sfp_metadefender(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

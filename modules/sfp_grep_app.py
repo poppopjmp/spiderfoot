@@ -64,18 +64,22 @@ class sfp_grep_app(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC", "DOMAIN_NAME",
                 "INTERNET_NAME", "RAW_RIR_DATA",
                 "INTERNET_NAME_UNRESOLVED", "LINKED_URL_INTERNAL"]
 
     def query(self, qry, page):
+        """Query the data source."""
         params = {
             'q': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'page': str(page)
@@ -98,6 +102,7 @@ class sfp_grep_app(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

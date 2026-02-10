@@ -90,10 +90,12 @@ class sfp_pulsedive(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -108,12 +110,14 @@ class sfp_pulsedive(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["MALICIOUS_INTERNET_NAME", "MALICIOUS_IPADDR",
                 "MALICIOUS_AFFILIATE_IPADDR", "MALICIOUS_NETBLOCK",
                 'TCP_PORT_OPEN']
 
     # https://pulsedive.com/api/
     def query(self, qry):
+        """Query the data source."""
         params = {
             'indicator': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'key': self.opts['api_key']
@@ -148,6 +152,7 @@ class sfp_pulsedive(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

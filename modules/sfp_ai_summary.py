@@ -42,22 +42,27 @@ class sfp_ai_summary(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.event_buffer = []
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["*"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["THREAT_INTEL_SUMMARY"]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         self.event_buffer.append(event)
         if self.opts.get("summary_frequency") == "periodic" and len(self.event_buffer) >= int(self.opts.get("max_events", 100)):
             self._summarize_events()
 
     def scanFinished(self):
+        """ScanFinished."""
         if self.event_buffer:
             self._summarize_events()
 

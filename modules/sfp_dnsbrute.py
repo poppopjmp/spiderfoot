@@ -61,6 +61,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
     lock = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.sublist = self.tempStorage()
         self.events = self.tempStorage()
@@ -82,6 +83,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         ret = ['DOMAIN_NAME']
         if not self.opts['domainonly'] or self.opts['numbersuffix']:
             ret.append('INTERNET_NAME')
@@ -91,9 +93,11 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME"]
 
     def tryHost(self, name):
+        """TryHost."""
         try:
             if self.resolve_host(name) or self.resolve_host6(name):
                 with self.lock:
@@ -103,6 +107,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
                 self.hostResults[name] = False
 
     def tryHostWrapper(self, hostList, sourceEvent):
+        """TryHostWrapper."""
         self.hostResults = dict()
         running = True
         i = 0
@@ -136,6 +141,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
 
     # Store the result internally and notify listening modules
     def sendEvent(self, source, result):
+        """SendEvent."""
         self.info("Found a brute-forced host: " + result)
         # Report the host
         evt = SpiderFootEvent("INTERNET_NAME", result, self.__name__, source)
@@ -143,6 +149,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

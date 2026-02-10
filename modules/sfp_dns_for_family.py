@@ -52,9 +52,11 @@ class sfp_dns_for_family(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
@@ -62,6 +64,7 @@ class sfp_dns_for_family(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -69,6 +72,7 @@ class sfp_dns_for_family(SpiderFootModernPlugin):
         ]
 
     def queryAddr(self, qaddr):
+        """Query Addr."""
         if not qaddr:
             return None
 
@@ -83,6 +87,7 @@ class sfp_dns_for_family(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

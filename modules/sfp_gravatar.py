@@ -60,15 +60,18 @@ class sfp_gravatar(SpiderFootModernPlugin):
     reportedUsers = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.reportedUsers = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['EMAILADDR']
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ['RAW_RIR_DATA', 'USERNAME',
                 'EMAILADDR', 'EMAILADDR_GENERIC', 'PHONE_NUMBER', 'GEOINFO',
                 'ACCOUNT_EXTERNAL_OWNED', 'SOCIAL_MEDIA']
@@ -77,6 +80,7 @@ class sfp_gravatar(SpiderFootModernPlugin):
     # https://secure.gravatar.com/site/implement/
     # https://secure.gravatar.com/site/implement/profiles/
     def query(self, qry):
+        """Query the data source."""
         email_hash = hashlib.md5(qry.encode('utf-8', errors='replace').lower()).hexdigest()  # noqa: DUO130
         output = 'json'
 
@@ -106,6 +110,7 @@ class sfp_gravatar(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

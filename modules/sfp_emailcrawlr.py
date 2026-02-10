@@ -72,21 +72,25 @@ class sfp_emailcrawlr(SpiderFootModernPlugin):
 
     # Initialize module and module options
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "EMAILADDR", "EMAILADDR_GENERIC",
                 "PHONE_NUMBER", "GEOINFO"]
 
     # Query domain
     # https://emailcrawlr.com/docs
     def queryDomain(self, qry):
+        """Query Domain."""
         params = {
             'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
         }
@@ -108,6 +112,7 @@ class sfp_emailcrawlr(SpiderFootModernPlugin):
 
     # Parse API response
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from EmailCrawlr.")
             return None
@@ -149,6 +154,7 @@ class sfp_emailcrawlr(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

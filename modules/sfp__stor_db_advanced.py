@@ -80,6 +80,7 @@ class ConnectionLoadBalancer:
     """Advanced connection load balancer with health monitoring."""
     
     def __init__(self, configs: list[dict[str, Any]]) -> None:
+        """Initialize the ConnectionLoadBalancer."""
         self.configs = configs
         self.pools = {}
         self.metrics = {}
@@ -179,6 +180,7 @@ class QueryOptimizer:
     """Advanced query optimizer with prepared statements and AI-powered optimization."""
     
     def __init__(self) -> None:
+        """Initialize the QueryOptimizer."""
         self.query_profiles = {}
         self.prepared_statements = {}
         self.query_cache = {}
@@ -287,6 +289,7 @@ class PerformanceMonitor:
     """Real-time performance monitoring and analytics."""
     
     def __init__(self) -> None:
+        """Initialize the PerformanceMonitor."""
         self.metrics = defaultdict(list)
         self.alerts = deque(maxlen=1000)
         self.thresholds = {
@@ -352,6 +355,7 @@ class PerformanceMonitor:
     def _start_monitoring_thread(self):
         """Start background monitoring thread."""
         def monitor():
+            """Monitor."""
             while self.monitoring_active:
                 try:
                     self._analyze_performance_trends()
@@ -425,6 +429,7 @@ class AutoScaler:
     """Automated scaling for database connections and resources."""
     
     def __init__(self, load_balancer: ConnectionLoadBalancer, monitor: PerformanceMonitor) -> None:
+        """Initialize the AutoScaler."""
         self.load_balancer = load_balancer
         self.monitor = monitor
         self.scaling_rules = {
@@ -440,6 +445,7 @@ class AutoScaler:
     def _start_scaling_thread(self):
         """Start background auto-scaling thread."""
         def scale():
+            """Scale."""
             while self.scaling_active:
                 try:
                     self._evaluate_scaling_needs()
@@ -646,6 +652,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
     def _setup_graceful_shutdown(self):
         """Set up graceful shutdown handlers."""
         def shutdown_handler(signum, frame):
+            """Shutdown handler."""
             self.debug("Received shutdown signal, cleaning up...")
             self._graceful_shutdown()
         

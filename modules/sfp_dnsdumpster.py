@@ -44,18 +44,22 @@ class sfp_dnsdumpster(SpiderFootModernPlugin):
     optdescs = {}
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.debug("Setting up sfp_dnsdumpster")
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
     def query(self, domain):
+        """Query the data source."""
         ret = []
         # first, get the CSRF tokens
         url = "https://dnsdumpster.com"
@@ -123,6 +127,7 @@ class sfp_dnsdumpster(SpiderFootModernPlugin):
         return list(subdomains)
 
     def sendEvent(self, source, host):
+        """SendEvent."""
         if self.resolve_host(host) or self.resolve_host6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)
         else:
@@ -131,6 +136,7 @@ class sfp_dnsdumpster(SpiderFootModernPlugin):
         self.notifyListeners(e)
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         query = str(event.data).lower()
 
         self.debug(f"Received event, {event.eventType}, from {event.module}")

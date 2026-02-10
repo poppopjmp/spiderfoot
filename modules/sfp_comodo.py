@@ -56,13 +56,16 @@ class sfp_comodo(SpiderFootModernPlugin):
     results = None
 
     def __init__(self) -> None:
+        """Initialize the sfp comodo."""
         super().__init__()
         self.__name__ = "sfp_comodo"
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
@@ -70,6 +73,7 @@ class sfp_comodo(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -80,6 +84,7 @@ class sfp_comodo(SpiderFootModernPlugin):
         ]
 
     def query(self, qaddr):
+        """Query the data source."""
         res = dns.resolver.Resolver()
         res.nameservers = ["8.26.56.26", "8.20.247.20"]
 
@@ -95,6 +100,7 @@ class sfp_comodo(SpiderFootModernPlugin):
         return False
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

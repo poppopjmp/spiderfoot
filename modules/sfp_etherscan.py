@@ -65,10 +65,12 @@ class sfp_etherscan(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "ETHEREUM_ADDRESS"
         ]
@@ -77,12 +79,14 @@ class sfp_etherscan(SpiderFootModernPlugin):
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "ETHEREUM_BALANCE",
             "RAW_RIR_DATA"
         ]
 
     def query(self, qry):
+        """Query the data source."""
         queryString = f"https://api.etherscan.io/api?module=account&action=balance&address={qry}&tag=latest&apikey={self.opts['api_key']}"
         # Wallet balance
         res = self.fetch_url(queryString,
@@ -104,6 +108,7 @@ class sfp_etherscan(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

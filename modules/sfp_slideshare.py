@@ -55,22 +55,27 @@ class sfp_slideshare(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["SOCIAL_MEDIA"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "GEOINFO"]
 
     # Extract meta property contents from HTML
     def extractMeta(self, meta_property, html):
+        """Extract Meta."""
         return re.findall(r'<meta property="' + meta_property + r'"\s+content="(.+)" />', html)
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

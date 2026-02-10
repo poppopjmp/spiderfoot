@@ -66,6 +66,7 @@ class sfp_deepinfo(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
@@ -73,14 +74,17 @@ class sfp_deepinfo(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["DOMAIN_NAME", "INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
     # Search Deepinfo
     def query(self, qry, page=1, accum=None):
+        """Query the data source."""
         url = f"https://api.deepinfo.com/v1/discovery/subdomain-finder?domain={qry}&page={page}"
         request = None
         headers = {"apikey": self.opts['api_key']}
@@ -125,6 +129,7 @@ class sfp_deepinfo(SpiderFootModernPlugin):
 
     # Search Deepinfo for Passive DNS
     def query_passive_dns(self, qry):
+        """Query passive dns."""
         url = f"https://api.deepinfo.com/v1/discovery/passive-dns?domain={qry}"
         headers = {"apikey": self.opts['api_key']}
         res = self.fetch_url(url,
@@ -149,6 +154,7 @@ class sfp_deepinfo(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

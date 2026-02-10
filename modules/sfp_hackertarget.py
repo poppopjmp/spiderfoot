@@ -78,11 +78,13 @@ class sfp_hackertarget(SpiderFootModernPlugin):
     cohostcount = 0
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "NETBLOCK_OWNER",
@@ -90,6 +92,7 @@ class sfp_hackertarget(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "CO_HOSTED_SITE",
             "IP_ADDRESS",
@@ -225,6 +228,7 @@ class sfp_hackertarget(SpiderFootModernPlugin):
         return hosts
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

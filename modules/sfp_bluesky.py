@@ -45,6 +45,7 @@ class sfp_bluesky(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
@@ -63,9 +64,11 @@ class sfp_bluesky(SpiderFootModernPlugin):
             raise ValueError("output_format must be 'summary' or 'full'.")
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["BLUESKY_POST"]
 
     def handleEvent(self, event):
@@ -124,4 +127,5 @@ class sfp_bluesky(SpiderFootModernPlugin):
         return None
 
     def shutdown(self):
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Bluesky module.")

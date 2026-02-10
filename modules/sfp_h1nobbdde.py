@@ -56,20 +56,24 @@ class sfp_h1nobbdde(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["VULNERABILITY_DISCLOSURE"]
 
     # Query h1.nobbd.de
     def queryOBB(self, qry):
+        """Query OBB."""
         ret = list()
         url = "http://h1.nobbd.de/search.php?q=" + qry
         res = self.fetch_url(
@@ -93,6 +97,7 @@ class sfp_h1nobbdde(SpiderFootModernPlugin):
         return ret
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

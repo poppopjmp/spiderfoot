@@ -92,6 +92,7 @@ class sfp_intelx(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
@@ -100,16 +101,19 @@ class sfp_intelx(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "AFFILIATE_IPADDR", "INTERNET_NAME", "EMAILADDR",
                 "CO_HOSTED_SITE", "PHONE_NUMBER", "BITCOIN_ADDRESS"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["LEAKSITE_URL", "DARKNET_MENTION_URL",
                 "INTERNET_NAME", "DOMAIN_NAME",
                 "EMAILADDR", "EMAILADDR_GENERIC"]
 
     def query(self, qry, qtype):
+        """Query the data source."""
         retdata = list()
 
         headers = {
@@ -194,6 +198,7 @@ class sfp_intelx(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -56,10 +56,12 @@ class sfp_duckduckgo(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "DOMAIN_NAME_PARENT",
                 "INTERNET_NAME", "AFFILIATE_INTERNET_NAME"]
 
@@ -67,11 +69,13 @@ class sfp_duckduckgo(SpiderFootModernPlugin):
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["DESCRIPTION_CATEGORY", "DESCRIPTION_ABSTRACT",
                 "AFFILIATE_DESCRIPTION_CATEGORY",
                 "AFFILIATE_DESCRIPTION_ABSTRACT"]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

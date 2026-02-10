@@ -86,11 +86,13 @@ class sfp_abusech(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "IP_ADDRESS",
@@ -103,6 +105,7 @@ class sfp_abusech(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "MALICIOUS_IPADDR",
             "MALICIOUS_INTERNET_NAME",
@@ -114,6 +117,7 @@ class sfp_abusech(SpiderFootModernPlugin):
         ]
 
     def queryFeodoTrackerBlacklist(self, target, targetType):
+        """Query FeodoTrackerBlacklist."""
         blacklist = self.retrieveFeodoTrackerBlacklist()
 
         if not blacklist:
@@ -135,6 +139,7 @@ class sfp_abusech(SpiderFootModernPlugin):
         return False
 
     def retrieveFeodoTrackerBlacklist(self):
+        """RetrieveFeodoTrackerBlacklist."""
         blacklist = self.cache_get('abusech_feodo', 24)
 
         if blacklist is not None:
@@ -188,6 +193,7 @@ class sfp_abusech(SpiderFootModernPlugin):
         return ips
 
     def querySslBlacklist(self, target, targetType):
+        """Query SslBlacklist."""
         blacklist = self.retrieveSslBlacklist()
 
         if not blacklist:
@@ -209,6 +215,7 @@ class sfp_abusech(SpiderFootModernPlugin):
         return False
 
     def retrieveSslBlacklist(self):
+        """RetrieveSslBlacklist."""
         blacklist = self.cache_get('abusech_ssl', 24)
 
         if blacklist is not None:
@@ -266,6 +273,7 @@ class sfp_abusech(SpiderFootModernPlugin):
         return ips
 
     def queryUrlHausBlacklist(self, target, targetType):
+        """Query UrlHausBlacklist."""
         blacklist = self.retrieveUrlHausBlacklist()
 
         if not blacklist:
@@ -292,6 +300,7 @@ class sfp_abusech(SpiderFootModernPlugin):
         return False
 
     def retrieveUrlHausBlacklist(self):
+        """RetrieveUrlHausBlacklist."""
         blacklist = self.cache_get('abusech_urlhaus', 24)
 
         if blacklist is not None:
@@ -352,6 +361,7 @@ class sfp_abusech(SpiderFootModernPlugin):
         return hosts
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -74,20 +74,24 @@ class sfp_pastebin(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME", "EMAILADDR"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["LEAKSITE_CONTENT", "LEAKSITE_URL"]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventData = event.data
 
         if self.errorState:

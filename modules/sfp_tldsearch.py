@@ -60,21 +60,25 @@ class sfp_tldsearch(SpiderFootModernPlugin):
     lock = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "DNS"
         self.lock = threading.Lock()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["SIMILARDOMAIN"]
 
     def tryTld(self, target, tld):
+        """TryTld."""
         resolver = dns.resolver.Resolver()
         resolver.timeout = 1
         resolver.lifetime = 1
@@ -97,6 +101,7 @@ class sfp_tldsearch(SpiderFootModernPlugin):
                 self.tldResults[target] = False
 
     def tryTldWrapper(self, tldList, sourceEvent):
+        """TryTldWrapper."""
         self.tldResults = dict()
         running = True
         t = []
@@ -131,6 +136,7 @@ class sfp_tldsearch(SpiderFootModernPlugin):
 
     # Store the result internally and notify listening modules
     def sendEvent(self, source, result):
+        """SendEvent."""
         self.info("Found a TLD with the target's name: " + result)
         self.results[result] = True
 
@@ -155,6 +161,7 @@ class sfp_tldsearch(SpiderFootModernPlugin):
 
     # Search for similar sounding domains
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventData = event.data
 
         if eventData in self.results:

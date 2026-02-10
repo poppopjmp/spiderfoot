@@ -39,13 +39,16 @@ class sfp_wechat(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["WECHAT_MESSAGE"]
 
     def handleEvent(self, event):
@@ -106,4 +109,5 @@ class sfp_wechat(SpiderFootModernPlugin):
                 self.error(f"Error fetching messages for user {user_id}: {e}")
 
     def shutdown(self):
+        """Shutdown."""
         pass

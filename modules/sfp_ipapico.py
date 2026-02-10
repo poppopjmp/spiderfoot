@@ -56,10 +56,12 @@ class sfp_ipapico(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS"
@@ -69,12 +71,14 @@ class sfp_ipapico(SpiderFootModernPlugin):
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "GEOINFO",
             "RAW_RIR_DATA"
         ]
 
     def query(self, qry):
+        """Query the data source."""
         queryString = f"https://ipapi.co/{qry}/json/"
 
         res = self.fetch_url(queryString,
@@ -95,6 +99,7 @@ class sfp_ipapico(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

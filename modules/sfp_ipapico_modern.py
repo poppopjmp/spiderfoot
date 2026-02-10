@@ -71,16 +71,19 @@ class sfp_ipapico_modern(SpiderFootModernPlugin):
 
     def setup(self, sfc, userOpts=None):
         # Modern setup — wires HttpService, DnsService, etc. automatically
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
     def watchedEvents(self) -> list[str]:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
         ]
 
     def producedEvents(self) -> list[str]:
+        """Return the list of events this module produces."""
         return [
             "GEOINFO",
             "RAW_RIR_DATA",
@@ -114,6 +117,7 @@ class sfp_ipapico_modern(SpiderFootModernPlugin):
             return None
 
     def handleEvent(self, event) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

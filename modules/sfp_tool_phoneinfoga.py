@@ -72,12 +72,15 @@ class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["PHONE_NUMBER"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "PHONE_NUMBER",
             "COUNTRY_NAME",
@@ -142,6 +145,7 @@ class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
             return None
 
     def query_api(self, phone_number):
+        """Query api."""
         if self.opts.get("remote_enabled"):
             return self.run_remote_tool(phone_number)
         """Query the PhoneInfoga API for information about a phone number."""

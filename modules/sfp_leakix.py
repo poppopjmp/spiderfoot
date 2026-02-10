@@ -71,15 +71,18 @@ class sfp_leakix(SpiderFootModernPlugin):
 
     # Initialize module and module options
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "DOMAIN_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "GEOINFO", "TCP_PORT_OPEN",
                 "OPERATING_SYSTEM", "SOFTWARE_USED", "WEBSERVER_BANNER",
                 "LEAKSITE_CONTENT", "INTERNET_NAME"]
@@ -87,6 +90,7 @@ class sfp_leakix(SpiderFootModernPlugin):
     # Query host
     # https://leakix.net/api-documentation
     def queryApi(self, qryType, qry):
+        """Query Api."""
         headers = {
             "Accept": "application/json",
             "api-key": self.opts["api_key"]
@@ -104,6 +108,7 @@ class sfp_leakix(SpiderFootModernPlugin):
 
     # Parse API response
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from LeakIX.")
             return None
@@ -136,6 +141,7 @@ class sfp_leakix(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

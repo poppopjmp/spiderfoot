@@ -59,10 +59,12 @@ class sfp_leakcheck(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
             "EMAILADDR",
@@ -71,6 +73,7 @@ class sfp_leakcheck(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "EMAILADDR",
             "EMAILADDR_COMPROMISED",
@@ -88,6 +91,7 @@ class sfp_leakcheck(SpiderFootModernPlugin):
 
     # Query LeakCheck
     def query(self, event):
+        """Query the data source."""
         if event.eventType == "EMAILADDR":
             queryString = f"https://leakcheck.io/api/v2/query/{event.data}?type=email"
         elif event.eventType == "DOMAIN_NAME":
@@ -150,6 +154,7 @@ class sfp_leakcheck(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

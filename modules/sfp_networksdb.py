@@ -78,22 +78,26 @@ class sfp_networksdb(SpiderFootModernPlugin):
 
     # Initialize module and module options
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "IPV6_ADDRESS", "INTERNET_NAME", "DOMAIN_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "IP_ADDRESS", "IPV6_ADDRESS", "NETBLOCK_MEMBER",
                 "CO_HOSTED_SITE", "GEOINFO", "RAW_RIR_DATA"]
 
     # Query IP Address Info
     # https://networksdb.io/api/docs#ipinfo
     def queryIpInfo(self, qry):
+        """Query IpInfo."""
         params = {
             'ip': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
         }
@@ -115,6 +119,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
     # Query IP Geolocation
     # https://networksdb.io/api/docs#geoip
     def queryIpGeo(self, qry):
+        """Query IpGeo."""
         params = {
             'ip': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
         }
@@ -136,6 +141,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
     # Query Domains on IP (Reverse DNS)
     # https://networksdb.io/api/docs#revdns
     def queryReverseDns(self, qry):
+        """Query ReverseDns."""
         params = {
             'ip': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
         }
@@ -157,6 +163,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
     # Query IPs for Domain (Forward DNS)
     # https://networksdb.io/api/docs#fwddns
     def queryForwardDns(self, qry):
+        """Query ForwardDns."""
         params = {
             'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
         }
@@ -179,6 +186,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
     # https://networksdb.io/api/docs#asinfo
     # Note: currently unused
     def queryAsnInfo(self, qry):
+        """Query AsnInfo."""
         params = {
             'asn': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
         }
@@ -201,6 +209,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
     # https://networksdb.io/api/docs#asnets
     # Note: currently unused
     def queryAsnNetworks(self, qry):
+        """Query AsnNetworks."""
         params = {
             'asn': qry,
         }
@@ -222,6 +231,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
     # Parse API response
     # https://networksdb.io/api/plans
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from NetworksDB.")
             return None
@@ -257,6 +267,7 @@ class sfp_networksdb(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

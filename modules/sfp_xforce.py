@@ -98,10 +98,12 @@ class sfp_xforce(SpiderFootModernPlugin):
     cohostcount = 0
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'AFFILIATE_IPADDR',
@@ -114,6 +116,7 @@ class sfp_xforce(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -131,6 +134,7 @@ class sfp_xforce(SpiderFootModernPlugin):
         ]
 
     def query(self, qry, querytype):
+        """Query the data source."""
         if querytype not in ["ipr/malware", "ipr/history", "resolve"]:
             querytype = "ipr/malware"
 
@@ -157,6 +161,7 @@ class sfp_xforce(SpiderFootModernPlugin):
     # Parse API Response from X-Force Exchange
     # https://exchange.xforce.ibmcloud.com/api/doc/
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from X-Force Exchange.")
             return None
@@ -207,6 +212,7 @@ class sfp_xforce(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

@@ -47,10 +47,12 @@ class sfp__stor_stdout(SpiderFootModernPlugin):
     }
 
     def __init__(self) -> None:
+        """Initialize the sfp  stor stdout."""
         super().__init__()
         self.firstEvent = True
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         # Always start with a fresh opts dict for this instance
         # Also allow 'enabled' to be set via userOpts
@@ -68,6 +70,7 @@ class sfp__stor_stdout(SpiderFootModernPlugin):
 
     def output(self, event):
         # If the module is disabled, do not output anything
+        """Output."""
         if not self.opts.get('enabled', True):
             return
         d = self.opts['_csvdelim']
@@ -136,6 +139,7 @@ class sfp__stor_stdout(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, sfEvent):
+        """Handle an event received by this module."""
         if not self.opts.get('enabled', True):
             return
         if sfEvent.eventType == "ROOT":

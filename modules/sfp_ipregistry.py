@@ -62,6 +62,7 @@ class sfp_ipregistry(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
@@ -69,12 +70,15 @@ class sfp_ipregistry(SpiderFootModernPlugin):
             self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "IPV6_ADDRESS"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["GEOINFO", "MALICIOUS_IPADDR", "PHYSICAL_COORDINATES", "RAW_RIR_DATA"]
 
     def query(self, qry):
+        """Query the data source."""
         qs = urllib.parse.urlencode({"key": self.opts["api_key"]})
         res = self.fetch_url(
             f"https://api.ipregistry.co/{qry}?{qs}",
@@ -96,11 +100,13 @@ class sfp_ipregistry(SpiderFootModernPlugin):
         return None
 
     def emit(self, etype, data, pevent):
+        """Emit."""
         evt = SpiderFootEvent(etype, data, self.__name__, pevent)
         self.notifyListeners(evt)
         return evt
 
     def generate_location_events(self, location, pevent):
+        """Generate location events."""
         if not isinstance(location, dict):
             return
         physical_location = None
@@ -136,6 +142,7 @@ class sfp_ipregistry(SpiderFootModernPlugin):
             self.emit("PHYSICAL_COORDINATES", physical_location, pevent)
 
     def generate_security_events(self, security, pevent):
+        """Generate security events."""
         if not isinstance(security, dict):
             return
         malicious = any(
@@ -146,12 +153,14 @@ class sfp_ipregistry(SpiderFootModernPlugin):
                       f"ipregistry [{pevent.data}]", pevent)
 
     def generate_events(self, data, pevent):
+        """Generate events."""
         if not isinstance(data, dict):
             return
         self.generate_location_events(data.get("location"), pevent)
         self.generate_security_events(data.get("security"), pevent)
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         if self.errorState:
             return
 

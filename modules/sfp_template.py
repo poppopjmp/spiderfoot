@@ -189,6 +189,7 @@ class sfp_template(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         # self.tempStorage() basically returns a dict(), but we use self.tempStorage()
         # instead since on SpiderFoot HX, different mechanisms are used to persist
@@ -208,6 +209,7 @@ class sfp_template(SpiderFootModernPlugin):
     # What events is this module interested in for input
     # For a list of all events, check spiderfoot/db.py.
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "NETBLOCK_OWNER",
@@ -217,6 +219,7 @@ class sfp_template(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "OPERATING_SYSTEM",
             "DEVICE_TYPE",
@@ -236,6 +239,7 @@ class sfp_template(SpiderFootModernPlugin):
         # from global config), and the user agent is SpiderFoot so that the
         # provider knows the request comes from the tool. Many third parties
         # request that, so best to just be consistent anyway.
+        """Query the data source."""
         res = self.fetch_url(
             f"https://api.shodan.io/shodan/host/{qry}?key={self.opts['api_key']}",
             timeout=self.opts['_fetchtimeout'],
@@ -266,6 +270,7 @@ class sfp_template(SpiderFootModernPlugin):
         # event.eventType - the event type, e.g. INTERNET_NAME, IP_ADDRESS, etc.
         # event.module - the name of the module that generated the event, e.g. sfp_dnsresolve
         # event.data - the actual data, e.g. 127.0.0.1. This can sometimes be megabytes in size (e.g. a PDF)
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

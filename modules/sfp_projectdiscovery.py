@@ -65,15 +65,19 @@ class sfp_projectdiscovery(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
     def query(self, qry):
+        """Query the data source."""
         headers = {"Accept": "application/json",
                    "Authorization": self.opts["api_key"]}
         res = self.fetch_url(
@@ -99,6 +103,7 @@ class sfp_projectdiscovery(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

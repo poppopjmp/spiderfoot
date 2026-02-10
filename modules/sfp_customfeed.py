@@ -64,6 +64,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
@@ -73,6 +74,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
     # What events is this module interested in for input
     # * = be notified about all events.
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "IP_ADDRESS", "AFFILIATE_INTERNET_NAME",
                 "AFFILIATE_IPADDR", "CO_HOSTED_SITE"]
 
@@ -80,12 +82,14 @@ class sfp_customfeed(SpiderFootModernPlugin):
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["MALICIOUS_IPADDR", "MALICIOUS_INTERNET_NAME",
                 "MALICIOUS_AFFILIATE_IPADDR", "MALICIOUS_AFFILIATE_INTERNET_NAME",
                 "MALICIOUS_COHOST"]
 
     # Look up 'list' type resources
     def resourceList(self, replaceme_id, target, targetType):
+        """ResourceList."""
         targetDom = ''
         # Get the base domain if we're supplied a domain
         if targetType == "domain":
@@ -169,6 +173,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
         return None
 
     def lookupItem(self, resourceId, itemType, target):
+        """Look up Item."""
         for check in list(malchecks.keys()):
             cid = malchecks[check]['id']
             if cid == resourceId and itemType in malchecks[check]['checks']:
@@ -180,6 +185,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

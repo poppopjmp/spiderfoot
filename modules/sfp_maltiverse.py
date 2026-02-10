@@ -72,16 +72,19 @@ class sfp_maltiverse(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     # For a list of all events, check sfdb.py.
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "NETBLOCK_OWNER", "NETBLOCK_MEMBER",
                 "AFFILIATE_IPADDR"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["IP_ADDRESS", "MALICIOUS_IPADDR", "RAW_RIR_DATA",
                 "MALICIOUS_AFFILIATE_IPADDR"]
 
@@ -89,6 +92,7 @@ class sfp_maltiverse(SpiderFootModernPlugin):
     # https://app.swaggerhub.com/apis-docs/maltiverse/api/1.0.0-oas3#/IPv4/getIP
     def queryIPAddress(self, qry):
 
+        """Query IPAddress."""
         headers = {
             'Accept': "application/json",
         }
@@ -122,6 +126,7 @@ class sfp_maltiverse(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

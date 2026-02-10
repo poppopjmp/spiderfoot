@@ -59,14 +59,17 @@ class sfp_searchcode(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'DOMAIN_NAME'
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'EMAILADDR',
             'EMAILADDR_GENERIC',
@@ -76,6 +79,7 @@ class sfp_searchcode(SpiderFootModernPlugin):
         ]
 
     def query(self, qry, page=1, per_page=100):
+        """Query the data source."""
         params = urllib.parse.urlencode({
             'q': qry,
             'p': page,
@@ -112,6 +116,7 @@ class sfp_searchcode(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

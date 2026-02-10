@@ -41,6 +41,7 @@ class AdvancedCorrelationEngine:
     """Advanced correlation engine for OSINT data analysis."""
     
     def __init__(self) -> None:
+        """Initialize the AdvancedCorrelationEngine."""
         self.entity_graph = defaultdict(set)
         self.temporal_events = []
         self.geo_clusters = defaultdict(list)
@@ -222,15 +223,18 @@ class sfp_advanced_correlation(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.correlation_engine = AdvancedCorrelationEngine()
         self.collected_events = []
         self.entity_cache = {}
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["*"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "ENTITY_RELATIONSHIP",
             "TEMPORAL_PATTERN",
@@ -241,6 +245,7 @@ class sfp_advanced_correlation(SpiderFootModernPlugin):
         ]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
         

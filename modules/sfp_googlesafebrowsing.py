@@ -67,10 +67,12 @@ class sfp_googlesafebrowsing(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "IP_ADDRESS",
@@ -83,6 +85,7 @@ class sfp_googlesafebrowsing(SpiderFootModernPlugin):
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "MALICIOUS_IPADDR",
             "MALICIOUS_INTERNET_NAME",
@@ -94,6 +97,7 @@ class sfp_googlesafebrowsing(SpiderFootModernPlugin):
 
     def query(self, qry):
 
+        """Query the data source."""
         headers = {"Content-Type": "application/json"}
         url = (
             "https://safebrowsing.googleapis.com/v4/threatMatches"
@@ -169,6 +173,7 @@ class sfp_googlesafebrowsing(SpiderFootModernPlugin):
         return info
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

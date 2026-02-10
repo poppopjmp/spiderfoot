@@ -58,19 +58,23 @@ class sfp_openstreetmap(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['PHYSICAL_ADDRESS']
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ['PHYSICAL_COORDINATES']
 
     # Search for address
     # https://operations.osmfoundation.org/policies/nominatim/
     def query(self, qry):
+        """Query the data source."""
         params = {
             'q': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'format': 'json',
@@ -94,6 +98,7 @@ class sfp_openstreetmap(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

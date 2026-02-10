@@ -48,6 +48,7 @@ class sfp_bnb(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         # Option validation
@@ -62,12 +63,15 @@ class sfp_bnb(SpiderFootModernPlugin):
         self.debug(f"BNB module options: {self.opts}")
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["BNB_ADDRESS", "BNB_TX"]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         self.debug(f"Received event: {event.eventType} from {event.module}")
         # Optionally filter by event_types (stub logic)
         allowed_types = [t.strip() for t in self.opts.get("event_types", "").split(",") if t.strip()]
@@ -87,4 +91,5 @@ class sfp_bnb(SpiderFootModernPlugin):
         return None
 
     def shutdown(self):
+        """Shutdown."""
         self.debug("Shutting down BNB module.")

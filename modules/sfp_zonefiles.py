@@ -63,13 +63,16 @@ class sfp_zonefiles(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "RAW_RIR_DATA",
             "IP_ADDRESS",
@@ -104,6 +107,7 @@ class sfp_zonefiles(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from ZoneFiles.")
             return None
@@ -142,6 +146,7 @@ class sfp_zonefiles(SpiderFootModernPlugin):
         return data
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         if self.errorState:
             return
 

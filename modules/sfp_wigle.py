@@ -78,6 +78,7 @@ class sfp_wigle(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
@@ -86,13 +87,16 @@ class sfp_wigle(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["PHYSICAL_COORDINATES"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["WIFI_ACCESS_POINT"]
 
     def getnetworks(self, coords):
+        """Get networks."""
         params = {
             'onlymine': 'false',
             'latrange1': str(coords[0]),
@@ -147,6 +151,7 @@ class sfp_wigle(SpiderFootModernPlugin):
             return None
 
     def validApiKey(self, api_key):
+        """ValidApiKey."""
         if not api_key:
             return False
 
@@ -160,6 +165,7 @@ class sfp_wigle(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

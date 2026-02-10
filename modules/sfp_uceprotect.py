@@ -65,9 +65,11 @@ class sfp_uceprotect(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'AFFILIATE_IPADDR',
@@ -76,6 +78,7 @@ class sfp_uceprotect(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -89,6 +92,7 @@ class sfp_uceprotect(SpiderFootModernPlugin):
 
     # Swap 1.2.3.4 to 4.3.2.1
     def reverseAddr(self, ipaddr):
+        """ReverseAddr."""
         return '.'.join(reversed(ipaddr.split('.')))
 
     def queryDnsblLevel1(self, qaddr):
@@ -136,6 +140,7 @@ class sfp_uceprotect(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

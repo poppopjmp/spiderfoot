@@ -77,20 +77,24 @@ class sfp_whatcms(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME']
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ['RAW_RIR_DATA', 'WEBSERVER_TECHNOLOGY']
 
     # Query WhatCMS API for the CMS used by the specified URL
     # https://whatcms.org/Documentation
     def queryCmsDetect(self, qry):
+        """Query CmsDetect."""
         params = {
             'url': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'key': self.opts['api_key']
@@ -107,6 +111,7 @@ class sfp_whatcms(SpiderFootModernPlugin):
     # Query WhatCMS API for the web technology used by the specified URL
     # https://whatcms.org/Documentation
     def queryCmsTechnology(self, qry):
+        """Query CmsTechnology."""
         params = {
             'url': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'key': self.opts['api_key']
@@ -122,6 +127,7 @@ class sfp_whatcms(SpiderFootModernPlugin):
 
     # Parse API response
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from WhatCMS.org.")
             return None
@@ -199,6 +205,7 @@ class sfp_whatcms(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

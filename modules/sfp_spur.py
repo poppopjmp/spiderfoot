@@ -78,11 +78,13 @@ class sfp_spur(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     # For a list of all events, check sfdb.py.
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "NETBLOCK_OWNER",
@@ -92,6 +94,7 @@ class sfp_spur(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
             "MALICIOUS_IPADDR",
@@ -105,6 +108,7 @@ class sfp_spur(SpiderFootModernPlugin):
     # https://spur.us/app/docs
     def queryIPAddress(self, ipAddr):
 
+        """Query IPAddress."""
         headers = {
             'Accept': "application/json",
             'token': self.opts['api_key']
@@ -135,6 +139,7 @@ class sfp_spur(SpiderFootModernPlugin):
         return res.get('content')
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

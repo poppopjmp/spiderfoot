@@ -59,15 +59,18 @@ class sfp_fullhunt(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "INTERNET_NAME",
             "INTERNET_NAME_UNRESOLVED",
@@ -102,6 +105,7 @@ class sfp_fullhunt(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from FullHunt.")
             return None
@@ -140,6 +144,7 @@ class sfp_fullhunt(SpiderFootModernPlugin):
         return results.get('hosts')
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

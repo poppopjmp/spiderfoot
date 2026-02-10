@@ -69,15 +69,18 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "RAW_RIR_DATA",
             "EMAILADDR",
@@ -90,6 +93,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
 
     def query(self, qry, qryType):
         # The StackOverflow excerpts endpoint will search the site for mentions of a keyword and returns a snippet of relevant results
+        """Query the data source."""
         if qryType == "excerpts":
             try:
                 res = self.fetch_url(
@@ -140,6 +144,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
 
     def extractUsername(self, questionId):
         # Need to query the questions endpoint with the question_id to find the username
+        """Extract Username."""
         query_results = self.query(questionId, "questions")
 
         items = query_results.get('items')
@@ -154,6 +159,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
         return str(username)
 
     def extractIP4s(self, text):
+        """Extract IP4s."""
         ips = list()
 
         matches = re.findall(r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$', text)
@@ -168,6 +174,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
         return list(set(ips))
 
     def extractIP6s(self, text):
+        """Extract IP6s."""
         ips = list()
 
         matches = re.findall(r'(?:^|(?<=\s))(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))(?=\s|$)', text)
@@ -182,6 +189,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
         return list(set(ips))
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventData = event.data
 
         if self.errorState:

@@ -73,13 +73,16 @@ class sfp_fullcontact(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "EMAILADDR"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "EMAILADDR",
             "EMAILADDR_GENERIC",
@@ -90,6 +93,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
         ]
 
     def query(self, url, data, failcount=0):
+        """Query the data source."""
         headers = {
             'Authorization': f"Bearer {self.opts['api_key']}"
         }
@@ -139,6 +143,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
         return ret
 
     def queryCompany(self, domain):
+        """Query Company."""
         url = "https://api.fullcontact.com/v3/company.enrich"
 
         if not domain:
@@ -147,6 +152,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
         return self.query(url, {"domain": domain})
 
     def queryPersonByEmail(self, email):
+        """Query PersonByEmail."""
         url = "https://api.fullcontact.com/v3/person.enrich"
 
         if not email:
@@ -155,6 +161,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
         return self.query(url, {'email': email})
 
     def queryPersonByName(self, name):
+        """Query PersonByName."""
         url = "https://api.fullcontact.com/v3/person.enrich"
 
         if not name:
@@ -163,6 +170,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
         return self.query(url, {'fullName': name})
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

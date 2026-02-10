@@ -63,10 +63,12 @@ class sfp_voipbl(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "AFFILIATE_IPADDR",
@@ -75,6 +77,7 @@ class sfp_voipbl(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -87,6 +90,7 @@ class sfp_voipbl(SpiderFootModernPlugin):
         ]
 
     def queryBlacklist(self, target, targetType):
+        """Query Blacklist."""
         blacklist = self.retrieveBlacklist()
 
         if not blacklist:
@@ -108,6 +112,7 @@ class sfp_voipbl(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
+        """RetrieveBlacklist."""
         blacklist = self.cache_get('voipbl', 24)
 
         if blacklist is not None:
@@ -164,6 +169,7 @@ class sfp_voipbl(SpiderFootModernPlugin):
         return ips
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

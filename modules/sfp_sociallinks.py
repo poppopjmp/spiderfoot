@@ -61,10 +61,12 @@ class sfp_sociallinks(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "USERNAME",
             "EMAILADDR",
@@ -75,6 +77,7 @@ class sfp_sociallinks(SpiderFootModernPlugin):
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "GEOINFO",
             "SOCIAL_MEDIA",
@@ -87,6 +90,7 @@ class sfp_sociallinks(SpiderFootModernPlugin):
         ]
 
     def query(self, queryString):
+        """Query the data source."""
         headers = {
             'Accept': "application/json",
             'Authorization': self.opts['api_key']
@@ -118,6 +122,7 @@ class sfp_sociallinks(SpiderFootModernPlugin):
         return json.loads(res['content'])
 
     def queryTelegram(self, qry, eventName):
+        """Query Telegram."""
         if eventName == "PHONE_NUMBER":
             queryString = f"https://osint.rest/api/telegram/user_by_phone?query={qry}"
         elif eventName == "USERNAME":
@@ -126,22 +131,26 @@ class sfp_sociallinks(SpiderFootModernPlugin):
         return self.query(queryString)
 
     def queryFlickr(self, qry):
+        """Query Flickr."""
         queryString = f"https://osint.rest/api/flickr/email?email={qry}"
 
         return self.query(queryString)
 
     def querySkype(self, qry):
+        """Query Skype."""
         queryString = f"https://osint.rest/api/skype/search/v2?query={qry}"
 
         return self.query(queryString)
 
     def queryLinkedin(self, qry):
+        """Query Linkedin."""
         queryString = f"https://osint.rest/api/linkedin/lookup_by_email/v2?query={qry}"
 
         return self.query(queryString)
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

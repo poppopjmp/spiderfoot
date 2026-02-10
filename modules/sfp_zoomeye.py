@@ -65,6 +65,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
@@ -73,9 +74,11 @@ class sfp_zoomeye(SpiderFootModernPlugin):
             self.errorState = True
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "INTERNET_NAME",
             "DOMAIN_NAME",
@@ -226,6 +229,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
         emitted = set()
 
         def emit(evt_type, data):
+            """Emit."""
             key = (evt_type, data)
             if key in emitted:
                 return

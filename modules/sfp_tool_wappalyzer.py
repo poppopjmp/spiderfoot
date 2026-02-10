@@ -60,15 +60,19 @@ class sfp_tool_wappalyzer(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["OPERATING_SYSTEM", "SOFTWARE_USED", "WEBSERVER_TECHNOLOGY"]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -54,21 +54,25 @@ class sfp_github(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "USERNAME", "SOCIAL_MEDIA"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "GEOINFO", "PUBLIC_CODE_REPO"]
 
     # Build up repo info for use as an event
     def buildRepoInfo(self, item):
         # Get repos matching the name
+        """Build RepoInfo."""
         name = item.get('name')
         if name is None:
             self.debug("Incomplete Github information found (name).")
@@ -87,6 +91,7 @@ class sfp_github(SpiderFootModernPlugin):
         return "\n".join([f"Name: {name}", f"URL: {html_url}", f"Description: {description}"])
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
         srcModuleName = event.module

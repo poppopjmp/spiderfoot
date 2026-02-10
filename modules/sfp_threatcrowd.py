@@ -73,6 +73,7 @@ class sfp_threatcrowd(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
@@ -81,18 +82,21 @@ class sfp_threatcrowd(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "AFFILIATE_IPADDR", "INTERNET_NAME",
                 "CO_HOSTED_SITE", "NETBLOCK_OWNER", "EMAILADDR",
                 "NETBLOCK_MEMBER", "AFFILIATE_INTERNET_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["MALICIOUS_IPADDR", "MALICIOUS_INTERNET_NAME",
                 "MALICIOUS_COHOST", "MALICIOUS_AFFILIATE_INTERNET_NAME",
                 "MALICIOUS_AFFILIATE_IPADDR", "MALICIOUS_NETBLOCK",
                 "MALICIOUS_SUBNET", "MALICIOUS_EMAILADDR"]
 
     def query(self, qry):
+        """Query the data source."""
         url = None
 
         if self.sf.validIP(qry):
@@ -121,6 +125,7 @@ class sfp_threatcrowd(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

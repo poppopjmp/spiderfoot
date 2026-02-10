@@ -60,13 +60,16 @@ class sfp_criminalip(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "PHONE_NUMBER", "IP_ADDRESS", "IPV6_ADDRESS"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "COMPANY_NAME",
             "SOCIAL_MEDIA",
@@ -77,6 +80,7 @@ class sfp_criminalip(SpiderFootModernPlugin):
         ]
 
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from CriminalIP API.")
             return None
@@ -157,6 +161,7 @@ class sfp_criminalip(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

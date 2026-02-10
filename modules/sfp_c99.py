@@ -68,10 +68,12 @@ class sfp_c99(SpiderFootModernPlugin):
     cohostcount = 0
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
             "PHONE_NUMBER",
@@ -81,6 +83,7 @@ class sfp_c99(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "RAW_RIR_DATA",
             "GEOINFO",
@@ -99,6 +102,7 @@ class sfp_c99(SpiderFootModernPlugin):
         ]
 
     def query(self, path, queryParam, queryData):
+        """Query the data source."""
         res = self.fetch_url(
             f"https://api.c99.nl/{path}?key={self.opts['api_key']}&{queryParam}={queryData}&json",
             timeout=self.opts["_fetchtimeout"],
@@ -132,10 +136,12 @@ class sfp_c99(SpiderFootModernPlugin):
         return info
 
     def emitRawRirData(self, data, event):
+        """EmitRawRirData."""
         evt = SpiderFootEvent("RAW_RIR_DATA", str(data), "sfp_c99", event)
         self.notifyListeners(evt)
 
     def emitPhoneData(self, phoneData, event):
+        """EmitPhoneData."""
         provider = phoneData.get("provider")
         carrier = phoneData.get("carrier")
         city = phoneData.get("city")
@@ -167,6 +173,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.emitRawRirData(phoneData, event)
 
     def emitSubDomainData(self, subDomainData, event):
+        """EmitSubDomainData."""
         found = False
 
         for subDomainElem in subDomainData:
@@ -183,6 +190,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.emitRawRirData(subDomainData, event)
 
     def emitDomainHistoryData(self, domainHistoryData, event):
+        """EmitDomainHistoryData."""
         found = False
 
         for domainHistoryElem in domainHistoryData:
@@ -205,6 +213,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.emitRawRirData(domainHistoryData, event)
 
     def emitIpToSkypeData(self, data, event):
+        """EmitIpToSkypeData."""
         skype = data.get("skype")
 
         if skype:
@@ -227,6 +236,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.emitRawRirData(data, event)
 
     def emitIpToDomainsData(self, data, event):
+        """EmitIpToDomainsData."""
         domains = data.get("domains")
         found = False
 
@@ -244,6 +254,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.emitRawRirData(data, event)
 
     def emitProxyDetectionData(self, data, event):
+        """EmitProxyDetectionData."""
         isProxy = data.get("proxy")
 
         if isProxy:
@@ -257,6 +268,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.emitRawRirData(data, event)
 
     def emitGeoIPData(self, data, event):
+        """EmitGeoIPData."""
         found = False
 
         hostName = data.get("hostname", "").strip()
@@ -310,6 +322,7 @@ class sfp_c99(SpiderFootModernPlugin):
         self.emitRawRirData(data, event)
 
     def emitSkypeResolverData(self, data, event):
+        """EmitSkypeResolverData."""
         ip = data.get("ip")
         ips = data.get("ips")
         found = False
@@ -342,6 +355,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.emitRawRirData(data, event)
 
     def emitWafDetectorData(self, data, event):
+        """EmitWafDetectorData."""
         firewall = data.get("result")
 
         if firewall:
@@ -355,6 +369,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.emitRawRirData(data, event)
 
     def emitHostname(self, data, event):
+        """EmitHostname."""
         if not self.sf.validHost(data, self.opts['_internettlds']):
             return
 
@@ -394,6 +409,7 @@ class sfp_c99(SpiderFootModernPlugin):
                 self.cohostcount += 1
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

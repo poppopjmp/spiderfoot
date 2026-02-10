@@ -91,6 +91,7 @@ class sfp_binaryedge(SpiderFootModernPlugin):
     checkedips = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.reportedhosts = self.tempStorage()
@@ -98,6 +99,7 @@ class sfp_binaryedge(SpiderFootModernPlugin):
         self.cohostcount = 0
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "DOMAIN_NAME",
@@ -107,6 +109,7 @@ class sfp_binaryedge(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "INTERNET_NAME",
             "DOMAIN_NAME",
@@ -125,6 +128,7 @@ class sfp_binaryedge(SpiderFootModernPlugin):
         ]
 
     def query(self, qry, querytype, page=1):
+        """Query the data source."""
         retarr = list()
 
         if self.errorState:
@@ -189,6 +193,7 @@ class sfp_binaryedge(SpiderFootModernPlugin):
         return retarr
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

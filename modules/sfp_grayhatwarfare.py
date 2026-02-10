@@ -71,16 +71,19 @@ class sfp_grayhatwarfare(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
         ]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'CLOUD_STORAGE_BUCKET',
             'CLOUD_STORAGE_BUCKET_OPEN',
@@ -89,6 +92,7 @@ class sfp_grayhatwarfare(SpiderFootModernPlugin):
 
     # Query Grayhat Warfare
     def query(self, keyword, start):
+        """Query the data source."""
         params = urllib.parse.urlencode({
             'keywords': keyword.encode('raw_unicode_escape'),
             'access_token': self.opts['api_key']
@@ -125,6 +129,7 @@ class sfp_grayhatwarfare(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

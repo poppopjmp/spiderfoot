@@ -62,11 +62,13 @@ class sfp_commoncrawl(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.indexBase = list()
         self.errorState = False
     def search(self, target):
+        """Search the data source."""
         ret = list()
         for index in self.indexBase:
             url = f"https://index.commoncrawl.org/{index}-index?url={target}/*&output=json"
@@ -88,6 +90,7 @@ class sfp_commoncrawl(SpiderFootModernPlugin):
         return ret
 
     def getLatestIndexes(self):
+        """Get LatestIndexes."""
         url = "https://index.commoncrawl.org/"
         res = self.fetch_url(url, timeout=60,
                                useragent="SpiderFoot")
@@ -126,16 +129,19 @@ class sfp_commoncrawl(SpiderFootModernPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["LINKED_URL_INTERNAL"]
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

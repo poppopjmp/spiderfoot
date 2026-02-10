@@ -66,6 +66,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         if userOpts is None:
             userOpts = {}
         super().setup(sfc, userOpts or {})
@@ -73,6 +74,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
         self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
             "EMAILADDR",
@@ -81,6 +83,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "EMAILADDR_DISPOSABLE",
             "EMAILADDR_COMPROMISED",
@@ -94,6 +97,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
         ]
 
     def handle_error_response(self, qry, res):
+        """Handle error response."""
         try:
             error_info = json.loads(res["content"])
         except Exception as e:
@@ -110,6 +114,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
     def query(self, qry, eventName):
+        """Query the data source."""
         queryString = ""
         if eventName == "PHONE_NUMBER":
             queryString = f"https://ipqualityscore.com/api/json/phone/{self.opts['api_key']}/{qry}?strictness={self.opts['strictness']}"
@@ -141,6 +146,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
         return None
 
     def getGeoInfo(self, data):
+        """Get GeoInfo."""
         geoInfo = ""
 
         city = data.get('city')
@@ -162,6 +168,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
         return geoInfo
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

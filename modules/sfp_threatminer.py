@@ -81,6 +81,7 @@ class sfp_threatminer(SpiderFootModernPlugin):
     checkedips = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.reportedhosts = self.tempStorage()
@@ -91,14 +92,17 @@ class sfp_threatminer(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "DOMAIN_NAME", "NETBLOCK_OWNER",
                 "NETBLOCK_MEMBER"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "CO_HOSTED_SITE"]
 
     def query(self, qry, querytype):
+        """Query the data source."""
         if self.sf.validIP(qry):
             tgttype = "host"
         else:
@@ -130,6 +134,7 @@ class sfp_threatminer(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -203,6 +203,7 @@ class sfp_netlas(SpiderFootModernPlugin):
         self.results[eventData] = True
         emitted = set()
         def emit(evt_type, data):
+            """Emit."""
             key = (evt_type, str(data))
             if key in emitted:
                 return

@@ -66,6 +66,7 @@ class sfp_ethereum(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
@@ -86,16 +87,19 @@ class sfp_ethereum(SpiderFootModernPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["ETHEREUM_ADDRESS", "ETHEREUM_TX"]
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         # Stub event filtering logic
         if event.eventType not in self.watchedEvents():
@@ -105,6 +109,7 @@ class sfp_ethereum(SpiderFootModernPlugin):
         self.debug("[handleEvent] (stub) No real logic implemented.")
 
     def shutdown(self):
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Ethereum module.")
 
 # End of sfp_ethereum class

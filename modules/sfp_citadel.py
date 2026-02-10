@@ -74,23 +74,27 @@ class sfp_citadel(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
         self.__dataSource__ = "Leak-Lookup.com"
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['EMAILADDR']
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["EMAILADDR_COMPROMISED"]
 
     # Query email address
     # https://leak-lookup.com/api
     def queryEmail(self, email):
+        """Query Email."""
         apikey = self.opts['api_key']
 
         if not apikey:
@@ -125,6 +129,7 @@ class sfp_citadel(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

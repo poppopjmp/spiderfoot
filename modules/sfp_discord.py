@@ -41,6 +41,7 @@ class sfp_discord(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         # Option validation
@@ -55,9 +56,11 @@ class sfp_discord(SpiderFootModernPlugin):
             raise ValueError("max_messages must be a positive integer.")
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["DISCORD_MESSAGE"]
 
     def handleEvent(self, event):
@@ -110,4 +113,5 @@ class sfp_discord(SpiderFootModernPlugin):
                 self.notifyListeners(evt)
 
     def shutdown(self):
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Discord module.")

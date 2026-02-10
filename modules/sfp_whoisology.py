@@ -69,6 +69,7 @@ class sfp_whoisology(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
@@ -76,14 +77,17 @@ class sfp_whoisology(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["EMAILADDR"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ['AFFILIATE_INTERNET_NAME', 'AFFILIATE_DOMAIN_NAME']
 
     # Search Whoisology
     def query(self, qry, querytype):
+        """Query the data source."""
         url = "https://whoisology.com/api?auth=" + \
             self.opts['api_key'] + "&request=flat"
         url += "&field=" + querytype + "&value=" + qry + \
@@ -120,6 +124,7 @@ class sfp_whoisology(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

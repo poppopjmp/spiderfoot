@@ -65,10 +65,12 @@ class sfp_multiproxy(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'AFFILIATE_IPADDR',
@@ -77,6 +79,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -89,6 +92,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
         ]
 
     def queryProxyList(self, target, targetType):
+        """Query ProxyList."""
         proxy_list = self.retrieveProxyList()
 
         if not proxy_list:
@@ -111,6 +115,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
         return False
 
     def retrieveProxyList(self):
+        """RetrieveProxyList."""
         proxy_list = self.cache_get('multiproxyopenproxies', 24)
 
         if proxy_list is not None:
@@ -162,6 +167,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
         return ips
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

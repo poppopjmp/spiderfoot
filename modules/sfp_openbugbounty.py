@@ -61,6 +61,7 @@ class sfp_openbugbounty(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
@@ -68,14 +69,17 @@ class sfp_openbugbounty(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["VULNERABILITY_DISCLOSURE"]
 
     # Query XSSposed.org
     def queryOBB(self, qry):
+        """Query OBB."""
         ret = list()
         base = "https://www.openbugbounty.org"
         url = "https://www.openbugbounty.org/search/?search=" + qry
@@ -102,6 +106,7 @@ class sfp_openbugbounty(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -65,6 +65,7 @@ class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
@@ -72,12 +73,15 @@ class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
             self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["BITCOIN_ADDRESS"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["MALICIOUS_BITCOIN_ADDRESS", "RAW_RIR_DATA"]
 
     def query(self, qry):
+        """Query the data source."""
         qs = urllib.parse.urlencode({"address": qry})
         res = self.fetch_url(
             f"https://bitcoinwhoswho.com/api/scam/{self.opts['api_key']}?{qs}",
@@ -98,12 +102,14 @@ class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
         return None
 
     def emit(self, etype, data, pevent, notify=True):
+        """Emit."""
         evt = SpiderFootEvent(etype, data, self.__name__, pevent)
         if notify:
             self.notifyListeners(evt)
         return evt
 
     def generate_events(self, data, pevent):
+        """Generate events."""
         if not isinstance(data, dict):
             return False
 
@@ -116,6 +122,7 @@ class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
         return False
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         if self.errorState:
             return
 

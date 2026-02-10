@@ -63,6 +63,7 @@ class sfp_ripe(SpiderFootModernPlugin):
     lastContent = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.memCache = self.tempStorage()
@@ -71,6 +72,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         self.lastContent = None
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'IPV6_ADDRESS',
@@ -84,6 +86,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'NETBLOCK_MEMBER',
             'NETBLOCK_OWNER',
@@ -96,6 +99,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # Fetch content and notify of the raw data
     def fetchRir(self, url):
+        """Fetch Rir."""
         if url in self.memCache:
             return self.memCache[url]
 
@@ -109,6 +113,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # Get the netblock the IP resides in
     def ipNetblock(self, ipaddr):
+        """IpNetblock."""
         prefix = None
 
         res = self.fetchRir(
@@ -133,6 +138,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # Query WHOIS data
     def queryWhois(self, qry):
+        """Query Whois."""
         res = self.fetchRir(
             f"https://stat.ripe.net/data/whois/data.json?resource={qry}")
         if res['content'] is None:
@@ -149,6 +155,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # Get the AS owning the netblock
     def netblockAs(self, prefix):
+        """NetblockAs."""
         whois = self.queryWhois(prefix)
 
         if not whois:
@@ -176,6 +183,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # Owner information about an AS or netblock
     def entityOwnerInfo(self, entity):
+        """EntityOwnerInfo."""
         whois = self.queryWhois(entity)
 
         if not whois:
@@ -213,6 +221,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # Netblocks owned by an AS
     def asNetblocks(self, asn):
+        """AsNetblocks."""
         res = self.fetchRir(
             f"https://stat.ripe.net/data/announced-prefixes/data.json?resource=AS{asn}")
         if res['content'] is None:
@@ -237,6 +246,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # Neighbours to an AS
     def asNeighbours(self, asn):
+        """AsNeighbours."""
         res = self.fetchRir(
             f"https://stat.ripe.net/data/asn-neighbours/data.json?resource=AS{asn}")
         if res['content'] is None:
@@ -261,6 +271,7 @@ class sfp_ripe(SpiderFootModernPlugin):
     # and the string supplied.
     def findName(self, string):
         # Simplest check to perform..
+        """FindName."""
         for n in self.getTarget().getNames():
             if n in string:
                 return True
@@ -297,6 +308,7 @@ class sfp_ripe(SpiderFootModernPlugin):
     # Owns the AS or not?
     def ownsAs(self, asn):
         # Determine whether the AS is owned by our target
+        """OwnsAs."""
         ownerinfo = self.entityOwnerInfo(asn)
 
         if not ownerinfo:
@@ -313,6 +325,7 @@ class sfp_ripe(SpiderFootModernPlugin):
     # Owns the netblock or not?
     def ownsNetblock(self, netblock):
         # Determine whether the netblock is owned by our target
+        """OwnsNetblock."""
         ownerinfo = self.entityOwnerInfo(netblock)
 
         if not ownerinfo:
@@ -328,6 +341,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

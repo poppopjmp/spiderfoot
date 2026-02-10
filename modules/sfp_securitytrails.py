@@ -77,6 +77,7 @@ class sfp_securitytrails(SpiderFootModernPlugin):
     cohostcount = 0
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
@@ -85,11 +86,13 @@ class sfp_securitytrails(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "IPV6_ADDRESS", "DOMAIN_NAME",
                 "EMAILADDR", "NETBLOCK_OWNER"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["CO_HOSTED_SITE",
                 "DOMAIN_NAME", "AFFILIATE_DOMAIN_NAME",
                 "INTERNET_NAME", "AFFILIATE_INTERNET_NAME",
@@ -97,6 +100,7 @@ class sfp_securitytrails(SpiderFootModernPlugin):
 
     # Search SecurityTrails
     def query(self, qry, querytype, page=1, accum=None):
+        """Query the data source."""
         info = None
 
         headers = {
@@ -153,6 +157,7 @@ class sfp_securitytrails(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

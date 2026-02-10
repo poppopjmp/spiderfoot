@@ -81,14 +81,17 @@ class sfp_onyphe(SpiderFootModernPlugin):
     cohostcount = 0
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "IPV6_ADDRESS"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "GEOINFO",
             "MALICIOUS_IPADDR",
@@ -105,6 +108,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
         ]
 
     def query(self, endpoint, ip, page=1):
+        """Query the data source."""
         retarr = list()
 
         headers = {
@@ -177,6 +181,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
         return retarr
 
     def emitLocationEvent(self, location, eventData, event):
+        """EmitLocationEvent."""
         if location is None:
             return
         self.info(f"Found location for {eventData}: {location}")
@@ -186,6 +191,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
         self.notifyListeners(evt)
 
     def emitDomainData(self, response, eventData, event):
+        """EmitDomainData."""
         domains = set()
         if response.get("domain") is not None and isinstance(
             response['domain'], list
@@ -232,6 +238,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
                 self.cohostcount += 1
 
     def isFreshEnough(self, result):
+        """IsFreshEnough."""
         limit = self.opts["age_limit_days"]
         if limit <= 0:
             return True
@@ -253,6 +260,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

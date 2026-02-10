@@ -62,9 +62,11 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
@@ -72,6 +74,7 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -82,6 +85,7 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
         ]
 
     def queryFamilyDNS(self, qaddr):
+        """Query FamilyDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["185.228.168.168", "185.228.168.169"]
 
@@ -97,6 +101,7 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
         return False
 
     def queryAdultDNS(self, qaddr):
+        """Query AdultDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["185.228.168.10", "185.228.169.11"]
 
@@ -112,6 +117,7 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
         return False
 
     def querySecurityDNS(self, qaddr):
+        """Query SecurityDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["185.228.168.9", "185.228.169.9"]
 
@@ -127,6 +133,7 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
         return False
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

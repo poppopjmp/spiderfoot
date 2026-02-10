@@ -68,6 +68,7 @@ class sfp_zoneh(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
@@ -77,6 +78,7 @@ class sfp_zoneh(SpiderFootModernPlugin):
     # What events is this module interested in for input
     # * = be notified about all events.
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "IP_ADDRESS", "IPV6_ADDRESS",
                 "AFFILIATE_INTERNET_NAME", "AFFILIATE_IPADDR", "AFFILIATE_IPV6_ADDRESS",
                 "CO_HOSTED_SITE"]
@@ -85,11 +87,13 @@ class sfp_zoneh(SpiderFootModernPlugin):
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["DEFACED_INTERNET_NAME", "DEFACED_IPADDR",
                 "DEFACED_AFFILIATE_INTERNET_NAME",
                 "DEFACED_COHOST", "DEFACED_AFFILIATE_IPADDR"]
 
     def lookupItem(self, target, content):
+        """Look up Item."""
         grps = re.findall(
             r"<title><\!\[CDATA\[(.[^\]]*)\]\]></title>\s+<link><\!\[CDATA\[(.[^\]]*)\]\]></link>", content)
         for m in grps:
@@ -101,6 +105,7 @@ class sfp_zoneh(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

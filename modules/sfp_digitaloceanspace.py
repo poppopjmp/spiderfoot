@@ -60,21 +60,25 @@ class sfp_digitaloceanspace(SpiderFootModernPlugin):
     lock = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.s3results = dict()
         self.results = self.tempStorage()
         self.lock = threading.Lock()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "LINKED_URL_EXTERNAL"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["CLOUD_STORAGE_BUCKET", "CLOUD_STORAGE_BUCKET_OPEN"]
 
     def checkSite(self, url):
+        """Check Site."""
         res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
 
@@ -97,6 +101,7 @@ class sfp_digitaloceanspace(SpiderFootModernPlugin):
                     self.s3results[url] = 0
 
     def threadSites(self, siteList):
+        """ThreadSites."""
         self.s3results = dict()
         running = True
         i = 0
@@ -134,6 +139,7 @@ class sfp_digitaloceanspace(SpiderFootModernPlugin):
         return self.s3results
 
     def batchSites(self, sites):
+        """BatchSites."""
         i = 0
         res = list()
         siteList = list()
@@ -158,6 +164,7 @@ class sfp_digitaloceanspace(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

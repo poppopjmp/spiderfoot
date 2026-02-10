@@ -81,6 +81,7 @@ class sfp_spider(SpiderFootModernPlugin):
     siteCookies = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.fetchedPages = self.tempStorage()
         self.urlEvents = self.tempStorage()
@@ -88,10 +89,12 @@ class sfp_spider(SpiderFootModernPlugin):
         self.__dataSource__ = "Target Website"
     # Search engines and DNS lookups provide INTERNET_NAME.
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL", "INTERNET_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "WEBSERVER_HTTPHEADERS",
             "HTTP_CODE",
@@ -244,6 +247,7 @@ class sfp_spider(SpiderFootModernPlugin):
 
     # Notify listening modules about links
     def linkNotify(self, url: str, parentEvent=None):
+        """LinkNotify."""
         if not isinstance(url, str):
             url = str(url, "utf-8", errors='replace')
         if self.getTarget().matches(self.sf.urlFQDN(url)):
@@ -257,6 +261,7 @@ class sfp_spider(SpiderFootModernPlugin):
 
     # Notify listening modules about raw data and others
     def contentNotify(self, url: str, httpresult: dict, parentEvent=None) -> None:
+        """ContentNotify."""
         if not isinstance(httpresult, dict):
             return
 
@@ -310,6 +315,7 @@ class sfp_spider(SpiderFootModernPlugin):
                 self.notifyListeners(event)
 
     def handleEvent(self, event) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -366,6 +372,7 @@ class sfp_spider(SpiderFootModernPlugin):
         return self.spiderFrom(spiderTarget)
 
     def spiderFrom(self, startingPoint: str) -> None:
+        """SpiderFrom."""
         pagesFetched = 0
         levelsTraversed = 0
 

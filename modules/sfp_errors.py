@@ -58,22 +58,26 @@ class sfp_errors(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Website"
     # What events is this module interested in for input
     # * = be notified about all events.
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["TARGET_WEB_CONTENT"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["ERROR_MESSAGE"]
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

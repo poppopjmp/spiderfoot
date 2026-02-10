@@ -76,14 +76,17 @@ class sfp_shodan(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "NETBLOCK_OWNER", "DOMAIN_NAME", "WEB_ANALYTICS_ID"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["OPERATING_SYSTEM", "DEVICE_TYPE",
                 "TCP_PORT_OPEN", "TCP_PORT_OPEN_BANNER",
                 'RAW_RIR_DATA', 'GEOINFO', 'IP_ADDRESS',
@@ -92,6 +95,7 @@ class sfp_shodan(SpiderFootModernPlugin):
                 'VULNERABILITY_CVE_LOW', 'VULNERABILITY_GENERAL']
 
     def queryHost(self, qry):
+        """Query Host."""
         res = self.fetch_url(
             f"https://api.shodan.io/shodan/host/{qry}?key={self.opts['api_key']}",
             timeout=self.opts['_fetchtimeout'],
@@ -122,6 +126,7 @@ class sfp_shodan(SpiderFootModernPlugin):
         return None
 
     def searchHosts(self, qry):
+        """Search for Hosts."""
         params = {
             'query': f"hostname:{qry}",
             'key': self.opts['api_key']
@@ -157,6 +162,7 @@ class sfp_shodan(SpiderFootModernPlugin):
         return None
 
     def searchHtml(self, qry):
+        """Search for Html."""
         params = {
             'query': 'http.html:"' + qry.encode('raw_unicode_escape').decode("ascii", errors='replace') + '"',
             'key': self.opts['api_key']
@@ -196,6 +202,7 @@ class sfp_shodan(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

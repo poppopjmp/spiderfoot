@@ -51,14 +51,17 @@ class sfp_apple_itunes(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'DOMAIN_NAME'
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'APPSTORE_ENTRY',
             'INTERNET_NAME',
@@ -68,6 +71,7 @@ class sfp_apple_itunes(SpiderFootModernPlugin):
         ]
 
     def query(self, qry, limit=100):
+        """Query the data source."""
         params = urllib.parse.urlencode({
             'media': 'software',
             'entity': 'software,iPadSoftware,softwareDeveloper',
@@ -102,6 +106,7 @@ class sfp_apple_itunes(SpiderFootModernPlugin):
         return results
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

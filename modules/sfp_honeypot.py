@@ -99,9 +99,11 @@ class sfp_honeypot(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "AFFILIATE_IPADDR",
@@ -110,6 +112,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -123,10 +126,12 @@ class sfp_honeypot(SpiderFootModernPlugin):
 
     # Swap 1.2.3.4 to 4.3.2.1
     def reverseAddr(self, ipaddr):
+        """ReverseAddr."""
         return '.'.join(reversed(ipaddr.split('.')))
 
     # Returns text about the IP status returned from DNS
     def parseDNS(self, addr):
+        """Parse DNS."""
         bits = addr.split(".")
         if int(bits[1]) > self.opts['timelimit']:
             return None
@@ -140,6 +145,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
         return f"{self.statuses[bits[3]]}\nLast Activity: {bits[1]} days ago\nThreat Level: {bits[2]}"
 
     def queryAddr(self, qaddr, parentEvent):
+        """Query Addr."""
         eventName = parentEvent.eventType
 
         text = None
@@ -191,6 +197,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
         self.notifyListeners(evt)
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

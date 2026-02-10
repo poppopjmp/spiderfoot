@@ -84,6 +84,7 @@ class sfp_greynoise(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
@@ -91,10 +92,12 @@ class sfp_greynoise(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "AFFILIATE_IPADDR", "NETBLOCK_MEMBER", "NETBLOCK_OWNER"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "MALICIOUS_IPADDR",
             "MALICIOUS_ASN",
@@ -109,6 +112,7 @@ class sfp_greynoise(SpiderFootModernPlugin):
         ]
 
     def queryIP(self, qry, qry_type):
+        """Query IP."""
         gn_context_url = "https://api.greynoise.io/v2/noise/context/"
         gn_gnql_url = "https://api.greynoise.io/v2/experimental/gnql?query="
 
@@ -146,6 +150,7 @@ class sfp_greynoise(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

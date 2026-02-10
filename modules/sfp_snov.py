@@ -72,19 +72,23 @@ class sfp_snov(SpiderFootModernPlugin):
     limit = 100
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     # For a list of all events, check sfdb.py.
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC"]
 
     # Get Authentication token from Snov.IO API
     def queryAccessToken(self):
+        """Query AccessToken."""
         params = {
             'grant_type': "client_credentials",
             'client_id': self.opts['api_key_client_id'],
@@ -127,6 +131,7 @@ class sfp_snov(SpiderFootModernPlugin):
 
     # Fetch email addresses related to target domain
     def queryDomainName(self, qry, accessToken, currentLastId):
+        """Query DomainName."""
         params = {
             'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'access_token': accessToken,
@@ -154,6 +159,7 @@ class sfp_snov(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -36,13 +36,16 @@ class sfp_xiaohongshu(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["XIAOHONGSHU_POST"]
 
     def handleEvent(self, event):
@@ -99,4 +102,5 @@ class sfp_xiaohongshu(SpiderFootModernPlugin):
                 self.error(f"Error fetching posts for user {username}: {e}")
 
     def shutdown(self):
+        """Shutdown."""
         pass

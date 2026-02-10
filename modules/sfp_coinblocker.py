@@ -59,10 +59,12 @@ class sfp_coinblocker(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
@@ -70,6 +72,7 @@ class sfp_coinblocker(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -80,6 +83,7 @@ class sfp_coinblocker(SpiderFootModernPlugin):
         ]
 
     def queryBlocklist(self, target):
+        """Query Blocklist."""
         blocklist = self.retrieveBlocklist()
 
         if not blocklist:
@@ -92,6 +96,7 @@ class sfp_coinblocker(SpiderFootModernPlugin):
         return False
 
     def retrieveBlocklist(self):
+        """RetrieveBlocklist."""
         blocklist = self.cache_get(
             'coinblocker', self.opts.get('cacheperiod', 24))
 
@@ -150,6 +155,7 @@ class sfp_coinblocker(SpiderFootModernPlugin):
         return hosts
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

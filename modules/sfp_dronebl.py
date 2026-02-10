@@ -85,9 +85,11 @@ class sfp_dronebl(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'AFFILIATE_IPADDR',
@@ -96,6 +98,7 @@ class sfp_dronebl(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -111,6 +114,7 @@ class sfp_dronebl(SpiderFootModernPlugin):
 
     # Swap 1.2.3.4 to 4.3.2.1
     def reverseAddr(self, ipaddr):
+        """ReverseAddr."""
         if not self.sf.validIP(ipaddr):
             self.debug(f"Invalid IPv4 address {ipaddr}")
             return None
@@ -140,6 +144,7 @@ class sfp_dronebl(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

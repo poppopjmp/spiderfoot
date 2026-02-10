@@ -73,6 +73,7 @@ class sfp_builtwith(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
@@ -81,15 +82,18 @@ class sfp_builtwith(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "EMAILADDR", "EMAILADDR_GENERIC", "RAW_RIR_DATA",
                 "WEBSERVER_TECHNOLOGY", "PHONE_NUMBER", "DOMAIN_NAME",
                 "CO_HOSTED_SITE", "IP_ADDRESS", "WEB_ANALYTICS_ID"]
 
     def queryRelationships(self, t):
+        """Query Relationships."""
         url = f"https://api.builtwith.com/rv1/api.json?LOOKUP={t}&KEY={self.opts['api_key']}"
 
         res = self.fetch_url(
@@ -110,6 +114,7 @@ class sfp_builtwith(SpiderFootModernPlugin):
         return None
 
     def queryDomainInfo(self, t):
+        """Query DomainInfo."""
         url = f"https://api.builtwith.com/rv1/api.json?LOOKUP={t}&KEY={self.opts['api_key']}"
 
         res = self.fetch_url(
@@ -131,6 +136,7 @@ class sfp_builtwith(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

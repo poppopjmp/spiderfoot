@@ -67,10 +67,12 @@ class sfp_isc(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -79,6 +81,7 @@ class sfp_isc(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -87,6 +90,7 @@ class sfp_isc(SpiderFootModernPlugin):
         ]
 
     def query(self, ip):
+        """Query the data source."""
         if not ip:
             return None
 
@@ -110,6 +114,7 @@ class sfp_isc(SpiderFootModernPlugin):
         return res['content']
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

@@ -56,18 +56,22 @@ class sfp_zetalytics(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         if userOpts:
             self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "DOMAIN_NAME", "EMAILADDR"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "AFFILIATE_DOMAIN_NAME", "INTERNET_NAME_UNRESOLVED"]
 
     def emit(self, etype, data, pevent):
+        """Emit."""
         if self.checkForStop():
             return None
         evt = SpiderFootEvent(etype, data, self.__name__, pevent)
@@ -75,6 +79,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         return evt
 
     def verify_emit_internet_name(self, hostname, pevent):
+        """Verify emit internet name."""
         if f"INTERNET_NAME:{hostname}" in self.results:
             return False
 
@@ -93,6 +98,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         return True
 
     def request(self, path, params):
+        """Request."""
         params = {**params, "token": self.opts["api_key"]}
         qs = urlencode(params)
         res = self.fetch_url(
@@ -112,18 +118,23 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         return None
 
     def query_subdomains(self, domain):
+        """Query subdomains."""
         return self.request("/subdomains", {"q": domain})
 
     def query_hostname(self, hostname):
+        """Query hostname."""
         return self.request("/hostname", {"q": hostname})
 
     def query_email_domain(self, email_domain):
+        """Query email domain."""
         return self.request("/email_domain", {"q": email_domain})
 
     def query_email_address(self, email_address):
+        """Query email address."""
         return self.request("/email_address", {"q": email_address})
 
     def generate_subdomains_events(self, data, pevent):
+        """Generate subdomains events."""
         if not isinstance(data, dict):
             return False
 
@@ -142,6 +153,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         return events_generated  # noqa R504
 
     def generate_hostname_events(self, data, pevent):
+        """Generate hostname events."""
         if not isinstance(data, dict):
             return False
 
@@ -163,6 +175,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         return events_generated  # noqa R504
 
     def generate_email_events(self, data, pevent):
+        """Generate email events."""
         if not isinstance(data, dict):
             return False
 
@@ -180,6 +193,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         return events_generated  # noqa R504
 
     def generate_email_domain_events(self, data, pevent):
+        """Generate email domain events."""
         if not isinstance(data, dict):
             return False
 
@@ -197,6 +211,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         return events_generated  # noqa R504
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

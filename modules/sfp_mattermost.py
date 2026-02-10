@@ -46,6 +46,7 @@ class sfp_mattermost(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
@@ -64,12 +65,15 @@ class sfp_mattermost(SpiderFootModernPlugin):
             raise ValueError("output_format must be 'summary' or 'full'.")
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["MATTERMOST_MESSAGE"]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         allowed_types = [t.strip() for t in self.opts.get("event_types", "").split(",") if t.strip()]
         if event.eventType.lower() not in [t.lower() for t in allowed_types]:
@@ -79,4 +83,5 @@ class sfp_mattermost(SpiderFootModernPlugin):
         return None
 
     def shutdown(self):
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Mattermost module.")

@@ -86,12 +86,15 @@ class sfp_virustotal(SpiderFootModernPlugin):
     errorState = False
 
     def __init__(self) -> None:
+        """Initialize the sfp virustotal."""
         super().__init__()
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "AFFILIATE_IPADDR",
@@ -102,6 +105,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "MALICIOUS_IPADDR",
             "MALICIOUS_INTERNET_NAME",
@@ -117,6 +121,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
         ]
 
     def queryIp(self, qry):
+        """Query Ip."""
         params = urllib.parse.urlencode({
             'ip': qry,
             'apikey': self.opts['api_key'],
@@ -145,6 +150,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
         return None
 
     def queryDomain(self, qry):
+        """Query Domain."""
         params = urllib.parse.urlencode({
             'domain': qry,
             'apikey': self.opts['api_key'],
@@ -178,6 +184,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

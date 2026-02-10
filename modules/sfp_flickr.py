@@ -74,19 +74,23 @@ class sfp_flickr(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC", "INTERNET_NAME",
                 "DOMAIN_NAME", "LINKED_URL_INTERNAL"]
 
     # Retrieve API key
     def retrieveApiKey(self):
+        """RetrieveApiKey."""
         res = self.fetch_url(
             "https://www.flickr.com/", timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
@@ -103,6 +107,7 @@ class sfp_flickr(SpiderFootModernPlugin):
 
     # Query the REST API
     def query(self, qry, api_key, page=1, per_page=200):
+        """Query the data source."""
         params = {
             "sort": "relevance",
             "parse_tags": "1",
@@ -138,6 +143,7 @@ class sfp_flickr(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

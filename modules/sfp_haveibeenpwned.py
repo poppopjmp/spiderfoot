@@ -66,6 +66,7 @@ class sfp_haveibeenpwned(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
@@ -74,13 +75,16 @@ class sfp_haveibeenpwned(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["EMAILADDR", "PHONE_NUMBER"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["EMAILADDR_COMPROMISED", "PHONE_NUMBER_COMPROMISED", "LEAKSITE_CONTENT", "LEAKSITE_URL"]
 
     def query(self, qry):
+        """Query the data source."""
         if self.opts['api_key']:
             version = "3"
         else:
@@ -125,6 +129,7 @@ class sfp_haveibeenpwned(SpiderFootModernPlugin):
         return None
 
     def queryPaste(self, qry):
+        """Query Paste."""
         url = f"https://haveibeenpwned.com/api/v3/pasteaccount/{qry}"
         headers = {
             'Accept': "application/json",
@@ -166,6 +171,7 @@ class sfp_haveibeenpwned(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -48,6 +48,7 @@ class sfp_subdomain_takeover(SpiderFootModernPlugin):
 
     # Initialize module and module options
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
@@ -74,14 +75,17 @@ class sfp_subdomain_takeover(SpiderFootModernPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["AFFILIATE_INTERNET_NAME", "AFFILIATE_INTERNET_NAME_UNRESOLVED"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["AFFILIATE_INTERNET_NAME_HIJACKABLE"]
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

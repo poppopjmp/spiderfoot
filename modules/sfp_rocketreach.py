@@ -66,13 +66,16 @@ class sfp_rocketreach(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "EMAILADDR"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "EMAILADDR",
             "PERSON_NAME",
@@ -82,6 +85,7 @@ class sfp_rocketreach(SpiderFootModernPlugin):
         ]
 
     def query(self, query_value, query_type):
+        """Query the data source."""
         if self.errorState:
             return None
 
@@ -153,6 +157,7 @@ class sfp_rocketreach(SpiderFootModernPlugin):
         emitted = set()
 
         def emit(evt_type, data):
+            """Emit."""
             key = (evt_type, data)
             if key in emitted:
                 return

@@ -65,15 +65,19 @@ class sfp_mandiant_ti(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME', 'INTERNET_NAME', 'IP_ADDRESS']
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ['THREAT_INTELLIGENCE']
 
     def query(self, qry):
+        """Query the data source."""
         headers = {
             'Authorization': f'Bearer {self.opts["api_key"]}',
             'Content-Type': 'application/json',
@@ -102,6 +106,7 @@ class sfp_mandiant_ti(SpiderFootModernPlugin):
             return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

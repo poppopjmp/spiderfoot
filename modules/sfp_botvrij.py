@@ -53,10 +53,12 @@ class sfp_botvrij(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
@@ -64,6 +66,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -74,6 +77,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
         ]
 
     def queryBlacklist(self, target):
+        """Query Blacklist."""
         blacklist = self.retrieveBlacklist()
 
         if not blacklist:
@@ -86,6 +90,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
         return False
 
     def retrieveBlacklist(self):
+        """RetrieveBlacklist."""
         blacklist = self.cache_get('botvrij', 24)
 
         if blacklist is not None:
@@ -140,6 +145,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
         return hosts
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

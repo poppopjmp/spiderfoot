@@ -67,16 +67,20 @@ class sfp_googlemaps(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME', 'PHYSICAL_ADDRESS']
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["PHYSICAL_ADDRESS", "PHYSICAL_COORDINATES", "RAW_RIR_DATA"]
 
     def query(self, address):
+        """Query the data source."""
         params = urllib.parse.urlencode({
             'key': self.opts['api_key'],
             'address': address.encode('raw_unicode_escape').decode("ascii", errors='replace')
@@ -95,6 +99,7 @@ class sfp_googlemaps(SpiderFootModernPlugin):
         return res
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

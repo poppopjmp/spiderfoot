@@ -58,12 +58,14 @@ class sfp_binstring(SpiderFootModernPlugin):
     fq = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = list()
         self.__dataSource__ = "Target Website"
 
         self.d = SpiderFootHelpers.dictionaryWordsFromWordlists()
     def getStrings(self, content):
+        """Get Strings."""
         words = list()
         result = ""
 
@@ -107,14 +109,17 @@ class sfp_binstring(SpiderFootModernPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["RAW_FILE_META_DATA"]
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

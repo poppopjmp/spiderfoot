@@ -70,13 +70,16 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "DOMAIN_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "INTERNET_NAME", "DOMAIN_NAME", "LINKED_URL_INTERNAL"]
 
     def queryDomain(self, qry):
@@ -210,6 +213,7 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

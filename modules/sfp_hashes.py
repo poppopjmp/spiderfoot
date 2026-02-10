@@ -41,9 +41,11 @@ class sfp_hashes(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["TARGET_WEB_CONTENT", "BASE64_DATA",
                 "LEAKSITE_CONTENT", "RAW_DNS_RECORDS",
                 "RAW_FILE_META_DATA"]
@@ -52,10 +54,12 @@ class sfp_hashes(SpiderFootModernPlugin):
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["HASH"]
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

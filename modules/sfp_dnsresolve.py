@@ -57,12 +57,14 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
     hostresults = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.domresults = self.tempStorage()
         self.hostresults = self.tempStorage()
         self.__dataSource__ = "DNS"
     def enrichTarget(self, target):
+        """Enrich the target with additional data."""
         ret = list()
         # If it's an IP, get the hostname it reverse resolves to
         self.info("Identifying aliases for specified target(s)")
@@ -194,6 +196,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             # Events that need some kind of DNS treatment
             "CO_HOSTED_SITE",
@@ -226,6 +229,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
             "INTERNET_NAME",
@@ -243,6 +247,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -483,6 +488,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
 
     # Process a host/IP, parentEvent is the event that represents this entity
     def processHost(self, host, parentEvent, affiliate=None) -> None:
+        """Process Host."""
         parentHash = self.sf.hashstring(parentEvent.data)
         if host in self.hostresults:
             if parentHash in self.hostresults[host] or parentEvent.data == host:
@@ -584,6 +590,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
             self.processDomain(dom, evt, True, host)
 
     def processDomain(self, domainName, parentEvent, affil=False, host=None) -> None:
+        """Process Domain."""
         if domainName in self.domresults:
             self.debug(f"Skipping domain, {domainName}, already processed.")
             return

@@ -89,14 +89,17 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["URL"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["URL_DIRECTORY", "URL_FILE"]
 
     def execute_command(self, cmd):
@@ -128,6 +131,7 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
                 pass
 
     def run_remote_tool(self, target_url):
+        """Run remote tool."""
         host = self.opts.get("remote_host")
         user = self.opts.get("remote_user")
         password = self.opts.get("remote_password")
@@ -184,6 +188,7 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
             return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

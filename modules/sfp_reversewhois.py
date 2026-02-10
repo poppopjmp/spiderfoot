@@ -53,6 +53,7 @@ class sfp_reversewhois(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
@@ -61,14 +62,17 @@ class sfp_reversewhois(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["AFFILIATE_INTERNET_NAME", "AFFILIATE_DOMAIN_NAME", "DOMAIN_REGISTRAR"]
 
     # Search ReverseWhois
     def query(self, qry):
+        """Query the data source."""
         url = f"https://reversewhois.io?searchterm={qry}"
 
         res = self.fetch_url(url, timeout=self.opts.get("_fetchtimeout", 30))
@@ -104,6 +108,7 @@ class sfp_reversewhois(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

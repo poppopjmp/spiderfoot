@@ -47,6 +47,7 @@ class sfp_arbitrum(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
@@ -65,9 +66,11 @@ class sfp_arbitrum(SpiderFootModernPlugin):
             raise ValueError("output_format must be 'summary' or 'full'.")
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["ARBITRUM_ADDRESS", "ARBITRUM_TX"]
 
     def handleEvent(self, event):
@@ -143,4 +146,5 @@ class sfp_arbitrum(SpiderFootModernPlugin):
                 self.error(f"[handleEvent] Error fetching Arbitrum transactions for {address}: {e}")
 
     def shutdown(self):
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Arbitrum module.")

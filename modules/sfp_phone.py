@@ -42,15 +42,19 @@ class sfp_phone(SpiderFootModernPlugin):
     optdescs = {}
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['TARGET_WEB_CONTENT', 'DOMAIN_WHOIS', 'NETBLOCK_WHOIS', 'PHONE_NUMBER']
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ['PHONE_NUMBER', 'PROVIDER_TELCO']
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

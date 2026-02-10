@@ -72,16 +72,19 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     # Initialize module and module options
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.__dataSource__ = "NeutrinoAPI"
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS', 'IPV6_ADDRESS', 'PHONE_NUMBER']
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'RAW_RIR_DATA',
             'BLACKLISTED_IPADDR',
@@ -95,6 +98,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
     # Query the phone-validate REST API
     # https://www.neutrinoapi.com/api/phone-validate/
     def queryPhoneValidate(self, qry):
+        """Query PhoneValidate."""
         res = self.fetch_url(
             'https://neutrinoapi.com/phone-validate',
             postData={"output-format": "json", "number": qry,
@@ -108,6 +112,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
     # Query the ip-info REST API
     # https://www.neutrinoapi.com/api/ip-info/
     def queryIpInfo(self, qry):
+        """Query IpInfo."""
         res = self.fetch_url(
             "https://neutrinoapi.com/ip-info",
             postData={"output-format": "json", "ip": qry,
@@ -121,6 +126,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
     # Query the ip-blocklist REST API
     # https://www.neutrinoapi.com/api/ip-blocklist/
     def queryIpBlocklist(self, qry):
+        """Query IpBlocklist."""
         res = self.fetch_url(
             "https://neutrinoapi.com/ip-blocklist",
             postData={"output-format": "json", "ip": qry, "vpn-lookup": True,
@@ -134,6 +140,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
     # Query the host-reputation REST API
     # https://www.neutrinoapi.com/api/host-reputation/
     def queryHostReputation(self, qry):
+        """Query HostReputation."""
         res = self.fetch_url(
             "https://neutrinoapi.com/host-reputation",
             postData={"output-format": "json", "host": qry,
@@ -146,6 +153,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     # Parse API response
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from NeutrinoAPI.")
             return None
@@ -177,6 +185,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
         return data
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

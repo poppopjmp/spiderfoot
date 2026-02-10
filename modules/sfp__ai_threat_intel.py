@@ -61,12 +61,15 @@ except ImportError:
 
         @staticmethod
         def array(data):
+            """Array."""
             return data
         @staticmethod
         def mean(data):
+            """Mean."""
             return mean(data) if isinstance(data, list) else mean([data])
         @staticmethod
         def std(data):
+            """Std."""
             return std_dev(data) if isinstance(data, list) else 0
 
 try:
@@ -154,6 +157,7 @@ class PatternRecognitionEngine:
     }
     
     def __init__(self) -> None:
+        """Initialize the PatternRecognitionEngine."""
         self.models = {}
         self.feature_extractors = {}
         self.threat_signatures = {}
@@ -521,6 +525,7 @@ class PredictiveAnalyticsEngine:
     """Predictive analytics for threat forecasting."""
     
     def __init__(self) -> None:
+        """Initialize the PredictiveAnalyticsEngine."""
         self.time_series_models = {}
         self.threat_history = defaultdict(list)
         self.prediction_cache = {}
@@ -635,6 +640,7 @@ class IOCCorrelationEngine:
     """Automated IOC correlation across data sources."""
     
     def __init__(self) -> None:
+        """Initialize the IOCCorrelationEngine."""
         self.ioc_graph = defaultdict(set)
         self.temporal_relationships = {}
         self.correlation_cache = {}
@@ -780,6 +786,7 @@ class ThreatScoringEngine:
     """Dynamic threat scoring using machine learning."""
     
     def __init__(self) -> None:
+        """Initialize the ThreatScoringEngine."""
         self.scoring_models = {}
         self.feature_weights = {
             'confidence': 0.25,
@@ -918,6 +925,7 @@ class NLPThreatAnalyzer:
     """Natural language processing for unstructured threat data."""
     
     def __init__(self) -> None:
+        """Initialize the NLPThreatAnalyzer."""
         self.sentiment_analyzer = None
         self.text_vectorizer = None
         self.threat_keywords = {

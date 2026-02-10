@@ -57,24 +57,29 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
     s3results = None
 
     def __init__(self) -> None:
+        """Initialize the sfp azureblobstorage."""
         super().__init__()
         self.lock = threading.Lock()
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "LINKED_URL_EXTERNAL"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["CLOUD_STORAGE_BUCKET"]
 
     def checkSite(self, url):
+        """Check Site."""
         res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
 
@@ -83,6 +88,7 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
                 self.s3results[url] = True
 
     def threadSites(self, siteList):
+        """ThreadSites."""
         self.s3results = dict()
         running = True
         i = 0
@@ -120,6 +126,7 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
         return self.s3results
 
     def batchSites(self, sites):
+        """BatchSites."""
         i = 0
         res = list()
         siteList = list()
@@ -143,6 +150,7 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

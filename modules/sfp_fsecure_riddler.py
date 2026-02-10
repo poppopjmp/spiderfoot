@@ -69,13 +69,16 @@ class sfp_fsecure_riddler(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME', 'INTERNET_NAME',
                 'INTERNET_NAME_UNRESOLVED', 'IP_ADDRESS']
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ['INTERNET_NAME', 'AFFILIATE_INTERNET_NAME',
                 'INTERNET_NAME_UNRESOLVED', 'AFFILIATE_INTERNET_NAME_UNRESOLVED',
                 'DOMAIN_NAME', 'AFFILIATE_DOMAIN_NAME',
@@ -84,6 +87,7 @@ class sfp_fsecure_riddler(SpiderFootModernPlugin):
 
     # https://riddler.io/help/api
     def login(self):
+        """Login."""
         params = {
             'email': self.opts['username'].encode('raw_unicode_escape').decode("ascii"),
             'password': self.opts['password'].encode('raw_unicode_escape').decode("ascii")
@@ -125,6 +129,7 @@ class sfp_fsecure_riddler(SpiderFootModernPlugin):
 
     # https://riddler.io/help/search
     def query(self, qry):
+        """Query the data source."""
         params = {
             'query': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
         }
@@ -164,6 +169,7 @@ class sfp_fsecure_riddler(SpiderFootModernPlugin):
         return data
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -54,6 +54,7 @@ class sfp_punkspider(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
@@ -61,13 +62,16 @@ class sfp_punkspider(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["VULNERABILITY_GENERAL"]
 
     def query(self, domain: str):
+        """Query the data source."""
         domain_hash = hashlib.md5(domain.encode('utf-8', errors='replace').lower()).hexdigest()  # noqa: DUO130
         url = f"https://api.punkspider.org/api/partial-hash/{domain_hash}"
         res = self.fetch_url(
@@ -76,6 +80,7 @@ class sfp_punkspider(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from PunkSpider.")
             return None
@@ -106,6 +111,7 @@ class sfp_punkspider(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

@@ -48,6 +48,7 @@ class sfp_dnsneighbor(SpiderFootModernPlugin):
     hostresults = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.domresults = self.tempStorage()
@@ -55,16 +56,19 @@ class sfp_dnsneighbor(SpiderFootModernPlugin):
         self.__dataSource__ = "DNS"
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS']
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["AFFILIATE_IPADDR", "IP_ADDRESS"]
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -147,6 +151,7 @@ class sfp_dnsneighbor(SpiderFootModernPlugin):
                     self.processHost(addr, parent, True)
 
     def processHost(self, host, parentEvent, affiliate=None):
+        """Process Host."""
         parentHash = self.sf.hashstring(parentEvent.data)
         if host not in self.hostresults:
             self.hostresults[host] = [parentHash]

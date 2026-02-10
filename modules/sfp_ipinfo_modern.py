@@ -83,14 +83,17 @@ class sfp_ipinfo_modern(SpiderFootModernPlugin):
     errorState: bool = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
     def watchedEvents(self) -> list[str]:
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS', 'IPV6_ADDRESS']
 
     def producedEvents(self) -> list[str]:
+        """Return the list of events this module produces."""
         return ["GEOINFO"]
 
     def queryIP(self, ip: str) -> dict | None:
@@ -144,6 +147,7 @@ class sfp_ipinfo_modern(SpiderFootModernPlugin):
         return data
 
     def handleEvent(self, event) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

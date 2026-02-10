@@ -89,21 +89,25 @@ class sfp_similar(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "DNS"
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["SIMILARDOMAIN"]
 
     # Search for similar sounding domains
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventData = event.data
 
         dom = self.sf.domainKeyword(eventData, self.opts['_internettlds'])

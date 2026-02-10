@@ -46,6 +46,7 @@ class sfp_telegram(SpiderFootModernPlugin):
     }
 
     def __init__(self) -> None:
+        """Initialize the sfp telegram."""
         super().__init__()
         self._stop_event = threading.Event()
         self._client = None
@@ -53,6 +54,7 @@ class sfp_telegram(SpiderFootModernPlugin):
         self._emitted_message_ids = set()  # For deduplication
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts)
         if not TelegramClient:
             self.error("telethon library is not installed. Please add it to requirements.txt.")
@@ -69,6 +71,7 @@ class sfp_telegram(SpiderFootModernPlugin):
         return True
 
     def start(self):
+        """Start the module."""
         if self.errorState:
             return
         api_id = self.opts.get("api_id")
@@ -146,16 +149,20 @@ class sfp_telegram(SpiderFootModernPlugin):
                 time.sleep(poll_interval)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["TELEGRAM_MESSAGE"]
 
     def handleEvent(self, event):
         # This module is passive and does not process incoming events
+        """Handle an event received by this module."""
         pass
 
     def finish(self):
+        """Finish."""
         self._stop_event.set()
         if hasattr(self, "_thread") and self._thread.is_alive():
             self._thread.join(timeout=5)

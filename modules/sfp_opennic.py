@@ -54,9 +54,11 @@ class sfp_opennic(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "INTERNET_NAME_UNRESOLVED",
@@ -65,6 +67,7 @@ class sfp_opennic(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -73,6 +76,7 @@ class sfp_opennic(SpiderFootModernPlugin):
         ]
 
     def queryOpenNIC(self, qaddr):
+        """Query OpenNIC."""
         res = dns.resolver.Resolver()
         # https://servers.opennicproject.org/
         res.nameservers = [
@@ -130,6 +134,7 @@ class sfp_opennic(SpiderFootModernPlugin):
         ]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

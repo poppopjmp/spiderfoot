@@ -71,6 +71,7 @@ class sfp_hunter(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
@@ -79,13 +80,16 @@ class sfp_hunter(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC", "RAW_RIR_DATA"]
 
     def query(self, qry, offset=0, limit=10):
+        """Query the data source."""
         params = {
             "domain": qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             "api_key": self.opts['api_key'],
@@ -113,6 +117,7 @@ class sfp_hunter(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

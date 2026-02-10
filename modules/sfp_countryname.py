@@ -51,6 +51,7 @@ class sfp_countryname(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
@@ -172,6 +173,7 @@ class sfp_countryname(SpiderFootModernPlugin):
 
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["IBAN_NUMBER", "PHONE_NUMBER", "AFFILIATE_DOMAIN_NAME",
                 "CO_HOSTED_SITE_DOMAIN", "DOMAIN_NAME", "SIMILARDOMAIN",
                 "AFFILIATE_DOMAIN_WHOIS", "CO_HOSTED_SITE_DOMAIN_WHOIS",
@@ -179,10 +181,12 @@ class sfp_countryname(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["COUNTRY_NAME"]
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -67,21 +67,25 @@ class sfp_koodous(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'DOMAIN_NAME'
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'APPSTORE_ENTRY',
             'RAW_RIR_DATA'
         ]
 
     def queryPackageName(self, qry, cursor=''):
+        """Query PackageName."""
         package_name = qry.encode('raw_unicode_escape').decode(
             "ascii", errors='replace')
 
@@ -103,6 +107,7 @@ class sfp_koodous(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from Koodous.")
             return None
@@ -143,6 +148,7 @@ class sfp_koodous(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         if self.errorState:
             return
 

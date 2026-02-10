@@ -68,12 +68,15 @@ class sfp_opencorporates(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["COMPANY_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["COMPANY_NAME", "PHYSICAL_ADDRESS", "RAW_RIR_DATA"]
 
     def searchCompany(self, qry):
@@ -125,6 +128,7 @@ class sfp_opencorporates(SpiderFootModernPlugin):
         return data['results']
 
     def retrieveCompanyDetails(self, jurisdiction_code, company_number):
+        """RetrieveCompanyDetails."""
         url = f"https://api.opencorporates.com/companies/{jurisdiction_code}/{company_number}"
 
         if self.opts['api_key']:
@@ -159,6 +163,7 @@ class sfp_opencorporates(SpiderFootModernPlugin):
     def extractCompanyDetails(self, company, sevt):
 
         # Extract registered address
+        """Extract CompanyDetails."""
         location = company.get('registered_address_in_full')
 
         if location:
@@ -201,6 +206,7 @@ class sfp_opencorporates(SpiderFootModernPlugin):
                     self.notifyListeners(e)
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

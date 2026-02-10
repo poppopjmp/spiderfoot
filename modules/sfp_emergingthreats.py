@@ -64,10 +64,12 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "AFFILIATE_IPADDR",
@@ -76,6 +78,7 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -88,6 +91,7 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
         ]
 
     def query(self, qry, targetType):
+        """Query the data source."""
         cid = "_emergingthreats"
         url = "https://rules.emergingthreats.net/blockrules/compromised-ips.txt"
 
@@ -132,6 +136,7 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

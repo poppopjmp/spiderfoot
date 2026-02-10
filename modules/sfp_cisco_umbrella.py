@@ -62,13 +62,16 @@ class sfp_cisco_umbrella(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "DOMAIN_NAME",
             "RAW_RIR_DATA",
@@ -81,6 +84,7 @@ class sfp_cisco_umbrella(SpiderFootModernPlugin):
         ]
 
     def query(self, qry):
+        """Query the data source."""
         if self.errorState:
             return None
 
@@ -120,6 +124,7 @@ class sfp_cisco_umbrella(SpiderFootModernPlugin):
             return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

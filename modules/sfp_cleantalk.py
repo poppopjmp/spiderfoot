@@ -70,10 +70,12 @@ class sfp_cleantalk(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'AFFILIATE_IPADDR',
@@ -82,6 +84,7 @@ class sfp_cleantalk(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -94,6 +97,7 @@ class sfp_cleantalk(SpiderFootModernPlugin):
         ]
 
     def query(self, qry, targetType):
+        """Query the data source."""
         cid = "_cleantalk"
         url = "https://iplists.firehol.org/files/cleantalk_7d.ipset"
 
@@ -141,6 +145,7 @@ class sfp_cleantalk(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

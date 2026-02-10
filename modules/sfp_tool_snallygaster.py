@@ -59,14 +59,17 @@ class sfp_tool_snallygaster(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = dict()
         self.errorState = False
         self.__dataSource__ = "Target Website"
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['INTERNET_NAME']
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'VULNERABILITY_GENERAL',
             'VULNERABILITY_CVE_CRITICAL',
@@ -76,6 +79,7 @@ class sfp_tool_snallygaster(SpiderFootModernPlugin):
         ]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

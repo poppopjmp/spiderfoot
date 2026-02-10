@@ -109,12 +109,14 @@ class sfp_alienvault(SpiderFootModernPlugin):
     cohostcount = 0
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "IP_ADDRESS",
@@ -131,6 +133,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -147,6 +150,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
     # Parse API response
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from AlienVault OTX.")
             return None
@@ -175,6 +179,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
         return None
 
     def queryReputation(self, qry):
+        """Query Reputation."""
         if ":" in qry:
             target_type = "IPv6"
         elif self.sf.validIP(qry):
@@ -197,6 +202,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def queryPassiveDns(self, qry):
+        """Query PassiveDns."""
         if ":" in qry:
             target_type = "IPv6"
         elif self.sf.validIP(qry):
@@ -219,6 +225,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def queryDomainUrlList(self, qry, page=1, per_page=50):
+        """Query DomainUrlList."""
         params = urllib.parse.urlencode({
             'page': page,
             'limit': per_page
@@ -237,6 +244,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def queryHostnameUrlList(self, qry, page=1, per_page=50):
+        """Query HostnameUrlList."""
         params = urllib.parse.urlencode({
             'page': page,
             'limit': per_page
@@ -256,6 +264,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

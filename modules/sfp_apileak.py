@@ -43,6 +43,7 @@ class sfp_apileak(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts: dict = None) -> None:
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         # Support multiple patterns (comma-separated or list)
@@ -57,9 +58,11 @@ class sfp_apileak(SpiderFootModernPlugin):
             self.patterns = []
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "EMAILADDR", "ORG_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["CREDENTIAL_LEAK", "API_KEY_LEAK"]
 
     def handleEvent(self, event: 'SpiderFootEvent') -> None:

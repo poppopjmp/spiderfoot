@@ -35,13 +35,16 @@ class sfp_aparat(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["APARAT_VIDEO"]
 
     def handleEvent(self, event: 'SpiderFootEvent') -> None:
@@ -107,4 +110,5 @@ class sfp_aparat(SpiderFootModernPlugin):
             self.info("No Aparat videos found for any configured user.")
 
     def shutdown(self):
+        """Shutdown."""
         pass

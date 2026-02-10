@@ -55,14 +55,17 @@ class sfp_crxcavator(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'DOMAIN_NAME'
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'APPSTORE_ENTRY',
             'INTERNET_NAME',
@@ -75,6 +78,7 @@ class sfp_crxcavator(SpiderFootModernPlugin):
         ]
 
     def query(self, qry):
+        """Query the data source."""
         params = urllib.parse.urlencode({
             'q': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
         })
@@ -103,6 +107,7 @@ class sfp_crxcavator(SpiderFootModernPlugin):
         return data
 
     def queryExtension(self, extension_id):
+        """Query Extension."""
         res = self.fetch_url(
             f"https://api.crxcavator.io/v1/report/{extension_id}",
             useragent=self.opts['_useragent'],
@@ -127,6 +132,7 @@ class sfp_crxcavator(SpiderFootModernPlugin):
         return data
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

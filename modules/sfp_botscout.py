@@ -67,15 +67,19 @@ class sfp_botscout(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS', 'EMAILADDR']
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["MALICIOUS_IPADDR", "BLACKLISTED_IPADDR", "MALICIOUS_EMAILADDR"]
 
     def queryIp(self, ip):
+        """Query Ip."""
         if not self.sf.validIP(ip):
             return None
 
@@ -93,6 +97,7 @@ class sfp_botscout(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def queryEmail(self, email):
+        """Query Email."""
         if not SpiderFootHelpers.validEmail(email):
             return None
 
@@ -110,6 +115,7 @@ class sfp_botscout(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from BotScout.")
             return None
@@ -136,6 +142,7 @@ class sfp_botscout(SpiderFootModernPlugin):
         return res['content']
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

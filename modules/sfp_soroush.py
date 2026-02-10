@@ -36,18 +36,23 @@ class sfp_soroush(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["SOROUSH_MESSAGE"]
 
     def handleEvent(self, event):
         # Stub for Soroush monitoring logic
+        """Handle an event received by this module."""
         pass
 
     def shutdown(self):
+        """Shutdown."""
         pass

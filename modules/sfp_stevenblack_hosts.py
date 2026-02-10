@@ -53,10 +53,12 @@ class sfp_stevenblack_hosts(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
@@ -64,6 +66,7 @@ class sfp_stevenblack_hosts(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -74,6 +77,7 @@ class sfp_stevenblack_hosts(SpiderFootModernPlugin):
         ]
 
     def queryBlocklist(self, target):
+        """Query Blocklist."""
         blocklist = self.retrieveBlocklist()
 
         if not blocklist:
@@ -87,6 +91,7 @@ class sfp_stevenblack_hosts(SpiderFootModernPlugin):
         return False
 
     def retrieveBlocklist(self):
+        """RetrieveBlocklist."""
         blocklist = self.cache_get('stevenblack_hosts', 24)
 
         if blocklist is not None:
@@ -144,6 +149,7 @@ class sfp_stevenblack_hosts(SpiderFootModernPlugin):
         return hosts
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

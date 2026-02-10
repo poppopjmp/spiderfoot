@@ -52,22 +52,26 @@ class sfp_names(SpiderFootModernPlugin):
     n = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.d = SpiderFootHelpers.dictionaryWordsFromWordlists()
         self.n = SpiderFootHelpers.humanNamesFromWordlists()
     # What events is this module interested in for input
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["TARGET_WEB_CONTENT", "EMAILADDR",
                 "DOMAIN_WHOIS", "NETBLOCK_WHOIS",
                 "RAW_RIR_DATA", "RAW_FILE_META_DATA"]
 
     # What events this module produces
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return ["HUMAN_NAME"]
 
     # Handle events sent to this module
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

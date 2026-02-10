@@ -59,14 +59,17 @@ class sfp_crt(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
         self.cert_ids = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME', 'INTERNET_NAME']
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "SSL_CERTIFICATE_RAW",
             "RAW_RIR_DATA",
@@ -78,6 +81,7 @@ class sfp_crt(SpiderFootModernPlugin):
         ]
 
     def queryDomain(self, qry: str):
+        """Query Domain."""
         params = {
             'q': '%.' + qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'output': 'json'
@@ -94,6 +98,7 @@ class sfp_crt(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from crt.sh")
             return None
@@ -130,6 +135,7 @@ class sfp_crt(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         if self.errorState:
             return
 

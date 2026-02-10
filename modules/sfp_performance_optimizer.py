@@ -43,6 +43,7 @@ class TTLCache:
     """Time-To-Live cache implementation with automatic cleanup."""
     
     def __init__(self, default_ttl: int = 3600, max_size: int = 10000) -> None:
+        """Initialize the TTLCache."""
         self.cache = OrderedDict()
         self.ttl_map = {}
         self.default_ttl = default_ttl
@@ -90,6 +91,7 @@ class TTLCache:
     def start_cleanup_thread(self):
         """Start background cleanup thread."""
         def cleanup_expired():
+            """Cleanup expired."""
             while True:
                 time.sleep(300)  # Cleanup every 5 minutes
                 self.cleanup_expired_items()
@@ -132,6 +134,7 @@ class AdaptiveRateLimiter:
     """Adaptive rate limiter with backoff and success rate monitoring."""
     
     def __init__(self, base_delay: float = 1.0, max_delay: float = 60.0) -> None:
+        """Initialize the AdaptiveRateLimiter."""
         self.base_delay = base_delay
         self.max_delay = max_delay
         self.current_delay = base_delay
@@ -179,6 +182,7 @@ class ResourceMonitor:
     """Monitor system resource usage and provide optimization hints."""
     
     def __init__(self) -> None:
+        """Initialize the ResourceMonitor."""
         self.memory_samples = []
         self.cpu_samples = []
         self.sample_interval = 60  # seconds
@@ -240,6 +244,7 @@ class RequestBatcher:
     """Batch and optimize API requests for better performance."""
     
     def __init__(self, batch_size: int = 10, flush_interval: float = 5.0) -> None:
+        """Initialize the RequestBatcher."""
         self.batch_size = batch_size
         self.flush_interval = flush_interval
         self.batches = defaultdict(list)
@@ -339,6 +344,7 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         
@@ -373,9 +379,11 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
         else:
             self.resource_monitor = None
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["*"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "PERFORMANCE_STATS",
             "CACHE_STATS", 
@@ -424,6 +432,7 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
     def start_monitoring_thread(self):
         """Start resource monitoring thread."""
         def monitor_resources():
+            """Monitor resources."""
             while True:
                 if self.resource_monitor:
                     sample = self.resource_monitor.sample_resources()

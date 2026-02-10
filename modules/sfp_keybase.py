@@ -59,12 +59,15 @@ class sfp_keybase(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ["USERNAME", "LINKED_URL_EXTERNAL", "DOMAIN_NAME"]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "RAW_RIR_DATA", "SOCIAL_MEDIA", "USERNAME",
             "GEOINFO", "BITCOIN_ADDRESS", "PGP_KEY"
@@ -133,6 +136,7 @@ class sfp_keybase(SpiderFootModernPlugin):
         return them
 
     def handleEvent(self, event) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

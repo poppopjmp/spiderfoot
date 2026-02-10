@@ -59,12 +59,15 @@ class sfp_google_tag_manager(SpiderFootModernPlugin):
     errorState = False
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return ['WEB_ANALYTICS_ID']
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'DOMAIN_NAME',
             'INTERNET_NAME',
@@ -74,6 +77,7 @@ class sfp_google_tag_manager(SpiderFootModernPlugin):
 
     # from: https://stackoverflow.com/a/43211062
     def is_valid_hostname(self, hostname: str = None) -> bool:
+        """Check if valid hostname."""
         if not hostname:
             return False
         if len(hostname) > 255:
@@ -84,6 +88,7 @@ class sfp_google_tag_manager(SpiderFootModernPlugin):
         return all(allowed.match(x) for x in hostname.split("."))
 
     def queryGoogleTagId(self, tag_id: str = None) -> set:
+        """Query GoogleTagId."""
         if not tag_id:
             return None
 
@@ -132,6 +137,7 @@ class sfp_google_tag_manager(SpiderFootModernPlugin):
         return set(hosts)
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         self.debug(f"Received event, {event.eventType}, from {event.module}")
 
         if self.errorState:

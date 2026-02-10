@@ -44,9 +44,11 @@ class sfp_crossref(SpiderFootModernPlugin):
     fetched = None
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.fetched = self.tempStorage()
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             'LINKED_URL_EXTERNAL',
             'SIMILARDOMAIN',
@@ -55,12 +57,14 @@ class sfp_crossref(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'AFFILIATE_INTERNET_NAME',
             'AFFILIATE_WEB_CONTENT'
         ]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

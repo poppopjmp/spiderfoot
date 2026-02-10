@@ -41,6 +41,7 @@ class BlockchainAnalyzer:
     """Core blockchain analysis engine."""
     
     def __init__(self, api_keys: dict[str, str]) -> None:
+        """Initialize the BlockchainAnalyzer."""
         self.api_keys = api_keys
         self.known_exchanges = self._load_exchange_data()
         self.sanctions_lists = self._load_sanctions_data()
@@ -355,6 +356,7 @@ class sfp_blockchain_analytics(SpiderFootModernPlugin):
     }
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         
@@ -367,6 +369,7 @@ class sfp_blockchain_analytics(SpiderFootModernPlugin):
         
         self.analyzer = BlockchainAnalyzer(api_keys)
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "BITCOIN_ADDRESS",
             "ETHEREUM_ADDRESS", 
@@ -376,6 +379,7 @@ class sfp_blockchain_analytics(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             "BLOCKCHAIN_ANALYSIS",
             "CRYPTOCURRENCY_RISK_ASSESSMENT",
@@ -388,6 +392,7 @@ class sfp_blockchain_analytics(SpiderFootModernPlugin):
         ]
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

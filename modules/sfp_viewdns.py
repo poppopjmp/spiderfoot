@@ -72,11 +72,13 @@ class sfp_viewdns(SpiderFootModernPlugin):
     cohostcount = 0
 
     def setup(self, sfc, userOpts=None):
+        """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.accum = list()
         self.cohostcount = 0
     def watchedEvents(self):
+        """Return the list of events this module watches."""
         return [
             "EMAILADDR",
             "IP_ADDRESS",
@@ -84,6 +86,7 @@ class sfp_viewdns(SpiderFootModernPlugin):
         ]
 
     def producedEvents(self):
+        """Return the list of events this module produces."""
         return [
             'AFFILIATE_INTERNET_NAME',
             'AFFILIATE_DOMAIN_NAME',
@@ -91,6 +94,7 @@ class sfp_viewdns(SpiderFootModernPlugin):
         ]
 
     def query(self, qry, querytype, page=1):
+        """Query the data source."""
         if querytype == "reverseip":
             attr = "host"
             pagesize = 10000
@@ -165,6 +169,7 @@ class sfp_viewdns(SpiderFootModernPlugin):
         self.accum.extend(response.get(responsekey, []))
 
     def handleEvent(self, event):
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 
