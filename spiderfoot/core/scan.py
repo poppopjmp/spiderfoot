@@ -19,6 +19,13 @@ from spiderfoot import SpiderFootDb, SpiderFootHelpers
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot.scan_service.scanner import startSpiderFootScanner
 
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORTED,
+    DB_STATUS_ABORT_REQUESTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+)
+
 
 class ScanManager:
     """Centralized scan management for SpiderFoot."""
@@ -264,13 +271,6 @@ class ScanManager:
                 'target_type': target_type,
                 'modules': modules,
                 'start_time': time.time()
-from spiderfoot.scan_state_map import (
-    DB_STATUS_ABORTED,
-    DB_STATUS_ABORT_REQUESTED,
-    DB_STATUS_ERROR_FAILED,
-    DB_STATUS_FINISHED,
-)
-
             }
 
             self.log.info("Started scan %s for target %s", scan_id, target)

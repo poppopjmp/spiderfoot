@@ -44,6 +44,11 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable, List
 
+from spiderfoot.scan_state_map import (
+    DB_STATUS_FINISHED,
+    DB_STATUS_STARTED,
+)
+
 log = logging.getLogger("spiderfoot.event_relay")
 
 
@@ -287,11 +292,6 @@ class EventRelay:
             {"scan_id": scan_id, "status": status, "event_count": event_count},
             event_type="status_update",
         )
-from spiderfoot.scan_state_map import (
-    DB_STATUS_FINISHED,
-    DB_STATUS_STARTED,
-)
-
 
     # -- Query ------------------------------------------------------------
 

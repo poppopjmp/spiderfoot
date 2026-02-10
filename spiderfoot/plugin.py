@@ -31,6 +31,11 @@ from typing import Any, Callable
 from spiderfoot import SpiderFootEvent
 from .threadpool import SpiderFootThreadPool
 
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORT_REQUESTED,
+    DB_STATUS_FINISHED,
+)
+
 # begin logging overrides
 # these are copied from the python logging module
 # https://github.com/python/cpython/blob/main/Lib/logging/__init__.py
@@ -552,10 +557,6 @@ class SpiderFootPlugin:
             # create new database handle since we're in our own thread
             from spiderfoot import SpiderFootDb
             self.setDbh(SpiderFootDb(self.opts))
-from spiderfoot.scan_state_map import (
-    DB_STATUS_ABORT_REQUESTED,
-    DB_STATUS_FINISHED,
-)
 
             self.sf._dbh = self.__sfdb__
 

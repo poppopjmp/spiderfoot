@@ -13,6 +13,12 @@ log = logging.getLogger("spiderfoot.webui.scan")
 from spiderfoot.scan_service.scanner import startSpiderFootScanner
 import multiprocessing as mp
 
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+)
+
 class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -683,11 +689,6 @@ class ScanEndpoints:
     @cherrypy.expose
     def savesettingsraw(self, allopts, token) -> bytes:
         import json
-from spiderfoot.scan_state_map import (
-    DB_STATUS_ABORTED,
-    DB_STATUS_ERROR_FAILED,
-    DB_STATUS_FINISHED,
-)
 
         try:
             opts = json.loads(allopts)

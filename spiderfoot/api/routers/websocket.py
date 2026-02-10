@@ -19,6 +19,12 @@ import logging
 from datetime import datetime
 import asyncio
 
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+)
+
 router = APIRouter()
 log = logging.getLogger("spiderfoot.api.websocket")
 
@@ -282,11 +288,6 @@ async def websocket_scan_stream(websocket: WebSocket, scan_id: str):
         try:
             from spiderfoot.event_relay import get_event_relay
             relay = get_event_relay()
-from spiderfoot.scan_state_map import (
-    DB_STATUS_ABORTED,
-    DB_STATUS_ERROR_FAILED,
-    DB_STATUS_FINISHED,
-)
 
             # Use relay mode if EventBus is wired, or if there are
             # already consumers (events being pushed manually)

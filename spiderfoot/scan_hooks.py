@@ -34,6 +34,13 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
 
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+    DB_STATUS_STARTED,
+)
+
 log = logging.getLogger(__name__)
 
 
@@ -218,13 +225,6 @@ class ScanLifecycleHooks:
             status="UNARCHIVED",
             metadata=metadata,
         ))
-from spiderfoot.scan_state_map import (
-    DB_STATUS_ABORTED,
-    DB_STATUS_ERROR_FAILED,
-    DB_STATUS_FINISHED,
-    DB_STATUS_STARTED,
-)
-
 
     # ── Query ────────────────────────────────────────────────────
     def get_recent_events(self, limit: int = 50) -> list[dict[str, Any]]:

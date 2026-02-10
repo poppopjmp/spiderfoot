@@ -10,6 +10,12 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+)
+
 log = logging.getLogger("spiderfoot.scan_metadata_service")
 
 
@@ -200,12 +206,6 @@ class ScanMetadataService:
             return {}
 
         import time as _time
-from spiderfoot.scan_state_map import (
-    DB_STATUS_ABORTED,
-    DB_STATUS_ERROR_FAILED,
-    DB_STATUS_FINISHED,
-)
-
 
         started = (
             _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(meta[3]))

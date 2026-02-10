@@ -38,7 +38,9 @@ Usage (CherryPy)::
         raise cherrypy.HTTPError(401)
 """
 
-import base64\nimport binascii\nimport hashlib
+import base64
+import binascii
+import hashlib
 import hmac
 import logging
 import os
