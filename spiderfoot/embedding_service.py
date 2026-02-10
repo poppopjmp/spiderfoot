@@ -67,6 +67,7 @@ class EmbeddingConfig:
 
     @classmethod
     def from_env(cls, env: dict[str, str] | None = None) -> EmbeddingConfig:
+        """Create an EmbeddingConfig from environment variables."""
         import os
         e = env or os.environ
         return cls(
@@ -97,6 +98,7 @@ class EmbeddingResult:
     elapsed_ms: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert the embedding result to a dictionary."""
         return {
             "count": len(self.vectors),
             "model": self.model,
@@ -115,14 +117,17 @@ class EmbeddingBackend(ABC):
 
     @abstractmethod
     def embed(self, texts: list[str]) -> EmbeddingResult:
+        """Embed a list of texts and return an EmbeddingResult."""
         ...
 
     @abstractmethod
     def dimensions(self) -> int:
+        """Return the embedding dimensionality."""
         ...
 
     @abstractmethod
     def model_name(self) -> str:
+        """Return the model name."""
         ...
 
 
@@ -138,9 +143,11 @@ class MockEmbeddingBackend(EmbeddingBackend):
     """
 
     def __init__(self, dims: int = 384) -> None:
+        """Initialize mock backend with the given dimensionality."""
         self._dims = dims
 
     def embed(self, texts: list[str]) -> EmbeddingResult:
+        """Generate deterministic embeddings from text hashes."""
         start = time.time()
         vectors = []
         for text in texts:
@@ -166,9 +173,11 @@ class MockEmbeddingBackend(EmbeddingBackend):
         return _normalize(raw)
 
     def dimensions(self) -> int:
+        """Return the embedding dimensionality."""
         return self._dims
 
     def model_name(self) -> str:
+        """Return the model name."""
         return "mock"
 
 
@@ -181,6 +190,7 @@ class SentenceTransformerBackend(EmbeddingBackend):
 
     def __init__(self, model_name: str = "all-MiniLM-L6-v2",
                  dims: int = 384) -> None:
+        """Initialize SentenceTransformer backend."""
         self._model_name = model_name
         self._dims = dims
         self._model = None
@@ -201,6 +211,7 @@ class SentenceTransformerBackend(EmbeddingBackend):
         return self._model
 
     def embed(self, texts: list[str]) -> EmbeddingResult:
+        """Embed texts using the local SentenceTransformer model."""
         start = time.time()
         model = self._get_model()
         if model == "UNAVAILABLE":
@@ -216,9 +227,11 @@ class SentenceTransformerBackend(EmbeddingBackend):
         )
 
     def dimensions(self) -> int:
+        """Return the embedding dimensionality."""
         return self._dims
 
     def model_name(self) -> str:
+        """Return the model name."""
         return self._model_name
 
 
@@ -232,6 +245,7 @@ class OpenAIEmbeddingBackend(EmbeddingBackend):
     def __init__(self, model: str = "text-embedding-3-small",
                  api_key: str = "", api_base: str = "",
                  dims: int = 1536, timeout: float = 30.0) -> None:
+        """Initialize the OpenAI embedding backend."""
         self._model = model
         self._api_key = api_key
         self._api_base = api_base or DEFAULT_OPENAI_BASE_URL
@@ -239,6 +253,7 @@ class OpenAIEmbeddingBackend(EmbeddingBackend):
         self._timeout = timeout
 
     def embed(self, texts: list[str]) -> EmbeddingResult:
+        """Embed texts using the OpenAI API."""
         import urllib.error
         import urllib.request
         start = time.time()
@@ -274,9 +289,11 @@ class OpenAIEmbeddingBackend(EmbeddingBackend):
         )
 
     def dimensions(self) -> int:
+        """Return the embedding dimensionality."""
         return self._dims
 
     def model_name(self) -> str:
+        """Return the model name."""
         return self._model
 
 
@@ -290,12 +307,14 @@ class HuggingFaceEmbeddingBackend(EmbeddingBackend):
     def __init__(self, model: str = "sentence-transformers/all-MiniLM-L6-v2",
                  api_key: str = "", dims: int = 384,
                  timeout: float = 30.0) -> None:
+        """Initialize the HuggingFace embedding backend."""
         self._model = model
         self._api_key = api_key
         self._dims = dims
         self._timeout = timeout
 
     def embed(self, texts: list[str]) -> EmbeddingResult:
+        """Embed texts using the HuggingFace Inference API."""
         import urllib.error
         import urllib.request
         start = time.time()
@@ -326,9 +345,11 @@ class HuggingFaceEmbeddingBackend(EmbeddingBackend):
         )
 
     def dimensions(self) -> int:
+        """Return the embedding dimensionality."""
         return self._dims
 
     def model_name(self) -> str:
+        """Return the model name."""
         return self._model
 
 
@@ -360,6 +381,7 @@ class _EmbeddingCache:
     """Thread-safe LRU cache for embeddings."""
 
     def __init__(self, max_size: int = 10_000) -> None:
+        """Initialize the embedding cache."""
         self._max = max_size
         self._cache: dict[str, list[float]] = {}
         self._order: list[str] = []
@@ -371,6 +393,7 @@ class _EmbeddingCache:
         return hashlib.md5(f"{model}:{text}".encode()).hexdigest()
 
     def get(self, text: str, model: str) -> list[float] | None:
+        """Retrieve a cached embedding vector, or None on cache miss."""
         k = self._key(text, model)
         with self._lock:
             if k in self._cache:
@@ -380,6 +403,7 @@ class _EmbeddingCache:
             return None
 
     def put(self, text: str, model: str, vector: list[float]) -> None:
+        """Store an embedding vector in the cache."""
         k = self._key(text, model)
         with self._lock:
             if k in self._cache:
@@ -391,6 +415,7 @@ class _EmbeddingCache:
             self._order.append(k)
 
     def clear(self) -> None:
+        """Clear all cached embeddings and reset stats."""
         with self._lock:
             self._cache.clear()
             self._order.clear()
@@ -399,6 +424,7 @@ class _EmbeddingCache:
 
     @property
     def stats(self) -> dict[str, int]:
+        """Return cache statistics."""
         return {
             "size": len(self._cache),
             "max_size": self._max,
@@ -422,6 +448,7 @@ class EmbeddingService:
     """
 
     def __init__(self, config: EmbeddingConfig | None = None) -> None:
+        """Initialize the embedding service."""
         self._config = config or EmbeddingConfig()
         self._backend = self._create_backend()
         self._cache = _EmbeddingCache(self._config.cache_max_size) \
@@ -499,28 +526,34 @@ class EmbeddingService:
     # Metadata
     @property
     def dimensions(self) -> int:
+        """Return the embedding dimensionality."""
         return self._backend.dimensions()
 
     @property
     def model(self) -> str:
+        """Return the active model name."""
         return self._backend.model_name()
 
     @property
     def provider(self) -> EmbeddingProvider:
+        """Return the configured embedding provider."""
         return self._config.provider
 
     # Cache management
     def clear_cache(self) -> None:
+        """Clear the embedding cache."""
         if self._cache:
             self._cache.clear()
 
     def cache_stats(self) -> dict[str, int]:
+        """Return cache hit/miss statistics."""
         if self._cache:
             return self._cache.stats
         return {"size": 0, "max_size": 0, "hits": 0, "misses": 0}
 
     # Stats
     def stats(self) -> dict[str, Any]:
+        """Return overall service statistics."""
         return {
             "provider": self._config.provider.value,
             "model": self.model,

@@ -37,6 +37,7 @@ class MetricValue:
     _values: list[float] = field(default_factory=list, repr=False)
 
     def record(self, value: float) -> None:
+        """Record a value for this metric."""
         if self.metric_type == MetricType.COUNTER:
             self.value += value
             self.count += 1
@@ -50,18 +51,21 @@ class MetricValue:
 
     @property
     def mean(self) -> float:
+        """Return the arithmetic mean of recorded values."""
         if not self._values:
             return self.value if self.metric_type in (MetricType.COUNTER, MetricType.GAUGE) else 0.0
         return statistics.mean(self._values)
 
     @property
     def median(self) -> float:
+        """Return the median of recorded values."""
         if not self._values:
             return 0.0
         return statistics.median(self._values)
 
     @property
     def p95(self) -> float:
+        """Return the 95th percentile of recorded values."""
         if len(self._values) < 2:
             return self._values[0] if self._values else 0.0
         sorted_vals = sorted(self._values)
@@ -70,6 +74,7 @@ class MetricValue:
 
     @property
     def p99(self) -> float:
+        """Return the 99th percentile of recorded values."""
         if len(self._values) < 2:
             return self._values[0] if self._values else 0.0
         sorted_vals = sorted(self._values)
@@ -78,18 +83,22 @@ class MetricValue:
 
     @property
     def min_val(self) -> float:
+        """Return the minimum recorded value."""
         return min(self._values) if self._values else 0.0
 
     @property
     def max_val(self) -> float:
+        """Return the maximum recorded value."""
         return max(self._values) if self._values else 0.0
 
     def reset(self) -> None:
+        """Reset the metric to its initial state."""
         self.value = 0.0
         self.count = 0
         self._values.clear()
 
     def to_dict(self) -> dict:
+        """Convert the metric value to a dictionary."""
         d: dict = {
             "name": self.name,
             "type": self.metric_type.value,
@@ -110,14 +119,17 @@ class TimerContext:
     """Context manager for timing operations."""
 
     def __init__(self, metric: MetricValue) -> None:
+        """Initialize with the metric to record timing for."""
         self._metric = metric
         self._start: float = 0
 
     def __enter__(self) -> "TimerContext":
+        """Start the timer."""
         self._start = time.monotonic()
         return self
 
     def __exit__(self, *args: Any) -> None:
+        """Stop the timer and record the elapsed time."""
         elapsed = time.monotonic() - self._start
         self._metric.record(elapsed)
 
@@ -138,6 +150,7 @@ class ModuleMetrics:
     """
 
     def __init__(self, module_name: str) -> None:
+        """Initialize metrics for the given module."""
         self.module_name = module_name
         self._metrics: dict[str, MetricValue] = {}
         self._lock = threading.Lock()
@@ -150,44 +163,54 @@ class ModuleMetrics:
             return self._metrics[name]
 
     def increment(self, name: str, amount: float = 1.0) -> None:
+        """Increment a counter metric."""
         metric = self._get_or_create(name, MetricType.COUNTER)
         metric.record(amount)
 
     def gauge(self, name: str, value: float) -> None:
+        """Set a gauge metric to the given value."""
         metric = self._get_or_create(name, MetricType.GAUGE)
         metric.record(value)
 
     def histogram(self, name: str, value: float) -> None:
+        """Record a value in a histogram metric."""
         metric = self._get_or_create(name, MetricType.HISTOGRAM)
         metric.record(value)
 
     def timer(self, name: str) -> TimerContext:
+        """Return a context manager that records elapsed time."""
         metric = self._get_or_create(name, MetricType.TIMER)
         return TimerContext(metric)
 
     def record_time(self, name: str, seconds: float) -> None:
+        """Record an explicit timing value in seconds."""
         metric = self._get_or_create(name, MetricType.TIMER)
         metric.record(seconds)
 
     def get(self, name: str) -> MetricValue | None:
+        """Return a metric by name, or None if not found."""
         with self._lock:
             return self._metrics.get(name)
 
     def get_all(self) -> dict[str, MetricValue]:
+        """Return all metrics as a name-to-MetricValue mapping."""
         with self._lock:
             return dict(self._metrics)
 
     @property
     def metric_names(self) -> list[str]:
+        """Return sorted list of all metric names."""
         with self._lock:
             return sorted(self._metrics.keys())
 
     def reset(self) -> None:
+        """Reset all metrics for this module."""
         with self._lock:
             for m in self._metrics.values():
                 m.reset()
 
     def to_dict(self) -> dict:
+        """Convert all module metrics to a dictionary."""
         with self._lock:
             return {
                 "module": self.module_name,
@@ -211,6 +234,7 @@ class MetricsCollector:
     _instance_lock = threading.Lock()
 
     def __init__(self) -> None:
+        """Initialize the global metrics collector."""
         self._modules: dict[str, ModuleMetrics] = {}
         self._global_metrics = ModuleMetrics("__global__")
         self._lock = threading.Lock()
@@ -218,26 +242,31 @@ class MetricsCollector:
         self._max_snapshots = 100
 
     def get_module(self, module_name: str) -> ModuleMetrics:
+        """Get or create metrics for the given module."""
         with self._lock:
             if module_name not in self._modules:
                 self._modules[module_name] = ModuleMetrics(module_name)
             return self._modules[module_name]
 
     def remove_module(self, module_name: str) -> bool:
+        """Remove metrics for a module, returning True if it existed."""
         with self._lock:
             return self._modules.pop(module_name, None) is not None
 
     @property
     def global_metrics(self) -> ModuleMetrics:
+        """Return the global (non-module-specific) metrics."""
         return self._global_metrics
 
     @property
     def module_names(self) -> list[str]:
+        """Return sorted list of all tracked module names."""
         with self._lock:
             return sorted(self._modules.keys())
 
     @property
     def module_count(self) -> int:
+        """Return the number of tracked modules."""
         with self._lock:
             return len(self._modules)
 
@@ -255,6 +284,7 @@ class MetricsCollector:
             return snap
 
     def get_snapshots(self) -> list[dict]:
+        """Return all stored metric snapshots."""
         return list(self._snapshots)
 
     def summary(self) -> dict:
@@ -281,6 +311,7 @@ class MetricsCollector:
             }
 
     def reset_all(self) -> None:
+        """Reset all module and global metrics and clear snapshots."""
         with self._lock:
             for m in self._modules.values():
                 m.reset()
@@ -288,10 +319,12 @@ class MetricsCollector:
             self._snapshots.clear()
 
     def to_dict(self) -> dict:
+        """Convert the collector state to a dictionary (alias for snapshot)."""
         return self.snapshot()
 
     @classmethod
     def get_instance(cls) -> "MetricsCollector":
+        """Return the singleton MetricsCollector instance."""
         with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = cls()
@@ -299,5 +332,6 @@ class MetricsCollector:
 
     @classmethod
     def reset_instance(cls) -> None:
+        """Reset the singleton instance."""
         with cls._instance_lock:
             cls._instance = None

@@ -71,24 +71,28 @@ class BenchmarkResult:
 
     @property
     def ops_per_sec(self) -> float:
+        """Return operations per second."""
         if self.total_time <= 0:
             return 0.0
         return self.iterations / self.total_time
 
     @property
     def avg_latency_ms(self) -> float:
+        """Return average latency in milliseconds."""
         if not self.times:
             return self.total_time / max(self.iterations, 1) * 1000
         return statistics.mean(self.times) * 1000
 
     @property
     def p50_ms(self) -> float:
+        """Return the 50th percentile (median) latency in milliseconds."""
         if not self.times:
             return 0.0
         return statistics.median(self.times) * 1000
 
     @property
     def p95_ms(self) -> float:
+        """Return the 95th percentile latency in milliseconds."""
         if len(self.times) < 2:
             return self.avg_latency_ms
         sorted_t = sorted(self.times)
@@ -97,6 +101,7 @@ class BenchmarkResult:
 
     @property
     def p99_ms(self) -> float:
+        """Return the 99th percentile latency in milliseconds."""
         if len(self.times) < 2:
             return self.avg_latency_ms
         sorted_t = sorted(self.times)
@@ -105,11 +110,13 @@ class BenchmarkResult:
 
     @property
     def stdev_ms(self) -> float:
+        """Return the standard deviation of latency in milliseconds."""
         if len(self.times) < 2:
             return 0.0
         return statistics.stdev(self.times) * 1000
 
     def to_dict(self) -> dict:
+        """Convert the benchmark result to a dictionary."""
         return {
             "name": self.name,
             "operation": self.operation,
@@ -126,6 +133,7 @@ class BenchmarkResult:
         }
 
     def summary_line(self) -> str:
+        """Return a one-line summary of the benchmark result."""
         return (
             f"{self.name}/{self.operation}: "
             f"{self.ops_per_sec:,.0f} ops/s  "
@@ -147,12 +155,15 @@ class BenchmarkReport:
 
     @property
     def total_time(self) -> float:
+        """Return total elapsed time in seconds."""
         return self.completed_at - self.started_at
 
     def add(self, result: BenchmarkResult) -> None:
+        """Add a benchmark result to the report."""
         self.results.append(result)
 
     def summary(self) -> str:
+        """Return a human-readable summary of all benchmark results."""
         lines = [
             "=" * 72,
             "SpiderFoot Benchmark Report",
@@ -173,6 +184,7 @@ class BenchmarkReport:
         return "\n".join(lines)
 
     def to_dict(self) -> dict:
+        """Convert the benchmark report to a dictionary."""
         return {
             "system_info": self.system_info,
             "total_time_s": round(self.total_time, 2),
@@ -248,15 +260,18 @@ class EventBusBenchmark(Benchmark):
     name = "EventBus"
 
     def __init__(self) -> None:
+        """Initialize the EventBus benchmark."""
         self._bus = None
 
     def setup(self) -> None:
+        """Set up the EventBus and subscribe a handler."""
         try:
             from spiderfoot.eventbus.memory import InMemoryEventBus
             self._bus = InMemoryEventBus()
             self._received = 0
 
             def handler(envelope: Any) -> None:
+                """Increment received counter."""
                 self._received += 1
 
             self._bus.subscribe("bench.topic", handler)
@@ -264,6 +279,7 @@ class EventBusBenchmark(Benchmark):
             self._bus = None
 
     def teardown(self) -> None:
+        """Shut down the EventBus."""
         if self._bus:
             try:
                 self._bus.shutdown()
@@ -271,11 +287,13 @@ class EventBusBenchmark(Benchmark):
                 log.debug("EventBus shutdown failed during teardown: %s", e)
 
     def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
+        """Benchmark EventBus publish throughput."""
         results = []
         if self._bus is None:
             return results
 
         def publish() -> None:
+            """Publish a single event."""
             self._bus.publish("bench.topic", {"data": "test"})
 
         results.append(
@@ -290,9 +308,11 @@ class CacheBenchmark(Benchmark):
     name = "Cache"
 
     def __init__(self) -> None:
+        """Initialize the Cache benchmark."""
         self._cache = None
 
     def setup(self) -> None:
+        """Set up the in-memory cache."""
         try:
             from spiderfoot.cache_service import MemoryCache
             self._cache = MemoryCache(max_size=100000)
@@ -300,6 +320,7 @@ class CacheBenchmark(Benchmark):
             self._cache = None
 
     def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
+        """Benchmark cache put, get, and miss operations."""
         results = []
         if self._cache is None:
             return results
@@ -308,6 +329,7 @@ class CacheBenchmark(Benchmark):
         i_counter = [0]
 
         def cache_put() -> None:
+            """Put a single entry into the cache."""
             self._cache.put(f"key_{i_counter[0]}", f"value_{i_counter[0]}")
             i_counter[0] += 1
 
@@ -319,6 +341,7 @@ class CacheBenchmark(Benchmark):
         i_counter[0] = 0
 
         def cache_get() -> None:
+            """Get a single entry from the cache."""
             self._cache.get(f"key_{i_counter[0]}")
             i_counter[0] += 1
 
@@ -328,6 +351,7 @@ class CacheBenchmark(Benchmark):
 
         # Read miss
         def cache_miss() -> None:
+            """Get a nonexistent key from the cache."""
             self._cache.get("nonexistent_key")
 
         results.append(
@@ -343,9 +367,11 @@ class RateLimiterBenchmark(Benchmark):
     name = "RateLimiter"
 
     def __init__(self) -> None:
+        """Initialize the RateLimiter benchmark."""
         self._limiter = None
 
     def setup(self) -> None:
+        """Set up the rate limiter with a high throughput limit."""
         try:
             from spiderfoot.rate_limiter import RateLimiterService, RateLimit
             self._limiter = RateLimiterService()
@@ -357,11 +383,13 @@ class RateLimiterBenchmark(Benchmark):
             self._limiter = None
 
     def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
+        """Benchmark rate limiter allow-check throughput."""
         results = []
         if self._limiter is None:
             return results
 
         def allow_check() -> None:
+            """Check if a request is allowed."""
             self._limiter.allow("bench")
 
         results.append(
@@ -376,12 +404,14 @@ class WorkerPoolBenchmark(Benchmark):
     name = "WorkerPool"
 
     def run(self, iterations: int = 5000) -> list[BenchmarkResult]:
+        """Benchmark thread pool task submission and completion."""
         import concurrent.futures
         results = []
 
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
         def submit_task() -> None:
+            """Submit a no-op task and wait for completion."""
             f = pool.submit(lambda: None)
             f.result()  # wait for completion
 
@@ -398,6 +428,7 @@ class SerializationBenchmark(Benchmark):
     name = "Serialization"
 
     def __init__(self) -> None:
+        """Initialize with a sample event-like payload."""
         self._payload = {
             "eventType": "IP_ADDRESS",
             "data": "192.168.1.1",
@@ -415,6 +446,7 @@ class SerializationBenchmark(Benchmark):
         }
 
     def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
+        """Benchmark JSON serialization and deserialization."""
         import json
         results = []
         payload = self._payload
@@ -422,6 +454,7 @@ class SerializationBenchmark(Benchmark):
         serialized = json.dumps(payload)
 
         def serialize() -> None:
+            """Serialize payload to JSON."""
             json.dumps(payload)
 
         results.append(
@@ -429,6 +462,7 @@ class SerializationBenchmark(Benchmark):
         )
 
         def deserialize() -> None:
+            """Deserialize JSON string to object."""
             json.loads(serialized)
 
         results.append(
@@ -443,12 +477,14 @@ class ThreadingBenchmark(Benchmark):
     name = "Threading"
 
     def run(self, iterations: int = 2000) -> list[BenchmarkResult]:
+        """Benchmark lock contention and thread creation overhead."""
         results = []
 
         # Lock acquire/release
         lock = threading.Lock()
 
         def lock_cycle() -> None:
+            """Acquire and release a lock."""
             lock.acquire()
             lock.release()
 
@@ -458,6 +494,7 @@ class ThreadingBenchmark(Benchmark):
 
         # Thread creation + join
         def thread_create() -> None:
+            """Create and join a thread."""
             t = threading.Thread(target=lambda: None)
             t.start()
             t.join()
@@ -474,12 +511,14 @@ class HashBenchmark(Benchmark):
     name = "Hashing"
 
     def run(self, iterations: int = 10000) -> list[BenchmarkResult]:
+        """Benchmark SHA-256 and MD5 hashing throughput."""
         import hashlib
         results = []
 
         data = b"192.168.1.1:IP_ADDRESS:sfp_dnsresolve:example.com"
 
         def sha256_hash() -> None:
+            """Hash data with SHA-256."""
             hashlib.sha256(data).hexdigest()
 
         results.append(
@@ -487,6 +526,7 @@ class HashBenchmark(Benchmark):
         )
 
         def md5_hash() -> None:
+            """Hash data with MD5."""
             hashlib.md5(data).hexdigest()
 
         results.append(
@@ -503,9 +543,11 @@ class BenchmarkSuite:
     """Manages and runs a collection of benchmarks."""
 
     def __init__(self) -> None:
+        """Initialize the benchmark suite."""
         self._benchmarks: list[Benchmark] = []
 
     def add(self, benchmark: Benchmark) -> BenchmarkSuite:
+        """Add a benchmark to the suite."""
         self._benchmarks.append(benchmark)
         return self
 

@@ -31,6 +31,7 @@ class ExportEvent:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
+        """Convert the export event to a dictionary."""
         return {
             "event_type": self.event_type,
             "data": self.data,
@@ -59,6 +60,7 @@ class Exporter(ABC):
     """Base class for data exporters."""
 
     def __init__(self, name: str = "") -> None:
+        """Initialize the exporter with an optional name."""
         self.name = name or self.__class__.__name__
 
     @abstractmethod
@@ -69,16 +71,19 @@ class Exporter(ABC):
     @property
     @abstractmethod
     def format_name(self) -> str:
+        """Return the human-readable format name."""
         ...
 
     @property
     @abstractmethod
     def file_extension(self) -> str:
+        """Return the file extension (e.g. '.json')."""
         ...
 
     @property
     @abstractmethod
     def content_type(self) -> str:
+        """Return the MIME content type."""
         ...
 
     def _filter_events(self, events: list[ExportEvent], options: ExportOptions) -> list[ExportEvent]:
@@ -107,21 +112,26 @@ class JsonExporter(Exporter):
     """Export events as JSON."""
 
     def __init__(self) -> None:
+        """Initialize the JSON exporter."""
         super().__init__("json")
 
     @property
     def format_name(self) -> str:
+        """Return the format display name."""
         return "JSON"
 
     @property
     def file_extension(self) -> str:
+        """Return the file extension for JSON exports."""
         return ".json"
 
     @property
     def content_type(self) -> str:
+        """Return the MIME content type."""
         return "application/json"
 
     def export(self, events: list[ExportEvent], options: ExportOptions) -> str:
+        """Export events as a JSON string."""
         filtered = self._filter_events(events, options)
         data = {
             "export_timestamp": time.time(),
@@ -141,21 +151,26 @@ class CsvExporter(Exporter):
     """Export events as CSV."""
 
     def __init__(self) -> None:
+        """Initialize the CSV exporter."""
         super().__init__("csv")
 
     @property
     def format_name(self) -> str:
+        """Return the format display name."""
         return "CSV"
 
     @property
     def file_extension(self) -> str:
+        """Return the file extension for CSV exports."""
         return ".csv"
 
     @property
     def content_type(self) -> str:
+        """Return the MIME content type."""
         return "text/csv"
 
     def export(self, events: list[ExportEvent], options: ExportOptions) -> str:
+        """Export events as a CSV string."""
         filtered = self._filter_events(events, options)
         output = io.StringIO()
         writer = csv.writer(output)
@@ -178,18 +193,22 @@ class StixExporter(Exporter):
     """Export events in a STIX-like bundle format."""
 
     def __init__(self) -> None:
+        """Initialize the STIX exporter."""
         super().__init__("stix")
 
     @property
     def format_name(self) -> str:
+        """Return the format display name."""
         return "STIX"
 
     @property
     def file_extension(self) -> str:
+        """Return the file extension for STIX exports."""
         return ".json"
 
     @property
     def content_type(self) -> str:
+        """Return the MIME content type."""
         return "application/json"
 
     _TYPE_MAP = {
@@ -216,6 +235,7 @@ class StixExporter(Exporter):
         return sco
 
     def export(self, events: list[ExportEvent], options: ExportOptions) -> str:
+        """Export events in a STIX-like bundle format."""
         filtered = self._filter_events(events, options)
         bundle = {
             "type": "bundle",
@@ -230,21 +250,26 @@ class SummaryExporter(Exporter):
     """Export a human-readable summary."""
 
     def __init__(self) -> None:
+        """Initialize the summary exporter."""
         super().__init__("summary")
 
     @property
     def format_name(self) -> str:
+        """Return the format display name."""
         return "Summary"
 
     @property
     def file_extension(self) -> str:
+        """Return the file extension for summary exports."""
         return ".txt"
 
     @property
     def content_type(self) -> str:
+        """Return the MIME content type."""
         return "text/plain"
 
     def export(self, events: list[ExportEvent], options: ExportOptions) -> str:
+        """Export a human-readable summary of events."""
         filtered = self._filter_events(events, options)
 
         # Aggregate stats
@@ -308,21 +333,38 @@ class ExportRegistry:
     """
 
     def __init__(self) -> None:
+        """Initialize the registry with built-in exporters."""
         self._exporters: dict[str, Exporter] = {}
         # Register built-in exporters
         for exporter in [JsonExporter(), CsvExporter(), StixExporter(), SummaryExporter()]:
             self._exporters[exporter.name] = exporter
 
     def register(self, exporter: Exporter) -> None:
+        """Register an exporter."""
         self._exporters[exporter.name] = exporter
 
     def unregister(self, name: str) -> bool:
+        """Unregister an exporter by name, returning True if it existed."""
         return self._exporters.pop(name, None) is not None
 
     def get(self, name: str) -> Exporter | None:
+        """Return an exporter by name, or None if not found."""
         return self._exporters.get(name)
 
     def export(self, format_name: str, events: list[ExportEvent], options: ExportOptions | None = None) -> str:
+        """Export events using the named exporter.
+
+        Args:
+            format_name: Name of the registered exporter to use.
+            events: Events to export.
+            options: Export options; defaults to ExportOptions().
+
+        Returns:
+            Exported string in the chosen format.
+
+        Raises:
+            ValueError: If format_name is not registered.
+        """
         exporter = self._exporters.get(format_name)
         if exporter is None:
             raise ValueError(f"Unknown export format: {format_name}")
@@ -330,9 +372,11 @@ class ExportRegistry:
 
     @property
     def available_formats(self) -> list[str]:
+        """Return sorted list of registered export format names."""
         return sorted(self._exporters.keys())
 
     def to_dict(self) -> dict:
+        """Convert registry metadata to a dictionary."""
         return {
             "formats": {
                 name: {
