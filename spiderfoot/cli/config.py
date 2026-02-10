@@ -2,6 +2,8 @@
 CLI configuration management for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
 class CLIConfig:
     def __init__(self) -> None:
         self.options = {

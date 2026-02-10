@@ -2,6 +2,8 @@
 Command registry and base command logic for SpiderFoot CLI.
 """
 
+from __future__ import annotations
+
 import importlib
 import pkgutil
 import os

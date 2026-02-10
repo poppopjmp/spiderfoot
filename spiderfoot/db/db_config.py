@@ -11,6 +11,8 @@
 """
 Configuration management (global and per-scan) for SpiderFootDb.
 """
+from __future__ import annotations
+
 from .db_utils import get_placeholder, is_transient_error, get_upsert_clause
 import logging
 import time

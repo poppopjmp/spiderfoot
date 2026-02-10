@@ -7,6 +7,8 @@ Provides automatic resource management, thread cleanup, and leak detection
 for all SpiderFoot scanner tests.
 """
 
+from __future__ import annotations
+
 import unittest
 import threading
 import time

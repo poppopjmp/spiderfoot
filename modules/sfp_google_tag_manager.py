@@ -10,6 +10,8 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 import re
 import urllib.error
 import urllib.parse

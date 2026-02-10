@@ -1,6 +1,8 @@
 """
 Network communication utilities for SpiderFoot CLI.
 """
+from __future__ import annotations
+
 import requests
 
 class SpiderFootApiClient:

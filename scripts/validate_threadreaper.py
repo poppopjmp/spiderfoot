@@ -8,6 +8,8 @@ of thread leaks, resource leaks, and global timeouts in the
 SpiderFoot test suite.
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import threading

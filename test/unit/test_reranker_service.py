@@ -1,5 +1,7 @@
 """Tests for spiderfoot.reranker_service — cross-encoder reranking."""
 
+from __future__ import annotations
+
 import math
 import pytest
 from spiderfoot.reranker_service import (

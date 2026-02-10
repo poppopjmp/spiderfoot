@@ -1,5 +1,7 @@
 """Tests for spiderfoot.scan_queue."""
 
+from __future__ import annotations
+
 import threading
 import time
 import unittest

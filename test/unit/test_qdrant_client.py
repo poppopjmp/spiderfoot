@@ -1,5 +1,7 @@
 """Tests for spiderfoot.qdrant_client — Qdrant vector store client."""
 
+from __future__ import annotations
+
 import pytest
 import time
 from spiderfoot.qdrant_client import (

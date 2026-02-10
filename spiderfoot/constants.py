@@ -5,6 +5,8 @@ scattered as magic numbers across the codebase. Import from here instead
 of hardcoding values.
 """
 
+from __future__ import annotations
+
 from typing import Final
 
 __all__ = [

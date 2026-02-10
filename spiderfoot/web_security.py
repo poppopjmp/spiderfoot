@@ -3,6 +3,8 @@ CherryPy Web Interface Security Integration for SpiderFoot
 Integrates all security components into the CherryPy web application.
 """
 
+from __future__ import annotations
+
 import os
 import time
 

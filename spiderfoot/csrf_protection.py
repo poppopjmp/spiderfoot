@@ -3,6 +3,8 @@ CSRF Protection Module for SpiderFoot Web Interface
 Provides Cross-Site Request Forgery protection for all form submissions and API calls.
 """
 
+from __future__ import annotations
+
 import hashlib
 import hmac
 import secrets

@@ -4,6 +4,8 @@ Tests for spiderfoot.report_formatter — Report Output Formatters.
 Covers HTML, Markdown, JSON, Plain Text, CSV rendering.
 """
 
+from __future__ import annotations
+
 import csv
 import io
 import json

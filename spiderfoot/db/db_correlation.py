@@ -11,6 +11,8 @@
 """
 Correlation result management and queries for SpiderFootDb.
 """
+from __future__ import annotations
+
 import logging
 import time
 from .db_utils import get_placeholder, is_transient_error

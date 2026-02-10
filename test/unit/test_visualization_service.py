@@ -8,6 +8,8 @@ Covers:
   - Router endpoints via Starlette TestClient with dependency override
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 

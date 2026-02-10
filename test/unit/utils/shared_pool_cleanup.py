@@ -7,6 +7,8 @@ This module provides specific cleanup for SpiderFoot's shared thread pool
 workers that are not properly cleaned up during test teardown.
 """
 
+from __future__ import annotations
+
 import threading
 import time
 import gc

@@ -11,6 +11,8 @@
 """
 Event storage, retrieval, search, and event tree navigation for SpiderFootDb.
 """
+from __future__ import annotations
+
 from threading import RLock
 import logging
 import time

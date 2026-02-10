@@ -12,6 +12,8 @@
 Scan instance management (create, update, delete, list, get) for SpiderFootDb.
 """
 
+from __future__ import annotations
+
 import sqlite3
 import psycopg2
 import logging

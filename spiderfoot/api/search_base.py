@@ -1,5 +1,7 @@
 # Legacy stub for test compatibility
 
+from __future__ import annotations
+
 def search_base(config, *args, **kwargs) -> list:
     """Stub for legacy search_base utility. Returns empty list for test compatibility.
     Args:

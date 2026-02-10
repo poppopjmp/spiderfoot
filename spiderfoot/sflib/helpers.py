@@ -14,6 +14,8 @@ All public symbols are listed in :data:`__all__` so that ``from .helpers
 import *`` exposes only the intended API.
 """
 
+from __future__ import annotations
+
 import hashlib
 import io
 import os

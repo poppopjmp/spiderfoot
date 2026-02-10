@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 import time

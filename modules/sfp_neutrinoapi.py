@@ -11,6 +11,8 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 import json
 
 from spiderfoot import SpiderFootEvent

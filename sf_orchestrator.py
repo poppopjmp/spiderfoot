@@ -18,6 +18,8 @@ interface that orchestrates the various components (CLI, API, WebUI) using
 modular, reusable components.
 """
 
+from __future__ import annotations
+
 import argparse
 import logging
 import multiprocessing as mp

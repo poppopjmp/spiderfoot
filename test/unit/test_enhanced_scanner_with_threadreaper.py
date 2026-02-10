@@ -7,6 +7,8 @@ Demonstrates the comprehensive thread management and resource cleanup
 system to eliminate hanging tests and thread leaks.
 """
 
+from __future__ import annotations
+
 import unittest
 import uuid
 import threading

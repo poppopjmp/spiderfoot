@@ -7,6 +7,8 @@ This package contains the core SpiderFoot functionality including:
 - Web interface components
 """
 
+from __future__ import annotations
+
 from .__version__ import __version__
 __author__ = "Steve Micallef, Agostino Panico"
 __license__ = "MIT"

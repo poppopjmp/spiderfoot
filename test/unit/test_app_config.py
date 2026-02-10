@@ -5,6 +5,8 @@ Covers: section defaults, from_dict / to_dict round-trip, env-var
 overlays, validation, dict-style access, merge, and descriptions.
 """
 
+from __future__ import annotations
+
 import os
 import time
 from copy import deepcopy

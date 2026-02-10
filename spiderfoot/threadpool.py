@@ -5,6 +5,8 @@ worker threads once and dispatches scan module tasks to them for the
 duration of a scan.
 """
 
+from __future__ import annotations
+
 import queue
 import logging
 import threading

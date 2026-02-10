@@ -15,6 +15,8 @@ Usage:
 
     install_compression(app)
 """
+from __future__ import annotations
+
 import gzip
 import logging
 import os

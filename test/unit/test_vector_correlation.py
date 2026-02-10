@@ -1,5 +1,7 @@
 """Tests for spiderfoot.vector_correlation — vector correlation engine."""
 
+from __future__ import annotations
+
 import pytest
 from spiderfoot.qdrant_client import QdrantClient, QdrantConfig, QdrantBackend
 from spiderfoot.embedding_service import EmbeddingConfig, EmbeddingProvider, EmbeddingService

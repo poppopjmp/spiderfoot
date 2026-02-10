@@ -6,6 +6,8 @@ log-rotation via :class:`TimedRotatingFileHandler`.  Designed so that
 every scan's log entries are queryable from the database.
 """
 
+from __future__ import annotations
+
 import atexit
 import logging
 import os

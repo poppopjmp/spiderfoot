@@ -13,6 +13,8 @@
 Provides :func:`configSerialize` and :func:`configUnserialize` used to
 persist and restore SpiderFoot scan settings to/from the database.
 """
+from __future__ import annotations
+
 from copy import deepcopy
 
 def configSerialize(opts: dict, filterSystem: bool = True) -> dict:

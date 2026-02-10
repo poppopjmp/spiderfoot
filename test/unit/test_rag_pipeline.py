@@ -1,5 +1,7 @@
 """Tests for spiderfoot.rag_pipeline — RAG pipeline core."""
 
+from __future__ import annotations
+
 import pytest
 from spiderfoot.rag_pipeline import (
     LLMProvider,

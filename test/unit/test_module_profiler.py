@@ -1,5 +1,7 @@
 """Tests for spiderfoot.module_profiler."""
 
+from __future__ import annotations
+
 import time
 import threading
 import unittest

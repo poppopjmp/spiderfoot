@@ -8,6 +8,8 @@
 # Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+from __future__ import annotations
+
 import yaml
 import os
 import jsonschema

@@ -15,6 +15,8 @@ HTTP content fetching, proxy support, and socket-level operations used by
 the core :class:`SpiderFoot` object.
 """
 # Network, DNS, IP, socket, proxy, fetch, etc. utilities
+from __future__ import annotations
+
 import socket
 import ssl
 import requests

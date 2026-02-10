@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..dependencies import get_app_config, optional_auth

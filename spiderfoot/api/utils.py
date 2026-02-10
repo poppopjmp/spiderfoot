@@ -1,6 +1,8 @@
 """
 Utility functions for SpiderFoot API (CSV/Excel builders, etc.)
 """
+from __future__ import annotations
+
 import html
 import openpyxl
 import string

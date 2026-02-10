@@ -1,5 +1,7 @@
 """Tests for spiderfoot.plugin_test (Plugin Testing Framework)."""
 
+from __future__ import annotations
+
 import unittest
 from unittest.mock import MagicMock, patch
 
