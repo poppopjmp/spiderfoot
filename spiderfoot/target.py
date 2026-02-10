@@ -204,8 +204,9 @@ class SpiderFootTarget():
         if self.targetType in ["HUMAN_NAME", "PHONE_NUMBER", "USERNAME", "BITCOIN_ADDRESS"]:
             return True
 
-        # TODO: review handling of other potential self.targetType target types:
-        # "INTERNET_NAME", "EMAILADDR", "BGP_AS_OWNER"
+        # NOTE(v6): Consider adding explicit scope matching for INTERNET_NAME
+        # (suffix match), EMAILADDR (domain match), and BGP_AS_OWNER (AS lookup).
+        # Currently these fall through to the IP/domain checks below.
 
         # For IP addreses, check if it is an alias of the target or within the target's subnet.
         if netaddr.valid_ipv4(value) or netaddr.valid_ipv6(value):

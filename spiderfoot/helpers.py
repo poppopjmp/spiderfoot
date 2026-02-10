@@ -919,10 +919,10 @@ class SpiderFootHelpers():
         Returns:
             list[str]: list of patterns which should not be followed
 
-        Todo:
-            Check and parse User-Agent.
+        Note:
+            Future: Check and parse User-Agent directives.
 
-            Fix whitespace parsing; ie, " " is not a valid disallowed path
+            Future: Fix whitespace parsing — " " is not a valid disallowed path.
         """
         returnArr: typing.List[str] = list()
 

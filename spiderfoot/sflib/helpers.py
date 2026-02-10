@@ -286,8 +286,8 @@ def useProxyForUrl(self, url: str) -> bool:
     Returns:
         bool: should the configured proxy be used?
 
-    Todo:
-        Allow using TOR only for .onion addresses
+    Note:
+        Future: Allow using TOR only for .onion addresses.
     """
     host = self.urlFQDN(url).lower().rstrip('.').strip()
 
