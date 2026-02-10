@@ -3,6 +3,27 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.153.0] — RC Cycle 78: Final Annotations on Constants
+
+### Changed
+- Added `typing.Final` to 18 constants in `constants.py` (ports, URLs, timeouts, limits)
+- Added `typing.Final` to 6 constants in `logging_config.py` (log format strings)
+- Added `typing.Final` to 10 constants in `scan_state_map.py` (DB status strings)
+
+## [5.152.0] — RC Cycle 77: Comprehensions & Misc Cleanup
+
+### Changed
+- Converted 6 for-append loops to list comprehensions / `list()` / `extend()` in `sflib/helpers.py`, `sflib/core.py`, `webui/scan.py`
+- Also removed redundant `list(dict.keys())` to direct `in dict` membership test
+- Added `encoding='utf-8'` to last bare `open()` call in `cli_service.py`
+- Added `-> None` return type to 2 `__init__` methods (`SpiderFootModuleLoader`, `SpiderFootDb`)
+
+## [5.151.0] — RC Cycle 76: Remove Unused Imports & DB Type Hints
+
+### Changed
+- Removed ~47 unused imports across 39 files via Pylance `source.unusedImports` refactoring
+- Added return type hints to 4 DB facade methods: `scanInstanceSet`, `scanConfigDelete`, `scanLogEvent`, `scanResultDelete`
+
 ## [5.150.0] — RC Cycle 74: Immutable Target Types
 
 ### Changed
