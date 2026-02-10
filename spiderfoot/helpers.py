@@ -204,7 +204,7 @@ class SpiderFootHelpers():
         return None
 
     @staticmethod
-    def loadModulesAsDict(path, ignore_files=None):
+    def loadModulesAsDict(path: str, ignore_files: typing.Optional[typing.List[str]] = None) -> dict:
         """Load modules as dictionary."""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
@@ -284,7 +284,7 @@ class SpiderFootHelpers():
         return modules
 
     @staticmethod
-    def loadCorrelationRulesRaw(path, ignore_files=None):
+    def loadCorrelationRulesRaw(path: str, ignore_files: typing.Optional[typing.List[str]] = None) -> typing.List[dict]:
         """Load correlation rules."""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
@@ -380,7 +380,7 @@ class SpiderFootHelpers():
         return '/'.join(stack)
 
     @staticmethod
-    def sanitiseInput(input_str):
+    def sanitiseInput(input_str: str) -> bool:
         """Sanitise input string."""
         if not isinstance(input_str, str):
             return False
@@ -1238,7 +1238,7 @@ class SpiderFootHelpers():
         }
 
     @staticmethod
-    def fixModuleImport(module, module_name=None):
+    def fixModuleImport(module: typing.Any, module_name: typing.Optional[str] = None) -> typing.Any:
         """Fix module imports to ensure proper class attributes for tests.
 
         Args:
@@ -1292,7 +1292,7 @@ class SpiderFootHelpers():
         return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
-def fix_module_for_tests(module_name):
+def fix_module_for_tests(module_name: str) -> typing.Optional[typing.Any]:
     """Fix a module to ensure it has the expected class attribute for tests.
 
     This function ensures that modules have the expected sfp_modulename.sfp_modulename
