@@ -6,3 +6,5 @@ injection for the ``/api/v1/`` endpoints.
 """
 
 from __future__ import annotations
+
+__all__: list[str] = []

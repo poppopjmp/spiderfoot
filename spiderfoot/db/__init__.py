@@ -18,6 +18,8 @@ schema migrations, and retry logic for SQLite operations.
 
 from __future__ import annotations
 
+__all__ = ["SpiderFootDb", "get_schema_queries"]
+
 from pathlib import Path
 import logging
 import re
