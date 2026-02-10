@@ -62,7 +62,6 @@ class ExtractedLink(typing.TypedDict):
     title: typing.str | None
 
 
-
 EmptyTree = dict[None, object]
 
 
