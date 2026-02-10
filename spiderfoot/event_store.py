@@ -87,7 +87,7 @@ class RetentionPolicy:
         max_events: int = 0,
         max_age_seconds: float = 0,
         min_priority: EventPriority = EventPriority.INFO,
-    ):
+    ) -> None:
         self.max_events = max_events
         self.max_age_seconds = max_age_seconds
         self.min_priority = min_priority
@@ -107,7 +107,7 @@ class EventStore:
         retention: Retention policy for automatic cleanup.
     """
 
-    def __init__(self, retention: Optional[RetentionPolicy] = None):
+    def __init__(self, retention: Optional[RetentionPolicy] = None) -> None:
         self._events: dict[str, StoredEvent] = {}  # event_id -> event
         self._scan_index: dict[str, list[str]] = {}  # scan_id -> [event_ids]
         self._type_index: dict[str, list[str]] = {}  # event_type -> [event_ids]

@@ -69,7 +69,7 @@ class WorkflowStep:
         retry_delay: float = 1.0,
         on_failure: str = "stop",
         tags: Optional[list[str]] = None,
-    ):
+    ) -> None:
         self.name = name
         self.step_type = step_type
         self.retry_count = retry_count
@@ -118,7 +118,7 @@ class ModuleStep(WorkflowStep):
         options: Module configuration options.
     """
 
-    def __init__(self, name: str, module_name: str, options: Optional[dict] = None, **kwargs):
+    def __init__(self, name: str, module_name: str, options: Optional[dict] = None, **kwargs) -> None:
         super().__init__(name, step_type=StepType.MODULE, **kwargs)
         self.module_name = module_name
         self.options = options or {}
@@ -146,7 +146,7 @@ class ModuleStep(WorkflowStep):
 class SequenceStep(WorkflowStep):
     """Step that runs child steps sequentially."""
 
-    def __init__(self, name: str, steps: Optional[list[WorkflowStep]] = None, **kwargs):
+    def __init__(self, name: str, steps: Optional[list[WorkflowStep]] = None, **kwargs) -> None:
         super().__init__(name, step_type=StepType.SEQUENCE, **kwargs)
         self.steps = steps or []
 
@@ -194,7 +194,7 @@ class SequenceStep(WorkflowStep):
 class ParallelStep(WorkflowStep):
     """Step that declares child steps to run in parallel."""
 
-    def __init__(self, name: str, steps: Optional[list[WorkflowStep]] = None, **kwargs):
+    def __init__(self, name: str, steps: Optional[list[WorkflowStep]] = None, **kwargs) -> None:
         super().__init__(name, step_type=StepType.PARALLEL, **kwargs)
         self.steps = steps or []
 
@@ -253,7 +253,7 @@ class ConditionalStep(WorkflowStep):
         if_true: Optional[WorkflowStep] = None,
         if_false: Optional[WorkflowStep] = None,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(name, step_type=StepType.CONDITIONAL, **kwargs)
         self.condition = condition
         self.if_true = if_true
@@ -306,7 +306,7 @@ class ConditionalStep(WorkflowStep):
 class DelayStep(WorkflowStep):
     """Step that introduces a delay."""
 
-    def __init__(self, name: str, delay_seconds: float = 1.0, **kwargs):
+    def __init__(self, name: str, delay_seconds: float = 1.0, **kwargs) -> None:
         super().__init__(name, step_type=StepType.DELAY, **kwargs)
         self.delay_seconds = delay_seconds
 
@@ -332,7 +332,7 @@ class DelayStep(WorkflowStep):
 class CheckpointStep(WorkflowStep):
     """Named checkpoint for workflow resume support."""
 
-    def __init__(self, name: str, **kwargs):
+    def __init__(self, name: str, **kwargs) -> None:
         super().__init__(name, step_type=StepType.CHECKPOINT, **kwargs)
 
     def execute(self, context: dict) -> StepResult:
@@ -353,7 +353,7 @@ class ScanWorkflow:
         description: Human-readable description.
     """
 
-    def __init__(self, name: str, description: str = ""):
+    def __init__(self, name: str, description: str = "") -> None:
         self.name = name
         self.description = description
         self._root = SequenceStep(f"{name}_root")

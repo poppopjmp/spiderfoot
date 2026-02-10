@@ -147,7 +147,7 @@ class SecretBackend(ABC):
 class MemorySecretBackend(SecretBackend):
     """In-memory secret storage (for development/testing)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._secrets: dict[str, SecretEntry] = {}
 
     def get(self, key: str) -> str | None:
@@ -190,7 +190,7 @@ class EnvSecretBackend(SecretBackend):
     Keys are transformed: ``shodan_api_key`` -> ``SF_SECRET_SHODAN_API_KEY``
     """
 
-    def __init__(self, prefix: str = "SF_SECRET_"):
+    def __init__(self, prefix: str = "SF_SECRET_") -> None:
         self._prefix = prefix
 
     def _env_key(self, key: str) -> str:
@@ -232,7 +232,7 @@ class FileSecretBackend(SecretBackend):
     for production.
     """
 
-    def __init__(self, filepath: str = ".secrets.json"):
+    def __init__(self, filepath: str = ".secrets.json") -> None:
         self._filepath = filepath
         self._secrets: dict[str, SecretEntry] = {}
         self._load()
@@ -301,7 +301,7 @@ class EncryptedFileSecretBackend(SecretBackend):
     """
 
     def __init__(self, filepath: str = ".secrets.enc",
-                 encryption_key: str = ""):
+                 encryption_key: str = "") -> None:
         self._filepath = filepath
         self._derived_key = self._derive_key(encryption_key or "default-key")
         self._secrets: dict[str, SecretEntry] = {}
@@ -396,7 +396,7 @@ class SecretManager:
     like access auditing, rotation warnings, and multi-backend fallback.
     """
 
-    def __init__(self, backend: SecretBackend | None = None, **kwargs: Any):
+    def __init__(self, backend: SecretBackend | None = None, **kwargs: Any) -> None:
         if backend is None:
             backend_type = kwargs.pop("backend_type", "memory")
             backend = self._create_backend(backend_type, **kwargs)

@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 class APISecurityManager:
     """Comprehensive API security management."""
 
-    def __init__(self, secret_key: str = None, token_expiry: int = DEFAULT_TTL_ONE_HOUR):
+    def __init__(self, secret_key: str = None, token_expiry: int = DEFAULT_TTL_ONE_HOUR) -> None:
         """Initialize API security manager.
 
         Args:
@@ -216,7 +216,7 @@ class APISecurityManager:
 class APIKeyManager:
     """API key management with database storage."""
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         """Initialize API key manager.
 
         Args:

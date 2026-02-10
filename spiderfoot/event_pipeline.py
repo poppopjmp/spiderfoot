@@ -76,7 +76,7 @@ class StageStats:
 class PipelineStage(ABC):
     """Base class for pipeline stages."""
 
-    def __init__(self, name: str = "", enabled: bool = True):
+    def __init__(self, name: str = "", enabled: bool = True) -> None:
         self.name = name or self.__class__.__name__
         self._enabled = enabled
         self._stats = StageStats(name=self.name)
@@ -104,7 +104,7 @@ class PipelineStage(ABC):
 class FunctionStage(PipelineStage):
     """Stage wrapping a callable."""
 
-    def __init__(self, func: Callable[[PipelineEvent], StageResult], name: str = ""):
+    def __init__(self, func: Callable[[PipelineEvent], StageResult], name: str = "") -> None:
         super().__init__(name=name or getattr(func, "__name__", "function_stage"))
         self._func = func
 
@@ -120,7 +120,7 @@ class ValidatorStage(PipelineStage):
         allowed_types: Optional[set[str]] = None,
         max_data_size: Optional[int] = None,
         name: str = "validator",
-    ):
+    ) -> None:
         super().__init__(name=name)
         self.allowed_types = allowed_types
         self.max_data_size = max_data_size
@@ -142,7 +142,7 @@ class TransformStage(PipelineStage):
         self,
         transform: Callable[[str], str],
         name: str = "transform",
-    ):
+    ) -> None:
         super().__init__(name=name)
         self._transform = transform
 
@@ -158,7 +158,7 @@ class TransformStage(PipelineStage):
 class TaggingStage(PipelineStage):
     """Adds tags to events based on rules."""
 
-    def __init__(self, rules: Optional[dict[str, str]] = None, name: str = "tagger"):
+    def __init__(self, rules: Optional[dict[str, str]] = None, name: str = "tagger") -> None:
         super().__init__(name=name)
         self._rules: dict[str, str] = rules or {}
 
@@ -176,7 +176,7 @@ class TaggingStage(PipelineStage):
 class RouterStage(PipelineStage):
     """Routes events to named destinations based on predicates."""
 
-    def __init__(self, name: str = "router"):
+    def __init__(self, name: str = "router") -> None:
         super().__init__(name=name)
         self._routes: list[tuple[Callable[[PipelineEvent], bool], str]] = []
 
@@ -206,7 +206,7 @@ class EventPipeline:
         result = pipeline.execute(event)
     """
 
-    def __init__(self, name: str = "default"):
+    def __init__(self, name: str = "default") -> None:
         self.name = name
         self._stages: list[PipelineStage] = []
         self._error_handlers: list[Callable[[PipelineEvent, PipelineStage, Exception], None]] = []

@@ -376,7 +376,7 @@ class HybridCorrelator:
         vector_engine: Any = None,
         multidim_analyzer: Any = None,
         event_loader: Callable | None = None,
-    ):
+    ) -> None:
         self.config = config or HybridConfig()
         self._rule_factory = rule_executor_factory
         self._vector_engine = vector_engine

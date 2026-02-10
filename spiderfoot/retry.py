@@ -180,7 +180,7 @@ class DeadLetterEntry:
 class DeadLetterQueue:
     """Stores permanently failed operations for later inspection/replay."""
 
-    def __init__(self, max_size: int = 1000):
+    def __init__(self, max_size: int = 1000) -> None:
         self._queue: Deque[DeadLetterEntry] = deque(maxlen=max_size)
         self._lock = threading.Lock()
         self._counter = 0
@@ -230,7 +230,7 @@ class RetryExecutor:
     """Execute operations with automatic retry and recovery."""
 
     def __init__(self, config: Optional[RetryConfig] = None, *,
-                 dlq: Optional[DeadLetterQueue] = None):
+                 dlq: Optional[DeadLetterQueue] = None) -> None:
         self.config = config or RetryConfig()
         self.dlq = dlq or _dlq
         self._stats = {
@@ -344,7 +344,7 @@ class RetryExecutor:
 class RetryContext:
     """Context manager for retry-managed operations."""
 
-    def __init__(self, config: Optional[RetryConfig] = None):
+    def __init__(self, config: Optional[RetryConfig] = None) -> None:
         self._executor = RetryExecutor(config)
 
     def __enter__(self):

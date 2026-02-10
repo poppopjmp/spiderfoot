@@ -68,7 +68,7 @@ class SandboxResult:
 class ResourceTracker:
     """Tracks resource usage within a sandbox."""
 
-    def __init__(self, limits: ResourceLimits):
+    def __init__(self, limits: ResourceLimits) -> None:
         self.limits = limits
         self._event_count = 0
         self._error_count = 0
@@ -144,7 +144,7 @@ class ModuleSandbox:
         self,
         module_name: str,
         limits: Optional[ResourceLimits] = None,
-    ):
+    ) -> None:
         self.module_name = module_name
         self.limits = limits or ResourceLimits()
         self._state = SandboxState.IDLE
@@ -298,7 +298,7 @@ class SandboxManager:
         result = sandbox.execute(func)
     """
 
-    def __init__(self, default_limits: Optional[ResourceLimits] = None):
+    def __init__(self, default_limits: Optional[ResourceLimits] = None) -> None:
         self.default_limits = default_limits or ResourceLimits()
         self._sandboxes: dict[str, ModuleSandbox] = {}
         self._results: list[SandboxResult] = []

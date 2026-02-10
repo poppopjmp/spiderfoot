@@ -72,7 +72,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
     # Override in subclass to disable auto-metrics
     _enable_metrics = True
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._registry = None
         self._http_service = None

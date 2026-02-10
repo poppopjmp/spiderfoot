@@ -49,7 +49,7 @@ class NotificationManager:
     def __init__(
         self,
         dispatcher: WebhookDispatcher | None = None,
-    ):
+    ) -> None:
         self._lock = threading.Lock()
         self._webhooks: dict[str, WebhookConfig] = {}
         self._dispatcher = dispatcher or WebhookDispatcher()

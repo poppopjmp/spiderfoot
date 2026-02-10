@@ -79,7 +79,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def setup(self, sfc, userOpts=None):

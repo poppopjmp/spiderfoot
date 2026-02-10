@@ -129,7 +129,7 @@ class EncryptionManager:
     __author__ = "poppopjmp"
     __license__ = "MIT"
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.master_key = None
         self.cipher_suite = None
         self.key_rotation_interval = 30 * 24 * 3600  # 30 days
@@ -234,7 +234,7 @@ class EncryptionManager:
 class AuthenticationManager:
     """Multi-factor authentication management."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.session_timeout = 3600  # 1 hour
         self.max_failed_attempts = 5
         self.lockout_duration = 900  # 15 minutes
@@ -415,7 +415,7 @@ class AuthenticationManager:
 class RBACManager:
     """Role-Based Access Control management."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.roles = {}
         self.user_roles = {}
         self.rbac_lock = threading.RLock()
@@ -470,7 +470,7 @@ class RBACManager:
 class SecurityAuditLogger:
     """Comprehensive security audit logging."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.audit_log = []
         self.log_file = None
         self.max_memory_logs = 10000
@@ -627,7 +627,7 @@ class SecurityAuditLogger:
 class ZeroTrustController:
     """Zero-Trust Architecture implementation."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.trust_policies = {}
         self.device_registry = {}
         self.network_segments = {}

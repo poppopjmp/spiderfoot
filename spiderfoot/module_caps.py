@@ -140,7 +140,7 @@ class CapabilityRegistry:
         conflicts = registry.find_conflicts(["sfp_dns", "sfp_portscan"])
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._declarations: dict[str, ModuleCapabilityDeclaration] = {}
         self._capability_index: dict[str, set[str]] = {}  # cap_name → module_names
         self._lock = threading.Lock()

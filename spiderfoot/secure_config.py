@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 class SecureConfigManager:
     """Secure configuration manager with encryption for sensitive data."""
 
-    def __init__(self, config_or_key: Union[str, dict[str, Any], None] = None, salt: Optional[bytes] = None):
+    def __init__(self, config_or_key: Union[str, dict[str, Any], None] = None, salt: Optional[bytes] = None) -> None:
         """Initialize secure configuration manager.
 
         Args:

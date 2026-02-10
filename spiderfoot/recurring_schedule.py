@@ -122,7 +122,7 @@ class RecurringSchedule:
 class RecurringScheduler:
     """In-memory recurring scan scheduler with background check loop."""
 
-    def __init__(self, check_interval: float = 30.0):
+    def __init__(self, check_interval: float = 30.0) -> None:
         self._schedules: dict[str, RecurringSchedule] = {}
         self._lock = threading.Lock()
         self._check_interval = check_interval

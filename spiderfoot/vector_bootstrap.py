@@ -97,7 +97,7 @@ class VectorBootstrap:
     - Minimal config generation for quick-start
     """
 
-    def __init__(self, config: VectorBootstrapConfig | None = None):
+    def __init__(self, config: VectorBootstrapConfig | None = None) -> None:
         self.config = config or VectorBootstrapConfig()
         self._health_cache: VectorHealthStatus | None = None
 

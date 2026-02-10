@@ -40,7 +40,7 @@ class sfp__stor_stdout(SpiderFootModernPlugin):
     optdescs = {
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.firstEvent = True
 

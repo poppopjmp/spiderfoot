@@ -142,7 +142,7 @@ class ModuleHealth:
 class ModuleHealthMonitor:
     """Monitors health of all modules during scans."""
 
-    def __init__(self, stall_threshold: float = 300.0):
+    def __init__(self, stall_threshold: float = 300.0) -> None:
         """
         Parameters
         ----------

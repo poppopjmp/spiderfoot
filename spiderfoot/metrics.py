@@ -68,7 +68,7 @@ def _format_labels(labels: dict[str, str]) -> str:
 class _LabeledValue:
     """Thread-safe labeled numeric value."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._lock = threading.Lock()
         self._value = 0.0
 
@@ -93,7 +93,7 @@ class Counter:
     """Prometheus-style counter (monotonically increasing)."""
 
     def __init__(self, name: str, help_text: str = "",
-                 label_names: Optional[list[str]] = None):
+                 label_names: Optional[list[str]] = None) -> None:
         self.name = name
         self.help_text = help_text
         self.label_names = label_names or []
@@ -136,7 +136,7 @@ class Gauge:
     """Prometheus-style gauge (can increase and decrease)."""
 
     def __init__(self, name: str, help_text: str = "",
-                 label_names: Optional[list[str]] = None):
+                 label_names: Optional[list[str]] = None) -> None:
         self.name = name
         self.help_text = help_text
         self.label_names = label_names or []
@@ -189,7 +189,7 @@ class Histogram:
 
     def __init__(self, name: str, help_text: str = "",
                  buckets: Optional[Sequence[float]] = None,
-                 label_names: Optional[list[str]] = None):
+                 label_names: Optional[list[str]] = None) -> None:
         self.name = name
         self.help_text = help_text
         self.buckets = sorted(buckets or self.DEFAULT_BUCKETS)
@@ -234,7 +234,7 @@ class Histogram:
 
 
 class _HistogramTimer:
-    def __init__(self, histogram: Histogram):
+    def __init__(self, histogram: Histogram) -> None:
         self._histogram = histogram
         self._start = None
 
@@ -253,7 +253,7 @@ class _HistogramTimer:
 class MetricsRegistry:
     """Global registry of all metrics."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._lock = threading.Lock()
         self._metrics: dict[str, object] = {}
 

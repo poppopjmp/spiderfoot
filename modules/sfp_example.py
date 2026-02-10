@@ -11,7 +11,7 @@ class sfp_example(SpiderFootModernPlugin):
         'labels': ['test'],
         'targetType': 'INTERNET_NAME',
     }
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.opts = {'example_option': 'default_value'}
         self.optdescs = {'example_option': 'Example option description'}

@@ -443,7 +443,7 @@ class SpiderFootMCPClient:
 class CTIReportExporter:
     """Export CTI reports in various formats."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.log = logging.getLogger("spiderfoot.cti_exporter")
 
     def export_report(

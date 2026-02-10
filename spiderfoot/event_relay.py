@@ -82,7 +82,7 @@ class EventRelay:
             When full, the oldest item is dropped.
     """
 
-    def __init__(self, max_queue_size: int = 500):
+    def __init__(self, max_queue_size: int = 500) -> None:
         self._lock = threading.Lock()
         self._consumers: Dict[str, Set[asyncio.Queue]] = defaultdict(set)
         self._max_queue_size = max_queue_size

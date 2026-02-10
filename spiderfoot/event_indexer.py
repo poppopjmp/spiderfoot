@@ -120,7 +120,7 @@ class BatchWriter:
 
     def __init__(self, config: IndexerConfig,
                  flush_fn: Callable[[list[Any]], int],
-                 metrics: IndexerMetrics):
+                 metrics: IndexerMetrics) -> None:
         self._config = config
         self._flush_fn = flush_fn
         self._metrics = metrics
@@ -225,7 +225,7 @@ class EventIndexer:
         config: IndexerConfig | None = None,
         vector_engine: Any = None,
         event_bus: Any = None,
-    ):
+    ) -> None:
         self.config = config or IndexerConfig()
         self._vector_engine = vector_engine
         self._event_bus = event_bus

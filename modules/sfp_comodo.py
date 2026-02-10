@@ -51,7 +51,7 @@ class sfp_comodo(SpiderFootModernPlugin):
 
     results = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.__name__ = "sfp_comodo"
 

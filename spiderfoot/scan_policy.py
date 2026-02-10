@@ -72,7 +72,7 @@ class ScanPolicy:
             print(result.violations)
     """
 
-    def __init__(self, name: str = "default"):
+    def __init__(self, name: str = "default") -> None:
         self.name = name
         self._enabled = True
 
@@ -398,7 +398,7 @@ class PolicyEngine:
                 print(v.message)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._policies: dict[str, ScanPolicy] = {}
 
     def add_policy(self, policy: ScanPolicy) -> "PolicyEngine":

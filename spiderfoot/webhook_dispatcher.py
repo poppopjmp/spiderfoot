@@ -147,7 +147,7 @@ class WebhookDispatcher:
     maintains a bounded delivery history.
     """
 
-    def __init__(self, max_history: int = 200):
+    def __init__(self, max_history: int = 200) -> None:
         self._lock = threading.Lock()
         self._history: Deque[DeliveryRecord] = deque(maxlen=max_history)
 

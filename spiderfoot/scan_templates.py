@@ -190,7 +190,7 @@ class TemplateRegistry:
         my_scan = template.clone("my_custom_scan")
     """
 
-    def __init__(self, load_defaults: bool = True):
+    def __init__(self, load_defaults: bool = True) -> None:
         self._templates: dict[str, ScanTemplate] = {}
         if load_defaults:
             self._load_defaults()

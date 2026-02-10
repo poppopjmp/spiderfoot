@@ -61,7 +61,7 @@ class ModuleOutputValidator:
         "INITIAL_TARGET",
     })
 
-    def __init__(self, mode: str = "warn"):
+    def __init__(self, mode: str = "warn") -> None:
         """
         Args:
             mode: "warn", "strict", or "off"

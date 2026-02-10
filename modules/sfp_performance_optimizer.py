@@ -40,7 +40,7 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 class TTLCache:
     """Time-To-Live cache implementation with automatic cleanup."""
     
-    def __init__(self, default_ttl: int = 3600, max_size: int = 10000):
+    def __init__(self, default_ttl: int = 3600, max_size: int = 10000) -> None:
         self.cache = OrderedDict()
         self.ttl_map = {}
         self.default_ttl = default_ttl
@@ -129,7 +129,7 @@ class TTLCache:
 class AdaptiveRateLimiter:
     """Adaptive rate limiter with backoff and success rate monitoring."""
     
-    def __init__(self, base_delay: float = 1.0, max_delay: float = 60.0):
+    def __init__(self, base_delay: float = 1.0, max_delay: float = 60.0) -> None:
         self.base_delay = base_delay
         self.max_delay = max_delay
         self.current_delay = base_delay
@@ -176,7 +176,7 @@ class AdaptiveRateLimiter:
 class ResourceMonitor:
     """Monitor system resource usage and provide optimization hints."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.memory_samples = []
         self.cpu_samples = []
         self.sample_interval = 60  # seconds
@@ -237,7 +237,7 @@ class ResourceMonitor:
 class RequestBatcher:
     """Batch and optimize API requests for better performance."""
     
-    def __init__(self, batch_size: int = 10, flush_interval: float = 5.0):
+    def __init__(self, batch_size: int = 10, flush_interval: float = 5.0) -> None:
         self.batch_size = batch_size
         self.flush_interval = flush_interval
         self.batches = defaultdict(list)

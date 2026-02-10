@@ -214,7 +214,7 @@ class StreamChunk:
 
 class LLMError(Exception):
     """Base error for LLM operations."""
-    def __init__(self, message: str, status_code: int = 0, response: str = ""):
+    def __init__(self, message: str, status_code: int = 0, response: str = "") -> None:
         super().__init__(message)
         self.status_code = status_code
         self.response = response
@@ -289,7 +289,7 @@ class LLMClient:
     - Detailed error classification
     """
 
-    def __init__(self, config: LLMConfig | None = None):
+    def __init__(self, config: LLMConfig | None = None) -> None:
         self.config = config or LLMConfig()
         self._total_requests = 0
         self._total_tokens = 0

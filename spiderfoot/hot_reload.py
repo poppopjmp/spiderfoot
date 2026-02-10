@@ -82,7 +82,7 @@ class ModuleWatcher:
     def __init__(self, modules_dir: str = "modules", *,
                  poll_interval: float = 2.0,
                  pattern: str = "sfp_*.py",
-                 auto_start: bool = False):
+                 auto_start: bool = False) -> None:
         """
         Args:
             modules_dir: Path to modules directory.

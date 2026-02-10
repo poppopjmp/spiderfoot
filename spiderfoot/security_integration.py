@@ -17,7 +17,7 @@ from .security_logging import SecurityLogger, SecurityEventType
 class SecurityIntegrator:
     """Main security integration class for SpiderFoot."""
 
-    def __init__(self, spiderfoot_root: str = None):
+    def __init__(self, spiderfoot_root: str = None) -> None:
         """Initialize security integrator.
 
         Args:

@@ -92,7 +92,7 @@ class ServiceClient:
 
     def __init__(self, service_name: str, endpoint: str,
                  timeout: float = 30.0,
-                 use_grpc: Optional[bool] = None):
+                 use_grpc: Optional[bool] = None) -> None:
         """
         Args:
             service_name: Logical service name (scanner, data, etc.).
@@ -242,7 +242,7 @@ class ServiceServer:
     support when stubs are compiled).
     """
 
-    def __init__(self, service_name: str, port: int = 5003):
+    def __init__(self, service_name: str, port: int = 5003) -> None:
         self.service_name = service_name
         self.port = port
         self._handlers: dict[str, Callable] = {}

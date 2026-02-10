@@ -43,7 +43,7 @@ class SpiderFootOrchestrator:
     This provides a clean, modular interface for CLI, API, and WebUI.
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the SpiderFoot orchestrator."""
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
         

@@ -151,7 +151,7 @@ if HAS_STARLETTE:
             trust_client_id: bool = True,
             log_requests: bool = True,
             slow_request_threshold: float = 5.0,
-        ):
+        ) -> None:
             super().__init__(app)
             self.trust_client_id = trust_client_id
             self.log_requests = log_requests

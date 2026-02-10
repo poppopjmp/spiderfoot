@@ -122,7 +122,7 @@ class TaskManager:
         self,
         max_workers: int = 4,
         max_history: int = 500,
-    ):
+    ) -> None:
         self._lock = threading.Lock()
         self._tasks: dict[str, _TaskEntry] = {}
         self._pool = ThreadPoolExecutor(
@@ -333,7 +333,7 @@ class _TaskEntry:
         task_type: TaskType,
         meta: dict[str, Any],
         created_at: float,
-    ):
+    ) -> None:
         self.task_id = task_id
         self.task_type = task_type
         self.state = TaskState.QUEUED

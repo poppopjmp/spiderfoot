@@ -76,7 +76,7 @@ class StartupResult:
 class DependencyProbe(ABC):
     """Base class for dependency health probes."""
 
-    def __init__(self, name: str, *, required: bool = True):
+    def __init__(self, name: str, *, required: bool = True) -> None:
         self.name = name
         self.required = required
 
@@ -90,7 +90,7 @@ class TcpProbe(DependencyProbe):
     """Probe that checks TCP connectivity to host:port."""
 
     def __init__(self, name: str, host: str, port: int, *,
-                 required: bool = True, timeout: float = 5.0):
+                 required: bool = True, timeout: float = 5.0) -> None:
         super().__init__(name, required=required)
         self.host = host
         self.port = port
@@ -114,7 +114,7 @@ class HttpProbe(DependencyProbe):
     """Probe that checks an HTTP endpoint returns 2xx."""
 
     def __init__(self, name: str, url: str, *,
-                 required: bool = True, timeout: float = 5.0):
+                 required: bool = True, timeout: float = 5.0) -> None:
         super().__init__(name, required=required)
         self.url = url
         self.timeout = timeout
@@ -136,7 +136,7 @@ class HttpProbe(DependencyProbe):
 class PostgresProbe(DependencyProbe):
     """Probe that verifies Postgres connectivity."""
 
-    def __init__(self, dsn: str | None = None, *, required: bool = True):
+    def __init__(self, dsn: str | None = None, *, required: bool = True) -> None:
         super().__init__("postgres", required=required)
         self.dsn = dsn or os.environ.get("POSTGRES_DSN", "")
 
@@ -161,7 +161,7 @@ class PostgresProbe(DependencyProbe):
 class RedisProbe(DependencyProbe):
     """Probe that verifies Redis connectivity."""
 
-    def __init__(self, url: str | None = None, *, required: bool = True):
+    def __init__(self, url: str | None = None, *, required: bool = True) -> None:
         super().__init__("redis", required=required)
         self.url = url or os.environ.get("SF_REDIS_URL", "")
 
@@ -181,7 +181,7 @@ class RedisProbe(DependencyProbe):
 class NatsProbe(DependencyProbe):
     """Probe that verifies NATS connectivity."""
 
-    def __init__(self, url: str | None = None, *, required: bool = True):
+    def __init__(self, url: str | None = None, *, required: bool = True) -> None:
         super().__init__("nats", required=required)
         self.url = url or os.environ.get("SF_EVENTBUS_NATS_URL", "")
 
@@ -249,7 +249,7 @@ class StartupSequencer:
         auto_discover: bool = True,
         retry_interval: float = 2.0,
         max_retries: int = 30,
-    ):
+    ) -> None:
         self.role = role
         self.retry_interval = retry_interval
         self.max_retries = max_retries

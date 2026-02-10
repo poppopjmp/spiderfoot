@@ -49,7 +49,7 @@ class OpenAPIGenerator:
 
     def __init__(self, *, title: str = "SpiderFoot API",
                  version: Optional[str] = None,
-                 description: str = ""):
+                 description: str = "") -> None:
         self.title = title
         self.version = version or _read_version()
         self.description = description or (

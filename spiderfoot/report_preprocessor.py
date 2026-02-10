@@ -440,7 +440,7 @@ class ReportPreprocessor:
     8. Build ReportContext with statistics
     """
 
-    def __init__(self, config: PreprocessorConfig | None = None):
+    def __init__(self, config: PreprocessorConfig | None = None) -> None:
         self.config = config or PreprocessorConfig()
 
     def process(

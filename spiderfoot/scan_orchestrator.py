@@ -80,7 +80,7 @@ class ScanOrchestrator:
         orch.complete()
     """
 
-    def __init__(self, scan_id: str, target: str = ""):
+    def __init__(self, scan_id: str, target: str = "") -> None:
         self.scan_id = scan_id
         self.target = target
         self._phase = ScanPhase.INIT

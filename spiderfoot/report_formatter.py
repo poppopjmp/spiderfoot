@@ -222,7 +222,7 @@ table:not(.meta-table) th {
 class ReportFormatter:
     """Renders GeneratedReport objects into various output formats."""
 
-    def __init__(self, config: FormatterConfig | None = None):
+    def __init__(self, config: FormatterConfig | None = None) -> None:
         self.config = config or FormatterConfig()
 
     # -----------------------------------------------------------------------

@@ -292,7 +292,7 @@ class ReportGenerator:
     4. Assemble into a coherent report
     """
 
-    def __init__(self, config: ReportGeneratorConfig | None = None):
+    def __init__(self, config: ReportGeneratorConfig | None = None) -> None:
         self.config = config or ReportGeneratorConfig()
         self._preprocessor = ReportPreprocessor(self.config.preprocessor_config)
         self._window_manager = ContextWindowManager(self.config.window_config)

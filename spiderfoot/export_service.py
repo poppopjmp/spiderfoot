@@ -75,7 +75,7 @@ class ExportConfig:
 class ExportService:
     """Multi-format scan result exporter."""
 
-    def __init__(self, config: Optional[ExportConfig] = None):
+    def __init__(self, config: Optional[ExportConfig] = None) -> None:
         self.config = config or ExportConfig()
 
     def export_scan(self, scan_id: str,

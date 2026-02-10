@@ -161,7 +161,7 @@ class PluginRegistry:
     STATE_FILE = ".plugin_state.json"
 
     def __init__(self, modules_dir: str = "modules", *,
-                 registry_url: str = ""):
+                 registry_url: str = "") -> None:
         """
         Args:
             modules_dir: Path to modules directory.

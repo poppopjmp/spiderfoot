@@ -72,7 +72,7 @@ __all__ = [
 class FakeTarget:
     """Minimal stand-in for SpiderFootTarget."""
 
-    def __init__(self, value: str, target_type: str = "DOMAIN_NAME"):
+    def __init__(self, value: str, target_type: str = "DOMAIN_NAME") -> None:
         self.value = value
         self.target_type = target_type
         self._aliases: list = []
@@ -99,7 +99,7 @@ class FakeSpiderFoot:
     Anything not explicitly stubbed falls through to a ``MagicMock``.
     """
 
-    def __init__(self, opts: dict | None = None):
+    def __init__(self, opts: dict | None = None) -> None:
         self.opts: dict[str, Any] = opts or _default_opts()
         self._mock = MagicMock()
         self._scan_id = "TEST_SCAN_001"
@@ -293,7 +293,7 @@ class PluginTestHarness:
 
     def __init__(self, module_instance: Any, *,
                  target: str = "example.com",
-                 target_type: str = "DOMAIN_NAME"):
+                 target_type: str = "DOMAIN_NAME") -> None:
         self._module = module_instance
         self._sf = FakeSpiderFoot()
         self._capture = EventCapture()

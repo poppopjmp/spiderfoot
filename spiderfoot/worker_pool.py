@@ -129,7 +129,7 @@ class ModuleWorker:
         input_queue: Optional[queue.Queue] = None,
         output_callback: Optional[Callable] = None,
         config: Optional[WorkerPoolConfig] = None,
-    ):
+    ) -> None:
         self.module_name = module_name
         self.module = module_instance
         self.input_queue = input_queue or queue.Queue(maxsize=1000)
@@ -224,7 +224,7 @@ class WorkerPool:
         pool.shutdown()
     """
 
-    def __init__(self, config: Optional[WorkerPoolConfig] = None):
+    def __init__(self, config: Optional[WorkerPoolConfig] = None) -> None:
         self.config = config or WorkerPoolConfig()
         self.log = logging.getLogger("spiderfoot.worker_pool")
         self._workers: dict[str, ModuleWorker] = {}

@@ -77,7 +77,7 @@ class QueryProfile:
 class ConnectionLoadBalancer:
     """Advanced connection load balancer with health monitoring."""
     
-    def __init__(self, configs: List[Dict[str, Any]]):
+    def __init__(self, configs: List[Dict[str, Any]]) -> None:
         self.configs = configs
         self.pools = {}
         self.metrics = {}
@@ -176,7 +176,7 @@ class ConnectionLoadBalancer:
 class QueryOptimizer:
     """Advanced query optimizer with prepared statements and AI-powered optimization."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.query_profiles = {}
         self.prepared_statements = {}
         self.query_cache = {}
@@ -284,7 +284,7 @@ class QueryOptimizer:
 class PerformanceMonitor:
     """Real-time performance monitoring and analytics."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.metrics = defaultdict(list)
         self.alerts = deque(maxlen=1000)
         self.thresholds = {
@@ -422,7 +422,7 @@ class PerformanceMonitor:
 class AutoScaler:
     """Automated scaling for database connections and resources."""
     
-    def __init__(self, load_balancer: ConnectionLoadBalancer, monitor: PerformanceMonitor):
+    def __init__(self, load_balancer: ConnectionLoadBalancer, monitor: PerformanceMonitor) -> None:
         self.load_balancer = load_balancer
         self.monitor = monitor
         self.scaling_rules = {

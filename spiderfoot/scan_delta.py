@@ -99,7 +99,7 @@ class ScanDeltaAnalyzer:
         risk_threshold: int = 0,
         ignore_types: Optional[set[str]] = None,
         track_modules: bool = True,
-    ):
+    ) -> None:
         self.risk_threshold = risk_threshold
         self.ignore_types = ignore_types or set()
         self.track_modules = track_modules
@@ -221,7 +221,7 @@ class DeltaResult:
         deltas: list[Delta],
         baseline: list[Finding],
         current: list[Finding],
-    ):
+    ) -> None:
         self._deltas = deltas
         self._baseline = baseline
         self._current = current

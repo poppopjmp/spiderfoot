@@ -47,7 +47,7 @@ class VectorConfig:
         api_key: str = "",
         environment: str = "development",
         extra_labels: Optional[dict[str, str]] = None,
-    ):
+    ) -> None:
         self.enabled = enabled
         self.endpoint = endpoint.rstrip("/")
         self.batch_size = batch_size
@@ -100,7 +100,7 @@ class VectorSink:
         sink.stop()
     """
 
-    def __init__(self, config: Optional[VectorConfig] = None):
+    def __init__(self, config: Optional[VectorConfig] = None) -> None:
         self.config = config or VectorConfig()
         self.log = logging.getLogger("spiderfoot.vector")
         self._buffer: queue.Queue = queue.Queue(maxsize=10000)
@@ -315,7 +315,7 @@ class VectorLogHandler(logging.Handler):
     ship all log output to Vector.dev alongside scan events.
     """
 
-    def __init__(self, sink: VectorSink):
+    def __init__(self, sink: VectorSink) -> None:
         super().__init__()
         self.sink = sink
 

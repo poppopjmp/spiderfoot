@@ -120,7 +120,7 @@ class RateLimiterService:
     - Custom keys
     """
 
-    def __init__(self, default_limit: Optional[RateLimit] = None):
+    def __init__(self, default_limit: Optional[RateLimit] = None) -> None:
         """
         Args:
             default_limit: Default limit for keys without explicit config.
@@ -330,7 +330,7 @@ class RateLimiterService:
 
     class _Acquirer:
         """Context manager that waits for rate limit clearance."""
-        def __init__(self, service: "RateLimiterService", key: str):
+        def __init__(self, service: "RateLimiterService", key: str) -> None:
             self._service = service
             self._key = key
             self.waited = 0.0

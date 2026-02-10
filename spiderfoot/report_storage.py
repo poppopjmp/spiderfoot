@@ -71,7 +71,7 @@ class StoreConfig:
 class LRUCache:
     """Thread-safe LRU cache with TTL expiration."""
 
-    def __init__(self, max_size: int = 100, ttl_seconds: float = DEFAULT_TTL_ONE_HOUR):
+    def __init__(self, max_size: int = 100, ttl_seconds: float = DEFAULT_TTL_ONE_HOUR) -> None:
         self._max_size = max(1, max_size)
         self._ttl = ttl_seconds
         self._cache: OrderedDict[str, tuple] = OrderedDict()  # key -> (data, timestamp)
@@ -174,7 +174,7 @@ CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at);
 class SQLiteBackend:
     """SQLite-based report storage."""
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str) -> None:
         self._db_path = db_path
         self._local = threading.local()
         # Initialize schema
@@ -318,7 +318,7 @@ class SQLiteBackend:
 class MemoryBackend:
     """In-memory report storage (for testing)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._store: dict[str, dict[str, Any]] = {}
         self._lock = threading.Lock()
 
@@ -390,7 +390,7 @@ class ReportStore:
     for fast reads.
     """
 
-    def __init__(self, config: StoreConfig | None = None):
+    def __init__(self, config: StoreConfig | None = None) -> None:
         self.config = config or StoreConfig(backend=StorageBackend.MEMORY)
 
         # Initialize cache

@@ -52,7 +52,7 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
     results = None
     s3results = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.lock = threading.Lock()
 

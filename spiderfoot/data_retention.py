@@ -169,7 +169,7 @@ class ResourceAdapter:
 class FileResourceAdapter(ResourceAdapter):
     """Adapter for file-based resources (logs, exports, cache)."""
 
-    def __init__(self, directories: Optional[dict[str, str]] = None):
+    def __init__(self, directories: Optional[dict[str, str]] = None) -> None:
         self._dirs = directories or {}
 
     def set_directory(self, resource: str, path: str) -> None:
@@ -226,7 +226,7 @@ class FileResourceAdapter(ResourceAdapter):
 class InMemoryResourceAdapter(ResourceAdapter):
     """Adapter that operates on in-memory item lists (for testing)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._items: dict[str, list[RetentionCandidate]] = {}
 
     def add_items(self, resource: str,
@@ -256,7 +256,7 @@ class InMemoryResourceAdapter(ResourceAdapter):
 class RetentionManager:
     """Manages and enforces data retention policies."""
 
-    def __init__(self, adapter: Optional[ResourceAdapter] = None):
+    def __init__(self, adapter: Optional[ResourceAdapter] = None) -> None:
         self._rules: dict[str, RetentionRule] = {}
         self._adapter = adapter or InMemoryResourceAdapter()
         self._lock = threading.Lock()

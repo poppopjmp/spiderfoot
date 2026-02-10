@@ -56,7 +56,7 @@ log = logging.getLogger("spiderfoot.service_runner")
 class _HealthStatus:
     """Shared health state for the running service."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.ready = False
         self.service_name = "unknown"
         self.started_at = time.time()

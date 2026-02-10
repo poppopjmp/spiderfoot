@@ -149,7 +149,7 @@ class PatternRecognitionEngine:
         "ml_model_update_interval": 3600  # seconds
     }
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.models = {}
         self.feature_extractors = {}
         self.threat_signatures = {}
@@ -516,7 +516,7 @@ class PatternRecognitionEngine:
 class PredictiveAnalyticsEngine:
     """Predictive analytics for threat forecasting."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.time_series_models = {}
         self.threat_history = defaultdict(list)
         self.prediction_cache = {}
@@ -630,7 +630,7 @@ class PredictiveAnalyticsEngine:
 class IOCCorrelationEngine:
     """Automated IOC correlation across data sources."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.ioc_graph = defaultdict(set)
         self.temporal_relationships = {}
         self.correlation_cache = {}
@@ -775,7 +775,7 @@ class IOCCorrelationEngine:
 class ThreatScoringEngine:
     """Dynamic threat scoring using machine learning."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.scoring_models = {}
         self.feature_weights = {
             'confidence': 0.25,
@@ -913,7 +913,7 @@ class ThreatScoringEngine:
 class NLPThreatAnalyzer:
     """Natural language processing for unstructured threat data."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.sentiment_analyzer = None
         self.text_vectorizer = None
         self.threat_keywords = {

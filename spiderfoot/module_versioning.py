@@ -129,7 +129,7 @@ class ModuleVersionInfo:
         current_version: Current semantic version.
     """
 
-    def __init__(self, module_name: str, current_version: Optional[SemanticVersion] = None):
+    def __init__(self, module_name: str, current_version: Optional[SemanticVersion] = None) -> None:
         self.module_name = module_name
         self.current_version = current_version or SemanticVersion(1, 0, 0)
         self._changelog: list[ChangelogEntry] = []
@@ -200,7 +200,7 @@ class ModuleVersionRegistry:
         load_defaults: If True, starts empty (modules register themselves).
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._modules: dict[str, ModuleVersionInfo] = {}
 
     def register(self, module_name: str, version: Optional[str] = None) -> ModuleVersionInfo:

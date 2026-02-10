@@ -33,7 +33,7 @@ class sfp_dideo(SpiderFootModernPlugin):
         "max_videos": "Maximum number of videos to fetch per search."
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.sf = None
 

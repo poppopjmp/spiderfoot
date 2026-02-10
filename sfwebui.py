@@ -63,7 +63,7 @@ class SpiderFootWebUi(WebUiRoutes):
     a clean, modular architecture.
     """
     
-    def __init__(self, web_config: dict[str, Any], config: dict[str, Any], loggingQueue: Optional[mp.Queue] = None):
+    def __init__(self, web_config: dict[str, Any], config: dict[str, Any], loggingQueue: Optional[mp.Queue] = None) -> None:
         """
         Initialize the SpiderFoot Web UI.
         
@@ -477,7 +477,7 @@ class SpiderFootWebUiApp:
     configuration validation, and system monitoring.
     """
     
-    def __init__(self, config: dict[str, Any], docroot: Optional[str] = None, loggingQueue: Optional[mp.Queue] = None):
+    def __init__(self, config: dict[str, Any], docroot: Optional[str] = None, loggingQueue: Optional[mp.Queue] = None) -> None:
         """
         Initialize the SpiderFoot Web UI Application.
         

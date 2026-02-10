@@ -147,7 +147,7 @@ class ScanScheduler:
         self,
         config: Optional[SchedulerConfig] = None,
         registry: Optional[Any] = None,
-    ):
+    ) -> None:
         self.config = config or SchedulerConfig()
         self._registry = registry
         self.log = logging.getLogger("spiderfoot.scan_scheduler")

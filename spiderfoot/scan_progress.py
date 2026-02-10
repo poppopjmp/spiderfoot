@@ -100,7 +100,7 @@ class ScanProgressTracker:
         print(f"Progress: {snapshot.overall_pct}%, ETA: {snapshot.eta_seconds}s")
     """
 
-    def __init__(self, scan_id: str):
+    def __init__(self, scan_id: str) -> None:
         self.scan_id = scan_id
         self._modules: dict[str, ModuleProgress] = {}
         self._lock = threading.Lock()

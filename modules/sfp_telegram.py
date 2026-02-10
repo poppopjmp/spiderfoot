@@ -39,7 +39,7 @@ class sfp_telegram(SpiderFootModernPlugin):
         "severity_keywords": "Comma-separated keyword:severity pairs (e.g. phishing:high,scam:medium) for tagging events."
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._stop_event = threading.Event()
         self._client = None

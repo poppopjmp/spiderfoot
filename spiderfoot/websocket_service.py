@@ -79,7 +79,7 @@ class WebSocketClient:
 
     def __init__(self, client_id: str,
                  send_func: Callable, *,
-                 max_queue: int = 1000):
+                 max_queue: int = 1000) -> None:
         self.client_id = client_id
         self._send = send_func
         self.connected_at = time.time()
@@ -144,7 +144,7 @@ class WebSocketHub:
     _instance: Optional["WebSocketHub"] = None
 
     def __init__(self, *, max_clients: int = 500,
-                 max_queue_per_client: int = 1000):
+                 max_queue_per_client: int = 1000) -> None:
         self._clients: dict[str, WebSocketClient] = {}
         self._scan_channels: dict[str, set[str]] = defaultdict(set)
         self._max_clients = max_clients

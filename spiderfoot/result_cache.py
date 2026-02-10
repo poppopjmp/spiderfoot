@@ -105,7 +105,7 @@ class ResultCache:
         max_size: int = 1000,
         default_ttl: float = 300.0,
         eviction_policy: EvictionPolicy = EvictionPolicy.LRU,
-    ):
+    ) -> None:
         self.max_size = max_size
         self.default_ttl = default_ttl
         self.eviction_policy = eviction_policy
@@ -270,7 +270,7 @@ class ScanResultCache:
     Wraps ResultCache with scan-specific key generation and namespacing.
     """
 
-    def __init__(self, max_size: int = 5000, default_ttl: float = 600.0):
+    def __init__(self, max_size: int = 5000, default_ttl: float = 600.0) -> None:
         self._cache = ResultCache(
             max_size=max_size,
             default_ttl=default_ttl,

@@ -100,7 +100,7 @@ class HttpService:
         print(result["content"])
     """
 
-    def __init__(self, config: Optional[HttpServiceConfig] = None):
+    def __init__(self, config: Optional[HttpServiceConfig] = None) -> None:
         self.config = config or HttpServiceConfig()
         self.log = logging.getLogger("spiderfoot.http_service")
         self._session_count = 0

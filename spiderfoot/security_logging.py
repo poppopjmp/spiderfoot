@@ -44,7 +44,7 @@ class SecurityEventType(Enum):
 class SecurityLogger:
     """Enhanced security logging with structured events."""
 
-    def __init__(self, log_file: str = None, console_output: bool = True):
+    def __init__(self, log_file: str = None, console_output: bool = True) -> None:
         """Initialize security logger.
 
         Args:
@@ -212,7 +212,7 @@ class SecurityLogger:
 class ErrorHandler:
     """Enhanced error handling with security considerations."""
 
-    def __init__(self, security_logger: SecurityLogger = None):
+    def __init__(self, security_logger: SecurityLogger = None) -> None:
         """Initialize error handler.
 
         Args:
@@ -371,7 +371,7 @@ class ErrorHandler:
 class SecurityMonitor:
     """Security monitoring and alerting."""
 
-    def __init__(self, security_logger: SecurityLogger = None):
+    def __init__(self, security_logger: SecurityLogger = None) -> None:
         """Initialize security monitor.
 
         Args:

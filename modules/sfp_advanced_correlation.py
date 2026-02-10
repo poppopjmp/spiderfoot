@@ -38,7 +38,7 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 class AdvancedCorrelationEngine:
     """Advanced correlation engine for OSINT data analysis."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.entity_graph = defaultdict(set)
         self.temporal_events = []
         self.geo_clusters = defaultdict(list)

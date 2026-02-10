@@ -107,7 +107,7 @@ class MetricValue:
 class TimerContext:
     """Context manager for timing operations."""
 
-    def __init__(self, metric: MetricValue):
+    def __init__(self, metric: MetricValue) -> None:
         self._metric = metric
         self._start: float = 0
 
@@ -135,7 +135,7 @@ class ModuleMetrics:
         print(metrics.get("events_produced").value)
     """
 
-    def __init__(self, module_name: str):
+    def __init__(self, module_name: str) -> None:
         self.module_name = module_name
         self._metrics: dict[str, MetricValue] = {}
         self._lock = threading.Lock()
@@ -208,7 +208,7 @@ class MetricsCollector:
     _instance: Optional["MetricsCollector"] = None
     _instance_lock = threading.Lock()
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._modules: dict[str, ModuleMetrics] = {}
         self._global_metrics = ModuleMetrics("__global__")
         self._lock = threading.Lock()

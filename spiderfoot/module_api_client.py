@@ -111,7 +111,7 @@ class RateLimiter:
         burst_size: Maximum burst of requests allowed.
     """
 
-    def __init__(self, requests_per_second: float = 10.0, burst_size: int = 20):
+    def __init__(self, requests_per_second: float = 10.0, burst_size: int = 20) -> None:
         self.rate = requests_per_second
         self.burst_size = burst_size
         self._tokens = float(burst_size)
@@ -187,7 +187,7 @@ class ModuleApiClient:
         api_key: str = "",
         api_key_header: str = "X-API-Key",
         max_history: int = 100,
-    ):
+    ) -> None:
         self.base_url = base_url.rstrip("/") if base_url else ""
         self.config = config or RequestConfig()
         self.rate_limiter = rate_limiter

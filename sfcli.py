@@ -59,7 +59,7 @@ class SpiderFootCli(cmd.Cmd):
     nohelp = "[!] Unknown command '%s'."
     knownscans = []
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.config = CLIConfig()
         self.registry = CommandRegistry()

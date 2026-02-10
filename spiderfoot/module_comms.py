@@ -82,7 +82,7 @@ class MessageBus:
         reply = bus.request("dns_lookup", "example.com", sender="sfp_ssl")
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._subscribers: dict[str, list[Callable]] = {}
         self._channel_stats: dict[str, ChannelStats] = {}
         self._lock = threading.Lock()

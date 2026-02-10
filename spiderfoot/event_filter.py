@@ -53,7 +53,7 @@ class FilterStats:
 class EventFilter(ABC):
     """Base class for event filters."""
 
-    def __init__(self, name: str = "", enabled: bool = True):
+    def __init__(self, name: str = "", enabled: bool = True) -> None:
         self.name = name or self.__class__.__name__
         self._enabled = enabled
         self._stats = FilterStats(name=self.name)
@@ -86,7 +86,7 @@ class TypeFilter(EventFilter):
         allowed_types: Optional[set[str]] = None,
         denied_types: Optional[set[str]] = None,
         name: str = "type_filter",
-    ):
+    ) -> None:
         super().__init__(name=name)
         self.allowed_types = allowed_types
         self.denied_types = denied_types or set()
@@ -107,7 +107,7 @@ class PatternFilter(EventFilter):
         pattern: str,
         action: FilterAction = FilterAction.DENY,
         name: str = "pattern_filter",
-    ):
+    ) -> None:
         super().__init__(name=name)
         self.pattern = re.compile(pattern, re.IGNORECASE)
         self.action = action
@@ -127,7 +127,7 @@ class RiskFilter(EventFilter):
         min_risk: int = 0,
         max_risk: int = 100,
         name: str = "risk_filter",
-    ):
+    ) -> None:
         super().__init__(name=name)
         self.min_risk = min_risk
         self.max_risk = max_risk
@@ -146,7 +146,7 @@ class PredicateFilter(EventFilter):
         self,
         predicate: Callable[..., bool],
         name: str = "predicate_filter",
-    ):
+    ) -> None:
         super().__init__(name=name)
         self._predicate = predicate
 
@@ -168,7 +168,7 @@ class ModuleFilter(EventFilter):
         allowed_modules: Optional[set[str]] = None,
         denied_modules: Optional[set[str]] = None,
         name: str = "module_filter",
-    ):
+    ) -> None:
         super().__init__(name=name)
         self.allowed_modules = allowed_modules
         self.denied_modules = denied_modules or set()
@@ -199,7 +199,7 @@ class EventFilterChain:
             pass
     """
 
-    def __init__(self, mode: str = "all_pass", name: str = "default"):
+    def __init__(self, mode: str = "all_pass", name: str = "default") -> None:
         self.mode = mode  # "all_pass" or "any_pass"
         self.name = name
         self._filters: list[EventFilter] = []

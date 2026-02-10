@@ -70,7 +70,7 @@ class AsyncCircuitBreaker:
         failure_threshold: int = 5,
         recovery_timeout: float = 30.0,
         half_open_max: int = 1,
-    ):
+    ) -> None:
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.half_open_max = half_open_max
@@ -188,7 +188,7 @@ class DeadLetterEntry:
 class AsyncDeadLetterQueue:
     """Bounded async-safe dead-letter queue."""
 
-    def __init__(self, max_size: int = 1000):
+    def __init__(self, max_size: int = 1000) -> None:
         self._max_size = max_size
         self._items: list[DeadLetterEntry] = []
         self._lock = asyncio.Lock()
@@ -260,7 +260,7 @@ class AsyncDeadLetterQueue:
 class EventBusMetrics:
     """Thread-safe metrics collector for EventBus operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._lock = threading.Lock()
         self._counters: dict[str, int] = {
             "published": 0,
@@ -392,7 +392,7 @@ class ResilientEventBus:
         self,
         inner: EventBus,
         config: Optional[ResilientConfig] = None,
-    ):
+    ) -> None:
         self._inner = inner
         self._config = config or ResilientConfig()
 

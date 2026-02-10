@@ -38,7 +38,7 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 class BlockchainAnalyzer:
     """Core blockchain analysis engine."""
     
-    def __init__(self, api_keys: Dict[str, str]):
+    def __init__(self, api_keys: Dict[str, str]) -> None:
         self.api_keys = api_keys
         self.known_exchanges = self._load_exchange_data()
         self.sanctions_lists = self._load_sanctions_data()

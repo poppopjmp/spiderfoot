@@ -85,7 +85,7 @@ class ModuleInfo:
 class ModuleGraph:
     """Directed graph of module event-type dependencies."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.modules: dict[str, ModuleInfo] = {}
 
         # event_type -> set of module names that produce it

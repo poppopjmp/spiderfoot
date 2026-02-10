@@ -246,7 +246,7 @@ class ProfileManager:
     or used via the built-in presets.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._profiles: dict[str, ScanProfile] = {}
         self._register_builtins()
 
