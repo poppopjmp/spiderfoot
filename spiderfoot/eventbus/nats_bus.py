@@ -69,8 +69,8 @@ class NatsEventBus(EventBus):
         for sub in self._subscriptions.values():
             try:
                 await sub.unsubscribe()
-            except Exception:
-                pass
+            except Exception as e:
+                self.log.debug("Unsubscribe failed: %s", e)
         self._subscriptions.clear()
         self._callbacks.clear()
         

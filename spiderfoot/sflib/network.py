@@ -218,8 +218,8 @@ def fetchUrl(url: str, cookies: str = None, timeout: int = 30, useragent: str = 
         result['content'] = resp.content.decode('utf-8', errors='replace')
         result['headers'] = dict(resp.headers)
         result['realurl'] = resp.url
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("HTTP request failed for %s: %s", url, e)
     return result
 
 

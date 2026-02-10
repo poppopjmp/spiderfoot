@@ -579,8 +579,8 @@ class SpiderFootDb:
                     if hasattr(mgr, 'close'):
                         try:
                             mgr.close()
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            log.debug("Cleanup failed: %s", e)
                     self.managers[key] = None
                 self.managers = None
             # Dereference all manager attributes
@@ -590,17 +590,17 @@ class SpiderFootDb:
             if hasattr(self, 'cursor') and self.cursor:
                 try:
                     self.cursor.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    log.debug("Cleanup failed: %s", e)
                 self.cursor = None
             if hasattr(self, 'conn') and self.conn:
                 try:
                     self.conn.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    log.debug("Cleanup failed: %s", e)
                 self.conn = None
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("Cleanup failed: %s", e)
         gc.collect()
 
     # --- Back-end database operations ---

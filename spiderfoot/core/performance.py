@@ -163,8 +163,8 @@ class CacheManager:
                 cached = self.redis_client.get(f"spiderfoot:{key}")
                 if cached:
                     return json.loads(cached if isinstance(cached, str) else cached.decode('utf-8'))
-            except Exception:
-                pass
+            except Exception as e:
+                logging.debug("Redis cache read failed (best-effort): %s", e)
         
         # Try memory cache
         with self.lock:
@@ -183,8 +183,8 @@ class CacheManager:
             try:
                 serialized = json.dumps(value, default=str)
                 self.redis_client.setex(f"spiderfoot:{key}", ttl, serialized)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.debug("Redis cache write failed (best-effort): %s", e)
         
         # Store in memory cache
         with self.lock:
@@ -224,8 +224,8 @@ class CacheManager:
                 try:
                     for key in self.redis_client.scan_iter(match="spiderfoot:*"):
                         self.redis_client.delete(key)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.debug("Redis cache clear failed (best-effort): %s", e)
 
 
 class DatabaseOptimizer:

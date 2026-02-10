@@ -1,6 +1,7 @@
 #  -*- coding: utf-8 -*-
 import html
 import json
+import logging
 import os
 import os.path
 import random
@@ -1274,8 +1275,8 @@ class SpiderFootHelpers():
                     
                     break
                     
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug("Module fix failed for %s: %s", module_name, e)
             
         return module
 

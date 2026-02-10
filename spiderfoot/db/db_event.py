@@ -553,12 +553,12 @@ class EventManager:
         if hasattr(self, 'dbh') and self.dbh:
             try:
                 self.dbh.close()
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("Cleanup failed: %s", e)
             self.dbh = None
         if hasattr(self, 'conn') and self.conn:
             try:
                 self.conn.close()
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("Cleanup failed: %s", e)
             self.conn = None

@@ -557,8 +557,8 @@ class CorrelationService:
             for r in results:
                 corr_counter.labels(risk=r.risk).inc()
 
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("Metrics update failed: %s", e)
 
     # ------------------------------------------------------------------
     # Status / API
