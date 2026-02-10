@@ -609,20 +609,26 @@ class SpiderFootDb:
 
     # --- Back-end database operations ---
     def vacuumDB(self) -> bool:
+        """Vacuum the database to reclaim space."""
         return self._core.vacuumDB()
     # --- SCAN INSTANCE MANAGEMENT ---
     def scanInstanceCreate(self, *args, **kwargs) -> None:
+        """Create a new scan instance record."""
         return self._scan.scanInstanceCreate(*args, **kwargs)
     def scanInstanceGet(self, scan_id: str) -> Optional[list]:
+        """Retrieve a scan instance by ID, or None if not found."""
         result = self._scan.scanInstanceGet(scan_id)
         if not result or result == []:
             return None
         return result[0]
     def scanInstanceUpdate(self, *args, **kwargs) -> None:
+        """Update a scan instance record."""
         return self._scan.scanInstanceUpdate(*args, **kwargs)
     def scanInstanceDelete(self, *args, **kwargs) -> None:
+        """Delete a scan instance and all associated data."""
         return self._scan.scanInstanceDelete(*args, **kwargs)
     def scanInstanceList(self) -> list:
+        """List all scan instances."""
         return self._scan.scanInstanceList()
     def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None) -> bool:
         """
@@ -643,20 +649,25 @@ class SpiderFootDb:
         return self._scan.scanInstanceSet(instanceId, started, ended, status)
     # --- CONFIGURATION MANAGEMENT ---
     def configSet(self, *args, **kwargs) -> None:
+        """Save configuration key-value pairs."""
         return self._config.configSet(*args, **kwargs)
     def configGet(self, *args, **kwargs) -> Optional[dict]:
+        """Retrieve the current configuration."""
         return self._config.configGet(*args, **kwargs)
     def configGetAll(self, *args, **kwargs) -> dict:
         return self._config.configGetAll(*args, **kwargs)
     def scanConfigSet(self, scan_id: str, optMap: dict) -> None:
+        """Save scan-specific configuration."""
         return self._config.scanConfigSet(scan_id, optMap)
     def scanConfigGet(self, scan_id: str) -> Optional[dict]:
+        """Retrieve scan-specific configuration."""
         return self._config.scanConfigGet(scan_id)
     def scanConfigDelete(self, *args: Any, **kwargs: Any) -> bool:
         """Stub for API/test compatibility. Does nothing."""
         return True
     # --- EVENT TYPES ---
     def eventTypes(self, *args, **kwargs) -> list:
+        """Return the list of known event types."""
         return self._core.eventTypes(*args, **kwargs)
     # --- EVENT MANAGEMENT ---
     def eventAdd(self, *args, **kwargs) -> None:
@@ -664,6 +675,7 @@ class SpiderFootDb:
     def eventGet(self, *args, **kwargs) -> Optional[list]:
         return self._event.eventGet(*args, **kwargs)
     def scanEventStore(self, instanceId: str, sfEvent: Any, truncateSize: int = 0) -> None:
+        """Store a scan event in the database."""
         return self._event.scanEventStore(instanceId, sfEvent, truncateSize)
     # --- CORRELATION MANAGEMENT ---
     def correlationAdd(self, *args, **kwargs) -> None:
@@ -676,14 +688,17 @@ class SpiderFootDb:
     def scanLogEvents(self, batch: list) -> bool:
         return self._event.scanLogEvents(batch)
     def scanLogs(self, instanceId: str, limit: int = None, fromRowId: int = 0, reverse: bool = False) -> list:
+        """Retrieve log entries for a scan instance."""
         return self._event.scanLogs(instanceId, limit, fromRowId, reverse)
     def scanErrors(self, instanceId: str, limit: int = 0) -> list:
         return self._event.scanErrors(instanceId, limit)
     # --- SEARCH ---
     def search(self, criteria: dict, filterFp: bool = False) -> list:
+        """Search scan results by criteria."""
         return self._event.search(criteria, filterFp)
     # --- SCAN RESULT / EVENT FUNCTIONS ---
     def scanResultEvent(self, instanceId: str, eventType: str = 'ALL', srcModule: str = None, data: list = None, sourceId: list = None, correlationId: str = None, filterFp: bool = False) -> list:
+        """Retrieve scan result events, optionally filtered by type or module."""
         return self._event.scanResultEvent(instanceId, eventType, srcModule, data, sourceId, correlationId, filterFp)
     def scanResultEventUnique(self, instanceId: str, eventType: str = 'ALL', filterFp: bool = False) -> list:
         return self._event.scanResultEventUnique(instanceId, eventType, filterFp)
