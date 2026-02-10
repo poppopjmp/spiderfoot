@@ -3,6 +3,22 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.155.0] — RC Cycle 81: Modernize Typing Annotations
+
+### Changed
+- Ran `pyupgrade --py39-plus` across 170 files to modernize type annotations
+- `typing.List` → `list`, `typing.Dict` → `dict`, `typing.Set` → `set`, `typing.Tuple` → `tuple`
+- `typing.Optional[X]` → `X | None`, `typing.Union[X, Y]` → `X | Y`
+- Removed Python 3.7 compatibility shims (version-gated TypedDict fallbacks)
+
+## [5.154.0] — RC Cycle 80: String Concat & Misc Cleanup
+
+### Changed
+- Replaced 8 string concatenation operations with f-strings in `sflib/config.py` (6) and `sflib/helpers.py` (2)
+- Removed redundant `.keys()` in membership tests in `helpers.py` and `core/scan.py`
+- Removed unnecessary `else` after `return` in `session_security.py` (2 instances)
+- Simplified `True if x == "1" else False` to `x == "1"` in `sflib/config.py`
+
 ## [5.153.0] — RC Cycle 78: Final Annotations on Constants
 
 ### Changed
