@@ -32,6 +32,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
     docroot = ''
 
     def __init__(self, web_config, config, loggingQueue=None) -> None:
+        """Initialize the web UI routes with configuration and logging."""
         from mako.lookup import TemplateLookup
 
         if not isinstance(config, dict):
@@ -137,6 +138,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             self.log.error("Error configuring security headers: %s", e)
 
     def error_page(self) -> None:
+        """Handle generic server error responses."""
         cherrypy.response.status = 500
         if self.config.get('_debug'):
             from cherrypy import _cperror
@@ -146,9 +148,11 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             cherrypy.response.body = b"<html><body>Error</body></html>"
 
     def error_page_401(self, status, message, traceback, version) -> str:
+        """Return an empty response for 401 unauthorized errors."""
         return ""
 
     def error_page_404(self, status, message, traceback, version) -> str:
+        """Return a rendered error page for 404 not found errors."""
         from mako.template import Template
         templ = Template(
             filename='spiderfoot/templates/error.tmpl', lookup=self.lookup)
@@ -156,6 +160,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     def documentation(self, doc=None, q=None) -> str:
+        """Render the documentation page with optional search and navigation."""
         import os
         import markdown
         from datetime import datetime
@@ -327,6 +332,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     def footer(self) -> str:
+        """Render the page footer template."""
         from mako.template import Template
         templ = Template(
             filename='spiderfoot/templates/footer.tmpl', lookup=self.lookup)
@@ -334,6 +340,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     def active_maintenance_status(self) -> str:
+        """Render the active maintenance status template."""
         from mako.template import Template
         templ = Template(
             filename='spiderfoot/templates/active_maintenance_status.tmpl', lookup=self.lookup)
@@ -382,6 +389,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def vacuum(self) -> bytes | str:
+        """Run a vacuum operation on the database to reclaim space."""
         try:
             dbh = self._get_dbh()
             dbh.vacuumDB()
@@ -392,6 +400,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scanstatus(self, id) -> list | dict:
+        """Return the status and summary of a scan by its ID."""
         try:
             dbh = self._get_dbh()
             data = dbh.scanInstanceGet(id)
@@ -422,6 +431,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def scandelete(self, id) -> str | dict:
+        """Delete a scan instance by its ID."""
         try:
             dbh = self._get_dbh()
             scan = dbh.scanInstanceGet(id)
@@ -485,6 +495,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     def savesettings(self, allopts, token, configFile=None) -> str:
+        """Save configuration settings from the web UI."""
         if not hasattr(self, 'token') or self.token != token:
             return self.error("Invalid token")
 
@@ -509,6 +520,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     def startscan(self, scanname, scantarget, modulelist, typelist, usecase) -> str:
+        """Start a new scan with the given parameters."""
         try:
             from sfwebui import SpiderFootHelpers
 
@@ -550,6 +562,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     def rerunscan(self, id) -> str:
+        """Re-run a previously completed scan by its ID."""
         try:
             from copy import deepcopy
             cfg = deepcopy(self.config)
@@ -616,6 +629,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def stopscan(self, id) -> str:
+        """Stop one or more running scans by their IDs."""
         try:
             if not id:
                 return ''

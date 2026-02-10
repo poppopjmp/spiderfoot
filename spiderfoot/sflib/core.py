@@ -45,6 +45,7 @@ class SpiderFoot:
     opts = dict()
 
     def __init__(self, options: dict) -> None:
+        """Initialize a SpiderFoot instance with the given options."""
         if not isinstance(options, dict):
             raise TypeError(f"options is {type(options)}; expected dict()")
         self.opts = deepcopy(options)
@@ -79,14 +80,17 @@ class SpiderFoot:
 
     @dbh.setter
     def dbh(self, dbh: SpiderFootDb | None) -> None:
+        """Set the database handle for this scan instance."""
         self._dbh = dbh
 
     @scanId.setter
     def scanId(self, scanId: str) -> str:
+        """Set the unique identifier for the current scan."""
         self._scanId = scanId
 
     @socksProxy.setter
     def socksProxy(self, socksProxy: str) -> str:
+        """Set the SOCKS proxy address for network requests."""
         self._socksProxy = socksProxy
 
     def optValueToData(self, val: str) -> str:
@@ -149,61 +153,87 @@ class SpiderFoot:
 
     # The following methods are now thin wrappers or use helpers directly
     def hashstring(self, string: str) -> str:
+        """Hash a string using MD5 and return the hex digest."""
         return hashstring(string)
     def cachePut(self, label: str, data: str) -> None:
+        """Store data in the cache under the given label."""
         return cachePut(label, data)
     def cacheGet(self, label: str, timeoutHrs: int) -> str:
+        """Retrieve cached data by label within the given timeout."""
         return cacheGet(label, timeoutHrs)
     def removeUrlCreds(self, url: str) -> str:
+        """Remove credentials from a URL."""
         return removeUrlCreds(url)
     def isValidLocalOrLoopbackIp(self, ip: str) -> bool:
+        """Check if an IP address is local or loopback."""
         return isValidLocalOrLoopbackIp(ip)
     def domainKeyword(self, domain: str, tldList: list) -> str:
+        """Extract the primary keyword from a domain name."""
         return domainKeyword(domain, tldList)
     def domainKeywords(self, domainList: list, tldList: list) -> set:
+        """Extract keywords from a list of domain names."""
         return domainKeywords(domainList, tldList)
     def hostDomain(self, hostname: str, tldList: list) -> str:
+        """Return the registered domain for a hostname."""
         return hostDomain(hostname, tldList)
     def validHost(self, hostname: str, tldList: str) -> bool:
+        """Check if a hostname is valid against the TLD list."""
         return validHost(hostname, tldList)
     def isDomain(self, hostname: str, tldList: list) -> bool:
+        """Check if a hostname is a registered domain."""
         return isDomain(hostname, tldList)
     def validIP(self, address: str) -> bool:
+        """Check if a string is a valid IPv4 address."""
         return validIP(address)
     def validIP6(self, address: str) -> bool:
+        """Check if a string is a valid IPv6 address."""
         return validIP6(address)
     def validIpNetwork(self, cidr: str) -> bool:
+        """Check if a string is a valid IP network in CIDR notation."""
         return validIpNetwork(cidr)
     def isPublicIpAddress(self, ip: str) -> bool:
+        """Check if an IP address is publicly routable."""
         return isPublicIpAddress(ip)
     def normalizeDNS(self, res: list) -> list:
+        """Normalize DNS results by removing trailing dots."""
         return normalizeDNS(res)
     def resolveHost(self, host: str) -> list:
+        """Resolve a hostname to its IPv4 addresses."""
         return resolveHost(host)
     def resolveIP(self, ipaddr: str) -> list:
+        """Resolve an IP address to its hostnames via reverse DNS."""
         return resolveIP(ipaddr)
     def resolveHost6(self, hostname: str) -> list:
+        """Resolve a hostname to its IPv6 addresses."""
         return resolveHost6(hostname)
     def validateIP(self, host: str, ip: str) -> bool:
+        """Validate that an IP address resolves to the given host."""
         return validateIP(host, ip)
     def safeSocket(self, host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
+        """Create a safe TCP socket connection to a host and port."""
         return safeSocket(host, port, timeout)
     def safeSSLSocket(self, host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
+        """Create a safe SSL socket connection to a host and port."""
         return safeSSLSocket(host, port, timeout)
     def parseCert(self, rawcert: str, fqdn: str = None, expiringdays: int = 30) -> dict:
+        """Parse an SSL certificate and return its details."""
         return parseCert(rawcert, fqdn, expiringdays)
     def getSession(self) -> 'requests.sessions.Session':
         """Return a configured requests session for HTTP operations."""
         return getSession()
     def useProxyForUrl(self, url: str) -> bool:
+        """Determine whether to use the configured proxy for a URL."""
         # Patch: pass self for urlFQDN resolution and improve local IP detection
         from .network import useProxyForUrl
         return useProxyForUrl(url, self.opts, urlFQDN=self.urlFQDN, isValidLocalOrLoopbackIp=self.isValidLocalOrLoopbackIp)
     def fetchUrl(self, url: str, cookies: str = None, timeout: int = 30, useragent: str = "SpiderFoot", headers: dict = None, noLog: bool = False, postData: str = None, disableContentEncoding: bool = False, sizeLimit: int = None, headOnly: bool = False, verify: bool = True) -> dict:
+        """Fetch the contents of a URL and return the response."""
         return fetchUrl(url, cookies, timeout, useragent, headers, noLog, postData, disableContentEncoding, sizeLimit, headOnly, verify)
     def checkDnsWildcard(self, target: str) -> bool:
+        """Check if a target domain has a DNS wildcard entry."""
         return checkDnsWildcard(target)
     def modulesProducing(self, events: list) -> list:
+        """Return the list of modules that produce the given event types."""
         modlist = list()
         if not events:
             return modlist
@@ -222,6 +252,7 @@ class SpiderFoot:
         return list(set(modlist))
 
     def modulesConsuming(self, events: list) -> list:
+        """Return the list of modules that consume the given event types."""
         modlist = list()
         if not events:
             return modlist
@@ -241,6 +272,7 @@ class SpiderFoot:
         return list(set(modlist))
 
     def eventsFromModules(self, modules: list) -> list:
+        """Return event types produced by the given modules."""
         if not modules:
             return []
         loaded_modules = self.opts.get('__modules__')
@@ -254,6 +286,7 @@ class SpiderFoot:
         ]
 
     def eventsToModules(self, modules: list) -> list:
+        """Return event types consumed by the given modules."""
         if not modules:
             return []
         loaded_modules = self.opts.get('__modules__')
@@ -267,6 +300,7 @@ class SpiderFoot:
         ]
 
     def urlFQDN(self, url: str) -> str:
+        """Extract the fully qualified domain name from a URL."""
         if not url:
             self.error(f"Invalid URL: {url}")
             return None

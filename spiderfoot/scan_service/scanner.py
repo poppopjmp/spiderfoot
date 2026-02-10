@@ -79,6 +79,7 @@ class SpiderFootScanner():
     """
 
     def __init__(self, scanName: str, scanId: str, targetValue: str, targetType: str, moduleList: list, globalOpts: dict, start: bool = True) -> None:
+        """Initialize the scanner with target details, modules, and global options."""
         # Instance attribute initialization (moved from class-level)
         self.__scanId = None
         self.__status = None
@@ -312,13 +313,16 @@ class SpiderFootScanner():
 
     @property
     def scanId(self) -> str:
+        """Return the unique identifier for this scan."""
         return self.__scanId
 
     @property
     def status(self) -> str:
+        """Return the current status of the scan."""
         return self.__status
 
     def __setStatus(self, status: str, started: float = None, ended: float = None) -> None:
+        """Update the scan status and persist it to the database."""
         if not isinstance(status, str):
             raise TypeError(f"status is {type(status)}; expected str()")
 
@@ -339,9 +343,11 @@ class SpiderFootScanner():
         self.__dbh.scanInstanceSet(self.__scanId, started, ended, status)
 
     def _log_module_error(self, modName, msg, exc):
+        """Log a formatted error message for a specific module."""
         self.__sf.error(f"Module {modName} {msg}: {exc}")
 
     def __startScan(self) -> None:
+        """Load modules, fire initial events, and execute the scan lifecycle."""
         failed = True
         self.__scanStartTime = time.time()
 
@@ -571,6 +577,7 @@ class SpiderFootScanner():
             self.__dbh.close()
 
     def runCorrelations(self) -> None:
+        """Execute correlation rules against the completed scan results."""
         from spiderfoot.correlation.rule_executor import RuleExecutor
         from spiderfoot.correlation.event_enricher import EventEnricher
         from spiderfoot.correlation.result_aggregator import ResultAggregator
@@ -590,6 +597,7 @@ class SpiderFootScanner():
         self.__sf.status(f"Correlated {agg_count} results for scan {self.__scanId}")
 
     def waitForThreads(self) -> None:
+        """Dispatch events to modules and block until all processing is complete."""
         if not self.eventQueue:
             return
 
@@ -662,6 +670,7 @@ class SpiderFootScanner():
             self.__sharedThreadPool.shutdown(wait=True)
 
     def threadsFinished(self, log_status: bool = False) -> bool:
+        """Check whether all module queues are empty and no modules are running."""
         if self.eventQueue is None:
             return True
 
