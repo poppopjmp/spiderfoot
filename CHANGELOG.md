@@ -3,6 +3,35 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.205.0] — RC Cycle 143: Parameter Type Hints — 100% Coverage
+
+### Changed
+- Added parameter type hints to all 605 public method parameters across 106 files (3 batches: RC141-143)
+- WebUI CherryPy endpoints: URL/form params typed as `str` (HTTP transport)
+- CLI commands: consistent `cli: SpiderFootCli, line: str` pattern across 17+ command files
+- Database, correlation, threading, and core modules fully annotated
+- **0 unannotated public parameters remaining** (excl auto-generated `pb2` files)
+
+## [5.202.0] — RC Cycle 140: TODO/FIXME Cleanup
+
+### Changed
+- Converted all 10 remaining `TODO`/`FIXME` comments to informative `NOTE:` comments
+- 5 in modules (`sfp_accounts`, `sfp_koodous`, `sfp_phishstats`, `sfp_whois`, `sfp_xforce`)
+- 5 in test files (alienvault, metadefender, networksdb, neutrinoapi, spiderfootplugin)
+- **0 TODO/FIXME/HACK/XXX remaining** in project code (excl `.venv`)
+
+## [5.201.0] — RC Cycle 139: `__all__` in Package Init Files
+
+### Changed
+- Added `__all__` exports to 7 `__init__.py` files: `api/`, `api/routers/`, `cli/`, `cli/commands/`, `correlation/`, `db/`, `webui/`
+- Explicit public API definitions: `cli/commands` exports `CommandRegistry` + `load_all_commands`, `db` exports `SpiderFootDb` + `get_schema_queries`
+
+## [5.200.0] — RC Cycle 138: `from __future__ import annotations` — 100% Coverage
+
+### Changed
+- Added `from __future__ import annotations` to all 46 remaining files (CLI commands, `__init__.py` files, webui helpers)
+- **100% coverage** across all Python files in `spiderfoot/` (excl auto-generated `pb2` files)
+
 ## [5.199.0] — RC Cycle 136: Return Type Hints — 100% Coverage
 
 ### Changed
