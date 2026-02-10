@@ -443,24 +443,24 @@ class ModuleLoader:
         try:
             from spiderfoot.service_integration import wire_module_services
             wire_module_services(instance, config)
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("Failed to wire services for %s: %s", mod_name, e)
 
         # SOCKS proxy
         if config.get("_socks1type", ""):
             try:
                 import socket as _socket
                 instance._updateSocket(_socket)
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("Failed to set SOCKS proxy for %s: %s", mod_name, e)
 
         # Output filter
         output_filter = config.get("__outputfilter")
         if output_filter:
             try:
                 instance.setOutputFilter(output_filter)
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("Failed to set output filter for %s: %s", mod_name, e)
 
         # Target enrichment + assignment
         if target is not None:
@@ -468,8 +468,8 @@ class ModuleLoader:
                 new_target = instance.enrichTarget(target)
                 if new_target is not None:
                     target = new_target
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("Failed to enrich target for %s: %s", mod_name, e)
 
             instance.setTarget(target)
 

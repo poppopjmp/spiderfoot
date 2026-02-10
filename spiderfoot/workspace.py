@@ -655,14 +655,7 @@ class SpiderFootWorkspace:
                         'risk': event[8]
                     })
         
-        return matching_events    # def create_workflow(self):
-    #     """Create a new workflow for this workspace.
-    #     
-    #     Returns:
-    #         SpiderFootWorkflow instance
-    #     """
-    #     from spiderfoot.workflow import SpiderFootWorkflow
-    #     return SpiderFootWorkflow(self.config, self)
+        return matching_events
 
     async def generate_cti_report(self, report_type: str = 'threat_assessment', 
                                  custom_prompt: str = None) -> Dict[str, Any]:
