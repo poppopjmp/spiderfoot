@@ -301,7 +301,7 @@ class SpiderFootHelpers():
                     yaml_file.read_text(encoding='utf-8'))
                 if rule_data:
                     rules.append(rule_data)
-            except Exception:
+            except (yaml.YAMLError, OSError):
                 continue
 
         return rules

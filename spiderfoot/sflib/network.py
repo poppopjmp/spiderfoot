@@ -38,7 +38,7 @@ def resolveHost(host: str) -> list:
     try:
         # Use gethostbyname_ex for patching/mocking compatibility in tests
         addrs = normalizeDNS(socket.gethostbyname_ex(host))
-    except Exception:
+    except (socket.gaierror, socket.herror, OSError):
         return []
     if not addrs:
         return []
@@ -52,7 +52,7 @@ def resolveIP(ipaddr: str) -> list:
         return []
     try:
         addrs = normalizeDNS(socket.gethostbyaddr(ipaddr))
-    except Exception:
+    except (socket.herror, socket.gaierror, OSError):
         return []
     if not addrs:
         return []
@@ -65,7 +65,7 @@ def resolveHost6(hostname: str) -> list:
     try:
         for r in socket.getaddrinfo(hostname, None, socket.AF_INET6):
             addrs.append(r[4][0])
-    except Exception:
+    except (socket.gaierror, OSError):
         return []
     if not addrs:
         return []
@@ -188,7 +188,7 @@ def fetchUrl(url: str, cookies: str = None, timeout: int = 30, useragent: str = 
     url = url.strip()
     try:
         parsed_url = urllib.parse.urlparse(url)
-    except Exception:
+    except ValueError:
         return None
     if parsed_url.scheme not in ['http', 'https']:
         return None
@@ -202,7 +202,7 @@ def fetchUrl(url: str, cookies: str = None, timeout: int = 30, useragent: str = 
     url = url.strip()
     try:
         parsed_url = urllib.parse.urlparse(url)
-    except Exception:
+    except ValueError:
         return result
     if parsed_url.scheme not in ['http', 'https']:
         return result

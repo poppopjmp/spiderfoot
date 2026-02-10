@@ -140,7 +140,7 @@ class HttpService:
         try:
             parsed = urllib.parse.urlparse(url)
             host = parsed.hostname or ""
-        except Exception:
+        except (ValueError, AttributeError):
             return True
 
         # Skip proxy for localhost/loopback
@@ -552,7 +552,7 @@ class HttpService:
         try:
             parsed = urllib.parse.urlparse(url)
             return parsed.hostname or ""
-        except Exception:
+        except (ValueError, AttributeError):
             return ""
 
     @staticmethod
@@ -568,7 +568,7 @@ class HttpService:
         try:
             parsed = urllib.parse.urlparse(url)
             return f"{parsed.scheme}://{parsed.hostname}"
-        except Exception:
+        except (ValueError, AttributeError):
             return url
 
     # --- Metrics ---

@@ -323,7 +323,7 @@ class ScanEndpoints:
                 max_wait = 10
             else:
                 max_wait = float(max_wait)
-        except Exception:
+        except (ValueError, TypeError):
             max_wait = 10
         waited = 0
         while dbh.scanInstanceGet(scanId) is None and waited < max_wait:
@@ -385,7 +385,7 @@ class ScanEndpoints:
             return b'["ERROR", "Invalid fp value"]'
         try:
             ids = resultids.split(',')
-        except Exception:
+        except (AttributeError, TypeError):
             return b'["ERROR", "Invalid resultids"]'
         status = dbh.scanInstanceGet(id)
         if not status:
@@ -430,7 +430,7 @@ class ScanEndpoints:
         try:
             if limit is not None:
                 limit = int(limit)
-        except Exception:
+        except (ValueError, TypeError):
             limit = 100
         dbh = self._get_dbh()
         try:
@@ -689,7 +689,7 @@ from spiderfoot.scan_state_map import (
 
         try:
             opts = json.loads(allopts)
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError) as e:
             return f'["ERROR", "{e}"]'.encode('utf-8')
         self.config.update(opts)
         return b'["SUCCESS", ""]'

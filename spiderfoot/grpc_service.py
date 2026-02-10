@@ -157,7 +157,7 @@ class ServiceClient:
 
         except ServiceCallError:
             raise
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError, OSError) as e:
             raise ServiceCallError(
                 f"Failed to call {self.service_name}.{method}: {e}") from e
 
