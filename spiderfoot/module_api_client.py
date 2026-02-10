@@ -47,6 +47,7 @@ class RequestConfig:
     user_agent: str = "SpiderFoot/5.x"
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "timeout": self.timeout,
             "max_retries": self.max_retries,
@@ -73,10 +74,12 @@ class ApiResponse:
 
     @property
     def ok(self) -> bool:
+        """Return whether the response status indicates success."""
         return 200 <= self.status_code < 300
 
     @property
     def is_json(self) -> bool:
+        """Return whether the content type is JSON."""
         return "json" in self.content_type.lower()
 
     def json(self) -> Any:
@@ -88,6 +91,7 @@ class ApiResponse:
         return None
 
     def text(self) -> str:
+        """Return the response body as a string."""
         if isinstance(self.body, str):
             return self.body
         if isinstance(self.body, bytes):
@@ -95,6 +99,7 @@ class ApiResponse:
         return str(self.body) if self.body is not None else ""
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "status_code": self.status_code,
             "content_type": self.content_type,
@@ -116,6 +121,7 @@ class RateLimiter:
     """
 
     def __init__(self, requests_per_second: float = 10.0, burst_size: int = 20) -> None:
+        """Initialize the RateLimiter."""
         self.rate = requests_per_second
         self.burst_size = burst_size
         self._tokens = float(burst_size)
@@ -157,6 +163,7 @@ class RequestRecord:
     retries: int = 0
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "method": self.method,
             "url": self.url,
@@ -192,6 +199,7 @@ class ModuleApiClient:
         api_key_header: str = "X-API-Key",
         max_history: int = 100,
     ) -> None:
+        """Initialize the ModuleApiClient."""
         self.base_url = base_url.rstrip("/") if base_url else ""
         self.config = config or RequestConfig()
         self.rate_limiter = rate_limiter
@@ -207,6 +215,7 @@ class ModuleApiClient:
         return self
 
     def remove_header(self, name: str) -> "ModuleApiClient":
+        """Remove a default header by name."""
         self._default_headers.pop(name, None)
         return self
 
@@ -283,15 +292,19 @@ class ModuleApiClient:
         return response
 
     def get(self, path: str, params: dict | None = None, **kwargs) -> ApiResponse:
+        """Send a GET request."""
         return self.request(HttpMethod.GET, path, params=params, **kwargs)
 
     def post(self, path: str, body: Any = None, **kwargs) -> ApiResponse:
+        """Send a POST request."""
         return self.request(HttpMethod.POST, path, body=body, **kwargs)
 
     def put(self, path: str, body: Any = None, **kwargs) -> ApiResponse:
+        """Send a PUT request."""
         return self.request(HttpMethod.PUT, path, body=body, **kwargs)
 
     def delete(self, path: str, **kwargs) -> ApiResponse:
+        """Send a DELETE request."""
         return self.request(HttpMethod.DELETE, path, **kwargs)
 
     def _record(self, record: RequestRecord):
@@ -301,9 +314,11 @@ class ModuleApiClient:
 
     @property
     def history(self) -> list[RequestRecord]:
+        """Return a copy of the request history."""
         return list(self._history)
 
     def clear_history(self) -> None:
+        """Clear the request history."""
         self._history.clear()
 
     def get_stats(self) -> dict:
@@ -320,6 +335,7 @@ class ModuleApiClient:
         }
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "base_url": self.base_url,
             "config": self.config.to_dict(),

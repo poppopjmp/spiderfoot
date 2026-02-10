@@ -114,10 +114,12 @@ class Config:
     # ------------------------------------------------------------------
 
     def update_config(self, updates: dict) -> dict[str, Any]:
+        """Merge updates into the current configuration and return the result."""
         self._app_config.merge(updates)
         return self.get_config()
 
     def set_config_option(self, key: str, value: Any) -> None:
+        """Set a single configuration option."""
         self._app_config.merge({key: value})
 
     def save_config(self) -> None:
@@ -177,15 +179,19 @@ class Config:
     # ------------------------------------------------------------------
 
     def get_scan_defaults(self) -> dict:
+        """Return the scan default options."""
         return self._app_config._extra.get('scan_defaults', {})
 
     def set_scan_defaults(self, options: dict) -> None:
+        """Set the scan default options."""
         self._app_config._extra['scan_defaults'] = options
 
     def get_workspace_defaults(self) -> dict:
+        """Return the workspace default options."""
         return self._app_config._extra.get('workspace_defaults', {})
 
     def set_workspace_defaults(self, options: dict) -> None:
+        """Set the workspace default options."""
         self._app_config._extra['workspace_defaults'] = options
 
     # ------------------------------------------------------------------
@@ -193,12 +199,15 @@ class Config:
     # ------------------------------------------------------------------
 
     def get_api_keys(self) -> list:
+        """Return the list of configured API keys."""
         return self._app_config._extra.get('api_keys', [])
 
     def add_api_key(self, key_data: dict) -> None:
+        """Add an API key to the configuration."""
         self._app_config._extra.setdefault('api_keys', []).append(key_data)
 
     def delete_api_key(self, key_id: str) -> None:
+        """Delete an API key by its identifier."""
         keys = self._app_config._extra.get('api_keys', [])
         self._app_config._extra['api_keys'] = [
             k for k in keys if k.get('key') != key_id
@@ -209,12 +218,15 @@ class Config:
     # ------------------------------------------------------------------
 
     def get_credentials(self) -> list:
+        """Return the list of stored credentials."""
         return self._app_config._extra.get('credentials', [])
 
     def add_credential(self, cred_data: dict) -> None:
+        """Add a credential to the configuration."""
         self._app_config._extra.setdefault('credentials', []).append(cred_data)
 
     def delete_credential(self, cred_id: str) -> None:
+        """Delete a credential by its identifier."""
         creds = self._app_config._extra.get('credentials', [])
         self._app_config._extra['credentials'] = [
             c for c in creds if c.get('key') != cred_id
@@ -233,10 +245,12 @@ class Config:
     # ------------------------------------------------------------------
 
     def get_module_config(self, module_name: str) -> dict | None:
+        """Return the configuration for a specific module."""
         modules = self._app_config.modules or {}
         return modules.get(module_name)
 
     def update_module_config(self, module_name: str, new_config: dict) -> None:
+        """Update the configuration for a specific module."""
         modules = self._app_config.modules or {}
         if module_name not in modules:
             raise KeyError("404: Module not found")
@@ -264,6 +278,7 @@ app_config = None
 
 
 def get_app_config() -> Config:
+    """Return the global Config singleton, creating it if needed."""
     global app_config
     if app_config is None:
         app_config = Config()
@@ -277,6 +292,7 @@ def reset_app_config() -> None:
 
 
 async def get_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str | None:
+    """Validate and return the API key from request credentials."""
     if not credentials:
         return None
     config = get_app_config()
@@ -290,6 +306,7 @@ async def get_api_key(credentials: HTTPAuthorizationCredentials = Depends(securi
 
 
 async def optional_auth(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str | None:
+    """Optionally authenticate using API key credentials."""
     if not credentials:
         return None
     return await get_api_key(credentials)

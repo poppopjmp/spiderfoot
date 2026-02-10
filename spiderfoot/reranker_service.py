@@ -70,6 +70,7 @@ class RerankerConfig:
 
     @classmethod
     def from_env(cls, env: dict[str, str] | None = None) -> RerankerConfig:
+        """Create a RerankerConfig from environment variables."""
         import os
         e = env or os.environ
         return cls(
@@ -109,6 +110,7 @@ class RerankResult:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "id": self.id,
             "text": self.text[:200],  # truncate for display
@@ -132,6 +134,7 @@ class RerankResponse:
     input_count: int = 0
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "query": self.query,
             "results": [r.to_dict() for r in self.results],
@@ -211,6 +214,7 @@ class RerankerBackend(ABC):
 
     @abstractmethod
     def model_name(self) -> str:
+        """Return the model name."""
         ...
 
 
@@ -222,6 +226,7 @@ class MockRerankerBackend(RerankerBackend):
     """Mock reranker using word overlap + hashing for testing."""
 
     def score(self, query: str, documents: list[str]) -> list[float]:
+        """Score documents by word overlap with the query."""
         query_words = set(query.lower().split())
         scores = []
         for doc in documents:
@@ -238,6 +243,7 @@ class MockRerankerBackend(RerankerBackend):
         return scores
 
     def model_name(self) -> str:
+        """Return the model name."""
         return "mock-reranker"
 
 
@@ -249,6 +255,7 @@ class CrossEncoderBackend(RerankerBackend):
     """Local cross-encoder via sentence-transformers."""
 
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> None:
+        """Initialize the CrossEncoderBackend."""
         self._model_name = model_name
         self._model = None
         self._lock = threading.Lock()
@@ -266,6 +273,7 @@ class CrossEncoderBackend(RerankerBackend):
         return self._model
 
     def score(self, query: str, documents: list[str]) -> list[float]:
+        """Score documents using the local cross-encoder model."""
         model = self._get_model()
         if model == "UNAVAILABLE":
             return MockRerankerBackend().score(query, documents)
@@ -274,6 +282,7 @@ class CrossEncoderBackend(RerankerBackend):
         return [float(s) for s in scores]
 
     def model_name(self) -> str:
+        """Return the model name."""
         return self._model_name
 
 
@@ -286,11 +295,13 @@ class CohereRerankerBackend(RerankerBackend):
 
     def __init__(self, api_key: str = "", model: str = "rerank-v3.5",
                  timeout: float = 30.0) -> None:
+        """Initialize the CohereRerankerBackend."""
         self._api_key = api_key
         self._model = model
         self._timeout = timeout
 
     def score(self, query: str, documents: list[str]) -> list[float]:
+        """Score documents using the Cohere Rerank API."""
         import urllib.error
         import urllib.request
         url = "https://api.cohere.ai/v1/rerank"
@@ -321,6 +332,7 @@ class CohereRerankerBackend(RerankerBackend):
         return scores
 
     def model_name(self) -> str:
+        """Return the model name."""
         return self._model
 
 
@@ -333,11 +345,13 @@ class JinaRerankerBackend(RerankerBackend):
 
     def __init__(self, api_key: str = "", model: str = "jina-reranker-v2-base-multilingual",
                  timeout: float = 30.0) -> None:
+        """Initialize the JinaRerankerBackend."""
         self._api_key = api_key
         self._model = model
         self._timeout = timeout
 
     def score(self, query: str, documents: list[str]) -> list[float]:
+        """Score documents using the Jina Reranker API."""
         import urllib.error
         import urllib.request
         url = "https://api.jina.ai/v1/rerank"
@@ -367,6 +381,7 @@ class JinaRerankerBackend(RerankerBackend):
         return scores
 
     def model_name(self) -> str:
+        """Return the model name."""
         return self._model
 
 
@@ -384,6 +399,7 @@ class RerankerService:
     """
 
     def __init__(self, config: RerankerConfig | None = None) -> None:
+        """Initialize the RerankerService."""
         self._config = config or RerankerConfig()
         self._backend = self._create_backend()
 
@@ -473,6 +489,7 @@ class RerankerService:
 
     # Stats
     def stats(self) -> dict[str, Any]:
+        """Return reranker service statistics."""
         return {
             "provider": self._config.provider.value,
             "model": self._backend.model_name(),

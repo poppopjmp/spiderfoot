@@ -182,24 +182,29 @@ class DeadLetterQueue:
     """Stores permanently failed operations for later inspection/replay."""
 
     def __init__(self, max_size: int = 1000) -> None:
+        """Initialize the DeadLetterQueue."""
         self._queue: deque[DeadLetterEntry] = deque(maxlen=max_size)
         self._lock = threading.Lock()
         self._counter = 0
 
     def add(self, entry: DeadLetterEntry) -> None:
+        """Add a failed operation entry to the queue."""
         with self._lock:
             self._queue.append(entry)
             self._counter += 1
 
     def pop(self) -> DeadLetterEntry | None:
+        """Remove and return the oldest entry from the queue."""
         with self._lock:
             return self._queue.popleft() if self._queue else None
 
     def peek(self, n: int = 10) -> list[DeadLetterEntry]:
+        """Return the most recent entries without removing them."""
         with self._lock:
             return list(self._queue)[-n:]
 
     def clear(self) -> int:
+        """Clear all entries and return the count removed."""
         with self._lock:
             count = len(self._queue)
             self._queue.clear()
@@ -207,10 +212,12 @@ class DeadLetterQueue:
 
     @property
     def size(self) -> int:
+        """Return the current number of entries in the queue."""
         return len(self._queue)
 
     @property
     def total_added(self) -> int:
+        """Return the total number of entries ever added."""
         return self._counter
 
 
@@ -219,6 +226,7 @@ _dlq = DeadLetterQueue()
 
 
 def get_dead_letter_queue() -> DeadLetterQueue:
+    """Return the global dead letter queue instance."""
     return _dlq
 
 
@@ -232,6 +240,7 @@ class RetryExecutor:
 
     def __init__(self, config: RetryConfig | None = None, *,
                  dlq: DeadLetterQueue | None = None) -> None:
+        """Initialize the RetryExecutor."""
         self.config = config or RetryConfig()
         self.dlq = dlq or _dlq
         self._stats = {
@@ -333,6 +342,7 @@ class RetryExecutor:
 
     @property
     def stats(self) -> dict:
+        """Return retry execution statistics."""
         with self._lock:
             return dict(self._stats)
 
@@ -346,9 +356,11 @@ class RetryContext:
     """Context manager for retry-managed operations."""
 
     def __init__(self, config: RetryConfig | None = None) -> None:
+        """Initialize the RetryContext."""
         self._executor = RetryExecutor(config)
 
     def __enter__(self) -> RetryContext:
+        """Enter the retry context."""
         return self
 
     def __exit__(
@@ -357,6 +369,7 @@ class RetryContext:
         exc_val: BaseException | None,
         exc_tb: types_mod.TracebackType | None,
     ) -> bool:
+        """Exit the retry context."""
         return False
 
     def execute(self, func: Callable, *args, **kwargs) -> Any:

@@ -83,6 +83,7 @@ class ScanOrchestrator:
     """
 
     def __init__(self, scan_id: str, target: str = "") -> None:
+        """Initialize the ScanOrchestrator."""
         self.scan_id = scan_id
         self.target = target
         self._phase = ScanPhase.INIT
@@ -127,6 +128,7 @@ class ScanOrchestrator:
         return self
 
     def unregister_module(self, module_name: str) -> bool:
+        """Unregister a module from the scan."""
         schedule = self._modules.pop(module_name, None)
         if schedule is None:
             return False
@@ -182,16 +184,19 @@ class ScanOrchestrator:
         return new_phase
 
     def module_started(self, module_name: str) -> None:
+        """Record that a module has started running."""
         with self._lock:
             self._running_modules.add(module_name)
 
     def module_completed(self, module_name: str, events_produced: int = 0) -> None:
+        """Record that a module has completed successfully."""
         with self._lock:
             self._running_modules.discard(module_name)
             self._completed_modules.add(module_name)
             self._total_events += events_produced
 
     def module_failed(self, module_name: str, error: str = "") -> None:
+        """Record that a module has failed."""
         with self._lock:
             self._running_modules.discard(module_name)
             self._failed_modules.add(module_name)
@@ -225,29 +230,36 @@ class ScanOrchestrator:
         log.error("Scan %s failed: %s", self.scan_id, reason)
 
     def on_phase_change(self, callback: Callable[[ScanPhase, ScanPhase], None]) -> None:
+        """Register a callback for phase transitions."""
         self._phase_callbacks.append(callback)
 
     def on_completion(self, callback: Callable[["ScanOrchestrator"], None]) -> None:
+        """Register a callback for scan completion."""
         self._completion_callbacks.append(callback)
 
     @property
     def current_phase(self) -> ScanPhase:
+        """Return the current scan phase."""
         return self._phase
 
     @property
     def is_complete(self) -> bool:
+        """Return whether the scan is complete or failed."""
         return self._phase in (ScanPhase.COMPLETE, ScanPhase.FAILED)
 
     @property
     def elapsed_seconds(self) -> float:
+        """Return the elapsed time since scan start in seconds."""
         return time.time() - self._scan_start
 
     @property
     def total_events(self) -> int:
+        """Return the total number of events produced."""
         return self._total_events
 
     @property
     def total_errors(self) -> int:
+        """Return the total number of errors encountered."""
         return self._total_errors
 
     def get_phase_modules(self, phase: ScanPhase) -> list[str]:
@@ -259,10 +271,12 @@ class ScanOrchestrator:
         )
 
     def get_pending_modules(self) -> list[str]:
+        """Return modules that have not yet completed or failed."""
         all_done = self._completed_modules | self._failed_modules
         return [m for m in self._modules if m not in all_done]
 
     def get_module_status(self, module_name: str) -> str:
+        """Return the current status of a module."""
         if module_name in self._completed_modules:
             return "completed"
         if module_name in self._failed_modules:
@@ -281,9 +295,11 @@ class ScanOrchestrator:
         return schedule.depends_on.issubset(self._completed_modules)
 
     def get_phase_results(self) -> list[PhaseResult]:
+        """Return the list of completed phase results."""
         return list(self._phase_results)
 
     def summary(self) -> dict:
+        """Return a summary of the scan state."""
         return {
             "scan_id": self.scan_id,
             "target": self.target,
@@ -299,6 +315,7 @@ class ScanOrchestrator:
         }
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             **self.summary(),
             "phases": [
