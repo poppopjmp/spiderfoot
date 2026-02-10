@@ -1042,7 +1042,7 @@ class SpiderFootHelpers():
 
             countryCode = iban[0:2]
 
-            if countryCode not in ibanCountryLengths.keys():
+            if countryCode not in ibanCountryLengths:
                 continue
 
             if len(iban) != ibanCountryLengths[countryCode]:

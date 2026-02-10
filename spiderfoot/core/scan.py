@@ -125,7 +125,7 @@ class ScanManager:
         # Auto-select all modules if none specified
         if not event_types and not modules and not usecase:
             self.log.warning("No modules, types or use case specified, enabling all modules")
-            for module_name in sf_modules.keys():
+            for module_name in sf_modules:
                 if "__" not in module_name:  # Skip internal modules
                     modlist.append(module_name)
 

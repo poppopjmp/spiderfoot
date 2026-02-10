@@ -51,7 +51,7 @@ def hashstring(string: str) -> str:
 
 def cachePut(label: str, data: str) -> None:
     pathLabel = hashlib.sha224(label.encode('utf-8')).hexdigest()
-    cacheFile = SpiderFootHelpers.cachePath() + "/" + pathLabel
+    cacheFile = f"{SpiderFootHelpers.cachePath()}/{pathLabel}"
     with io.open(cacheFile, "w", encoding="utf-8", errors="ignore") as fp:
         if isinstance(data, list):
             for line in data:
@@ -69,7 +69,7 @@ def cacheGet(label: str, timeoutHrs: int) -> str:
     if not label:
         return None
     pathLabel = hashlib.sha224(label.encode('utf-8')).hexdigest()
-    cacheFile = SpiderFootHelpers.cachePath() + "/" + pathLabel
+    cacheFile = f"{SpiderFootHelpers.cachePath()}/{pathLabel}"
     try:
         cache_stat = os.stat(cacheFile)
     except OSError:

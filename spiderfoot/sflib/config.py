@@ -103,22 +103,22 @@ def configUnserialize(opts: dict, referencePoint: dict, filterSystem: bool = Tru
         for opt in referencePoint['__modules__'][modName]['opts']:
             if opt.startswith('_') and filterSystem:
                 continue
-            if modName + ":" + opt in opts:
+            if f"{modName}:{opt}" in opts:
                 ref_mod = referencePoint['__modules__'][modName]['opts'][opt]
                 if isinstance(ref_mod, list) and len(ref_mod) == 0:
                     continue
                 if isinstance(ref_mod, bool):
-                    returnOpts['__modules__'][modName]['opts'][opt] = True if opts[modName + ":" + opt] == "1" else False
+                    returnOpts['__modules__'][modName]['opts'][opt] = opts[f"{modName}:{opt}"] == "1"
                     continue
                 if isinstance(ref_mod, str):
-                    returnOpts['__modules__'][modName]['opts'][opt] = str(opts[modName + ":" + opt])
+                    returnOpts['__modules__'][modName]['opts'][opt] = str(opts[f"{modName}:{opt}"])
                     continue
                 if isinstance(ref_mod, int):
-                    returnOpts['__modules__'][modName]['opts'][opt] = int(opts[modName + ":" + opt])
+                    returnOpts['__modules__'][modName]['opts'][opt] = int(opts[f"{modName}:{opt}"])
                     continue
                 if isinstance(ref_mod, list):
                     if isinstance(ref_mod[0], int):
-                        returnOpts['__modules__'][modName]['opts'][opt] = [int(x) for x in str(opts[modName + ":" + opt]).split(",")]
+                        returnOpts['__modules__'][modName]['opts'][opt] = [int(x) for x in str(opts[f"{modName}:{opt}"]).split(",")]
                     else:
-                        returnOpts['__modules__'][modName]['opts'][opt] = str(opts[modName + ":" + opt]).split(",")
+                        returnOpts['__modules__'][modName]['opts'][opt] = str(opts[f"{modName}:{opt}"]).split(",")
     return returnOpts

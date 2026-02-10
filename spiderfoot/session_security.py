@@ -158,8 +158,7 @@ class SecureSessionManager:
         """
         if self.redis:
             return self._invalidate_user_sessions_redis(user_id, except_token)
-        else:
-            return self._invalidate_user_sessions_memory(user_id, except_token)
+        return self._invalidate_user_sessions_memory(user_id, except_token)
 
     def get_user_sessions(self, user_id: str) -> list:
         """Get all active sessions for a user.
@@ -206,8 +205,7 @@ class SecureSessionManager:
         """
         if self.redis:
             return self._cleanup_expired_sessions_redis()
-        else:
-            return self._cleanup_expired_sessions_memory()
+        return self._cleanup_expired_sessions_memory()
 
     def _hash_user_agent(self, user_agent: str) -> str:
         """Hash user agent for session validation.
