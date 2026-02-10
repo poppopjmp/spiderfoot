@@ -23,6 +23,9 @@ import inspect
 from cryptography.hazmat.backends.openssl import backend
 from spiderfoot import SpiderFootHelpers
 from .helpers import validIP, validIP6
+
+import logging
+log = logging.getLogger("spiderfoot.sflib.network")
 from datetime import datetime, timezone
 
 def resolveHost(host: str) -> list:
@@ -123,20 +126,20 @@ def parseCert(rawcert: str, fqdn: str = None, expiringdays: int = 30) -> dict:
             ret['expired'] = True
         elif (not_after - now).days < expiringdays:
             ret['expiring'] = True
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("Failed to check cert not_valid_after: %s", e)
     # SANs
     try:
         ext = cert.extensions.get_extension_for_class(cryptography.x509.SubjectAlternativeName)
         ret['altnames'] = ext.value.get_values_for_type(cryptography.x509.DNSName)
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("Failed to extract SubjectAlternativeName from cert: %s", e)
     certhosts = list()
     try:
         certhosts.append(cert.subject.get_attributes_for_oid(cryptography.x509.NameOID.COMMON_NAME)[0].value)
         certhosts.extend(ret['altnames'])
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("Failed to extract CommonName from cert: %s", e)
     # Check for mismatch
     if fqdn and ret['issued']:
         if fqdn not in certhosts:

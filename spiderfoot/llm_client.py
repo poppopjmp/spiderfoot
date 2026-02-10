@@ -489,8 +489,8 @@ class LLMClient:
             body_text = ""
             try:
                 body_text = e.read().decode("utf-8")
-            except Exception:
-                pass
+            except Exception as read_err:
+                log.debug("Failed to read HTTP error response body: %s", read_err)
             self._classify_and_raise(e.code, body_text)
         except urllib.error.URLError as e:
             if "timed out" in str(e.reason).lower():
@@ -560,8 +560,8 @@ class LLMClient:
             body_text = ""
             try:
                 body_text = e.read().decode("utf-8")
-            except Exception:
-                pass
+            except Exception as read_err:
+                log.debug("Failed to read HTTP error response body (streaming): %s", read_err)
             self._classify_and_raise(e.code, body_text)
         except urllib.error.URLError as e:
             raise LLMError(f"Connection error: {e.reason}")

@@ -473,8 +473,8 @@ def require_api_auth(required_scope: str = None):
                 if hasattr(current_app, 'api_key_manager'):
                     key_hash = hashlib.sha256(api_key.encode()).hexdigest()
                     current_app.api_key_manager.update_last_used(key_hash)
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("Failed to update API key last-used timestamp: %s", e)
             
             return f(*args, **kwargs)
         return decorated_function

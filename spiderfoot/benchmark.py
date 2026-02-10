@@ -268,8 +268,8 @@ class EventBusBenchmark(Benchmark):
         if self._bus:
             try:
                 self._bus.shutdown()
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("EventBus shutdown failed during teardown: %s", e)
 
     def run(self, iterations: int = 10000) -> List[BenchmarkResult]:
         results = []
@@ -532,8 +532,8 @@ class BenchmarkSuite:
             finally:
                 try:
                     bench.teardown()
-                except Exception:
-                    pass
+                except Exception as e:
+                    log.debug("Benchmark '%s' teardown failed: %s", bench.name, e)
 
         report.completed_at = time.time()
         return report

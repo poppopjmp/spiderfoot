@@ -294,8 +294,8 @@ def set_endpoint_override(path: str, requests: int, window: float) -> bool:
         try:
             from spiderfoot.rate_limiter import RateLimit
             _limiter.set_limit(f"endpoint:{path}", RateLimit(requests=requests, window=window))
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("Failed to set rate limit for endpoint %s: %s", path, e)
     log.info("Endpoint rate limit override set: %s = %d/%0.0fs", path, requests, window)
     return True
 

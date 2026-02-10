@@ -1,10 +1,13 @@
 import cherrypy
+import logging
 from copy import deepcopy
 from mako.template import Template
 from spiderfoot import SpiderFootHelpers, __version__
 from spiderfoot.sflib import SpiderFoot
 import time
 import json
+
+log = logging.getLogger("spiderfoot.webui.scan")
 from spiderfoot.scan_service.scanner import startSpiderFootScanner
 import multiprocessing as mp
 import html
@@ -183,8 +186,8 @@ class ScanEndpoints:
                     for r in correlations:
                         if r[0] in riskmatrix:
                             riskmatrix[r[0]] = r[1]
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("Failed to get correlation summary for scan %s: %s", scan_id, e)
             # Append riskmatrix as 9th element
             retdata.append(row_list + [riskmatrix])
         return retdata

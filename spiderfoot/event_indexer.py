@@ -272,8 +272,8 @@ class EventIndexer:
             for sid in self._sub_ids:
                 try:
                     bus.unsubscribe_sync(sid)
-                except Exception:
-                    pass
+                except Exception as e:
+                    log.debug("Failed to unsubscribe subscription %s: %s", sid, e)
         self._sub_ids.clear()
         self._started = False
         log.info("Event indexer stopped (indexed=%d, errors=%d)",

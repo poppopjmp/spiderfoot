@@ -32,6 +32,9 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, Spid
 from spiderfoot.logger import logWorkerSetup
 from spiderfoot import SpiderFootDb
 
+import logging
+log = logging.getLogger("spiderfoot.scanner")
+
 
 def startSpiderFootScanner(loggingQueue, *args, **kwargs):
     """Initialize and start the SpiderFootScanner.
@@ -437,8 +440,8 @@ class SpiderFootScanner():
                         try:
                             from spiderfoot.service_integration import wire_module_services
                             wire_module_services(mod, self.__config)
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            log.debug("wire_module_services failed for %s: %s", modName, e)
                     except Exception:
                         self.__sf.error(
                             f"Module {modName} setup failed")
@@ -550,8 +553,8 @@ class SpiderFootScanner():
                 status = "FINISHED" if not failed else "ERROR"
                 duration = scan_end_time - (self.__scanStartTime or scan_end_time)
                 complete_scan_services(self.__scanId, status, duration)
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("complete_scan_services failed for scan %s: %s", self.__scanId, e)
 
             self.__dbh.close()
 
@@ -638,8 +641,8 @@ class SpiderFootScanner():
                     bridge = getattr(self, '_event_bridge', None)
                     if bridge is not None:
                         bridge.forward(sfEvent)
-                except Exception:
-                    pass
+                except Exception as e:
+                    log.debug("Event bridge forwarding failed: %s", e)
 
         finally:
             for mod in self.__moduleInstances.values():
