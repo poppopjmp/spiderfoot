@@ -428,6 +428,7 @@ class HttpVectorBackend(VectorStoreBackend):
 
     def _request(self, method: str, path: str,
                  body: dict | None = None) -> dict[str, Any]:
+        import urllib.error
         import urllib.request
         url = f"{self._base}{path}"
         data = json.dumps(body).encode() if body else None
@@ -435,7 +436,7 @@ class HttpVectorBackend(VectorStoreBackend):
         try:
             with urllib.request.urlopen(req, timeout=self._config.timeout) as resp:
                 return json.loads(resp.read().decode())
-        except Exception as e:
+        except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
             log.error("Qdrant HTTP %s %s failed: %s", method, path, e)
             return {"status": "error", "error": str(e)}
 

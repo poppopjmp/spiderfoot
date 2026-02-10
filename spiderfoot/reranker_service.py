@@ -289,6 +289,7 @@ class CohereRerankerBackend(RerankerBackend):
         self._timeout = timeout
 
     def score(self, query: str, documents: list[str]) -> list[float]:
+        import urllib.error
         import urllib.request
         url = "https://api.cohere.ai/v1/rerank"
         body = json.dumps({
@@ -305,7 +306,7 @@ class CohereRerankerBackend(RerankerBackend):
         try:
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 data = json.loads(resp.read().decode())
-        except Exception as e:
+        except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
             log.error("Cohere rerank failed: %s", e)
             return [0.0] * len(documents)
 
@@ -335,6 +336,7 @@ class JinaRerankerBackend(RerankerBackend):
         self._timeout = timeout
 
     def score(self, query: str, documents: list[str]) -> list[float]:
+        import urllib.error
         import urllib.request
         url = "https://api.jina.ai/v1/rerank"
         body = json.dumps({
@@ -351,7 +353,7 @@ class JinaRerankerBackend(RerankerBackend):
         try:
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 data = json.loads(resp.read().decode())
-        except Exception as e:
+        except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
             log.error("Jina rerank failed: %s", e)
             return [0.0] * len(documents)
 

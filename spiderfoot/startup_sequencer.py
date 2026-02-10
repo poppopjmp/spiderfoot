@@ -195,7 +195,7 @@ class NatsProbe(DependencyProbe):
             port = int(parts[1]) if len(parts) > 1 else 4222
             probe = TcpProbe("nats-tcp", host, port)
             return await probe.check()
-        except Exception:
+        except (ValueError, IndexError, OSError):
             return False
 
 

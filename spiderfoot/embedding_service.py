@@ -238,6 +238,7 @@ class OpenAIEmbeddingBackend(EmbeddingBackend):
         self._timeout = timeout
 
     def embed(self, texts: list[str]) -> EmbeddingResult:
+        import urllib.error
         import urllib.request
         start = time.time()
 
@@ -254,7 +255,7 @@ class OpenAIEmbeddingBackend(EmbeddingBackend):
         try:
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 data = json.loads(resp.read().decode())
-        except Exception as e:
+        except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
             log.error("OpenAI embedding failed: %s", e)
             return EmbeddingResult(vectors=[], model=self._model)
 
@@ -294,6 +295,7 @@ class HuggingFaceEmbeddingBackend(EmbeddingBackend):
         self._timeout = timeout
 
     def embed(self, texts: list[str]) -> EmbeddingResult:
+        import urllib.error
         import urllib.request
         start = time.time()
 
@@ -307,7 +309,7 @@ class HuggingFaceEmbeddingBackend(EmbeddingBackend):
         try:
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 vectors = json.loads(resp.read().decode())
-        except Exception as e:
+        except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
             log.error("HuggingFace embedding failed: %s", e)
             return EmbeddingResult(vectors=[], model=self._model)
 

@@ -242,6 +242,7 @@ class OpenAILLMBackend(LLMBackend):
     def generate(self, system: str, user: str,
                  temperature: float = 0.1,
                  max_tokens: int = 2048) -> tuple[str, dict[str, Any]]:
+        import urllib.error
         import urllib.request
         url = f"{self._api_base}/chat/completions"
         body = json.dumps({
@@ -261,7 +262,7 @@ class OpenAILLMBackend(LLMBackend):
         try:
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 data = json.loads(resp.read().decode())
-        except Exception as e:
+        except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
             log.error("OpenAI LLM call failed: %s", e)
             return f"Error: {e}", {"error": str(e)}
 
@@ -291,6 +292,7 @@ class OllamaLLMBackend(LLMBackend):
     def generate(self, system: str, user: str,
                  temperature: float = 0.1,
                  max_tokens: int = 2048) -> tuple[str, dict[str, Any]]:
+        import urllib.error
         import urllib.request
         url = f"{self._api_base}/api/chat"
         body = json.dumps({
@@ -310,7 +312,7 @@ class OllamaLLMBackend(LLMBackend):
         try:
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 data = json.loads(resp.read().decode())
-        except Exception as e:
+        except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
             log.error("Ollama LLM call failed: %s", e)
             return f"Error: {e}", {"error": str(e)}
 
