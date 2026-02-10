@@ -38,12 +38,14 @@ class CapturedEvent:
 
     def __init__(self, event_type: str, data: str, module: str,
                  source_event: Any = None) -> None:
+        """Initialize the CapturedEvent."""
         self.event_type = event_type
         self.data = data
         self.module = module
         self.source_event = source_event
 
     def __repr__(self) -> str:
+        """Return a string representation of the CapturedEvent."""
         return (f"CapturedEvent(type={self.event_type!r}, "
                 f"data={self.data[:50]!r}, module={self.module!r})")
 
@@ -53,18 +55,22 @@ class MockSpiderFootTarget:
 
     def __init__(self, target_value: str = "example.com",
                  target_type: str = "INTERNET_NAME") -> None:
+        """Initialize the MockSpiderFootTarget."""
         self.targetValue = target_value
         self.targetType = target_type
         self._aliases: list[dict[str, str]] = []
 
     def setAlias(self, value: str, type_: str) -> None:
+        """Add an alias with the given value and type."""
         self._aliases.append({"value": value, "type": type_})
 
     def getEquivalents(self, type_: str) -> list[str]:
+        """Return equivalent alias values for the given type."""
         return [a["value"] for a in self._aliases if a["type"] == type_]
 
     def matches(self, value: str, includeChildren: bool = True,
                 includeParents: bool = True) -> bool:
+        """Check if the value matches the target."""
         if value == self.targetValue:
             return True
         if includeChildren and self.targetValue in value:
@@ -77,6 +83,7 @@ class MockSpiderFootEvent:
 
     def __init__(self, event_type: str, data: str, module: str,
                  source_event: MockSpiderFootEvent | None = None) -> None:
+        """Initialize the MockSpiderFootEvent."""
         self.eventType = event_type
         self.data = data
         self.module = module
@@ -90,6 +97,7 @@ class MockSpiderFootEvent:
 
     @property
     def hash(self) -> str:
+        """Return a hash string for this event."""
         import hashlib
         return hashlib.sha256(
             f"{self.eventType}{self.data}{self.module}".encode()
@@ -100,6 +108,7 @@ class MockSpiderFoot:
     """Minimal mock of SpiderFoot core for module testing."""
 
     def __init__(self, target: MockSpiderFootTarget | None = None) -> None:
+        """Initialize the MockSpiderFoot."""
         self.target = target or MockSpiderFootTarget()
         self.opts = {
             "_debug": False,
@@ -119,45 +128,58 @@ class MockSpiderFoot:
         self._log = logging.getLogger("test.spiderfoot")
 
     def debug(self, msg: str) -> None:
+        """Log a debug message."""
         self._log.debug(msg)
 
     def info(self, msg: str) -> None:
+        """Log an info message."""
         self._log.info(msg)
 
     def error(self, msg: str) -> None:
+        """Log an error message."""
         self._log.error(msg)
 
     def warning(self, msg: str) -> None:
+        """Log a warning message."""
         self._log.warning(msg)
 
     def tempStorage(self) -> dict:
+        """Return a temporary storage dictionary."""
         return {}
 
     def cacheGet(self, key: str, max_age: int = 0) -> str | None:
+        """Return a cached value by key."""
         return self._cache.get(key)
 
     def cachePut(self, key: str, value: str) -> None:
+        """Store a value in the cache."""
         self._cache[key] = value
 
     def hashstring(self, s: str) -> str:
+        """Return a SHA-256 hash of the string."""
         import hashlib
         return hashlib.sha256(s.encode("utf-8", errors="replace")).hexdigest()
 
     def validIP(self, ip: str) -> bool:
+        """Check if the string is a valid IPv4 address."""
         import re
         return bool(re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip))
 
     def validIP6(self, ip: str) -> bool:
+        """Check if the string is a valid IPv6 address."""
         return ":" in ip
 
     def validEmail(self, email: str) -> bool:
+        """Check if the string is a valid email address."""
         return "@" in email and "." in email
 
     def isDomain(self, hostname: str, tldList: Any = None) -> bool:
+        """Check if the hostname is a domain."""
         parts = hostname.split(".")
         return len(parts) == 2
 
     def urlFQDN(self, url: str) -> str:
+        """Return the fully qualified domain name from a URL."""
         from urllib.parse import urlparse
         return urlparse(url).hostname or ""
 
@@ -172,15 +194,19 @@ class MockSpiderFoot:
         }
 
     def resolveHost(self, host: str) -> list[str] | None:
+        """Mock DNS resolution for a hostname."""
         return None
 
     def resolveHost6(self, host: str) -> list[str] | None:
+        """Mock IPv6 DNS resolution for a hostname."""
         return None
 
     def resolveIP(self, ip: str) -> list[str] | None:
+        """Mock reverse DNS resolution for an IP address."""
         return None
 
     def checkForStop(self) -> bool:
+        """Check whether scanning should stop."""
         return False
 
 
@@ -260,6 +286,7 @@ class ModuleTestHarness:
         original_produce = getattr(instance, 'produceEvent', None)
 
         def capture_produce(event: Any, *args, **kwargs) -> None:
+            """Capture a produced event for test assertions."""
             self._captured_events.append(CapturedEvent(
                 event_type=event.eventType,
                 data=event.data,
@@ -377,6 +404,7 @@ class ModuleTestHarness:
         original_fetch = self.sf.fetchUrl
 
         def mock_fetch(url: str, **kwargs) -> dict:
+            """Return a mock response if the URL matches the pattern."""
             if url_pattern in url:
                 return {
                     "content": content,

@@ -76,6 +76,7 @@ class RetentionRule:
     exclude_pattern: str = ""   # Regex or glob for exclusions
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "name": self.name,
             "resource": self.resource,
@@ -89,6 +90,7 @@ class RetentionRule:
 
     @classmethod
     def from_dict(cls, data: dict) -> "RetentionRule":
+        """Create a RetentionRule from a dictionary."""
         action = data.get("action", "delete")
         try:
             action = RetentionAction(action)
@@ -118,6 +120,7 @@ class RetentionCandidate:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "resource": self.resource,
             "identifier": self.identifier,
@@ -139,6 +142,7 @@ class RetentionResult:
     timestamp: float = field(default_factory=time.time)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "rule_name": self.rule_name,
             "candidates_found": self.candidates_found,
@@ -162,9 +166,11 @@ class ResourceAdapter:
         raise NotImplementedError
 
     def delete_item(self, candidate: RetentionCandidate) -> bool:
+        """Delete a resource item."""
         raise NotImplementedError
 
     def archive_item(self, candidate: RetentionCandidate) -> bool:
+        """Archive a resource item."""
         raise NotImplementedError
 
 
@@ -172,12 +178,15 @@ class FileResourceAdapter(ResourceAdapter):
     """Adapter for file-based resources (logs, exports, cache)."""
 
     def __init__(self, directories: dict[str, str] | None = None) -> None:
+        """Initialize the FileResourceAdapter."""
         self._dirs = directories or {}
 
     def set_directory(self, resource: str, path: str) -> None:
+        """Set the directory path for a resource type."""
         self._dirs[resource] = path
 
     def list_items(self, resource: str) -> list[RetentionCandidate]:
+        """List all file items for a resource type."""
         directory = self._dirs.get(resource, "")
         if not directory or not os.path.isdir(directory):
             return []
@@ -199,6 +208,7 @@ class FileResourceAdapter(ResourceAdapter):
         return sorted(items, key=lambda c: c.created_at)
 
     def delete_item(self, candidate: RetentionCandidate) -> bool:
+        """Delete a file from disk."""
         try:
             if os.path.exists(candidate.identifier):
                 os.remove(candidate.identifier)
@@ -209,6 +219,7 @@ class FileResourceAdapter(ResourceAdapter):
         return False
 
     def archive_item(self, candidate: RetentionCandidate) -> bool:
+        """Move a file to the .archive subdirectory."""
         # Move to .archive subdirectory
         directory = os.path.dirname(candidate.identifier)
         archive_dir = os.path.join(directory, ".archive")
@@ -229,17 +240,21 @@ class InMemoryResourceAdapter(ResourceAdapter):
     """Adapter that operates on in-memory item lists (for testing)."""
 
     def __init__(self) -> None:
+        """Initialize the InMemoryResourceAdapter."""
         self._items: dict[str, list[RetentionCandidate]] = {}
 
     def add_items(self, resource: str,
                   items: list[RetentionCandidate]) -> None:
+        """Add items to the in-memory store for a resource type."""
         self._items.setdefault(resource, []).extend(items)
 
     def list_items(self, resource: str) -> list[RetentionCandidate]:
+        """List all in-memory items for a resource type."""
         items = self._items.get(resource, [])
         return sorted(items, key=lambda c: c.created_at)
 
     def delete_item(self, candidate: RetentionCandidate) -> bool:
+        """Remove an item from the in-memory store."""
         items = self._items.get(candidate.resource, [])
         for i, item in enumerate(items):
             if item.identifier == candidate.identifier:
@@ -248,6 +263,7 @@ class InMemoryResourceAdapter(ResourceAdapter):
         return False
 
     def archive_item(self, candidate: RetentionCandidate) -> bool:
+        """Archive an item by delegating to delete."""
         return self.delete_item(candidate)
 
 
@@ -259,6 +275,7 @@ class RetentionManager:
     """Manages and enforces data retention policies."""
 
     def __init__(self, adapter: ResourceAdapter | None = None) -> None:
+        """Initialize the RetentionManager."""
         self._rules: dict[str, RetentionRule] = {}
         self._adapter = adapter or InMemoryResourceAdapter()
         self._lock = threading.Lock()
@@ -266,10 +283,12 @@ class RetentionManager:
 
     @property
     def adapter(self) -> ResourceAdapter:
+        """Return the resource adapter."""
         return self._adapter
 
     @adapter.setter
     def adapter(self, value: ResourceAdapter) -> None:
+        """Set the resource adapter."""
         self._adapter = value
 
     # ------------------------------------------------------------------
@@ -277,15 +296,19 @@ class RetentionManager:
     # ------------------------------------------------------------------
 
     def add_rule(self, rule: RetentionRule) -> None:
+        """Add a retention rule."""
         self._rules[rule.name] = rule
 
     def remove_rule(self, name: str) -> bool:
+        """Remove a retention rule by name."""
         return self._rules.pop(name, None) is not None
 
     def get_rule(self, name: str) -> RetentionRule | None:
+        """Return a retention rule by name."""
         return self._rules.get(name)
 
     def list_rules(self) -> list[RetentionRule]:
+        """Return all retention rules."""
         return list(self._rules.values())
 
     # ------------------------------------------------------------------
@@ -427,10 +450,12 @@ class RetentionManager:
 
     @property
     def history(self) -> list[RetentionResult]:
+        """Return the enforcement history."""
         return list(self._history)
 
     @property
     def stats(self) -> dict:
+        """Return aggregate retention statistics."""
         total_processed = sum(r.items_processed for r in self._history)
         total_freed = sum(r.bytes_freed for r in self._history)
         return {

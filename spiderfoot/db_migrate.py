@@ -66,6 +66,7 @@ class MigrationRecord:
     downgrade_fn: Callable | None = None
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "version": self.version,
             "name": self.name,
@@ -87,6 +88,7 @@ class AppliedMigration:
     direction: str = "up"
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "version": self.version,
             "name": self.name,
@@ -108,9 +110,11 @@ class MigrationPlan:
 
     @property
     def count(self) -> int:
+        """Return the number of migration steps."""
         return len(self.steps)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "direction": self.direction.value,
             "steps": [s.to_dict() for s in self.steps],
@@ -127,37 +131,54 @@ class MigrationPlan:
 class DbAdapter(Protocol):
     """Minimal database interface for migrations."""
 
-    def execute(self, sql: str, params: tuple | None = None) -> None: ...
-    def fetchall(self, sql: str, params: tuple | None = None) -> list[tuple]: ...
-    def fetchone(self, sql: str, params: tuple | None = None) -> tuple | None: ...
-    def commit(self) -> None: ...
-    def rollback(self) -> None: ...
+    def execute(self, sql: str, params: tuple | None = None) -> None:
+        """Execute an SQL statement."""
+        ...
+    def fetchall(self, sql: str, params: tuple | None = None) -> list[tuple]:
+        """Fetch all rows from an SQL query."""
+        ...
+    def fetchone(self, sql: str, params: tuple | None = None) -> tuple | None:
+        """Fetch a single row from an SQL query."""
+        ...
+    def commit(self) -> None:
+        """Commit the current transaction."""
+        ...
+    def rollback(self) -> None:
+        """Roll back the current transaction."""
+        ...
 
 
 class InMemoryDbAdapter:
     """Simple in-memory adapter for testing."""
 
     def __init__(self) -> None:
+        """Initialize the InMemoryDbAdapter."""
         self._tables: dict[str, list[dict]] = {}
         self._log: list[str] = []
 
     def execute(self, sql: str, params: tuple | None = None) -> None:
+        """Record the SQL statement in the log."""
         self._log.append(sql)
 
     def fetchall(self, sql: str, params: tuple | None = None) -> list[tuple]:
+        """Return an empty result set."""
         return []
 
     def fetchone(self, sql: str, params: tuple | None = None) -> tuple | None:
+        """Return None as a single-row result."""
         return None
 
     def commit(self) -> None:
+        """Record a commit in the log."""
         self._log.append("COMMIT")
 
     def rollback(self) -> None:
+        """Record a rollback in the log."""
         self._log.append("ROLLBACK")
 
     @property
     def sql_log(self) -> list[str]:
+        """Return the list of recorded SQL statements."""
         return list(self._log)
 
 
@@ -165,25 +186,32 @@ class SqliteAdapter:
     """SQLite database adapter."""
 
     def __init__(self, db_path: str) -> None:
+        """Initialize the SqliteAdapter with a database path."""
         import sqlite3
         self._conn = sqlite3.connect(db_path)
 
     def execute(self, sql: str, params: tuple | None = None) -> None:
+        """Execute an SQL statement on the SQLite connection."""
         self._conn.execute(sql, params or ())
 
     def fetchall(self, sql: str, params: tuple | None = None) -> list[tuple]:
+        """Fetch all rows from an SQL query."""
         return self._conn.execute(sql, params or ()).fetchall()
 
     def fetchone(self, sql: str, params: tuple | None = None) -> tuple | None:
+        """Fetch a single row from an SQL query."""
         return self._conn.execute(sql, params or ()).fetchone()
 
     def commit(self) -> None:
+        """Commit the current transaction."""
         self._conn.commit()
 
     def rollback(self) -> None:
+        """Roll back the current transaction."""
         self._conn.rollback()
 
     def close(self) -> None:
+        """Close the database connection."""
         self._conn.close()
 
 
@@ -226,6 +254,7 @@ class MigrationManager:
         migrations_dir: str = "migrations",
         dialect: DbDialect = DbDialect.SQLITE,
     ) -> None:
+        """Initialize the MigrationManager."""
         self._db = db
         self._dir = migrations_dir
         self._dialect = dialect
@@ -339,6 +368,7 @@ class MigrationManager:
         return sorted(self._migrations.values(), key=lambda m: m.version)
 
     def is_up_to_date(self) -> bool:
+        """Check if all migrations have been applied."""
         return len(self.pending_migrations()) == 0
 
     # -------------------------------------------------------------------
@@ -584,6 +614,7 @@ def downgrade(db, dialect):
     # -------------------------------------------------------------------
 
     def on_migration(self, callback: Callable[[AppliedMigration], None]) -> None:
+        """Register a callback to invoke after each migration."""
         self._callbacks.append(callback)
 
     # -------------------------------------------------------------------
@@ -591,6 +622,7 @@ def downgrade(db, dialect):
     # -------------------------------------------------------------------
 
     def stats(self) -> dict[str, Any]:
+        """Return migration statistics."""
         return {
             "current_version": self.current_version(),
             "total_available": len(self._migrations),

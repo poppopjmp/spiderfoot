@@ -79,6 +79,7 @@ class RAGConfig:
 
     @classmethod
     def from_env(cls, env: dict[str, str] | None = None) -> RAGConfig:
+        """Create a RAGConfig from environment variables."""
         import os
         e = env or os.environ
         return cls(
@@ -109,6 +110,7 @@ class RetrievedChunk:
     rerank_score: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         d: dict[str, Any] = {
             "id": self.id, "text": self.text,
             "score": round(self.score, 4),
@@ -130,6 +132,7 @@ class RAGContext:
     token_estimate: int = 0
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "query": self.query,
             "num_chunks": len(self.chunks),
@@ -148,6 +151,7 @@ class RAGResponse:
     metrics: dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "query": self.query,
             "answer": self.answer,
@@ -170,6 +174,7 @@ class PipelineMetrics:
     chunks_reranked: int = 0
 
     def to_dict(self) -> dict[str, float]:
+        """Return a dictionary representation."""
         return {
             "retrieval_ms": round(self.retrieval_ms, 2),
             "rerank_ms": round(self.rerank_ms, 2),
@@ -195,6 +200,7 @@ class LLMBackend(ABC):
 
     @abstractmethod
     def model_name(self) -> str:
+        """Return the model name."""
         ...
 
 
@@ -204,6 +210,7 @@ class MockLLMBackend(LLMBackend):
     def generate(self, system: str, user: str,
                  temperature: float = 0.1,
                  max_tokens: int = 2048) -> tuple[str, dict[str, Any]]:
+        """Generate a deterministic mock response."""
         # Extract evidence count from user prompt for realistic output
         chunks_mentioned = user.count("[Evidence")
         answer = (
@@ -226,6 +233,7 @@ class MockLLMBackend(LLMBackend):
         return answer, meta
 
     def model_name(self) -> str:
+        """Return the model name."""
         return "mock"
 
 
@@ -235,6 +243,7 @@ class OpenAILLMBackend(LLMBackend):
     def __init__(self, model: str = "gpt-4o-mini",
                  api_key: str = "", api_base: str = "",
                  timeout: float = 60.0) -> None:
+        """Initialize the OpenAI LLM backend."""
         self._model = model
         self._api_key = api_key
         self._api_base = api_base or DEFAULT_OPENAI_BASE_URL
@@ -243,6 +252,7 @@ class OpenAILLMBackend(LLMBackend):
     def generate(self, system: str, user: str,
                  temperature: float = 0.1,
                  max_tokens: int = 2048) -> tuple[str, dict[str, Any]]:
+        """Generate a response via the OpenAI API."""
         import urllib.error
         import urllib.request
         url = f"{self._api_base}/chat/completions"
@@ -278,6 +288,7 @@ class OpenAILLMBackend(LLMBackend):
         return text, meta
 
     def model_name(self) -> str:
+        """Return the model name."""
         return self._model
 
 
@@ -286,6 +297,7 @@ class OllamaLLMBackend(LLMBackend):
 
     def __init__(self, model: str = "llama3.1:8b",
                  api_base: str = "", timeout: float = 120.0) -> None:
+        """Initialize the Ollama LLM backend."""
         self._model = model
         self._api_base = api_base or DEFAULT_OLLAMA_BASE_URL
         self._timeout = timeout
@@ -293,6 +305,7 @@ class OllamaLLMBackend(LLMBackend):
     def generate(self, system: str, user: str,
                  temperature: float = 0.1,
                  max_tokens: int = 2048) -> tuple[str, dict[str, Any]]:
+        """Generate a response via the Ollama API."""
         import urllib.error
         import urllib.request
         url = f"{self._api_base}/api/chat"
@@ -326,6 +339,7 @@ class OllamaLLMBackend(LLMBackend):
         return text, meta
 
     def model_name(self) -> str:
+        """Return the model name."""
         return self._model
 
 
@@ -422,6 +436,7 @@ class Retriever(ABC):
                  score_threshold: float = 0.3,
                  filter_metadata: dict[str, Any] | None = None
                  ) -> list[RetrievedChunk]:
+        """Retrieve relevant chunks for the given query."""
         ...
 
 
@@ -429,15 +444,18 @@ class MockRetriever(Retriever):
     """Mock retriever with pre-loaded chunks for testing."""
 
     def __init__(self, chunks: list[RetrievedChunk] | None = None) -> None:
+        """Initialize the MockRetriever with optional pre-loaded chunks."""
         self._chunks = chunks or []
 
     def add_chunk(self, chunk: RetrievedChunk) -> None:
+        """Add a chunk to the mock retriever."""
         self._chunks.append(chunk)
 
     def retrieve(self, query: str, top_k: int = 20,
                  score_threshold: float = 0.3,
                  filter_metadata: dict[str, Any] | None = None
                  ) -> list[RetrievedChunk]:
+        """Retrieve chunks matching the query from pre-loaded data."""
         result = []
         for c in self._chunks:
             if filter_metadata:
@@ -458,6 +476,7 @@ class Reranker(ABC):
     @abstractmethod
     def rerank(self, query: str, chunks: list[RetrievedChunk],
                top_k: int = 5) -> list[RetrievedChunk]:
+        """Rerank retrieved chunks by relevance to the query."""
         ...
 
 
@@ -466,6 +485,7 @@ class PassthroughReranker(Reranker):
 
     def rerank(self, query: str, chunks: list[RetrievedChunk],
                top_k: int = 5) -> list[RetrievedChunk]:
+        """Return chunks truncated to top_k without reranking."""
         return chunks[:top_k]
 
 
@@ -474,6 +494,7 @@ class MockReranker(Reranker):
 
     def rerank(self, query: str, chunks: list[RetrievedChunk],
                top_k: int = 5) -> list[RetrievedChunk]:
+        """Rerank chunks using simulated cross-encoder scoring."""
         # Simulate reranking by boosting chunks whose text contains query words
         query_words = set(query.lower().split())
         scored = []
@@ -510,6 +531,7 @@ class RAGPipeline:
         reranker: Reranker | None = None,
         llm: LLMBackend | None = None,
     ) -> None:
+        """Initialize the RAGPipeline."""
         self._config = config or RAGConfig()
         self._retriever = retriever or MockRetriever()
         self._reranker = reranker or (
@@ -615,14 +637,18 @@ class RAGPipeline:
 
     # Configuration
     def set_retriever(self, retriever: Retriever) -> None:
+        """Set the retriever for the pipeline."""
         self._retriever = retriever
 
     def set_reranker(self, reranker: Reranker) -> None:
+        """Set the reranker for the pipeline."""
         self._reranker = reranker
 
     def set_llm(self, llm: LLMBackend) -> None:
+        """Set the LLM backend for the pipeline."""
         self._llm = llm
 
     @property
     def config(self) -> RAGConfig:
+        """Return the pipeline configuration."""
         return self._config

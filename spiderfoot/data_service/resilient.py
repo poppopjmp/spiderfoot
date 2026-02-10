@@ -50,6 +50,7 @@ class DataServiceCircuitBreaker:
         recovery_timeout: float = 30.0,
         half_open_max: int = 1,
     ) -> None:
+        """Initialize the DataServiceCircuitBreaker."""
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.half_open_max = half_open_max
@@ -63,6 +64,7 @@ class DataServiceCircuitBreaker:
 
     @property
     def state(self) -> str:
+        """Return the current circuit breaker state."""
         if self._state == CircuitState.OPEN:
             if time.monotonic() - self._last_failure_time >= self.recovery_timeout:
                 self._state = CircuitState.HALF_OPEN
@@ -70,6 +72,7 @@ class DataServiceCircuitBreaker:
         return self._state
 
     def allow_request(self) -> bool:
+        """Check if a request is allowed through the circuit breaker."""
         state = self.state
         if state == CircuitState.CLOSED:
             return True
@@ -81,11 +84,13 @@ class DataServiceCircuitBreaker:
         return False
 
     def record_success(self) -> None:
+        """Record a successful call and reset the failure count."""
         self._failure_count = 0
         self._success_count += 1
         self._state = CircuitState.CLOSED
 
     def record_failure(self) -> None:
+        """Record a failed call and potentially open the circuit."""
         self._failure_count += 1
         self._last_failure_time = time.monotonic()
         if self._failure_count >= self.failure_threshold:
@@ -98,6 +103,7 @@ class DataServiceCircuitBreaker:
             )
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "state": self.state,
             "failure_count": self._failure_count,
@@ -125,6 +131,7 @@ class ResilientDataService(DataService):
         failure_threshold: int = 5,
         recovery_timeout: float = 30.0,
     ) -> None:
+        """Initialize the ResilientDataService."""
         super().__init__(primary.config)
         self._primary = primary
         self._fallback = fallback
@@ -189,20 +196,25 @@ class ResilientDataService(DataService):
     # ------------------------------------------------------------------
 
     def scan_instance_create(self, scan_id: str, scan_name: str, target: str) -> bool:
+        """Create a scan instance via the resilient proxy."""
         return self._call("scan_instance_create", scan_id, scan_name, target, default=False)
 
     def scan_instance_get(self, scan_id: str) -> dict[str, Any] | None:
+        """Retrieve a scan instance by ID."""
         return self._call("scan_instance_get", scan_id, default=None)
 
     def scan_instance_list(self) -> list[dict[str, Any]]:
+        """List all scan instances."""
         return self._call("scan_instance_list", default=[])
 
     def scan_instance_delete(self, scan_id: str) -> bool:
+        """Delete a scan instance by ID."""
         return self._call("scan_instance_delete", scan_id, default=False)
 
     def scan_status_set(self, scan_id: str, status: str,
                         started: int | None = None,
                         ended: int | None = None) -> bool:
+        """Set the status of a scan."""
         return self._call("scan_status_set", scan_id, status,
                           started=started, ended=ended, default=False)
 
@@ -210,6 +222,7 @@ class ResilientDataService(DataService):
                     module: str, data: str, source_event_hash: str = "ROOT",
                     confidence: int = 100, visibility: int = 100,
                     risk: int = 0) -> bool:
+        """Store an event for a scan."""
         return self._call(
             "event_store", scan_id, event_hash, event_type, module, data,
             source_event_hash=source_event_hash, confidence=confidence,
@@ -219,36 +232,44 @@ class ResilientDataService(DataService):
     def event_get_by_scan(self, scan_id: str,
                           event_type: str | None = None,
                           limit: int = 0) -> list[dict[str, Any]]:
+        """Retrieve events for a scan."""
         return self._call("event_get_by_scan", scan_id,
                           event_type=event_type, limit=limit, default=[])
 
     def event_get_unique(self, scan_id: str, event_type: str) -> list[str]:
+        """Retrieve unique event data for a scan and event type."""
         return self._call("event_get_unique", scan_id, event_type, default=[])
 
     def event_exists(self, scan_id: str, event_type: str,
                      data: str) -> bool:
+        """Check if an event exists for the given scan."""
         return self._call("event_exists", scan_id, event_type, data, default=False)
 
     def scan_log_event(self, scan_id: str, classification: str,
                        message: str, component: str | None = None) -> bool:
+        """Log an event for a scan."""
         return self._call("scan_log_event", scan_id, classification,
                           message, component=component, default=False)
 
     def scan_log_get(self, scan_id: str, limit: int = 0,
                      offset: int = 0,
                      log_type: str | None = None) -> list[dict[str, Any]]:
+        """Retrieve log entries for a scan."""
         return self._call("scan_log_get", scan_id, limit=limit,
                           offset=offset, log_type=log_type, default=[])
 
     def config_set(self, config_data: dict[str, str],
                    scope: str = "GLOBAL") -> bool:
+        """Store configuration data."""
         return self._call("config_set", config_data, scope=scope, default=False)
 
     def config_get(self, scope: str = "GLOBAL") -> dict[str, str]:
+        """Retrieve configuration data."""
         return self._call("config_get", scope=scope, default={})
 
     def scan_config_set(self, scan_id: str,
                         config_data: dict[str, str]) -> bool:
+        """Store scan-specific configuration."""
         return self._call("scan_config_set", scan_id, config_data, default=False)
 
     def correlation_store(self, correlation_id: str, scan_id: str,
@@ -256,6 +277,7 @@ class ResilientDataService(DataService):
                           rule_risk: str, rule_descr: str,
                           rule_logic: str,
                           event_hashes: list[str]) -> bool:
+        """Store a correlation result."""
         return self._call(
             "correlation_store", correlation_id, scan_id, title,
             rule_id, rule_name, rule_risk, rule_descr, rule_logic,
@@ -263,10 +285,13 @@ class ResilientDataService(DataService):
         )
 
     def correlation_get_by_scan(self, scan_id: str) -> list[dict[str, Any]]:
+        """Retrieve correlations for a scan."""
         return self._call("correlation_get_by_scan", scan_id, default=[])
 
     def scan_result_summary(self, scan_id: str) -> dict[str, int]:
+        """Return a summary of scan results."""
         return self._call("scan_result_summary", scan_id, default={})
 
     def event_types_list(self) -> list[dict[str, str]]:
+        """List all known event types."""
         return self._call("event_types_list", default=[])
