@@ -3,6 +3,31 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.144.0] — RC Cycle 66: Lazy Log Formatting
+
+### Changed
+- Converted 269 f-string log calls to lazy `%` formatting across 27 files
+- Avoids unnecessary string interpolation when log level is disabled (perf)
+
+## [5.143.0] — RC Cycle 65: PEP 257 Docstring Cleanup
+
+### Changed
+- Added trailing period to 95 single-line docstrings across 13 files (PEP 257)
+
+## [5.142.0] — RC Cycle 64: Centralize Log Format Strings
+
+### Added
+- `LOG_FORMAT_SECURITY`, `LOG_FORMAT_SECURITY_CONSOLE`, `LOG_FORMAT_NAMED` constants in `logging_config.py`
+
+### Changed
+- Wired constants into `security_logging.py` (3 inline formats removed) and `service_runner.py` (1)
+
+## [5.141.0] — RC Cycle 63: Logger Formatter Performance Fix
+
+### Fixed
+- `SpiderFootLogHandler.format()` — cached `Formatter` as instance attribute (was creating new one per call)
+- Wired `LOG_FORMAT_TEXT`/`LOG_FORMAT_DEBUG` constants into `logger.py` (replaced 3 inline format strings)
+
 ## [5.140.0] — RC Cycle 61: os.path → pathlib Conversion
 
 ### Changed
