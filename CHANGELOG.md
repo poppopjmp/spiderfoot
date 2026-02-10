@@ -3,6 +3,36 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.132.0] — RC Cycle 51: Database Type Annotations
+
+### Changed
+- Added return type annotations to 26 `SpiderFootDb` facade methods
+- Added `typing` imports (`Any`, `Dict`, `List`, `Optional`) to db package
+- Typed parameters: `scan_id: str`, `optMap: dict`, `sfEvent: Any`, etc.
+
+## [5.131.0] — RC Cycle 50: Scan Status Constants
+
+### Changed
+- Created 10 named `DB_STATUS_*` constants in `scan_state_map.py`
+- Replaced 60 bare magic strings (`"FINISHED"`, `"ABORTED"`, `"ERROR-FAILED"`,
+  `"ABORT-REQUESTED"`, `"RUNNING"`, `"STARTED"`, `"STARTING"`) across 9 files
+- Key files: scanner.py (31), api/routers/scan.py (7), core/scan.py (5),
+  scan_hooks.py (4), webui/scan.py (3), scan_metadata_service.py (3)
+
+## [5.130.0] — RC Cycle 49: Hardcoded URL/Default Constants
+
+### Changed
+- Added 5 new constants to `constants.py`: `DEFAULT_OPENAI_BASE_URL`,
+  `DEFAULT_OLLAMA_BASE_URL`, `DEFAULT_VLLM_BASE_URL`, `DEFAULT_DOH_URL`,
+  `DEFAULT_DATABASE_NAME`
+- Wired into llm_client.py, rag_pipeline.py, embedding_service.py,
+  dns_service.py, data_service/factory.py, webui/routes.py
+
+## [5.129.0] — RC Cycle 48: Missing Package Init
+
+### Added
+- `spiderfoot/scan_service/__init__.py` with docstring and `__all__`
+
 ## [5.128.0] — RC Cycle 46: Module-Level Docstrings
 
 ### Added
