@@ -3,6 +3,23 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.147.0] — RC Cycle 70: Plugin Type Hints
+
+### Changed
+- Added parameter type hints to 10 public methods in `plugin.py` (sendEvent, setup, setTarget, setDbh, registerListener, setOutputFilter, notifyListeners, handleEvent, poolExecute, setSharedThreadPool)
+- Fixed mutable default argument: `setup(userOpts={})` → `setup(userOpts=None)`
+- Added `Callable` import to `typing` imports
+
+## [5.146.0] — RC Cycle 69: Excess Blank Lines
+
+### Changed
+- Reduced 3+ consecutive blank lines to PEP 8 maximum of 2 in `security_middleware.py`, `db/__init__.py`, `api/routers/scan.py`
+
+## [5.145.0] — RC Cycle 68: Trailing Whitespace Cleanup
+
+### Changed
+- Stripped trailing whitespace from 3,016 lines across 58 files
+
 ## [5.144.0] — RC Cycle 66: Lazy Log Formatting
 
 ### Changed
