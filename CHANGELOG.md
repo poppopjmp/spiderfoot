@@ -3,6 +3,53 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.183.0] — RC Cycle 116: Final Typing Modernization (26 files)
+
+### Changed
+- Added `from __future__ import annotations` to 26 remaining files across scripts/, spiderfoot/, test/, and update_version.py
+- Modernized all old typing generics: `Dict` → `dict`, `List` → `list`, `Tuple` → `tuple`, `Set` → `set`, `Optional[X]` → `X | None`, `Union[X, Y]` → `X | Y`
+- Cleaned unused typing imports with AST-based script
+- Zero old typing generic imports remain in entire codebase
+
+## [5.182.0] — RC Cycle 115: Modernize Old Typing in Annotated Files (8 files)
+
+### Changed
+- Replaced `Dict` → `dict` in annotations across 4 module files (sfp_4chan, sfp_advanced_correlation, sfp_blockchain_analytics, sfp_performance_optimizer)
+- Replaced `List` → `list` in annotations across 2 script files (migrate_module, validate_modules)
+- Replaced `Deque` → `deque` in annotations in retry.py and webhook_dispatcher.py
+- Removed unused Dict, List, Deque symbols from typing imports; 2 files no longer need typing import at all
+
+## [5.181.0] — RC Cycle 114: Remove Unused Old Typing Imports (80 files)
+
+### Added
+- `scripts/clean_typing_imports.py`: AST-based cleanup tool that correctly distinguishes real code/annotation usage from docstring/comment mentions
+
+### Changed
+- Removed unused old typing symbols (Dict, List, Optional, Tuple, Set, FrozenSet, Type, Union, Deque) from `from typing import` lines in 80 files
+- 25 files no longer need typing import at all; 55 files retain only actively-used symbols like `Any`, `Callable`
+
+## [5.180.0] — RC Cycle 113: Fix All 9 Pre-existing Syntax Errors
+
+### Fixed
+- Fixed literal `\n` characters in import line in auth.py — split into proper separate imports
+- Fixed 7 files with misplaced `scan_state_map` import blocks at column 0 inside indented code (event_relay, plugin, scan_hooks, scan_metadata_service, websocket, scan, webui/scan)
+- Fixed backslash-escaped quotes in webui/performance.py double-quoted string
+- All 9 files verified to compile successfully with py_compile
+
+## [5.179.0] — RC Cycle 112: Return Type Hints (sfcli, sfwebui, services)
+
+### Changed
+- Added return type hints to 35 methods in sfcli.py (all do_*/complete_* commands, request, cmdloop, etc.)
+- Added return type hints to 14 methods in sfwebui.py (configuration, setup, mount, error page handlers)
+- Added return type hints to data_service (local, http_client, grpc_client) and dns_service methods
+
+## [5.178.0] — RC Cycle 111: Return Type Hints (core infrastructure)
+
+### Changed
+- Added return type hints to ~50 methods across core infrastructure: db_utils (12), correlation modules (13), API dependencies (2), db close/core (6), performance (10), security (4), API middleware/routing (8), plugin (1)
+- Added `from __future__ import annotations` to db_utils.py, result_aggregator.py, api/main.py
+- Added `from collections.abc import Callable` to security.py and api_security.py
+
 ## [5.177.0] — RC Cycle 109: Complete Typing Modernization
 
 ### Changed
