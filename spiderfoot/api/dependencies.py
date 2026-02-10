@@ -17,7 +17,7 @@ from spiderfoot.helpers import SpiderFootHelpers
 from spiderfoot.app_config import AppConfig
 import multiprocessing as mp
 import logging
-from typing import Any
+from typing import Any, Generator
 
 security = HTTPBearer(auto_error=False)
 
@@ -299,7 +299,7 @@ async def optional_auth(credentials: HTTPAuthorizationCredentials = Depends(secu
 # Repository Depends providers  (Cycle 23)
 # ------------------------------------------------------------------
 
-def get_scan_repository():
+def get_scan_repository() -> Generator:
     """FastAPI ``Depends`` provider for ``ScanRepository``.
 
     Creates a fresh DB handle per request and yields a repository.
@@ -320,7 +320,7 @@ def get_scan_repository():
         repo.close()
 
 
-def get_event_repository():
+def get_event_repository() -> Generator:
     """FastAPI ``Depends`` provider for ``EventRepository``."""
     from spiderfoot.db.repositories import (
         get_repository_factory,
@@ -337,7 +337,7 @@ def get_event_repository():
         repo.close()
 
 
-def get_config_repository():
+def get_config_repository() -> Generator:
     """FastAPI ``Depends`` provider for ``ConfigRepository``."""
     from spiderfoot.db.repositories import (
         get_repository_factory,
@@ -358,7 +358,7 @@ def get_config_repository():
 # Correlation Service provider  (Cycle 26)
 # ------------------------------------------------------------------
 
-def get_correlation_svc():
+def get_correlation_svc() -> Any:
     """FastAPI ``Depends`` provider for ``CorrelationService``.
 
     Returns the module-level singleton.  The service is lazily
@@ -375,7 +375,7 @@ def get_correlation_svc():
 # Scan Service provider  (Cycle 27)
 # ------------------------------------------------------------------
 
-def get_scan_service():
+def get_scan_service() -> Generator:
     """FastAPI ``Depends`` provider for ``ScanService``.
 
     Creates a fresh DB handle via the repository factory, wraps it in
@@ -404,7 +404,7 @@ def get_scan_service():
 # Visualization Service provider  (Cycle 28)
 # ------------------------------------------------------------------
 
-def get_visualization_service():
+def get_visualization_service() -> Generator:
     """FastAPI ``Depends`` provider for ``VisualizationService``.
 
     Composes ``ScanRepository`` (for existence checks) and a raw

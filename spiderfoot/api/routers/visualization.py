@@ -34,7 +34,7 @@ async def get_multi_scan_graph_data(
     filter_type: str | None = Query(None, description="Filter by event type"),
     include_internal: bool = Query(False, description="Include internal events"),
     svc=Depends(get_visualization_service),
-):
+) -> Response:
     """Generate graph visualization data for multiple scans."""
     try:
         scan_list = [s.strip() for s in scan_ids.split(",") if s.strip()]
@@ -83,7 +83,7 @@ async def get_scan_graph_data(
     filter_type: str | None = Query(None, description="Filter by event type"),
     include_internal: bool = Query(False, description="Include internal events"),
     svc=Depends(get_visualization_service),
-):
+) -> Response:
     """Generate graph visualization data for a scan."""
     try:
         _info, results = svc.get_graph_data(scan_id, event_type=filter_type)
@@ -122,7 +122,7 @@ async def get_scan_summary_data(
     api_key: str = optional_auth_dep,
     group_by: str = Query("type", description="Group results by: type, module, risk"),
     svc=Depends(get_visualization_service),
-):
+) -> dict:
     """Get statistical summary data for visualization."""
     try:
         return svc.get_summary_data(scan_id, group_by=group_by)
@@ -143,7 +143,7 @@ async def get_scan_timeline_data(
     interval: str = Query("hour", description="Time interval: hour, day, week"),
     event_type: str | None = Query(None, description="Filter by event type"),
     svc=Depends(get_visualization_service),
-):
+) -> dict:
     """Get timeline data for scan events."""
     try:
         return svc.get_timeline_data(
@@ -166,7 +166,7 @@ async def get_scan_heatmap_data(
     dimension_x: str = Query("module", description="X-axis dimension: module, type, risk"),
     dimension_y: str = Query("type", description="Y-axis dimension: module, type, risk"),
     svc=Depends(get_visualization_service),
-):
+) -> dict:
     """Get heatmap data for scan results."""
     try:
         return svc.get_heatmap_data(

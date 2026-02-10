@@ -129,7 +129,7 @@ else:
         state: str | None = Query(None, description="Filter by state"),
         task_type: str | None = Query(None, description="Filter by task type"),
         limit: int = Query(50, ge=1, le=500),
-    ):
+    ) -> dict:
         mgr = get_task_manager()
         st = _parse_task_state(state) if state else None
         tt = _parse_task_type(task_type) if task_type else None
@@ -146,7 +146,7 @@ else:
         summary="List active tasks",
         description="Shorthand for listing queued and running tasks.",
     )
-    async def list_active_tasks():
+    async def list_active_tasks() -> dict:
         mgr = get_task_manager()
         queued = mgr.list_tasks(state=TaskState.QUEUED, limit=100)
         running = mgr.list_tasks(state=TaskState.RUNNING, limit=100)
@@ -164,7 +164,7 @@ else:
         summary="Get task status",
         description="Retrieve the current status and result of a specific task.",
     )
-    async def get_task(task_id: str):
+    async def get_task(task_id: str) -> dict:
         mgr = get_task_manager()
         record = mgr.get(task_id)
         if record is None:
@@ -184,7 +184,7 @@ else:
             "automatically registered with the TaskManager."
         ),
     )
-    async def submit_task(body: TaskSubmitRequest):
+    async def submit_task(body: TaskSubmitRequest) -> dict:
         mgr = get_task_manager()
         tt = _parse_task_type(body.task_type)
 
@@ -205,7 +205,7 @@ else:
         summary="Clear completed tasks",
         description="Remove all terminal (completed/failed/cancelled) tasks from history.",
     )
-    async def clear_completed():
+    async def clear_completed() -> dict:
         mgr = get_task_manager()
         count = mgr.clear_completed()
         return {"removed": count}
@@ -215,7 +215,7 @@ else:
         summary="Cancel a task",
         description="Attempt to cancel a queued or running task.",
     )
-    async def cancel_task(task_id: str):
+    async def cancel_task(task_id: str) -> dict:
         mgr = get_task_manager()
         record = mgr.get(task_id)
         if record is None:

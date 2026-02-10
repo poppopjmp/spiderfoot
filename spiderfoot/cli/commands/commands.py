@@ -8,22 +8,24 @@ import importlib
 import pkgutil
 import os
 import sys
+from typing import Any
+
 
 class CommandRegistry:
     """Registry for CLI command handlers."""
     def __init__(self) -> None:
         self.commands = {}
 
-    def register(self, name, func, help_text=None):
+    def register(self, name, func, help_text=None) -> None:
         self.commands[name] = {'func': func, 'help': help_text}
 
-    def get(self, name):
+    def get(self, name) -> dict | None:
         return self.commands.get(name)
 
-    def all_commands(self):
+    def all_commands(self) -> Any:
         return self.commands.keys()
 
-    def help(self, name):
+    def help(self, name) -> str:
         cmd = self.get(name)
         if cmd:
             return cmd.get('help', '')
@@ -35,10 +37,10 @@ class BaseCommand:
     """
     def __init__(self, cli) -> None:
         self.cli = cli
-    def run(self, *args, **kwargs):
+    def run(self, *args, **kwargs) -> None:
         raise NotImplementedError("Command must implement run()")
 
-def load_all_commands(registry, commands_pkg="spiderfoot.cli.commands"):
+def load_all_commands(registry, commands_pkg="spiderfoot.cli.commands") -> None:
     """
     Dynamically import and register all command modules in the commands package.
     Each command module must define a 'register' function.

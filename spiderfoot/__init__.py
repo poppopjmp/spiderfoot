@@ -53,7 +53,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-def get_modules_path():
+def get_modules_path() -> str:
     """Get the correct path to the modules directory."""
     # Get script directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -88,7 +88,7 @@ from .helpers import SpiderFootHelpers
 class SpiderFootModuleFinder:
     """Custom module finder to fix SpiderFoot module imports."""
 
-    def find_spec(self, name, path, target=None):
+    def find_spec(self, name, path, target=None) -> None:
         # Only intercept sfp_ module imports
         if name.startswith('modules.sfp_') or name.startswith('sfp_'):
             return None  # Let default finder handle it, we'll fix in exec_module
@@ -100,10 +100,10 @@ class SpiderFootModuleLoader:
     def __init__(self, spec) -> None:
         self.spec = spec
 
-    def create_module(self, spec):
+    def create_module(self, spec) -> None:
         return None  # Use default module creation
 
-    def exec_module(self, module):
+    def exec_module(self, module) -> None:
         # Execute the module normally first
         spec = importlib.util.find_spec(module.__name__)
         if spec and spec.loader:
@@ -121,7 +121,7 @@ if not any(isinstance(finder, SpiderFootModuleFinder) for finder in sys.meta_pat
 def fetchUrl(self, url, fatal=False, cookies=None, timeout=30,
              useragent="SpiderFoot", headers=None, noLog=False,
              postData=None, dontMaskPassword=False, sizeLimit=None,
-             headOnly=False, verify=True):
+             headOnly=False, verify=True) -> None:
     # Check for invalid URL types
     if not isinstance(url, str):
         return None

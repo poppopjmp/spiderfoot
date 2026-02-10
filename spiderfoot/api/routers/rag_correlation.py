@@ -231,7 +231,7 @@ def _get_multidim():
 @router.post("/rag/index", response_model=IndexResponse,
              summary="Index OSINT events into vector store")
 async def index_events(req: IndexRequest,
-                       _auth: str = optional_auth_dep):
+                       _auth: str = optional_auth_dep) -> IndexResponse:
     """Embed and store OSINT events as vectors in Qdrant."""
     engine = _get_vector_engine()
     t0 = time.perf_counter()
@@ -268,7 +268,7 @@ async def index_events(req: IndexRequest,
 @router.post("/rag/correlate", response_model=CorrelateResponse,
              summary="Run vector correlation query")
 async def correlate(req: CorrelateRequest,
-                    _auth: str = optional_auth_dep):
+                    _auth: str = optional_auth_dep) -> CorrelateResponse:
     """Execute a correlation query using the chosen strategy."""
     engine = _get_vector_engine()
     t0 = time.perf_counter()
@@ -321,7 +321,7 @@ async def correlate(req: CorrelateRequest,
 @router.post("/rag/multidim", response_model=MultiDimResponse,
              summary="Run multi-dimensional correlation analysis")
 async def multidim_analyze(req: MultiDimRequest,
-                           _auth: str = optional_auth_dep):
+                           _auth: str = optional_auth_dep) -> MultiDimResponse:
     """Analyze events across multiple OSINT dimensions."""
     analyzer = _get_multidim()
     t0 = time.perf_counter()
@@ -393,7 +393,7 @@ async def multidim_analyze(req: MultiDimRequest,
 @router.post("/rag/search", response_model=SearchResponse,
              summary="Raw semantic search in vector store")
 async def semantic_search(req: SearchRequest,
-                          _auth: str = optional_auth_dep):
+                          _auth: str = optional_auth_dep) -> SearchResponse:
     """Embed query text and retrieve nearest neighbours from Qdrant."""
     engine = _get_vector_engine()
     t0 = time.perf_counter()
@@ -446,7 +446,7 @@ async def semantic_search(req: SearchRequest,
 
 @router.get("/rag/stats", response_model=StatsResponse,
             summary="Get RAG correlation engine statistics")
-async def stats(_auth: str = optional_auth_dep):
+async def stats(_auth: str = optional_auth_dep) -> StatsResponse:
     """Return current engine status and vector store stats."""
     qdrant_ok = False
     emb_ok = False
@@ -494,7 +494,7 @@ async def delete_collection(
     collection: str = Query("osint_events",
                             description="Collection to delete"),
     _auth: str = optional_auth_dep,
-):
+) -> dict:
     """Delete and re-create the vector collection."""
     try:
         from spiderfoot.qdrant_client import get_qdrant_client

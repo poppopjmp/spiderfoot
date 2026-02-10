@@ -40,11 +40,11 @@ class PerformanceProfiler:
 
     def profile_function(self, func_name: str = None) -> Callable:
         """Decorator to profile function execution."""
-        def decorator(func):
+        def decorator(func) -> Callable:
             name = func_name or f"{func.__module__}.{func.__name__}"
 
             @wraps(func)
-            def wrapper(*args, **kwargs):
+            def wrapper(*args, **kwargs) -> Any:
                 start_time = time.perf_counter()
                 start_memory = psutil.Process().memory_info().rss
 
@@ -124,9 +124,9 @@ class CacheManager:
 
     def cache_result(self, ttl: int = DEFAULT_TTL_ONE_HOUR, use_redis: bool = False) -> Callable:
         """Decorator for caching function results."""
-        def decorator(func):
+        def decorator(func) -> Callable:
             @wraps(func)
-            def wrapper(*args, **kwargs):
+            def wrapper(*args, **kwargs) -> Any:
                 # Create cache key
                 cache_key = self._create_cache_key(func.__name__, args, kwargs)
 
@@ -460,7 +460,7 @@ class MemoryManager:
 # Performance optimization decorator
 def optimize_performance(cache_ttl: int = DEFAULT_TTL_ONE_HOUR, profile: bool = True, use_async: bool = False) -> Callable:
     """Comprehensive performance optimization decorator."""
-    def decorator(func):
+    def decorator(func) -> Callable:
         # Apply profiling
         if profile:
             profiler = PerformanceProfiler()
@@ -471,7 +471,7 @@ def optimize_performance(cache_ttl: int = DEFAULT_TTL_ONE_HOUR, profile: bool = 
         func = cache_manager.cache_result(ttl=cache_ttl)(func)
 
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Any:
             # Resource monitoring
             resource_monitor = ResourceMonitor()
             if resource_monitor.should_throttle():

@@ -416,7 +416,7 @@ class WebSocketHub:
 # FastAPI WebSocket Router
 # ---------------------------------------------------------------------------
 
-def create_ws_router():
+def create_ws_router() -> Any:
     """Create a FastAPI router for WebSocket connections.
 
     Returns None if FastAPI is not available (graceful degradation).
@@ -431,10 +431,10 @@ def create_ws_router():
     hub = WebSocketHub.get_instance()
 
     @router.websocket("/ws")
-    async def websocket_endpoint(websocket: WebSocket):
+    async def websocket_endpoint(websocket: WebSocket) -> None:
         await websocket.accept()
 
-        async def send(data: str):
+        async def send(data: str) -> None:
             await websocket.send_text(data)
 
         client = await hub.connect(send)
@@ -454,11 +454,11 @@ def create_ws_router():
             await hub.disconnect(client.client_id)
 
     @router.websocket("/ws/scan/{scan_id}")
-    async def scan_websocket(websocket: WebSocket, scan_id: str):
+    async def scan_websocket(websocket: WebSocket, scan_id: str) -> None:
         """Auto-subscribe WebSocket to a specific scan."""
         await websocket.accept()
 
-        async def send(data: str):
+        async def send(data: str) -> None:
             await websocket.send_text(data)
 
         client = await hub.connect(send)

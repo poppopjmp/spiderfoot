@@ -6,7 +6,7 @@ import shlex
 import json
 
 
-def correlations_command(cli, line):
+def correlations_command(cli, line) -> None:
     """Show correlation results from a scan. Usage: correlations <scan_id> [options]
 
     Options:
@@ -96,7 +96,7 @@ def correlations_command(cli, line):
         cli.edprint(f"Failed to parse correlations: {e}")
 
 
-def correlation_rules_command(cli, line):
+def correlation_rules_command(cli, line) -> None:
     """List available correlation rules. Usage: correlation_rules [options]
 
     Options:
@@ -170,7 +170,7 @@ def correlation_rules_command(cli, line):
         cli.edprint(f"Failed to parse correlation rules: {e}")
 
 
-def correlation_summary_command(cli, line):
+def correlation_summary_command(cli, line) -> None:
     """Show correlation summary for a scan. Usage: correlation_summary <scan_id>."""
     args = shlex.split(line)
     if not args:
@@ -205,7 +205,7 @@ def correlation_summary_command(cli, line):
         cli.edprint(f"Failed to parse scan status: {e}")
 
 
-def register(registry):
+def register(registry) -> None:
     """Register all correlation commands."""
     registry.register("correlations", correlations_command,
                      help_text="Show correlation results from a scan")

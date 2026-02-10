@@ -104,7 +104,7 @@ class Alert:
     context: dict = field(default_factory=dict)
     acknowledged: bool = False
 
-    def acknowledge(self):
+    def acknowledge(self) -> None:
         self.acknowledged = True
 
     def to_dict(self) -> dict:
@@ -206,7 +206,7 @@ class AlertRule:
     def alert_count(self) -> int:
         return self._alert_count
 
-    def reset(self):
+    def reset(self) -> None:
         self._alert_count = 0
         self._last_alert_time = 0.0
 
@@ -289,15 +289,15 @@ class AlertEngine:
     def get_unacknowledged(self) -> list[Alert]:
         return [a for a in self._alerts if not a.acknowledged]
 
-    def acknowledge_all(self):
+    def acknowledge_all(self) -> None:
         for a in self._alerts:
             a.acknowledge()
 
-    def clear_alerts(self):
+    def clear_alerts(self) -> None:
         with self._lock:
             self._alerts.clear()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset all rules and clear alerts."""
         with self._lock:
             for rule in self._rules.values():

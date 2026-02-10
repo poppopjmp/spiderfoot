@@ -12,7 +12,7 @@ import hmac
 import hashlib
 import secrets
 import jwt
-from typing import Any
+from typing import Any, Callable
 from fastapi import HTTPException, Depends, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
@@ -420,7 +420,7 @@ def get_current_user(
     return claims
 
 
-def require_scopes(required_scopes: list[str]):
+def require_scopes(required_scopes: list[str]) -> Callable:
     """Dependency to require specific scopes.
 
     Args:
@@ -477,17 +477,17 @@ def require_api_key(
 
 
 # Convenience dependencies for common scopes
-def require_read_access(current_user: dict[str, Any] = Depends(require_scopes(['scan:read']))):
+def require_read_access(current_user: dict[str, Any] = Depends(require_scopes(['scan:read']))) -> dict[str, Any]:
     """Require read access."""
     return current_user
 
 
-def require_write_access(current_user: dict[str, Any] = Depends(require_scopes(['scan:write']))):
+def require_write_access(current_user: dict[str, Any] = Depends(require_scopes(['scan:write']))) -> dict[str, Any]:
     """Require write access."""
     return current_user
 
 
-def require_admin_access(current_user: dict[str, Any] = Depends(require_scopes(['system:admin']))):
+def require_admin_access(current_user: dict[str, Any] = Depends(require_scopes(['system:admin']))) -> dict[str, Any]:
     """Require admin access."""
     return current_user
 

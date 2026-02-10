@@ -8,7 +8,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
-def batch_scan_command(cli, line):
+def batch_scan_command(cli, line) -> None:
     """Run multiple scans in batch. Usage: batch_scan <targets_file> [options]
 
     Options:
@@ -189,7 +189,7 @@ def _wait_for_scans_completion(cli, scan_ids):
     cli.dprint("All batch scans completed", plain=True)
 
 
-def batch_export_command(cli, line):
+def batch_export_command(cli, line) -> None:
     """Export multiple scans in batch. Usage: batch_export <scan_ids> [options]
 
     Options:
@@ -316,7 +316,7 @@ def _create_export_archive(cli, output_dir, scan_ids, export_format):
         cli.edprint(f"Failed to create archive: {e}")
 
 
-def batch_delete_command(cli, line):
+def batch_delete_command(cli, line) -> None:
     """Delete multiple scans in batch. Usage: batch_delete <scan_ids> [options]
 
     Options:
@@ -435,7 +435,7 @@ def _filter_scans_for_deletion(cli, scan_ids, status_filter, older_than):
     return filtered_ids
 
 
-def register(registry):
+def register(registry) -> None:
     """Register all batch operation commands."""
     registry.register("batch_scan", batch_scan_command,
                      help_text="Run multiple scans in batch")

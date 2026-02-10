@@ -347,10 +347,10 @@ class RetryContext:
     def __init__(self, config: RetryConfig | None = None) -> None:
         self._executor = RetryExecutor(config)
 
-    def __enter__(self):
+    def __enter__(self) -> RetryContext:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         return False
 
     def execute(self, func: Callable, *args, **kwargs) -> Any:
@@ -376,7 +376,7 @@ def retry(max_attempts: int = 3, *,
           backoff_base: float = 1.0,
           backoff_max: float = 60.0,
           retryable_exceptions: list[type[Exception]] | None = None,
-          on_retry: Callable | None = None):
+          on_retry: Callable | None = None) -> Callable:
     """Decorator to add retry logic to a function.
 
     Usage::
@@ -396,9 +396,9 @@ def retry(max_attempts: int = 3, *,
     )
     executor = RetryExecutor(config)
 
-    def decorator(func):
+    def decorator(func) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Any:
             result = executor.execute(func, *args, **kwargs)
             if result.success:
                 return result.result
