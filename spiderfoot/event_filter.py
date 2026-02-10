@@ -42,6 +42,7 @@ class FilterStats:
     errors: int = 0
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "name": self.name,
             "evaluated": self.evaluated,
@@ -56,6 +57,7 @@ class EventFilter(ABC):
     """Base class for event filters."""
 
     def __init__(self, name: str = "", enabled: bool = True) -> None:
+        """Initialize the EventFilter."""
         self.name = name or self.__class__.__name__
         self._enabled = enabled
         self._stats = FilterStats(name=self.name)
@@ -67,16 +69,20 @@ class EventFilter(ABC):
 
     @property
     def stats(self) -> FilterStats:
+        """Return the filter statistics."""
         return self._stats
 
     @property
     def is_enabled(self) -> bool:
+        """Return whether the filter is enabled."""
         return self._enabled
 
     def enable(self) -> None:
+        """Enable this filter."""
         self._enabled = True
 
     def disable(self) -> None:
+        """Disable this filter."""
         self._enabled = False
 
 
@@ -89,11 +95,13 @@ class TypeFilter(EventFilter):
         denied_types: set[str] | None = None,
         name: str = "type_filter",
     ) -> None:
+        """Initialize the TypeFilter."""
         super().__init__(name=name)
         self.allowed_types = allowed_types
         self.denied_types = denied_types or set()
 
     def evaluate(self, event_type: str, data: str, **kwargs) -> FilterResult:
+        """Evaluate whether an event type is allowed."""
         if event_type in self.denied_types:
             return FilterResult.BLOCK
         if self.allowed_types is not None and event_type not in self.allowed_types:
@@ -110,11 +118,13 @@ class PatternFilter(EventFilter):
         action: FilterAction = FilterAction.DENY,
         name: str = "pattern_filter",
     ) -> None:
+        """Initialize the PatternFilter."""
         super().__init__(name=name)
         self.pattern = re.compile(pattern, re.IGNORECASE)
         self.action = action
 
     def evaluate(self, event_type: str, data: str, **kwargs) -> FilterResult:
+        """Evaluate whether event data matches the pattern."""
         matches = bool(self.pattern.search(data))
         if matches:
             return FilterResult.BLOCK if self.action == FilterAction.DENY else FilterResult.PASS
@@ -130,11 +140,13 @@ class RiskFilter(EventFilter):
         max_risk: int = 100,
         name: str = "risk_filter",
     ) -> None:
+        """Initialize the RiskFilter."""
         super().__init__(name=name)
         self.min_risk = min_risk
         self.max_risk = max_risk
 
     def evaluate(self, event_type: str, data: str, **kwargs) -> FilterResult:
+        """Evaluate whether the event risk level is within range."""
         risk = kwargs.get("risk", 0)
         if risk < self.min_risk or risk > self.max_risk:
             return FilterResult.BLOCK
@@ -149,10 +161,12 @@ class PredicateFilter(EventFilter):
         predicate: Callable[..., bool],
         name: str = "predicate_filter",
     ) -> None:
+        """Initialize the PredicateFilter."""
         super().__init__(name=name)
         self._predicate = predicate
 
     def evaluate(self, event_type: str, data: str, **kwargs) -> FilterResult:
+        """Evaluate using the custom predicate function."""
         try:
             if self._predicate(event_type, data, **kwargs):
                 return FilterResult.PASS
@@ -171,11 +185,13 @@ class ModuleFilter(EventFilter):
         denied_modules: set[str] | None = None,
         name: str = "module_filter",
     ) -> None:
+        """Initialize the ModuleFilter."""
         super().__init__(name=name)
         self.allowed_modules = allowed_modules
         self.denied_modules = denied_modules or set()
 
     def evaluate(self, event_type: str, data: str, **kwargs) -> FilterResult:
+        """Evaluate whether the source module is allowed."""
         module = kwargs.get("module", "")
         if module in self.denied_modules:
             return FilterResult.BLOCK
@@ -202,6 +218,7 @@ class EventFilterChain:
     """
 
     def __init__(self, mode: str = "all_pass", name: str = "default") -> None:
+        """Initialize the EventFilterChain."""
         self.mode = mode  # "all_pass" or "any_pass"
         self.name = name
         self._filters: list[EventFilter] = []
@@ -279,6 +296,7 @@ class EventFilterChain:
 
     @property
     def filter_count(self) -> int:
+        """Return the number of filters in the chain."""
         with self._lock:
             return len(self._filters)
 
@@ -296,6 +314,7 @@ class EventFilterChain:
             }
 
     def get_filter_names(self) -> list[str]:
+        """Return the names of all filters in the chain."""
         with self._lock:
             return [f.name for f in self._filters]
 
@@ -309,4 +328,5 @@ class EventFilterChain:
                 f._stats = FilterStats(name=f.name)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return self.get_stats()

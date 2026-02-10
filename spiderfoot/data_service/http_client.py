@@ -35,6 +35,7 @@ class HttpDataService(DataService):
     """
 
     def __init__(self, config: DataServiceConfig | None = None, **kwargs) -> None:
+        """Initialize the HttpDataService."""
         super().__init__(config)
         self._base_url = self.config.api_url.rstrip("/")
         self._api_key = self.config.api_key
@@ -150,6 +151,7 @@ class HttpDataService(DataService):
     def scan_instance_create(
         self, scan_id: str, scan_name: str, target: str
     ) -> bool:
+        """Create a new scan instance via HTTP."""
         try:
             self._post(
                 "/scans",
@@ -165,6 +167,7 @@ class HttpDataService(DataService):
             return False
 
     def scan_instance_get(self, scan_id: str) -> dict[str, Any] | None:
+        """Retrieve a scan instance by ID via HTTP."""
         try:
             data = self._get(f"/scans/{scan_id}")
             return data.get("scan") or data
@@ -173,6 +176,7 @@ class HttpDataService(DataService):
             return None
 
     def scan_instance_list(self) -> list[dict[str, Any]]:
+        """List all scan instances via HTTP."""
         try:
             data = self._get("/scans")
             return data.get("scans", data) if isinstance(data, dict) else data
@@ -181,6 +185,7 @@ class HttpDataService(DataService):
             return []
 
     def scan_instance_delete(self, scan_id: str) -> bool:
+        """Delete a scan instance via HTTP."""
         try:
             self._delete(f"/scans/{scan_id}")
             return True
@@ -195,6 +200,7 @@ class HttpDataService(DataService):
         started: int | None = None,
         ended: int | None = None,
     ) -> bool:
+        """Set the status of a scan instance via HTTP."""
         try:
             self._patch(
                 f"/scans/{scan_id}/metadata",
@@ -225,6 +231,7 @@ class HttpDataService(DataService):
         visibility: int = 100,
         risk: int = 0,
     ) -> bool:
+        """Store a scan event via HTTP."""
         try:
             self._post(
                 f"/scans/{scan_id}/events",
@@ -250,6 +257,7 @@ class HttpDataService(DataService):
         event_type: str | None = None,
         limit: int = 0,
     ) -> list[dict[str, Any]]:
+        """Retrieve events for a scan via HTTP."""
         try:
             params: dict[str, Any] = {}
             if event_type:
@@ -267,6 +275,7 @@ class HttpDataService(DataService):
         scan_id: str,
         event_type: str,
     ) -> list[str]:
+        """Retrieve unique event values for a scan via HTTP."""
         try:
             data = self._get(
                 f"/scans/{scan_id}/events/unique",
@@ -283,6 +292,7 @@ class HttpDataService(DataService):
         event_type: str,
         data: str,
     ) -> bool:
+        """Check if an event exists for a scan via HTTP."""
         try:
             resp = self._get(
                 f"/scans/{scan_id}/events/exists",
@@ -303,6 +313,7 @@ class HttpDataService(DataService):
         message: str,
         component: str | None = None,
     ) -> bool:
+        """Log a scan event via HTTP."""
         try:
             self._post(
                 f"/scans/{scan_id}/logs",
@@ -324,6 +335,7 @@ class HttpDataService(DataService):
         offset: int = 0,
         log_type: str | None = None,
     ) -> list[dict[str, Any]]:
+        """Retrieve scan log entries via HTTP."""
         try:
             params: dict[str, Any] = {}
             if limit > 0:
@@ -345,6 +357,7 @@ class HttpDataService(DataService):
     def config_set(
         self, config_data: dict[str, str], scope: str = "GLOBAL"
     ) -> bool:
+        """Set configuration values via HTTP."""
         try:
             self._post(
                 "/config",
@@ -356,6 +369,7 @@ class HttpDataService(DataService):
             return False
 
     def config_get(self, scope: str = "GLOBAL") -> dict[str, str]:
+        """Retrieve configuration values via HTTP."""
         try:
             data = self._get("/config", params={"scope": scope})
             return data.get("config", data) if isinstance(data, dict) else data
@@ -366,6 +380,7 @@ class HttpDataService(DataService):
     def scan_config_set(
         self, scan_id: str, config_data: dict[str, str]
     ) -> bool:
+        """Set scan-specific configuration via HTTP."""
         try:
             self._post(
                 f"/scans/{scan_id}/config",
@@ -392,6 +407,7 @@ class HttpDataService(DataService):
         rule_logic: str,
         event_hashes: list[str],
     ) -> bool:
+        """Store a correlation result via HTTP."""
         try:
             self._post(
                 f"/scans/{scan_id}/correlations",
@@ -414,6 +430,7 @@ class HttpDataService(DataService):
     def correlation_get_by_scan(
         self, scan_id: str
     ) -> list[dict[str, Any]]:
+        """Retrieve correlation results for a scan via HTTP."""
         try:
             data = self._get(f"/scans/{scan_id}/correlations")
             return data.get("correlations", data) if isinstance(data, dict) else data
@@ -426,6 +443,7 @@ class HttpDataService(DataService):
     # ------------------------------------------------------------------
 
     def scan_result_summary(self, scan_id: str) -> dict[str, int]:
+        """Retrieve a summary of scan results via HTTP."""
         try:
             data = self._get(f"/scans/{scan_id}/summary")
             return data.get("summary", data) if isinstance(data, dict) else data
@@ -434,6 +452,7 @@ class HttpDataService(DataService):
             return {}
 
     def event_types_list(self) -> list[dict[str, str]]:
+        """List all known event types via HTTP."""
         try:
             data = self._get("/data/entity-types")
             return data.get("entity_types", data) if isinstance(data, dict) else data
@@ -452,7 +471,9 @@ class HttpDataService(DataService):
             self._session = None
 
     def __del__(self) -> None:
+        """Clean up the HTTP session on garbage collection."""
         self.close()
 
     def __repr__(self) -> str:
+        """Return a string representation of the HttpDataService."""
         return f"HttpDataService(url={self._base_url!r})"

@@ -105,6 +105,7 @@ class CorrelationRule:
         enabled: bool = True,
         priority: int = 0,
     ) -> None:
+        """Initialize the CorrelationRule."""
         self.name = name
         self.description = description
         self.mode = mode
@@ -122,6 +123,7 @@ class CorrelationRule:
         self._fire_count = 0
 
     def add_condition(self, condition: Condition) -> "CorrelationRule":
+        """Add a condition to this rule."""
         self._conditions.append(condition)
         return self
 
@@ -210,24 +212,30 @@ class CorrelationRule:
 
     @property
     def fire_count(self) -> int:
+        """Return the number of times this rule has fired."""
         return self._fire_count
 
     @property
     def is_enabled(self) -> bool:
+        """Return whether this rule is enabled."""
         return self._enabled
 
     def enable(self) -> None:
+        """Enable this rule."""
         self._enabled = True
 
     def disable(self) -> None:
+        """Disable this rule."""
         self._enabled = False
 
     def reset(self) -> None:
+        """Reset matched events and fire count."""
         self._matched_events.clear()
         self._group_counts.clear()
         self._fire_count = 0
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "name": self.name,
             "description": self.description,
@@ -261,6 +269,7 @@ class CorrelationEngine:
     """
 
     def __init__(self) -> None:
+        """Initialize the CorrelationEngine."""
         self._rules: dict[str, CorrelationRule] = {}
         self._callbacks: list[Callable[[CorrelationMatch], None]] = []
         self._matches: list[CorrelationMatch] = []
@@ -268,18 +277,22 @@ class CorrelationEngine:
         self._lock = threading.Lock()
 
     def add_rule(self, rule: CorrelationRule) -> "CorrelationEngine":
+        """Register a correlation rule."""
         with self._lock:
             self._rules[rule.name] = rule
         return self
 
     def remove_rule(self, name: str) -> bool:
+        """Remove a correlation rule by name."""
         with self._lock:
             return self._rules.pop(name, None) is not None
 
     def get_rule(self, name: str) -> CorrelationRule | None:
+        """Return a rule by name, or None if not found."""
         return self._rules.get(name)
 
     def on_match(self, callback: Callable[[CorrelationMatch], None]) -> None:
+        """Register a callback for correlation matches."""
         self._callbacks.append(callback)
 
     def process(self, event: dict) -> list[CorrelationMatch]:
@@ -312,28 +325,34 @@ class CorrelationEngine:
 
     @property
     def rule_count(self) -> int:
+        """Return the number of registered rules."""
         with self._lock:
             return len(self._rules)
 
     @property
     def rule_names(self) -> list[str]:
+        """Return sorted list of rule names."""
         with self._lock:
             return sorted(self._rules.keys())
 
     @property
     def events_processed(self) -> int:
+        """Return the total number of events processed."""
         return self._events_processed
 
     @property
     def total_matches(self) -> int:
+        """Return the total number of correlation matches."""
         return len(self._matches)
 
     def get_matches(self, rule_name: str | None = None) -> list[CorrelationMatch]:
+        """Return matches, optionally filtered by rule name."""
         if rule_name:
             return [m for m in self._matches if m.rule_name == rule_name]
         return list(self._matches)
 
     def reset(self) -> None:
+        """Reset all rules, matches, and counters."""
         with self._lock:
             for rule in self._rules.values():
                 rule.reset()
@@ -341,6 +360,7 @@ class CorrelationEngine:
             self._events_processed = 0
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         with self._lock:
             return {
                 "rules": {name: r.to_dict() for name, r in self._rules.items()},

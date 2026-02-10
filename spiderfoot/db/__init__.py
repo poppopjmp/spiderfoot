@@ -663,6 +663,7 @@ class SpiderFootDb:
         """Retrieve the current configuration."""
         return self._config.configGet(*args, **kwargs)
     def configGetAll(self, *args, **kwargs) -> dict:
+        """Retrieve all configuration values."""
         return self._config.configGetAll(*args, **kwargs)
     def scanConfigSet(self, scan_id: str, optMap: dict) -> None:
         """Save scan-specific configuration."""
@@ -679,26 +680,33 @@ class SpiderFootDb:
         return self._core.eventTypes(*args, **kwargs)
     # --- EVENT MANAGEMENT ---
     def eventAdd(self, *args, **kwargs) -> None:
+        """Add an event to the database."""
         return self._event.eventAdd(*args, **kwargs)
     def eventGet(self, *args, **kwargs) -> list | None:
+        """Retrieve events from the database."""
         return self._event.eventGet(*args, **kwargs)
     def scanEventStore(self, instanceId: str, sfEvent: Any, truncateSize: int = 0) -> None:
         """Store a scan event in the database."""
         return self._event.scanEventStore(instanceId, sfEvent, truncateSize)
     # --- CORRELATION MANAGEMENT ---
     def correlationAdd(self, *args, **kwargs) -> None:
+        """Add a correlation record to the database."""
         return self._correlation.correlationAdd(*args, **kwargs)
     def correlationGet(self, *args, **kwargs) -> list | None:
+        """Retrieve correlation records from the database."""
         return self._correlation.correlationGet(*args, **kwargs)
     # --- LOGGING ---
     def scanLogEvent(self, instanceId: str, classification: str, message: str, component: str | None = None) -> None:
+        """Log a single scan event."""
         return self._event.scanLogEvent(instanceId, classification, message, component)
     def scanLogEvents(self, batch: list) -> bool:
+        """Log a batch of scan events."""
         return self._event.scanLogEvents(batch)
     def scanLogs(self, instanceId: str, limit: int = None, fromRowId: int = 0, reverse: bool = False) -> list:
         """Retrieve log entries for a scan instance."""
         return self._event.scanLogs(instanceId, limit, fromRowId, reverse)
     def scanErrors(self, instanceId: str, limit: int = 0) -> list:
+        """Retrieve error log entries for a scan instance."""
         return self._event.scanErrors(instanceId, limit)
     # --- SEARCH ---
     def search(self, criteria: dict, filterFp: bool = False) -> list:
@@ -717,25 +725,33 @@ class SpiderFootDb:
             sourceId, correlationId, filterFp,
         )
     def scanResultEventUnique(self, instanceId: str, eventType: str = 'ALL', filterFp: bool = False) -> list:
+        """Retrieve unique scan result events."""
         return self._event.scanResultEventUnique(instanceId, eventType, filterFp)
     def scanResultSummary(self, instanceId: str, by: str = "type") -> list:
+        """Retrieve a summary of scan results."""
         return self._event.scanResultSummary(instanceId, by)
     def scanResultHistory(self, instanceId: str) -> list:
+        """Retrieve the scan result history."""
         return self._event.scanResultHistory(instanceId)
     def scanResultsUpdateFP(self, instanceId: str, resultHashes: list, fpFlag: int) -> bool:
+        """Update the false positive flag for scan results."""
         return self._event.scanResultsUpdateFP(instanceId, resultHashes, fpFlag)
 
     # --- SCAN ELEMENT METHODS ---
     def scanElementSourcesDirect(self, instanceId: str, elementIdList: list) -> list:
+        """Retrieve direct source elements for the given element IDs."""
         return self._event.scanElementSourcesDirect(instanceId, elementIdList)
 
     def scanElementChildrenDirect(self, instanceId: str, elementIdList: list) -> list:
+        """Retrieve direct child elements for the given element IDs."""
         return self._event.scanElementChildrenDirect(instanceId, elementIdList)
 
     def scanElementSourcesAll(self, instanceId: str, childData: list) -> list:
+        """Retrieve all source elements recursively."""
         return self._event.scanElementSourcesAll(instanceId, childData)
 
     def scanElementChildrenAll(self, instanceId: str, parentIds: list) -> list:
+        """Retrieve all child elements recursively."""
         return self._event.scanElementChildrenAll(instanceId, parentIds)
     # --- CORRELATION RESULTS ---
     def correlationResultCreate(
@@ -744,13 +760,16 @@ class SpiderFootDb:
         ruleRisk: str, ruleYaml: str,
         correlationTitle: str, eventHashes: list,
     ) -> str:
+        """Create a correlation result record."""
         return self._correlation.correlationResultCreate(
             instanceId, event_hash, ruleId, ruleName, ruleDescr,
             ruleRisk, ruleYaml, correlationTitle, eventHashes,
         )
     def scanCorrelationSummary(self, instanceId: str, by: str = "rule") -> list:
+        """Retrieve a summary of scan correlations."""
         return self._correlation.scanCorrelationSummary(instanceId, by)
     def scanCorrelationList(self, instanceId: str) -> list:
+        """List all correlation results for a scan instance."""
         return self._correlation.scanCorrelationList(instanceId)
 
     # --- Backend-aware schema generation ---

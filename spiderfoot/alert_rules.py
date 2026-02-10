@@ -87,6 +87,7 @@ class AlertCondition:
         return False
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "condition_type": self.condition_type.value,
             "value": str(self.value) if not isinstance(self.value, (int, float, str, bool, type(None))) else self.value,
@@ -105,9 +106,11 @@ class Alert:
     acknowledged: bool = False
 
     def acknowledge(self) -> None:
+        """Mark this alert as acknowledged."""
         self.acknowledged = True
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "rule_name": self.rule_name,
             "severity": self.severity.value,
@@ -143,6 +146,7 @@ class AlertRule:
         max_alerts: int = 0,
         enabled: bool = True,
     ) -> None:
+        """Initialize the AlertRule."""
         self.name = name
         self.severity = severity
         self.message_template = message_template
@@ -155,6 +159,7 @@ class AlertRule:
         self._last_alert_time = 0.0
 
     def add_condition(self, condition: AlertCondition) -> "AlertRule":
+        """Add a condition to this alert rule."""
         self.conditions.append(condition)
         return self
 
@@ -204,13 +209,16 @@ class AlertRule:
 
     @property
     def alert_count(self) -> int:
+        """Return the number of alerts triggered by this rule."""
         return self._alert_count
 
     def reset(self) -> None:
+        """Reset the alert count and cooldown timer."""
         self._alert_count = 0
         self._last_alert_time = 0.0
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "name": self.name,
             "severity": self.severity.value,
@@ -231,6 +239,7 @@ class AlertEngine:
     """
 
     def __init__(self, max_history: int = 1000) -> None:
+        """Initialize the AlertEngine."""
         self._rules: dict[str, AlertRule] = {}
         self._alerts: list[Alert] = []
         self._max_history = max_history
@@ -244,10 +253,12 @@ class AlertEngine:
         return self
 
     def remove_rule(self, name: str) -> bool:
+        """Remove an alert rule by name."""
         with self._lock:
             return self._rules.pop(name, None) is not None
 
     def get_rule(self, name: str) -> AlertRule | None:
+        """Return an alert rule by name, or None if not found."""
         return self._rules.get(name)
 
     def add_handler(self, handler: Callable[[Alert], None]) -> "AlertEngine":
@@ -281,19 +292,24 @@ class AlertEngine:
 
     @property
     def alerts(self) -> list[Alert]:
+        """Return a copy of all triggered alerts."""
         return list(self._alerts)
 
     def get_alerts_by_severity(self, severity: AlertSeverity) -> list[Alert]:
+        """Return alerts filtered by severity level."""
         return [a for a in self._alerts if a.severity == severity]
 
     def get_unacknowledged(self) -> list[Alert]:
+        """Return all unacknowledged alerts."""
         return [a for a in self._alerts if not a.acknowledged]
 
     def acknowledge_all(self) -> None:
+        """Acknowledge all triggered alerts."""
         for a in self._alerts:
             a.acknowledge()
 
     def clear_alerts(self) -> None:
+        """Clear all stored alerts."""
         with self._lock:
             self._alerts.clear()
 
@@ -306,9 +322,11 @@ class AlertEngine:
 
     @property
     def rules(self) -> list[AlertRule]:
+        """Return a list of all registered alert rules."""
         return list(self._rules.values())
 
     def summary(self) -> dict:
+        """Return a summary of rules and alert statistics."""
         return {
             "total_rules": len(self._rules),
             "enabled_rules": sum(1 for r in self._rules.values() if r.enabled),
@@ -321,6 +339,7 @@ class AlertEngine:
         }
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "rules": {name: r.to_dict() for name, r in self._rules.items()},
             "alert_count": len(self._alerts),
