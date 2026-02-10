@@ -87,10 +87,12 @@ class APIVersion:
 
     @property
     def is_available(self) -> bool:
+        """Check whether this version is still available."""
         return self.status != VersionStatus.SUNSET
 
     @property
     def is_deprecated(self) -> bool:
+        """Check whether this version is deprecated or sunset."""
         return self.status in (VersionStatus.DEPRECATED, VersionStatus.SUNSET)
 
     @property
@@ -100,6 +102,7 @@ class APIVersion:
         return int(m.group(1)) if m else 0
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "version": self.version,
             "status": self.status.value,
@@ -129,9 +132,11 @@ class VersionedRoute:
 
     @property
     def full_path(self) -> str:
+        """Return the full API path including version prefix."""
         return f"/api/{self.version}{self.path}"
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "path": self.path,
             "full_path": self.full_path,
@@ -158,6 +163,7 @@ class VersionNegotiator:
                  header_name: str = "X-API-Version",
                  query_param: str = "version",
                  vendor_type: str = "application/vnd.spiderfoot") -> None:
+        """Initialize the VersionNegotiator."""
         self._strategies = strategies or [VersionStrategy.URL_PREFIX]
         self._default = default_version
         self._header_name = header_name
@@ -215,6 +221,7 @@ class APIVersionManager:
     def __init__(self, *,
                  default_version: str = "v1",
                  strategies: list[VersionStrategy] | None = None) -> None:
+        """Initialize the APIVersionManager."""
         self._versions: dict[str, APIVersion] = {}
         self._routes: dict[str, list[VersionedRoute]] = {}  # version -> routes
         self._default = default_version
@@ -236,15 +243,18 @@ class APIVersionManager:
                  version.version, version.status.value)
 
     def get_version(self, version: str) -> APIVersion | None:
+        """Return the APIVersion for the given version string."""
         return self._versions.get(version)
 
     def list_versions(self, *, include_sunset: bool = False) -> list[APIVersion]:
+        """List all registered API versions."""
         versions = list(self._versions.values())
         if not include_sunset:
             versions = [v for v in versions if v.is_available]
         return sorted(versions, key=lambda v: v.numeric)
 
     def current_version(self) -> APIVersion | None:
+        """Return the current active API version."""
         for v in self._versions.values():
             if v.status == VersionStatus.CURRENT:
                 return v
@@ -281,6 +291,7 @@ class APIVersionManager:
         self._routes[route.version].append(route)
 
     def add_routes(self, routes: list[VersionedRoute]) -> None:
+        """Register multiple routes at once."""
         for r in routes:
             self.add_route(r)
 
@@ -391,6 +402,7 @@ class APIVersionManager:
     # --- Stats ---
 
     def stats(self) -> dict:
+        """Return version and route statistics."""
         total_routes = sum(len(r) for r in self._routes.values())
         return {
             "total_versions": len(self._versions),

@@ -28,6 +28,7 @@ log = logging.getLogger(__name__)
 class ScanManager:
     """Manages scan instance lifecycle operations in the database."""
     def __init__(self, dbh: Any, conn: Any, dbhLock: RLock, db_type: str) -> None:
+        """Initialize the ScanManager."""
         self.dbh = dbh
         self.conn = conn
         self.dbhLock = dbhLock
@@ -40,6 +41,7 @@ class ScanManager:
         return is_transient_error(exc)
 
     def scanInstanceCreate(self, instanceId: str, scanName: str, scanTarget: str) -> None:
+        """Create a new scan instance in the database."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(scanName, str):
@@ -62,6 +64,7 @@ class ScanManager:
                     raise OSError("Unable to create scan instance in database") from e
 
     def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None) -> None:
+        """Update fields on an existing scan instance."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         ph = get_placeholder(self.db_type)
@@ -96,6 +99,7 @@ class ScanManager:
                     raise OSError("Unable to set information for the scan instance.") from e
 
     def scanInstanceGet(self, instanceId: str) -> list:
+        """Retrieve a scan instance by its ID."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         ph = get_placeholder(self.db_type)
@@ -114,6 +118,7 @@ class ScanManager:
                     raise OSError("SQL error encountered when retrieving scan instance") from e
 
     def scanInstanceList(self) -> list:
+        """List all scan instances with result counts."""
         qry = "SELECT i.guid, i.name, i.seed_target, ROUND(i.created/1000), ROUND(i.started)/1000 as started, ROUND(i.ended)/1000, i.status, COUNT(r.type) FROM tbl_scan_instance i, tbl_scan_results r WHERE i.guid = r.scan_instance_id AND r.type <> 'ROOT' GROUP BY i.guid UNION ALL SELECT i.guid, i.name, i.seed_target, ROUND(i.created/1000), ROUND(i.started)/1000 as started, ROUND(i.ended)/1000, i.status, '0' FROM tbl_scan_instance i  WHERE i.guid NOT IN ( SELECT distinct scan_instance_id FROM tbl_scan_results WHERE type <> 'ROOT') ORDER BY started DESC"
         with self.dbhLock:
             for attempt in range(3):
@@ -128,6 +133,7 @@ class ScanManager:
                     raise OSError("SQL error encountered when fetching scan list") from e
 
     def scanInstanceDelete(self, instanceId: str) -> bool:
+        """Delete a scan instance and all related records."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         ph = get_placeholder(self.db_type)
@@ -154,6 +160,7 @@ class ScanManager:
         return True
 
     def close(self) -> None:
+        """Close the database cursor and connection."""
         if hasattr(self, 'dbh') and self.dbh:
             try:
                 self.dbh.close()

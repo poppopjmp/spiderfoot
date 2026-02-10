@@ -43,6 +43,7 @@ class ScanService:
 
     def __init__(self, repo: ScanRepository, *, dbh=None,
                  event_repo: EventRepository | None = None) -> None:
+        """Initialize the ScanService."""
         self._repo = repo
         self._event_repo = event_repo
         self._dbh = dbh  # fallback raw dbh for methods not yet on repo
@@ -153,15 +154,19 @@ class ScanService:
     # ------------------------------------------------------------------
 
     def get_config(self, scan_id: str) -> dict[str, Any] | None:
+        """Return the configuration for a scan."""
         return self._repo.get_config(scan_id)
 
     def set_config(self, scan_id: str, config_data: str) -> None:
+        """Save configuration data for a scan."""
         self._repo.set_config(scan_id, config_data)
 
     def get_scan_log(self, scan_id: str, **kw) -> list[Any]:
+        """Return log entries for a scan."""
         return self._repo.get_scan_log(scan_id, **kw)
 
     def get_scan_errors(self, scan_id: str, limit: int = 0) -> list[Any]:
+        """Return error entries for a scan."""
         return self._repo.get_scan_errors(scan_id, limit=limit)
 
     # ------------------------------------------------------------------
@@ -220,21 +225,27 @@ class ScanService:
         return self._metadata_svc
 
     def get_metadata(self, scan_id: str) -> dict[str, Any]:
+        """Return metadata for a scan."""
         return self._metadata_svc.get_metadata(scan_id)
 
     def set_metadata(self, scan_id: str, metadata: dict[str, Any]) -> None:
+        """Save metadata for a scan."""
         self._metadata_svc.set_metadata(scan_id, metadata)
 
     def get_notes(self, scan_id: str) -> str:
+        """Return analyst notes for a scan."""
         return self._metadata_svc.get_notes(scan_id)
 
     def set_notes(self, scan_id: str, notes: str) -> None:
+        """Save analyst notes for a scan."""
         self._metadata_svc.set_notes(scan_id, notes)
 
     def archive(self, scan_id: str) -> None:
+        """Archive a scan."""
         self._metadata_svc.archive(scan_id)
 
     def unarchive(self, scan_id: str) -> None:
+        """Unarchive a scan."""
         self._metadata_svc.unarchive(scan_id)
 
     # ------------------------------------------------------------------

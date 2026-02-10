@@ -37,6 +37,7 @@ class Message:
     correlation_id: str = ""  # For request/reply matching
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "channel": self.channel,
             "sender": self.sender,
@@ -58,6 +59,7 @@ class ChannelStats:
     last_message_at: float | None = None
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "messages_sent": self.messages_sent,
             "messages_delivered": self.messages_delivered,
@@ -85,6 +87,7 @@ class MessageBus:
     """
 
     def __init__(self) -> None:
+        """Initialize the MessageBus."""
         self._subscribers: dict[str, list[Callable]] = {}
         self._channel_stats: dict[str, ChannelStats] = {}
         self._lock = threading.Lock()
@@ -290,26 +293,32 @@ class MessageBus:
             self._filters.clear()
 
     def enable(self) -> None:
+        """Enable message delivery."""
         self._enabled = True
 
     def disable(self) -> None:
+        """Disable message delivery."""
         self._enabled = False
 
     @property
     def is_enabled(self) -> bool:
+        """Check whether the message bus is enabled."""
         return self._enabled
 
     @property
     def channel_count(self) -> int:
+        """Return the number of registered channels."""
         with self._lock:
             return len(self._subscribers)
 
     @property
     def total_subscribers(self) -> int:
+        """Return the total number of subscribers across all channels."""
         with self._lock:
             return sum(len(subs) for subs in self._subscribers.values())
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         with self._lock:
             return {
                 "enabled": self._enabled,

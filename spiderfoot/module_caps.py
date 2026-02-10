@@ -36,6 +36,7 @@ class Capability:
     version: str = "1.0"
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return f"{self.category.value}:{self.name}"
 
 
@@ -47,6 +48,7 @@ class Requirement:
     description: str = ""
 
     def __str__(self) -> str:
+        """Return a string representation."""
         prefix = "required" if self.required else "optional"
         return f"{prefix}:{self.name}"
 
@@ -94,17 +96,21 @@ class ModuleCapabilityDeclaration:
 
     @property
     def capability_names(self) -> set[str]:
+        """Return the set of capability names provided."""
         return {c.name for c in self.provides}
 
     @property
     def required_names(self) -> set[str]:
+        """Return the set of required requirement names."""
         return {r.name for r in self.requires if r.required}
 
     @property
     def optional_names(self) -> set[str]:
+        """Return the set of optional requirement names."""
         return {r.name for r in self.requires if not r.required}
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "module": self.module_name,
             "provides": [
@@ -143,6 +149,7 @@ class CapabilityRegistry:
     """
 
     def __init__(self) -> None:
+        """Initialize the CapabilityRegistry."""
         self._declarations: dict[str, ModuleCapabilityDeclaration] = {}
         self._capability_index: dict[str, set[str]] = {}  # cap_name → module_names
         self._lock = threading.Lock()
@@ -274,15 +281,18 @@ class CapabilityRegistry:
 
     @property
     def module_count(self) -> int:
+        """Return the number of registered modules."""
         with self._lock:
             return len(self._declarations)
 
     @property
     def capability_count(self) -> int:
+        """Return the number of unique capabilities."""
         with self._lock:
             return len(self._capability_index)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         with self._lock:
             return {
                 "modules": {

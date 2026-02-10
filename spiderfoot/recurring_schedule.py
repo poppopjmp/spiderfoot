@@ -64,6 +64,7 @@ class RecurringSchedule:
     tags: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
+        """Perform post-initialization validation."""
         if not self.schedule_id:
             self.schedule_id = str(uuid.uuid4())[:12]
         if not self.created_at:
@@ -100,6 +101,7 @@ class RecurringSchedule:
             self.next_run_at = time.time() + (self.interval_minutes * 60)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "schedule_id": self.schedule_id,
             "name": self.name,
@@ -124,6 +126,7 @@ class RecurringScheduler:
     """In-memory recurring scan scheduler with background check loop."""
 
     def __init__(self, check_interval: float = 30.0) -> None:
+        """Initialize the RecurringScheduler."""
         self._schedules: dict[str, RecurringSchedule] = {}
         self._lock = threading.Lock()
         self._check_interval = check_interval
@@ -170,10 +173,12 @@ class RecurringScheduler:
         return schedule
 
     def get(self, schedule_id: str) -> RecurringSchedule | None:
+        """Return a schedule by ID or None."""
         with self._lock:
             return self._schedules.get(schedule_id)
 
     def remove(self, schedule_id: str) -> bool:
+        """Remove a schedule by ID."""
         with self._lock:
             if schedule_id in self._schedules:
                 del self._schedules[schedule_id]
@@ -182,10 +187,12 @@ class RecurringScheduler:
             return False
 
     def list_all(self) -> list[RecurringSchedule]:
+        """Return all registered schedules."""
         with self._lock:
             return list(self._schedules.values())
 
     def pause(self, schedule_id: str) -> bool:
+        """Pause an active schedule."""
         with self._lock:
             s = self._schedules.get(schedule_id)
             if s and s.status == RecurringStatus.ACTIVE:
@@ -194,6 +201,7 @@ class RecurringScheduler:
             return False
 
     def resume(self, schedule_id: str) -> bool:
+        """Resume a paused schedule."""
         with self._lock:
             s = self._schedules.get(schedule_id)
             if s and s.status == RecurringStatus.PAUSED:
@@ -216,6 +224,7 @@ class RecurringScheduler:
         log.info("Recurring scheduler started (check every %.0fs)", self._check_interval)
 
     def stop(self) -> None:
+        """Stop the background scheduler loop."""
         self._running = False
         if self._thread:
             self._thread.join(timeout=5.0)
@@ -248,6 +257,7 @@ class RecurringScheduler:
                 schedule.mark_run(scan_id)
 
     def stats(self) -> dict[str, Any]:
+        """Return scheduler statistics."""
         with self._lock:
             statuses = {}
             for s in self._schedules.values():
