@@ -11,13 +11,13 @@ class MiscEndpoints:
     def documentation(self, doc=None, q=None):
         # Render documentation page or search results
         import re
-        
+
         def highlight(text, query):
             if not text or not query:
                 return text
             pattern = re.compile(re.escape(query), re.IGNORECASE)
             return pattern.sub(lambda m: f'<mark>{m.group(0)}</mark>', text)
-        
+
         templ = Template(filename='spiderfoot/templates/documentation.tmpl', lookup=self.lookup)
         return templ.render(
             doc=doc,

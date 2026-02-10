@@ -22,7 +22,7 @@ class DataServiceBackend(str, Enum):
 @dataclass
 class DataServiceConfig:
     """Configuration for the data service.
-    
+
     Attributes:
         backend: Which backend to use
         api_url: URL for HTTP/gRPC backend
@@ -41,84 +41,84 @@ class DataServiceConfig:
 
 class DataService(ABC):
     """Abstract data service interface.
-    
+
     Provides CRUD operations for scans, events, configs, and correlations.
     All methods are synchronous for compatibility with the existing module
     system, but implementations may use async internally.
     """
-    
+
     def __init__(self, config: Optional[DataServiceConfig] = None):
         self.config = config or DataServiceConfig()
         self.log = logging.getLogger(f"spiderfoot.dataservice.{self.config.backend.value}")
-    
+
     # --- Scan Instance Operations ---
-    
+
     @abstractmethod
     def scan_instance_create(self, scan_id: str, scan_name: str, target: str) -> bool:
         """Create a new scan instance.
-        
+
         Args:
             scan_id: Unique scan identifier
             scan_name: Human-readable scan name
             target: Scan target
-            
+
         Returns:
             True if created successfully
         """
         ...
-    
+
     @abstractmethod
     def scan_instance_get(self, scan_id: str) -> Optional[Dict[str, Any]]:
         """Get a scan instance by ID.
-        
+
         Args:
             scan_id: Scan identifier
-            
+
         Returns:
             Scan instance data or None
         """
         ...
-    
+
     @abstractmethod
     def scan_instance_list(self) -> List[Dict[str, Any]]:
         """List all scan instances.
-        
+
         Returns:
             List of scan instance dicts
         """
         ...
-    
+
     @abstractmethod
     def scan_instance_delete(self, scan_id: str) -> bool:
         """Delete a scan instance and all associated data.
-        
+
         Args:
             scan_id: Scan identifier
-            
+
         Returns:
             True if deleted successfully
         """
         ...
-    
+
     @abstractmethod
-    def scan_status_set(self, scan_id: str, status: str, 
-                        started: Optional[int] = None, 
+    def scan_status_set(self, scan_id: str, status: str,
+                        started: Optional[int] = None,
                         ended: Optional[int] = None) -> bool:
         """Update scan status.
-        
+
         Args:
             scan_id: Scan identifier
             status: New status string
             started: Optional start timestamp (ms)
             ended: Optional end timestamp (ms)
-            
+
         Returns:
             True if updated
         """
         ...
-    
+
     # --- Event Operations ---
-    
+
     @abstractmethod
     def event_store(
         self,
@@ -133,7 +133,7 @@ class DataService(ABC):
         risk: int = 0,
     ) -> bool:
         """Store a scan event/result.
-        
+
         Args:
             scan_id: Scan identifier
             event_hash: Unique event hash
@@ -144,12 +144,12 @@ class DataService(ABC):
             confidence: Confidence score 0-100
             visibility: Visibility score 0-100
             risk: Risk score 0-100
-            
+
         Returns:
             True if stored successfully
         """
         ...
-    
+
     @abstractmethod
     def event_get_by_scan(
         self,
@@ -158,17 +158,17 @@ class DataService(ABC):
         limit: int = 0,
     ) -> List[Dict[str, Any]]:
         """Get events for a scan, optionally filtered by type.
-        
+
         Args:
             scan_id: Scan identifier
             event_type: Optional filter by event type
             limit: Maximum results (0 = no limit)
-            
+
         Returns:
             List of event dicts
         """
         ...
-    
+
     @abstractmethod
     def event_get_unique(
         self,
@@ -176,16 +176,16 @@ class DataService(ABC):
         event_type: str,
     ) -> List[str]:
         """Get unique event data values for a scan and type.
-        
+
         Args:
             scan_id: Scan identifier
             event_type: Event type filter
-            
+
         Returns:
             List of unique data values
         """
         ...
-    
+
     @abstractmethod
     def event_exists(
         self,
@@ -194,19 +194,19 @@ class DataService(ABC):
         data: str,
     ) -> bool:
         """Check if an event already exists.
-        
+
         Args:
             scan_id: Scan identifier
             event_type: Event type
             data: Event data
-            
+
         Returns:
             True if event exists
         """
         ...
-    
+
     # --- Log Operations ---
-    
+
     @abstractmethod
     def scan_log_event(
         self,
@@ -216,18 +216,18 @@ class DataService(ABC):
         component: Optional[str] = None,
     ) -> bool:
         """Log a scan event.
-        
+
         Args:
             scan_id: Scan identifier
             classification: Log classification (STATUS, ERROR, etc.)
             message: Log message
             component: Source component
-            
+
         Returns:
             True if logged
         """
         ...
-    
+
     @abstractmethod
     def scan_log_get(
         self,
@@ -237,60 +237,60 @@ class DataService(ABC):
         log_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Get scan log entries.
-        
+
         Args:
             scan_id: Scan identifier
             limit: Max results
             offset: Result offset
             log_type: Optional filter by log type
-            
+
         Returns:
             List of log entry dicts
         """
         ...
-    
+
     # --- Config Operations ---
-    
+
     @abstractmethod
     def config_set(self, config_data: Dict[str, str], scope: str = "GLOBAL") -> bool:
         """Set configuration values.
-        
+
         Args:
             config_data: Dict of option name → value
             scope: Config scope (GLOBAL or scan_id)
-            
+
         Returns:
             True if saved
         """
         ...
-    
+
     @abstractmethod
     def config_get(self, scope: str = "GLOBAL") -> Dict[str, str]:
         """Get configuration values for a scope.
-        
+
         Args:
             scope: Config scope
-            
+
         Returns:
             Dict of option name → value
         """
         ...
-    
+
     @abstractmethod
     def scan_config_set(self, scan_id: str, config_data: Dict[str, str]) -> bool:
         """Save scan-specific configuration.
-        
+
         Args:
             scan_id: Scan identifier
             config_data: Configuration key-value pairs
-            
+
         Returns:
             True if saved
         """
         ...
-    
+
     # --- Correlation Operations ---
-    
+
     @abstractmethod
     def correlation_store(
         self,
@@ -305,7 +305,7 @@ class DataService(ABC):
         event_hashes: List[str],
     ) -> bool:
         """Store a correlation result.
-        
+
         Args:
             correlation_id: Unique correlation ID
             scan_id: Scan identifier
@@ -316,45 +316,45 @@ class DataService(ABC):
             rule_descr: Rule description
             rule_logic: Rule logic
             event_hashes: List of related event hashes
-            
+
         Returns:
             True if stored
         """
         ...
-    
+
     @abstractmethod
     def correlation_get_by_scan(self, scan_id: str) -> List[Dict[str, Any]]:
         """Get all correlations for a scan.
-        
+
         Args:
             scan_id: Scan identifier
-            
+
         Returns:
             List of correlation result dicts
         """
         ...
-    
+
     # --- Aggregate / Summary Operations ---
-    
+
     @abstractmethod
     def scan_result_summary(
         self,
         scan_id: str,
     ) -> Dict[str, int]:
         """Get event type counts for a scan.
-        
+
         Args:
             scan_id: Scan identifier
-            
+
         Returns:
             Dict mapping event_type → count
         """
         ...
-    
+
     @abstractmethod
     def event_types_list(self) -> List[Dict[str, str]]:
         """List all registered event types.
-        
+
         Returns:
             List of event type dicts with 'event', 'event_descr', 'event_type'
         """

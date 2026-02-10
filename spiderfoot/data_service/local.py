@@ -14,15 +14,15 @@ from spiderfoot.data_service.base import DataService, DataServiceConfig
 
 class LocalDataService(DataService):
     """Data service backed by direct local database access.
-    
+
     This wraps the existing SpiderFootDb infrastructure (DbCore + managers)
     to provide the DataService interface. Used when running in monolithic
     or single-node mode.
     """
-    
+
     def __init__(self, config: Optional[DataServiceConfig] = None, db_opts: Optional[Dict] = None):
         """Initialize LocalDataService.
-        
+
         Args:
             config: DataServiceConfig (optional)
             db_opts: Database options dict passed to SpiderFootDb.
@@ -32,12 +32,12 @@ class LocalDataService(DataService):
         self._db_opts = db_opts or {}
         self._dbh = None
         self._initialized = False
-    
+
     def _ensure_db(self):
         """Lazily initialize the database handle."""
         if self._initialized:
             return
-        
+
         try:
             from spiderfoot.db import SpiderFootDb
             self._dbh = SpiderFootDb(self._db_opts, init=True)
@@ -46,27 +46,27 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("Failed to initialize database: %s", e)
             raise
-    
+
     def set_db_handle(self, dbh):
         """Set an existing database handle directly.
-        
+
         Useful when integrating with existing code that already
         has a SpiderFootDb instance.
-        
+
         Args:
             dbh: An existing SpiderFootDb instance
         """
         self._dbh = dbh
         self._initialized = True
-    
+
     @property
     def dbh(self):
         """Get the underlying database handle."""
         self._ensure_db()
         return self._dbh
-    
+
     # --- Scan Instance Operations ---
-    
+
     def scan_instance_create(self, scan_id: str, scan_name: str, target: str) -> bool:
         """Create a new scan instance."""
         try:
@@ -75,20 +75,20 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("scan_instance_create failed: %s", e)
             return False
-    
+
     def scan_instance_get(self, scan_id: str) -> Optional[Dict[str, Any]]:
         """Get a scan instance by ID."""
         try:
             rows = self.dbh.scanInstanceGet(scan_id)
             if not rows:
                 return None
-            
+
             # scanInstanceGet returns (name, seed_target, created, started, ended, status)
             if isinstance(rows, list) and len(rows) > 0:
                 row = rows[0] if isinstance(rows[0], (list, tuple)) else rows
             else:
                 row = rows
-            
+
             return {
                 "id": scan_id,
                 "name": row[0],
@@ -101,7 +101,7 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("scan_instance_get failed: %s", e)
             return None
-    
+
     def scan_instance_list(self) -> List[Dict[str, Any]]:
         """List all scan instances."""
         try:
@@ -123,7 +123,7 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("scan_instance_list failed: %s", e)
             return []
-    
+
     def scan_instance_delete(self, scan_id: str) -> bool:
         """Delete a scan instance and all associated data."""
         try:
@@ -132,7 +132,7 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("scan_instance_delete failed: %s", e)
             return False
-    
+
     def scan_status_set(self, scan_id: str, status: str,
                         started: Optional[int] = None,
                         ended: Optional[int] = None) -> bool:
@@ -148,9 +148,9 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("scan_status_set failed: %s", e)
             return False
-    
+
     # --- Event Operations ---
-    
+
     def event_store(
         self,
         scan_id: str,
@@ -164,7 +164,7 @@ class LocalDataService(DataService):
         risk: int = 0,
     ) -> bool:
         """Store a scan event/result.
-        
+
         Note: For full SpiderFootEvent integration, callers should use
         scanEventStore() on the underlying dbh. This method provides
         a simplified dict-based interface for new code.
@@ -172,12 +172,12 @@ class LocalDataService(DataService):
         try:
             # Build a minimal event-like object for the DB layer
             generated = int(time.time() * 1000)
-            
+
             # Direct insert via the underlying DB, bypassing SpiderFootEvent
             with self.dbh.dbhLock:
                 from spiderfoot.db.db_utils import get_placeholder
                 ph = get_placeholder(self.dbh.db_type)
-                
+
                 self.dbh.dbh.execute(
                     f"INSERT INTO tbl_scan_results "
                     f"(scan_instance_id, hash, type, module, data, source_event_hash, "
@@ -191,16 +191,16 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("event_store failed: %s", e)
             return False
-    
+
     def event_store_obj(self, scan_id: str, sf_event) -> bool:
         """Store a SpiderFootEvent object directly.
-        
+
         This preserves full compatibility with the existing event system.
-        
+
         Args:
             scan_id: Scan identifier
             sf_event: A SpiderFootEvent instance
-            
+
         Returns:
             True if stored
         """
@@ -210,7 +210,7 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("event_store_obj failed: %s", e)
             return False
-    
+
     def event_get_by_scan(
         self,
         scan_id: str,
@@ -221,7 +221,7 @@ class LocalDataService(DataService):
         try:
             et = event_type if event_type else "ALL"
             rows = self.dbh.scanResultEvent(scan_id, eventType=et)
-            
+
             results = []
             for row in rows:
                 # (generated, data, module, hash, type, source_event_hash,
@@ -237,15 +237,15 @@ class LocalDataService(DataService):
                     "visibility": row[7],
                     "risk": row[8],
                 })
-            
+
             if limit > 0:
                 results = results[:limit]
-            
+
             return results
         except Exception as e:
             self.log.error("event_get_by_scan failed: %s", e)
             return []
-    
+
     def event_get_unique(
         self,
         scan_id: str,
@@ -259,7 +259,7 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("event_get_unique failed: %s", e)
             return []
-    
+
     def event_exists(
         self,
         scan_id: str,
@@ -275,9 +275,9 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("event_exists failed: %s", e)
             return False
-    
+
     # --- Log Operations ---
-    
+
     def scan_log_event(
         self,
         scan_id: str,
@@ -294,7 +294,7 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("scan_log_event failed: %s", e)
             return False
-    
+
     def scan_log_get(
         self,
         scan_id: str,
@@ -305,11 +305,11 @@ class LocalDataService(DataService):
         """Get scan log entries."""
         try:
             rows = self.dbh.scanLogs(
-                scan_id, 
+                scan_id,
                 limit=limit if limit > 0 else None,
                 fromRowId=offset,
             )
-            
+
             results = []
             for row in rows:
                 # (generated, component, type, message, rowid)
@@ -323,14 +323,14 @@ class LocalDataService(DataService):
                 if log_type and entry["type"] != log_type:
                     continue
                 results.append(entry)
-            
+
             return results
         except Exception as e:
             self.log.error("scan_log_get failed: %s", e)
             return []
-    
+
     # --- Config Operations ---
-    
+
     def config_set(self, config_data: Dict[str, str], scope: str = "GLOBAL") -> bool:
         """Set configuration values."""
         try:
@@ -344,7 +344,7 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("config_set failed: %s", e)
             return False
-    
+
     def config_get(self, scope: str = "GLOBAL") -> Dict[str, str]:
         """Get configuration values."""
         try:
@@ -356,14 +356,14 @@ class LocalDataService(DataService):
                 # Return scoped entries, stripping the scope prefix
                 prefix = f"{scope}:"
                 return {
-                    k[len(prefix):]: v 
-                    for k, v in all_config.items() 
+                    k[len(prefix):]: v
+                    for k, v in all_config.items()
                     if k.startswith(prefix)
                 }
         except Exception as e:
             self.log.error("config_get failed: %s", e)
             return {}
-    
+
     def scan_config_set(self, scan_id: str, config_data: Dict[str, str]) -> bool:
         """Save scan-specific configuration."""
         try:
@@ -372,9 +372,9 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("scan_config_set failed: %s", e)
             return False
-    
+
     # --- Correlation Operations ---
-    
+
     def correlation_store(
         self,
         correlation_id: str,
@@ -406,7 +406,7 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("correlation_store failed: %s", e)
             return False
-    
+
     def correlation_get_by_scan(self, scan_id: str) -> List[Dict[str, Any]]:
         """Get all correlations for a scan."""
         try:
@@ -428,9 +428,9 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("correlation_get_by_scan failed: %s", e)
             return []
-    
+
     # --- Summary Operations ---
-    
+
     def scan_result_summary(self, scan_id: str) -> Dict[str, int]:
         """Get event type counts for a scan."""
         try:
@@ -440,7 +440,7 @@ class LocalDataService(DataService):
         except Exception as e:
             self.log.error("scan_result_summary failed: %s", e)
             return {}
-    
+
     def event_types_list(self) -> List[Dict[str, str]]:
         """List all registered event types."""
         try:

@@ -13,53 +13,53 @@ def interactive_scan_wizard(cli, line):
     try:
         cli.dprint("SpiderFoot Interactive Scan Wizard", plain=True)
         cli.dprint("=" * 40, plain=True)
-        
+
         # Collect scan parameters interactively
         scan_config = {}
-        
+
         # Basic scan info
         scan_config['name'] = _prompt_input(cli, "Scan name", "New Scan")
         scan_config['target'] = _prompt_input(cli, "Target (domain, IP, etc.)", required=True)
-        
+
         # Target type detection
         target_type = _detect_target_type(scan_config['target'])
         cli.dprint(f"Detected target type: {target_type}", plain=True)
-        
+
         # Module selection
         modules = _prompt_modules(cli)
         if modules:
             scan_config['modules'] = modules
-        
+
         # Event type filtering
         use_type_filter = _prompt_yes_no(cli, "Filter by event types?", False)
         if use_type_filter:
             event_types = _prompt_event_types(cli)
             if event_types:
                 scan_config['type_filter'] = event_types
-        
+
         # Workspace selection
         use_workspace = _prompt_yes_no(cli, "Use workspace?", False)
         if use_workspace:
             workspace = _prompt_workspace(cli)
             if workspace:
                 scan_config['workspace'] = workspace
-        
+
         # Advanced options
         use_advanced = _prompt_yes_no(cli, "Configure advanced options?", False)
         if use_advanced:
             scan_config.update(_prompt_advanced_options(cli))
-        
+
         # Confirmation
         cli.dprint("\nScan Configuration Summary:", plain=True)
         cli.dprint("-" * 30, plain=True)
         for key, value in scan_config.items():
             cli.dprint(f"{key}: {value}", plain=True)
-        
+
         if _prompt_yes_no(cli, "\nCreate this scan?", True):
             _create_scan_from_config(cli, scan_config)
         else:
             cli.dprint("Scan creation cancelled", plain=True)
-            
+
     except KeyboardInterrupt:
         cli.dprint("\nWizard cancelled by user", plain=True)
     except Exception as e:
@@ -106,13 +106,13 @@ def _prompt_yes_no(cli, prompt, default=True):
 def _detect_target_type(target):
     """Detect target type based on input."""
     import ipaddress
-    
+
     try:
         ipaddress.ip_address(target)
         return "IP_ADDRESS"
     except ValueError:
         pass
-    
+
     if target.startswith('http://') or target.startswith('https://'):
         return "URL"
     elif '.' in target and not target.startswith('www.'):
@@ -133,12 +133,12 @@ def _prompt_modules(cli):
         '6': 'All modules',
         '7': 'Custom selection'
     }
-    
+
     for key, desc in categories.items():
         cli.dprint(f"  {key}. {desc}", plain=True)
-    
+
     choice = _prompt_input(cli, "\nSelect category", "6")
-    
+
     if choice == '6':
         return None  # Use all modules
     elif choice == '7':
@@ -159,12 +159,12 @@ def _prompt_custom_modules(cli):
     """Custom module selection."""
     cli.dprint("Enter module names (comma-separated) or 'list' to see all:", plain=True)
     modules_input = _prompt_input(cli, "Modules")
-    
+
     if modules_input.lower() == 'list':
         # This would show available modules
         cli.dprint("Available modules: [list would be fetched from API]", plain=True)
         modules_input = _prompt_input(cli, "Modules")
-    
+
     if modules_input:
         return [m.strip() for m in modules_input.split(',') if m.strip()]
     return []
@@ -177,12 +177,12 @@ def _prompt_event_types(cli):
         'IP_ADDRESS', 'INTERNET_NAME', 'DOMAIN_NAME',
         'EMAILADDR', 'URL', 'PHONE_NUMBER'
     ]
-    
+
     for i, event_type in enumerate(common_types, 1):
         cli.dprint(f"  {i}. {event_type}", plain=True)
-    
+
     types_input = _prompt_input(cli, "Select types (numbers, comma-separated)")
-    
+
     if types_input:
         try:
             selected_indices = [int(x.strip()) - 1 for x in types_input.split(',')]
@@ -202,19 +202,19 @@ def _prompt_workspace(cli):
 def _prompt_advanced_options(cli):
     """Advanced configuration options."""
     advanced = {}
-    
+
     if _prompt_yes_no(cli, "Set scan timeout?", False):
         timeout = _prompt_input(cli, "Timeout (minutes)", "60")
         try:
             advanced['timeout'] = int(timeout) * 60  # Convert to seconds
         except ValueError:
             pass
-    
+
     if _prompt_yes_no(cli, "Set custom user agent?", False):
         user_agent = _prompt_input(cli, "User agent")
         if user_agent:
             advanced['user_agent'] = user_agent
-    
+
     return advanced
 
 
@@ -222,13 +222,13 @@ def _create_scan_from_config(cli, scan_config):
     """Create scan from wizard configuration."""
     try:
         base_url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001')
-        
+
         if 'workspace' in scan_config:
             workspace = scan_config.pop('workspace')
             url = f"{base_url}/api/workspaces/{workspace}/scans"
         else:
             url = f"{base_url}/api/scans"
-        
+
         resp = cli.request(url, post=scan_config)
         if resp:
             try:
@@ -239,7 +239,7 @@ def _create_scan_from_config(cli, scan_config):
                 cli.dprint("Scan created successfully!", plain=True)
         else:
             cli.edprint("Failed to create scan")
-            
+
     except Exception as e:
         cli.edprint(f"Failed to create scan: {e}")
 
@@ -249,11 +249,11 @@ def enhanced_help_command(cli, line):
     args = shlex.split(line)
     search_term = args[0] if args else None
     show_categories = '--category' in args
-    
+
     if show_categories:
         _show_command_categories(cli)
         return
-    
+
     if search_term:
         _search_commands(cli, search_term)
     else:
@@ -285,10 +285,10 @@ def _show_command_categories(cli):
             "scan_wizard", "help", "find"
         ]
     }
-    
+
     cli.dprint("SpiderFoot CLI Commands by Category", plain=True)
     cli.dprint("=" * 40, plain=True)
-    
+
     for category, commands in categories.items():
         cli.dprint(f"\n{category}:", plain=True)
         for cmd in commands:
@@ -300,7 +300,7 @@ def _search_commands(cli, search_term):
     """Search commands by term."""
     cli.dprint(f"Commands matching '{search_term}':", plain=True)
     cli.dprint("-" * 30, plain=True)
-    
+
     # This would search through registered commands
     # For now, just show a placeholder
     cli.dprint("Search functionality would be implemented here", plain=True)
@@ -326,10 +326,10 @@ def smart_completion_command(cli, line):
     if not args:
         cli.dprint("Smart completion would suggest commands here", plain=True)
         return
-    
+
     partial_command = args[0]
     suggestions = _get_command_suggestions(cli, partial_command)
-    
+
     if suggestions:
         cli.dprint(f"Suggestions for '{partial_command}':", plain=True)
         for suggestion in suggestions:
@@ -346,14 +346,14 @@ def _get_command_suggestions(cli, partial):
         "workspaces", "workspace_create", "workspace_delete",
         "export", "monitor", "correlations", "help"
     ]
-    
+
     # Simple prefix matching for demonstration
     suggestions = [cmd for cmd in all_commands if cmd.startswith(partial)]
-    
+
     # Add fuzzy matching suggestions
     import difflib
     fuzzy_matches = difflib.get_close_matches(partial, all_commands, n=3, cutoff=0.6)
-    
+
     # Combine and deduplicate
     all_suggestions = list(dict.fromkeys(suggestions + fuzzy_matches))
     return all_suggestions[:5]  # Limit to 5 suggestions
@@ -361,9 +361,9 @@ def _get_command_suggestions(cli, partial):
 
 def register(registry):
     """Register all interactive enhancement commands."""
-    registry.register("scan_wizard", interactive_scan_wizard, 
+    registry.register("scan_wizard", interactive_scan_wizard,
                      help_text="Interactive wizard for creating complex scans")
-    registry.register("help", enhanced_help_command, 
+    registry.register("help", enhanced_help_command,
                      help_text="Enhanced help with search and categories")
-    registry.register("complete", smart_completion_command, 
+    registry.register("complete", smart_completion_command,
                      help_text="Smart command completion and suggestions")

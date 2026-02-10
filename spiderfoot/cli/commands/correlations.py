@@ -8,7 +8,7 @@ import json
 
 def correlations_command(cli, line):
     """Show correlation results from a scan. Usage: correlations <scan_id> [options]
-    
+
     Options:
         --risk LEVEL       Filter by risk level (HIGH, MEDIUM, LOW, INFO)
         --rule RULE_ID     Filter by specific rule ID
@@ -19,13 +19,13 @@ def correlations_command(cli, line):
     if not args:
         cli.edprint("Usage: correlations <scan_id> [options]")
         return
-    
+
     scan_id = args[0]
     risk_filter = None
     rule_filter = None
     show_details = '--details' in args
     show_count = '--count' in args
-    
+
     # Parse arguments
     i = 1
     while i < len(args):
@@ -39,41 +39,41 @@ def correlations_command(cli, line):
             i += 1
         else:
             i += 1
-    
+
     base_url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001')
     url = f"{base_url}/api/scans/{scan_id}/correlations"
-    
+
     # Add filters if specified
     params = []
     if risk_filter:
         params.append(f"risk={risk_filter}")
     if rule_filter:
         params.append(f"rule={rule_filter}")
-    
+
     if params:
         url += '?' + '&'.join(params)
-    
+
     resp = cli.request(url)
     if not resp:
         cli.dprint("No correlation results found.")
         return
-    
+
     try:
         data = json.loads(resp)
         correlations = data.get('correlations', []) if isinstance(data, dict) else data
-        
+
         if show_count:
             # Show summary count
             risk_counts = {}
             for corr in correlations:
                 risk = corr.get('risk', 'UNKNOWN')
                 risk_counts[risk] = risk_counts.get(risk, 0) + 1
-            
+
             cli.dprint("Correlation Summary:", plain=True)
             for risk, count in sorted(risk_counts.items()):
                 cli.dprint(f"  {risk}: {count}", plain=True)
             cli.dprint(f"Total: {len(correlations)}", plain=True)
-            
+
         elif show_details:
             # Show detailed information
             cli.dprint("Detailed Correlations:", plain=True)
@@ -91,14 +91,14 @@ def correlations_command(cli, line):
                 risk = corr.get('risk', 'UNKNOWN')
                 count = corr.get('count', 0)
                 cli.dprint(f"  • {title} [{risk}] ({count} instances)", plain=True)
-    
+
     except Exception as e:
         cli.edprint(f"Failed to parse correlations: {e}")
 
 
 def correlation_rules_command(cli, line):
     """List available correlation rules. Usage: correlation_rules [options]
-    
+
     Options:
         --risk LEVEL       Filter by risk level (HIGH, MEDIUM, LOW, INFO)
         --enabled          Show only enabled rules
@@ -109,7 +109,7 @@ def correlation_rules_command(cli, line):
     risk_filter = None
     enabled_filter = None
     show_details = '--details' in args
-    
+
     # Parse arguments
     i = 0
     while i < len(args):
@@ -126,29 +126,29 @@ def correlation_rules_command(cli, line):
             i += 1
         else:
             i += 1
-    
+
     base_url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001')
     url = f"{base_url}/api/correlationrules"
-    
+
     # Add filters if specified
     params = []
     if risk_filter:
         params.append(f"risk={risk_filter}")
     if enabled_filter is not None:
         params.append(f"enabled={str(enabled_filter).lower()}")
-    
+
     if params:
         url += '?' + '&'.join(params)
-    
+
     resp = cli.request(url)
     if not resp:
         cli.dprint("No correlation rules found.")
         return
-    
+
     try:
         data = json.loads(resp)
         rules = data.get('rules', []) if isinstance(data, dict) else data
-        
+
         if show_details:
             cli.dprint("Correlation Rules (Detailed):", plain=True)
             for i, rule in enumerate(rules, 1):
@@ -165,7 +165,7 @@ def correlation_rules_command(cli, line):
                 risk = rule.get('risk', 'UNKNOWN')
                 enabled = '✓' if rule.get('enabled', False) else '✗'
                 cli.dprint(f"  {enabled} {name} [{risk}]", plain=True)
-    
+
     except Exception as e:
         cli.edprint(f"Failed to parse correlation rules: {e}")
 
@@ -176,40 +176,40 @@ def correlation_summary_command(cli, line):
     if not args:
         cli.edprint("Usage: correlation_summary <scan_id>")
         return
-    
+
     scan_id = args[0]
     base_url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001')
     url = f"{base_url}/api/scans/{scan_id}/status"
-    
+
     resp = cli.request(url)
     if not resp:
         cli.edprint("Failed to get scan status.")
         return
-    
+
     try:
         data = json.loads(resp)
         correlations = data.get('correlations', {})
-        
+
         cli.dprint(f"Correlation Summary for Scan: {scan_id}", plain=True)
         cli.dprint("=" * 50, plain=True)
-        
+
         total = 0
         for risk_level, count in correlations.items():
             cli.dprint(f"{risk_level}: {count}", plain=True)
             total += count
-        
+
         cli.dprint("-" * 20, plain=True)
         cli.dprint(f"Total: {total}", plain=True)
-        
+
     except Exception as e:
         cli.edprint(f"Failed to parse scan status: {e}")
 
 
 def register(registry):
     """Register all correlation commands."""
-    registry.register("correlations", correlations_command, 
+    registry.register("correlations", correlations_command,
                      help_text="Show correlation results from a scan")
-    registry.register("correlation_rules", correlation_rules_command, 
+    registry.register("correlation_rules", correlation_rules_command,
                      help_text="List available correlation rules")
-    registry.register("correlation_summary", correlation_summary_command, 
+    registry.register("correlation_summary", correlation_summary_command,
                      help_text="Show correlation summary for a scan")

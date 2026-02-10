@@ -31,9 +31,9 @@ except ImportError:
     logger = logging.getLogger(__name__)
 
 __all__ = [
-    'SpiderFootDb', 
-    'SpiderFootEvent', 
-    'SpiderFootHelpers', 
+    'SpiderFootDb',
+    'SpiderFootEvent',
+    'SpiderFootHelpers',
     'SpiderFootPlugin',
     'SpiderFootTarget',
     'SpiderFootThreadPool',
@@ -55,7 +55,7 @@ def get_modules_path():
     """Get the correct path to the modules directory."""
     # Get script directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    
+
     # Try multiple possible locations
     possible_paths = [
         os.path.join(PROJECT_ROOT, "modules"),
@@ -64,7 +64,7 @@ def get_modules_path():
         "/home/spiderfoot/modules",  # Container path
         os.path.join(os.path.dirname(script_dir), "modules")
     ]
-    
+
     for path in possible_paths:
         abs_path = os.path.abspath(path)
         if os.path.exists(abs_path) and os.path.isdir(abs_path):
@@ -76,7 +76,7 @@ def get_modules_path():
                     return abs_path
             except OSError:
                 continue
-    
+
     # Default fallback
     return os.path.join(PROJECT_ROOT, "modules")
 
@@ -85,7 +85,7 @@ from .helpers import SpiderFootHelpers
 
 class SpiderFootModuleFinder:
     """Custom module finder to fix SpiderFoot module imports."""
-    
+
     def find_spec(self, name, path, target=None):
         # Only intercept sfp_ module imports
         if name.startswith('modules.sfp_') or name.startswith('sfp_'):
@@ -94,19 +94,19 @@ class SpiderFootModuleFinder:
 
 class SpiderFootModuleLoader:
     """Custom module loader to fix SpiderFoot module imports."""
-    
+
     def __init__(self, spec):
         self.spec = spec
-    
+
     def create_module(self, spec):
         return None  # Use default module creation
-    
+
     def exec_module(self, module):
         # Execute the module normally first
         spec = importlib.util.find_spec(module.__name__)
         if spec and spec.loader:
             spec.loader.exec_module(module)
-        
+
         # Then fix the module
         module_name = module.__name__.split('.')[-1]
         if module_name.startswith('sfp_'):
@@ -123,9 +123,9 @@ def fetchUrl(self, url, fatal=False, cookies=None, timeout=30,
     # Check for invalid URL types
     if not isinstance(url, str):
         return None
-    
+
     # Check for empty URL
     if not url or not url.strip():
         return None
-    
+
     # ...existing code...

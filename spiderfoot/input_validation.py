@@ -20,7 +20,7 @@ except ImportError:
 
 class InputValidator:
     """Comprehensive input validation and sanitization."""
-    
+
     # Common regex patterns for validation
     PATTERNS = {
         'email': re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'),
@@ -32,27 +32,27 @@ class InputValidator:
         'scan_id': re.compile(r'^[a-zA-Z0-9_-]{1,50}$'),
         'module_name': re.compile(r'^sfp_[a-zA-Z0-9_]{1,50}$'),
     }
-    
+
     # Allowed HTML tags and attributes for content sanitization
     ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'code', 'pre']
     ALLOWED_ATTRIBUTES = {
         'a': ['href', 'title'],
         '*': ['class']
     }
-    
+
     @classmethod
     def sanitize_html(cls, content: str) -> str:
         """Sanitize HTML content to prevent XSS.
-        
+
         Args:
             content: Raw HTML content
-            
+
         Returns:
             Sanitized HTML content
         """
         if not isinstance(content, str):
             return str(content)
-        
+
         if HAS_BLEACH:
             return bleach.clean(
                 content,
@@ -63,163 +63,163 @@ class InputValidator:
         else:
             # Fallback: basic HTML sanitization when bleach is not available
             return cls._fallback_sanitize_html(content)
-    
+
     @classmethod
     def _fallback_sanitize_html(cls, content: str) -> str:
         """Fallback HTML sanitization when bleach is not available.
-        
+
         Args:
             content: Content to sanitize
-            
+
         Returns:
             Sanitized content
         """
         # Remove script tags and their content
         content = re.sub(r'<script[^>]*>.*?</script>', '', content, flags=re.IGNORECASE | re.DOTALL)
-        
+
         # Remove dangerous tags and their content
         dangerous_tags = ['script', 'object', 'embed', 'form', 'input', 'iframe', 'style']
         for tag in dangerous_tags:
             content = re.sub(f'<{tag}[^>]*>.*?</{tag}>', '', content, flags=re.IGNORECASE | re.DOTALL)
             content = re.sub(f'<{tag}[^>]*/?>', '', content, flags=re.IGNORECASE)
-        
+
         # Remove on* event handlers
         content = re.sub(r'\s+on\w+\s*=\s*["\'][^"\']*["\']', '', content, flags=re.IGNORECASE)
         content = re.sub(r'\s+on\w+\s*=\s*[^>\s]+', '', content, flags=re.IGNORECASE)
-        
+
         # Remove javascript: protocol
         content = re.sub(r'javascript:', '', content, flags=re.IGNORECASE)
-        
+
         # If no allowed tags are found, escape everything
         allowed_pattern = '|'.join(cls.ALLOWED_TAGS)
         if not re.search(f'<({allowed_pattern})\\b[^>]*>', content, re.IGNORECASE):
             return cls.escape_html(content)
-        
+
         return content
-    
+
     @classmethod
     def escape_html(cls, content: str) -> str:
         """Escape HTML entities in content.
-        
+
         Args:
             content: Content to escape
-            
+
         Returns:
             HTML-escaped content
         """
         if not isinstance(content, str):
             content = str(content)
         return html.escape(content, quote=True)
-    
+
     @classmethod
     def validate_email(cls, email: str) -> bool:
         """Validate email address format.
-        
+
         Args:
             email: Email address to validate
-            
+
         Returns:
             True if valid email format
         """
         return bool(cls.PATTERNS['email'].match(email.lower()))
-    
+
     @classmethod
     def validate_domain(cls, domain: str) -> bool:
         """Validate domain name format.
-        
+
         Args:
             domain: Domain name to validate
-            
+
         Returns:
             True if valid domain format
         """
         return bool(cls.PATTERNS['domain'].match(domain.lower()))
-    
+
     @classmethod
     def validate_ip_address(cls, ip: str) -> bool:
         """Validate IP address (IPv4 or IPv6).
-        
+
         Args:
             ip: IP address to validate
-            
+
         Returns:
             True if valid IP address
         """
-        return (cls.PATTERNS['ip_address'].match(ip) or 
+        return (cls.PATTERNS['ip_address'].match(ip) or
                 cls.PATTERNS['ipv6_address'].match(ip))
-    
+
     @classmethod
     def validate_url(cls, url: str) -> bool:
         """Validate URL format.
-        
+
         Args:
             url: URL to validate
-            
+
         Returns:
             True if valid URL format
         """
         return bool(cls.PATTERNS['url'].match(url))
-    
+
     @classmethod
     def sanitize_api_key(cls, api_key: str) -> Optional[str]:
         """Sanitize and validate API key.
-        
+
         Args:
             api_key: API key to sanitize
-            
+
         Returns:
             Sanitized API key or None if invalid
         """
         if not isinstance(api_key, str):
             return None
-        
+
         # Remove whitespace and validate format
         api_key = api_key.strip()
         if cls.PATTERNS['api_key'].match(api_key):
             return api_key
         return None
-    
+
     @classmethod
     def sanitize_scan_input(cls, scan_target: str) -> Optional[str]:
         """Sanitize scan target input.
-        
+
         Args:
             scan_target: Target to sanitize
-            
+
         Returns:
             Sanitized target or None if invalid
         """
         if not isinstance(scan_target, str):
             return None
-        
+
         scan_target = scan_target.strip().lower()
-        
+
         # Validate against known patterns
-        if (cls.validate_domain(scan_target) or 
-            cls.validate_ip_address(scan_target) or 
+        if (cls.validate_domain(scan_target) or
+            cls.validate_ip_address(scan_target) or
             cls.validate_email(scan_target) or
             cls.validate_url(scan_target)):
             return scan_target
-        
+
         return None
-    
+
     @classmethod
     def sanitize_module_options(cls, options: Dict[str, Any]) -> Dict[str, Any]:
         """Sanitize module configuration options.
-        
+
         Args:
             options: Module options dictionary
-            
+
         Returns:
             Sanitized options dictionary
         """
         sanitized = {}
-        
+
         for key, value in options.items():
             # Sanitize key
             if not isinstance(key, str) or not re.match(r'^[a-zA-Z0-9_-]{1,50}$', key):
                 continue
-            
+
             # Sanitize value based on type and key name
             if isinstance(value, str):
                 if 'api_key' in key.lower() or 'password' in key.lower():
@@ -248,54 +248,54 @@ class InputValidator:
                     elif isinstance(item, (int, float, bool)):
                         sanitized_list.append(item)
                 sanitized[key] = sanitized_list
-        
+
         return sanitized
-    
+
     @classmethod
-    def validate_file_upload(cls, filename: str, content: bytes, 
+    def validate_file_upload(cls, filename: str, content: bytes,
                            allowed_extensions: List[str] = None,
                            max_size: int = 1024 * 1024) -> bool:
         """Validate file upload.
-        
+
         Args:
             filename: Uploaded filename
             content: File content bytes
             allowed_extensions: List of allowed file extensions
             max_size: Maximum file size in bytes
-            
+
         Returns:
             True if file is valid
         """
         if not filename or not content:
             return False
-        
+
         # Check file size
         if len(content) > max_size:
             return False
-        
+
         # Check file extension
         if allowed_extensions:
             extension = filename.lower().split('.')[-1]
             if extension not in allowed_extensions:
                 return False
-        
+
         # Basic content validation (no executable headers)
         dangerous_headers = [
             b'\x4d\x5a',  # PE executable
             b'\x7f\x45\x4c\x46',  # ELF executable
             b'\xca\xfe\xba\xbe',  # Mach-O executable
         ]
-        
+
         for header in dangerous_headers:
             if content.startswith(header):
                 return False
-        
+
         return True
 
 
 class SecurityHeaders:
     """Security headers for HTTP responses."""
-    
+
     DEFAULT_HEADERS = {
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
@@ -314,14 +314,14 @@ class SecurityHeaders:
             "frame-src 'none';"
         )
     }
-    
+
     @classmethod
     def add_security_headers(cls, response):
         """Add security headers to HTTP response.
-        
+
         Args:
             response: HTTP response object
-            
+
         Returns:
             Response with security headers added
         """

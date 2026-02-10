@@ -119,7 +119,7 @@ class ScanEndpoints:
         import sfwebui  # for patching Template in tests
         dbh = self._get_dbh()
         types = dbh.eventTypes()
-        
+
         templ = Template(filename='spiderfoot/templates/newscan.tmpl', lookup=self.lookup)
         return templ.render(pageid='NEWSCAN', types=types, docroot=self.docroot,
                             modules=self.config['__modules__'], scanname="",
@@ -177,7 +177,7 @@ class ScanEndpoints:
                 row_list[4] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row_list[4]))
             if row_list[5] and row_list[5] != 0:
                 row_list[5] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row_list[5]))
-            
+
             # Get risk summary for this scan
             riskmatrix = {"HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0}
             try:

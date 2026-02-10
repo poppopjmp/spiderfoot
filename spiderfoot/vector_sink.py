@@ -24,7 +24,7 @@ except ImportError:
 
 class VectorConfig:
     """Configuration for Vector.dev integration.
-    
+
     Attributes:
         enabled: Whether Vector integration is active
         endpoint: Vector HTTP source endpoint URL
@@ -36,7 +36,7 @@ class VectorConfig:
         environment: Environment label
         extra_labels: Static labels added to all events
     """
-    
+
     def __init__(
         self,
         enabled: bool = False,
@@ -58,11 +58,11 @@ class VectorConfig:
         self.api_key = api_key
         self.environment = environment
         self.extra_labels = extra_labels or {}
-    
+
     @classmethod
     def from_sf_config(cls, config: dict) -> 'VectorConfig':
         """Create VectorConfig from SpiderFoot configuration dict.
-        
+
         Config keys:
             _vector_enabled: bool
             _vector_endpoint: str
@@ -84,23 +84,23 @@ class VectorConfig:
 
 class VectorSink:
     """Asynchronous sink that batches and sends events to Vector.dev.
-    
+
     Buffers events in memory and flushes them to Vector's HTTP source
     in configurable batches. Thread-safe for use from synchronous code.
-    
+
     Usage:
         sink = VectorSink(config)
         sink.start()
-        
+
         sink.emit_event("scan_event", {
             "scan_id": "abc",
             "event_type": "IP_ADDRESS",
             "data": "1.2.3.4"
         })
-        
+
         sink.stop()
     """
-    
+
     def __init__(self, config: Optional[VectorConfig] = None):
         self.config = config or VectorConfig()
         self.log = logging.getLogger("spiderfoot.vector")
@@ -113,20 +113,20 @@ class VectorSink:
             "batches_sent": 0,
             "errors": 0,
         }
-    
+
     def start(self) -> None:
         """Start the background flush thread."""
         if not self.config.enabled:
             self.log.info("Vector.dev integration disabled")
             return
-        
+
         if not HTTPX_AVAILABLE:
             self.log.warning(
                 "Vector.dev integration requires 'httpx' package. "
                 "Install with: pip install httpx"
             )
             return
-        
+
         self._running = True
         self._flush_thread = threading.Thread(
             target=self._flush_loop,
@@ -135,12 +135,12 @@ class VectorSink:
         )
         self._flush_thread.start()
         self.log.info("Vector.dev sink started → %s", self.config.endpoint)
-    
+
     def stop(self) -> None:
         """Stop the sink, flushing remaining events."""
         if not self._running:
             return
-        
+
         self._running = False
         # Final flush
         self._flush_batch()
@@ -149,17 +149,17 @@ class VectorSink:
         self.log.info(
             f"Vector.dev sink stopped. Stats: {json.dumps(self._stats)}"
         )
-    
+
     def emit_event(self, event_type: str, data: Dict[str, Any]) -> None:
         """Queue an event for sending to Vector.
-        
+
         Args:
             event_type: Category of event (scan_event, scan_status, log, metric)
             data: Event payload
         """
         if not self.config.enabled or not self._running:
             return
-        
+
         event = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "source": "spiderfoot",
@@ -168,13 +168,13 @@ class VectorSink:
             **self.config.extra_labels,
             **data,
         }
-        
+
         try:
             self._buffer.put_nowait(event)
         except queue.Full:
             self._stats["events_dropped"] += 1
             self.log.warning("Vector.dev buffer full, dropping event")
-    
+
     def emit_scan_event(
         self,
         scan_id: str,
@@ -186,7 +186,7 @@ class VectorSink:
         source_hash: str = "ROOT",
     ) -> None:
         """Convenience method to emit a SpiderFoot scan event.
-        
+
         Args:
             scan_id: Scan instance ID
             event_type: SpiderFoot event type
@@ -205,7 +205,7 @@ class VectorSink:
             "risk": risk,
             "source_event_hash": source_hash,
         })
-    
+
     def emit_scan_status(
         self,
         scan_id: str,
@@ -214,7 +214,7 @@ class VectorSink:
         progress: float = 0.0,
     ) -> None:
         """Emit a scan status change event.
-        
+
         Args:
             scan_id: Scan instance ID
             status: Scan status string
@@ -227,7 +227,7 @@ class VectorSink:
             "target": target,
             "progress": progress,
         })
-    
+
     def emit_metric(
         self,
         name: str,
@@ -235,7 +235,7 @@ class VectorSink:
         tags: Optional[Dict[str, str]] = None,
     ) -> None:
         """Emit a metric event.
-        
+
         Args:
             name: Metric name
             value: Metric value
@@ -246,33 +246,33 @@ class VectorSink:
             "metric_value": value,
             "tags": tags or {},
         })
-    
+
     def _flush_loop(self) -> None:
         """Background loop that periodically flushes the event buffer."""
         while self._running:
             time.sleep(self.config.flush_interval)
             self._flush_batch()
-    
+
     def _flush_batch(self) -> None:
         """Drain the buffer and send events to Vector."""
         batch: List[Dict] = []
-        
+
         while len(batch) < self.config.batch_size:
             try:
                 event = self._buffer.get_nowait()
                 batch.append(event)
             except queue.Empty:
                 break
-        
+
         if not batch:
             return
-        
+
         payload = "\n".join(json.dumps(e, default=str) for e in batch)
-        
+
         headers = {"Content-Type": "application/x-ndjson"}
         if self.config.api_key:
             headers["Authorization"] = f"Bearer {self.config.api_key}"
-        
+
         for attempt in range(self.config.max_retries):
             try:
                 with httpx.Client(timeout=self.config.timeout) as client:
@@ -281,7 +281,7 @@ class VectorSink:
                         content=payload,
                         headers=headers,
                     )
-                
+
                 if response.status_code in (200, 201, 202, 204):
                     self._stats["events_sent"] += len(batch)
                     self._stats["batches_sent"] += 1
@@ -295,14 +295,14 @@ class VectorSink:
                 self.log.warning(
                     f"Vector.dev send failed (attempt {attempt+1}): {e}"
                 )
-            
+
             if attempt < self.config.max_retries - 1:
                 time.sleep(1 * (attempt + 1))
-        
+
         self._stats["errors"] += 1
         self._stats["events_dropped"] += len(batch)
         self.log.error("Failed to send %s events to Vector.dev after %s attempts", len(batch), self.config.max_retries)
-    
+
     @property
     def stats(self) -> Dict[str, int]:
         """Get sink statistics."""
@@ -311,15 +311,15 @@ class VectorSink:
 
 class VectorLogHandler(logging.Handler):
     """Python logging handler that forwards log records to Vector.dev via VectorSink.
-    
+
     Attach this handler to the root 'spiderfoot' logger to automatically
     ship all log output to Vector.dev alongside scan events.
     """
-    
+
     def __init__(self, sink: VectorSink):
         super().__init__()
         self.sink = sink
-    
+
     def emit(self, record: logging.LogRecord) -> None:
         """Forward a log record to Vector.dev."""
         try:
@@ -330,15 +330,15 @@ class VectorLogHandler(logging.Handler):
                 "pid": record.process,
                 "thread": record.thread,
             }
-            
+
             scan_id = getattr(record, 'scanId', None)
             if scan_id:
                 data["scan_id"] = scan_id
-            
+
             if record.exc_info and record.exc_info[0]:
                 data["exception_type"] = record.exc_info[0].__name__
                 data["exception_message"] = str(record.exc_info[1])
-            
+
             self.sink.emit_event("log", data)
         except Exception:
             self.handleError(record)

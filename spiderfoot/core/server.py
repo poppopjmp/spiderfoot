@@ -24,25 +24,25 @@ from spiderfoot.constants import DEFAULT_API_PORT
 
 class ServerManager:
     """Centralized server management for SpiderFoot."""
-    
+
     def __init__(self, config: Dict[str, Any]):
         """
         Initialize the server manager.
-        
+
         Args:
             config: SpiderFoot configuration dictionary
         """
         self.config = config
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
-        
+
     def start_web_server(self, web_config: Dict[str, Any], logging_queue: Optional[mp.Queue] = None) -> None:
         """
         Start the CherryPy web server.
-        
+
         Args:
             web_config: Web server configuration
             logging_queue: Optional logging queue for multiprocessing
-            
+
         Raises:
             SystemExit: If server fails to start
         """
@@ -85,7 +85,7 @@ class ServerManager:
 
             # Determine URL scheme
             scheme = "https" if using_ssl else "http"
-            
+
             if web_host == "0.0.0.0":
                 url = f"{scheme}://localhost:{web_port}{web_root}"
             else:
@@ -116,7 +116,7 @@ class ServerManager:
                 script_name=web_root,
                 config=conf
             )
-            
+
         except Exception as e:
             self.log.critical(f"Unhandled exception in start_web_server: {e}", exc_info=True)
             sys.exit(-1)
@@ -124,11 +124,11 @@ class ServerManager:
     def start_fastapi_server(self, api_config: Dict[str, Any], logging_queue: Optional[mp.Queue] = None) -> None:
         """
         Start the FastAPI server.
-        
+
         Args:
             api_config: API server configuration
             logging_queue: Optional logging queue for multiprocessing
-            
+
         Raises:
             SystemExit: If server fails to start
         """
@@ -178,16 +178,16 @@ class ServerManager:
             self.log.critical(f"Unhandled exception in start_fastapi_server: {e}", exc_info=True)
             sys.exit(-1)
 
-    def start_both_servers(self, web_config: Dict[str, Any], api_config: Dict[str, Any], 
+    def start_both_servers(self, web_config: Dict[str, Any], api_config: Dict[str, Any],
                           logging_queue: Optional[mp.Queue] = None) -> None:
         """
         Start both web UI and FastAPI servers concurrently.
-        
+
         Args:
             web_config: Web server configuration
             api_config: API server configuration
             logging_queue: Optional logging queue for multiprocessing
-            
+
         Raises:
             SystemExit: If servers fail to start
         """
@@ -256,13 +256,13 @@ class ServerManager:
     def _load_auth_secrets(self) -> Dict[str, str]:
         """
         Load authentication secrets from passwd file.
-        
+
         Returns:
             Dict containing username/password pairs
         """
         secrets = {}
         passwd_file = SpiderFootHelpers.dataPath() + '/passwd'
-        
+
         if os.path.isfile(passwd_file):
             try:
                 with open(passwd_file, 'r', encoding='utf-8') as f:
@@ -274,19 +274,19 @@ class ServerManager:
                 self.log.info("Loaded %s authentication credentials", len(secrets))
             except Exception as e:
                 self.log.error("Failed to load authentication file: %s", e)
-        
+
         return secrets
 
     def _setup_ssl(self) -> bool:
         """
         Set up SSL configuration if certificates are available.
-        
+
         Returns:
             True if SSL is configured, False otherwise
         """
         key_path = SpiderFootHelpers.dataPath() + '/spiderfoot.key'
         crt_path = SpiderFootHelpers.dataPath() + '/spiderfoot.crt'
-        
+
         if os.path.isfile(key_path) and os.path.isfile(crt_path):
             cherrypy.config.update({
                 'server.ssl_certificate': crt_path,
@@ -294,13 +294,13 @@ class ServerManager:
             })
             self.log.info("SSL enabled")
             return True
-        
+
         return False
 
     def _setup_authentication(self, conf: Dict[str, Any], secrets: Dict[str, str]) -> None:
         """
         Set up digest authentication.
-        
+
         Args:
             conf: CherryPy configuration dict to update
             secrets: Username/password pairs

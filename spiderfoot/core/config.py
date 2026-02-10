@@ -17,7 +17,7 @@ from spiderfoot.constants import DEFAULT_WEB_PORT, DEFAULT_API_PORT
 
 class ConfigManager:
     """Centralized configuration management for SpiderFoot."""
-    
+
     # Default configuration options
     DEFAULT_CONFIG = {
         '_debug': False,
@@ -39,7 +39,7 @@ class ConfigManager:
         '_socks4user': '',
         '_socks5pwd': '',
     }
-    
+
     # Configuration descriptions
     CONFIG_DESCRIPTIONS = {
         '_debug': "Enable debugging?",
@@ -57,17 +57,17 @@ class ConfigManager:
         '_socks5pwd': "SOCKS Password. Valid only for SOCKS5 servers.",
         '_modulesenabled': "Modules enabled for the scan."
     }
-    
+
     def __init__(self):
         """Initialize the configuration manager."""
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
         self._config = deepcopy(self.DEFAULT_CONFIG)
         self._initialized = False
-        
+
     def initialize(self) -> Dict[str, Any]:
         """
         Initialize configuration with runtime values.
-        
+
         Returns:
             Dict containing the initialized configuration
         """
@@ -85,51 +85,51 @@ class ConfigManager:
                 default_data_path = Path.home() / '.spiderfoot'
                 default_data_path.mkdir(exist_ok=True)
                 self._config['__database'] = str(default_data_path / 'spiderfoot.db')
-            
+
             # Add configuration descriptions
             self._config['__globaloptdescs__'] = self.CONFIG_DESCRIPTIONS
-            
+
             self._initialized = True
             self.log.info("Configuration initialized successfully")
             return deepcopy(self._config)
-            
+
         except Exception as e:
             self.log.error("Failed to initialize configuration: %s", e)
             raise
-    
+
     def get_config(self) -> Dict[str, Any]:
         """
         Get the current configuration.
-        
+
         Returns:
             Dict containing the current configuration
         """
         if not self._initialized:
             return self.initialize()
         return deepcopy(self._config)
-    
+
     def update_config(self, updates: Dict[str, Any]) -> None:
         """
         Update configuration with new values.
-        
+
         Args:
             updates: Dictionary of configuration updates
         """
         if not isinstance(updates, dict):
             raise TypeError("Updates must be a dictionary")
-        
+
         self._config.update(updates)
         self.log.debug("Configuration updated with %s changes", len(updates))
-    
+
     def validate_legacy_files(self) -> None:
         """
         Validate that legacy files are not present in the application directory.
-        
+
         Raises:
             SystemExit: If legacy files are found
         """
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        
+
         # Check for legacy database files
         legacy_db_path = os.path.join(script_dir, '../../../spiderfoot.db')
         if os.path.exists(legacy_db_path):
@@ -147,18 +147,18 @@ class ConfigManager:
             print(f"The passwd file is now loaded from your home directory: {SpiderFootHelpers.dataPath()}/passwd")
             print(f"This message will go away once you move or remove passwd from {os.path.dirname(legacy_passwd_path)}")
             raise SystemExit(-1)
-    
-    def get_web_config(self, host: str = '127.0.0.1', port: int = DEFAULT_WEB_PORT, 
+
+    def get_web_config(self, host: str = '127.0.0.1', port: int = DEFAULT_WEB_PORT,
                       root: str = '/', cors_origins: Optional[list] = None) -> Dict[str, Any]:
         """
         Get web server configuration.
-        
+
         Args:
             host: Host to bind to
             port: Port to bind to
             root: Root path
             cors_origins: CORS origins list
-            
+
         Returns:
             Dict containing web server configuration
         """
@@ -168,20 +168,20 @@ class ConfigManager:
             'root': root,
             'cors_origins': cors_origins or [],
         }
-    
-    def get_api_config(self, host: str = '127.0.0.1', port: int = DEFAULT_API_PORT, 
-                      workers: int = 1, log_level: str = 'info', 
+
+    def get_api_config(self, host: str = '127.0.0.1', port: int = DEFAULT_API_PORT,
+                      workers: int = 1, log_level: str = 'info',
                       reload: bool = False) -> Dict[str, Any]:
         """
         Get API server configuration.
-        
+
         Args:
             host: Host to bind to
-            port: Port to bind to  
+            port: Port to bind to
             workers: Number of worker processes
             log_level: Logging level
             reload: Enable auto-reload
-            
+
         Returns:
             Dict containing API server configuration
         """
@@ -192,16 +192,16 @@ class ConfigManager:
             'log_level': log_level,
             'reload': reload
         }
-    
+
     def apply_command_line_args(self, args) -> None:
         """
         Apply command line arguments to configuration.
-        
+
         Args:
             args: Parsed command line arguments
         """
         if hasattr(args, 'debug') and args.debug:
             self._config['_debug'] = True
-            
+
         if hasattr(args, 'max_threads') and args.max_threads:
             self._config['_maxthreads'] = args.max_threads

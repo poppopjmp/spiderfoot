@@ -24,7 +24,7 @@ class InfoEndpoints:
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         modlist = list()
         modules_data = self.config['__modules__']
-        
+
         # Handle both dict and list formats for backward compatibility
         if isinstance(modules_data, dict):
             # Convert dict to list format expected by frontend
@@ -51,7 +51,7 @@ class InfoEndpoints:
             # Handle list format (original)
             for mod in modules_data:
                 modlist.append(mod)
-        
+
         return sorted(modlist, key=lambda x: x['name'])
 
     @cherrypy.expose

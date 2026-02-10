@@ -22,11 +22,11 @@ class WorkspaceEndpoints:
         except Exception as e:
             self.log.warning("Could not generate CSRF token: %s", e)
             csrf_token = "disabled"
-        
+
         templ = Template(filename='spiderfoot/templates/workspaces.tmpl', lookup=self.lookup)
         return templ.render(
-            pageid='WORKSPACES', 
-            docroot=self.docroot, 
+            pageid='WORKSPACES',
+            docroot=self.docroot,
             version=__version__,
             csrf_token=csrf_token
         )
@@ -191,11 +191,11 @@ class WorkspaceEndpoints:
     def workspacedetails(self, workspace_id):
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
-            
+
             # Ensure workspace has required attributes
             if not hasattr(ws, 'name') or not ws.name:
                 return f"Error: Workspace {workspace_id} not found or has no name"
-            
+
             # Generate CSRF token for the session
             csrf_token = None
             try:
@@ -206,14 +206,14 @@ class WorkspaceEndpoints:
             except Exception as e:
                 self.log.warning("Could not generate CSRF token: %s", e)
                 csrf_token = "disabled"
-            
+
             # Load scans for the workspace
             scan_details = []
             try:
                 scan_details = ws.get_scans()
             except Exception as e:
                 self.log.warning("Could not load scans for workspace %s: %s", workspace_id, e)
-            
+
             # Use the template
             templ = Template(filename='spiderfoot/templates/workspace_details.tmpl', lookup=self.lookup)
             return templ.render(

@@ -9,21 +9,21 @@ def workspaces_command(cli, line):
     """List all workspaces using the API. Usage: workspaces [--details]."""
     args = shlex.split(line)
     show_details = '--details' in args
-    
+
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + '/api/workspaces'
     resp = cli.request(url)
     if not resp:
         cli.dprint("No workspaces found.")
         return
-    
+
     try:
         data = json.loads(resp) if hasattr(json, 'loads') else cli.json_loads(resp)
         workspaces = data.get('workspaces', []) if isinstance(data, dict) else data
-        
+
         if not workspaces:
             cli.dprint("No workspaces found.")
             return
-            
+
         cli.dprint("Workspaces:", plain=True)
         for ws in workspaces:
             if isinstance(ws, dict):
@@ -49,10 +49,10 @@ def workspace_create_command(cli, line):
     if not args:
         cli.edprint("Usage: workspace_create <name> [description]")
         return
-    
+
     name = args[0]
     description = ' '.join(args[1:]) if len(args) > 1 else ""
-    
+
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + '/api/workspaces'
     payload = {"name": name, "description": description}
     resp = cli.request(url, post=payload)
@@ -72,7 +72,7 @@ def workspace_delete_command(cli, line):
     if not args:
         cli.edprint("Usage: workspace_delete <workspace_id>")
         return
-    
+
     workspace_id = args[0]
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + f'/api/workspaces/{workspace_id}'
     resp = cli.request(url, delete=True)
@@ -87,14 +87,14 @@ def workspace_info_command(cli, line):
     if not args:
         cli.edprint("Usage: workspace_info <workspace_id>")
         return
-    
+
     workspace_id = args[0]
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + f'/api/workspaces/{workspace_id}'
     resp = cli.request(url)
     if not resp:
         cli.edprint(f"Workspace '{workspace_id}' not found")
         return
-    
+
     try:
         data = json.loads(resp)
         cli.dprint(f"Workspace: {data.get('name', workspace_id)}", plain=True)
@@ -114,7 +114,7 @@ def workspace_activate_command(cli, line):
     if not args:
         cli.edprint("Usage: workspace_activate <workspace_id>")
         return
-    
+
     workspace_id = args[0]
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + f'/api/workspaces/{workspace_id}/set-active'
     resp = cli.request(url, post={})
@@ -132,20 +132,20 @@ def workspace_export_command(cli, line):
     if not args:
         cli.edprint("Usage: workspace_export <workspace_id> [format] [output_file]")
         return
-    
+
     workspace_id = args[0]
     format_type = args[1] if len(args) > 1 else 'json'
     output_file = args[2] if len(args) > 2 else None
-    
+
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + f'/api/workspaces/{workspace_id}/export'
     if format_type != 'json':
         url += f'?format={format_type}'
-    
+
     resp = cli.request(url)
     if not resp:
         cli.edprint(f"Failed to export workspace '{workspace_id}'")
         return
-    
+
     if output_file:
         try:
             with open(output_file, 'w', encoding='utf-8') as f:
@@ -162,10 +162,10 @@ def workspace_clone_command(cli, line):
     if len(args) < 2:
         cli.edprint("Usage: workspace_clone <source_workspace_id> <new_name>")
         return
-    
+
     source_id = args[0]
     new_name = args[1]
-    
+
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + f'/api/workspaces/{source_id}/clone'
     payload = {"name": new_name}
     resp = cli.request(url, post=payload)
@@ -181,17 +181,17 @@ def workspace_clone_command(cli, line):
 
 def register(registry):
     """Register all workspace commands."""
-    registry.register("workspaces", workspaces_command, 
+    registry.register("workspaces", workspaces_command,
                      help_text="List all workspaces. Use --details for more info.")
-    registry.register("workspace_create", workspace_create_command, 
+    registry.register("workspace_create", workspace_create_command,
                      help_text="Create a new workspace.")
-    registry.register("workspace_delete", workspace_delete_command, 
+    registry.register("workspace_delete", workspace_delete_command,
                      help_text="Delete a workspace.")
-    registry.register("workspace_info", workspace_info_command, 
+    registry.register("workspace_info", workspace_info_command,
                      help_text="Get detailed information about a workspace.")
-    registry.register("workspace_activate", workspace_activate_command, 
+    registry.register("workspace_activate", workspace_activate_command,
                      help_text="Set a workspace as active.")
-    registry.register("workspace_export", workspace_export_command, 
+    registry.register("workspace_export", workspace_export_command,
                      help_text="Export workspace data.")
-    registry.register("workspace_clone", workspace_clone_command, 
+    registry.register("workspace_clone", workspace_clone_command,
                      help_text="Clone a workspace.")

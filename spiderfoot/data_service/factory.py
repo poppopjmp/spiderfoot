@@ -21,21 +21,21 @@ def create_data_service(
     resilient: bool = True,
 ) -> DataService:
     """Create a DataService instance from explicit config.
-    
+
     Args:
         config: DataServiceConfig specifying backend and settings
         resilient: If True, wrap remote backends (HTTP/gRPC) with a
             circuit breaker and optional local fallback.
-        
+
     Returns:
         Configured DataService instance
     """
     if config is None:
         config = DataServiceConfig()
-    
+
     if config.backend == DataServiceBackend.LOCAL:
         return LocalDataService(config=config, db_opts=config.db_config)
-    
+
     elif config.backend == DataServiceBackend.HTTP:
         from spiderfoot.data_service.http_client import HttpDataService
         log.info("Using HTTP data service backend: %s", config.api_url)
@@ -43,7 +43,7 @@ def create_data_service(
         if resilient:
             return _wrap_resilient(primary, config)
         return primary
-    
+
     elif config.backend == DataServiceBackend.GRPC:
         from spiderfoot.data_service.grpc_client import GrpcDataService
         log.info("Using gRPC data service backend: %s", config.api_url)
@@ -51,7 +51,7 @@ def create_data_service(
         if resilient:
             return _wrap_resilient(primary, config)
         return primary
-    
+
     else:
         raise ValueError(f"Unknown data service backend: {config.backend}")
 
@@ -78,9 +78,9 @@ def _wrap_resilient(primary: DataService, config: DataServiceConfig) -> DataServ
 
 def create_data_service_from_config(sf_config: Dict[str, Any]) -> DataService:
     """Create a DataService from SpiderFoot configuration dict.
-    
+
     Reads _dataservice_* keys from the SpiderFoot config.
-    
+
     Config keys:
         _dataservice_backend: 'local', 'http', or 'grpc'
         _dataservice_api_url: URL for remote backends
@@ -88,21 +88,21 @@ def create_data_service_from_config(sf_config: Dict[str, Any]) -> DataService:
         _dataservice_timeout: Request timeout (seconds)
         __database: Database path/URL (for local backend)
         __dbtype: Database type 'sqlite' or 'postgresql'
-    
+
     Args:
         sf_config: SpiderFoot configuration dict
-        
+
     Returns:
         Configured DataService instance
     """
     backend_str = sf_config.get("_dataservice_backend", "local")
-    
+
     try:
         backend = DataServiceBackend(backend_str.lower())
     except ValueError:
         log.warning("Unknown backend '%s', defaulting to local", backend_str)
         backend = DataServiceBackend.LOCAL
-    
+
     config = DataServiceConfig(
         backend=backend,
         api_url=sf_config.get("_dataservice_api_url", "http://localhost:8002"),
@@ -113,13 +113,13 @@ def create_data_service_from_config(sf_config: Dict[str, Any]) -> DataService:
             "__dbtype": sf_config.get("__dbtype", "sqlite"),
         },
     )
-    
+
     return create_data_service(config)
 
 
 def create_data_service_from_env() -> DataService:
     """Create a DataService from environment variables.
-    
+
     Environment variables:
         SF_DATASERVICE_BACKEND: 'local', 'http', or 'grpc'
         SF_DATASERVICE_API_URL: URL for remote backends
@@ -127,18 +127,18 @@ def create_data_service_from_env() -> DataService:
         SF_DATASERVICE_TIMEOUT: Request timeout (seconds)
         SF_DATABASE: Database path/URL
         SF_DBTYPE: Database type
-    
+
     Returns:
         Configured DataService instance
     """
     backend_str = os.environ.get("SF_DATASERVICE_BACKEND", "local")
-    
+
     try:
         backend = DataServiceBackend(backend_str.lower())
     except ValueError:
         log.warning("Unknown backend '%s', defaulting to local", backend_str)
         backend = DataServiceBackend.LOCAL
-    
+
     config = DataServiceConfig(
         backend=backend,
         api_url=os.environ.get("SF_DATASERVICE_API_URL", "http://localhost:8002"),
@@ -149,36 +149,36 @@ def create_data_service_from_env() -> DataService:
             "__dbtype": os.environ.get("SF_DBTYPE", "sqlite"),
         },
     )
-    
+
     return create_data_service(config)
 
 
 class DataServiceBridge:
     """Bridge between the new DataService and legacy SpiderFootDb callers.
-    
+
     Provides backward compatibility by exposing legacy method names
     that delegate to a DataService instance. This allows gradual
     migration of modules from direct DB access to the service layer.
-    
+
     Usage:
         ds = create_data_service(config)
         bridge = DataServiceBridge(ds)
-        
+
         # Legacy code can call:
         bridge.scanInstanceCreate(scan_id, name, target)
         bridge.scanEventStore(scan_id, sf_event)
     """
-    
+
     def __init__(self, data_service: DataService):
         self._ds = data_service
         self.log = logging.getLogger("spiderfoot.dataservice.bridge")
-    
+
     # --- Legacy scan methods ---
-    
+
     def scanInstanceCreate(self, instanceId: str, scanName: str, scanTarget: str):
         """Legacy wrapper for scan_instance_create."""
         self._ds.scan_instance_create(instanceId, scanName, scanTarget)
-    
+
     def scanInstanceGet(self, instanceId: str):
         """Legacy wrapper returning tuple format."""
         result = self._ds.scan_instance_get(instanceId)
@@ -186,7 +186,7 @@ class DataServiceBridge:
             return []
         return [(result["name"], result["target"], result["created"],
                  result["started"], result["ended"], result["status"])]
-    
+
     def scanInstanceList(self):
         """Legacy wrapper returning tuple format."""
         results = self._ds.scan_instance_list()
@@ -195,19 +195,19 @@ class DataServiceBridge:
              r["started"], r["ended"], r["status"], r.get("result_count", 0))
             for r in results
         ]
-    
+
     def scanInstanceDelete(self, instanceId: str):
         """Legacy wrapper for scan_instance_delete."""
         self._ds.scan_instance_delete(instanceId)
-    
+
     def scanInstanceSet(self, instanceId: str, started=None, ended=None, status=None):
         """Legacy wrapper for scan_status_set."""
         started_int = int(started) if started else None
         ended_int = int(ended) if ended else None
         self._ds.scan_status_set(instanceId, status or "", started_int, ended_int)
-    
+
     # --- Legacy event methods ---
-    
+
     def scanEventStore(self, instanceId: str, sfEvent):
         """Legacy wrapper - stores a SpiderFootEvent."""
         if isinstance(self._ds, LocalDataService):
@@ -225,7 +225,7 @@ class DataServiceBridge:
                 visibility=sfEvent.visibility,
                 risk=sfEvent.risk,
             )
-    
+
     def scanResultEvent(self, instanceId: str, eventType="ALL", **kwargs):
         """Legacy wrapper for event queries."""
         et = None if eventType == "ALL" else eventType
@@ -236,7 +236,7 @@ class DataServiceBridge:
              r["visibility"], r["risk"])
             for r in results
         ]
-    
+
     def scanResultSummary(self, instanceId: str, by: str = "type"):
         """Legacy wrapper - partial support."""
         if by == "type":
@@ -244,13 +244,13 @@ class DataServiceBridge:
             return [(k, "", "", v, 0) for k, v in summary.items()]
         self.log.warning("scanResultSummary by='%s' not fully supported via bridge", by)
         return []
-    
+
     # --- Legacy log methods ---
-    
+
     def scanLogEvent(self, instanceId: str, classification: str, message: str, component=None):
         """Legacy wrapper for scan_log_event."""
         self._ds.scan_log_event(instanceId, classification, message, component)
-    
+
     def scanLogs(self, instanceId: str, limit=None, fromRowId=0, reverse=False):
         """Legacy wrapper for scan_log_get."""
         lmt = limit if limit else 0
@@ -262,27 +262,27 @@ class DataServiceBridge:
         if reverse:
             rows.reverse()
         return rows
-    
+
     # --- Legacy config methods ---
-    
+
     def configSet(self, optMap=None):
         """Legacy wrapper for config_set."""
         if optMap is None:
             optMap = {}
         self._ds.config_set(optMap)
-    
+
     def configGet(self):
         """Legacy wrapper for config_get."""
         return self._ds.config_get()
-    
+
     def scanConfigSet(self, scan_id: str, optMap=None):
         """Legacy wrapper for scan_config_set."""
         if optMap is None:
             optMap = {}
         self._ds.scan_config_set(scan_id, optMap)
-    
+
     # --- Legacy event type methods ---
-    
+
     def eventTypes(self):
         """Legacy wrapper for event_types_list."""
         results = self._ds.event_types_list()

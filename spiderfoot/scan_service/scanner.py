@@ -728,7 +728,7 @@ class SpiderFootScanner():
 
     def shutdown(self) -> None:
         """Explicitly shutdown the scanner and clean up resources.
-        
+
         This method ensures proper cleanup of threads and database connections,
         preventing resource leaks during testing.
         """
@@ -738,22 +738,22 @@ class SpiderFootScanner():
                 for mod in self.__moduleInstances.values():
                     with suppress(Exception):
                         mod._stopScanning = True
-            
+
             # Shutdown the shared thread pool
             if hasattr(self, '_SpiderFootScanner__sharedThreadPool') and self.__sharedThreadPool:
                 with suppress(Exception):
                     self.__sharedThreadPool.shutdown(wait=False)  # Don't wait to prevent hanging
-            
+
             # Close database connection
             if hasattr(self, '_SpiderFootScanner__dbh') and self.__dbh:
                 with suppress(Exception):
                     self.__dbh.close()
-                    
+
             # Set status to aborted if not already finished
             if hasattr(self, '_SpiderFootScanner__status') and self.__status not in [DB_STATUS_FINISHED, DB_STATUS_ERROR_FAILED, DB_STATUS_ABORTED]:
                 with suppress(Exception):
                     self.__setStatus(DB_STATUS_ABORTED, None, time.time() * 1000)
-                    
+
         except Exception:
             # Complete silent failure to prevent issues during cleanup
             pass

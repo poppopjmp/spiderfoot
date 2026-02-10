@@ -33,7 +33,7 @@ def setup_security_headers():
     if not SECURE_AVAILABLE:
         logging.getLogger(__name__).warning("secure module not available, skipping security headers")
         return
-        
+
     csp = (
         secure.ContentSecurityPolicy()
             .default_src("'self'")
@@ -59,26 +59,26 @@ def setup_security_headers():
 def setup_enhanced_security(config: Dict[str, Any]) -> Optional[Any]:
     """
     Set up enhanced security with the new security framework.
-    
+
     Args:
         config: SpiderFoot configuration dictionary
-        
+
     Returns:
         Security middleware instance or None if not available
     """
     log = logging.getLogger(__name__)
-    
+
     if not SECURITY_MODULES_AVAILABLE:
         log.warning("Enhanced security modules not available, falling back to basic security")
         setup_security_headers()
         return None
-    
+
     try:
         # Install enhanced security middleware
         security_middleware = install_cherrypy_security(config)
         log.info("Enhanced security middleware installed successfully")
         return security_middleware
-        
+
     except Exception as e:
         log.error("Failed to install enhanced security middleware: %s", e)
         log.info("Falling back to basic security headers")
@@ -89,7 +89,7 @@ def setup_enhanced_security(config: Dict[str, Any]) -> Optional[Any]:
 def get_security_status() -> Dict[str, Any]:
     """
     Get current security status and capabilities.
-    
+
     Returns:
         Security status information
     """

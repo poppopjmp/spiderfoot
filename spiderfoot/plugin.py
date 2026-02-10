@@ -97,18 +97,18 @@ class SpiderFootPluginLogger(logging.Logger):
 
 class SpiderFootPlugin:
     """Base class for SpiderFoot modules/plugins.
-    
+
     All SpiderFoot modules should inherit from this class and implement
     the required methods.
     """
-    
+
     # Module metadata
     _name = "module_template"
     _description = "Base SpiderFoot Plugin"
     _flags = []
     _useragent = None
     _priority = 3
-    
+
     # Module state
     errorState = False
     incomingEventQueue = None
@@ -122,11 +122,11 @@ class SpiderFootPlugin:
     _thread = None
     running = False
     maxThreads = 10  # Default maximum threads for this module
-    
+
     # Database and listeners
     _dbh = None
     _listeners = []
-    
+
     def __init__(self):
         """Initialize the plugin."""
         self._listeners = []
@@ -143,10 +143,10 @@ class SpiderFootPlugin:
     def finished(self):
         """Called when the module should finish processing."""
         pass
-        
+
     def sendEvent(self, eventType: str, eventData: str, parentEvent=None, confidenceLevel: int = 100):
         """Send an event.
-        
+
         Args:
             eventType: Type of event
             eventData: Event data
@@ -155,7 +155,7 @@ class SpiderFootPlugin:
         """
         if not parentEvent:
             parentEvent = self._currentEvent
-            
+
         if parentEvent:
             evt = SpiderFootEvent(eventType, eventData, self._name, parentEvent)
             self.notifyListeners(evt)
@@ -529,10 +529,10 @@ class SpiderFootPlugin:
             else:
                 logging.getLogger(__name__).error(error_msg)
             return
-            
+
         if hasattr(self, 'sf') and self.sf:
             self.sf.debug(f"Starting module {getattr(self, '__name__', 'unknown')} thread")
-        
+
         # Replace the undefined 'thread' with a proper thread creation
         import threading
         thread = threading.Thread(target=self.threadWorker)

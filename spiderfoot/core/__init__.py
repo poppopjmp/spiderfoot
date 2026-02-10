@@ -5,7 +5,7 @@ This package contains shared functionality used by CLI, API, and WebUI.
 
 __all__ = [
     'ConfigManager',
-    'ModuleManager', 
+    'ModuleManager',
     'ScanManager',
     'ServerManager',
     'ValidationUtils'
