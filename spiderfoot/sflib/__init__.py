@@ -9,6 +9,13 @@
 # Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+"""SpiderFoot core library (sflib).
+
+Re-exports the main :class:`SpiderFoot` object together with configuration
+serialisation helpers and common utility functions used across the entire
+codebase.
+"""
+
 from .core import SpiderFoot
 from .config import configSerialize, configUnserialize
 from .helpers import *  # Expose other helpers as needed

@@ -1,4 +1,11 @@
 #  -*- coding: utf-8 -*-
+"""Top-level helper utilities for SpiderFoot.
+
+Contains :class:`SpiderFootHelpers` with static/class methods for URL
+parsing, data type detection, country-code lookups, hash identification,
+data extraction from web content, and other cross-cutting concerns.
+"""
+
 import html
 import json
 import logging

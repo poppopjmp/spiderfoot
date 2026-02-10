@@ -9,6 +9,12 @@
 # Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+"""Pure-function helpers for validation, hashing, and domain/IP utilities.
+
+All public symbols are listed in :data:`__all__` so that ``from .helpers
+import *`` exposes only the intended API.
+"""
+
 import hashlib
 import io
 import os

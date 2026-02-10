@@ -9,6 +9,13 @@
 # Copyright:   (c) Steve Micallef 2012
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+"""Base class for all SpiderFoot modules (plugins).
+
+Provides the :class:`SpiderFootPlugin` ABC that every ``sfp_*`` module
+subclasses.  Handles event registration, listener management, thread
+coordination, error tracking, and the ``handleEvent`` / ``producedEvents``
+contract that the scan engine relies on.
+"""
 
 from contextlib import suppress
 import io

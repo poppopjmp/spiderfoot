@@ -1,3 +1,10 @@
+"""Thread pool executor for concurrent module execution.
+
+Provides :class:`SpiderFootThreadPool`, a reusable thread pool that spawns
+worker threads once and dispatches scan module tasks to them for the
+duration of a scan.
+"""
+
 import queue
 import logging
 import threading

@@ -1,3 +1,9 @@
+"""Version string for the SpiderFoot package.
+
+Reads the canonical version from the ``VERSION`` file at the repository root
+and exposes it as :data:`__version__`.
+"""
+
 import os
 import pathlib
 
@@ -10,7 +16,7 @@ def _get_version():
         return version_string
     except (FileNotFoundError, IOError):
         # Fallback version if VERSION file is not found
-        return "5.127.0"
+        return "5.128.0"
 
 __version__ = _get_version()
 

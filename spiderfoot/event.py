@@ -9,6 +9,12 @@
 # Copyright:   (c) Steve Micallef 2012
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+"""SpiderFoot event model.
+
+Defines :class:`SpiderFootEvent`, the fundamental data unit passed between
+modules during a scan.  Each event carries a type, data payload, source
+reference, and provenance metadata used for correlation and reporting.
+"""
 
 import hashlib
 import random

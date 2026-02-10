@@ -9,6 +9,12 @@
 # Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+"""Network, DNS, and HTTP utilities for SpiderFoot.
+
+Provides mixin methods for DNS resolution, SSL/TLS certificate inspection,
+HTTP content fetching, proxy support, and socket-level operations used by
+the core :class:`SpiderFoot` object.
+"""
 # Network, DNS, IP, socket, proxy, fetch, etc. utilities
 import socket
 import ssl

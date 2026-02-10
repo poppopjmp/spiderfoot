@@ -9,6 +9,11 @@
 # Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+"""Configuration serialisation and deserialisation helpers.
+
+Provides :func:`configSerialize` and :func:`configUnserialize` used to
+persist and restore SpiderFoot scan settings to/from the database.
+"""
 from copy import deepcopy
 
 def configSerialize(opts: dict, filterSystem: bool = True):

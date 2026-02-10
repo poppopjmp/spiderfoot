@@ -1,3 +1,11 @@
+"""Logging infrastructure for SpiderFoot.
+
+Provides :class:`SpiderFootLog` (SQLite-backed log handler),
+:class:`SpiderFootLogHandler` (queue-based async handler), and
+log-rotation via :class:`TimedRotatingFileHandler`.  Designed so that
+every scan's log entries are queryable from the database.
+"""
+
 import atexit
 import logging
 import os

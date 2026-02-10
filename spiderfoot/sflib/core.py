@@ -9,6 +9,12 @@
 # Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+"""Core SpiderFoot engine object.
+
+Contains the :class:`SpiderFoot` "god object" that holds scan
+configuration, provides DNS resolution, HTTP fetching, content analysis,
+and various domain / IP / URL helper methods used by every module.
+"""
 # Will import from .config, .network, .logging, .helpers as needed
 
 from copy import deepcopy

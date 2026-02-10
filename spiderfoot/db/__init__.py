@@ -9,6 +9,13 @@
 # Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
+"""SpiderFoot database package.
+
+Exposes :class:`SpiderFootDb`, the high-level facade that delegates to
+specialised sub-modules (``db_core``, ``db_scan``, ``db_event``,
+``db_config``, ``db_correlation``).  Handles connection lifecycle,
+schema migrations, and retry logic for SQLite operations.
+"""
 
 from pathlib import Path
 import hashlib

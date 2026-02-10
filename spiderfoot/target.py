@@ -1,3 +1,11 @@
+"""Scan target abstraction.
+
+Provides the :class:`SpiderFootTarget` class that encapsulates a scan's
+root target (domain, IP address, hostname, etc.), validates its type, and
+offers helpers for determining whether discovered hosts and IPs fall within
+the target's scope.
+"""
+
 import sys
 import typing
 
