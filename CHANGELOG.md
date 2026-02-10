@@ -3,6 +3,19 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.235.0] — RC Cycle 178: Type Hints & Docstrings in modules/ — Near-Complete Coverage
+
+### Changed
+- Added class docstrings to **172 module classes** using each module's `meta['summary']` field (RC173)
+- Added method docstrings to **1,433 public methods** across 271 module files — pattern-matched for SpiderFoot conventions: `setup` → "Set up the module.", `handleEvent` → "Handle an event received by this module.", `query*` → "Query {name}." (RC174)
+- Added **1,241 return type hints** to public methods in modules/ — three phases: known methods (1,151), AST None-analysis (56), AST literal-type inference (34) (RC175)
+- Added **1,330 parameter type hints** to public methods in modules/ — four phases: `setup`/`handleEvent` signatures (831), query params (187), comprehensive mapping (309), final 3 `handle_error_response.res` (3) (RC176–177)
+- Added **250 additional return type hints** via AST return-pattern analysis and manual classification (RC178)
+- **Parameter type hints: 100% complete** (0 remaining in modules/)
+- **Return type hints: 97.3% complete** (41 complex types remain — DNS resolvers, recursive calls, dict.get() results)
+- **Class docstrings: 100% complete** in modules/
+- **Method docstrings: 100% complete** in modules/
+
 ## [5.229.0] — RC Cycle 171: Module Docstrings & Exception Capture — 100% Project-Wide
 
 ### Changed
