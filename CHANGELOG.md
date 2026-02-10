@@ -3,6 +3,24 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.193.0] — RC Cycle 129: Return Type Hints (WebUI)
+
+### Changed
+- Added return type hints to 45 public methods in `webui/` subsystem (export, helpers, settings, info, templates, workspace)
+- WebUI endpoints now fully annotated: `-> str` for template renders, `-> dict` for JSON endpoints, `-> bytes` for file exports
+
+## [5.192.0] — RC Cycle 128: Function Docstrings (94 functions)
+
+### Changed
+- Added docstrings to 94 more public functions: `webui/scan.py` (37), `webui/routes.py` (14), `sflib/core.py` (34), `scan_service/scanner.py` (9)
+- Core SpiderFoot class now fully documented (all public methods have docstrings)
+
+## [5.191.0] — RC Cycle 127: Function Docstrings (72 functions)
+
+### Changed
+- Added docstrings to 72 public functions across `webui/` (export, helpers, settings, info, templates, workspace), API routers (scan, workspace), correlation engine, and helpers
+- All user-facing endpoint functions now have descriptions
+
 ## [5.190.0] — RC Cycle 125: print() → logging + Module Docstrings
 
 ### Changed
