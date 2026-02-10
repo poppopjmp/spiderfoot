@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import cherrypy
 import logging
 from copy import deepcopy
@@ -14,7 +16,7 @@ import multiprocessing as mp
 class ScanEndpoints:
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanopts(self, id):
+    def scanopts(self, id) -> dict:
         dbh = self._get_dbh()
         ret = dict()
         meta = dbh.scanInstanceGet(id)
@@ -30,7 +32,7 @@ class ScanEndpoints:
         return ret
 
     @cherrypy.expose
-    def rerunscan(self, id):
+    def rerunscan(self, id) -> str | dict:
         cfg = deepcopy(self.config)
         dbh = self._get_dbh(cfg)
         info = dbh.scanInstanceGet(id)
@@ -70,7 +72,7 @@ class ScanEndpoints:
         raise cherrypy.HTTPRedirect(f"{self.docroot}/scaninfo?id={scanId}")
 
     @cherrypy.expose
-    def rerunscanmulti(self, ids):
+    def rerunscanmulti(self, ids) -> str:
         import sfwebui
         cfg = deepcopy(self.config)
         dbh = self._get_dbh(cfg)
@@ -114,7 +116,7 @@ class ScanEndpoints:
         return templ.render(rerunscans=True, docroot=self.docroot, pageid="SCANLIST", version=__version__, errors=errors)
 
     @cherrypy.expose
-    def newscan(self):
+    def newscan(self) -> str:
         import sfwebui  # for patching Template in tests
         dbh = self._get_dbh()
         types = dbh.eventTypes()
@@ -125,7 +127,7 @@ class ScanEndpoints:
                             selectedmods="", scantarget="", version=__version__)
 
     @cherrypy.expose
-    def clonescan(self, id):
+    def clonescan(self, id) -> str:
         import sfwebui  # for patching Template in tests
         dbh = self._get_dbh()
         types = dbh.eventTypes()
@@ -149,7 +151,7 @@ class ScanEndpoints:
                             scanname=str(scanname), scantarget=str(scantarget), version=__version__)
 
     @cherrypy.expose
-    def scaninfo(self, id):
+    def scaninfo(self, id) -> str:
         import sfwebui
         dbh = self._get_dbh()
         res = dbh.scanInstanceGet(id)
@@ -160,7 +162,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanlist(self):
+    def scanlist(self) -> list:
         dbh = self._get_dbh()
         data = dbh.scanInstanceList()
         retdata = []
@@ -193,7 +195,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanstatus(self, id):
+    def scanstatus(self, id) -> list | dict:
         dbh = self._get_dbh()
         data = dbh.scanInstanceGet(id)
         if not data:
@@ -210,7 +212,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scansummary(self, id, by):
+    def scansummary(self, id, by) -> list:
         retdata = []
         dbh = self._get_dbh()
         try:
@@ -226,7 +228,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scancorrelations(self, id):
+    def scancorrelations(self, id) -> list | dict:
         retdata = []
         dbh = self._get_dbh()
         try:
@@ -238,7 +240,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scaneventresults(self, id, eventType=None, filterfp=False, correlationId=None):
+    def scaneventresults(self, id, eventType=None, filterfp=False, correlationId=None) -> list:
         retdata = []
         dbh = self._get_dbh()
         try:
@@ -250,7 +252,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scaneventresultsunique(self, id, eventType, filterfp=False):
+    def scaneventresultsunique(self, id, eventType, filterfp=False) -> list:
         dbh = self._get_dbh()
         retdata = []
         try:
@@ -262,7 +264,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def search(self, id=None, eventType=None, value=None):
+    def search(self, id=None, eventType=None, value=None) -> list:
         try:
             return self.searchBase(id, eventType, value)
         except Exception:
@@ -270,7 +272,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanhistory(self, id):
+    def scanhistory(self, id) -> list:
         if not id:
             return []
         dbh = self._get_dbh()
@@ -281,7 +283,7 @@ class ScanEndpoints:
             return []
 
     @cherrypy.expose
-    def startscan(self, scanname, scantarget, modulelist, typelist, usecase, max_wait=10):
+    def startscan(self, scanname, scantarget, modulelist, typelist, usecase, max_wait=10) -> str | dict:
         scanname = self.cleanUserInput([scanname])[0]
         scantarget = self.cleanUserInput([scantarget])[0]
         if not scanname:
@@ -336,7 +338,7 @@ class ScanEndpoints:
         raise cherrypy.HTTPRedirect(f"{self.docroot}/scaninfo?id={scanId}")
 
     @cherrypy.expose
-    def stopscan(self, id):
+    def stopscan(self, id) -> bytes:
         if not id:
             return b''
         dbh = self._get_dbh()
@@ -352,7 +354,7 @@ class ScanEndpoints:
         return b''
 
     @cherrypy.expose
-    def scandelete(self, id):
+    def scandelete(self, id) -> bytes:
         if not id:
             return b''
         dbh = self._get_dbh()
@@ -368,7 +370,7 @@ class ScanEndpoints:
         return b''
 
     @cherrypy.expose
-    def savesettings(self, allopts, token, configFile=None):
+    def savesettings(self, allopts, token, configFile=None) -> str:
         import json
         try:
             opts = json.loads(allopts)
@@ -378,7 +380,7 @@ class ScanEndpoints:
         raise cherrypy.HTTPRedirect("/opts?updated=1")
 
     @cherrypy.expose
-    def resultsetfp(self, id, resultids, fp):
+    def resultsetfp(self, id, resultids, fp) -> bytes:
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         dbh = self._get_dbh()
         if fp not in ["0", "1"]:
@@ -406,7 +408,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanelementtypediscovery(self, id, eventType):
+    def scanelementtypediscovery(self, id, eventType) -> dict:
         dbh = self._get_dbh()
         pc = dict()
         datamap = dict()
@@ -426,7 +428,7 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacescanresults(self, workspace, limit=None):
+    def workspacescanresults(self, workspace, limit=None) -> dict:
         try:
             if limit is not None:
                 limit = int(limit)
@@ -440,13 +442,13 @@ class ScanEndpoints:
             return {'success': False, 'error': str(e)}
 
     @cherrypy.expose
-    def index(self):
+    def index(self) -> str:
         import sfwebui  # for patching Template in tests
         templ = Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
         return templ.render(docroot=self.docroot, pageid="INDEX", version=__version__)
 
     @cherrypy.expose
-    def scanexportlogs(self, id, dialect="excel"):
+    def scanexportlogs(self, id, dialect="excel") -> str | bytes:
         import csv
         from io import StringIO
         dbh = self._get_dbh()
@@ -467,7 +469,7 @@ class ScanEndpoints:
         return fileobj.getvalue().encode('utf-8')
 
     @cherrypy.expose
-    def scancorrelationsexport(self, id, filetype="csv", dialect="excel"):
+    def scancorrelationsexport(self, id, filetype="csv", dialect="excel") -> str | bytes:
         import csv
         import sfwebui
         from io import StringIO
@@ -496,7 +498,7 @@ class ScanEndpoints:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
-    def scaneventresultexport(self, id, type, filetype="csv", dialect="excel"):
+    def scaneventresultexport(self, id, type, filetype="csv", dialect="excel") -> str | bytes:
         import csv
         from io import StringIO
         dbh = self._get_dbh()
@@ -517,7 +519,7 @@ class ScanEndpoints:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
-    def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel"):
+    def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel") -> str | bytes:
         import csv
         from io import StringIO
         dbh = self._get_dbh()
@@ -546,7 +548,7 @@ class ScanEndpoints:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
-    def scansearchresultexport(self, id, eventType=None, value=None, filetype="csv", dialect="excel"):
+    def scansearchresultexport(self, id, eventType=None, value=None, filetype="csv", dialect="excel") -> str | bytes:
         import csv
         from io import StringIO
         data = self.searchBase(id, eventType, value)
@@ -568,7 +570,7 @@ class ScanEndpoints:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
-    def scanexportjsonmulti(self, ids):
+    def scanexportjsonmulti(self, ids) -> bytes:
         import json
         dbh = self._get_dbh()
         scaninfo = list()
@@ -587,7 +589,7 @@ class ScanEndpoints:
         return json.dumps(scaninfo).encode('utf-8')
 
     @cherrypy.expose
-    def scanviz(self, id, gexf="0"):
+    def scanviz(self, id, gexf="0") -> str | bytes:
         dbh = self._get_dbh()
         if not id:
             return self.error("No scan id provided.")
@@ -607,7 +609,7 @@ class ScanEndpoints:
         return SpiderFootHelpers.buildGraphGexf([root], "SpiderFoot Export", data)
 
     @cherrypy.expose
-    def scanvizmulti(self, ids, gexf="1"):
+    def scanvizmulti(self, ids, gexf="1") -> str | bytes:
         dbh = self._get_dbh()
         data = list()
         roots = list()
@@ -633,7 +635,7 @@ class ScanEndpoints:
         return SpiderFootHelpers.buildGraphGexf(roots, "SpiderFoot Export", data)
 
     @cherrypy.expose
-    def opts(self, updated=None, error_message=None, config=None):
+    def opts(self, updated=None, error_message=None, config=None) -> str:
         import sfwebui
         templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
         # Use provided config or fallback to self.config
@@ -648,7 +650,7 @@ class ScanEndpoints:
         )
 
     @cherrypy.expose
-    def optsexport(self, pattern=None):
+    def optsexport(self, pattern=None) -> str:
         import json
         if pattern:
             filtered = {k: v for k, v in self.config.items() if pattern in k}
@@ -661,17 +663,17 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def optsraw(self):
+    def optsraw(self) -> list:
         return [self.config]
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def ping(self):
+    def ping(self) -> list:
         return ["PONG"]
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def query(self, query):
+    def query(self, query) -> list:
         dbh = self._get_dbh()
         try:
             return dbh.query(query)
@@ -679,7 +681,7 @@ class ScanEndpoints:
             return [["ERROR", str(e)]]
 
     @cherrypy.expose
-    def savesettingsraw(self, allopts, token):
+    def savesettingsraw(self, allopts, token) -> bytes:
         import json
 from spiderfoot.scan_state_map import (
     DB_STATUS_ABORTED,
@@ -695,7 +697,7 @@ from spiderfoot.scan_state_map import (
         return b'["SUCCESS", ""]'
 
     @cherrypy.expose
-    def vacuum(self):
+    def vacuum(self) -> bytes:
         dbh = self._get_dbh()
         try:
             dbh.vacuum()
