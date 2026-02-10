@@ -3,6 +3,28 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.122.0] — RC Cycle 39: Silent Exception Cleanup (Batch 2)
+
+### Changed
+- Fixed 10 more `except Exception: pass` blocks with debug logging
+- api/routers/config.py (4), rag_correlation.py (3), retry.py (3)
+
+## [5.121.0] — RC Cycle 38: Silent Exception Cleanup (Batch 1)
+
+### Changed
+- Fixed 11 `except Exception: pass` blocks in api/routers/scan.py with contextual debug logging
+- Covers scan hooks, state machine, config retrieval, metadata copy, log export
+
+## [5.120.0] — RC Cycle 37: Unused Import Cleanup
+
+### Removed
+- Removed unused imports from 5 API layer files: SecureConfigManager, get_app_config, Query, ValidationError, Callable/List
+
+## [5.119.0] — RC Cycle 36: Debug Print Cleanup
+
+### Changed
+- Replaced 3 `print(f"[DEBUG]...")` calls with `self.log.debug()` in correlation/rule_executor.py
+
 ## [5.118.0] — RC Cycle 34: Port Constants
 
 ### Changed
