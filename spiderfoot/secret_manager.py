@@ -245,7 +245,7 @@ class FileSecretBackend(SecretBackend):
                 for item in data.get("secrets", []):
                     entry = SecretEntry.from_dict(item)
                     self._secrets[entry.key] = entry
-            except Exception as e:
+            except (json.JSONDecodeError, OSError) as e:
                 log.error("Failed to load secrets from %s: %s",
                           self._filepath, e)
 

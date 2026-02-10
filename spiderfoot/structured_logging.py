@@ -166,7 +166,7 @@ class StructuredFormatter(logging.Formatter):
 
         try:
             return json.dumps(log_entry, default=str, ensure_ascii=False)
-        except Exception:
+        except (TypeError, ValueError):
             # Fallback to basic formatting
             return json.dumps({
                 "timestamp": datetime.now(timezone.utc).isoformat(),

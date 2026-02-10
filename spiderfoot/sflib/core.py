@@ -315,7 +315,7 @@ class SpiderFoot:
             if isinstance(response_json, str):
                 import json
                 response_json = json.loads(response_json)
-        except Exception:
+        except (json.JSONDecodeError, TypeError):
             self.error(
                 "The key 'content' in the Google API response doesn't contain valid JSON.")
             return None
@@ -386,7 +386,7 @@ class SpiderFoot:
             response_json = response['content']
             if isinstance(response_json, str):
                 response_json = json.loads(response_json)
-        except Exception:
+        except (json.JSONDecodeError, TypeError):
             self.error(
                 "The key 'content' in the bing API response doesn't contain valid JSON.")
             return None

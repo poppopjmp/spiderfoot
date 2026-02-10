@@ -237,7 +237,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                             text = f.read()
                             if search_query.lower() in text.lower() or search_query.lower() in entry['title'].lower():
                                 search_results.append(entry)
-                    except Exception:
+                    except (OSError, KeyError):
                         continue
             selected_entry = next((e for e in doc_index if e['file'] == selected_file), None)
             abs_selected = os.path.join(doc_dir, selected_file) if selected_file else None

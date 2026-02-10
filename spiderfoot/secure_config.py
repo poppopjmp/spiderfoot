@@ -357,7 +357,7 @@ class SecureConfigManager:
             config = backup_data.get('config', {})
             return self.decrypt_config(config)
 
-        except Exception:
+        except (OSError, json.JSONDecodeError):
             return {}
 
     def validate_compliance(self, config: dict[str, Any], standards: list = None) -> dict[str, Any]:

@@ -463,7 +463,7 @@ class ProfileManager:
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(profile.to_dict(), f, indent=2)
             return True
-        except Exception as e:
+        except (TypeError, OSError) as e:
             log.error("Failed to save profile %s: %s", name, e)
             return False
 
@@ -475,7 +475,7 @@ class ProfileManager:
             profile = ScanProfile.from_dict(data)
             self.register(profile)
             return profile
-        except Exception as e:
+        except (json.JSONDecodeError, OSError, ValueError) as e:
             log.error("Failed to load profile from %s: %s",
                       filepath, e)
             return None

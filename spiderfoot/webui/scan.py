@@ -372,10 +372,10 @@ class ScanEndpoints:
         import json
         try:
             opts = json.loads(allopts)
-            self.config.update(opts)
-            raise cherrypy.HTTPRedirect("/opts?updated=1")
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError) as e:
             return self.opts(updated=None, error_message=f"Processing one or more of your inputs failed. {str(e)}", config=None)
+        self.config.update(opts)
+        raise cherrypy.HTTPRedirect("/opts?updated=1")
 
     @cherrypy.expose
     def resultsetfp(self, id, resultids, fp):

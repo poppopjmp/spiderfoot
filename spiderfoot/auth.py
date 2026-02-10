@@ -36,7 +36,7 @@ Usage (CherryPy)::
         raise cherrypy.HTTPError(401)
 """
 
-import hashlib
+import base64\nimport binascii\nimport hashlib
 import hmac
 import logging
 import os
@@ -311,7 +311,7 @@ class AuthGuard:
             decoded = base64.b64decode(
                 auth_header[6:]).decode("utf-8")
             username, password = decoded.split(":", 1)
-        except Exception:
+        except (binascii.Error, UnicodeDecodeError, ValueError):
             return AuthResult(False, error="Invalid Basic auth format")
 
         stored_hash = self.config.basic_credentials.get(username)
