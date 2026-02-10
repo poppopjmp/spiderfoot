@@ -36,7 +36,11 @@ import threading
 from collections import OrderedDict
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from spiderfoot.module_graph import ModuleGraph
+    from spiderfoot.module_registry import ModuleRegistry
 
 log = logging.getLogger("spiderfoot.module_loader")
 
@@ -103,8 +107,8 @@ class ModuleLoader:
 
     def __init__(
         self,
-        registry=None,
-        graph=None,
+        registry: ModuleRegistry | None = None,
+        graph: ModuleGraph | None = None,
         *,
         enable_topological: bool = True,
         enable_pruning: bool = False,

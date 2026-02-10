@@ -82,7 +82,7 @@ class ExportService:
 
     def export_scan(self, scan_id: str,
                     fmt: ExportFormat,
-                    dbh=None) -> str:
+                    dbh: Any = None) -> str:
         """Export scan results as a string.
 
         Args:
@@ -112,7 +112,7 @@ class ExportService:
     def export_to_file(self, scan_id: str,
                        fmt: ExportFormat,
                        filepath: str,
-                       dbh=None) -> str:
+                       dbh: Any = None) -> str:
         """Export scan results to a file.
 
         Returns the filepath written.
@@ -129,7 +129,7 @@ class ExportService:
     def export_to_stream(self, scan_id: str,
                          fmt: ExportFormat,
                          stream: IO,
-                         dbh=None) -> None:
+                         dbh: Any = None) -> None:
         """Export scan results to a stream/file-like object."""
         content = self.export_scan(scan_id, fmt, dbh)
         stream.write(content)

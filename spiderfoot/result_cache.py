@@ -13,6 +13,7 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+from collections.abc import Callable
 
 
 class EvictionPolicy(Enum):
@@ -205,7 +206,7 @@ class ResultCache:
                 self._stats.expirations += 1
             return len(expired_keys)
 
-    def get_or_set(self, key: str, factory, ttl: float | None = None) -> Any:
+    def get_or_set(self, key: str, factory: Callable, ttl: float | None = None) -> Any:
         """Get value if cached, otherwise call factory() to compute and cache it."""
         val = self.get(key, default=self._SENTINEL)
         if val is not self._SENTINEL:

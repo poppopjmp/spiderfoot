@@ -479,7 +479,7 @@ class APISecurityMiddleware:
 
 def require_api_key(permissions: list[str] = None) -> Callable:
     """Decorator to require API key with specific permissions."""
-    def decorator(func) -> Callable:
+    def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
             # This would need to be integrated with your web framework

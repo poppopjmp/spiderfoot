@@ -14,7 +14,7 @@ import logging
 
 from ..dependencies import get_visualization_service, optional_auth
 from spiderfoot import SpiderFootHelpers
-from spiderfoot.visualization_service import VisualizationServiceError
+from spiderfoot.visualization_service import VisualizationService, VisualizationServiceError
 
 router = APIRouter()
 log = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ async def get_multi_scan_graph_data(
     format: str = Query("gexf", description="Output format: json, gexf"),
     filter_type: str | None = Query(None, description="Filter by event type"),
     include_internal: bool = Query(False, description="Include internal events"),
-    svc=Depends(get_visualization_service),
+    svc: VisualizationService = Depends(get_visualization_service),
 ) -> Response:
     """Generate graph visualization data for multiple scans."""
     try:
@@ -82,7 +82,7 @@ async def get_scan_graph_data(
     format: str = Query("json", description="Output format: json, gexf"),
     filter_type: str | None = Query(None, description="Filter by event type"),
     include_internal: bool = Query(False, description="Include internal events"),
-    svc=Depends(get_visualization_service),
+    svc: VisualizationService = Depends(get_visualization_service),
 ) -> Response:
     """Generate graph visualization data for a scan."""
     try:
@@ -121,7 +121,7 @@ async def get_scan_summary_data(
     scan_id: str,
     api_key: str = optional_auth_dep,
     group_by: str = Query("type", description="Group results by: type, module, risk"),
-    svc=Depends(get_visualization_service),
+    svc: VisualizationService = Depends(get_visualization_service),
 ) -> dict:
     """Get statistical summary data for visualization."""
     try:
@@ -142,7 +142,7 @@ async def get_scan_timeline_data(
     api_key: str = optional_auth_dep,
     interval: str = Query("hour", description="Time interval: hour, day, week"),
     event_type: str | None = Query(None, description="Filter by event type"),
-    svc=Depends(get_visualization_service),
+    svc: VisualizationService = Depends(get_visualization_service),
 ) -> dict:
     """Get timeline data for scan events."""
     try:
@@ -165,7 +165,7 @@ async def get_scan_heatmap_data(
     api_key: str = optional_auth_dep,
     dimension_x: str = Query("module", description="X-axis dimension: module, type, risk"),
     dimension_y: str = Query("type", description="Y-axis dimension: module, type, risk"),
-    svc=Depends(get_visualization_service),
+    svc: VisualizationService = Depends(get_visualization_service),
 ) -> dict:
     """Get heatmap data for scan results."""
     try:

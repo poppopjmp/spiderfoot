@@ -4,8 +4,14 @@ Correlation rules command for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def correlationrules_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def correlationrules_command(cli: SpiderFootCli, line: str) -> None:
     """List all available correlation rules from the API."""
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + '/api/config/correlationrules'
     resp = cli.request(url)
@@ -14,5 +20,5 @@ def correlationrules_command(cli, line) -> None:
         return
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("correlationrules", correlationrules_command, help_text="List available correlation rules from the API.")

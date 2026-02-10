@@ -385,7 +385,7 @@ class SpiderFootEvent:
         """
         return f"SpiderFootEvent(type='{self.eventType}', data='{self.data}', module='{self.module}')"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Check equality with another event.
 
         Args:

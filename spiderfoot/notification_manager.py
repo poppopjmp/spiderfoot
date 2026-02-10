@@ -186,7 +186,7 @@ class NotificationManager:
         event_type = f"task.{record.state.value}"
         self.notify_async(event_type, record.to_dict())
 
-    def wire_alert_engine(self, engine=None) -> None:
+    def wire_alert_engine(self, engine: Any | None = None) -> None:
         """Register as an AlertEngine handler.
 
         Args:

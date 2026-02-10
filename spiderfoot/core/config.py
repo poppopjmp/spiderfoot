@@ -195,7 +195,7 @@ class ConfigManager:
             'reload': reload
         }
 
-    def apply_command_line_args(self, args) -> None:
+    def apply_command_line_args(self, args: Any) -> None:
         """
         Apply command line arguments to configuration.
 

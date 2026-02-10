@@ -24,6 +24,7 @@ import os
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.api.compression")
 
@@ -64,12 +65,12 @@ class CompressionMiddleware(BaseHTTPMiddleware):
     - Response is not a streaming response
     """
 
-    def __init__(self, app, *, min_size: int = _DEFAULT_MIN_SIZE, level: int = _DEFAULT_LEVEL) -> None:
+    def __init__(self, app: Any, *, min_size: int = _DEFAULT_MIN_SIZE, level: int = _DEFAULT_LEVEL) -> None:
         super().__init__(app)
         self.min_size = min_size
         self.level = max(1, min(9, level))
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         # Check if client accepts gzip
         accept_encoding = request.headers.get("accept-encoding", "")
         if "gzip" not in accept_encoding.lower():
@@ -116,7 +117,7 @@ class CompressionMiddleware(BaseHTTPMiddleware):
         )
 
 
-def install_compression(app, *, min_size: int = None, level: int = None) -> None:
+def install_compression(app: Any, *, min_size: int = None, level: int = None) -> None:
     """Install response compression middleware on the FastAPI app.
 
     Reads defaults from environment variables if not explicitly provided.

@@ -4,8 +4,14 @@ Ping command for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def ping_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def ping_command(cli: SpiderFootCli, line: str) -> None:
     """Ping the SpiderFoot API server."""
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + '/api/health'
     resp = cli.request(url)
@@ -21,5 +27,5 @@ def ping_command(cli, line) -> None:
     else:
         cli.edprint("No response from API.")
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("ping", ping_command, help_text="Test connectivity to the SpiderFoot API server.")

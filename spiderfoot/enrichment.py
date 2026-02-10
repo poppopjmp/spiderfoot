@@ -194,7 +194,7 @@ class EnrichmentPipeline:
         event_types: set[str] | None = None,
     ) -> Callable:
         """Decorator to register a function as an enricher."""
-        def decorator(func) -> Callable:
+        def decorator(func: Callable) -> Callable:
             self.add_function(func, name=name or func.__name__, priority=priority, event_types=event_types)
             return func
         return decorator

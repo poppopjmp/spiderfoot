@@ -74,7 +74,7 @@ def integrate_services(sf_config: dict[str, Any]) -> bool:
         return False
 
 
-def wire_scan_services(scanner, scan_id: str) -> None:
+def wire_scan_services(scanner: Any, scan_id: str) -> None:
     """Wire services into a running scan.
 
     Called at the beginning of __startScan() to connect metrics,
@@ -97,7 +97,7 @@ def wire_scan_services(scanner, scan_id: str) -> None:
         log.warning("Partial service wiring for scan %s: %s", scan_id, e)
 
 
-def wire_module_services(module, sf_config: dict[str, Any]) -> None:
+def wire_module_services(module: Any, sf_config: dict[str, Any]) -> None:
     """Inject service references into a module if it supports them.
 
     Called after mod.setup() for each module. If the module is a
@@ -249,7 +249,7 @@ def _inject_legacy_metrics(module) -> None:
     import functools
 
     @functools.wraps(original_handler)
-    def instrumented_handler(event) -> Any:
+    def instrumented_handler(event: Any) -> Any:
         t0 = time.monotonic()
         try:
             result = original_handler(event)

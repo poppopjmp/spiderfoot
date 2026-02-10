@@ -317,7 +317,7 @@ class SecurityHeaders:
     }
 
     @classmethod
-    def add_security_headers(cls, response) -> Any:
+    def add_security_headers(cls, response: Any) -> Any:
         """Add security headers to HTTP response.
 
         Args:

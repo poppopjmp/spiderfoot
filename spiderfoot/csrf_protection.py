@@ -18,7 +18,7 @@ from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 class CSRFProtection:
     """CSRF Protection implementation for SpiderFoot with CherryPy."""
 
-    def __init__(self, secret_key=None) -> None:
+    def __init__(self, secret_key: str | None = None) -> None:
         """Initialize CSRF protection.
 
         Args:
@@ -46,7 +46,7 @@ class CSRFProtection:
 
         return session['csrf_token']
 
-    def validate_csrf_token(self, token=None) -> bool:
+    def validate_csrf_token(self, token: str | None = None) -> bool:
         """Validate CSRF token.
 
         Args:
@@ -123,7 +123,7 @@ csrf_protection = CSRFProtection()
 cherrypy.tools.csrf = CSRFTool()
 
 
-def csrf_protect(f) -> Callable:
+def csrf_protect(f: Callable) -> Callable:
     """Decorator to enforce CSRF protection on specific routes.
 
     Args:
@@ -148,7 +148,7 @@ def csrf_token() -> str:
     return csrf_protection.generate_csrf_token()
 
 
-def init_csrf_protection(app_config=None) -> CSRFProtection:
+def init_csrf_protection(app_config: dict | None = None) -> CSRFProtection:
     """Initialize CSRF protection for CherryPy application.
 
     Args:

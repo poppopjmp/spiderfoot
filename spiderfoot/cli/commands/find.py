@@ -4,8 +4,14 @@ Find command for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def find_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def find_command(cli: SpiderFootCli, line: str) -> None:
     """Search for data in scan events using the API."""
     import shlex
     args = shlex.split(line)
@@ -28,5 +34,5 @@ def find_command(cli, line) -> None:
         return
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("find", find_command, help_text="Search for data within scan results using the API.")

@@ -13,12 +13,12 @@ from spiderfoot import __version__
 class MiscEndpoints:
     """WebUI endpoints for documentation and miscellaneous pages."""
     @cherrypy.expose
-    def documentation(self, doc=None, q=None) -> str:
+    def documentation(self, doc: str | None = None, q: str | None = None) -> str:
         """Render the documentation page with optional search query highlighting."""
         # Render documentation page or search results
         import re
 
-        def highlight(text, query) -> str:
+        def highlight(text: str, query: str) -> str:
             if not text or not query:
                 return text
             pattern = re.compile(re.escape(query), re.IGNORECASE)

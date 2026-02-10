@@ -4,7 +4,7 @@ from __future__ import annotations
 
 """Legacy stub providing a no-op search_base function for test compatibility."""
 
-def search_base(config, *args, **kwargs) -> list:
+def search_base(config: dict, *args, **kwargs) -> list:
     """Stub for legacy search_base utility. Returns empty list for test compatibility.
     Args:
         config: Configuration object

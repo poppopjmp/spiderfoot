@@ -232,7 +232,7 @@ class APISecurityManager:
 class APIKeyManager:
     """API key management with database storage for FastAPI."""
 
-    def __init__(self, config) -> None:
+    def __init__(self, config: dict) -> None:
         """Initialize API key manager.
 
         Args:
@@ -308,7 +308,7 @@ class APIKeyManager:
 
         return key_id, api_key
 
-    def revoke_api_key(self, key_id: str, user_id: str = None) -> bool:
+    def revoke_api_key(self, key_id: str, user_id: str | None = None) -> bool:
         """Revoke API key.
 
         Args:

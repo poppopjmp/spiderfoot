@@ -4,8 +4,14 @@ Start command for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def start_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def start_command(cli: SpiderFootCli, line: str) -> None:
     """Start a new scan using the SpiderFoot API."""
     import shlex, json
     args = shlex.split(line)
@@ -29,5 +35,5 @@ def start_command(cli, line) -> None:
     else:
         cli.edprint("No response from API.")
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("start", start_command, help_text="Start a new scan using the SpiderFoot API.")

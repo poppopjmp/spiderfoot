@@ -26,7 +26,7 @@ class ScanMetadataService:
     metadata/annotation concerns from scan lifecycle management.
     """
 
-    def __init__(self, dbh=None, event_repo=None) -> None:
+    def __init__(self, dbh: Any = None, event_repo: Any = None) -> None:
         """
         Args:
             dbh: Database handle (SpiderFootDb instance).
@@ -35,7 +35,7 @@ class ScanMetadataService:
         self._dbh = dbh
         self._event_repo = event_repo
 
-    def set_db_handle(self, dbh) -> None:
+    def set_db_handle(self, dbh: Any) -> None:
         """Set or replace the database handle."""
         self._dbh = dbh
 

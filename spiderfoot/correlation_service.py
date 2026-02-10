@@ -47,7 +47,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.correlation_service")
 
@@ -340,7 +340,7 @@ class CorrelationService:
 
     def run_for_scan(self, scan_id: str,
                      rule_ids: list[str] | None = None,
-                     dbh=None) -> list[CorrelationResult]:
+                     dbh: Any | None = None) -> list[CorrelationResult]:
         """Run correlations for a specific scan.
 
         Args:

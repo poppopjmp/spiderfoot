@@ -211,7 +211,7 @@ async def update_module_options(module_name: str, options: dict = config_body, a
 
 @router.get("/event-types")
 async def get_event_types(api_key: str = optional_auth_dep,
-                          config_repo=Depends(get_config_repository)) -> dict[str, Any]:
+                          config_repo: Any = Depends(get_config_repository)) -> dict[str, Any]:
     """
     Get all event types.
 

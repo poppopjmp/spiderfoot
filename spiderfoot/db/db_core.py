@@ -825,7 +825,7 @@ class DbCore:
             except Exception:
                 return 0
 
-    def set_schema_version(self, version=None) -> None:
+    def set_schema_version(self, version: int | None = None) -> None:
         """Set the schema version to the given value (or current if None)."""
         if version is None:
             version = self.SCHEMA_VERSION

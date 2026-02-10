@@ -207,7 +207,7 @@ def isPublicIpAddress(ip: str) -> bool:
             return False
     return True
 
-def normalizeDNS(res) -> list:
+def normalizeDNS(res: list) -> list:
     """Clean DNS results to be a simple list.
 
     Args:

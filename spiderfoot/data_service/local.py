@@ -49,7 +49,7 @@ class LocalDataService(DataService):
             self.log.error("Failed to initialize database: %s", e)
             raise
 
-    def set_db_handle(self, dbh) -> None:
+    def set_db_handle(self, dbh: Any) -> None:
         """Set an existing database handle directly.
 
         Useful when integrating with existing code that already
@@ -194,7 +194,7 @@ class LocalDataService(DataService):
             self.log.error("event_store failed: %s", e)
             return False
 
-    def event_store_obj(self, scan_id: str, sf_event) -> bool:
+    def event_store_obj(self, scan_id: str, sf_event: Any) -> bool:
         """Store a SpiderFootEvent object directly.
 
         This preserves full compatibility with the existing event system.

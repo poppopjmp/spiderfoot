@@ -285,7 +285,7 @@ class WebSocketHub:
     # EventBus bridge
     # ------------------------------------------------------------------
 
-    def setup_eventbus_bridge(self, event_bus) -> None:
+    def setup_eventbus_bridge(self, event_bus: Any) -> None:
         """Subscribe to EventBus events and forward to WebSocket.
 
         Bridges internal event bus → WebSocket for real-time UI updates.

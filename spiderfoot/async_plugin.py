@@ -112,7 +112,7 @@ class SpiderFootAsyncPlugin(SpiderFootModernPlugin):
     # Core async bridge
     # ------------------------------------------------------------------
 
-    def run_async(self, coro) -> Any:
+    def run_async(self, coro: Any) -> Any:
         """Run an async coroutine from synchronous context.
 
         Submits the coroutine to the shared event loop and blocks

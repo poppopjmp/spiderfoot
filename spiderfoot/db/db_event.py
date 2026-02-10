@@ -18,6 +18,7 @@ import logging
 import time
 import sqlite3
 import psycopg2
+from typing import Any
 from ..event import SpiderFootEvent
 from .db_utils import get_placeholder, is_transient_error
 from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
@@ -32,7 +33,7 @@ class EventManager:
     delegate all event-related SQL operations.
     """
 
-    def __init__(self, dbh, conn, dbhLock, db_type) -> None:
+    def __init__(self, dbh: Any, conn: Any, dbhLock: RLock, db_type: str) -> None:
         self.dbh = dbh
         self.conn = conn
         self.dbhLock = dbhLock
@@ -285,7 +286,7 @@ class EventManager:
                 raise OSError("SQL error encountered when updating false-positive") from e
         return True
 
-    def scanEventStore(self, instanceId: str, sfEvent, truncateSize: int = 0) -> None:
+    def scanEventStore(self, instanceId: str, sfEvent: SpiderFootEvent, truncateSize: int = 0) -> None:
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not instanceId:

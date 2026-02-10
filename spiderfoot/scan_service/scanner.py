@@ -15,6 +15,7 @@ from __future__ import annotations
 import socket
 import time
 import queue
+from typing import Any
 from time import sleep
 from copy import deepcopy
 from contextlib import suppress
@@ -48,7 +49,7 @@ import logging
 log = logging.getLogger("spiderfoot.scanner")
 
 
-def startSpiderFootScanner(loggingQueue, *args, **kwargs) -> SpiderFootScanner:
+def startSpiderFootScanner(loggingQueue: Any, *args, **kwargs) -> SpiderFootScanner:
     """Initialize and start the SpiderFootScanner.
 
     Args:

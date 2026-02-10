@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Any
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -56,7 +57,7 @@ def _parse_size(value: str, default: int) -> int:
 class BodySizeLimitMiddleware(BaseHTTPMiddleware):
     """Reject requests with Content-Length exceeding configured limits."""
 
-    def __init__(self, app, max_body: int = _DEFAULT_MAX_BODY, max_upload: int = _DEFAULT_MAX_UPLOAD) -> None:
+    def __init__(self, app: Any, max_body: int = _DEFAULT_MAX_BODY, max_upload: int = _DEFAULT_MAX_UPLOAD) -> None:
         super().__init__(app)
         self._max_body = _parse_size(
             os.environ.get("SF_API_MAX_BODY_SIZE", ""), max_body
@@ -114,7 +115,7 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-def install_body_limits(app, **kwargs) -> None:
+def install_body_limits(app: Any, **kwargs) -> None:
     """Install the body size limiting middleware on a FastAPI/Starlette app."""
     app.add_middleware(BodySizeLimitMiddleware, **kwargs)
     log.info("Body size limiting middleware installed")

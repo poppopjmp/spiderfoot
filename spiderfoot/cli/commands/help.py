@@ -4,8 +4,14 @@ Help command for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def help_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def help_command(cli: SpiderFootCli, line: str) -> None:
     """Show help for all commands or a specific command."""
     c = cli.myparseline(line)
     if len(c[0]) == 0:
@@ -28,5 +34,5 @@ def help_command(cli, line) -> None:
         else:
             cli.edprint(f"No help found for command '{cmd}'")
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("help", help_command, help_text="This help output.")

@@ -4,8 +4,14 @@ Logs command for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def logs_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def logs_command(cli: SpiderFootCli, line: str) -> None:
     """Show logs for a scan using the API."""
     import shlex
     args = shlex.split(line)
@@ -20,5 +26,5 @@ def logs_command(cli, line) -> None:
         return
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("logs", logs_command, help_text="Show logs for a scan using the API.")

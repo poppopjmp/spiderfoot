@@ -12,6 +12,7 @@ import time
 import signal
 import logging
 import multiprocessing as mp
+import types
 from typing import Any
 from copy import deepcopy
 
@@ -396,7 +397,7 @@ class ScanManager:
         Args:
             scan_id: Scan ID to handle interruption for
         """
-        def handle_abort(signum, frame) -> None:
+        def handle_abort(signum: int, frame: types.FrameType | None) -> None:
             self.log.info("Received interrupt signal, stopping scan %s", scan_id)
             self.stop_scan(scan_id)
             sys.exit(-1)

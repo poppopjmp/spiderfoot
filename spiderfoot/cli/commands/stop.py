@@ -4,8 +4,14 @@ Stop command for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def stop_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def stop_command(cli: SpiderFootCli, line: str) -> None:
     """Stop a running scan using the SpiderFoot API."""
     import shlex
     args = shlex.split(line)
@@ -20,5 +26,5 @@ def stop_command(cli, line) -> None:
     else:
         cli.edprint("No response from API.")
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("stop", stop_command, help_text="Stop a scan using the SpiderFoot API.")

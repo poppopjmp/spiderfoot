@@ -256,7 +256,7 @@ class EventBusBenchmark(Benchmark):
             self._bus = InMemoryEventBus()
             self._received = 0
 
-            def handler(envelope) -> None:
+            def handler(envelope: Any) -> None:
                 self._received += 1
 
             self._bus.subscribe("bench.topic", handler)

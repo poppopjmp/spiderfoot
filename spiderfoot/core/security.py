@@ -262,7 +262,7 @@ class SecurityMiddleware:
 class AuthenticationManager:
     """Authentication and authorization management."""
 
-    def __init__(self, secret_key: str = None) -> None:
+    def __init__(self, secret_key: str | None = None) -> None:
         self.secret_key = secret_key or self._generate_secret_key()
         self.sessions = {}
         self.failed_attempts = {}
@@ -356,7 +356,7 @@ class AuthenticationManager:
 class DataProtection:
     """Data protection and encryption utilities."""
 
-    def __init__(self, encryption_key: bytes = None) -> None:
+    def __init__(self, encryption_key: bytes | None = None) -> None:
         if encryption_key is None:
             encryption_key = Fernet.generate_key()
         self.cipher = Fernet(encryption_key)
@@ -393,7 +393,7 @@ class DataProtection:
         return data[:2] + mask_char * (len(data) - 4) + data[-2:]
 
 
-def security_header_middleware(response) -> object:
+def security_header_middleware(response: object) -> object:
     """Add security headers to response."""
     headers = {
         'X-Content-Type-Options': 'nosniff',
@@ -413,7 +413,7 @@ def security_header_middleware(response) -> object:
 
 def require_authentication(auth_manager: AuthenticationManager) -> Callable:
     """Decorator for requiring authentication."""
-    def decorator(func) -> Callable:
+    def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
             # Extract session from request (implementation depends on framework)

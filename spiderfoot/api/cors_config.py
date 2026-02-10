@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Any
 
 log = logging.getLogger("spiderfoot.api.cors")
 
@@ -29,7 +30,7 @@ def _parse_list(env_var: str, default: str = "*") -> list[str]:
     return [v.strip() for v in value.split(",") if v.strip()]
 
 
-def install_cors(app) -> None:
+def install_cors(app: Any) -> None:
     """Install CORS middleware on a FastAPI/Starlette app.
 
     Reads configuration from environment variables so that

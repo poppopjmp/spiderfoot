@@ -42,6 +42,7 @@ import threading
 import time
 
 from collections.abc import Sequence
+from typing import Any
 
 
 # ---------------------------------------------------------------------------
@@ -259,7 +260,7 @@ class MetricsRegistry:
         self._lock = threading.Lock()
         self._metrics: dict[str, object] = {}
 
-    def register(self, metric) -> None:
+    def register(self, metric: Any) -> None:
         """Register a metric (Counter, Gauge, or Histogram)."""
         with self._lock:
             self._metrics[metric.name] = metric

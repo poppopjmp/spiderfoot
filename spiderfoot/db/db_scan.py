@@ -18,6 +18,8 @@ import sqlite3
 import psycopg2
 import logging
 import time
+from threading import RLock
+from typing import Any
 from .db_utils import get_placeholder, is_transient_error
 from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
 
@@ -25,7 +27,7 @@ log = logging.getLogger(__name__)
 
 class ScanManager:
     """Manages scan instance lifecycle operations in the database."""
-    def __init__(self, dbh, conn, dbhLock, db_type) -> None:
+    def __init__(self, dbh: Any, conn: Any, dbhLock: RLock, db_type: str) -> None:
         self.dbh = dbh
         self.conn = conn
         self.dbhLock = dbhLock

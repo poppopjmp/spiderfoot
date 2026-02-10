@@ -28,7 +28,7 @@ import logging
 import os
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.api.rate_limit")
 
@@ -352,7 +352,7 @@ if HAS_STARLETTE:
 
         def __init__(
             self,
-            app,
+            app: Any,
             *,
             rate_config: RateLimitConfig | None = None,
         ) -> None:
@@ -387,7 +387,7 @@ if HAS_STARLETTE:
                 len(self._config.endpoint_overrides),
             )
 
-        async def dispatch(self, request: Request, call_next) -> Response:
+        async def dispatch(self, request: Request, call_next: Callable) -> Response:
             """Process a request through rate limiting."""
             if not self._config.enabled:
                 return await call_next(request)
@@ -489,7 +489,7 @@ if HAS_STARLETTE:
 
 
 def install_rate_limiting(
-    app,
+    app: Any,
     config: dict[str, Any] | None = None,
 ) -> bool:
     """Install rate-limiting middleware on a FastAPI/Starlette app.

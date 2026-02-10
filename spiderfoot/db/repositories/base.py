@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+import types
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -50,7 +51,7 @@ class AbstractRepository(ABC):
     def __enter__(self) -> AbstractRepository:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: types.TracebackType | None) -> bool:
         self.close()
         return False
 

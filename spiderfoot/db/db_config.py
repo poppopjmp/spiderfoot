@@ -16,13 +16,15 @@ from __future__ import annotations
 from .db_utils import get_placeholder, is_transient_error, get_upsert_clause
 import logging
 import time
+from threading import RLock
+from typing import Any
 from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
 
 log = logging.getLogger(__name__)
 
 class ConfigManager:
     """Manages global and per-scan configuration storage in the database."""
-    def __init__(self, dbh, conn, dbhLock, db_type) -> None:
+    def __init__(self, dbh: Any, conn: Any, dbhLock: RLock, db_type: str) -> None:
         self.dbh = dbh
         self.conn = conn
         self.dbhLock = dbhLock
@@ -110,7 +112,7 @@ class ConfigManager:
                         continue
                     raise OSError("Unable to clear configuration from the database") from e
 
-    def scanConfigSet(self, scan_id, optMap=None) -> None:
+    def scanConfigSet(self, scan_id: str, optMap: dict | None = None) -> None:
         if optMap is None:
             optMap = {}
         if not isinstance(optMap, dict):

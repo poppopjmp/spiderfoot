@@ -7,10 +7,10 @@ import requests
 
 class SpiderFootApiClient:
     """HTTP client for communicating with the SpiderFoot API."""
-    def __init__(self, config) -> None:
+    def __init__(self, config: dict) -> None:
         self.config = config
 
-    def request(self, url, post=None) -> str | None:
+    def request(self, url: str, post: dict | None = None) -> str | None:
         headers = {
             "User-agent": "SpiderFoot-CLI/" + str(self.config.get('cli.version', '')),
             "Accept": "application/json"

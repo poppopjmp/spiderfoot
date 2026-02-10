@@ -48,6 +48,7 @@ import logging
 import random
 import threading
 import time
+import types as types_mod
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
@@ -350,7 +351,7 @@ class RetryContext:
     def __enter__(self) -> RetryContext:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: types_mod.TracebackType | None) -> bool:
         return False
 
     def execute(self, func: Callable, *args, **kwargs) -> Any:
@@ -396,7 +397,7 @@ def retry(max_attempts: int = 3, *,
     )
     executor = RetryExecutor(config)
 
-    def decorator(func) -> Callable:
+    def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> Any:
             result = executor.execute(func, *args, **kwargs)

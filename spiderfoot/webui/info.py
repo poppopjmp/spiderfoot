@@ -81,7 +81,7 @@ class InfoEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def query(self, query) -> list:
+    def query(self, query: str) -> list:
         """Execute a read-only SQL SELECT query and return the results as JSON."""
         dbh = self.get_dbh()
         if not query:

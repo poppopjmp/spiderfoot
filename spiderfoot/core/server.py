@@ -307,7 +307,7 @@ class ServerManager:
             conf: CherryPy configuration dict to update
             secrets: Username/password pairs
         """
-        def get_ha1(realm, username) -> str | None:
+        def get_ha1(realm: str, username: str) -> str | None:
             if username in secrets:
                 return auth_digest.get_ha1(realm, username, secrets[username])
             return None

@@ -24,6 +24,7 @@ import OpenSSL
 import cryptography
 import urllib.parse
 import random
+from collections.abc import Callable
 from cryptography.hazmat.backends.openssl import backend
 from .helpers import validIP, validIP6
 
@@ -153,7 +154,7 @@ def getSession() -> 'requests.sessions.Session':
     session = requests.session()
     return session
 
-def useProxyForUrl(url: str, opts=None, urlFQDN=None, isValidLocalOrLoopbackIp=None) -> bool:
+def useProxyForUrl(url: str, opts: dict | None = None, urlFQDN: Callable | None = None, isValidLocalOrLoopbackIp: Callable | None = None) -> bool:
     if opts is None:
         return False
     if urlFQDN is None:

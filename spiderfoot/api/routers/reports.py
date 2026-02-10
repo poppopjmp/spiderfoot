@@ -19,7 +19,10 @@ import logging
 import time
 import uuid
 from enum import Enum
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot.scan_service_facade import ScanService
 
 from pydantic import BaseModel, Field
 
@@ -423,7 +426,7 @@ else:
     async def generate_report(
         request: ReportGenerateRequest,
         background_tasks: BackgroundTasks,
-        scan_service=Depends(get_scan_service),
+        scan_service: ScanService = Depends(get_scan_service),
     ) -> ReportStatusResponse:
         report_id = str(uuid.uuid4())
 
@@ -518,7 +521,7 @@ else:
         description="Synchronously generates a quick executive summary for immediate display.",
     )
     async def preview_report(request: ReportPreviewRequest,
-                            scan_service=Depends(get_scan_service)) -> dict[str, Any]:
+                            scan_service: ScanService = Depends(get_scan_service)) -> dict[str, Any]:
         from spiderfoot.report_generator import ReportGenerator, ReportGeneratorConfig
 
         events, scan_metadata = _get_scan_events(request.scan_id, scan_service=scan_service)

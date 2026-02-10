@@ -193,7 +193,7 @@ class EventRelay:
 
     # -- EventBus integration ---------------------------------------------
 
-    def wire_eventbus(self, eventbus) -> None:
+    def wire_eventbus(self, eventbus: Any) -> None:
         """Connect to an EventBus instance for automatic forwarding.
 
         Subscribes to all scan events and relays them to consumers.

@@ -96,7 +96,7 @@ app = FastAPI(
 )
 
 # Initialize security (will be done by main application, but provide fallback)
-def initialize_security(config) -> object | None:
+def initialize_security(config: dict) -> object | None:
     """Initialize security middleware for FastAPI."""
     try:
         return install_fastapi_security(app, config)

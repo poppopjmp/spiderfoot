@@ -14,6 +14,7 @@ Usage:
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -39,7 +40,7 @@ class ApiVersionMiddleware(BaseHTTPMiddleware):
     3. Recognises Accept-Version header for future version negotiation.
     """
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         path = request.url.path
 
         # Skip non-API routes

@@ -4,8 +4,14 @@ Scans command for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def scans_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def scans_command(cli: SpiderFootCli, line: str) -> None:
     """List all scans using the SpiderFoot API."""
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + '/api/scans'
     resp = cli.request(url)
@@ -24,5 +30,5 @@ def scans_command(cli, line) -> None:
     else:
         cli.edprint("No response from API.")
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("scans", scans_command, help_text="List all scans using the SpiderFoot API.")

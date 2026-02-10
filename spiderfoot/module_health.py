@@ -25,6 +25,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+from collections.abc import Callable
 
 
 log = logging.getLogger("spiderfoot.health_monitor")
@@ -234,7 +235,7 @@ class ModuleHealthMonitor:
                 if h.status in (HealthStatus.UNHEALTHY, HealthStatus.STALLED)
             ]
 
-    def on_alert(self, callback) -> None:
+    def on_alert(self, callback: Callable) -> None:
         """Register a callback for health alerts.
 
         Callback receives (module_name, health_dict).

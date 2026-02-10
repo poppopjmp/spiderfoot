@@ -98,7 +98,7 @@ class _HealthHandler(BaseHTTPRequestHandler):
         else:
             self.send_error(404)
 
-    def log_message(self, format, *args) -> None:  # noqa: A002
+    def log_message(self, format: str, *args) -> None:  # noqa: A002
         pass  # silence health-check logs
 
 

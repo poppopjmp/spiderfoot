@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import time
 import hashlib
+from typing import Any
 
 # Optional dependencies for enhanced rate limiting
 try:
@@ -19,7 +20,7 @@ except ImportError:
 class RateLimiter:
     """Rate limiting implementation with Redis backend."""
 
-    def __init__(self, redis_client=None, redis_host='localhost', redis_port=6379, redis_db=0) -> None:
+    def __init__(self, redis_client: Any | None = None, redis_host: str = 'localhost', redis_port: int = 6379, redis_db: int = 0) -> None:
         """Initialize rate limiter.
 
         Args:

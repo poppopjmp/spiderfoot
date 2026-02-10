@@ -218,7 +218,7 @@ class APISecurityManager:
 class APIKeyManager:
     """API key management with database storage."""
 
-    def __init__(self, config) -> None:
+    def __init__(self, config: dict) -> None:
         """Initialize API key manager.
 
         Args:
@@ -442,7 +442,7 @@ def require_api_auth(required_scope: str = None) -> Callable:
     Args:
         required_scope: Required scope for the endpoint
     """
-    def decorator(f) -> Callable:
+    def decorator(f: Callable) -> Callable:
         @wraps(f)
         def decorated_function(*args, **kwargs) -> Any:
             # Get API key from Authorization header
@@ -483,17 +483,17 @@ def require_api_auth(required_scope: str = None) -> Callable:
 
 
 # Convenience decorators for common scopes
-def require_read_access(f) -> Callable:
+def require_read_access(f: Callable) -> Callable:
     """Require read access."""
     return require_api_auth('scan:read')(f)
 
 
-def require_write_access(f) -> Callable:
+def require_write_access(f: Callable) -> Callable:
     """Require write access."""
     return require_api_auth('scan:write')(f)
 
 
-def require_admin_access(f) -> Callable:
+def require_admin_access(f: Callable) -> Callable:
     """Require admin access."""
     return require_api_auth('system:admin')(f)
 

@@ -259,7 +259,7 @@ class ModuleTestHarness:
         # Monkey-patch produceEvent to capture events
         original_produce = getattr(instance, 'produceEvent', None)
 
-        def capture_produce(event, *args, **kwargs) -> None:
+        def capture_produce(event: Any, *args, **kwargs) -> None:
             self._captured_events.append(CapturedEvent(
                 event_type=event.eventType,
                 data=event.data,

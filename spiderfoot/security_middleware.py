@@ -578,7 +578,7 @@ class FastAPISecurityMiddleware:
         self.middleware = middleware
         self.log = logging.getLogger(__name__)
 
-    async def __call__(self, request, call_next) -> Any:
+    async def __call__(self, request: Any, call_next: Any) -> Any:
         """Process request through security middleware."""
         try:
             # Get client info
@@ -767,7 +767,7 @@ class FastAPISecurityMiddleware:
         )
 
 
-def install_fastapi_security(app, config: dict[str, Any]) -> SpiderFootSecurityMiddleware:
+def install_fastapi_security(app: Any, config: dict[str, Any]) -> SpiderFootSecurityMiddleware:
     """
     Install security middleware for FastAPI.
 

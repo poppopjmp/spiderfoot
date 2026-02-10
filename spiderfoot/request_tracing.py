@@ -147,7 +147,7 @@ if HAS_STARLETTE:
 
         def __init__(
             self,
-            app,
+            app: Any,
             trust_client_id: bool = True,
             log_requests: bool = True,
             slow_request_threshold: float = 5.0,
@@ -235,7 +235,7 @@ if HAS_STARLETTE:
 
 
 def install_tracing_middleware(
-    app,
+    app: Any,
     *,
     trust_client_id: bool = True,
     log_requests: bool = True,

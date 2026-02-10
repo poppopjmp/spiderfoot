@@ -4,8 +4,14 @@ Set command for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def set_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def set_command(cli: SpiderFootCli, line: str) -> None:
     """Set a configuration variable in SpiderFoot."""
     c = cli.myparseline(line, replace=False)
     cfg = None
@@ -119,5 +125,5 @@ def set_command(cli, line) -> None:
             "Variable not found, so not set. Did you mean to use a $ variable?")
         return
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("set", set_command, help_text="Set variables and configuration settings.")

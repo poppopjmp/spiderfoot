@@ -43,7 +43,7 @@ RULE_SCHEMA = {
 
 class RuleLoader:
     """Loads and validates YAML correlation rules from a directory."""
-    def __init__(self, rule_dir) -> None:
+    def __init__(self, rule_dir: str) -> None:
         """Initialize the rule loader with the given rules directory."""
         self.rule_dir = rule_dir
         self.rules = []

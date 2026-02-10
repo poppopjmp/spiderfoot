@@ -11,6 +11,7 @@ from __future__ import annotations
 import atexit
 import logging
 import os
+from typing import Any
 import sys
 import time
 from contextlib import suppress
@@ -172,7 +173,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
                 continue
 
 
-def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.QueueListener':
+def logListenerSetup(loggingQueue: Any, opts: dict = None) -> 'logging.handlers.QueueListener':
     """Create and start a SpiderFoot log listener in its own thread.
 
     This function should be called as soon as possible in the main
@@ -247,7 +248,7 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
     return spiderFootLogListener
 
 
-def logWorkerSetup(loggingQueue) -> 'logging.Logger':
+def logWorkerSetup(loggingQueue: Any) -> 'logging.Logger':
     """Root SpiderFoot logger.
 
     Args:

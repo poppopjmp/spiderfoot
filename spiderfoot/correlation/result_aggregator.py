@@ -20,7 +20,7 @@ class ResultAggregator:
         """Initialize the result aggregator with a logger."""
         self.log = logging.getLogger("spiderfoot.correlation.aggregator")
 
-    def aggregate(self, results, method='count') -> int | list:
+    def aggregate(self, results: list, method: str = 'count') -> int | list:
         """Aggregate correlation results using the specified method."""
         # Example: aggregate results by method
         if method == 'count':

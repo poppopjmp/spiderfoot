@@ -188,7 +188,7 @@ class StructuredLogHandler(logging.Handler):
 
     def __init__(
         self,
-        stream=None,
+        stream: Any | None = None,
         formatter: StructuredFormatter | None = None,
         **kwargs
     ) -> None:

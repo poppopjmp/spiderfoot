@@ -23,6 +23,7 @@ from __future__ import annotations
 import logging
 import os
 import time
+from typing import Any
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -49,7 +50,7 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
     - user identity (from auth header, redacted)
     """
 
-    def __init__(self, app, exclude_paths: set[str] | None = None, log_body: bool = False) -> None:
+    def __init__(self, app: Any, exclude_paths: set[str] | None = None, log_body: bool = False) -> None:
         super().__init__(app)
         env_excludes = os.environ.get("SF_API_AUDIT_EXCLUDE", "")
         if env_excludes:
@@ -149,7 +150,7 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
         return "unknown"
 
 
-def install_audit_logging(app, **kwargs) -> None:
+def install_audit_logging(app: Any, **kwargs) -> None:
     """Install the audit logging middleware on a FastAPI/Starlette app."""
     enabled = os.environ.get("SF_API_AUDIT_ENABLED", "true").lower()
     if enabled in ("0", "false", "no", "off"):

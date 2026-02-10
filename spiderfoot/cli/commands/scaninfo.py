@@ -4,8 +4,14 @@ Scaninfo command for SpiderFoot CLI.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def scaninfo_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def scaninfo_command(cli: SpiderFootCli, line: str) -> None:
     """Get scan info and config from the API."""
     import shlex
     args = shlex.split(line)
@@ -33,5 +39,5 @@ def scaninfo_command(cli, line) -> None:
     except Exception as e:
         cli.edprint(f"Failed to parse API response: {e}")
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("scaninfo", scaninfo_command, help_text="Scan information from the API.")

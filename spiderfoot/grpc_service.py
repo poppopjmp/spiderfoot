@@ -345,7 +345,7 @@ def _make_handler_factory(service_name: str,
                 self.end_headers()
                 self.wfile.write(error_body)
 
-        def log_message(self, format, *args) -> None:  # noqa: A002
+        def log_message(self, format: str, *args) -> None:  # noqa: A002
             pass
 
     return _RPCHandler

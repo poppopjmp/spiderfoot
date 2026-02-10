@@ -4,8 +4,14 @@ API command for SpiderFoot CLI: interact with the API directly.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def api_command(cli, line) -> None:
+if TYPE_CHECKING:
+    from sfcli import SpiderFootCli
+    from spiderfoot.cli.commands.commands import CommandRegistry
+
+
+def api_command(cli: SpiderFootCli, line: str) -> None:
     """
     Usage: api <endpoint> [POST <json_data>]
     Example: api /scans
@@ -36,5 +42,5 @@ def api_command(cli, line) -> None:
     else:
         cli.edprint("No response from API.")
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("api", api_command, help_text="Interact with the SpiderFoot API directly. Usage: api <endpoint> [POST <json_data>]")
