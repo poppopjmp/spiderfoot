@@ -3,6 +3,25 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.162.0] — RC Cycle 91: Narrow Except Clauses (Batch 2) + Bug Fix
+
+### Fixed
+- **Bug fix:** `savesettings` in `webui/scan.py` — `except Exception` was catching `cherrypy.HTTPRedirect`, preventing redirect after saving settings
+
+### Changed
+- Narrowed 12 `except Exception` clauses to specific types across 8 files
+- `json.loads/load/dump` → `(json.JSONDecodeError, TypeError/ValueError)`
+- `base64.b64decode` → `(binascii.Error, UnicodeDecodeError, ValueError)`
+- File I/O + JSON → `(OSError, json.JSONDecodeError)`
+- `json.dumps` formatting → `(TypeError, ValueError)`
+
+## [5.161.0] — RC Cycle 90: Property Return Types
+
+### Changed
+- Added return type annotations to 19 `@property` methods across 10 files
+- Added `from __future__ import annotations` to 3 files for Python 3.9 compat
+- Fixed missing `encoding='utf-8'` on `open()` in test file
+
 ## [5.160.0] — RC Cycle 88: Core Class Docstrings
 
 ### Added
