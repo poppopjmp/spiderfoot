@@ -13,7 +13,7 @@ class bcolors:
     GREYBLUE_DARK = '\x1b[38;5;24m'
 
 
-def format_colored(msg, color=None, bold=False, prefix=None):
+def format_colored(msg, color=None, bold=False, prefix=None) -> str:
     out = ""
     if color:
         out += color
@@ -27,7 +27,7 @@ def format_colored(msg, color=None, bold=False, prefix=None):
     return out
 
 
-def pretty_table(data, titlemap=None):
+def pretty_table(data, titlemap=None) -> str:
     if not data:
         return ""
     out = list()

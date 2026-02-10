@@ -211,7 +211,7 @@ class EventStore:
             return len(self._scan_index.get(scan_id, []))
         return len(self._events)
 
-    def clear(self):
+    def clear(self) -> None:
         """Remove all events."""
         with self._lock:
             self._events.clear()

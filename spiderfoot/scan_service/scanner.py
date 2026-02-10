@@ -48,7 +48,7 @@ import logging
 log = logging.getLogger("spiderfoot.scanner")
 
 
-def startSpiderFootScanner(loggingQueue, *args, **kwargs):
+def startSpiderFootScanner(loggingQueue, *args, **kwargs) -> SpiderFootScanner:
     """Initialize and start the SpiderFootScanner.
 
     Args:

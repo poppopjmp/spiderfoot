@@ -91,7 +91,7 @@ class ReportGeneratorConfig:
     # Callbacks
     on_section_complete: Callable[[str, str], None] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.preprocessor_config is None:
             self.preprocessor_config = PreprocessorConfig()
         if self.window_config is None:

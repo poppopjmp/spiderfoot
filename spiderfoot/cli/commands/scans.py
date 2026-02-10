@@ -2,7 +2,7 @@
 Scans command for SpiderFoot CLI.
 """
 
-def scans_command(cli, line):
+def scans_command(cli, line) -> None:
     """List all scans using the SpiderFoot API."""
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + '/api/scans'
     resp = cli.request(url)
@@ -21,5 +21,5 @@ def scans_command(cli, line):
     else:
         cli.edprint("No response from API.")
 
-def register(registry):
+def register(registry) -> None:
     registry.register("scans", scans_command, help_text="List all scans using the SpiderFoot API.")

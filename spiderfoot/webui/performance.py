@@ -28,7 +28,7 @@ class WebUIPerformanceEnhancer:
         """Decorator for caching function results with TTL."""
         def decorator(func: Callable) -> Callable:
             @functools.wraps(func)
-            def wrapper(*args, **kwargs):
+            def wrapper(*args, **kwargs) -> Any:
                 # Create cache key
                 cache_key = f"{func.__name__}:{hash(str(args) + str(sorted(kwargs.items())))}"
 
@@ -294,7 +294,7 @@ class AsyncWebUIHelper:
 def monitor_performance(func: Callable) -> Callable:
     """Decorator to monitor function performance."""
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs) -> Any:
         start_time = time.time()
         logger = logging.getLogger(__name__)
 

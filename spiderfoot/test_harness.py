@@ -259,7 +259,7 @@ class ModuleTestHarness:
         # Monkey-patch produceEvent to capture events
         original_produce = getattr(instance, 'produceEvent', None)
 
-        def capture_produce(event, *args, **kwargs):
+        def capture_produce(event, *args, **kwargs) -> None:
             self._captured_events.append(CapturedEvent(
                 event_type=event.eventType,
                 data=event.data,
@@ -376,7 +376,7 @@ class ModuleTestHarness:
         """
         original_fetch = self.sf.fetchUrl
 
-        def mock_fetch(url: str, **kwargs):
+        def mock_fetch(url: str, **kwargs) -> dict:
             if url_pattern in url:
                 return {
                     "content": content,

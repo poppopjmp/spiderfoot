@@ -56,7 +56,7 @@ class StoreConfig:
     cache_ttl_seconds: float = DEFAULT_TTL_ONE_HOUR  # Cache entry TTL (1 hour)
     auto_cleanup_days: int = 90  # Auto-delete reports older than N days (0=disable)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.db_path and self.backend == StorageBackend.SQLITE:
             self.db_path = os.path.join(
                 os.environ.get("SF_DATA_DIR", "."),

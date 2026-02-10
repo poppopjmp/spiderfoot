@@ -546,7 +546,7 @@ else:
             ReportFormatEnum.MARKDOWN, alias="format",
             description="Output format"
         ),
-    ):
+    ) -> StreamingResponse:
         from spiderfoot.report_formatter import ReportFormatter
         from spiderfoot.report_generator import (
             GeneratedReport,
@@ -648,7 +648,7 @@ else:
         summary="Delete a report",
         status_code=204,
     )
-    async def delete_report(report_id: str):
+    async def delete_report(report_id: str) -> None:
         if not delete_stored_report(report_id):
             raise HTTPException(status_code=404, detail="Report not found")
         return None

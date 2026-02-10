@@ -2,7 +2,7 @@
 Stop command for SpiderFoot CLI.
 """
 
-def stop_command(cli, line):
+def stop_command(cli, line) -> None:
     """Stop a running scan using the SpiderFoot API."""
     import shlex
     args = shlex.split(line)
@@ -17,5 +17,5 @@ def stop_command(cli, line):
     else:
         cli.edprint("No response from API.")
 
-def register(registry):
+def register(registry) -> None:
     registry.register("stop", stop_command, help_text="Stop a scan using the SpiderFoot API.")

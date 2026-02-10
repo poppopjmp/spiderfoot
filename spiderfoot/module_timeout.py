@@ -36,6 +36,7 @@ import os
 import threading
 import time
 from contextlib import contextmanager
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, Callable
@@ -89,7 +90,7 @@ class ModuleTimeoutGuard:
         return self._module_timeouts.get(module_name, self.default_timeout)
 
     @contextmanager
-    def timed(self, module_name: str, scan_id: str = ""):
+    def timed(self, module_name: str, scan_id: str = "") -> Iterator[None]:
         """Context manager that enforces a timeout on the enclosed block.
 
         On timeout:

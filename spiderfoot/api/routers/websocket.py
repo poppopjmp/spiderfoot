@@ -274,7 +274,7 @@ async def _polling_mode(websocket: WebSocket, scan_id: str) -> None:
 
 
 @router.websocket("/scans/{scan_id}")
-async def websocket_scan_stream(websocket: WebSocket, scan_id: str):
+async def websocket_scan_stream(websocket: WebSocket, scan_id: str) -> None:
     """Stream scan events over WebSocket.
 
     Uses EventRelay push mode if the relay has an EventBus wired.

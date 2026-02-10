@@ -2,7 +2,7 @@
 Scaninfo command for SpiderFoot CLI.
 """
 
-def scaninfo_command(cli, line):
+def scaninfo_command(cli, line) -> None:
     """Get scan info and config from the API."""
     import shlex
     args = shlex.split(line)
@@ -30,5 +30,5 @@ def scaninfo_command(cli, line):
     except Exception as e:
         cli.edprint(f"Failed to parse API response: {e}")
 
-def register(registry):
+def register(registry) -> None:
     registry.register("scaninfo", scaninfo_command, help_text="Scan information from the API.")

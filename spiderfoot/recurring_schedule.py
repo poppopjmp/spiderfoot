@@ -63,7 +63,7 @@ class RecurringSchedule:
     description: str = ""
     tags: list[str] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.schedule_id:
             self.schedule_id = str(uuid.uuid4())[:12]
         if not self.created_at:

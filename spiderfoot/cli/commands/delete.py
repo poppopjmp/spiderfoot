@@ -2,7 +2,7 @@
 Delete command for SpiderFoot CLI.
 """
 
-def delete_command(cli, line):
+def delete_command(cli, line) -> None:
     """Delete a scan using the SpiderFoot API."""
     import shlex
     args = shlex.split(line)
@@ -21,5 +21,5 @@ def delete_command(cli, line):
     except Exception as e:
         cli.edprint(f"Error deleting scan: {e}")
 
-def register(registry):
+def register(registry) -> None:
     registry.register("delete", delete_command, help_text="Delete a scan using the SpiderFoot API.")

@@ -221,7 +221,7 @@ class ServerManager:
             self.log.info("")
 
             # Start FastAPI server in a separate thread
-            def run_fastapi():
+            def run_fastapi() -> None:
                 try:
                     # Check if sfapi.py exists
                     sfapi_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../sfapi.py')
@@ -307,7 +307,7 @@ class ServerManager:
             conf: CherryPy configuration dict to update
             secrets: Username/password pairs
         """
-        def get_ha1(realm, username):
+        def get_ha1(realm, username) -> str | None:
             if username in secrets:
                 return auth_digest.get_ha1(realm, username, secrets[username])
             return None

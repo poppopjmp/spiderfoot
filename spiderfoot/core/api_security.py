@@ -479,9 +479,9 @@ class APISecurityMiddleware:
 
 def require_api_key(permissions: list[str] = None) -> Callable:
     """Decorator to require API key with specific permissions."""
-    def decorator(func):
+    def decorator(func) -> Callable:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Any:
             # This would need to be integrated with your web framework
             # to extract the API key from headers
             api_key = kwargs.get('api_key') or (hasattr(args[0], 'headers') and args[0].headers.get('Authorization', '').replace('Bearer ', ''))

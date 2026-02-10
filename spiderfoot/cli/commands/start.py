@@ -2,7 +2,7 @@
 Start command for SpiderFoot CLI.
 """
 
-def start_command(cli, line):
+def start_command(cli, line) -> None:
     """Start a new scan using the SpiderFoot API."""
     import shlex, json
     args = shlex.split(line)
@@ -26,5 +26,5 @@ def start_command(cli, line):
     else:
         cli.edprint("No response from API.")
 
-def register(registry):
+def register(registry) -> None:
     registry.register("start", start_command, help_text="Start a new scan using the SpiderFoot API.")

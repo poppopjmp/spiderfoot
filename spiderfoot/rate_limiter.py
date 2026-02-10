@@ -336,11 +336,11 @@ class RateLimiterService:
             self._key = key
             self.waited = 0.0
 
-        def __enter__(self):
+        def __enter__(self) -> RateLimiterService._Acquirer:
             self.waited = self._service.wait(self._key)
             return self
 
-        def __exit__(self, *_):
+        def __exit__(self, *_) -> None:
             pass
 
     def acquire(self, key: str) -> "_Acquirer":

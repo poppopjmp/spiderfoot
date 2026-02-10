@@ -657,7 +657,7 @@ class SecurityIntegrator:
         return {'status': 'pending', 'message': 'Security logging validation not yet implemented'}
 
 
-def main():
+def main() -> None:
     """Main function for running security integration."""
     integrator = SecurityIntegrator()
 

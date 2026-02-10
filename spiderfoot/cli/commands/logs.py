@@ -2,7 +2,7 @@
 Logs command for SpiderFoot CLI.
 """
 
-def logs_command(cli, line):
+def logs_command(cli, line) -> None:
     """Show logs for a scan using the API."""
     import shlex
     args = shlex.split(line)
@@ -17,5 +17,5 @@ def logs_command(cli, line):
         return
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
-def register(registry):
+def register(registry) -> None:
     registry.register("logs", logs_command, help_text="Show logs for a scan using the API.")

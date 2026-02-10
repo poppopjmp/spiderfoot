@@ -208,7 +208,7 @@ class MessageBus:
         reply_channel = f"_reply_{channel}_{id(payload)}_{time.time()}"
         result_queue: queue.Queue = queue.Queue()
 
-        def reply_handler(msg: Message):
+        def reply_handler(msg: Message) -> None:
             result_queue.put(msg.payload)
 
         self.subscribe(reply_channel, reply_handler)

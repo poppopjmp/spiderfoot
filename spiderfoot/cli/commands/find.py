@@ -2,7 +2,7 @@
 Find command for SpiderFoot CLI.
 """
 
-def find_command(cli, line):
+def find_command(cli, line) -> None:
     """Search for data in scan events using the API."""
     import shlex
     args = shlex.split(line)
@@ -25,5 +25,5 @@ def find_command(cli, line):
         return
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
-def register(registry):
+def register(registry) -> None:
     registry.register("find", find_command, help_text="Search for data within scan results using the API.")

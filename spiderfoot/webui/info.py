@@ -1,6 +1,7 @@
 """WebUI endpoints for listing event types and module information."""
 
 import cherrypy
+from typing import Any
 from operator import itemgetter
 from spiderfoot import __version__
 try:
@@ -91,6 +92,6 @@ class InfoEndpoints:
         except Exception as e:
             return ["ERROR", str(e)]
 
-    def get_dbh(self):
+    def get_dbh(self) -> Any:
         """Return a database handle instance."""
         return self._get_dbh()

@@ -16,7 +16,7 @@ class MiscEndpoints:
         # Render documentation page or search results
         import re
 
-        def highlight(text, query):
+        def highlight(text, query) -> str:
             if not text or not query:
                 return text
             pattern = re.compile(re.escape(query), re.IGNORECASE)

@@ -60,7 +60,7 @@ class RelayEvent:
     data: dict[str, Any] = field(default_factory=dict)
     timestamp: float = 0.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.timestamp:
             self.timestamp = time.time()
 

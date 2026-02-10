@@ -2,7 +2,7 @@
 API command for SpiderFoot CLI: interact with the API directly.
 """
 
-def api_command(cli, line):
+def api_command(cli, line) -> None:
     """
     Usage: api <endpoint> [POST <json_data>]
     Example: api /scans
@@ -33,5 +33,5 @@ def api_command(cli, line):
     else:
         cli.edprint("No response from API.")
 
-def register(registry):
+def register(registry) -> None:
     registry.register("api", api_command, help_text="Interact with the SpiderFoot API directly. Usage: api <endpoint> [POST <json_data>]")

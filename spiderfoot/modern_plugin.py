@@ -101,7 +101,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
     # Setup (called by scan engine)
     # ------------------------------------------------------------------
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Initialize the module with SpiderFoot facade and user options.
 
         Extends the legacy setup to also resolve services from the registry

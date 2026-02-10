@@ -71,7 +71,7 @@ class WebhookConfig:
     max_retries: int = 3
     description: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.webhook_id:
             self.webhook_id = str(uuid.uuid4())
 
@@ -112,7 +112,7 @@ class DeliveryRecord:
     completed_at: float | None = None
     payload_size: int = 0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.delivery_id:
             self.delivery_id = str(uuid.uuid4())
         if not self.created_at:

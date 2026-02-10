@@ -2,7 +2,7 @@
 Query command for SpiderFoot CLI.
 """
 
-def query_command(cli, line):
+def query_command(cli, line) -> None:
     """Run SQL against the SpiderFoot API (if enabled)."""
     import shlex
     args = shlex.split(line)
@@ -17,5 +17,5 @@ def query_command(cli, line):
         return
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
-def register(registry):
+def register(registry) -> None:
     registry.register("query", query_command, help_text="Run SQL against the SpiderFoot API (if enabled).")

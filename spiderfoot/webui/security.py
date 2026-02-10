@@ -30,7 +30,7 @@ except ImportError:
     SECURITY_MODULES_AVAILABLE = False
 
 
-def setup_security_headers():
+def setup_security_headers() -> None:
     """Legacy security headers setup function for backward compatibility."""
     if not SECURE_AVAILABLE:
         logging.getLogger(__name__).warning("secure module not available, skipping security headers")
@@ -104,7 +104,7 @@ def get_security_status() -> dict[str, Any]:
 
 
 # Backward compatibility
-def setup_security():
+def setup_security() -> None:
     """Backward compatibility function."""
     setup_security_headers()
 

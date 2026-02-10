@@ -52,7 +52,7 @@ class ScanRequest:
     max_duration: int = 0
     tags: list[str] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.scan_id:
             self.scan_id = str(uuid.uuid4())
 

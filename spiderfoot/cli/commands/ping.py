@@ -2,7 +2,7 @@
 Ping command for SpiderFoot CLI.
 """
 
-def ping_command(cli, line):
+def ping_command(cli, line) -> None:
     """Ping the SpiderFoot API server."""
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + '/api/health'
     resp = cli.request(url)
@@ -18,5 +18,5 @@ def ping_command(cli, line):
     else:
         cli.edprint("No response from API.")
 
-def register(registry):
+def register(registry) -> None:
     registry.register("ping", ping_command, help_text="Test connectivity to the SpiderFoot API server.")

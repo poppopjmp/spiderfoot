@@ -413,9 +413,9 @@ def security_header_middleware(response) -> object:
 
 def require_authentication(auth_manager: AuthenticationManager) -> Callable:
     """Decorator for requiring authentication."""
-    def decorator(func):
+    def decorator(func) -> Callable:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Any:
             # Extract session from request (implementation depends on framework)
             session_id = kwargs.get('session_id') or (args[0].headers.get('Authorization', '').replace('Bearer ', '') if args else None)
 

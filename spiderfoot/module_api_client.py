@@ -138,7 +138,7 @@ class RateLimiter:
             self._tokens = 0.0
             return wait_time
 
-    def wait(self):
+    def wait(self) -> None:
         """Block until a request is permitted."""
         delay = self.acquire()
         if delay > 0:
@@ -303,7 +303,7 @@ class ModuleApiClient:
     def history(self) -> list[RequestRecord]:
         return list(self._history)
 
-    def clear_history(self):
+    def clear_history(self) -> None:
         self._history.clear()
 
     def get_stats(self) -> dict:

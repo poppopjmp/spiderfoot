@@ -10,7 +10,7 @@ import hmac
 import secrets
 import time
 from functools import wraps
-from typing import Callable
+from typing import Any, Callable
 import cherrypy
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
@@ -133,7 +133,7 @@ def csrf_protect(f) -> Callable:
         function: Decorated function with CSRF protection
     """
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(*args, **kwargs) -> Any:
         csrf_protection.check_csrf_token()
         return f(*args, **kwargs)
     return decorated_function

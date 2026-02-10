@@ -84,7 +84,7 @@ class AuditEvent:
     timestamp: float = field(default_factory=time.time)
     event_id: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.event_id:
             # Generate deterministic ID
             raw = f"{self.timestamp}:{self.category}:{self.action}:{self.actor}"

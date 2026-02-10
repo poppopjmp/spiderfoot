@@ -578,7 +578,7 @@ class FastAPISecurityMiddleware:
         self.middleware = middleware
         self.log = logging.getLogger(__name__)
 
-    async def __call__(self, request, call_next):
+    async def __call__(self, request, call_next) -> Any:
         """Process request through security middleware."""
         try:
             # Get client info

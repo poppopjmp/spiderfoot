@@ -47,7 +47,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 
 log = logging.getLogger("spiderfoot.module_registry")
 
@@ -451,7 +451,7 @@ class ModuleRegistry:
     def __len__(self) -> int:
         return len(self._descriptors)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[ModuleDescriptor]:
         return iter(self._descriptors.values())
 
     def list_names(self) -> list[str]:

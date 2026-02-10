@@ -47,10 +47,10 @@ class AbstractRepository(ABC):
         """Whether the underlying DB handle is available."""
         return self._dbh is not None
 
-    def __enter__(self):
+    def __enter__(self) -> AbstractRepository:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         self.close()
         return False
 

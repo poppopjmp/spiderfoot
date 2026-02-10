@@ -140,7 +140,7 @@ class NatsEventBus(EventBus):
         # Create a durable consumer
         durable_name = f"sf-{sub_id[:8]}"
 
-        async def msg_handler(msg):
+        async def msg_handler(msg) -> None:
             try:
                 payload = json.loads(msg.data.decode())
                 envelope = EventEnvelope(

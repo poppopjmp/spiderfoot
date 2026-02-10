@@ -2,7 +2,7 @@
 Set command for SpiderFoot CLI.
 """
 
-def set_command(cli, line):
+def set_command(cli, line) -> None:
     """Set a configuration variable in SpiderFoot."""
     c = cli.myparseline(line, replace=False)
     cfg = None
@@ -116,5 +116,5 @@ def set_command(cli, line):
             "Variable not found, so not set. Did you mean to use a $ variable?")
         return
 
-def register(registry):
+def register(registry) -> None:
     registry.register("set", set_command, help_text="Set variables and configuration settings.")

@@ -435,7 +435,7 @@ class GrpcDataService(DataService):
             self._channel = None
             self._stub = None
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.close()
 
     def __repr__(self) -> str:

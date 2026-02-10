@@ -2,7 +2,7 @@
 Help command for SpiderFoot CLI.
 """
 
-def help_command(cli, line):
+def help_command(cli, line) -> None:
     """Show help for all commands or a specific command."""
     c = cli.myparseline(line)
     if len(c[0]) == 0:
@@ -25,5 +25,5 @@ def help_command(cli, line):
         else:
             cli.edprint(f"No help found for command '{cmd}'")
 
-def register(registry):
+def register(registry) -> None:
     registry.register("help", help_command, help_text="This help output.")
