@@ -63,17 +63,17 @@ class sfp_nameapi(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "EMAILADDR"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "EMAILADDR_DISPOSABLE",
@@ -100,7 +100,7 @@ class sfp_nameapi(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

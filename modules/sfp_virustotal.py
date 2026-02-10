@@ -89,11 +89,11 @@ class sfp_virustotal(SpiderFootModernPlugin):
         """Initialize the sfp virustotal."""
         super().__init__()
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
@@ -104,7 +104,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
             "NETBLOCK_MEMBER"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "MALICIOUS_IPADDR",
@@ -183,7 +183,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

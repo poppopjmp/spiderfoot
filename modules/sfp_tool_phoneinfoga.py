@@ -71,15 +71,15 @@ class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["PHONE_NUMBER"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "PHONE_NUMBER",
@@ -183,7 +183,7 @@ class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
                     continue
                 return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle PHONE_NUMBER events and query PhoneInfoga API."""
         eventData = event.data
         if eventData in self.results:

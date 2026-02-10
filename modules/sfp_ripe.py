@@ -62,7 +62,7 @@ class sfp_ripe(SpiderFootModernPlugin):
     keywords = None
     lastContent = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -71,7 +71,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         self.nbreported = self.tempStorage()
         self.lastContent = None
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
@@ -85,7 +85,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             'NETBLOCK_MEMBER',
@@ -269,7 +269,7 @@ class sfp_ripe(SpiderFootModernPlugin):
 
     # Determine whether there is a textual link between the target
     # and the string supplied.
-    def findName(self, string):
+    def findName(self, string) -> bool:
         # Simplest check to perform..
         """FindName."""
         for n in self.getTarget().getNames():
@@ -306,7 +306,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return False
 
     # Owns the AS or not?
-    def ownsAs(self, asn):
+    def ownsAs(self, asn) -> bool:
         # Determine whether the AS is owned by our target
         """OwnsAs."""
         ownerinfo = self.entityOwnerInfo(asn)
@@ -323,7 +323,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return False
 
     # Owns the netblock or not?
-    def ownsNetblock(self, netblock):
+    def ownsNetblock(self, netblock) -> bool:
         # Determine whether the netblock is owned by our target
         """OwnsNetblock."""
         ownerinfo = self.entityOwnerInfo(netblock)
@@ -340,7 +340,7 @@ class sfp_ripe(SpiderFootModernPlugin):
         return False
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

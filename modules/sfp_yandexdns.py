@@ -61,11 +61,11 @@ class sfp_yandexdns(SpiderFootModernPlugin):
         "93.158.134.250": "Yandex - Adult",
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
@@ -73,7 +73,7 @@ class sfp_yandexdns(SpiderFootModernPlugin):
             "CO_HOSTED_SITE"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
@@ -100,7 +100,7 @@ class sfp_yandexdns(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

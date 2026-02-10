@@ -61,7 +61,7 @@ class sfp_ipregistry(SpiderFootModernPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -69,11 +69,11 @@ class sfp_ipregistry(SpiderFootModernPlugin):
         if userOpts:
             self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["IP_ADDRESS", "IPV6_ADDRESS"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["GEOINFO", "MALICIOUS_IPADDR", "PHYSICAL_COORDINATES", "RAW_RIR_DATA"]
 
@@ -99,13 +99,13 @@ class sfp_ipregistry(SpiderFootModernPlugin):
 
         return None
 
-    def emit(self, etype, data, pevent):
+    def emit(self, etype, data, pevent) -> None:
         """Emit."""
         evt = SpiderFootEvent(etype, data, self.__name__, pevent)
         self.notifyListeners(evt)
         return evt
 
-    def generate_location_events(self, location, pevent):
+    def generate_location_events(self, location, pevent) -> None:
         """Generate location events."""
         if not isinstance(location, dict):
             return
@@ -141,7 +141,7 @@ class sfp_ipregistry(SpiderFootModernPlugin):
         if physical_location:
             self.emit("PHYSICAL_COORDINATES", physical_location, pevent)
 
-    def generate_security_events(self, security, pevent):
+    def generate_security_events(self, security, pevent) -> None:
         """Generate security events."""
         if not isinstance(security, dict):
             return
@@ -152,14 +152,14 @@ class sfp_ipregistry(SpiderFootModernPlugin):
             self.emit("MALICIOUS_IPADDR",
                       f"ipregistry [{pevent.data}]", pevent)
 
-    def generate_events(self, data, pevent):
+    def generate_events(self, data, pevent) -> None:
         """Generate events."""
         if not isinstance(data, dict):
             return
         self.generate_location_events(data.get("location"), pevent)
         self.generate_security_events(data.get("security"), pevent)
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         if self.errorState:
             return

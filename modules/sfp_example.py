@@ -21,27 +21,27 @@ class sfp_example(SpiderFootModernPlugin):
         self.opts = {'example_option': 'default_value'}
         self.optdescs = {'example_option': 'Example option description'}
         self.errorState = False
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ['ROOT']
-    def enrichTarget(self, target):
+    def enrichTarget(self, target) -> None:
         """Enrich the target with additional data."""
         return None
-    def setup(self, sf, opts):
+    def setup(self, sf, opts) -> None:
         """Set up the module."""
         pass
-    def clearListeners(self):
+    def clearListeners(self) -> None:
         """ClearListeners."""
         pass
-    def setScanId(self, scan_id):
+    def setScanId(self, scan_id) -> None:
         """Set ScanId."""
         pass
-    def setSharedThreadPool(self, pool):
+    def setSharedThreadPool(self, pool) -> None:
         """Set SharedThreadPool."""
         pass
-    def setDbh(self, dbh):
+    def setDbh(self, dbh) -> None:
         """Set Dbh."""
         pass
-    def setTarget(self, target):
+    def setTarget(self, target) -> None:
         """Set Target."""
         pass

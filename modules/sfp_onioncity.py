@@ -72,25 +72,25 @@ class sfp_onioncity(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["INTERNET_NAME", "DOMAIN_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["DARKNET_MENTION_URL", "DARKNET_MENTION_CONTENT",
                 "RAW_RIR_DATA"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

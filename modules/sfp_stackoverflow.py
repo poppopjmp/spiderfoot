@@ -68,18 +68,18 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
     # Tracking the error state of the module
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "RAW_RIR_DATA",
@@ -188,7 +188,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
 
         return list(set(ips))
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventData = event.data
 

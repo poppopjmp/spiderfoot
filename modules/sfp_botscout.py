@@ -66,15 +66,15 @@ class sfp_botscout(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ['IP_ADDRESS', 'EMAILADDR']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["MALICIOUS_IPADDR", "BLACKLISTED_IPADDR", "MALICIOUS_EMAILADDR"]
 
@@ -141,7 +141,7 @@ class sfp_botscout(SpiderFootModernPlugin):
 
         return res['content']
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

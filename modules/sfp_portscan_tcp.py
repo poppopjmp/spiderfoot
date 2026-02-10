@@ -69,7 +69,7 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
     lock = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -100,16 +100,16 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
             random.SystemRandom().shuffle(self.portlist)
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ['IP_ADDRESS', 'NETBLOCK_OWNER']
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["TCP_PORT_OPEN", "TCP_PORT_OPEN_BANNER"]
 
-    def tryPort(self, ip, port):
+    def tryPort(self, ip, port) -> None:
         """TryPort."""
         peer = f"{ip}:{port}"
 
@@ -166,7 +166,7 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
         return self.portResults
 
     # Generate TCP_PORT_OPEN_BANNER event
-    def sendEvent(self, resArray, srcEvent):
+    def sendEvent(self, resArray, srcEvent) -> None:
         """SendEvent."""
         for cp in resArray:
             if not resArray[cp]:
@@ -183,7 +183,7 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
                 self.notifyListeners(bevt)
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

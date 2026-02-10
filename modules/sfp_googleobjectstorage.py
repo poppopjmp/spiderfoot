@@ -60,25 +60,25 @@ class sfp_googleobjectstorage(SpiderFootModernPlugin):
     gosresults = dict()
     lock = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.gosresults = dict()
         self.results = self.tempStorage()
         self.lock = threading.Lock()
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "LINKED_URL_EXTERNAL"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["CLOUD_STORAGE_BUCKET", "CLOUD_STORAGE_BUCKET_OPEN"]
 
-    def checkSite(self, url):
+    def checkSite(self, url) -> None:
         """Check Site."""
         res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
@@ -101,7 +101,7 @@ class sfp_googleobjectstorage(SpiderFootModernPlugin):
                 with self.lock:
                     self.gosresults[url] = 0
 
-    def threadSites(self, siteList):
+    def threadSites(self, siteList) -> None:
         """ThreadSites."""
         self.gosresults = dict()
         running = True
@@ -139,7 +139,7 @@ class sfp_googleobjectstorage(SpiderFootModernPlugin):
         # Return once the scanning has completed
         return self.gosresults
 
-    def batchSites(self, sites):
+    def batchSites(self, sites) -> None:
         """BatchSites."""
         i = 0
         res = list()
@@ -164,7 +164,7 @@ class sfp_googleobjectstorage(SpiderFootModernPlugin):
         return res
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

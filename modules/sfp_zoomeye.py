@@ -64,7 +64,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -73,11 +73,11 @@ class sfp_zoomeye(SpiderFootModernPlugin):
             self.error("ZoomEye API key is required.")
             self.errorState = True
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "INTERNET_NAME",
@@ -200,7 +200,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
             self.error(f"Error querying ZoomEye API: {e}")
             return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """
         Handle incoming events, query ZoomEye, and emit relevant events.
         Deduplicate emitted events to avoid duplicates.
@@ -228,7 +228,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
         self.results[eventData] = True
         emitted = set()
 
-        def emit(evt_type, data):
+        def emit(evt_type, data) -> None:
             """Emit."""
             key = (evt_type, data)
             if key in emitted:

@@ -87,7 +87,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
         'collect_metrics': "Enable metrics collection (enterprise feature)"
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module with user options.
 
         Args:
@@ -183,7 +183,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
         except Exception as e:
             return False
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in for input.
 
         Returns:
@@ -191,7 +191,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
         """
         return ["*"]
 
-    def handleEvent(self, sfEvent):
+    def handleEvent(self, sfEvent) -> None:
         """Handle events sent to this module.
 
         Args:

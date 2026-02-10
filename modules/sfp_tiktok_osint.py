@@ -88,12 +88,12 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
     results = None
     errorState = False
     
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "SOCIAL_MEDIA_PROFILE_URL",
@@ -103,7 +103,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
             "PHONE_NUMBER"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "SOCIAL_MEDIA_PROFILE",
@@ -120,7 +120,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
             "LINKED_URL_EXTERNAL"
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

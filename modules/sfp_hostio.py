@@ -59,7 +59,7 @@ class sfp_hostio(SpiderFootModernPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         if userOpts is None:
             userOpts = {}
@@ -67,14 +67,14 @@ class sfp_hostio(SpiderFootModernPlugin):
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
@@ -89,7 +89,7 @@ class sfp_hostio(SpiderFootModernPlugin):
 
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
-    def handle_error_response(self, qry, res):
+    def handle_error_response(self, qry, res) -> None:
         """Handle error response."""
         try:
             error_info = json.loads(res["content"])
@@ -129,7 +129,7 @@ class sfp_hostio(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

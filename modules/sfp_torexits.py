@@ -60,13 +60,13 @@ class sfp_torexits(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
         self.__dataSource__ = "torproject.org"
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
@@ -77,7 +77,7 @@ class sfp_torexits(SpiderFootModernPlugin):
             "NETBLOCKV6_OWNER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
@@ -85,7 +85,7 @@ class sfp_torexits(SpiderFootModernPlugin):
             "TOR_EXIT_NODE",
         ]
 
-    def queryExitNodes(self, ip):
+    def queryExitNodes(self, ip) -> bool:
         """Query ExitNodes."""
         exit_addresses = self.retrieveExitNodes()
 
@@ -179,7 +179,7 @@ class sfp_torexits(SpiderFootModernPlugin):
 
         return list(set(ips))
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

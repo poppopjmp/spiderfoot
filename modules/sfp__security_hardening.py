@@ -438,7 +438,7 @@ class RBACManager:
             'security_admin': list(Permission)  # All permissions
         }
     
-    def assign_role(self, user_id: str, role: str):
+    def assign_role(self, user_id: str, role: str) -> None:
         """Assign role to user."""
         with self.rbac_lock:
             if role in self.roles:
@@ -732,7 +732,7 @@ class ZeroTrustController:
         else:
             return False
     
-    def register_device(self, device_id: str, device_info: dict[str, Any]):
+    def register_device(self, device_id: str, device_info: dict[str, Any]) -> None:
         """Register a trusted device."""
         with self.zero_trust_lock:
             self.device_registry[device_id] = {
@@ -784,7 +784,7 @@ class sfp__security_hardening(SpiderFootModernPlugin):
         'suspicious_activity_threshold': "Threshold for suspicious activity detection"
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the security hardening module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -822,11 +822,11 @@ class sfp__security_hardening(SpiderFootModernPlugin):
             self.error(f"Failed to initialize security components: {e}")
             self.errorState = True
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in."""
         return ["*"]  # Monitor all events for security
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Define the events this module produces."""
         return [
             "SECURITY_AUDIT_EVENT",
@@ -837,7 +837,7 @@ class sfp__security_hardening(SpiderFootModernPlugin):
             "AUTHORIZATION_DENIED"
         ]
 
-    def handleEvent(self, sfEvent):
+    def handleEvent(self, sfEvent) -> None:
         """Handle events with security monitoring."""
         if self.errorState:
             return

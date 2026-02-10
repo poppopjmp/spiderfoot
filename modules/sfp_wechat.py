@@ -38,20 +38,20 @@ class sfp_wechat(SpiderFootModernPlugin):
         "max_messages": "Maximum number of messages to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["WECHAT_MESSAGE"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """
         Fetch recent messages for each configured WeChat user ID using the API (mocked),
         emit WECHAT_MESSAGE events, deduplicate, and handle errors.
@@ -108,6 +108,6 @@ class sfp_wechat(SpiderFootModernPlugin):
             except Exception as e:
                 self.error(f"Error fetching messages for user {user_id}: {e}")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown."""
         pass

@@ -48,28 +48,28 @@ class sfp_dnsraw(SpiderFootModernPlugin):
     events = None
     checked = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.checked = self.tempStorage()
         self.__dataSource__ = "DNS"
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ['INTERNET_NAME', 'DOMAIN_NAME', 'DOMAIN_NAME_PARENT']
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["PROVIDER_MAIL", "PROVIDER_DNS", "RAW_DNS_RECORDS", "DNS_TEXT", "DNS_SPF",
                 'INTERNET_NAME', 'INTERNET_NAME_UNRESOLVED',
                 'AFFILIATE_INTERNET_NAME', 'AFFILIATE_INTERNET_NAME_UNRESOLVED']
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

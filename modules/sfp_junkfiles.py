@@ -54,7 +54,7 @@ class sfp_junkfiles(SpiderFootModernPlugin):
     skiphosts = None
     bases = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -63,19 +63,19 @@ class sfp_junkfiles(SpiderFootModernPlugin):
         self.bases = self.tempStorage()
         self.__dataSource__ = "Target Website"
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["JUNK_FILE"]
 
     # Test how trustworthy a result is
-    def checkValidity(self, junkUrl):
+    def checkValidity(self, junkUrl) -> bool:
         # Try and fetch an obviously missing version of the junk file
         """Check Validity."""
         fetch = junkUrl + str(random.SystemRandom().randint(0, 99999999))
@@ -90,7 +90,7 @@ class sfp_junkfiles(SpiderFootModernPlugin):
         return True
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

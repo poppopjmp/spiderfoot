@@ -67,12 +67,12 @@ class sfp_c99(SpiderFootModernPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
@@ -82,7 +82,7 @@ class sfp_c99(SpiderFootModernPlugin):
             "EMAILADDR",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "RAW_RIR_DATA",
@@ -135,12 +135,12 @@ class sfp_c99(SpiderFootModernPlugin):
 
         return info
 
-    def emitRawRirData(self, data, event):
+    def emitRawRirData(self, data, event) -> None:
         """EmitRawRirData."""
         evt = SpiderFootEvent("RAW_RIR_DATA", str(data), "sfp_c99", event)
         self.notifyListeners(evt)
 
-    def emitPhoneData(self, phoneData, event):
+    def emitPhoneData(self, phoneData, event) -> None:
         """EmitPhoneData."""
         provider = phoneData.get("provider")
         carrier = phoneData.get("carrier")
@@ -172,7 +172,7 @@ class sfp_c99(SpiderFootModernPlugin):
         if found:
             self.emitRawRirData(phoneData, event)
 
-    def emitSubDomainData(self, subDomainData, event):
+    def emitSubDomainData(self, subDomainData, event) -> None:
         """EmitSubDomainData."""
         found = False
 
@@ -189,7 +189,7 @@ class sfp_c99(SpiderFootModernPlugin):
         if found:
             self.emitRawRirData(subDomainData, event)
 
-    def emitDomainHistoryData(self, domainHistoryData, event):
+    def emitDomainHistoryData(self, domainHistoryData, event) -> None:
         """EmitDomainHistoryData."""
         found = False
 
@@ -212,7 +212,7 @@ class sfp_c99(SpiderFootModernPlugin):
         if found:
             self.emitRawRirData(domainHistoryData, event)
 
-    def emitIpToSkypeData(self, data, event):
+    def emitIpToSkypeData(self, data, event) -> None:
         """EmitIpToSkypeData."""
         skype = data.get("skype")
 
@@ -235,7 +235,7 @@ class sfp_c99(SpiderFootModernPlugin):
 
             self.emitRawRirData(data, event)
 
-    def emitIpToDomainsData(self, data, event):
+    def emitIpToDomainsData(self, data, event) -> None:
         """EmitIpToDomainsData."""
         domains = data.get("domains")
         found = False
@@ -253,7 +253,7 @@ class sfp_c99(SpiderFootModernPlugin):
         if found:
             self.emitRawRirData(data, event)
 
-    def emitProxyDetectionData(self, data, event):
+    def emitProxyDetectionData(self, data, event) -> None:
         """EmitProxyDetectionData."""
         isProxy = data.get("proxy")
 
@@ -267,7 +267,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.notifyListeners(evt)
             self.emitRawRirData(data, event)
 
-    def emitGeoIPData(self, data, event):
+    def emitGeoIPData(self, data, event) -> None:
         """EmitGeoIPData."""
         found = False
 
@@ -321,7 +321,7 @@ class sfp_c99(SpiderFootModernPlugin):
         # Always emit RAW_RIR_DATA, even if not found
         self.emitRawRirData(data, event)
 
-    def emitSkypeResolverData(self, data, event):
+    def emitSkypeResolverData(self, data, event) -> None:
         """EmitSkypeResolverData."""
         ip = data.get("ip")
         ips = data.get("ips")
@@ -354,7 +354,7 @@ class sfp_c99(SpiderFootModernPlugin):
         if found:
             self.emitRawRirData(data, event)
 
-    def emitWafDetectorData(self, data, event):
+    def emitWafDetectorData(self, data, event) -> None:
         """EmitWafDetectorData."""
         firewall = data.get("result")
 
@@ -368,7 +368,7 @@ class sfp_c99(SpiderFootModernPlugin):
             self.notifyListeners(evt)
             self.emitRawRirData(data, event)
 
-    def emitHostname(self, data, event):
+    def emitHostname(self, data, event) -> None:
         """EmitHostname."""
         if not self.sf.validHost(data, self.opts['_internettlds']):
             return
@@ -408,7 +408,7 @@ class sfp_c99(SpiderFootModernPlugin):
                 self.notifyListeners(evt)
                 self.cohostcount += 1
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

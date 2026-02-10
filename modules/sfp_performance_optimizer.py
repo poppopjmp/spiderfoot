@@ -88,9 +88,9 @@ class TTLCache:
             self.cache[key] = value
             self.ttl_map[key] = expiry_time
     
-    def start_cleanup_thread(self):
+    def start_cleanup_thread(self) -> None:
         """Start background cleanup thread."""
-        def cleanup_expired():
+        def cleanup_expired() -> None:
             """Cleanup expired."""
             while True:
                 time.sleep(300)  # Cleanup every 5 minutes
@@ -100,7 +100,7 @@ class TTLCache:
             self.cleanup_thread = threading.Thread(target=cleanup_expired, daemon=True)
             self.cleanup_thread.start()
     
-    def cleanup_expired_items(self):
+    def cleanup_expired_items(self) -> None:
         """Remove expired items from cache."""
         with self.lock:
             current_time = time.time()
@@ -114,7 +114,7 @@ class TTLCache:
                     del self.cache[key]
                 del self.ttl_map[key]
     
-    def clear(self):
+    def clear(self) -> None:
         """Clear all cache entries."""
         with self.lock:
             self.cache.clear()
@@ -252,7 +252,7 @@ class RequestBatcher:
         self.last_flush = defaultdict(float)
         self.lock = threading.Lock()
         
-    def add_request(self, batch_key: str, request_data: dict, callback: Callable):
+    def add_request(self, batch_key: str, request_data: dict, callback: Callable) -> None:
         """Add request to batch."""
         with self.lock:
             self.batches[batch_key].append(request_data)
@@ -343,7 +343,7 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
         'auto_gc_enabled': "Enable automatic garbage collection"
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -378,11 +378,11 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
             self.start_monitoring_thread()
         else:
             self.resource_monitor = None
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["*"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "PERFORMANCE_STATS",
@@ -391,7 +391,7 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
             "OPTIMIZATION_SUGGESTION"
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Optimize event processing."""
         if self.resource_monitor and self.opts.get('auto_gc_enabled', True):
             if self.resource_monitor.should_trigger_gc():
@@ -429,9 +429,9 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
         if self.rate_limiters:
             self.rate_limiters[domain].record_failure(status_code)
 
-    def start_monitoring_thread(self):
+    def start_monitoring_thread(self) -> None:
         """Start resource monitoring thread."""
-        def monitor_resources():
+        def monitor_resources() -> None:
             """Monitor resources."""
             while True:
                 if self.resource_monitor:
@@ -497,7 +497,7 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
             )
             self.notifyListeners(suggestion_event)
 
-    def scanFinished(self):
+    def scanFinished(self) -> None:
         """Clean up resources when scan finishes."""
         if self.cache:
             # Emit final cache statistics

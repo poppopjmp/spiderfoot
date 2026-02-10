@@ -38,15 +38,15 @@ class sfp_bitcoin(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["TARGET_WEB_CONTENT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["BITCOIN_ADDRESS"]
 
@@ -68,7 +68,7 @@ class sfp_bitcoin(SpiderFootModernPlugin):
         bcbytes = self.decode_base58(bc, 25)
         return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

@@ -55,22 +55,22 @@ class sfp_zetalytics(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         if userOpts:
             self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["INTERNET_NAME", "DOMAIN_NAME", "EMAILADDR"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["INTERNET_NAME", "AFFILIATE_DOMAIN_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def emit(self, etype, data, pevent):
+    def emit(self, etype, data, pevent) -> None:
         """Emit."""
         if self.checkForStop():
             return None
@@ -78,7 +78,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
         self.notifyListeners(evt)
         return evt
 
-    def verify_emit_internet_name(self, hostname, pevent):
+    def verify_emit_internet_name(self, hostname, pevent) -> bool:
         """Verify emit internet name."""
         if f"INTERNET_NAME:{hostname}" in self.results:
             return False
@@ -210,7 +210,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
 
         return events_generated  # noqa R504
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

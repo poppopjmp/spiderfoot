@@ -53,11 +53,11 @@ class sfp_opennic(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
@@ -66,7 +66,7 @@ class sfp_opennic(SpiderFootModernPlugin):
             "AFFILIATE_INTERNET_NAME_UNRESOLVED",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
@@ -94,7 +94,7 @@ class sfp_opennic(SpiderFootModernPlugin):
 
         return None
 
-    def tlds(self):
+    def tlds(self) -> list:
         """Valid OpenNIC top-level domains.
 
         Returns:
@@ -133,7 +133,7 @@ class sfp_opennic(SpiderFootModernPlugin):
             'uu',
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

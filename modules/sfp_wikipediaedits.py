@@ -61,16 +61,16 @@ class sfp_wikipediaedits(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Wikipedia"
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["IP_ADDRESS", "USERNAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["WIKIPEDIA_PAGE_EDIT"]
 
@@ -118,7 +118,7 @@ class sfp_wikipediaedits(SpiderFootModernPlugin):
             self.error(f"Error processing response from Wikipedia: {e}")
             return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

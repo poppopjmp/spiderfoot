@@ -65,16 +65,16 @@ class sfp_rocketreach(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "EMAILADDR"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "EMAILADDR",
@@ -128,7 +128,7 @@ class sfp_rocketreach(SpiderFootModernPlugin):
             self.error(f"Error processing JSON response from RocketReach: {e}")
             return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """
         Handle incoming events, query RocketReach, and emit relevant events.
         Deduplicate emitted events to avoid duplicates.
@@ -156,7 +156,7 @@ class sfp_rocketreach(SpiderFootModernPlugin):
         self.results[eventData] = True
         emitted = set()
 
-        def emit(evt_type, data):
+        def emit(evt_type, data) -> None:
             """Emit."""
             key = (evt_type, data)
             if key in emitted:

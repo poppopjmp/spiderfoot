@@ -61,7 +61,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
 
     # Be sure to completely clear any class variables in setup()
     # or you risk data persisting between scan runs.
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -143,7 +143,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
         return items
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """
         Return a list of event types this module is interested in.
 
@@ -159,7 +159,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """
         Return a list of event types this module produces.
 
@@ -199,7 +199,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
         return False
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """
         Handle incoming events, check Bambenek feeds, and emit events for matches.
 

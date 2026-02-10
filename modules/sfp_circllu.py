@@ -84,7 +84,7 @@ class sfp_circllu(SpiderFootModernPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -93,12 +93,12 @@ class sfp_circllu(SpiderFootModernPlugin):
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["INTERNET_NAME", "NETBLOCK_OWNER", "IP_ADDRESS", "DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["IP_ADDRESS", "SSL_CERTIFICATE_ISSUED", "CO_HOSTED_SITE"]
 
@@ -136,7 +136,7 @@ class sfp_circllu(SpiderFootModernPlugin):
         return res['content']
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

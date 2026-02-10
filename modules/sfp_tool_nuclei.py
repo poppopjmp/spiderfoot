@@ -87,15 +87,15 @@ class sfp_tool_nuclei(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["INTERNET_NAME", "IP_ADDRESS", "NETBLOCK_OWNER"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "VULNERABILITY_CVE_CRITICAL",
@@ -108,7 +108,7 @@ class sfp_tool_nuclei(SpiderFootModernPlugin):
         ]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

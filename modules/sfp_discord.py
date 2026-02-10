@@ -40,7 +40,7 @@ class sfp_discord(SpiderFootModernPlugin):
         "max_messages": "Maximum number of messages to fetch per channel."
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -55,15 +55,15 @@ class sfp_discord(SpiderFootModernPlugin):
             self.error("max_messages must be a positive integer.")
             raise ValueError("max_messages must be a positive integer.")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["DISCORD_MESSAGE"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """
         Handle event: fetch Discord messages for each channel and emit DISCORD_MESSAGE events.
         """
@@ -112,6 +112,6 @@ class sfp_discord(SpiderFootModernPlugin):
                 )
                 self.notifyListeners(evt)
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown."""
         self.debug("[shutdown] Shutting down Discord module.")

@@ -64,12 +64,12 @@ class sfp_multiproxy(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
@@ -78,7 +78,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
             'NETBLOCK_MEMBER',
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
@@ -91,7 +91,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
             "MALICIOUS_SUBNET",
         ]
 
-    def queryProxyList(self, target, targetType):
+    def queryProxyList(self, target, targetType) -> bool:
         """Query ProxyList."""
         proxy_list = self.retrieveProxyList()
 
@@ -166,7 +166,7 @@ class sfp_multiproxy(SpiderFootModernPlugin):
 
         return ips
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

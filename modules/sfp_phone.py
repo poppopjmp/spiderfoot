@@ -41,19 +41,19 @@ class sfp_phone(SpiderFootModernPlugin):
     results = None
     optdescs = {}
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ['TARGET_WEB_CONTENT', 'DOMAIN_WHOIS', 'NETBLOCK_WHOIS', 'PHONE_NUMBER']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ['PHONE_NUMBER', 'PROVIDER_TELCO']
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
@@ -120,7 +120,7 @@ class sfp_phone(SpiderFootModernPlugin):
             # else:
             #     self.debug("No location information found for " + eventData)
 
-    def registerEventEmitter(self, emitter):
+    def registerEventEmitter(self, emitter) -> None:
         """Register event emitter"""
         self.eventEmitter = emitter
 

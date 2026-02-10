@@ -53,19 +53,19 @@ class sfp_github(SpiderFootModernPlugin):
         'namesonly': "Match repositories by name only, not by their descriptions. Helps reduce false positives."
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "USERNAME", "SOCIAL_MEDIA"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "GEOINFO", "PUBLIC_CODE_REPO"]
 
@@ -90,7 +90,7 @@ class sfp_github(SpiderFootModernPlugin):
 
         return "\n".join([f"Name: {name}", f"URL: {html_url}", f"Description: {description}"])
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

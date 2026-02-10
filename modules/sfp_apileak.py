@@ -57,11 +57,11 @@ class sfp_apileak(SpiderFootModernPlugin):
         else:
             self.patterns = []
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "EMAILADDR", "ORG_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["CREDENTIAL_LEAK", "API_KEY_LEAK"]
 

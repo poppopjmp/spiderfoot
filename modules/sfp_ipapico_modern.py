@@ -69,7 +69,7 @@ class sfp_ipapico_modern(SpiderFootModernPlugin):
     optdescs: dict[str, str] = {}
     results = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         # Modern setup — wires HttpService, DnsService, etc. automatically
         """Set up the module."""
         super().setup(sfc, userOpts or {})

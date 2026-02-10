@@ -64,7 +64,7 @@ class sfp__stor_elasticsearch(SpiderFootModernPlugin):
         'timeout': "Connection timeout in seconds"
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module with user options.
 
         Args:
@@ -163,7 +163,7 @@ class sfp__stor_elasticsearch(SpiderFootModernPlugin):
             self.error(f"Failed to create ElasticSearch index: {e}")
             # Don't fail completely, index might exist with different mapping
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in for input.
 
         Returns:
@@ -171,7 +171,7 @@ class sfp__stor_elasticsearch(SpiderFootModernPlugin):
         """
         return ["*"]
 
-    def handleEvent(self, sfEvent):
+    def handleEvent(self, sfEvent) -> None:
         """Handle events sent to this module.
 
         Args:
@@ -267,7 +267,7 @@ class sfp__stor_elasticsearch(SpiderFootModernPlugin):
         except Exception as e:
             return False
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Clean up after this module."""
         # Flush any remaining events in the buffer
         if self.opts['enabled'] and self.es and self.buffer:

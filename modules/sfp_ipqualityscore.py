@@ -65,7 +65,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         if userOpts is None:
             userOpts = {}
@@ -73,7 +73,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
@@ -82,7 +82,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
             "PHONE_NUMBER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "EMAILADDR_DISPOSABLE",
@@ -96,7 +96,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def handle_error_response(self, qry, res):
+    def handle_error_response(self, qry, res) -> None:
         """Handle error response."""
         try:
             error_info = json.loads(res["content"])
@@ -167,7 +167,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
 
         return geoInfo
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

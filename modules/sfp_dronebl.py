@@ -84,11 +84,11 @@ class sfp_dronebl(SpiderFootModernPlugin):
         "127.0.0.255": "dronebl.org - Unknown"
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
@@ -97,7 +97,7 @@ class sfp_dronebl(SpiderFootModernPlugin):
             'NETBLOCK_MEMBER'
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
@@ -143,7 +143,7 @@ class sfp_dronebl(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

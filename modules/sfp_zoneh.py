@@ -67,7 +67,7 @@ class sfp_zoneh(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -77,7 +77,7 @@ class sfp_zoneh(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     # * = be notified about all events.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["INTERNET_NAME", "IP_ADDRESS", "IPV6_ADDRESS",
                 "AFFILIATE_INTERNET_NAME", "AFFILIATE_IPADDR", "AFFILIATE_IPV6_ADDRESS",
@@ -86,7 +86,7 @@ class sfp_zoneh(SpiderFootModernPlugin):
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["DEFACED_INTERNET_NAME", "DEFACED_IPADDR",
                 "DEFACED_AFFILIATE_INTERNET_NAME",
@@ -104,7 +104,7 @@ class sfp_zoneh(SpiderFootModernPlugin):
         return False
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

@@ -52,7 +52,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -62,7 +62,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
         """
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """
         Return a list of event types this module is interested in.
 
@@ -77,7 +77,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
             'NETBLOCKV6_MEMBER'
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """
         Return a list of event types this module produces.
 
@@ -200,7 +200,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
 
         return data
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """
         Handle incoming events, query BGPView, and emit events for found information.
 

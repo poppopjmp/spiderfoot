@@ -65,7 +65,7 @@ class sfp_netlas(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module with user options.
 
         Args:
@@ -75,7 +75,7 @@ class sfp_netlas(SpiderFootModernPlugin):
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in for input.
 
         Returns:
@@ -83,7 +83,7 @@ class sfp_netlas(SpiderFootModernPlugin):
         """
         return ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Define the events this module produces.
 
         Returns:
@@ -177,7 +177,7 @@ class sfp_netlas(SpiderFootModernPlugin):
             self.errorState = True
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle events sent to this module.
 
         Args:
@@ -202,7 +202,7 @@ class sfp_netlas(SpiderFootModernPlugin):
 
         self.results[eventData] = True
         emitted = set()
-        def emit(evt_type, data):
+        def emit(evt_type, data) -> None:
             """Emit."""
             key = (evt_type, str(data))
             if key in emitted:

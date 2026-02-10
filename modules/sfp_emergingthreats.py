@@ -63,12 +63,12 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
@@ -77,7 +77,7 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
             "NETBLOCK_OWNER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
@@ -135,7 +135,7 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

@@ -39,7 +39,7 @@ class sfp_4chan(SpiderFootModernPlugin):
         "max_threads": "Maximum number of threads to fetch per board."
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """
         Setup plugin with SpiderFoot context and user options.
         :param sfc: SpiderFoot context
@@ -79,7 +79,7 @@ class sfp_4chan(SpiderFootModernPlugin):
             self.log.error(f"Exception fetching thread {thread_id} on board {board}: {e}")
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """
         Handle the incoming event and monitor 4chan boards for new posts.
         :param event: SpiderFootEvent
@@ -133,6 +133,6 @@ class sfp_4chan(SpiderFootModernPlugin):
                     self.notifyListeners(post_event)
                 time.sleep(1)  # Respect API rate limit
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Clean up resources if needed."""
         pass

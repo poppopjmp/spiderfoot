@@ -62,17 +62,17 @@ class sfp_cloudfront(SpiderFootModernPlugin):
     # CloudFront specific HTTP headers
     CLOUDFRONT_HEADERS = ["X-Amz-Cf-Id", "Via"]
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME", "AFFILIATE_INTERNET_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "CLOUD_PROVIDER",
@@ -96,7 +96,7 @@ class sfp_cloudfront(SpiderFootModernPlugin):
             self.debug(f"DNS resolution failed for {domain}: {e}")
             return None
 
-    def checkHeaders(self, domain):
+    def checkHeaders(self, domain) -> bool:
         """Check if domain's HTTP headers indicate CloudFront usage."""
         url = f"https://{domain}"
         res = self.fetch_url(
@@ -122,7 +122,7 @@ class sfp_cloudfront(SpiderFootModernPlugin):
         return False
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

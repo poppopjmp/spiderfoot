@@ -92,7 +92,7 @@ class sfp_archiveorg(SpiderFootModernPlugin):
     foundDates = list()
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -104,7 +104,7 @@ class sfp_archiveorg(SpiderFootModernPlugin):
         self.results = self.tempStorage()
         self.foundDates = list()
         self.errorState = False
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """
         Return a list of event types this module is interested in.
 
@@ -117,7 +117,7 @@ class sfp_archiveorg(SpiderFootModernPlugin):
             "URL_WEB_FRAMEWORK"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """
         Return a list of event types this module produces.
 
@@ -132,7 +132,7 @@ class sfp_archiveorg(SpiderFootModernPlugin):
             "URL_JAVASCRIPT_HISTORIC"
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """
         Handle incoming events, query archive.org for historic versions, and emit events for found snapshots.
 

@@ -46,7 +46,7 @@ class sfp_arbitrum(SpiderFootModernPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -65,15 +65,15 @@ class sfp_arbitrum(SpiderFootModernPlugin):
             self.error("[setup] output_format must be 'summary' or 'full'.")
             raise ValueError("output_format must be 'summary' or 'full'.")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["ARBITRUM_ADDRESS", "ARBITRUM_TX"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """
         Handle ROOT event and monitor Arbitrum blockchain for transactions for configured addresses.
         Emits ARBITRUM_TX and ARBITRUM_ADDRESS events for each relevant transaction found.
@@ -145,6 +145,6 @@ class sfp_arbitrum(SpiderFootModernPlugin):
             except Exception as e:
                 self.error(f"[handleEvent] Error fetching Arbitrum transactions for {address}: {e}")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown."""
         self.debug("[shutdown] Shutting down Arbitrum module.")

@@ -65,7 +65,7 @@ class sfp_accounts(SpiderFootModernPlugin):
     distrustedChecked = False
     lock = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -99,16 +99,16 @@ class sfp_accounts(SpiderFootModernPlugin):
             self.errorState = True
             return
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["EMAILADDR", "DOMAIN_NAME", "HUMAN_NAME", "USERNAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["USERNAME", "ACCOUNT_EXTERNAL_OWNED",
                 "SIMILAR_ACCOUNT_EXTERNAL"]
 
-    def checkSite(self, name, site):
+    def checkSite(self, name, site) -> None:
         """Check Site."""
         if 'uri_check' not in site:
             return
@@ -169,9 +169,9 @@ class sfp_accounts(SpiderFootModernPlugin):
         with self.lock:
             self.siteResults[retname] = True
 
-    def checkSites(self, username, sites=None):
+    def checkSites(self, username, sites=None) -> list | None:
         """Check Sites."""
-        def processSiteQueue(username, queue):
+        def processSiteQueue(username, queue) -> None:
             """Process SiteQueue."""
             try:
                 while True:
@@ -300,7 +300,7 @@ class sfp_accounts(SpiderFootModernPlugin):
 
         return list(set(permutations))
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

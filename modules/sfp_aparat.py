@@ -34,16 +34,16 @@ class sfp_aparat(SpiderFootModernPlugin):
         "max_videos": "Maximum number of videos to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["APARAT_VIDEO"]
 
@@ -109,6 +109,6 @@ class sfp_aparat(SpiderFootModernPlugin):
         if total_found == 0:
             self.info("No Aparat videos found for any configured user.")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown."""
         pass

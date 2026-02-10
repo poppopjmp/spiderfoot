@@ -82,7 +82,7 @@ class sfp_ipinfo_modern(SpiderFootModernPlugin):
     results = None
     errorState: bool = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()

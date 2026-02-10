@@ -47,7 +47,7 @@ class sfp_bnb(SpiderFootModernPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -62,15 +62,15 @@ class sfp_bnb(SpiderFootModernPlugin):
             self.error("min_value must be non-negative.")
         self.debug(f"BNB module options: {self.opts}")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["BNB_ADDRESS", "BNB_TX"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         self.debug(f"Received event: {event.eventType} from {event.module}")
         # Optionally filter by event_types (stub logic)
@@ -90,6 +90,6 @@ class sfp_bnb(SpiderFootModernPlugin):
         self.debug("Stub: would process and emit BNB events here.")
         return None
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown."""
         self.debug("Shutting down BNB module.")

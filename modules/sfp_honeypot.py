@@ -98,11 +98,11 @@ class sfp_honeypot(SpiderFootModernPlugin):
         "10": "Unknown (10)"
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
@@ -111,7 +111,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
             "NETBLOCK_MEMBER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
@@ -144,7 +144,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
 
         return f"{self.statuses[bits[3]]}\nLast Activity: {bits[1]} days ago\nThreat Level: {bits[2]}"
 
-    def queryAddr(self, qaddr, parentEvent):
+    def queryAddr(self, qaddr, parentEvent) -> None:
         """Query Addr."""
         eventName = parentEvent.eventType
 
@@ -196,7 +196,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
             blacklist_type, f"ProjectHoneyPot ({qaddr}): {text}\n<SFURL>{url}</SFURL>", self.__name__, parentEvent)
         self.notifyListeners(evt)
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

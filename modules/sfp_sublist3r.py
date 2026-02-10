@@ -45,18 +45,18 @@ class sfp_sublist3r(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.debug("Setting up sfp_sublist3r")
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
@@ -87,7 +87,7 @@ class sfp_sublist3r(SpiderFootModernPlugin):
 
         return list(set(ret))
 
-    def sendEvent(self, source, host):
+    def sendEvent(self, source, host) -> None:
         """SendEvent."""
         if self.resolve_host(host) or self.resolve_host6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)
@@ -96,7 +96,7 @@ class sfp_sublist3r(SpiderFootModernPlugin):
                                 host, self.__name__, source)
         self.notifyListeners(e)
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         query = str(event.data).lower()
 

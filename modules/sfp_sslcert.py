@@ -54,7 +54,7 @@ class sfp_sslcert(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -63,14 +63,14 @@ class sfp_sslcert(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     # * = be notified about all events.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["INTERNET_NAME", "LINKED_URL_INTERNAL", "IP_ADDRESS"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ['TCP_PORT_OPEN', 'INTERNET_NAME', 'INTERNET_NAME_UNRESOLVED',
                 'CO_HOSTED_SITE', 'CO_HOSTED_SITE_DOMAIN',
@@ -80,7 +80,7 @@ class sfp_sslcert(SpiderFootModernPlugin):
                 "DOMAIN_NAME"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

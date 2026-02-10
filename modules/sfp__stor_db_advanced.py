@@ -154,7 +154,7 @@ class ConnectionLoadBalancer:
                 # Retry with next best pool
                 return self.get_optimal_connection(query_type)
     
-    def return_connection(self, pool_id: str, conn: Any, success: bool = True):
+    def return_connection(self, pool_id: str, conn: Any, success: bool = True) -> None:
         """Return connection to pool and update metrics."""
         with self.lock:
             try:
@@ -300,7 +300,7 @@ class PerformanceMonitor:
         self.monitoring_active = True
         self._start_monitoring_thread()
     
-    def record_query(self, query_type: str, execution_time: float, success: bool):
+    def record_query(self, query_type: str, execution_time: float, success: bool) -> None:
         """Record query execution metrics."""
         timestamp = time.time()
         self.metrics['queries'].append({
@@ -318,7 +318,7 @@ class PerformanceMonitor:
                 'timestamp': timestamp
             })
     
-    def record_connection_metrics(self, pool_id: str, metrics: ConnectionMetrics):
+    def record_connection_metrics(self, pool_id: str, metrics: ConnectionMetrics) -> None:
         """Record connection pool metrics."""
         self.metrics['connections'].append({
             'timestamp': time.time(),
@@ -354,7 +354,7 @@ class PerformanceMonitor:
     
     def _start_monitoring_thread(self):
         """Start background monitoring thread."""
-        def monitor():
+        def monitor() -> None:
             """Monitor."""
             while self.monitoring_active:
                 try:
@@ -444,7 +444,7 @@ class AutoScaler:
     
     def _start_scaling_thread(self):
         """Start background auto-scaling thread."""
-        def scale():
+        def scale() -> None:
             """Scale."""
             while self.scaling_active:
                 try:
@@ -587,7 +587,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
         'database_configs': "List of database configurations for load balancing"
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the advanced storage module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -651,7 +651,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
 
     def _setup_graceful_shutdown(self):
         """Set up graceful shutdown handlers."""
-        def shutdown_handler(signum, frame):
+        def shutdown_handler(signum, frame) -> None:
             """Shutdown handler."""
             self.debug("Received shutdown signal, cleaning up...")
             self._graceful_shutdown()
@@ -659,11 +659,11 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
         signal.signal(signal.SIGTERM, shutdown_handler)
         signal.signal(signal.SIGINT, shutdown_handler)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in."""
         return ["*"]
 
-    def handleEvent(self, sfEvent):
+    def handleEvent(self, sfEvent) -> None:
         """Handle events with enterprise features."""
         if not self.opts['_store'] or self.errorState:
             return

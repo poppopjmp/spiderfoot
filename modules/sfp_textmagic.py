@@ -62,7 +62,7 @@ class sfp_textmagic(SpiderFootModernPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         if userOpts is None:
             userOpts = {}
@@ -70,20 +70,20 @@ class sfp_textmagic(SpiderFootModernPlugin):
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "PHONE_NUMBER"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "PHONE_NUMBER_TYPE",
             "RAW_RIR_DATA"
         ]
 
-    def handle_error_response(self, qry, res):
+    def handle_error_response(self, qry, res) -> None:
         """Handle error response."""
         try:
             error_info = json.loads(res["content"])
@@ -129,7 +129,7 @@ class sfp_textmagic(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

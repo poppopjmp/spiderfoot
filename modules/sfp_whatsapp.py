@@ -38,24 +38,24 @@ class sfp_whatsapp(SpiderFootModernPlugin):
         "max_messages": "Maximum number of messages to fetch per number."
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["WHATSAPP_MESSAGE"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         # Stub for WhatsApp monitoring logic
         """Handle an event received by this module."""
         pass
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown."""
         pass

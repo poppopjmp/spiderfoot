@@ -80,17 +80,17 @@ class sfp_onyphe(SpiderFootModernPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["IP_ADDRESS", "IPV6_ADDRESS"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "GEOINFO",
@@ -180,7 +180,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
 
         return retarr
 
-    def emitLocationEvent(self, location, eventData, event):
+    def emitLocationEvent(self, location, eventData, event) -> None:
         """EmitLocationEvent."""
         if location is None:
             return
@@ -190,7 +190,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
                               location, self.__name__, event)
         self.notifyListeners(evt)
 
-    def emitDomainData(self, response, eventData, event):
+    def emitDomainData(self, response, eventData, event) -> None:
         """EmitDomainData."""
         domains = set()
         if response.get("domain") is not None and isinstance(
@@ -237,7 +237,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
                 self.notifyListeners(evt)
                 self.cohostcount += 1
 
-    def isFreshEnough(self, result):
+    def isFreshEnough(self, result) -> bool:
         """IsFreshEnough."""
         limit = self.opts["age_limit_days"]
         if limit <= 0:
@@ -259,7 +259,7 @@ class sfp_onyphe(SpiderFootModernPlugin):
         return True
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

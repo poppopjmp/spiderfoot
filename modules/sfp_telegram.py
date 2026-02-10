@@ -53,7 +53,7 @@ class sfp_telegram(SpiderFootModernPlugin):
         self._last_message_ids = {}
         self._emitted_message_ids = set()  # For deduplication
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts)
         if not TelegramClient:
@@ -70,7 +70,7 @@ class sfp_telegram(SpiderFootModernPlugin):
             return False
         return True
 
-    def start(self):
+    def start(self) -> None:
         """Start the module."""
         if self.errorState:
             return
@@ -148,20 +148,20 @@ class sfp_telegram(SpiderFootModernPlugin):
                         self.error(f"Error fetching messages from {channel}: {e}")
                 time.sleep(poll_interval)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["TELEGRAM_MESSAGE"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         # This module is passive and does not process incoming events
         """Handle an event received by this module."""
         pass
 
-    def finish(self):
+    def finish(self) -> None:
         """Finish."""
         self._stop_event.set()
         if hasattr(self, "_thread") and self._thread.is_alive():

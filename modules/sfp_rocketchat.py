@@ -45,7 +45,7 @@ class sfp_rocketchat(SpiderFootModernPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -64,15 +64,15 @@ class sfp_rocketchat(SpiderFootModernPlugin):
             self.error("[setup] output_format must be 'summary' or 'full'.")
             raise ValueError("output_format must be 'summary' or 'full'.")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["INTERNET_NAME", "ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["ROCKETCHAT_MESSAGE"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         allowed_types = [t.strip() for t in self.opts.get("event_types", "").split(",") if t.strip()]
@@ -82,6 +82,6 @@ class sfp_rocketchat(SpiderFootModernPlugin):
         self.debug("[handleEvent] (stub) Would process and emit Rocket.Chat events here.")
         return None
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown."""
         self.debug("[shutdown] Shutting down Rocket.Chat module.")

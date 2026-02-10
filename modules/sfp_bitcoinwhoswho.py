@@ -64,7 +64,7 @@ class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -72,11 +72,11 @@ class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
         if userOpts:
             self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["BITCOIN_ADDRESS"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["MALICIOUS_BITCOIN_ADDRESS", "RAW_RIR_DATA"]
 
@@ -101,14 +101,14 @@ class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
 
         return None
 
-    def emit(self, etype, data, pevent, notify=True):
+    def emit(self, etype, data, pevent, notify=True) -> None:
         """Emit."""
         evt = SpiderFootEvent(etype, data, self.__name__, pevent)
         if notify:
             self.notifyListeners(evt)
         return evt
 
-    def generate_events(self, data, pevent):
+    def generate_events(self, data, pevent) -> bool:
         """Generate events."""
         if not isinstance(data, dict):
             return False
@@ -121,7 +121,7 @@ class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
 
         return False
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         if self.errorState:
             return

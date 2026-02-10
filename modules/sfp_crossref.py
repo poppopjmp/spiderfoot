@@ -43,11 +43,11 @@ class sfp_crossref(SpiderFootModernPlugin):
 
     fetched = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.fetched = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             'LINKED_URL_EXTERNAL',
@@ -56,14 +56,14 @@ class sfp_crossref(SpiderFootModernPlugin):
             'DARKNET_MENTION_URL'
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             'AFFILIATE_INTERNET_NAME',
             'AFFILIATE_WEB_CONTENT'
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

@@ -63,7 +63,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -73,7 +73,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
         # or you risk them persisting between threads.
     # What events is this module interested in for input
     # * = be notified about all events.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["INTERNET_NAME", "IP_ADDRESS", "AFFILIATE_INTERNET_NAME",
                 "AFFILIATE_IPADDR", "CO_HOSTED_SITE"]
@@ -81,7 +81,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["MALICIOUS_IPADDR", "MALICIOUS_INTERNET_NAME",
                 "MALICIOUS_AFFILIATE_IPADDR", "MALICIOUS_AFFILIATE_INTERNET_NAME",
@@ -184,7 +184,7 @@ class sfp_customfeed(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

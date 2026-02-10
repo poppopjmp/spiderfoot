@@ -60,7 +60,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
     sublist = None
     lock = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.sublist = self.tempStorage()
@@ -82,7 +82,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
                     self.sublist[s] = True
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         ret = ['DOMAIN_NAME']
         if not self.opts['domainonly'] or self.opts['numbersuffix']:
@@ -92,11 +92,11 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["INTERNET_NAME"]
 
-    def tryHost(self, name):
+    def tryHost(self, name) -> None:
         """TryHost."""
         try:
             if self.resolve_host(name) or self.resolve_host6(name):
@@ -106,7 +106,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
             with self.lock:
                 self.hostResults[name] = False
 
-    def tryHostWrapper(self, hostList, sourceEvent):
+    def tryHostWrapper(self, hostList, sourceEvent) -> None:
         """TryHostWrapper."""
         self.hostResults = dict()
         running = True
@@ -140,7 +140,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
                 self.sendEvent(sourceEvent, res)
 
     # Store the result internally and notify listening modules
-    def sendEvent(self, source, result):
+    def sendEvent(self, source, result) -> None:
         """SendEvent."""
         self.info("Found a brute-forced host: " + result)
         # Report the host
@@ -148,7 +148,7 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
         self.notifyListeners(evt)
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

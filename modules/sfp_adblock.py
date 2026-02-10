@@ -67,19 +67,19 @@ class sfp_adblock(SpiderFootModernPlugin):
     rules = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.rules = None
         self.errorState = False
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL", "LINKED_URL_EXTERNAL", "PROVIDER_JAVASCRIPT"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["URL_ADBLOCKED_INTERNAL", "URL_ADBLOCKED_EXTERNAL"]
 
@@ -111,7 +111,7 @@ class sfp_adblock(SpiderFootModernPlugin):
 
         return self.setBlocklistRules(res['content'])
 
-    def setBlocklistRules(self, blocklist):
+    def setBlocklistRules(self, blocklist) -> None:
         """Parse AdBlock Plus blocklist and set blocklist rules.
 
         Args:
@@ -129,7 +129,7 @@ class sfp_adblock(SpiderFootModernPlugin):
             self.error(f"Parsing error handling AdBlock list: {e}")
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

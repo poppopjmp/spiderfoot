@@ -355,7 +355,7 @@ class sfp_blockchain_analytics(SpiderFootModernPlugin):
         'clustering_depth': "Depth for address clustering analysis"
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -368,7 +368,7 @@ class sfp_blockchain_analytics(SpiderFootModernPlugin):
         }
         
         self.analyzer = BlockchainAnalyzer(api_keys)
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "BITCOIN_ADDRESS",
@@ -378,7 +378,7 @@ class sfp_blockchain_analytics(SpiderFootModernPlugin):
             "ETHEREUM_TRANSACTION"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "BLOCKCHAIN_ANALYSIS",
@@ -391,7 +391,7 @@ class sfp_blockchain_analytics(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

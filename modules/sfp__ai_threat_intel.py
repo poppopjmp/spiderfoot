@@ -531,7 +531,7 @@ class PredictiveAnalyticsEngine:
         self.prediction_cache = {}
         self.model_lock = threading.RLock()
     
-    def record_threat_event(self, threat_type: str, timestamp: float, severity: str):
+    def record_threat_event(self, threat_type: str, timestamp: float, severity: str) -> None:
         """Record a threat event for predictive modeling."""
         with self.model_lock:
             self.threat_history[threat_type].append({
@@ -646,7 +646,7 @@ class IOCCorrelationEngine:
         self.correlation_cache = {}
         self.correlation_lock = threading.RLock()
     
-    def add_ioc_relationship(self, ioc1: str, ioc2: str, relationship_type: str = "related", timestamp: float = None):
+    def add_ioc_relationship(self, ioc1: str, ioc2: str, relationship_type: str = "related", timestamp: float = None) -> None:
         """Add a relationship between two IOCs."""
         with self.correlation_lock:
             self.ioc_graph[ioc1].add(ioc2)
@@ -1105,7 +1105,7 @@ class sfp__ai_threat_intel(SpiderFootModernPlugin):
         'ml_model_update_interval': "Interval for ML model updates (seconds)"
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the AI threat intelligence module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -1138,11 +1138,11 @@ class sfp__ai_threat_intel(SpiderFootModernPlugin):
             self.error(f"Failed to initialize AI engines: {e}")
             self.errorState = True
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in."""
         return ["*"]  # Process all events for comprehensive AI analysis
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Define the events this module produces."""
         return [
             "AI_THREAT_SIGNATURE",
@@ -1153,7 +1153,7 @@ class sfp__ai_threat_intel(SpiderFootModernPlugin):
             "AI_NLP_ANALYSIS"
         ]
 
-    def handleEvent(self, sfEvent):
+    def handleEvent(self, sfEvent) -> None:
         """Handle events with AI-powered analysis."""
         if self.errorState:
             return

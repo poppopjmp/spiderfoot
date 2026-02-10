@@ -69,18 +69,18 @@ class sfp_metadefender(SpiderFootModernPlugin):
     errorState = False
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ['IP_ADDRESS', 'INTERNET_NAME']
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             'MALICIOUS_IPADDR',
@@ -157,7 +157,7 @@ class sfp_metadefender(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

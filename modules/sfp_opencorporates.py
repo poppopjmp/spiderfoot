@@ -67,15 +67,15 @@ class sfp_opencorporates(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["COMPANY_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["COMPANY_NAME", "PHYSICAL_ADDRESS", "RAW_RIR_DATA"]
 
@@ -160,7 +160,7 @@ class sfp_opencorporates(SpiderFootModernPlugin):
         return data['results']
 
     # Extract company address, previous names, and officer names
-    def extractCompanyDetails(self, company, sevt):
+    def extractCompanyDetails(self, company, sevt) -> None:
 
         # Extract registered address
         """Extract CompanyDetails."""
@@ -205,7 +205,7 @@ class sfp_opencorporates(SpiderFootModernPlugin):
                         "RAW_RIR_DATA", "Possible full name: " + n, self.__name__, sevt)
                     self.notifyListeners(e)
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

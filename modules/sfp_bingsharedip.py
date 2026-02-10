@@ -69,7 +69,7 @@ class sfp_bingsharedip(SpiderFootModernPlugin):
     cohostcount = 0
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -77,19 +77,19 @@ class sfp_bingsharedip(SpiderFootModernPlugin):
         self.__dataSource__ = "Bing"
         self.errorState = False
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["IP_ADDRESS", "NETBLOCK_OWNER"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["CO_HOSTED_SITE", "IP_ADDRESS", "RAW_RIR_DATA"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

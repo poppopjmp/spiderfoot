@@ -59,25 +59,25 @@ class sfp_tldsearch(SpiderFootModernPlugin):
     tldResults = dict()
     lock = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "DNS"
         self.lock = threading.Lock()
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["INTERNET_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["SIMILARDOMAIN"]
 
-    def tryTld(self, target, tld):
+    def tryTld(self, target, tld) -> None:
         """TryTld."""
         resolver = dns.resolver.Resolver()
         resolver.timeout = 1
@@ -100,7 +100,7 @@ class sfp_tldsearch(SpiderFootModernPlugin):
             with self.lock:
                 self.tldResults[target] = False
 
-    def tryTldWrapper(self, tldList, sourceEvent):
+    def tryTldWrapper(self, tldList, sourceEvent) -> None:
         """TryTldWrapper."""
         self.tldResults = dict()
         running = True
@@ -135,7 +135,7 @@ class sfp_tldsearch(SpiderFootModernPlugin):
                 self.sendEvent(sourceEvent, res)
 
     # Store the result internally and notify listening modules
-    def sendEvent(self, source, result):
+    def sendEvent(self, source, result) -> None:
         """SendEvent."""
         self.info("Found a TLD with the target's name: " + result)
         self.results[result] = True
@@ -160,7 +160,7 @@ class sfp_tldsearch(SpiderFootModernPlugin):
             self.notifyListeners(evt)
 
     # Search for similar sounding domains
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventData = event.data
 

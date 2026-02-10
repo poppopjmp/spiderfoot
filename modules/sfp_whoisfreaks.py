@@ -67,12 +67,12 @@ class sfp_whoisfreaks(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "COMPANY_NAME",
@@ -82,7 +82,7 @@ class sfp_whoisfreaks(SpiderFootModernPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             'AFFILIATE_INTERNET_NAME',
@@ -141,7 +141,7 @@ class sfp_whoisfreaks(SpiderFootModernPlugin):
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

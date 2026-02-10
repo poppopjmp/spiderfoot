@@ -188,7 +188,7 @@ class sfp_template(SpiderFootModernPlugin):
     # has failed and you don't wish to process any more events.
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         # self.tempStorage() basically returns a dict(), but we use self.tempStorage()
@@ -208,7 +208,7 @@ class sfp_template(SpiderFootModernPlugin):
         self.__dataSource__ = "Some Data Source"
     # What events is this module interested in for input
     # For a list of all events, check spiderfoot/db.py.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
@@ -218,7 +218,7 @@ class sfp_template(SpiderFootModernPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "OPERATING_SYSTEM",
@@ -265,7 +265,7 @@ class sfp_template(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         # The three most used fields in SpiderFootEvent are:
         # event.eventType - the event type, e.g. INTERNET_NAME, IP_ADDRESS, etc.
         # event.module - the name of the module that generated the event, e.g. sfp_dnsresolve

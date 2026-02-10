@@ -56,14 +56,14 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
     domresults = None
     hostresults = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.domresults = self.tempStorage()
         self.hostresults = self.tempStorage()
         self.__dataSource__ = "DNS"
-    def enrichTarget(self, target):
+    def enrichTarget(self, target) -> None:
         """Enrich the target with additional data."""
         ret = list()
         # If it's an IP, get the hostname it reverse resolves to
@@ -195,7 +195,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
         return list(set(ret))
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
             # Events that need some kind of DNS treatment
@@ -228,7 +228,7 @@ class sfp_dnsresolve(SpiderFootModernPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",

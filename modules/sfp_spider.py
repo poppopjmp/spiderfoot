@@ -80,7 +80,7 @@ class sfp_spider(SpiderFootModernPlugin):
     # Tracked cookies per site
     siteCookies = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.fetchedPages = self.tempStorage()
@@ -88,12 +88,12 @@ class sfp_spider(SpiderFootModernPlugin):
         self.siteCookies = self.tempStorage()
         self.__dataSource__ = "Target Website"
     # Search engines and DNS lookups provide INTERNET_NAME.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL", "INTERNET_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "WEBSERVER_HTTPHEADERS",

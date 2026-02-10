@@ -48,7 +48,7 @@ class AdvancedCorrelationEngine:
         self.behavior_patterns = defaultdict(list)
         self.confidence_scores = {}
         
-    def add_entity_relationship(self, entity1: str, entity2: str, relationship_type: str, confidence: float):
+    def add_entity_relationship(self, entity1: str, entity2: str, relationship_type: str, confidence: float) -> None:
         """Add a relationship between two entities."""
         self.entity_graph[entity1].add((entity2, relationship_type, confidence))
         self.entity_graph[entity2].add((entity1, relationship_type, confidence))
@@ -222,18 +222,18 @@ class sfp_advanced_correlation(SpiderFootModernPlugin):
         'min_pattern_strength': "Minimum number of events to form a pattern"
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.correlation_engine = AdvancedCorrelationEngine()
         self.collected_events = []
         self.entity_cache = {}
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["*"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
             "ENTITY_RELATIONSHIP",
@@ -244,7 +244,7 @@ class sfp_advanced_correlation(SpiderFootModernPlugin):
             "CORRELATION_ANALYSIS"
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
@@ -342,7 +342,7 @@ class sfp_advanced_correlation(SpiderFootModernPlugin):
         
         return len(intersection) / len(union) if union else 0.0
 
-    def scanFinished(self):
+    def scanFinished(self) -> None:
         """Perform comprehensive correlation analysis when scan finishes."""
         if not self.collected_events:
             return

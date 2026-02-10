@@ -45,7 +45,7 @@ class sfp_unwiredlabs(SpiderFootModernPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -67,15 +67,15 @@ class sfp_unwiredlabs(SpiderFootModernPlugin):
             self.error("[setup] output_format must be 'summary' or 'full'.")
             raise ValueError("output_format must be 'summary' or 'full'.")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return ["IP_ADDRESS", "MAC_ADDRESS", "CELL_TOWER"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return ["UNWIREDLABS_GEOINFO"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         # Stub event filtering logic
@@ -85,6 +85,6 @@ class sfp_unwiredlabs(SpiderFootModernPlugin):
         self.debug("[handleEvent] (stub) Would process and emit UnwiredLabs events here.")
         return None
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown."""
         self.debug("[shutdown] Shutting down UnwiredLabs module.")

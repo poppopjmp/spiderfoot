@@ -64,7 +64,7 @@ class sfp_fofa(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc, userOpts=None) -> None:
         """
         Setup plugin with SpiderFoot context and user options.
         :param sfc: SpiderFoot context
@@ -75,11 +75,11 @@ class sfp_fofa(SpiderFootModernPlugin):
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return a list of event types this module watches."""
         return ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return a list of event types this module produces."""
         return ["INTERNET_NAME", "DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS", "RAW_RIR_DATA"]
 
@@ -140,7 +140,7 @@ class sfp_fofa(SpiderFootModernPlugin):
             self.debug(f"Error processing JSON response: {e}")
             return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event) -> None:
         """
         Handle incoming events, query Fofa, and emit results as SpiderFootEvents.
         :param event: SpiderFootEvent
