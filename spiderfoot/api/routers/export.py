@@ -61,7 +61,7 @@ def _get_dbh():
         from spiderfoot.service_registry import ServiceRegistry
         registry = ServiceRegistry.instance()
         return registry.get("db") or registry.get("dbh")
-    except Exception:
+    except (ImportError, AttributeError):
         pass
     return None
 

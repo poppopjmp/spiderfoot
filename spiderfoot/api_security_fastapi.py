@@ -5,6 +5,7 @@ Provides comprehensive API security including authentication, authorization, and
 
 from __future__ import annotations
 
+import sqlite3
 import time
 import hmac
 import hashlib
@@ -348,7 +349,7 @@ class APIKeyManager:
             self.db.execute("""
                 UPDATE api_keys SET last_used = CURRENT_TIMESTAMP WHERE key_hash = ?
             """, [key_hash])
-        except Exception:
+        except (sqlite3.Error, OSError):
             pass
 
     def list_user_api_keys(self, user_id: str) -> list[dict[str, Any]]:

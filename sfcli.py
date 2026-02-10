@@ -41,12 +41,12 @@ try:
         # Enable Ctrl+R reverse search if available
         try:
             readline.parse_and_bind(r'"\\C-r": reverse-search-history')
-        except Exception:
+        except AttributeError:
             pass
-except Exception:
+except ImportError:
     try:
         import pyreadline as readline
-    except Exception:
+    except ImportError:
         readline = None  # Continue without readline if unavailable
 
 
@@ -78,7 +78,7 @@ class SpiderFootCli(cmd.Cmd):
             self.workspaces = self._fetch_api_list('/api/workspaces')
             self.targets = self._fetch_api_list('/api/targets')
             self.knownscans = self._fetch_api_list('/api/scans')
-        except Exception:
+        except (ConnectionError, ValueError):
             pass
 
     def _fetch_api_list(self, endpoint):
@@ -229,7 +229,7 @@ class SpiderFootCli(cmd.Cmd):
                 cmd = shlex.split(line)[0]
                 if cmd in self.inline_help:
                     print(f"\n[HELP] {cmd}: {self.inline_help[cmd]}")
-            except Exception:
+            except (ValueError, IndexError):
                 pass
         if self.config['cli.history'] and line != "EOF":
             f = codecs.open(
@@ -498,7 +498,7 @@ class SpiderFootCli(cmd.Cmd):
                 if isinstance(err, dict) and 'error' in err:
                     self.edprint(f"API error: {err['error'].get('message', err['error'])}")
                     return
-            except Exception:
+            except (json.JSONDecodeError, KeyError, TypeError):
                 pass
             self.edprint(f"Unable to parse data from server: {e}")
             return
@@ -746,7 +746,7 @@ class SpiderFootCli(cmd.Cmd):
                 with codecs.open(self.config.get('cli.history_file', ''), "r", encoding="utf-8") as f:
                     for line in f.readlines():
                         readline.add_history(line.strip())
-            except Exception:
+            except OSError:
                 pass
         super().preloop()
 
@@ -756,7 +756,7 @@ class SpiderFootCli(cmd.Cmd):
             try:
                 with codecs.open(self.config.get('cli.history_file', ''), "a", encoding="utf-8") as f:
                     f.write(line.strip() + '\n')
-            except Exception:
+            except OSError:
                 pass
         return super().postcmd(stop, line)
 
@@ -876,7 +876,7 @@ if __name__ == "__main__":
             for line in f.readlines():
                 pass  # History loading to be modularized
             s.dprint("Loaded previous command history.")
-        except Exception:
+        except OSError:
             pass
 
     # Run CLI
@@ -889,7 +889,7 @@ if __name__ == "__main__":
             if args.e:
                 try:
                     cin.close()
-                except Exception:
+                except OSError:
                     pass
         sys.exit(0)
     try:
