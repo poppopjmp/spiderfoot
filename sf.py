@@ -17,6 +17,7 @@ This is the backward-compatible entry point that now uses the new modular
 architecture. It delegates all functionality to the SpiderFootOrchestrator
 while maintaining the original interface.
 """
+from __future__ import annotations
 
 import sys
 import os

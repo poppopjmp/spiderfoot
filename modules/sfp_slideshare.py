@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_slideshare
 # Purpose:      Query SlideShare for name and location information.

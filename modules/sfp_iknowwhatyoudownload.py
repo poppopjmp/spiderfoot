@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_iknowwhatyoudownload
 # Purpose:      Query iknowwhatyoudownload.com for IP addresses using torrents.

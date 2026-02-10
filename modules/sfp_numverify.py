@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_numverify
 # Purpose:     SpiderFoot plug-in to search numverify.com API for a phone number

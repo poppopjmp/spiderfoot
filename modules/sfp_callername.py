@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_callername
 # Purpose:     SpiderFoot plug-in to search CallerName.com for a phone number

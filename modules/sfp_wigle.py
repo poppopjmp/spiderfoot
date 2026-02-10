@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_wigle
 # Purpose:      Query wigle.net to identify nearby WiFi access points.

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_dehashed
 # Purpose:     Gather breach data from Dehashed API.

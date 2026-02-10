@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_twitter
 # Purpose:      Query Twitter for name and location information.

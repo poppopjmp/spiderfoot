@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_builtwith
 # Purpose:      Query builtwith.com using their API.

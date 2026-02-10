@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_psbdmp
 # Purpose:      Query psbdmp.cc for potentially hacked e-mail addresses.

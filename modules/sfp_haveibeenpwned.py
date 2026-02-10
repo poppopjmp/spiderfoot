@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_haveibeenpwned
 # Purpose:      Query haveibeenpwned.com to see if an e-mail account has been hacked.

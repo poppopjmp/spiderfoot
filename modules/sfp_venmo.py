@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_venmo
 # Purpose:     Gather user information from Venmo API.

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Setup script for SpiderFoot."""
+from __future__ import annotations
 
 import os
 import pathlib

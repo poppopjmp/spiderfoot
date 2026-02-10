@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_h1.nobbd.de
 # Purpose:      Query the the unofficial HackerOne disclosure timeline database

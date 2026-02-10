@@ -3,6 +3,7 @@
 SpiderFoot REST API (modular entrypoint)
 Delegates to the modular FastAPI app in spiderfoot/api/main.py
 """
+from __future__ import annotations
 
 import argparse
 import uvicorn

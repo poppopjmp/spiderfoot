@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_myspace
 # Purpose:      Query MySpace for username and location information.

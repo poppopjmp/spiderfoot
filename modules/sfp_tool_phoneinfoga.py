@@ -2,6 +2,8 @@
 """
 SpiderFoot plug-in for using the PhoneInfoga tool (https://github.com/sundowndev/phoneinfoga).
 """
+from __future__ import annotations
+
 import json
 import time
 from spiderfoot import SpiderFootEvent
