@@ -18,6 +18,7 @@ from queue import Empty, Queue
 from threading import Thread
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
+from spiderfoot.logging_config import LOG_FORMAT_DEBUG, LOG_FORMAT_TEXT
 
 
 class SpiderFootSqliteLogHandler(logging.Handler):
@@ -46,6 +47,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         self.backup_count = 30
         self.rotate_logs()
         self.log_queue = Queue()
+        self._formatter = logging.Formatter(LOG_FORMAT_TEXT)
         self.logging_thread = Thread(target=self.process_log_queue)
         self.logging_thread.daemon = True
         self.logging_thread.start()
@@ -156,9 +158,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
         Returns:
             str: Formatted log message
         """
-        formatter = logging.Formatter(
-            "%(asctime)s [%(levelname)s] %(module)s : %(message)s")
-        return formatter.format(record)
+        return self._formatter.format(record)
 
     def process_log_queue(self):
         """Process log records from the queue."""
@@ -224,10 +224,8 @@ def logListenerSetup(loggingQueue, opts: dict = None) -> 'logging.handlers.Queue
     error_handler.addFilter(lambda x: x.levelno >= logging.WARN)
 
     # Set log format
-    log_format = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(module)s : %(message)s")
-    debug_format = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s : %(message)s")
+    log_format = logging.Formatter(LOG_FORMAT_TEXT)
+    debug_format = logging.Formatter(LOG_FORMAT_DEBUG)
     console_handler.setFormatter(log_format)
     debug_handler.setFormatter(debug_format)
     error_handler.setFormatter(debug_format)
