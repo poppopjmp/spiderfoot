@@ -3,6 +3,36 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.190.0] — RC Cycle 125: print() → logging + Module Docstrings
+
+### Changed
+- Converted 9 `print()` calls to proper `logging.error()` / `sys.stderr.write()` in `api_security_fastapi.py`, `core/config.py`, `core/validation.py`
+- Added module docstrings to `sfcli.py` and `sfwebui.py`
+
+## [5.189.0] — RC Cycle 124: Module Docstrings (16 files)
+
+### Changed
+- Added module-level docstrings to all 16 `spiderfoot/` files that were missing them (api, correlation, scan_service, webui subpackages)
+- All `spiderfoot/` modules now have module docstrings
+
+## [5.188.0] — RC Cycle 123: Final Exception Narrowing (10 blocks)
+
+### Changed
+- Narrowed the final 10 `except Exception: pass` blocks to specific types across 8 files
+- `sfp_blockchain_analytics.py`: `ConnectionError | ValueError | KeyError` (2 blocks)
+- `sfp_bnb.py`: `ValueError | TypeError`; `sfp_dnsdumpster.py`: `ValueError | AttributeError | KeyError | TypeError`
+- `sfp_tool_gobuster.py`: `OSError` (2 blocks); `sfp__stor_db.py`: `OSError | psycopg2.Error`
+- `sfp__stor_db_advanced.py`: `OSError`; `data.py`: `KeyError | TypeError | AttributeError`; `reports.py`: `OSError | AttributeError`
+- Only 1 template-code block remains (intentional in `migrate_threadreaper.py`)
+
+## [5.187.0] — RC Cycle 122: Narrow Exception Handling (9 blocks)
+
+### Changed
+- Narrowed 9 `except Exception: pass` blocks in `batch.py`, `monitor.py`, `scan.py`, `websocket.py`
+- `batch.py`: 4 blocks → `json.JSONDecodeError | ConnectionError | OSError`
+- `monitor.py`: 2 blocks → `json.JSONDecodeError`
+- `scan.py`, `websocket.py`: 3 blocks kept broad but replaced silent `pass` with `logging.debug()` for observability
+
 ## [5.186.0] — RC Cycle 120: Narrow Exception Handling
 
 ### Changed
