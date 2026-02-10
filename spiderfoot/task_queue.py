@@ -76,6 +76,7 @@ class TaskRecord:
 
     @property
     def elapsed_seconds(self) -> float:
+        """Return the elapsed time in seconds since the task started."""
         if self.started_at is None:
             return 0.0
         end = self.completed_at or time.time()
@@ -83,11 +84,13 @@ class TaskRecord:
 
     @property
     def is_terminal(self) -> bool:
+        """Return True if the task has reached a final state."""
         return self.state in (
             TaskState.COMPLETED, TaskState.FAILED, TaskState.CANCELLED,
         )
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "task_id": self.task_id,
             "task_type": self.task_type.value,
@@ -123,6 +126,7 @@ class TaskManager:
         max_workers: int = 4,
         max_history: int = 500,
     ) -> None:
+        """Initialize the TaskManager."""
         self._lock = threading.Lock()
         self._tasks: dict[str, _TaskEntry] = {}
         self._pool = ThreadPoolExecutor(
@@ -310,6 +314,7 @@ class TaskManager:
 
     @property
     def task_count(self) -> int:
+        """Return the total number of tracked tasks."""
         with self._lock:
             return len(self._tasks)
 
@@ -334,6 +339,7 @@ class _TaskEntry:
         meta: dict[str, Any],
         created_at: float,
     ) -> None:
+        """Initialize the _TaskEntry."""
         self.task_id = task_id
         self.task_type = task_type
         self.state = TaskState.QUEUED
@@ -348,11 +354,13 @@ class _TaskEntry:
 
     @property
     def is_terminal(self) -> bool:
+        """Return True if the task has reached a final state."""
         return self.state in (
             TaskState.COMPLETED, TaskState.FAILED, TaskState.CANCELLED,
         )
 
     def to_record(self) -> TaskRecord:
+        """Convert this entry to an immutable TaskRecord snapshot."""
         return TaskRecord(
             task_id=self.task_id,
             task_type=self.task_type,

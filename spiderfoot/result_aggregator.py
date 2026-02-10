@@ -60,6 +60,7 @@ class TypeStats:
 
     def record(self, data: str, module: str, confidence: int,
                risk: int) -> None:
+        """Record a new event occurrence in the type statistics."""
         self.count += 1
         self._values.add(data)
         self.unique_values = len(self._values)
@@ -72,6 +73,7 @@ class TypeStats:
             self.max_risk = risk
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "event_type": self.event_type,
             "count": self.count,
@@ -87,6 +89,7 @@ class ScanResultAggregator:
     """Aggregates scan results into structured summaries."""
 
     def __init__(self, scan_id: str = "") -> None:
+        """Initialize the ScanResultAggregator."""
         self.scan_id = scan_id
         self.start_time = time.time()
         self._events: list[EventRecord] = []
@@ -176,18 +179,22 @@ class ScanResultAggregator:
 
     @property
     def total_events(self) -> int:
+        """Return the total number of recorded events."""
         return len(self._events)
 
     @property
     def unique_types(self) -> int:
+        """Return the number of distinct event types seen."""
         return len(self._type_stats)
 
     @property
     def unique_modules(self) -> int:
+        """Return the number of distinct modules that produced events."""
         return len(self._module_counts)
 
     @property
     def duration(self) -> float:
+        """Return the elapsed time in seconds since aggregation started."""
         return time.time() - self.start_time
 
     @property

@@ -169,6 +169,7 @@ else:
         ),
     )
     async def get_progress(scan_id: str) -> dict:
+        """Return the current progress snapshot for a scan."""
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
@@ -193,6 +194,7 @@ else:
         ),
     )
     async def get_module_progress(scan_id: str) -> dict:
+        """Return per-module progress breakdown for a scan."""
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
@@ -243,6 +245,7 @@ else:
         ),
     )
     async def get_progress_history(scan_id: str) -> dict:
+        """Return historical progress snapshots for a scan."""
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
@@ -270,6 +273,7 @@ else:
         request: Request,
         interval: float = _DEFAULT_SSE_INTERVAL,
     ) -> StreamingResponse:
+        """Stream scan progress updates via Server-Sent Events."""
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
@@ -307,6 +311,7 @@ else:
         ),
     )
     async def create_tracker(scan_id: str, modules: list[str] | None = None) -> dict:
+        """Create and start a new progress tracker for a scan."""
         if not HAS_TRACKER:
             raise HTTPException(
                 status_code=501,
@@ -338,6 +343,7 @@ else:
         description="Returns IDs of all scans with active progress trackers.",
     )
     async def list_active_trackers() -> dict:
+        """List all scans with active progress trackers."""
         scan_ids = list_tracked_scans()
         summaries = []
         for sid in scan_ids:

@@ -52,14 +52,17 @@ class SpiderFootTarget():
         self.targetAliases = list()
 
     def __repr__(self) -> str:
+        """Return a string representation of the target."""
         return f"SpiderFootTarget({self._targetValue!r}, {self._targetType!r})"
 
     @property
     def targetType(self) -> str:
+        """Return the target type."""
         return self._targetType
 
     @targetType.setter
     def targetType(self, targetType: str) -> None:
+        """Set and validate the target type."""
         if not isinstance(targetType, str):
             raise TypeError(
                 f"targetType is {type(targetType)}; expected str()")
@@ -72,10 +75,12 @@ class SpiderFootTarget():
 
     @property
     def targetValue(self) -> str:
+        """Return the target value."""
         return self._targetValue
 
     @targetValue.setter
     def targetValue(self, targetValue: str) -> None:
+        """Set and validate the target value."""
         if not isinstance(targetValue, str):
             raise TypeError(
                 f"targetValue is {type(targetValue)}; expected str()")
@@ -86,10 +91,12 @@ class SpiderFootTarget():
 
     @property
     def targetAliases(self) -> list[TargetAlias]:
+        """Return the list of target aliases."""
         return self._targetAliases
 
     @targetAliases.setter
     def targetAliases(self, value: list[TargetAlias]) -> None:
+        """Set the list of target aliases."""
         self._targetAliases = value
 
     def setAlias(self, value: str, typeName: str) -> None:

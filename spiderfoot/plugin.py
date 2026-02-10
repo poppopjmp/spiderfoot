@@ -144,6 +144,7 @@ class SpiderFootPlugin:
         self._listenerModules = []  # Initialize _listenerModules attribute
 
     def __repr__(self) -> str:
+        """Return a string representation of the plugin."""
         return f"SpiderFootPlugin({self._name!r})"
 
     def finished(self) -> None:
@@ -174,6 +175,7 @@ class SpiderFootPlugin:
 
     @property
     def log(self) -> logging.Logger:
+        """Return the logger instance for this plugin."""
         if self._log is None:
             # temporarily set logger class
             logging.setLoggerClass(SpiderFootPluginLogger)
@@ -331,6 +333,7 @@ class SpiderFootPlugin:
         self._listenerModules.append(listener)
 
     def setOutputFilter(self, types: list[str]) -> None:
+        """Set the event types to filter outgoing events."""
         self.__outputFilter__ = types
 
     def tempStorage(self) -> dict:
@@ -520,6 +523,7 @@ class SpiderFootPlugin:
         return
 
     def asdict(self) -> dict:
+        """Return a dictionary representation of the plugin metadata."""
         return {
             'name': self.meta.get('name'),
             'descr': self.meta.get('summary'),
@@ -569,6 +573,7 @@ class SpiderFootPlugin:
         return
 
     def threadWorker(self) -> None:
+        """Main thread loop that processes events from the incoming queue."""
         try:
             # create new database handle since we're in our own thread
             from spiderfoot import SpiderFootDb
@@ -643,9 +648,11 @@ class SpiderFootPlugin:
             )
 
     def threadPool(self, *args, **kwargs) -> SpiderFootThreadPool:
+        """Create and return a new SpiderFootThreadPool."""
         return SpiderFootThreadPool(*args, **kwargs)
 
     def setSharedThreadPool(self, sharedThreadPool: 'SpiderFootThreadPool') -> None:
+        """Assign a shared thread pool for this plugin."""
         self.sharedThreadPool = sharedThreadPool
 
 # end of SpiderFootPlugin class

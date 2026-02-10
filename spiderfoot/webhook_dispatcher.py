@@ -72,6 +72,7 @@ class WebhookConfig:
     description: str = ""
 
     def __post_init__(self) -> None:
+        """Generate a default webhook ID if not provided."""
         if not self.webhook_id:
             self.webhook_id = str(uuid.uuid4())
 
@@ -85,6 +86,7 @@ class WebhookConfig:
         )
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "webhook_id": self.webhook_id,
             "url": self.url,
@@ -113,6 +115,7 @@ class DeliveryRecord:
     payload_size: int = 0
 
     def __post_init__(self) -> None:
+        """Generate default delivery ID and timestamp if not provided."""
         if not self.delivery_id:
             self.delivery_id = str(uuid.uuid4())
         if not self.created_at:
@@ -120,10 +123,12 @@ class DeliveryRecord:
 
     @property
     def elapsed_seconds(self) -> float:
+        """Return the elapsed time in seconds since the delivery was created."""
         end = self.completed_at or time.time()
         return round(end - self.created_at, 3)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "delivery_id": self.delivery_id,
             "webhook_id": self.webhook_id,
@@ -149,6 +154,7 @@ class WebhookDispatcher:
     """
 
     def __init__(self, max_history: int = 200) -> None:
+        """Initialize the WebhookDispatcher."""
         self._lock = threading.Lock()
         self._history: deque[DeliveryRecord] = deque(maxlen=max_history)
 
@@ -305,6 +311,7 @@ class WebhookDispatcher:
         return records[:limit]
 
     def clear_history(self) -> int:
+        """Clear all delivery records and return the count removed."""
         with self._lock:
             count = len(self._history)
             self._history.clear()

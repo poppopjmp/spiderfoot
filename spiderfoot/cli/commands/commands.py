@@ -14,18 +14,23 @@ from typing import Any, Callable
 class CommandRegistry:
     """Registry for CLI command handlers."""
     def __init__(self) -> None:
+        """Initialize the CommandRegistry."""
         self.commands = {}
 
     def register(self, name: str, func: Callable, help_text: str | None = None) -> None:
+        """Register a command handler with an optional help text."""
         self.commands[name] = {'func': func, 'help': help_text}
 
     def get(self, name: str) -> dict | None:
+        """Return the command entry for the given name, or None."""
         return self.commands.get(name)
 
     def all_commands(self) -> Any:
+        """Return all registered command names."""
         return self.commands.keys()
 
     def help(self, name: str) -> str:
+        """Return the help text for the given command name."""
         cmd = self.get(name)
         if cmd:
             return cmd.get('help', '')
@@ -36,8 +41,10 @@ class BaseCommand:
     Optional base class for CLI commands.
     """
     def __init__(self, cli: Any) -> None:
+        """Initialize the BaseCommand."""
         self.cli = cli
     def run(self, *args, **kwargs) -> None:
+        """Execute the command logic; must be overridden by subclasses."""
         raise NotImplementedError("Command must implement run()")
 
 def load_all_commands(registry: CommandRegistry, commands_pkg: str = "spiderfoot.cli.commands") -> None:

@@ -113,16 +113,19 @@ class ScannerNode:
 
     @property
     def available_capacity(self) -> int:
+        """Return the remaining work capacity for this node."""
         return max(0, self.capacity - self.active_work)
 
     @property
     def is_available(self) -> bool:
+        """Return True if the node is online and has spare capacity."""
         return (
             self.state == NodeState.ONLINE
             and self.available_capacity > 0
         )
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "node_id": self.node_id,
             "endpoint": self.endpoint,
@@ -152,6 +155,7 @@ class ScanWork:
     max_retries: int = 2
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "scan_id": self.scan_id,
             "target": self.target,
@@ -180,6 +184,7 @@ class WorkAssignment:
     result: dict | None = None
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "work_id": self.work_id,
             "scan_id": self.work.scan_id,
@@ -210,6 +215,7 @@ class ScanCoordinator:
                  heartbeat_interval: float = 30.0,
                  heartbeat_timeout: float = 90.0,
                  auto_monitor: bool = False) -> None:
+        """Initialize the ScanCoordinator."""
         self._lock = threading.Lock()
         self._nodes: dict[str, ScannerNode] = {}
         self._work: dict[str, WorkAssignment] = {}
@@ -257,10 +263,12 @@ class ScanCoordinator:
             return node
 
     def get_node(self, node_id: str) -> ScannerNode | None:
+        """Return a registered node by its ID, or None."""
         with self._lock:
             return self._nodes.get(node_id)
 
     def list_nodes(self) -> list[ScannerNode]:
+        """Return a list of all registered scanner nodes."""
         with self._lock:
             return list(self._nodes.values())
 

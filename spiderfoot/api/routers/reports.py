@@ -428,6 +428,7 @@ else:
         background_tasks: BackgroundTasks,
         scan_service: ScanService = Depends(get_scan_service),
     ) -> ReportStatusResponse:
+        """Start asynchronous report generation for a scan."""
         report_id = str(uuid.uuid4())
 
         # Retrieve scan events
@@ -479,6 +480,7 @@ else:
         description="Retrieve a generated report by ID. Check status to see if generation is complete.",
     )
     async def get_report(report_id: str) -> ReportResponse:
+        """Retrieve a generated report by its ID."""
         stored = get_stored_report(report_id)
         if stored is None:
             raise HTTPException(status_code=404, detail="Report not found")
@@ -503,6 +505,7 @@ else:
         summary="Check report generation status",
     )
     async def get_report_status(report_id: str) -> ReportStatusResponse:
+        """Check the generation status of a report."""
         stored = get_stored_report(report_id)
         if stored is None:
             raise HTTPException(status_code=404, detail="Report not found")
@@ -522,6 +525,7 @@ else:
     )
     async def preview_report(request: ReportPreviewRequest,
                             scan_service: ScanService = Depends(get_scan_service)) -> dict[str, Any]:
+        """Generate a quick executive summary preview synchronously."""
         from spiderfoot.report_generator import ReportGenerator, ReportGeneratorConfig
 
         events, scan_metadata = _get_scan_events(request.scan_id, scan_service=scan_service)
@@ -550,6 +554,7 @@ else:
             description="Output format"
         ),
     ) -> StreamingResponse:
+        """Export a completed report in the specified format."""
         from spiderfoot.report_formatter import ReportFormatter
         from spiderfoot.report_generator import (
             GeneratedReport,
@@ -631,6 +636,7 @@ else:
         limit: int = Query(50, ge=1, le=200),
         offset: int = Query(0, ge=0),
     ) -> list[ReportListItem]:
+        """List all generated reports with optional filtering."""
         reports = list_stored_reports(scan_id=scan_id, limit=limit, offset=offset)
 
         return [
@@ -652,6 +658,7 @@ else:
         status_code=204,
     )
     async def delete_report(report_id: str) -> None:
+        """Delete a report by its ID."""
         if not delete_stored_report(report_id):
             raise HTTPException(status_code=404, detail="Report not found")
         return None
