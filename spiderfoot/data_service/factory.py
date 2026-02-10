@@ -177,11 +177,11 @@ class DataServiceBridge:
 
     # --- Legacy scan methods ---
 
-    def scanInstanceCreate(self, instanceId: str, scanName: str, scanTarget: str):
+    def scanInstanceCreate(self, instanceId: str, scanName: str, scanTarget: str) -> None:
         """Legacy wrapper for scan_instance_create."""
         self._ds.scan_instance_create(instanceId, scanName, scanTarget)
 
-    def scanInstanceGet(self, instanceId: str):
+    def scanInstanceGet(self, instanceId: str) -> list:
         """Legacy wrapper returning tuple format."""
         result = self._ds.scan_instance_get(instanceId)
         if result is None:
@@ -189,7 +189,7 @@ class DataServiceBridge:
         return [(result["name"], result["target"], result["created"],
                  result["started"], result["ended"], result["status"])]
 
-    def scanInstanceList(self):
+    def scanInstanceList(self) -> list:
         """Legacy wrapper returning tuple format."""
         results = self._ds.scan_instance_list()
         return [
@@ -198,11 +198,11 @@ class DataServiceBridge:
             for r in results
         ]
 
-    def scanInstanceDelete(self, instanceId: str):
+    def scanInstanceDelete(self, instanceId: str) -> None:
         """Legacy wrapper for scan_instance_delete."""
         self._ds.scan_instance_delete(instanceId)
 
-    def scanInstanceSet(self, instanceId: str, started=None, ended=None, status=None):
+    def scanInstanceSet(self, instanceId: str, started=None, ended=None, status=None) -> None:
         """Legacy wrapper for scan_status_set."""
         started_int = int(started) if started else None
         ended_int = int(ended) if ended else None
@@ -210,7 +210,7 @@ class DataServiceBridge:
 
     # --- Legacy event methods ---
 
-    def scanEventStore(self, instanceId: str, sfEvent):
+    def scanEventStore(self, instanceId: str, sfEvent) -> None:
         """Legacy wrapper - stores a SpiderFootEvent."""
         if isinstance(self._ds, LocalDataService):
             self._ds.event_store_obj(instanceId, sfEvent)
@@ -228,7 +228,7 @@ class DataServiceBridge:
                 risk=sfEvent.risk,
             )
 
-    def scanResultEvent(self, instanceId: str, eventType="ALL", **kwargs):
+    def scanResultEvent(self, instanceId: str, eventType="ALL", **kwargs) -> list:
         """Legacy wrapper for event queries."""
         et = None if eventType == "ALL" else eventType
         results = self._ds.event_get_by_scan(instanceId, event_type=et)
@@ -239,7 +239,7 @@ class DataServiceBridge:
             for r in results
         ]
 
-    def scanResultSummary(self, instanceId: str, by: str = "type"):
+    def scanResultSummary(self, instanceId: str, by: str = "type") -> list:
         """Legacy wrapper - partial support."""
         if by == "type":
             summary = self._ds.scan_result_summary(instanceId)
@@ -249,11 +249,11 @@ class DataServiceBridge:
 
     # --- Legacy log methods ---
 
-    def scanLogEvent(self, instanceId: str, classification: str, message: str, component=None):
+    def scanLogEvent(self, instanceId: str, classification: str, message: str, component=None) -> None:
         """Legacy wrapper for scan_log_event."""
         self._ds.scan_log_event(instanceId, classification, message, component)
 
-    def scanLogs(self, instanceId: str, limit=None, fromRowId=0, reverse=False):
+    def scanLogs(self, instanceId: str, limit=None, fromRowId=0, reverse=False) -> list:
         """Legacy wrapper for scan_log_get."""
         lmt = limit if limit else 0
         results = self._ds.scan_log_get(instanceId, limit=lmt, offset=fromRowId)
@@ -267,17 +267,17 @@ class DataServiceBridge:
 
     # --- Legacy config methods ---
 
-    def configSet(self, optMap=None):
+    def configSet(self, optMap=None) -> None:
         """Legacy wrapper for config_set."""
         if optMap is None:
             optMap = {}
         self._ds.config_set(optMap)
 
-    def configGet(self):
+    def configGet(self) -> Any:
         """Legacy wrapper for config_get."""
         return self._ds.config_get()
 
-    def scanConfigSet(self, scan_id: str, optMap=None):
+    def scanConfigSet(self, scan_id: str, optMap=None) -> None:
         """Legacy wrapper for scan_config_set."""
         if optMap is None:
             optMap = {}
@@ -285,7 +285,7 @@ class DataServiceBridge:
 
     # --- Legacy event type methods ---
 
-    def eventTypes(self):
+    def eventTypes(self) -> list:
         """Legacy wrapper for event_types_list."""
         results = self._ds.event_types_list()
         return [

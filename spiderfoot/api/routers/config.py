@@ -56,7 +56,7 @@ class ConfigSummaryResponse(BaseModel):
 
 
 @router.get("/config", response_model=ConfigSummaryResponse)
-async def get_config_endpoint(api_key: str = optional_auth_dep):
+async def get_config_endpoint(api_key: str = optional_auth_dep) -> ConfigSummaryResponse:
     """
     Get the global configuration.
 
@@ -81,7 +81,7 @@ async def get_config_endpoint(api_key: str = optional_auth_dep):
 
 
 @router.patch("/config")
-async def update_config(body: ConfigUpdateRequest, api_key: str = optional_auth_dep):
+async def update_config(body: ConfigUpdateRequest, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Update global config options with typed validation.
     """
@@ -113,7 +113,7 @@ async def update_config(body: ConfigUpdateRequest, api_key: str = optional_auth_
 async def update_config_endpoint(
     new_config: dict,
     api_key: str = Depends(optional_auth)
-):
+) -> dict[str, Any]:
     """
     Update the global configuration.
 
@@ -135,7 +135,7 @@ async def update_config_endpoint(
 
 
 @router.get("/modules")
-async def get_modules(api_key: str = optional_auth_dep):
+async def get_modules(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Get all modules and their info.
 
@@ -173,7 +173,7 @@ async def get_modules(api_key: str = optional_auth_dep):
 
 
 @router.patch("/modules/{module_name}/options")
-async def update_module_options(module_name: str, options: dict = config_body, api_key: str = optional_auth_dep):
+async def update_module_options(module_name: str, options: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Update config options for a specific module.
 
@@ -211,7 +211,7 @@ async def update_module_options(module_name: str, options: dict = config_body, a
 
 @router.get("/event-types")
 async def get_event_types(api_key: str = optional_auth_dep,
-                          config_repo=Depends(get_config_repository)):
+                          config_repo=Depends(get_config_repository)) -> dict[str, Any]:
     """
     Get all event types.
 
@@ -237,7 +237,7 @@ async def get_event_types(api_key: str = optional_auth_dep,
 async def get_module_config(
     module_name: str,
     api_key: str = Depends(optional_auth)
-):
+) -> dict[str, Any]:
     """
     Get configuration for a specific module.
 
@@ -267,7 +267,7 @@ async def update_module_config(
     module_name: str,
     new_config: dict,
     api_key: str = Depends(optional_auth)
-):
+) -> dict[str, Any]:
     """
     Update configuration for a specific module.
 
@@ -290,7 +290,7 @@ async def update_module_config(
 
 
 @router.post("/config/reload")
-async def reload_config(api_key: str = Depends(optional_auth)):
+async def reload_config(api_key: str = Depends(optional_auth)) -> dict[str, Any]:
     """
     Reload the application configuration from the database
     and re-apply environment variable overrides.
@@ -305,7 +305,7 @@ async def reload_config(api_key: str = Depends(optional_auth)):
 
 
 @router.post("/config/validate", response_model=ValidationResponse)
-async def validate_config(body: ConfigValidateRequest, api_key: str = optional_auth_dep):
+async def validate_config(body: ConfigValidateRequest, api_key: str = optional_auth_dep) -> ValidationResponse:
     """
     Validate configuration options without saving.
 
@@ -327,7 +327,7 @@ async def validate_config(body: ConfigValidateRequest, api_key: str = optional_a
 
 
 @router.get("/config/scan-defaults")
-async def get_scan_defaults(api_key: str = optional_auth_dep):
+async def get_scan_defaults(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Get scan default options.
     """
@@ -341,7 +341,7 @@ async def get_scan_defaults(api_key: str = optional_auth_dep):
 
 
 @router.patch("/config/scan-defaults")
-async def update_scan_defaults(options: dict = config_body, api_key: str = optional_auth_dep):
+async def update_scan_defaults(options: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Update scan default options.
     """
@@ -356,7 +356,7 @@ async def update_scan_defaults(options: dict = config_body, api_key: str = optio
 
 
 @router.get("/config/workspace-defaults")
-async def get_workspace_defaults(api_key: str = optional_auth_dep):
+async def get_workspace_defaults(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Get workspace default options.
     """
@@ -370,7 +370,7 @@ async def get_workspace_defaults(api_key: str = optional_auth_dep):
 
 
 @router.patch("/config/workspace-defaults")
-async def update_workspace_defaults(options: dict = config_body, api_key: str = optional_auth_dep):
+async def update_workspace_defaults(options: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Update workspace default options.
     """
@@ -385,7 +385,7 @@ async def update_workspace_defaults(options: dict = config_body, api_key: str = 
 
 
 @router.get("/config/api-keys")
-async def list_api_keys(api_key: str = optional_auth_dep):
+async def list_api_keys(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     List all API keys (admin only).
     """
@@ -398,7 +398,7 @@ async def list_api_keys(api_key: str = optional_auth_dep):
         raise HTTPException(status_code=500, detail="Failed to list API keys") from e
 
 @router.post("/config/api-keys")
-async def add_api_key(key_data: dict = config_body, api_key: str = optional_auth_dep):
+async def add_api_key(key_data: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Add a new API key (admin only).
     """
@@ -412,7 +412,7 @@ async def add_api_key(key_data: dict = config_body, api_key: str = optional_auth
         raise HTTPException(status_code=500, detail="Failed to add API key") from e
 
 @router.delete("/config/api-keys/{key_id}")
-async def delete_api_key(key_id: str, api_key: str = optional_auth_dep):
+async def delete_api_key(key_id: str, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Delete an API key (admin only).
     """
@@ -427,7 +427,7 @@ async def delete_api_key(key_id: str, api_key: str = optional_auth_dep):
 
 
 @router.post("/config/api-keys/{key_id}/rotate")
-async def rotate_api_key(key_id: str, api_key: str = optional_auth_dep):
+async def rotate_api_key(key_id: str, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """Rotate an API key — generates a new key value, preserving permissions.
 
     The old key is immediately invalidated and a new key value is returned.
@@ -517,7 +517,7 @@ API_KEY_SCOPES = {
 
 
 @router.get("/config/api-keys/scopes")
-async def list_api_key_scopes(api_key: str = optional_auth_dep):
+async def list_api_key_scopes(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """List all available API key scopes and their descriptions."""
     return {
         "scopes": {
@@ -535,7 +535,7 @@ async def set_api_key_scopes(
     key_id: str,
     scopes: list[str] = Body(..., embed=True),
     api_key: str = optional_auth_dep,
-):
+) -> dict[str, Any]:
     """Set the scopes for an API key.
 
     Scopes restrict which endpoints the key can access.
@@ -586,7 +586,7 @@ async def set_api_key_scopes(
 
 
 @router.get("/config/api-keys/{key_id}/scopes")
-async def get_api_key_scopes(key_id: str, api_key: str = optional_auth_dep):
+async def get_api_key_scopes(key_id: str, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """Get the current scopes for an API key."""
     try:
         config = get_app_config()
@@ -614,7 +614,7 @@ async def get_api_key_scopes(key_id: str, api_key: str = optional_auth_dep):
         raise HTTPException(status_code=500, detail="Failed to get key scopes") from e
 
 @router.get("/config/credentials")
-async def list_credentials(api_key: str = optional_auth_dep):
+async def list_credentials(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     List all stored credentials.
     """
@@ -627,7 +627,7 @@ async def list_credentials(api_key: str = optional_auth_dep):
         raise HTTPException(status_code=500, detail="Failed to list credentials") from e
 
 @router.post("/config/credentials")
-async def add_credential(cred_data: dict = config_body, api_key: str = optional_auth_dep):
+async def add_credential(cred_data: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Add a new credential.
     """
@@ -641,7 +641,7 @@ async def add_credential(cred_data: dict = config_body, api_key: str = optional_
         raise HTTPException(status_code=500, detail="Failed to add credential") from e
 
 @router.delete("/config/credentials/{cred_id}")
-async def delete_credential(cred_id: str, api_key: str = optional_auth_dep):
+async def delete_credential(cred_id: str, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Delete a credential.
     """
@@ -655,7 +655,7 @@ async def delete_credential(cred_id: str, api_key: str = optional_auth_dep):
         raise HTTPException(status_code=500, detail="Failed to delete credential") from e
 
 @router.get("/config/export")
-async def export_config(api_key: str = optional_auth_dep):
+async def export_config(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Export the current configuration as JSON.
     """
@@ -668,7 +668,7 @@ async def export_config(api_key: str = optional_auth_dep):
 
 
 @router.get("/config/summary")
-async def get_config_summary(api_key: str = optional_auth_dep):
+async def get_config_summary(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Return a typed summary of all 11 AppConfig sections.
     """
@@ -725,7 +725,7 @@ async def get_config_summary(api_key: str = optional_auth_dep):
         raise HTTPException(status_code=500, detail="Failed to get config summary") from e
 
 @router.post("/config/import")
-async def import_config(new_config: dict = config_body, api_key: str = optional_auth_dep):
+async def import_config(new_config: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Import/replace the current configuration.
     """
@@ -774,7 +774,7 @@ async def get_config_sources(
         description="Filter by source (default, env:*, file:*, runtime)",
     ),
     api_key: str = optional_auth_dep,
-):
+) -> dict[str, Any]:
     """Return provenance information for every config key.
 
     Shows where each value came from: ``default``, ``file:<name>``,
@@ -820,7 +820,7 @@ async def get_config_sources(
 
 
 @router.get("/config/environment", response_model=ConfigEnvironmentResponse)
-async def get_config_environment(api_key: str = optional_auth_dep):
+async def get_config_environment(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """Report environment variable overrides and service identity.
 
     Returns active ``SF_*`` env vars that override defaults, flags
@@ -849,7 +849,7 @@ async def get_config_environment(api_key: str = optional_auth_dep):
 
 
 @router.get("/config/validate")
-async def validate_current_config(api_key: str = optional_auth_dep):
+async def validate_current_config(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """Validate the current running configuration comprehensively.
 
     Unlike ``POST /config/validate`` (which checks proposed changes),
@@ -979,7 +979,7 @@ async def validate_current_config(api_key: str = optional_auth_dep):
 # -----------------------------------------------------------------------
 
 @router.get("/config/rate-limits")
-async def get_rate_limits(api_key: str = optional_auth_dep):
+async def get_rate_limits(api_key: str = optional_auth_dep) -> dict[str, Any]:
     """Get current rate limit configuration including per-endpoint overrides."""
     try:
         from spiderfoot.api.rate_limit_middleware import get_rate_limit_config, get_rate_limit_stats
@@ -1003,7 +1003,7 @@ class EndpointRateLimitRequest(BaseModel):
 async def set_endpoint_rate_limit(
     request: EndpointRateLimitRequest,
     api_key: str = optional_auth_dep,
-):
+) -> dict[str, Any]:
     """Set a per-endpoint rate limit override (runtime, not persisted)."""
     try:
         from spiderfoot.api.rate_limit_middleware import set_endpoint_override
@@ -1027,7 +1027,7 @@ async def set_endpoint_rate_limit(
 async def remove_endpoint_rate_limit(
     path: str = Query(..., description="URL path prefix to remove override for"),
     api_key: str = optional_auth_dep,
-):
+) -> dict[str, Any]:
     """Remove a per-endpoint rate limit override."""
     try:
         from spiderfoot.api.rate_limit_middleware import remove_endpoint_override
@@ -1074,7 +1074,7 @@ async def get_config_history(
     limit: int = Query(50, ge=1, le=200),
     section: str | None = Query(None, description="Filter by config section"),
     api_key: str = optional_auth_dep,
-):
+) -> dict[str, Any]:
     """Get configuration change history.
 
     Returns recent config modifications with timestamps, sections,
@@ -1100,7 +1100,7 @@ async def get_config_history(
 @router.get("/config/diff")
 async def get_config_diff(
     api_key: str = optional_auth_dep,
-):
+) -> dict[str, Any]:
     """Compare current config against defaults.
 
     Returns a diff showing which settings have been modified from

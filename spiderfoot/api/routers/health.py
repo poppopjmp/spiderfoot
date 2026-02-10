@@ -445,7 +445,7 @@ else:
         summary="Overall health check",
         description="Combined liveness and readiness. Returns 200 if healthy, 503 if degraded/down.",
     )
-    async def health():
+    async def health() -> Response:
         result = run_all_checks()
         status_code = 200 if result["status"] == "up" else 503
         return Response(
@@ -459,7 +459,7 @@ else:
         summary="Liveness probe",
         description="Returns 200 if the process is alive. Always succeeds.",
     )
-    async def liveness():
+    async def liveness() -> dict[str, Any]:
         return {
             "status": "up",
             "uptime_seconds": round(time.time() - _startup_time, 1),
@@ -471,7 +471,7 @@ else:
         summary="Readiness probe",
         description="Returns 200 if the service can handle traffic, 503 otherwise.",
     )
-    async def readiness():
+    async def readiness() -> Response:
         result = run_all_checks()
         status_code = 200 if result["status"] in ("up", "degraded") else 503
         return Response(
@@ -485,7 +485,7 @@ else:
         summary="Startup probe",
         description="Returns 200 once application initialization is complete.",
     )
-    async def startup_probe():
+    async def startup_probe() -> Response:
         status_code = 200 if _startup_complete else 503
         return Response(
             content=_json_dumps({
@@ -502,7 +502,7 @@ else:
         summary="Full health dashboard",
         description="Comprehensive status overview of all subsystems.",
     )
-    async def dashboard():
+    async def dashboard() -> dict[str, Any]:
         result = run_all_checks()
         result["subsystems_available"] = list(_SUBSYSTEM_CHECKS.keys())
         result["python"] = {
@@ -517,7 +517,7 @@ else:
         summary="Individual component health",
         description="Check health of a specific subsystem by name.",
     )
-    async def component_health(component_name: str):
+    async def component_health(component_name: str) -> Response:
         result = run_single_check(component_name)
         if result is None:
             raise HTTPException(
@@ -537,7 +537,7 @@ else:
         summary="Prometheus metrics",
         description="Prometheus-compatible metrics in text exposition format.",
     )
-    async def metrics():
+    async def metrics() -> PlainTextResponse:
         return PlainTextResponse(
             content=_get_metrics_text(),
             media_type="text/plain; version=0.0.4; charset=utf-8",
@@ -548,7 +548,7 @@ else:
         summary="API version info",
         description="Returns current and supported API versions.",
     )
-    async def version_info():
+    async def version_info() -> dict[str, Any]:
         from spiderfoot.api.versioning import get_version_info
         from spiderfoot import __version__
         info = get_version_info()
@@ -560,7 +560,7 @@ else:
         summary="Shutdown manager status",
         description="Shows registered services and shutdown state.",
     )
-    async def shutdown_status():
+    async def shutdown_status() -> dict[str, Any]:
         from spiderfoot.graceful_shutdown import get_shutdown_coordinator
         mgr = get_shutdown_coordinator()
         return mgr.status()

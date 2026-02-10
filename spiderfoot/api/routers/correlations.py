@@ -8,7 +8,7 @@ and ``PaginatedResponse`` from Cycle 25.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, Response
 from typing import Any
 import logging
 from datetime import datetime
@@ -77,7 +77,7 @@ async def list_correlation_rules(
     tag: str | None = Query(None, description="Filter by tag"),
     params: PaginationParams = Depends(),
     svc: CorrelationService = Depends(get_correlation_svc),
-):
+) -> dict[str, Any]:
     """List correlation rules with optional filtering and pagination."""
     try:
         rules = svc.filter_rules(risk=risk, enabled=enabled, tag=tag)
@@ -92,7 +92,7 @@ async def create_correlation_rule(
     rule_data: CorrelationRuleRequest,
     api_key: str = optional_auth_dep,
     svc: CorrelationService = Depends(get_correlation_svc),
-):
+) -> dict[str, Any]:
     """Create a new correlation rule."""
     try:
         now = datetime.now().isoformat()
@@ -119,7 +119,7 @@ async def get_correlation_rule(
     rule_id: str,
     api_key: str = optional_auth_dep,
     svc: CorrelationService = Depends(get_correlation_svc),
-):
+) -> dict[str, Any]:
     """Get a specific correlation rule by ID."""
     rule = svc.get_rule(rule_id)
     if rule is None:
@@ -133,7 +133,7 @@ async def update_correlation_rule(
     rule_data: CorrelationRuleUpdate,
     api_key: str = optional_auth_dep,
     svc: CorrelationService = Depends(get_correlation_svc),
-):
+) -> dict[str, Any]:
     """Update a correlation rule (partial)."""
     updates = {k: v for k, v in rule_data.dict().items() if v is not None}
     if "risk" in updates:
@@ -153,7 +153,7 @@ async def delete_correlation_rule(
     rule_id: str,
     api_key: str = optional_auth_dep,
     svc: CorrelationService = Depends(get_correlation_svc),
-):
+) -> dict[str, Any]:
     """Delete a correlation rule."""
     removed = svc.delete_rule(rule_id)
     if not removed:
@@ -175,7 +175,7 @@ async def test_correlation_rule(
     ),
     api_key: str = optional_auth_dep,
     svc: CorrelationService = Depends(get_correlation_svc),
-):
+) -> dict[str, Any]:
     """Run a single correlation rule against a scan and return results."""
     rule = svc.get_rule(rule_id)
     if rule is None:
@@ -219,7 +219,7 @@ async def get_detailed_scan_correlations(
     rule_id: str | None = Query(None, description="Filter by specific rule"),
     params: PaginationParams = Depends(),
     svc: CorrelationService = Depends(get_correlation_svc),
-):
+) -> dict[str, Any]:
     """Get detailed correlation results for a scan via CorrelationService."""
     try:
         # Attempt to get cached results first; fall back to live run
@@ -266,7 +266,7 @@ async def analyze_correlation_patterns(
     ),
     api_key: str = optional_auth_dep,
     svc: CorrelationService = Depends(get_correlation_svc),
-):
+) -> dict[str, Any]:
     """Run correlation analysis across multiple scans."""
     scan_ids: list[str] = analysis_request.get("scan_ids", [])
     rule_ids: list[str] | None = analysis_request.get("rule_ids") or None
@@ -329,7 +329,7 @@ async def export_scan_correlations(
     risk: str | None = Query(None, description="Filter by risk level"),
     api_key: str = optional_auth_dep,
     svc: CorrelationService = Depends(get_correlation_svc),
-):
+) -> Response:
     """Export scan correlation results as CSV or JSON download.
 
     Provides a downloadable file of all correlation findings for a

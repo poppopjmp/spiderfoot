@@ -87,7 +87,7 @@ else:
         summary="List webhooks",
         description="List all registered webhook endpoints.",
     )
-    async def list_webhooks():
+    async def list_webhooks() -> dict[str, Any]:
         mgr = get_notification_manager()
         hooks = mgr.list_webhooks()
         return {
@@ -101,7 +101,7 @@ else:
         summary="Register a webhook",
         description="Create a new webhook subscription.",
     )
-    async def create_webhook(body: WebhookCreateRequest):
+    async def create_webhook(body: WebhookCreateRequest) -> dict[str, Any]:
         mgr = get_notification_manager()
         cfg = WebhookConfig(
             url=body.url,
@@ -121,7 +121,7 @@ else:
         summary="Delivery statistics",
         description="Aggregate statistics for all webhook deliveries.",
     )
-    async def webhook_stats():
+    async def webhook_stats() -> dict[str, Any]:
         mgr = get_notification_manager()
         return mgr.stats
 
@@ -133,7 +133,7 @@ else:
     async def webhook_history(
         webhook_id: str | None = Query(None),
         limit: int = Query(50, ge=1, le=500),
-    ):
+    ) -> dict[str, Any]:
         mgr = get_notification_manager()
         records = mgr.get_delivery_history(
             webhook_id=webhook_id, limit=limit,
@@ -147,7 +147,7 @@ else:
         "/webhooks/{webhook_id}",
         summary="Get webhook details",
     )
-    async def get_webhook(webhook_id: str):
+    async def get_webhook(webhook_id: str) -> dict[str, Any]:
         mgr = get_notification_manager()
         cfg = mgr.get_webhook(webhook_id)
         if cfg is None:
@@ -158,7 +158,7 @@ else:
         "/webhooks/{webhook_id}",
         summary="Remove a webhook",
     )
-    async def delete_webhook(webhook_id: str):
+    async def delete_webhook(webhook_id: str) -> dict[str, Any]:
         mgr = get_notification_manager()
         if not mgr.remove_webhook(webhook_id):
             raise HTTPException(status_code=404, detail="Webhook not found.")
@@ -169,7 +169,7 @@ else:
         summary="Send test event",
         description="Dispatch a test event to verify webhook connectivity.",
     )
-    async def test_webhook(webhook_id: str):
+    async def test_webhook(webhook_id: str) -> dict[str, Any]:
         mgr = get_notification_manager()
         record = mgr.test_webhook(webhook_id)
         if record is None:
@@ -180,7 +180,7 @@ else:
         "/webhooks/{webhook_id}",
         summary="Update webhook",
     )
-    async def update_webhook(webhook_id: str, body: WebhookUpdateRequest):
+    async def update_webhook(webhook_id: str, body: WebhookUpdateRequest) -> dict[str, Any]:
         mgr = get_notification_manager()
         updates = {k: v for k, v in body.model_dump().items() if v is not None}
         if not updates:
@@ -233,7 +233,7 @@ else:
         summary="List available event types",
         description="Returns all known webhook event types that can be used for filtering.",
     )
-    async def list_event_types():
+    async def list_event_types() -> dict[str, Any]:
         flat = []
         for category, types in KNOWN_EVENT_TYPES.items():
             for et in types:
@@ -262,7 +262,7 @@ else:
         summary="Update webhook event filter",
         description="Replace the event type filter for a webhook.",
     )
-    async def update_event_filter(webhook_id: str, body: EventFilterUpdateRequest):
+    async def update_event_filter(webhook_id: str, body: EventFilterUpdateRequest) -> dict[str, Any]:
         mgr = get_notification_manager()
         cfg = mgr.get_webhook(webhook_id)
         if cfg is None:

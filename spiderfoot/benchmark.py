@@ -256,7 +256,7 @@ class EventBusBenchmark(Benchmark):
             self._bus = InMemoryEventBus()
             self._received = 0
 
-            def handler(envelope):
+            def handler(envelope) -> None:
                 self._received += 1
 
             self._bus.subscribe("bench.topic", handler)
@@ -275,7 +275,7 @@ class EventBusBenchmark(Benchmark):
         if self._bus is None:
             return results
 
-        def publish():
+        def publish() -> None:
             self._bus.publish("bench.topic", {"data": "test"})
 
         results.append(
@@ -307,7 +307,7 @@ class CacheBenchmark(Benchmark):
         # Write
         i_counter = [0]
 
-        def cache_put():
+        def cache_put() -> None:
             self._cache.put(f"key_{i_counter[0]}", f"value_{i_counter[0]}")
             i_counter[0] += 1
 
@@ -318,7 +318,7 @@ class CacheBenchmark(Benchmark):
         # Read (existing keys)
         i_counter[0] = 0
 
-        def cache_get():
+        def cache_get() -> None:
             self._cache.get(f"key_{i_counter[0]}")
             i_counter[0] += 1
 
@@ -327,7 +327,7 @@ class CacheBenchmark(Benchmark):
         )
 
         # Read miss
-        def cache_miss():
+        def cache_miss() -> None:
             self._cache.get("nonexistent_key")
 
         results.append(
@@ -361,7 +361,7 @@ class RateLimiterBenchmark(Benchmark):
         if self._limiter is None:
             return results
 
-        def allow_check():
+        def allow_check() -> None:
             self._limiter.allow("bench")
 
         results.append(
@@ -381,7 +381,7 @@ class WorkerPoolBenchmark(Benchmark):
 
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
-        def submit_task():
+        def submit_task() -> None:
             f = pool.submit(lambda: None)
             f.result()  # wait for completion
 
@@ -421,14 +421,14 @@ class SerializationBenchmark(Benchmark):
 
         serialized = json.dumps(payload)
 
-        def serialize():
+        def serialize() -> None:
             json.dumps(payload)
 
         results.append(
             _timed_loop("json_dumps", self.name, serialize, iterations)
         )
 
-        def deserialize():
+        def deserialize() -> None:
             json.loads(serialized)
 
         results.append(
@@ -448,7 +448,7 @@ class ThreadingBenchmark(Benchmark):
         # Lock acquire/release
         lock = threading.Lock()
 
-        def lock_cycle():
+        def lock_cycle() -> None:
             lock.acquire()
             lock.release()
 
@@ -457,7 +457,7 @@ class ThreadingBenchmark(Benchmark):
         )
 
         # Thread creation + join
-        def thread_create():
+        def thread_create() -> None:
             t = threading.Thread(target=lambda: None)
             t.start()
             t.join()
@@ -479,14 +479,14 @@ class HashBenchmark(Benchmark):
 
         data = b"192.168.1.1:IP_ADDRESS:sfp_dnsresolve:example.com"
 
-        def sha256_hash():
+        def sha256_hash() -> None:
             hashlib.sha256(data).hexdigest()
 
         results.append(
             _timed_loop("sha256", self.name, sha256_hash, iterations)
         )
 
-        def md5_hash():
+        def md5_hash() -> None:
             hashlib.md5(data).hexdigest()
 
         results.append(
