@@ -3,6 +3,25 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.186.0] — RC Cycle 120: Narrow Exception Handling
+
+### Changed
+- Narrowed 12 broad `except Exception: pass` blocks to specific exception types across 4 files
+- sfcli.py: 9 blocks narrowed (`AttributeError`, `ImportError`, `ConnectionError|ValueError`, `ValueError|IndexError`, `json.JSONDecodeError|KeyError|TypeError`, `OSError` x3)
+- api/routers/export.py, api_security_fastapi.py, db/repositories/base.py: narrowed to `ImportError|AttributeError`, `sqlite3.Error|OSError`
+
+## [5.185.0] — RC Cycle 119: Class Docstrings (67 classes)
+
+### Changed
+- Added concise one-line docstrings to all 67 classes in spiderfoot/ that were missing them
+- Covers API models, app config enums, CLI classes, correlation engine, database managers, WebUI endpoints, and infrastructure classes
+
+## [5.184.0] — RC Cycle 118: Future Annotations (77 files)
+
+### Changed
+- Added `from __future__ import annotations` to 77 more files with type annotations
+- Coverage now at 296 files with future annotations import
+
 ## [5.183.0] — RC Cycle 116: Final Typing Modernization (26 files)
 
 ### Changed
