@@ -266,7 +266,7 @@ async def bulk_stop_scans(
                 results["not_found"].append(scan_id)
                 continue
             status = record.status if hasattr(record, "status") else str(record)
-            if status in ("FINISHED", "ABORTED", "ERROR-FAILED"):
+            if status in (DB_STATUS_FINISHED, DB_STATUS_ABORTED, DB_STATUS_ERROR_FAILED):
                 results["already_finished"].append(scan_id)
                 continue
             svc.stop_scan(scan_id)
@@ -631,7 +631,7 @@ async def create_scan(
             id=scan_id,
             name=scan_request.name,
             target=scan_request.target,
-            status="STARTING",
+            status=DB_STATUS_STARTING,
             message="Scan created and starting",
         )
     except HTTPException:
@@ -740,7 +740,7 @@ async def retry_scan(
     status = str(scan_dict.get("status", "")).upper()
 
     # Only allow retry of non-running scans
-    if status in ("RUNNING", "STARTING", "STARTED"):
+    if status in (DB_STATUS_RUNNING, DB_STATUS_STARTING, DB_STATUS_STARTED):
         raise HTTPException(
             status_code=409,
             detail=f"Cannot retry a scan in '{status}' state — stop it first",
@@ -1639,6 +1639,15 @@ async def remove_scan_tags(
         scan_id=scan_id, tags=remaining,
         message=f"Removed {len(removed)} tag(s)" if removed else "No matching tags found",
     )
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+    DB_STATUS_RUNNING,
+    DB_STATUS_STARTED,
+    DB_STATUS_STARTING,
+)
+
 
 
 # -----------------------------------------------------------------------

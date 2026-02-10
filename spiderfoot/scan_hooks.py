@@ -165,7 +165,7 @@ class ScanLifecycleHooks:
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.STARTED,
             scan_id=scan_id,
-            status="STARTED",
+            status=DB_STATUS_STARTED,
             metadata=metadata,
         ))
 
@@ -173,7 +173,7 @@ class ScanLifecycleHooks:
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.COMPLETED,
             scan_id=scan_id,
-            status="FINISHED",
+            status=DB_STATUS_FINISHED,
             metadata=metadata,
         ))
 
@@ -181,7 +181,7 @@ class ScanLifecycleHooks:
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.ABORTED,
             scan_id=scan_id,
-            status="ABORTED",
+            status=DB_STATUS_ABORTED,
             reason=reason,
             metadata=metadata,
         ))
@@ -190,7 +190,7 @@ class ScanLifecycleHooks:
         self._fire(ScanLifecycleEvent(
             event=ScanEvent.FAILED,
             scan_id=scan_id,
-            status="ERROR-FAILED",
+            status=DB_STATUS_ERROR_FAILED,
             reason=reason,
             metadata=metadata,
         ))
@@ -218,6 +218,13 @@ class ScanLifecycleHooks:
             status="UNARCHIVED",
             metadata=metadata,
         ))
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+    DB_STATUS_STARTED,
+)
+
 
     # ── Query ────────────────────────────────────────────────────
     def get_recent_events(self, limit: int = 50) -> List[Dict[str, Any]]:

@@ -395,7 +395,7 @@ class ScanEndpoints:
         status = dbh.scanInstanceGet(id)
         if not status:
             return b'["ERROR", "Scan not found"]'
-        if status[5] not in ["ABORTED", "FINISHED", "ERROR-FAILED"]:
+        if status[5] not in [DB_STATUS_ABORTED, DB_STATUS_FINISHED, DB_STATUS_ERROR_FAILED]:
             return b'["ERROR", "Scan not completed"]'
         try:
             if fp == "0":
@@ -686,6 +686,12 @@ class ScanEndpoints:
     @cherrypy.expose
     def savesettingsraw(self, allopts, token):
         import json
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+)
+
         try:
             opts = json.loads(allopts)
         except Exception as e:

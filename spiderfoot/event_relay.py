@@ -264,12 +264,12 @@ class EventRelay:
         """Convenience: push a scan.started event."""
         return self.push_event(
             scan_id,
-            {"scan_id": scan_id, "target": target, "status": "STARTED"},
+            {"scan_id": scan_id, "target": target, "status": DB_STATUS_STARTED},
             event_type="scan_started",
         )
 
     def push_scan_completed(
-        self, scan_id: str, status: str = "FINISHED", event_count: int = 0,
+        self, scan_id: str, status: str = DB_STATUS_FINISHED, event_count: int = 0,
     ) -> int:
         """Convenience: push a scan completed/error event."""
         return self.push_event(
@@ -287,6 +287,11 @@ class EventRelay:
             {"scan_id": scan_id, "status": status, "event_count": event_count},
             event_type="status_update",
         )
+from spiderfoot.scan_state_map import (
+    DB_STATUS_FINISHED,
+    DB_STATUS_STARTED,
+)
+
 
     # -- Query ------------------------------------------------------------
 

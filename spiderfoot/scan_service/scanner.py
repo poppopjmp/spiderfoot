@@ -31,6 +31,15 @@ except ImportError:
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool
 from spiderfoot.logger import logWorkerSetup
 from spiderfoot import SpiderFootDb
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORT_REQUESTED,
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+    DB_STATUS_RUNNING,
+    DB_STATUS_STARTED,
+    DB_STATUS_STARTING,
+)
 
 import logging
 log = logging.getLogger("spiderfoot.scanner")
@@ -142,7 +151,7 @@ class SpiderFootScanner():
                 self.__scanId, self.__scanName, self.__targetValue)
         except Exception as e:
             self.__sf.status(f"Scan [{self.__scanId}] failed to create scan instance: {e}")
-            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
             raise
 
         # Create our target
@@ -152,7 +161,7 @@ class SpiderFootScanner():
                 self.__targetValue, self.__targetType)
         except (TypeError, ValueError) as e:
             self.__sf.status(f"Scan [{self.__scanId}] failed: {e}")
-            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
             raise ValueError(f"Invalid target: {e}") from None
 
         # Ensure all modules have an 'opts' key to prevent KeyError in configSerialize
@@ -169,7 +178,7 @@ class SpiderFootScanner():
                 self.__scanId, self.__sf.configSerialize(deepcopy(self.__config)))
         except Exception as e:
             self.__sf.status(f"Scan [{self.__scanId}] failed to save config: {e}")
-            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
             raise
 
         # Process global options that point to other places for data
@@ -183,7 +192,7 @@ class SpiderFootScanner():
             if not proxy_proto:
                 self.__sf.status(
                     f"Scan [{self.__scanId}] failed: Invalid proxy type: {proxy_type}")
-                self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+                self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
                 raise ValueError(f"Invalid proxy type: {proxy_type}")
 
             proxy_host = self.__config.get('_socks2addr', '')
@@ -191,7 +200,7 @@ class SpiderFootScanner():
             if not proxy_host:
                 self.__sf.status(
                     f"Scan [{self.__scanId}] failed: Proxy type is set ({proxy_type}) but proxy address value is blank")
-                self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+                self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
                 raise ValueError(
                     f"Proxy type is set ({proxy_type}) but proxy address value is blank")
 
@@ -229,7 +238,7 @@ class SpiderFootScanner():
                 dns.resolver.restore_system_resolver()
         except Exception as e:
             self.__sf.status(f"Scan [{self.__scanId}] failed to set DNS resolver: {e}")
-            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
             raise
 
         # Set the user agent
@@ -239,7 +248,7 @@ class SpiderFootScanner():
                 self.__config['_useragent'])
         except Exception as e:
             self.__sf.status(f"Scan [{self.__scanId}] failed to set user agent: {e}")
-            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
             raise
 
         # Improved exception handling for TLD setup
@@ -251,13 +260,13 @@ class SpiderFootScanner():
                 if tld_data is None:
                     self.__sf.status(
                         f"Scan [{self.__scanId}] failed: Could not update TLD list")
-                    self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+                    self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
                     raise ValueError("Could not update TLD list")
                 self.__sf.cachePut("internet_tlds", tld_data)
             self.__config['_internettlds'] = tld_data.splitlines()
         except Exception as e:
             self.__sf.status(f"Scan [{self.__scanId}] failed to set up TLDs: {e}")
-            self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
             raise
 
         self.__setStatus("INITIALIZING", time.time() * 1000, None)
@@ -312,14 +321,14 @@ class SpiderFootScanner():
 
         if status not in [
             "INITIALIZING",
-            "STARTING",
-            "STARTED",
-            "RUNNING",
-            "ABORT-REQUESTED",
-            "ABORTED",
+            DB_STATUS_STARTING,
+            DB_STATUS_STARTED,
+            DB_STATUS_RUNNING,
+            DB_STATUS_ABORT_REQUESTED,
+            DB_STATUS_ABORTED,
             "ABORTING",
-            "FINISHED",
-            "ERROR-FAILED"
+            DB_STATUS_FINISHED,
+            DB_STATUS_ERROR_FAILED
         ]:
             raise ValueError(f"Invalid scan status {status}")
 
@@ -334,7 +343,7 @@ class SpiderFootScanner():
         self.__scanStartTime = time.time()
 
         try:
-            self.__setStatus("STARTING", time.time() * 1000, None)
+            self.__setStatus(DB_STATUS_STARTING, time.time() * 1000, None)
             self.__sf.status(
                 f"Scan [{self.__scanId}] for '{self.__target.targetValue}' initiated.")
 
@@ -501,11 +510,11 @@ class SpiderFootScanner():
                 f"Scan [{self.__scanId}] loaded {len(self.__moduleInstances)} modules.")
 
             if not self.__moduleInstances:
-                self.__setStatus("ERROR-FAILED", None, time.time() * 1000)
+                self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
                 self.__dbh.close()
                 return
 
-            self.__setStatus("RUNNING")
+            self.__setStatus(DB_STATUS_RUNNING)
 
             psMod = SpiderFootPlugin()
             psMod.__name__ = "SpiderFoot UI"
@@ -527,15 +536,15 @@ class SpiderFootScanner():
                 psMod.notifyListeners(firstEvent)
 
             scanstatus = self.__dbh.scanInstanceGet(self.__scanId)
-            if scanstatus and scanstatus[5] == "ABORT-REQUESTED":
-                raise AssertionError("ABORT-REQUESTED")
+            if scanstatus and scanstatus[5] == DB_STATUS_ABORT_REQUESTED:
+                raise AssertionError(DB_STATUS_ABORT_REQUESTED)
 
             self.waitForThreads()
             failed = False
 
         except (KeyboardInterrupt, AssertionError):
             self.__sf.status(f"Scan [{self.__scanId}] aborted.")
-            self.__setStatus("ABORTED", None, time.time() * 1000)
+            self.__setStatus(DB_STATUS_ABORTED, None, time.time() * 1000)
 
         except Exception as e:
             self.__sf.error(f"Scan [{self.__scanId}] failed: {str(e)}")
@@ -543,14 +552,14 @@ class SpiderFootScanner():
         finally:
             scan_end_time = time.time()
             if not failed:
-                self.__setStatus("FINISHED", None, scan_end_time * 1000)
+                self.__setStatus(DB_STATUS_FINISHED, None, scan_end_time * 1000)
                 self.runCorrelations()
                 self.__sf.status(f"Scan [{self.__scanId}] completed.")
 
             # Record scan completion in metrics / event bus / vector
             try:
                 from spiderfoot.service_integration import complete_scan_services
-                status = "FINISHED" if not failed else "ERROR"
+                status = DB_STATUS_FINISHED if not failed else "ERROR"
                 duration = scan_end_time - (self.__scanStartTime or scan_end_time)
                 complete_scan_services(self.__scanId, status, duration)
             except Exception as e:
@@ -597,8 +606,8 @@ class SpiderFootScanner():
 
                 if log_status:
                     scanstatus = self.__dbh.scanInstanceGet(self.__scanId)
-                    if scanstatus and scanstatus[5] == "ABORT-REQUESTED":
-                        raise AssertionError("ABORT-REQUESTED")
+                    if scanstatus and scanstatus[5] == DB_STATUS_ABORT_REQUESTED:
+                        raise AssertionError(DB_STATUS_ABORT_REQUESTED)
 
                 try:
                     sfEvent = self.eventQueue.get_nowait()
@@ -612,7 +621,7 @@ class SpiderFootScanner():
                                 break
                             for mod in self.__moduleInstances.values():
                                 if not mod.errorState and mod.incomingEventQueue is not None:
-                                    mod.incomingEventQueue.put('FINISHED')
+                                    mod.incomingEventQueue.put(DB_STATUS_FINISHED)
                             sleep(.1)
                             while not self.threadsFinished(log_status):
                                 log_status = counter % 100 == 0
@@ -742,9 +751,9 @@ class SpiderFootScanner():
                     self.__dbh.close()
                     
             # Set status to aborted if not already finished
-            if hasattr(self, '_SpiderFootScanner__status') and self.__status not in ['FINISHED', 'ERROR-FAILED', 'ABORTED']:
+            if hasattr(self, '_SpiderFootScanner__status') and self.__status not in [DB_STATUS_FINISHED, DB_STATUS_ERROR_FAILED, DB_STATUS_ABORTED]:
                 with suppress(Exception):
-                    self.__setStatus("ABORTED", None, time.time() * 1000)
+                    self.__setStatus(DB_STATUS_ABORTED, None, time.time() * 1000)
                     
         except Exception:
             # Complete silent failure to prevent issues during cleanup

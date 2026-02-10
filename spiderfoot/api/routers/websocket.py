@@ -223,7 +223,7 @@ async def _polling_mode(websocket: WebSocket, scan_id: str) -> None:
                     }))
 
                     # Check if scan is done
-                    if status in ("FINISHED", "ABORTED", "ERROR-FAILED"):
+                    if status in (DB_STATUS_FINISHED, DB_STATUS_ABORTED, DB_STATUS_ERROR_FAILED):
                         await websocket.send_text(json.dumps({
                             "type": "stream_end",
                             "scan_id": scan_id,
@@ -280,6 +280,12 @@ async def websocket_scan_stream(websocket: WebSocket, scan_id: str):
         try:
             from spiderfoot.event_relay import get_event_relay
             relay = get_event_relay()
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+)
+
             # Use relay mode if EventBus is wired, or if there are
             # already consumers (events being pushed manually)
             use_relay = relay._eventbus is not None or relay.has_consumers(scan_id)

@@ -51,6 +51,19 @@ _DB_TO_STATE = {
     "STOPPING": ScanState.STOPPING,        # normalized alias
 }
 
+# ── Named constants for legacy DB status strings ─────────────────────────────
+# Use these instead of bare string literals like "FINISHED" or "ABORTED".
+DB_STATUS_CREATED: str = "CREATED"
+DB_STATUS_QUEUED: str = "QUEUED"
+DB_STATUS_STARTING: str = "STARTING"
+DB_STATUS_RUNNING: str = "RUNNING"
+DB_STATUS_STARTED: str = "STARTED"
+DB_STATUS_PAUSED: str = "PAUSED"
+DB_STATUS_ABORT_REQUESTED: str = "ABORT-REQUESTED"
+DB_STATUS_ABORTED: str = "ABORTED"
+DB_STATUS_FINISHED: str = "FINISHED"
+DB_STATUS_ERROR_FAILED: str = "ERROR-FAILED"
+
 _STATE_TO_DB = {
     ScanState.CREATED: "CREATED",
     ScanState.QUEUED: "QUEUED",

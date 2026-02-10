@@ -449,7 +449,7 @@ class SpiderFootPlugin:
         if not scanstatus:
             return False
 
-        if scanstatus[5] == "ABORT-REQUESTED":
+        if scanstatus[5] == DB_STATUS_ABORT_REQUESTED:
             self._stopScanning = True
             return True
 
@@ -549,6 +549,11 @@ class SpiderFootPlugin:
             # create new database handle since we're in our own thread
             from spiderfoot import SpiderFootDb
             self.setDbh(SpiderFootDb(self.opts))
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORT_REQUESTED,
+    DB_STATUS_FINISHED,
+)
+
             self.sf._dbh = self.__sfdb__
 
             if not (self.incomingEventQueue and self.outgoingEventQueue):
@@ -562,7 +567,7 @@ class SpiderFootPlugin:
                 except queue.Empty:
                     sleep(.3)
                     continue
-                if sfEvent == 'FINISHED':
+                if sfEvent == DB_STATUS_FINISHED:
                     self.sf.debug(
                         f"{getattr(self, '__name__', self.__class__.__name__)}.threadWorker() got \"FINISHED\" from incomingEventQueue.")
                     self.poolExecute(self.finish)

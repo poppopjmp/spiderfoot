@@ -111,7 +111,7 @@ class ScanMetadataService:
         if not scan_info:
             return {"status": "ERROR", "message": f"Scan not found: {scan_id}"}
 
-        if scan_info[5] not in ("ABORTED", "FINISHED", "ERROR-FAILED"):
+        if scan_info[5] not in (DB_STATUS_ABORTED, DB_STATUS_FINISHED, DB_STATUS_ERROR_FAILED):
             return {
                 "status": "WARNING",
                 "message": "Scan must be in a finished state when setting False Positives.",
@@ -198,6 +198,12 @@ class ScanMetadataService:
             return {}
 
         import time as _time
+from spiderfoot.scan_state_map import (
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+)
+
 
         started = (
             _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(meta[3]))
