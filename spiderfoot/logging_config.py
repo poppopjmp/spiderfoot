@@ -34,7 +34,7 @@ import logging.handlers
 import os
 import sys
 import warnings
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Final, Optional
 
 from spiderfoot.structured_logging import StructuredFormatter
 
@@ -43,12 +43,12 @@ from spiderfoot.structured_logging import StructuredFormatter
 # Constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_LOG_LEVEL = logging.INFO
-LOG_FORMAT_TEXT = "%(asctime)s [%(levelname)s] %(name)s : %(message)s"
-LOG_FORMAT_DEBUG = "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s : %(message)s"
-LOG_FORMAT_SECURITY = "%(asctime)s - %(levelname)s - %(message)s"
-LOG_FORMAT_SECURITY_CONSOLE = "%(asctime)s - SECURITY - %(levelname)s - %(message)s"
-LOG_FORMAT_NAMED = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+DEFAULT_LOG_LEVEL: Final[int] = logging.INFO
+LOG_FORMAT_TEXT: Final[str] = "%(asctime)s [%(levelname)s] %(name)s : %(message)s"
+LOG_FORMAT_DEBUG: Final[str] = "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s : %(message)s"
+LOG_FORMAT_SECURITY: Final[str] = "%(asctime)s - %(levelname)s - %(message)s"
+LOG_FORMAT_SECURITY_CONSOLE: Final[str] = "%(asctime)s - SECURITY - %(levelname)s - %(message)s"
+LOG_FORMAT_NAMED: Final[str] = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 _CONFIGURED = False
 

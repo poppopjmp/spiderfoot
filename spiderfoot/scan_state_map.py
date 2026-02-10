@@ -25,7 +25,7 @@ Usage::
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import Final, Optional
 
 from spiderfoot.scan_state import ScanState
 
@@ -53,16 +53,16 @@ _DB_TO_STATE = {
 
 # ── Named constants for legacy DB status strings ─────────────────────────────
 # Use these instead of bare string literals like "FINISHED" or "ABORTED".
-DB_STATUS_CREATED: str = "CREATED"
-DB_STATUS_QUEUED: str = "QUEUED"
-DB_STATUS_STARTING: str = "STARTING"
-DB_STATUS_RUNNING: str = "RUNNING"
-DB_STATUS_STARTED: str = "STARTED"
-DB_STATUS_PAUSED: str = "PAUSED"
-DB_STATUS_ABORT_REQUESTED: str = "ABORT-REQUESTED"
-DB_STATUS_ABORTED: str = "ABORTED"
-DB_STATUS_FINISHED: str = "FINISHED"
-DB_STATUS_ERROR_FAILED: str = "ERROR-FAILED"
+DB_STATUS_CREATED: Final[str] = "CREATED"
+DB_STATUS_QUEUED: Final[str] = "QUEUED"
+DB_STATUS_STARTING: Final[str] = "STARTING"
+DB_STATUS_RUNNING: Final[str] = "RUNNING"
+DB_STATUS_STARTED: Final[str] = "STARTED"
+DB_STATUS_PAUSED: Final[str] = "PAUSED"
+DB_STATUS_ABORT_REQUESTED: Final[str] = "ABORT-REQUESTED"
+DB_STATUS_ABORTED: Final[str] = "ABORTED"
+DB_STATUS_FINISHED: Final[str] = "FINISHED"
+DB_STATUS_ERROR_FAILED: Final[str] = "ERROR-FAILED"
 
 _STATE_TO_DB = {
     ScanState.CREATED: "CREATED",
