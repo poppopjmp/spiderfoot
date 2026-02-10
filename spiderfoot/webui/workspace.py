@@ -48,7 +48,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacecreate(self, name, description='') -> dict:
+    def workspacecreate(self, name: str, description: str = '') -> dict:
         """Create a new workspace with the given name and description."""
         try:
             ws = SpiderFootWorkspace(self.config, name=name)
@@ -60,7 +60,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspaceget(self, workspace_id) -> dict:
+    def workspaceget(self, workspace_id: str) -> dict:
         """Retrieve workspace details including targets, scans, and metadata."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -79,7 +79,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspaceupdate(self, workspace_id, name=None, description=None) -> dict:
+    def workspaceupdate(self, workspace_id: str, name: str | None = None, description: str | None = None) -> dict:
         """Update workspace name and description."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -94,7 +94,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacedelete(self, workspace_id) -> dict:
+    def workspacedelete(self, workspace_id: str) -> dict:
         """Delete a workspace by its ID."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -105,7 +105,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacesummary(self, workspace_id) -> dict:
+    def workspacesummary(self, workspace_id: str) -> dict:
         """Return a summary of the workspace including scan statistics."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -115,7 +115,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspaceaddtarget(self, workspace_id, target, target_type=None) -> dict:
+    def workspaceaddtarget(self, workspace_id: str, target: str, target_type: str | None = None) -> dict:
         """Add a scan target to the specified workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -126,7 +126,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspaceremovetarget(self, workspace_id, target_id) -> dict:
+    def workspaceremovetarget(self, workspace_id: str, target_id: str) -> dict:
         """Remove a scan target from the specified workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -137,7 +137,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspaceimportscans(self, workspace_id, scan_ids) -> dict:
+    def workspaceimportscans(self, workspace_id: str, scan_ids: str) -> dict:
         """Import existing scans into a workspace by scan IDs."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -149,7 +149,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacemultiscan(self, workspace_id, targets, modules, scan_name_prefix, enable_correlation='false') -> dict:
+    def workspacemultiscan(self, workspace_id: str, targets: str, modules: str, scan_name_prefix: str, enable_correlation: str = 'false') -> dict:
         """Launch scans against multiple targets in a workspace."""
         self.log.info("[MULTISCAN] Starting multi-target scan for workspace: %s", workspace_id)
         self.log.debug("[MULTISCAN] Input parameters - targets: %s, modules: %s, prefix: %s", targets, modules, scan_name_prefix)
@@ -164,7 +164,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacemcpreport(self, workspace_id, report_type, format='json', include_correlations='true', include_threat_intel='true', include_recommendations='true', tlp_level='amber') -> dict:
+    def workspacemcpreport(self, workspace_id: str, report_type: str, format: str = 'json', include_correlations: str = 'true', include_threat_intel: str = 'true', include_recommendations: str = 'true', tlp_level: str = 'amber') -> dict:
         """Generate an MCP-format report for the specified workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -175,7 +175,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacetiming(self, workspace_id, timezone=None, default_start_time=None, retention_period=None, auto_scheduling=None, business_hours_only=None, enable_throttling=None, business_start=None, business_end=None) -> dict:
+    def workspacetiming(self, workspace_id: str, timezone: str | None = None, default_start_time: str | None = None, retention_period: str | None = None, auto_scheduling: str | None = None, business_hours_only: str | None = None, enable_throttling: str | None = None, business_start: str | None = None, business_end: str | None = None) -> dict:
         """Update scan timing and scheduling configuration for a workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -186,7 +186,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacescanresults(self, workspace_id, scan_id=None, event_type=None, limit=100) -> dict:
+    def workspacescanresults(self, workspace_id: str, scan_id: str | None = None, event_type: str | None = None, limit: str | int = 100) -> dict:
         """Retrieve scan results for a workspace, optionally filtered by scan or event type."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -197,7 +197,7 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacescancorrelations(self, workspace_id) -> dict:
+    def workspacescancorrelations(self, workspace_id: str) -> dict:
         """Retrieve cross-scan correlations for a workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -207,7 +207,7 @@ class WorkspaceEndpoints:
             return {"error": str(e)}
 
     @cherrypy.expose
-    def workspacedetails(self, workspace_id) -> str:
+    def workspacedetails(self, workspace_id: str) -> str:
         """Render the workspace details page with scans and metadata."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
@@ -247,7 +247,7 @@ class WorkspaceEndpoints:
             return f"Error loading workspace details: {str(e)}"
 
     @cherrypy.expose
-    def workspacereportdownload(self, report_id, workspace_id, format='json') -> str:
+    def workspacereportdownload(self, report_id: str, workspace_id: str, format: str = 'json') -> str:
         """Download a generated workspace report by report ID."""
         try:
             cherrypy.response.headers['Content-Type'] = 'application/json'

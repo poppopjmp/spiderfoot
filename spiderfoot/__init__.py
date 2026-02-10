@@ -88,7 +88,7 @@ from .helpers import SpiderFootHelpers
 class SpiderFootModuleFinder:
     """Custom module finder to fix SpiderFoot module imports."""
 
-    def find_spec(self, name, path, target=None) -> None:
+    def find_spec(self, name: str, path: str | None, target: object | None = None) -> None:
         # Only intercept sfp_ module imports
         if name.startswith('modules.sfp_') or name.startswith('sfp_'):
             return None  # Let default finder handle it, we'll fix in exec_module
@@ -97,13 +97,13 @@ class SpiderFootModuleFinder:
 class SpiderFootModuleLoader:
     """Custom module loader to fix SpiderFoot module imports."""
 
-    def __init__(self, spec) -> None:
+    def __init__(self, spec: object) -> None:
         self.spec = spec
 
-    def create_module(self, spec) -> None:
+    def create_module(self, spec: object) -> None:
         return None  # Use default module creation
 
-    def exec_module(self, module) -> None:
+    def exec_module(self, module: object) -> None:
         # Execute the module normally first
         spec = importlib.util.find_spec(module.__name__)
         if spec and spec.loader:
@@ -118,10 +118,10 @@ class SpiderFootModuleLoader:
 if not any(isinstance(finder, SpiderFootModuleFinder) for finder in sys.meta_path):
     sys.meta_path.insert(0, SpiderFootModuleFinder())
 
-def fetchUrl(self, url, fatal=False, cookies=None, timeout=30,
-             useragent="SpiderFoot", headers=None, noLog=False,
-             postData=None, dontMaskPassword=False, sizeLimit=None,
-             headOnly=False, verify=True) -> None:
+def fetchUrl(self, url: str, fatal: bool = False, cookies: str | None = None, timeout: int = 30,
+             useragent: str = "SpiderFoot", headers: dict | None = None, noLog: bool = False,
+             postData: str | dict | None = None, dontMaskPassword: bool = False, sizeLimit: int | None = None,
+             headOnly: bool = False, verify: bool = True) -> None:
     # Check for invalid URL types
     if not isinstance(url, str):
         return None

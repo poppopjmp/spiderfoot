@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 
-def get_placeholder(db_type) -> str:
+def get_placeholder(db_type: str) -> str:
     """Return the correct SQL placeholder for the given DB type."""
     db_type = normalize_db_type(db_type)
     if db_type == 'sqlite':
@@ -25,7 +25,7 @@ def get_placeholder(db_type) -> str:
         return '%s'
     raise ValueError(f"Unsupported db_type: {db_type}")
 
-def normalize_db_type(db_type) -> str:
+def normalize_db_type(db_type: str) -> str:
     """Normalize and validate the db_type string."""
     if not isinstance(db_type, str):
         raise TypeError("db_type must be a string")
@@ -36,7 +36,7 @@ def normalize_db_type(db_type) -> str:
         return 'postgresql'
     raise ValueError(f"Unsupported db_type: {db_type}")
 
-def get_upsert_clause(db_type, table, conflict_cols, update_cols) -> str:
+def get_upsert_clause(db_type: str, table: str, conflict_cols: list[str], update_cols: list[str]) -> str:
     """Return the correct upsert clause for the backend."""
     db_type = normalize_db_type(db_type)
     if not conflict_cols or not update_cols:
@@ -49,7 +49,7 @@ def get_upsert_clause(db_type, table, conflict_cols, update_cols) -> str:
         return f"ON CONFLICT({conflict_str}) DO UPDATE SET {update_str}"
     raise ValueError(f"Unsupported db_type: {db_type}")
 
-def is_transient_error(exc) -> bool:
+def is_transient_error(exc: Exception) -> bool:
     """Classify if an exception is a transient DB error."""
     import sqlite3
     try:
@@ -70,7 +70,7 @@ def is_transient_error(exc) -> bool:
             return True
     return False
 
-def check_connection(conn, db_type) -> bool:
+def check_connection(conn: object, db_type: str) -> bool:
     """Check if the DB connection is alive."""
     db_type = normalize_db_type(db_type)
     try:
@@ -90,7 +90,7 @@ def check_connection(conn, db_type) -> bool:
     except Exception:
         return False
 
-def get_type_mapping(db_type) -> dict:
+def get_type_mapping(db_type: str) -> dict:
     """Return a dict mapping logical types to backend-specific types."""
     db_type = normalize_db_type(db_type)
     if db_type == 'sqlite':
@@ -111,7 +111,7 @@ def get_type_mapping(db_type) -> dict:
         }
     raise ValueError(f"Unsupported db_type: {db_type}")
 
-def get_index_if_not_exists(db_type) -> str:
+def get_index_if_not_exists(db_type: str) -> str:
     """Return the correct 'IF NOT EXISTS' clause for index creation."""
     db_type = normalize_db_type(db_type)
     if db_type == 'sqlite':
@@ -120,7 +120,7 @@ def get_index_if_not_exists(db_type) -> str:
         return 'IF NOT EXISTS '
     raise ValueError(f"Unsupported db_type: {db_type}")
 
-def get_bool_value(db_type, value) -> bool | int:
+def get_bool_value(db_type: str, value: object) -> bool | int:
     """Return the correct boolean value for the backend."""
     db_type = normalize_db_type(db_type)
     if db_type == 'sqlite':
@@ -129,7 +129,7 @@ def get_bool_value(db_type, value) -> bool | int:
         return True if value else False
     raise ValueError(f"Unsupported db_type: {db_type}")
 
-def get_schema_version_queries(db_type) -> dict:
+def get_schema_version_queries(db_type: str) -> dict:
     """Return queries to get/set schema version for the backend."""
     db_type = normalize_db_type(db_type)
     if db_type == 'sqlite':
@@ -146,7 +146,7 @@ def get_schema_version_queries(db_type) -> dict:
         }
     raise ValueError(f"Unsupported db_type: {db_type}")
 
-def get_limit_offset_clause(db_type, limit=None, offset=None) -> str:
+def get_limit_offset_clause(db_type: str, limit: int | None = None, offset: int | None = None) -> str:
     """Return LIMIT/OFFSET clause for the backend."""
     db_type = normalize_db_type(db_type)
     clause = ''
@@ -156,7 +156,7 @@ def get_limit_offset_clause(db_type, limit=None, offset=None) -> str:
         clause += f' OFFSET {int(offset)}'
     return clause
 
-def drop_all_tables(db_type, conn) -> None:
+def drop_all_tables(db_type: str, conn: object) -> None:
     """Drop all user tables in the database (for test isolation)."""
     db_type = normalize_db_type(db_type)
     try:
@@ -176,7 +176,7 @@ def drop_all_tables(db_type, conn) -> None:
     except Exception as e:
         logging.getLogger(__name__).error("Error dropping tables: %s", e)
 
-def dump_schema(db_type, conn) -> str:
+def dump_schema(db_type: str, conn: object) -> str:
     """Return a string dump of the current DB schema (for debugging)."""
     db_type = normalize_db_type(db_type)
     cursor = conn.cursor()

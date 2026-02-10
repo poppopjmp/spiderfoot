@@ -31,7 +31,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
     token = None
     docroot = ''
 
-    def __init__(self, web_config, config, loggingQueue=None) -> None:
+    def __init__(self, web_config: dict, config: dict, loggingQueue: mp.Queue | None = None) -> None:
         """Initialize the web UI routes with configuration and logging."""
         from mako.lookup import TemplateLookup
 
@@ -147,11 +147,11 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
         else:
             cherrypy.response.body = b"<html><body>Error</body></html>"
 
-    def error_page_401(self, status, message, traceback, version) -> str:
+    def error_page_401(self, status: str, message: str, traceback: str, version: str) -> str:
         """Return an empty response for 401 unauthorized errors."""
         return ""
 
-    def error_page_404(self, status, message, traceback, version) -> str:
+    def error_page_404(self, status: str, message: str, traceback: str, version: str) -> str:
         """Return a rendered error page for 404 not found errors."""
         from mako.template import Template
         templ = Template(
@@ -159,7 +159,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
         return templ.render(message='Not Found', docroot=self.docroot, status=status, version=__version__)
 
     @cherrypy.expose
-    def documentation(self, doc=None, q=None) -> str:
+    def documentation(self, doc: str | None = None, q: str | None = None) -> str:
         """Render the documentation page with optional search and navigation."""
         import os
         import markdown
@@ -179,7 +179,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
         related = []
         title = ''
 
-        def highlight(code, lang=None) -> str:
+        def highlight(code: str, lang: str | None = None) -> str:
             # Dummy highlight function for template compatibility
             return code
 
@@ -213,7 +213,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             except Exception as te:
                 return f'<pre>Template error: {te}</pre>'
         try:
-            def list_docs(base_dir) -> list:
+            def list_docs(base_dir: str) -> list:
                 docs = []
                 for root, _dirs, files in os.walk(base_dir):
                     for f in files:
@@ -222,7 +222,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                             docs.append(rel.replace('\\', '/'))
                 return docs
 
-            def get_title(md_path) -> str:
+            def get_title(md_path: str) -> str:
                 import contextlib
                 with contextlib.suppress(Exception):
                     with open(md_path, encoding='utf-8') as f:
@@ -348,7 +348,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanlog(self, scanid) -> list | dict:
+    def scanlog(self, scanid: str) -> list | dict:
         """Return scan logs for a given scan ID, matching legacy API.
 
         Args:
@@ -363,7 +363,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanerrors(self, scanid) -> list | dict:
+    def scanerrors(self, scanid: str) -> list | dict:
         """Return scan errors for a given scan ID, matching legacy API."""
         try:
             dbh = self._get_dbh()
@@ -374,7 +374,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scancorrelations(self, id) -> list | dict:
+    def scancorrelations(self, id: str) -> list | dict:
         """Return scan correlations for a given scan ID."""
         try:
             dbh = self._get_dbh()
@@ -399,7 +399,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanstatus(self, id) -> list | dict:
+    def scanstatus(self, id: str) -> list | dict:
         """Return the status and summary of a scan by its ID."""
         try:
             dbh = self._get_dbh()
@@ -430,7 +430,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scandelete(self, id) -> str | dict:
+    def scandelete(self, id: str) -> str | dict:
         """Delete a scan instance by its ID."""
         try:
             dbh = self._get_dbh()
@@ -442,7 +442,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
         except Exception as e:
             return self.jsonify_error("500", str(e))
 
-    def jsonify_error(self, status, message) -> dict:
+    def jsonify_error(self, status: str, message: str) -> dict:
         """Helper method to create JSON error responses."""
         cherrypy.response.headers['Content-Type'] = 'application/json'
         cherrypy.response.status = status
@@ -453,7 +453,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             }
         }
 
-    def error(self, message) -> str:
+    def error(self, message: str) -> str:
         """Show generic error page with error message."""
         from mako.template import Template
         templ = Template(
@@ -470,7 +470,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return False
 
     @cherrypy.expose
-    def resultsetfp(self, id, resultids, fp) -> bytes:
+    def resultsetfp(self, id: str, resultids: str, fp: str) -> bytes:
         """Set false positive flag for scan results."""
         try:
             dbh = self._get_dbh()
@@ -494,7 +494,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return f'["ERROR", "{e}"]'.encode('utf-8')
 
     @cherrypy.expose
-    def savesettings(self, allopts, token, configFile=None) -> str:
+    def savesettings(self, allopts: str, token: str, configFile: str | None = None) -> str:
         """Save configuration settings from the web UI."""
         if not hasattr(self, 'token') or self.token != token:
             return self.error("Invalid token")
@@ -519,7 +519,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return self.error(f"Processing one or more of your inputs failed. {str(e)}")
 
     @cherrypy.expose
-    def startscan(self, scanname, scantarget, modulelist, typelist, usecase) -> str:
+    def startscan(self, scanname: str, scantarget: str, modulelist: str, typelist: str, usecase: str) -> str:
         """Start a new scan with the given parameters."""
         try:
             from sfwebui import SpiderFootHelpers
@@ -561,7 +561,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return self.error(f"Failed to start scan: {str(e)}")
 
     @cherrypy.expose
-    def rerunscan(self, id) -> str:
+    def rerunscan(self, id: str) -> str:
         """Re-run a previously completed scan by its ID."""
         try:
             from copy import deepcopy
@@ -628,7 +628,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def stopscan(self, id) -> str:
+    def stopscan(self, id: str) -> str:
         """Stop one or more running scans by their IDs."""
         try:
             if not id:
@@ -664,7 +664,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
         return self._get_dbh()
 
     # Add methods from helpers for backward compatibility
-    def cleanUserInput(self, inputList) -> list:
+    def cleanUserInput(self, inputList: list) -> list:
         """Clean user input by escaping HTML."""
         if not isinstance(inputList, list):
             raise TypeError(f"inputList is {type(inputList)}; expected list()")
@@ -679,7 +679,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             ret.append(c)
         return ret
 
-    def searchBase(self, scan_id=None, eventType=None, value=None) -> list:
+    def searchBase(self, scan_id: str | None = None, eventType: str | None = None, value: str | None = None) -> list:
         """Search scan results."""
         retdata = []
 
@@ -725,7 +725,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
         return retdata
 
-    def buildExcel(self, data, columnNames, sheetNameIndex=0) -> bytes:
+    def buildExcel(self, data: list, columnNames: list, sheetNameIndex: int = 0) -> bytes:
         """Convert supplied raw data into Excel format."""
         from sfwebui import openpyxl, BytesIO
         import string
@@ -769,7 +769,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
     # Export methods
     @cherrypy.expose
-    def scanexportlogs(self, scan_id, dialect="excel") -> str | bytes:
+    def scanexportlogs(self, scan_id: str, dialect: str = "excel") -> str | bytes:
         """Export scan logs."""
         try:
             dbh = self._get_dbh()
@@ -794,7 +794,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return self.error(f"Export failed: {str(e)}")
 
     @cherrypy.expose
-    def scancorrelationsexport(self, scan_id, filetype="csv", dialect="excel") -> str:
+    def scancorrelationsexport(self, scan_id: str, filetype: str = "csv", dialect: str = "excel") -> str:
         """Export scan correlations."""
         try:
             dbh = self._get_dbh()
@@ -824,7 +824,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return self.error(f"Export failed: {str(e)}")
 
     @cherrypy.expose
-    def scaneventresultexport(self, scan_id, event_type, filetype="csv", dialect="excel") -> str | bytes:
+    def scaneventresultexport(self, scan_id: str, event_type: str, filetype: str = "csv", dialect: str = "excel") -> str | bytes:
         """Export scan event results."""
         try:
             dbh = self._get_dbh()
@@ -859,7 +859,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return self.error(f"Export failed: {str(e)}")
 
     @cherrypy.expose
-    def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel") -> str | bytes:
+    def scaneventresultexportmulti(self, ids: str, filetype: str = "csv", dialect: str = "excel") -> str | bytes:
         """Export multiple scan event results."""
         try:
             scan_ids = ids.split(',')
@@ -905,7 +905,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return self.error(f"Export failed: {str(e)}")
 
     @cherrypy.expose
-    def scansearchresultexport(self, scan_id, eventType=None, value=None, filetype="csv", dialect="excel") -> str | bytes:
+    def scansearchresultexport(self, scan_id: str, eventType: str | None = None, value: str | None = None, filetype: str = "csv", dialect: str = "excel") -> str | bytes:
         """Export search results."""
         try:
             search_results = self.searchBase(scan_id, eventType, value)
@@ -933,7 +933,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return self.error(f"Export failed: {str(e)}")
 
     @cherrypy.expose
-    def scanexportjsonmulti(self, ids) -> bytes:
+    def scanexportjsonmulti(self, ids: str) -> bytes:
         """Export multiple scans as JSON."""
         import json
         import time
@@ -986,7 +986,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
         return json.dumps(scaninfo).encode('utf-8')
 
     @cherrypy.expose
-    def scanviz(self, scan_id, gexf="0") -> str:
+    def scanviz(self, scan_id: str, gexf: str = "0") -> str:
         """Generate scan visualization."""
         try:
             dbh = self._get_dbh()
@@ -1004,7 +1004,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return self.error(f"Visualization failed: {str(e)}")
 
     @cherrypy.expose
-    def scanvizmulti(self, ids, gexf="1") -> str:
+    def scanvizmulti(self, ids: str, gexf: str = "1") -> str:
         """Generate multi-scan visualization."""
         try:
             scan_ids = ids.split(',')
@@ -1034,7 +1034,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
     # Workspace methods
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacescanresults(self, workspace_id, scan_id=None, event_type=None, limit=100) -> dict:
+    def workspacescanresults(self, workspace_id: str, scan_id: str | None = None, event_type: str | None = None, limit: str | int = 100) -> dict:
         """Get workspace scan results."""
         try:
             # Convert string limit to int if needed

@@ -10,7 +10,7 @@ from spiderfoot import SpiderFootHelpers
 class ExportEndpoints:
     """WebUI endpoints for exporting scan data."""
     @cherrypy.expose
-    def scanexportlogs(self, id, dialect="excel") -> bytes:
+    def scanexportlogs(self, id: str, dialect: str = "excel") -> bytes:
         """Export scan logs as a CSV file download."""
         dbh = self._get_dbh()
         try:
@@ -31,7 +31,7 @@ class ExportEndpoints:
         return fileobj.getvalue().encode('utf-8')
 
     @cherrypy.expose
-    def scancorrelationsexport(self, id, filetype="csv", dialect="excel") -> str | bytes:
+    def scancorrelationsexport(self, id: str, filetype: str = "csv", dialect: str = "excel") -> str | bytes:
         """Export scan correlations as a CSV or Excel file download."""
         dbh = self._get_dbh()
         try:
@@ -62,7 +62,7 @@ class ExportEndpoints:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
-    def scaneventresultexport(self, id, type, filetype="csv", dialect="excel") -> str | bytes:
+    def scaneventresultexport(self, id: str, type: str, filetype: str = "csv", dialect: str = "excel") -> str | bytes:
         """Export scan event results filtered by type as CSV or Excel."""
         dbh = self._get_dbh()
         data = dbh.scanResultEvent(id, type)
@@ -100,7 +100,7 @@ class ExportEndpoints:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
-    def scaneventresultexportmulti(self, ids, filetype="csv", dialect="excel") -> str | bytes | None:
+    def scaneventresultexportmulti(self, ids: str, filetype: str = "csv", dialect: str = "excel") -> str | bytes | None:
         """Export event results from multiple scans as CSV or Excel."""
         dbh = self._get_dbh()
         scaninfo = dict()
@@ -154,7 +154,7 @@ class ExportEndpoints:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
-    def scansearchresultexport(self, id, eventType=None, value=None, filetype="csv", dialect="excel") -> str | bytes | None:
+    def scansearchresultexport(self, id: str, eventType: str | None = None, value: str | None = None, filetype: str = "csv", dialect: str = "excel") -> str | bytes | None:
         """Export scan search results as CSV or Excel."""
         data = self.searchBase(id, eventType, value)
         if not data:
@@ -187,7 +187,7 @@ class ExportEndpoints:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
-    def scanexportjsonmulti(self, ids) -> bytes:
+    def scanexportjsonmulti(self, ids: str) -> bytes:
         """Export event results from multiple scans as a JSON file download."""
         dbh = self._get_dbh()
         scaninfo = list()
@@ -209,7 +209,7 @@ class ExportEndpoints:
         return json.dumps(scaninfo).encode('utf-8')
 
     @cherrypy.expose
-    def scanviz(self, id, gexf="0") -> str | None:
+    def scanviz(self, id: str, gexf: str = "0") -> str | None:
         """Generate scan result visualization as JSON graph or GEXF export."""
         if not id:
             return None
@@ -232,7 +232,7 @@ class ExportEndpoints:
         return SpiderFootHelpers.buildGraphGexf([root], "SpiderFoot Export", data)
 
     @cherrypy.expose
-    def scanvizmulti(self, ids, gexf="1") -> str | None:
+    def scanvizmulti(self, ids: str, gexf: str = "1") -> str | None:
         """Generate combined visualization from multiple scans as JSON or GEXF."""
         dbh = self._get_dbh()
         data = list()
