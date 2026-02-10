@@ -12,6 +12,12 @@ from enum import Enum
 from datetime import datetime, timezone
 from pathlib import Path
 
+from spiderfoot.logging_config import (
+    LOG_FORMAT_NAMED,
+    LOG_FORMAT_SECURITY,
+    LOG_FORMAT_SECURITY_CONSOLE,
+)
+
 
 class SecurityEventType(Enum):
     """Security event types for logging."""
@@ -64,7 +70,7 @@ class SecurityLogger:
         # File handler for security events
         file_handler = logging.FileHandler(self.log_file, encoding='utf-8')
         file_formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s'
+            LOG_FORMAT_SECURITY
         )
         file_handler.setFormatter(file_formatter)
         self.logger.addHandler(file_handler)
@@ -73,7 +79,7 @@ class SecurityLogger:
         if console_output:
             console_handler = logging.StreamHandler(sys.stdout)
             console_formatter = logging.Formatter(
-                '%(asctime)s - SECURITY - %(levelname)s - %(message)s'
+                LOG_FORMAT_SECURITY_CONSOLE
             )
             console_handler.setFormatter(console_formatter)
             self.logger.addHandler(console_handler)
@@ -218,9 +224,7 @@ class ErrorHandler:
         # Set up error logger
         if not self.error_logger.handlers:
             handler = logging.FileHandler('logs/errors.log', encoding='utf-8')
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
+            formatter = logging.Formatter(LOG_FORMAT_NAMED)
             handler.setFormatter(formatter)
             self.error_logger.addHandler(handler)
             self.error_logger.setLevel(logging.ERROR)

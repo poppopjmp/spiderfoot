@@ -39,6 +39,8 @@ import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Optional
 
+from spiderfoot.logging_config import LOG_FORMAT_TEXT
+
 # Ensure project root is on path
 _project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _project_root not in sys.path:
@@ -293,7 +295,7 @@ def main():
     # Configure logging
     logging.basicConfig(
         level=getattr(logging, args.log_level.upper(), logging.INFO),
-        format="%(asctime)s [%(name)s] %(levelname)s %(message)s",
+        format=LOG_FORMAT_TEXT,
         datefmt="%Y-%m-%dT%H:%M:%S",
     )
 
