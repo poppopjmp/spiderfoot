@@ -65,7 +65,7 @@ class sfp_ethereum(SpiderFootModernPlugin):
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
-        self.debug("[setup] Options: {}".format(self.opts))
+        self.debug(f"[setup] Options: {self.opts}")
         # Option validation
         if not self.opts.get("api_key"):
             self.error("[setup] API key is required.")

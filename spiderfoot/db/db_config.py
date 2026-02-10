@@ -31,7 +31,9 @@ class ConfigManager:
     def _is_transient_error(self, exc):
         return is_transient_error(exc)
 
-    def configSet(self, optMap: dict = {}) -> bool:
+    def configSet(self, optMap: dict = None) -> bool:
+        if optMap is None:
+            optMap = {}
         if not isinstance(optMap, dict):
             raise TypeError(f"optMap is {type(optMap)}; expected dict()")
         if not optMap:
@@ -105,7 +107,9 @@ class ConfigManager:
                         continue
                     raise OSError("Unable to clear configuration from the database") from e
 
-    def scanConfigSet(self, scan_id, optMap=dict()) -> None:
+    def scanConfigSet(self, scan_id, optMap=None) -> None:
+        if optMap is None:
+            optMap = {}
         if not isinstance(optMap, dict):
             raise TypeError(f"optMap is {type(optMap)}; expected dict()")
         if not optMap:

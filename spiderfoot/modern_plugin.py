@@ -44,6 +44,8 @@ Backward Compatibility:
     - If no registry is configured, gracefully falls back to self.sf
 """
 
+from __future__ import annotations
+
 import logging
 import queue
 import time

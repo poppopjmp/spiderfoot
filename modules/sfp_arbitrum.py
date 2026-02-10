@@ -45,7 +45,7 @@ class sfp_arbitrum(SpiderFootModernPlugin):
     def setup(self, sfc, userOpts=None):
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
-        self.debug("[setup] Options: {}".format(self.opts))
+        self.debug(f"[setup] Options: {self.opts}")
         # Option validation
         if not self.opts.get("api_key"):
             self.error("[setup] API key is required.")

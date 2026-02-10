@@ -9,6 +9,8 @@ Endpoints:
   ws://.../ws/scans/{scan_id}  — Stream scan events in real-time
 """
 
+from __future__ import annotations
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from ..dependencies import get_app_config
 import json
