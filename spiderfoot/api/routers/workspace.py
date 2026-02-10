@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""FastAPI router for workspace management, target handling, and multi-scan operations."""
+
 from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException, Body, UploadFile, File
 from fastapi.responses import StreamingResponse
 import json

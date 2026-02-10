@@ -1,3 +1,5 @@
+"""WebUI endpoints for exporting scan data in CSV, Excel, and JSON formats."""
+
 import cherrypy
 import csv
 import json

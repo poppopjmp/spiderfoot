@@ -1,3 +1,5 @@
+"""WebUI endpoints for workspace creation, listing, and management."""
+
 import cherrypy
 import json
 from mako.template import Template

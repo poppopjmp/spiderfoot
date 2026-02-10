@@ -10,6 +10,8 @@
 # -------------------------------------------------------------------------------
 from __future__ import annotations
 
+"""Executes correlation rules against scan data using pluggable strategies."""
+
 import logging
 from collections import defaultdict
 from spiderfoot.correlation.rule_loader import RuleLoader

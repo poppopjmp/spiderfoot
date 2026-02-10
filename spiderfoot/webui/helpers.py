@@ -1,3 +1,5 @@
+"""Utility methods for WebUI input sanitization, Excel generation, and template rendering."""
+
 import html
 import openpyxl
 import string

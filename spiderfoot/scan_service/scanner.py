@@ -10,6 +10,8 @@
 # -------------------------------------------------------------------------------
 from __future__ import annotations
 
+"""Core scan orchestration including module loading, event processing, and scan lifecycle management."""
+
 import socket
 import time
 import queue

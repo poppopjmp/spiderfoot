@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Main WebUI controller combining all endpoint groups and CherryPy configuration."""
+
 from .scan import ScanEndpoints
 from .export import ExportEndpoints
 from .workspace import WorkspaceEndpoints

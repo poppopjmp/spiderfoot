@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""WebUI endpoints for scan creation, management, and result viewing."""
+
 import cherrypy
 import logging
 from copy import deepcopy

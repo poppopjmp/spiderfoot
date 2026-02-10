@@ -1,3 +1,5 @@
+"""WebUI endpoints for application settings import, export, and persistence."""
+
 import cherrypy
 import random
 import json

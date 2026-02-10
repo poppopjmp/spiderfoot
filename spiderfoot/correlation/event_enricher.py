@@ -10,6 +10,8 @@
 # -------------------------------------------------------------------------------
 from __future__ import annotations
 
+"""Enriches scan events with source, child, and summary metadata for correlation."""
+
 import logging
 
 class EventEnricher:

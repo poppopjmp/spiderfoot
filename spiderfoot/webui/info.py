@@ -1,3 +1,5 @@
+"""WebUI endpoints for listing event types and module information."""
+
 import cherrypy
 from operator import itemgetter
 from spiderfoot import __version__

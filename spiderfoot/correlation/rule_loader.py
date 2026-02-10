@@ -10,6 +10,8 @@
 # -------------------------------------------------------------------------------
 from __future__ import annotations
 
+"""Loads and validates YAML-based correlation rules against a JSON schema."""
+
 import yaml
 import os
 import jsonschema

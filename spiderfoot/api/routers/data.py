@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""FastAPI router for scan data retrieval, entity types, and module queries."""
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..dependencies import get_app_config, optional_auth

@@ -10,6 +10,8 @@
 # -------------------------------------------------------------------------------
 from __future__ import annotations
 
+"""Aggregates correlation rule results using configurable methods."""
+
 import logging
 
 class ResultAggregator:
