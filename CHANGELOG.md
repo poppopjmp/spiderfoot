@@ -3,6 +3,27 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.150.0] — RC Cycle 74: Immutable Target Types
+
+### Changed
+- Converted `_validTypes` from mutable `list` to immutable `frozenset` in `target.py`
+- Provides O(1) membership testing (was O(n) list scan) and prevents accidental mutation
+- Updated class-level type annotation to `typing.FrozenSet[str]`
+- Updated docstring attribute type from `typing.List[str]` to `typing.FrozenSet[str]`
+
+## [5.149.0] — RC Cycle 73: helpers.py Type Hints
+
+### Changed
+- Added type hints to 5 remaining untyped public methods in `helpers.py` (100% coverage)
+- Methods: `loadModulesAsDict`, `loadCorrelationRulesRaw`, `sanitiseInput`, `fixModuleImport`, `fix_module_for_tests`
+
+## [5.148.0] — RC Cycle 72: Raise From Exception Chaining
+
+### Fixed
+- Added `from e` to 7 `raise` statements in `except` blocks across 4 files
+- Files: `api_security.py`, `api_security_fastapi.py`, `api_gateway.py`, `llm_client.py` (4 fixes)
+- Preserves original traceback context per PEP 3134
+
 ## [5.147.0] — RC Cycle 70: Plugin Type Hints
 
 ### Changed
