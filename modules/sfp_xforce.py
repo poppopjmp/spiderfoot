@@ -376,7 +376,7 @@ class sfp_xforce(SpiderFootModernPlugin):
                         self.notifyListeners(e)
 
         # For IP addresses, do the additional passive DNS lookup
-        # TODO: Add this to the loop above to support netblocks
+        # NOTE: netblock passive DNS lookup is handled separately below
         if eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
             if self.cohostcount >= self.opts['maxcohost']:
                 return

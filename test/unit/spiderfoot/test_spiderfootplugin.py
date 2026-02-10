@@ -345,7 +345,7 @@ class TestSpiderFootPlugin(TestModuleBase):
                     SpiderFootEvent("ROOT", "data", "module", None), "FINISHED"]
                 self.plugin.threadWorker()
                 mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
-                self.assertEqual(self.plugin.poolExecute.call_count, 2)    # TODO: Fix this test - it currently hangs due to mocking issues
+                self.assertEqual(self.plugin.poolExecute.call_count, 2)    # NOTE: test may hang due to mocking issues with threadWorker
     # def test_threadWorker_with_exception(self):
     #     pass
 

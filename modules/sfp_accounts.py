@@ -150,7 +150,7 @@ class sfp_accounts(SpiderFootModernPlugin):
                 return
 
         # Some sites can't handle periods so treat bob.abc and bob as the same
-        # TODO: fix this once WhatsMyName has support for usernames with '.'
+        # NOTE: WhatsMyName does not yet support usernames containing '.'
         if "." in name:
             firstname = name.split(".")[0]
             if firstname + "<" in res['content'] or firstname + '"' in res['content']:

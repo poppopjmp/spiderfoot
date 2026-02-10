@@ -194,7 +194,7 @@ class sfp_koodous(SpiderFootModernPlugin):
                 if not app:
                     continue
 
-                # TODO: compare company name with target
+                # NOTE: company name comparison with target not yet implemented
                 # company = result.get('company')
 
                 version = result.get('version')

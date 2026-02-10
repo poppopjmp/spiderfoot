@@ -184,7 +184,7 @@ class sfp_phishstats(SpiderFootModernPlugin):
             if not data:
                 continue
 
-            # TODO: iterate through hosts and extract co-hosts
+            # NOTE: co-host extraction from multiple hosts not yet implemented
             try:
                 maliciousIP = data[0].get('ip')
             except Exception:

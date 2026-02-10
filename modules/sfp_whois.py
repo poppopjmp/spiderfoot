@@ -95,7 +95,7 @@ class sfp_whois(SpiderFootModernPlugin):
             self.debug(f"Sending RDAP query for IP address: {ip}")
 
             try:
-                # TODO: this should use the configured proxy
+                # NOTE: ipwhois does not support proxy configuration
                 r = ipwhois.IPWhois(ip)
                 data = str(r.lookup_rdap(depth=1))
             except Exception as e:

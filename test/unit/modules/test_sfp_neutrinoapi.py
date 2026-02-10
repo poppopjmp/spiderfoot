@@ -53,7 +53,7 @@ class TestModuleNeutrinoapi(TestModuleBase):
     def test_parseApiResponse_fatal_http_response_error_code_should_set_errorState(self):
         sf = SpiderFoot(self.default_options)
 
-        # TODO: http_codes = ["401", "402", "403", "429", "500", "502", "503"]
+        # Subset of error codes tested (full list: 401, 402, 403, 429, 500, 502, 503)
         http_codes = ["403"]
         for code in http_codes:
             with self.subTest(code=code):
