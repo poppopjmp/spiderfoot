@@ -3,6 +3,37 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.173.0] — RC Cycle 104: Complete __init__ Return Type Coverage
+
+### Changed
+- Added `-> None` return type annotation to ALL remaining `__init__` methods across the entire codebase
+- 61 files changed covering: `api/` (audit, body_limit, compression, dependencies, pagination, rate_limit, websocket), `cli/` (commands, config, network), `core/` (api_security, config, modules, performance, scan, security, server, validation), `correlation/` (event_enricher, result_aggregator, rule_executor, rule_loader), `data_service/` (base, factory, grpc_client, http_client, local, resilient), `db/` (db_config, db_correlation, db_event, db_scan), `eventbus/` (base, factory, memory, nats_bus, redis_bus), plus enrichment, dns_service, error_telemetry, event_dedup, mcp_integration, alert_rules, api_versioning, correlation_rules, and more
+- Combined with RC101–RC103, every `__init__` method in the project now has `-> None`
+
+## [5.172.0] — RC Cycle 103: __init__ Return Types (Batch 3 — 142 methods)
+
+### Changed
+- Added `-> None` to 142 `__init__` methods across 55 files
+- Covers spiderfoot/ infrastructure (data_retention, event_filter, event_pipeline, scan_workflow, metrics, startup_sequencer, secret_manager, eventbus_hardening, module_sandbox, etc.), modules/ (sfp__ai_threat_intel, sfp__security_hardening, sfp_performance_optimizer, sfp__stor_db_advanced, etc.), and root-level files
+
+## [5.171.0] — RC Cycle 102: Encoding Fixes + __init__ Return Types (Batch 2)
+
+### Changed
+- Added `encoding='utf-8'` to 3 `open()` calls in sfp_tool_onesixtyone.py, sfp_tool_testsslsh.py, sfp__security_hardening.py
+- Added `-> None` to 22 `__init__` methods across 10 files (auth.py, csrf_protection.py, health.py, notification_service.py, structured_logging.py, security_middleware.py, webui/api_client.py, webui/performance.py)
+
+## [5.170.0] — RC Cycle 101: __init__ Return Types (Batch 1 — 14 methods)
+
+### Changed
+- Added `-> None` return type annotation to 14 `__init__` methods across 12 files
+- Files: db/__init__.py, sflib/plugin.py, sflib/core.py, webui/routes.py, webui/scan.py, module_caps.py, module_comms.py, scan_policy.py, scan_profile.py, sfp_shodan.py, sfp_builtwith.py, sfp_github.py
+
+## [5.169.0] — RC Cycle 100: Encoding & Unused Variable Cleanup
+
+### Changed
+- Added `encoding='utf-8'` to 12 `open()` calls across 8 files
+- Removed 8 unused loop/assignment variables across 6 files
+
 ## [5.168.0] — RC Cycle 98: Database Facade Docstrings
 
 ### Added
