@@ -17,16 +17,13 @@ schema migrations, and retry logic for SQLite operations.
 """
 
 from pathlib import Path
-import hashlib
 import logging
-import random
 import re
 import sqlite3
 import threading
-import time
 import psycopg2
 import psycopg2.extras
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from spiderfoot.db.db_core import DbCore
 from spiderfoot.db.db_scan import ScanManager
@@ -627,7 +624,7 @@ class SpiderFootDb:
         return self._scan.scanInstanceDelete(*args, **kwargs)
     def scanInstanceList(self) -> list:
         return self._scan.scanInstanceList()
-    def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None):
+    def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None) -> bool:
         """
         Direct pass-through to the underlying _scan.scanInstanceSet method.
 
@@ -655,7 +652,7 @@ class SpiderFootDb:
         return self._config.scanConfigSet(scan_id, optMap)
     def scanConfigGet(self, scan_id: str) -> Optional[dict]:
         return self._config.scanConfigGet(scan_id)
-    def scanConfigDelete(self, *args, **kwargs):
+    def scanConfigDelete(self, *args: Any, **kwargs: Any) -> bool:
         """Stub for API/test compatibility. Does nothing."""
         return True
     # --- EVENT TYPES ---
@@ -674,7 +671,7 @@ class SpiderFootDb:
     def correlationGet(self, *args, **kwargs) -> Optional[list]:
         return self._correlation.correlationGet(*args, **kwargs)
     # --- LOGGING ---
-    def scanLogEvent(self, instanceId, classification, message, component=None):
+    def scanLogEvent(self, instanceId: str, classification: str, message: str, component: Optional[str] = None) -> None:
         return self._event.scanLogEvent(instanceId, classification, message, component)
     def scanLogEvents(self, batch: list) -> bool:
         return self._event.scanLogEvents(batch)
@@ -841,7 +838,7 @@ class SpiderFootDb:
                     raise
             self.conn.commit()
 
-    def scanResultDelete(self, *args, **kwargs):
+    def scanResultDelete(self, *args: Any, **kwargs: Any) -> bool:
         """Stub for API/test compatibility. Does nothing."""
         return True
 

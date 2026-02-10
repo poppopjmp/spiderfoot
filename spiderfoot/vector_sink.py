@@ -6,7 +6,6 @@ a Vector.dev instance for routing to external data stores (ClickHouse,
 Loki, Elasticsearch, S3, etc.).
 """
 
-import asyncio
 import json
 import logging
 import threading

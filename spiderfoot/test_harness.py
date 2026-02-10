@@ -28,10 +28,7 @@ from __future__ import annotations
 
 import importlib
 import logging
-import os
-import sys
-from typing import Any, Dict, List, Optional, Set, Tuple, Type
-from unittest.mock import MagicMock, patch
+from typing import Any, Dict, List, Optional, Set, Type
 
 log = logging.getLogger("spiderfoot.test_harness")
 

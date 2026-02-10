@@ -36,7 +36,7 @@ import sys
 import warnings
 from typing import Any, Dict, Optional
 
-from spiderfoot.structured_logging import StructuredFormatter, StructuredLogHandler
+from spiderfoot.structured_logging import StructuredFormatter
 
 
 # ---------------------------------------------------------------------------

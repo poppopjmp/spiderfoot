@@ -20,13 +20,9 @@ import ssl
 import requests
 import OpenSSL
 import cryptography
-import dns.resolver
 import urllib.parse
-import time
 import random
-import inspect
 from cryptography.hazmat.backends.openssl import backend
-from spiderfoot import SpiderFootHelpers
 from .helpers import validIP, validIP6
 
 import logging

@@ -43,7 +43,7 @@ import os
 import threading
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
 log = logging.getLogger("spiderfoot.api_gateway")
 

@@ -9,11 +9,8 @@ backward compatibility with the existing SpiderFoot logging setup.
 
 import json
 import logging
-import os
 import socket
 import sys
-import time
-import traceback
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 

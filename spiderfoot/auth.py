@@ -41,11 +41,10 @@ import hmac
 import logging
 import os
 import secrets
-import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 

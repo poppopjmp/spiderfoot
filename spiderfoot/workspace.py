@@ -6,12 +6,10 @@ targets, and cross-correlations within a unified context.
 
 import json
 import logging
-import os
 import time
 import uuid
 from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
 

@@ -4,12 +4,11 @@ This module provides integration with Model Context Protocol (MCP) servers
 for CTI report generation and analysis.
 """
 
-import asyncio
 import json
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 
 import httpx
 

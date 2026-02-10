@@ -40,10 +40,9 @@ Centralized rate limiting for internal and external service calls::
 import logging
 import threading
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 log = logging.getLogger("spiderfoot.rate_limiter")
 

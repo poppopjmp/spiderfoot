@@ -23,13 +23,12 @@ Features:
 
 from __future__ import annotations
 
-import hashlib
 import logging
 import time
 import threading
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
 
 log = logging.getLogger("spiderfoot.vector_correlation")
 

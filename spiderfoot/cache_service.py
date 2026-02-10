@@ -12,9 +12,9 @@ import os
 import threading
 import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 

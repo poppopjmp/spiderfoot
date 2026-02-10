@@ -51,12 +51,11 @@ import smtplib
 import threading
 import time
 import urllib.request
-import urllib.error
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 log = logging.getLogger("spiderfoot.notification_service")
 

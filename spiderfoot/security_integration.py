@@ -5,23 +5,16 @@ Integrates all security enhancements into the existing SpiderFoot codebase.
 
 import os
 import sys
-import json
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 
 # Import SpiderFoot core modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 # Import security modules
-from .secure_config import SecureConfigManager, EnvironmentConfigManager
-from .csrf_protection import CSRFProtection
-from .input_validation import InputValidator, SecurityHeaders
-from .rate_limiting import RateLimiter
-from .session_security import SecureSessionManager
-from .api_security import APISecurityManager, APIKeyManager
-from .security_logging import SecurityLogger, SecurityEventType, SecurityMonitor
-from .web_security import SpiderFootSecurityManager
+from .secure_config import SecureConfigManager
+from .security_logging import SecurityLogger, SecurityEventType
 
 
 class SecurityIntegrator:

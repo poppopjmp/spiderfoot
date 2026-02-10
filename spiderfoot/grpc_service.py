@@ -55,7 +55,6 @@ Usage (server)::
 import json
 import logging
 import threading
-import time
 from http.client import HTTPConnection
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Any, Callable, Dict, Optional

@@ -12,10 +12,9 @@ import json
 import logging
 import ssl
 import socket
-import time
 import urllib.parse
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
 
 try:
     import requests

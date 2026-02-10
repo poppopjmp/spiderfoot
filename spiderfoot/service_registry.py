@@ -17,8 +17,7 @@ Usage:
 
 import logging
 import threading
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional
 
 log = logging.getLogger("spiderfoot.registry")
 

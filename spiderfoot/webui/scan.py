@@ -10,7 +10,6 @@ import json
 log = logging.getLogger("spiderfoot.webui.scan")
 from spiderfoot.scan_service.scanner import startSpiderFootScanner
 import multiprocessing as mp
-import html
 
 class ScanEndpoints:
     @cherrypy.expose

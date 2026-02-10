@@ -9,11 +9,10 @@ every scan's log entries are queryable from the database.
 import atexit
 import logging
 import os
-import sqlite3
 import sys
 import time
 from contextlib import suppress
-from logging.handlers import QueueHandler, QueueListener, TimedRotatingFileHandler
+from logging.handlers import QueueHandler, QueueListener
 from queue import Empty, Queue
 from threading import Thread
 

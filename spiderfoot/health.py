@@ -38,7 +38,7 @@ import logging
 import threading
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, Optional
 
 log = logging.getLogger("spiderfoot.health")
 

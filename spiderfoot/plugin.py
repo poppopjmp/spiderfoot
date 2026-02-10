@@ -22,12 +22,11 @@ import logging
 import os
 import queue
 import sys
-import threading
 from time import sleep
 import traceback
-from typing import List, Dict, Any, Callable, Optional
+from typing import List, Any, Callable, Optional
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent
 from .threadpool import SpiderFootThreadPool
 
 # begin logging overrides

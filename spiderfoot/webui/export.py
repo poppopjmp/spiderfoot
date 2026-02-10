@@ -1,7 +1,6 @@
 import cherrypy
 import csv
 import json
-from io import StringIO
 from spiderfoot import SpiderFootHelpers
 
 class ExportEndpoints:

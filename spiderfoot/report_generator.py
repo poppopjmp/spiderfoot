@@ -27,18 +27,15 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
 from spiderfoot.context_window import (
-    AllocationStrategy,
     ContextWindow,
     ContextWindowManager,
     WindowConfig,
-    WindowRole,
 )
-from spiderfoot.llm_client import LLMClient, LLMConfig, LLMProvider, LLMResponse
+from spiderfoot.llm_client import LLMClient, LLMConfig, LLMProvider
 from spiderfoot.report_preprocessor import (
     PreprocessorConfig,
     ReportContext,
     ReportPreprocessor,
-    ReportSectionType,
 )
 
 log = logging.getLogger("spiderfoot.report_generator")

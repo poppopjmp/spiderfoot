@@ -5,8 +5,7 @@ Provides comprehensive input sanitization and validation.
 
 import re
 import html
-import urllib.parse
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 # Optional dependency for enhanced HTML sanitization
 try:

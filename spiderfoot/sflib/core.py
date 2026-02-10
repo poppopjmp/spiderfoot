@@ -20,10 +20,8 @@ from copy import deepcopy
 import logging
 import ssl
 import dns.resolver
-from typing import Tuple
-from .config import configSerialize, configUnserialize
 from .network import (
-    resolveHost, resolveIP, resolveHost6, validateIP, safeSocket, safeSSLSocket, parseCert, getSession, useProxyForUrl, fetchUrl, checkDnsWildcard
+    resolveHost, resolveIP, resolveHost6, validateIP, safeSocket, safeSSLSocket, parseCert, getSession, fetchUrl, checkDnsWildcard
 )
 from .helpers import (
     hashstring, cachePut, cacheGet, removeUrlCreds, isValidLocalOrLoopbackIp, domainKeyword, domainKeywords, hostDomain, validHost, isDomain, validIP, validIP6, validIpNetwork, isPublicIpAddress, normalizeDNS

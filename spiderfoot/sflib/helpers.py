@@ -20,10 +20,8 @@ import os
 import time
 import re
 import netaddr
-import socket
 from publicsuffixlist import PublicSuffixList
 from spiderfoot import SpiderFootHelpers
-import sys
 
 __all__ = [
     'hashstring',
