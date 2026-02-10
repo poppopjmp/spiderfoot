@@ -38,7 +38,7 @@ import logging
 import os
 import sys
 from copy import deepcopy
-from typing import Dict, List, Optional, Any, Union
+from typing import Any
 
 # Web framework imports
 import cherrypy
@@ -65,7 +65,7 @@ class SpiderFootWebUi(WebUiRoutes):
     a clean, modular architecture.
     """
     
-    def __init__(self, web_config: dict[str, Any], config: dict[str, Any], loggingQueue: Optional[mp.Queue] = None) -> None:
+    def __init__(self, web_config: dict[str, Any], config: dict[str, Any], loggingQueue: mp.Queue | None = None) -> None:
         """
         Initialize the SpiderFoot Web UI.
         
@@ -219,7 +219,7 @@ class SpiderFootWebUi(WebUiRoutes):
         except Exception:
             return False
     
-    def sanitize_user_input(self, user_input: Union[str, list[str]]) -> Union[str, list[str]]:
+    def sanitize_user_input(self, user_input: str | list[str]) -> str | list[str]:
         """
         Sanitize user input to prevent XSS and injection attacks.
         
@@ -373,7 +373,7 @@ class SpiderFootWebUi(WebUiRoutes):
         except Exception as e:
             return self.handle_error(f"Failed to get performance metrics: {e}")
     
-    def backup_database(self, backup_path: Optional[str] = None) -> dict[str, Any]:
+    def backup_database(self, backup_path: str | None = None) -> dict[str, Any]:
         """
         Create a backup of the database.
         
@@ -479,7 +479,7 @@ class SpiderFootWebUiApp:
     configuration validation, and system monitoring.
     """
     
-    def __init__(self, config: dict[str, Any], docroot: Optional[str] = None, loggingQueue: Optional[mp.Queue] = None) -> None:
+    def __init__(self, config: dict[str, Any], docroot: str | None = None, loggingQueue: mp.Queue | None = None) -> None:
         """
         Initialize the SpiderFoot Web UI Application.
         
@@ -542,7 +542,7 @@ class SpiderFootWebUiApp:
                     for m in modules
                 ]
     
-    def _setup_logging(self, loggingQueue: Optional[mp.Queue]):
+    def _setup_logging(self, loggingQueue: mp.Queue | None):
         """Setup logging with proper error handling."""
         if loggingQueue is None:
             self.loggingQueue = mp.Queue()

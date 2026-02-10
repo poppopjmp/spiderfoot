@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException, Body, Up
 from fastapi.responses import StreamingResponse
 import json
 from io import BytesIO
-from typing import Optional
 from spiderfoot.workspace import SpiderFootWorkspace
 from spiderfoot import SpiderFootHelpers
 from ..dependencies import get_app_config, get_api_key, optional_auth
@@ -87,8 +86,8 @@ async def update_workspace(workspace_id: str, name: str | None = None, descripti
 
     Args:
         workspace_id (str): Workspace ID.
-        name (Optional[str]): New workspace name.
-        description (Optional[str]): New workspace description.
+        name (str | None): New workspace name.
+        description (str | None): New workspace description.
         api_key (str): API key for authentication.
 
     Returns:

@@ -27,7 +27,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Optional
 
 log = logging.getLogger("spiderfoot.hybrid_correlation")
 
@@ -366,7 +366,7 @@ class HybridCorrelator:
     multidim_analyzer : optional
         MultiDimAnalyzer instance (or mock).
     event_loader : callable, optional
-        ``(scan_id) -> List[EventData]`` — loads events for multi-dim.
+        ``(scan_id) -> list[EventData]`` -- loads events for multi-dim.
     """
 
     def __init__(
