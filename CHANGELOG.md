@@ -3,6 +3,13 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.226.0] — RC Cycle 167: `from __future__ import annotations` — 100% Project-Wide
+
+### Changed
+- Added `from __future__ import annotations` to 234 module files, 671 test files, and 4 root-level files (RC166–167)
+- Every Python file in the entire project now uses PEP 563 deferred annotation evaluation
+- Only exception: auto-generated `spiderfoot_pb2.py` (protobuf)
+
 ## [5.224.0] — RC Cycle 164: Public Method Docstrings — 100% Coverage
 
 ### Changed
