@@ -13,7 +13,7 @@ import weakref
 
 
 class WebUIPerformanceEnhancer:
-    """Performance enhancement utilities for WebUI operations"""
+    """Performance enhancement utilities for WebUI operations."""
     
     def __init__(self, max_workers: int = 4):
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
@@ -23,7 +23,7 @@ class WebUIPerformanceEnhancer:
         self.logger = logging.getLogger(__name__)
         
     def cache_with_ttl(self, ttl_seconds: int = 300):
-        """Decorator for caching function results with TTL"""
+        """Decorator for caching function results with TTL."""
         def decorator(func: Callable) -> Callable:
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
@@ -55,12 +55,12 @@ class WebUIPerformanceEnhancer:
         return decorator
     
     def async_operation(self, func: Callable, *args, **kwargs):
-        """Execute operation asynchronously"""
+        """Execute operation asynchronously."""
         future = self.executor.submit(func, *args, **kwargs)
         return future
     
     def batch_operation(self, func: Callable, items: list, batch_size: int = 10):
-        """Execute operations in batches to improve performance"""
+        """Execute operations in batches to improve performance."""
         results = []
         
         for i in range(0, len(items), batch_size):
@@ -83,7 +83,7 @@ class WebUIPerformanceEnhancer:
         return results
     
     def clear_cache(self, pattern: Optional[str] = None):
-        """Clear cache entries, optionally matching a pattern"""
+        """Clear cache entries, optionally matching a pattern."""
         with self.cache_lock:
             if pattern:
                 keys_to_remove = [k for k in self.cache.keys() if pattern in k]
@@ -96,7 +96,7 @@ class WebUIPerformanceEnhancer:
                 self.cache_ttl.clear()
     
     def get_cache_stats(self) -> Dict[str, Any]:
-        """Get cache statistics"""
+        """Get cache statistics."""
         with self.cache_lock:
             return {
                 'total_entries': len(self.cache),
@@ -107,7 +107,7 @@ class WebUIPerformanceEnhancer:
 
 
 class PaginationOptimizer:
-    """Optimized pagination for large datasets"""
+    """Optimized pagination for large datasets."""
     
     @staticmethod
     def optimize_pagination(data: list, page: int, per_page: int, 
@@ -156,7 +156,7 @@ class PaginationOptimizer:
 
 
 class DataCompressionHelper:
-    """Helper for compressing large data transfers"""
+    """Helper for compressing large data transfers."""
     
     @staticmethod
     def compress_json_response(data: Dict[str, Any], 
@@ -202,14 +202,14 @@ class DataCompressionHelper:
 
 
 class MemoryOptimizer:
-    """Memory optimization utilities"""
+    """Memory optimization utilities."""
     
     def __init__(self):
         self.object_pool = weakref.WeakValueDictionary()
         self.logger = logging.getLogger(__name__)
     
     def get_memory_usage(self) -> Dict[str, Any]:
-        """Get current memory usage statistics"""
+        """Get current memory usage statistics."""
         import psutil
         import os
         
@@ -229,12 +229,12 @@ class MemoryOptimizer:
             return {'error': str(e)}
     
     def optimize_large_list(self, data: list, chunk_size: int = 1000):
-        """Generator for processing large lists in chunks"""
+        """Generator for processing large lists in chunks."""
         for i in range(0, len(data), chunk_size):
             yield data[i:i + chunk_size]
     
     def cleanup_resources(self):
-        """Cleanup unused resources"""
+        """Cleanup unused resources."""
         import gc
         
         # Force garbage collection
@@ -246,7 +246,7 @@ class MemoryOptimizer:
 
 
 class AsyncWebUIHelper:
-    """Async utilities for WebUI operations"""
+    """Async utilities for WebUI operations."""
     
     @staticmethod
     async def fetch_multiple_endpoints(urls: list, timeout: int = 30) -> list:
@@ -273,7 +273,7 @@ class AsyncWebUIHelper:
     
     @staticmethod
     async def _fetch_url(session, url):
-        """Fetch a single URL"""
+        """Fetch a single URL."""
         try:
             async with session.get(url) as response:
                 return {
@@ -290,7 +290,7 @@ class AsyncWebUIHelper:
 
 # Performance monitoring decorator
 def monitor_performance(func: Callable) -> Callable:
-    """Decorator to monitor function performance"""
+    """Decorator to monitor function performance."""
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.time()
@@ -322,7 +322,7 @@ performance_enhancer = WebUIPerformanceEnhancer()
 
 # Enhanced WebUI methods with performance optimizations
 class PerformanceEnhancedWebUI:
-    """Mixin class with performance-enhanced WebUI methods"""
+    """Mixin class with performance-enhanced WebUI methods."""
     
     def __init__(self):
         self.performance_enhancer = performance_enhancer

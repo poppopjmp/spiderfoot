@@ -161,7 +161,7 @@ class HealthAggregator:
         return self.check_all()
 
     def startup(self) -> dict:
-        """Startup probe — has initialization completed?"""
+        """Startup probe — has initialization completed?."""
         return {
             "status": (HealthStatus.UP if self._startup_complete
                        else HealthStatus.DOWN).value,

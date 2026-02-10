@@ -485,11 +485,11 @@ class PluginTestHarness:
         return self._capture
 
     def produced(self, event_type: str) -> bool:
-        """Did the module produce at least one event of *event_type*?"""
+        """Did the module produce at least one event of *event_type*?."""
         return self._capture.has(event_type)
 
     def produced_count(self, event_type: Optional[str] = None) -> int:
-        """How many events of *event_type* (or total) were produced?"""
+        """How many events of *event_type* (or total) were produced?."""
         return self._capture.count(event_type)
 
     def events_of_type(self, event_type: str) -> List[Any]:

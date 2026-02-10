@@ -69,7 +69,7 @@ class SpiderFootHelpers():
     
     @staticmethod
     def dataPath() -> str:
-        """Return data path and validate it exists"""
+        """Return data path and validate it exists."""
         try:
             data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
             if not os.path.exists(data_dir):
@@ -84,7 +84,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def cachePath() -> str:
-        """Return cache path and validate it exists"""
+        """Return cache path and validate it exists."""
         try:
             cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'cache'))
             if not os.path.exists(cache_dir):
@@ -99,7 +99,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def logPath() -> str:
-        """Return log path and validate it exists"""
+        """Return log path and validate it exists."""
         try:
             log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
             if not os.path.exists(log_dir):
@@ -205,7 +205,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def loadModulesAsDict(path, ignore_files=None):
-        """Load modules as dictionary"""
+        """Load modules as dictionary."""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
             
@@ -285,7 +285,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def loadCorrelationRulesRaw(path, ignore_files=None):
-        """Load correlation rules"""
+        """Load correlation rules."""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
 
@@ -381,7 +381,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def sanitiseInput(input_str):
-        """Sanitise input string"""
+        """Sanitise input string."""
         if not isinstance(input_str, str):
             return False
         
@@ -1117,7 +1117,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def extractUrlsFromText(data: str) -> typing.List[str]:
-        """Extract URLs from text"""
+        """Extract URLs from text."""
         if not isinstance(data, str):
             return []
         import re

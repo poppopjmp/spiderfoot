@@ -171,7 +171,7 @@ def correlation_rules_command(cli, line):
 
 
 def correlation_summary_command(cli, line):
-    """Show correlation summary for a scan. Usage: correlation_summary <scan_id>"""
+    """Show correlation summary for a scan. Usage: correlation_summary <scan_id>."""
     args = shlex.split(line)
     if not args:
         cli.edprint("Usage: correlation_summary <scan_id>")
@@ -206,7 +206,7 @@ def correlation_summary_command(cli, line):
 
 
 def register(registry):
-    """Register all correlation commands"""
+    """Register all correlation commands."""
     registry.register("correlations", correlations_command, 
                      help_text="Show correlation results from a scan")
     registry.register("correlation_rules", correlation_rules_command, 

@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 
 
 def interactive_scan_wizard(cli, line):
-    """Interactive wizard for creating complex scans. Usage: scan_wizard"""
+    """Interactive wizard for creating complex scans. Usage: scan_wizard."""
     try:
         cli.dprint("SpiderFoot Interactive Scan Wizard", plain=True)
         cli.dprint("=" * 40, plain=True)
@@ -67,7 +67,7 @@ def interactive_scan_wizard(cli, line):
 
 
 def _prompt_input(cli, prompt, default=None, required=False):
-    """Prompt for user input with optional default"""
+    """Prompt for user input with optional default."""
     while True:
         try:
             if default:
@@ -86,7 +86,7 @@ def _prompt_input(cli, prompt, default=None, required=False):
 
 
 def _prompt_yes_no(cli, prompt, default=True):
-    """Prompt for yes/no input"""
+    """Prompt for yes/no input."""
     default_text = "Y/n" if default else "y/N"
     while True:
         try:
@@ -104,7 +104,7 @@ def _prompt_yes_no(cli, prompt, default=True):
 
 
 def _detect_target_type(target):
-    """Detect target type based on input"""
+    """Detect target type based on input."""
     import ipaddress
     
     try:
@@ -122,7 +122,7 @@ def _detect_target_type(target):
 
 
 def _prompt_modules(cli):
-    """Interactive module selection"""
+    """Interactive module selection."""
     cli.dprint("\nAvailable module categories:", plain=True)
     categories = {
         '1': 'DNS/Network Discovery',
@@ -156,7 +156,7 @@ def _prompt_modules(cli):
 
 
 def _prompt_custom_modules(cli):
-    """Custom module selection"""
+    """Custom module selection."""
     cli.dprint("Enter module names (comma-separated) or 'list' to see all:", plain=True)
     modules_input = _prompt_input(cli, "Modules")
     
@@ -171,7 +171,7 @@ def _prompt_custom_modules(cli):
 
 
 def _prompt_event_types(cli):
-    """Interactive event type selection"""
+    """Interactive event type selection."""
     cli.dprint("Common event types:", plain=True)
     common_types = [
         'IP_ADDRESS', 'INTERNET_NAME', 'DOMAIN_NAME',
@@ -193,14 +193,14 @@ def _prompt_event_types(cli):
 
 
 def _prompt_workspace(cli):
-    """Interactive workspace selection"""
+    """Interactive workspace selection."""
     # This would fetch available workspaces from API
     cli.dprint("Available workspaces: [would be fetched from API]", plain=True)
     return _prompt_input(cli, "Workspace ID")
 
 
 def _prompt_advanced_options(cli):
-    """Advanced configuration options"""
+    """Advanced configuration options."""
     advanced = {}
     
     if _prompt_yes_no(cli, "Set scan timeout?", False):
@@ -219,7 +219,7 @@ def _prompt_advanced_options(cli):
 
 
 def _create_scan_from_config(cli, scan_config):
-    """Create scan from wizard configuration"""
+    """Create scan from wizard configuration."""
     try:
         base_url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001')
         
@@ -245,7 +245,7 @@ def _create_scan_from_config(cli, scan_config):
 
 
 def enhanced_help_command(cli, line):
-    """Enhanced help with search and categories. Usage: help [search_term] [--category]"""
+    """Enhanced help with search and categories. Usage: help [search_term] [--category]."""
     args = shlex.split(line)
     search_term = args[0] if args else None
     show_categories = '--category' in args
@@ -261,7 +261,7 @@ def enhanced_help_command(cli, line):
 
 
 def _show_command_categories(cli):
-    """Show commands organized by categories"""
+    """Show commands organized by categories."""
     categories = {
         "Scan Management": [
             "start", "stop", "scans", "scaninfo", "delete"
@@ -297,7 +297,7 @@ def _show_command_categories(cli):
 
 
 def _search_commands(cli, search_term):
-    """Search commands by term"""
+    """Search commands by term."""
     cli.dprint(f"Commands matching '{search_term}':", plain=True)
     cli.dprint("-" * 30, plain=True)
     
@@ -307,7 +307,7 @@ def _search_commands(cli, search_term):
 
 
 def _show_enhanced_help(cli):
-    """Show enhanced help overview"""
+    """Show enhanced help overview."""
     cli.dprint("SpiderFoot CLI - Enhanced Help", plain=True)
     cli.dprint("=" * 35, plain=True)
     cli.dprint("Available help options:", plain=True)
@@ -319,7 +319,7 @@ def _show_enhanced_help(cli):
 
 
 def smart_completion_command(cli, line):
-    """Provide intelligent command completion and suggestions"""
+    """Provide intelligent command completion and suggestions."""
     # This would integrate with the CLI's completion system
     # For now, just demonstrate the concept
     args = shlex.split(line)
@@ -339,7 +339,7 @@ def smart_completion_command(cli, line):
 
 
 def _get_command_suggestions(cli, partial):
-    """Get command suggestions based on partial input"""
+    """Get command suggestions based on partial input."""
     # This would use fuzzy matching against available commands
     all_commands = [
         "start", "stop", "scans", "scaninfo", "delete",
@@ -360,7 +360,7 @@ def _get_command_suggestions(cli, partial):
 
 
 def register(registry):
-    """Register all interactive enhancement commands"""
+    """Register all interactive enhancement commands."""
     registry.register("scan_wizard", interactive_scan_wizard, 
                      help_text="Interactive wizard for creating complex scans")
     registry.register("help", enhanced_help_command, 

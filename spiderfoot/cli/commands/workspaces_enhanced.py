@@ -6,7 +6,7 @@ import shlex
 import json
 
 def workspaces_command(cli, line):
-    """List all workspaces using the API. Usage: workspaces [--details]"""
+    """List all workspaces using the API. Usage: workspaces [--details]."""
     args = shlex.split(line)
     show_details = '--details' in args
     
@@ -44,7 +44,7 @@ def workspaces_command(cli, line):
         cli.edprint(f"Failed to parse workspace list: {e}")
 
 def workspace_create_command(cli, line):
-    """Create a new workspace. Usage: workspace_create <name> [description]"""
+    """Create a new workspace. Usage: workspace_create <name> [description]."""
     args = shlex.split(line)
     if not args:
         cli.edprint("Usage: workspace_create <name> [description]")
@@ -67,7 +67,7 @@ def workspace_create_command(cli, line):
         cli.edprint("Failed to create workspace.")
 
 def workspace_delete_command(cli, line):
-    """Delete a workspace. Usage: workspace_delete <workspace_id>"""
+    """Delete a workspace. Usage: workspace_delete <workspace_id>."""
     args = shlex.split(line)
     if not args:
         cli.edprint("Usage: workspace_delete <workspace_id>")
@@ -82,7 +82,7 @@ def workspace_delete_command(cli, line):
         cli.edprint(f"Failed to delete workspace '{workspace_id}'")
 
 def workspace_info_command(cli, line):
-    """Get detailed information about a workspace. Usage: workspace_info <workspace_id>"""
+    """Get detailed information about a workspace. Usage: workspace_info <workspace_id>."""
     args = shlex.split(line)
     if not args:
         cli.edprint("Usage: workspace_info <workspace_id>")
@@ -109,7 +109,7 @@ def workspace_info_command(cli, line):
         cli.edprint(f"Failed to parse workspace info: {e}")
 
 def workspace_activate_command(cli, line):
-    """Set a workspace as active. Usage: workspace_activate <workspace_id>"""
+    """Set a workspace as active. Usage: workspace_activate <workspace_id>."""
     args = shlex.split(line)
     if not args:
         cli.edprint("Usage: workspace_activate <workspace_id>")
@@ -127,7 +127,7 @@ def workspace_activate_command(cli, line):
         cli.edprint(f"Failed to activate workspace '{workspace_id}'")
 
 def workspace_export_command(cli, line):
-    """Export workspace data. Usage: workspace_export <workspace_id> [format] [output_file]"""
+    """Export workspace data. Usage: workspace_export <workspace_id> [format] [output_file]."""
     args = shlex.split(line)
     if not args:
         cli.edprint("Usage: workspace_export <workspace_id> [format] [output_file]")
@@ -157,7 +157,7 @@ def workspace_export_command(cli, line):
         cli.dprint(resp, plain=True)
 
 def workspace_clone_command(cli, line):
-    """Clone a workspace. Usage: workspace_clone <source_workspace_id> <new_name>"""
+    """Clone a workspace. Usage: workspace_clone <source_workspace_id> <new_name>."""
     args = shlex.split(line)
     if len(args) < 2:
         cli.edprint("Usage: workspace_clone <source_workspace_id> <new_name>")
@@ -180,7 +180,7 @@ def workspace_clone_command(cli, line):
         cli.edprint(f"Failed to clone workspace '{source_id}'")
 
 def register(registry):
-    """Register all workspace commands"""
+    """Register all workspace commands."""
     registry.register("workspaces", workspaces_command, 
                      help_text="List all workspaces. Use --details for more info.")
     registry.register("workspace_create", workspace_create_command, 

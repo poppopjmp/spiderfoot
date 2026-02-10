@@ -264,7 +264,7 @@ def export_viz_command(cli, line):
 
 
 def register(registry):
-    """Register all export commands"""
+    """Register all export commands."""
     registry.register("export", export_command, 
                      help_text="Export scan data in various formats")
     registry.register("export_logs", export_logs_command, 

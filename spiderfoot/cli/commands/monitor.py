@@ -141,7 +141,7 @@ def monitor_command(cli, line):
 
 
 def _display_simple_status(cli, status_data):
-    """Display simple status format"""
+    """Display simple status format."""
     timestamp = datetime.now().strftime("%H:%M:%S")
     status = status_data.get('status', 'UNKNOWN')
     progress = status_data.get('progress', 0)
@@ -150,7 +150,7 @@ def _display_simple_status(cli, status_data):
 
 
 def _display_detailed_status(cli, status_data):
-    """Display detailed status format"""
+    """Display detailed status format."""
     timestamp = datetime.now().strftime("%H:%M:%S")
     status = status_data.get('status', 'UNKNOWN')
     progress = status_data.get('progress', 0)
@@ -251,7 +251,7 @@ def watch_scans_command(cli, line):
 
 
 def _display_scans_table(cli, scans):
-    """Display scans in table format"""
+    """Display scans in table format."""
     timestamp = datetime.now().strftime("%H:%M:%S")
     cli.dprint(f"[{timestamp}] Active Scans:", plain=True)
     
@@ -274,7 +274,7 @@ def _display_scans_table(cli, scans):
 
 
 def _display_scans_simple(cli, scans):
-    """Display scans in simple format"""
+    """Display scans in simple format."""
     timestamp = datetime.now().strftime("%H:%M:%S")
     cli.dprint(f"[{timestamp}] Active Scans: {len(scans)}", plain=True)
     
@@ -369,7 +369,7 @@ def logs_stream_command(cli, line):
 
 
 def register(registry):
-    """Register all monitoring commands"""
+    """Register all monitoring commands."""
     registry.register("monitor", monitor_command, 
                      help_text="Monitor scan progress in real-time")
     registry.register("watch_scans", watch_scans_command, 

@@ -5,7 +5,7 @@ Target management commands for SpiderFoot CLI.
 import shlex
 
 def targets_command(cli, line):
-    """List all targets in a workspace. Usage: targets <workspace_id>"""
+    """List all targets in a workspace. Usage: targets <workspace_id>."""
     args = shlex.split(line)
     if not args:
         cli.edprint("Usage: targets <workspace_id>")
@@ -19,7 +19,7 @@ def targets_command(cli, line):
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
 def target_add_command(cli, line):
-    """Add a target to a workspace. Usage: target_add <workspace_id> <target> <target_type> [metadata_json]"""
+    """Add a target to a workspace. Usage: target_add <workspace_id> <target> <target_type> [metadata_json]."""
     import json
     args = shlex.split(line)
     if len(args) < 3:
@@ -36,7 +36,7 @@ def target_add_command(cli, line):
         cli.edprint("Failed to add target.")
 
 def target_delete_command(cli, line):
-    """Delete a target from a workspace. Usage: target_delete <workspace_id> <target_id>"""
+    """Delete a target from a workspace. Usage: target_delete <workspace_id> <target_id>."""
     args = shlex.split(line)
     if len(args) < 2:
         cli.edprint("Usage: target_delete <workspace_id> <target_id>")

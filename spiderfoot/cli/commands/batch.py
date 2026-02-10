@@ -131,7 +131,7 @@ def batch_scan_command(cli, line):
 
 
 def _create_scan(cli, base_url, scan_config, workspace):
-    """Create a single scan"""
+    """Create a single scan."""
     try:
         if workspace:
             url = f"{base_url}/api/workspaces/{workspace}/scans"
@@ -148,7 +148,7 @@ def _create_scan(cli, base_url, scan_config, workspace):
 
 
 def _get_scan_config(cli, scan_id):
-    """Get configuration from an existing scan"""
+    """Get configuration from an existing scan."""
     try:
         base_url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001')
         url = f"{base_url}/api/scans/{scan_id}/options"
@@ -162,7 +162,7 @@ def _get_scan_config(cli, scan_id):
 
 
 def _wait_for_scans_completion(cli, scan_ids):
-    """Wait for multiple scans to complete"""
+    """Wait for multiple scans to complete."""
     base_url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001')
     completed = set()
     
@@ -277,7 +277,7 @@ def batch_export_command(cli, line):
 
 
 def _export_single_scan(cli, base_url, scan_id, export_format, output_dir):
-    """Export a single scan"""
+    """Export a single scan."""
     try:
         url = f"{base_url}/api/scans/{scan_id}/events/export?format={export_format}"
         resp = cli.request(url)
@@ -294,7 +294,7 @@ def _export_single_scan(cli, base_url, scan_id, export_format, output_dir):
 
 
 def _create_export_archive(cli, output_dir, scan_ids, export_format):
-    """Create ZIP archive of exported files"""
+    """Create ZIP archive of exported files."""
     try:
         import zipfile
         import os
@@ -403,7 +403,7 @@ def batch_delete_command(cli, line):
 
 
 def _filter_scans_for_deletion(cli, scan_ids, status_filter, older_than):
-    """Filter scans based on deletion criteria"""
+    """Filter scans based on deletion criteria."""
     filtered_ids = []
     base_url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001')
     
@@ -436,7 +436,7 @@ def _filter_scans_for_deletion(cli, scan_ids, status_filter, older_than):
 
 
 def register(registry):
-    """Register all batch operation commands"""
+    """Register all batch operation commands."""
     registry.register("batch_scan", batch_scan_command, 
                      help_text="Run multiple scans in batch")
     registry.register("batch_export", batch_export_command, 

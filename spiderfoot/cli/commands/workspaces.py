@@ -14,7 +14,7 @@ def workspaces_command(cli, line):
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
 def workspace_create_command(cli, line):
-    """Create a new workspace using the API. Usage: workspace_create <name> [description]"""
+    """Create a new workspace using the API. Usage: workspace_create <name> [description]."""
     args = shlex.split(line)
     if not args:
         cli.edprint("Usage: workspace_create <name> [description]")
@@ -30,7 +30,7 @@ def workspace_create_command(cli, line):
         cli.edprint("Failed to create workspace.")
 
 def workspace_delete_command(cli, line):
-    """Delete a workspace using the API. Usage: workspace_delete <workspace_id>"""
+    """Delete a workspace using the API. Usage: workspace_delete <workspace_id>."""
     args = shlex.split(line)
     if not args:
         cli.edprint("Usage: workspace_delete <workspace_id>")
