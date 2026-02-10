@@ -101,7 +101,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
     # Setup (called by scan engine)
     # ------------------------------------------------------------------
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: Any, userOpts: dict | None = None) -> None:
         """Initialize the module with SpiderFoot facade and user options.
 
         Extends the legacy setup to also resolve services from the registry
@@ -302,7 +302,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
 
         return False
 
-    def store_event(self, event) -> None:
+    def store_event(self, event: Any) -> None:
         """Store an event to the data service."""
         try:
             if self.data is not None:
@@ -331,7 +331,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
     # Enhanced event dispatch with metrics
     # ------------------------------------------------------------------
 
-    def notifyListeners(self, sfEvent) -> None:
+    def notifyListeners(self, sfEvent: Any) -> None:
         """Override to add metrics instrumentation."""
         # Record event production metric
         self._record_event_produced(sfEvent.eventType)
@@ -339,8 +339,8 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
         # Delegate to parent implementation
         super().notifyListeners(sfEvent)
 
-    def sendEvent(self, eventType, eventData, parentEvent,
-                  confidenceLevel=100) -> None:
+    def sendEvent(self, eventType: str, eventData: str, parentEvent: Any,
+                  confidenceLevel: int = 100) -> None:
         """Enhanced sendEvent with metrics."""
         self._record_event_produced(eventType)
         super().sendEvent(eventType, eventData, parentEvent, confidenceLevel)

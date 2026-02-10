@@ -13,6 +13,7 @@ from __future__ import annotations
 """Enriches scan events with source, child, and summary metadata for correlation."""
 
 import logging
+from typing import Any
 
 class EventEnricher:
     """Enrich scan events with source, child, and summary metadata.
@@ -22,12 +23,12 @@ class EventEnricher:
     correlation rules are evaluated.
     """
 
-    def __init__(self, dbh) -> None:
+    def __init__(self, dbh: Any) -> None:
         """Initialize the event enricher with a database handle."""
         self.log = logging.getLogger("spiderfoot.correlation.enricher")
         self.dbh = dbh
 
-    def enrich_sources(self, scan_id, events) -> list:
+    def enrich_sources(self, scan_id: str, events: list) -> list:
         """Attach source module information to each event."""
         # Example: Add source info to each event
         for event in events:
@@ -35,14 +36,14 @@ class EventEnricher:
             event['sources'] = self.dbh.get_sources(scan_id, event_hash)
         return events
 
-    def enrich_children(self, scan_id, events) -> list:
+    def enrich_children(self, scan_id: str, events: list) -> list:
         """Attach child event information to each event."""
         # Example: Add child info to each event
         for event in events:
             event['children'] = self.dbh.get_children(scan_id, event['id'])
         return events
 
-    def enrich_entities(self, scan_id, events) -> list:
+    def enrich_entities(self, scan_id: str, events: list) -> list:
         """Attach entity summary information to each event."""
         # Example: Add entity info to each event
         for event in events:

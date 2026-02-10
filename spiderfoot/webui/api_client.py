@@ -174,7 +174,7 @@ class ApiClient:
             log.error("API scanInstanceDelete failed: %s", e)
 
     def scanInstanceSet(
-        self, scan_id: str, started=None, ended=None, status=None
+        self, scan_id: str, started: int | None = None, ended: int | None = None, status: str | None = None
     ) -> None:
         """Update scan metadata."""
         try:
@@ -285,7 +285,7 @@ class ApiClient:
     # Scan logs
     # ------------------------------------------------------------------
 
-    def scanLogs(self, scan_id: str, limit=None, fromRowId=0, reverse=False) -> list:
+    def scanLogs(self, scan_id: str, limit: int | None = None, fromRowId: int = 0, reverse: bool = False) -> list:
         """Get scan logs in legacy tuple format."""
         try:
             params: dict[str, Any] = {}
@@ -313,7 +313,7 @@ class ApiClient:
             return []
 
     def scanLogEvent(
-        self, scan_id: str, classification: str, message: str, component=None
+        self, scan_id: str, classification: str, message: str, component: str | None = None
     ) -> None:
         """Log a scan event."""
         try:

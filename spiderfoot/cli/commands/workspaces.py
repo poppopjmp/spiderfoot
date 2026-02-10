@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import shlex
 
-def workspaces_command(cli, line) -> None:
+def workspaces_command(cli: SpiderFootCli, line: str) -> None:
     """List all workspaces using the API."""
     url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + '/api/workspaces'
     resp = cli.request(url)
@@ -15,7 +15,7 @@ def workspaces_command(cli, line) -> None:
         return
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
-def workspace_create_command(cli, line) -> None:
+def workspace_create_command(cli: SpiderFootCli, line: str) -> None:
     """Create a new workspace using the API. Usage: workspace_create <name> [description]."""
     args = shlex.split(line)
     if not args:
@@ -31,7 +31,7 @@ def workspace_create_command(cli, line) -> None:
     else:
         cli.edprint("Failed to create workspace.")
 
-def workspace_delete_command(cli, line) -> None:
+def workspace_delete_command(cli: SpiderFootCli, line: str) -> None:
     """Delete a workspace using the API. Usage: workspace_delete <workspace_id>."""
     args = shlex.split(line)
     if not args:
@@ -49,7 +49,7 @@ def workspace_delete_command(cli, line) -> None:
     except Exception as e:
         cli.edprint(f"Error deleting workspace: {e}")
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("workspaces", workspaces_command, help_text="List all workspaces using the API.")
     registry.register("workspace_create", workspace_create_command, help_text="Create a new workspace using the API.")
     registry.register("workspace_delete", workspace_delete_command, help_text="Delete a workspace using the API.")

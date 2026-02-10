@@ -9,7 +9,7 @@ import re
 from typing import Any
 
 
-def interactive_scan_wizard(cli, line) -> None:
+def interactive_scan_wizard(cli: SpiderFootCli, line: str) -> None:
     """Interactive wizard for creating complex scans. Usage: scan_wizard."""
     try:
         cli.dprint("SpiderFoot Interactive Scan Wizard", plain=True)
@@ -245,7 +245,7 @@ def _create_scan_from_config(cli, scan_config):
         cli.edprint(f"Failed to create scan: {e}")
 
 
-def enhanced_help_command(cli, line) -> None:
+def enhanced_help_command(cli: SpiderFootCli, line: str) -> None:
     """Enhanced help with search and categories. Usage: help [search_term] [--category]."""
     args = shlex.split(line)
     search_term = args[0] if args else None
@@ -319,7 +319,7 @@ def _show_enhanced_help(cli):
     cli.dprint("\nTip: Use TAB completion for commands and arguments!", plain=True)
 
 
-def smart_completion_command(cli, line) -> None:
+def smart_completion_command(cli: SpiderFootCli, line: str) -> None:
     """Provide intelligent command completion and suggestions."""
     # This would integrate with the CLI's completion system
     # For now, just demonstrate the concept
@@ -360,7 +360,7 @@ def _get_command_suggestions(cli, partial):
     return all_suggestions[:5]  # Limit to 5 suggestions
 
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     """Register all interactive enhancement commands."""
     registry.register("scan_wizard", interactive_scan_wizard,
                      help_text="Interactive wizard for creating complex scans")

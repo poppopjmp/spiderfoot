@@ -17,6 +17,7 @@ import logging
 from typing import Any, Callable
 from functools import wraps, lru_cache
 from collections import defaultdict, deque
+from types import TracebackType
 from datetime import datetime, timedelta
 import sqlite3
 import redis
@@ -40,7 +41,7 @@ class PerformanceProfiler:
 
     def profile_function(self, func_name: str = None) -> Callable:
         """Decorator to profile function execution."""
-        def decorator(func) -> Callable:
+        def decorator(func: Callable) -> Callable:
             name = func_name or f"{func.__module__}.{func.__name__}"
 
             @wraps(func)
@@ -124,7 +125,7 @@ class CacheManager:
 
     def cache_result(self, ttl: int = DEFAULT_TTL_ONE_HOUR, use_redis: bool = False) -> Callable:
         """Decorator for caching function results."""
-        def decorator(func) -> Callable:
+        def decorator(func: Callable) -> Callable:
             @wraps(func)
             def wrapper(*args, **kwargs) -> Any:
                 # Create cache key
@@ -250,7 +251,7 @@ class DatabaseOptimizer:
                 conn.execute("PRAGMA temp_store=MEMORY")
                 return conn
 
-    def return_connection(self, conn) -> None:
+    def return_connection(self, conn: sqlite3.Connection) -> None:
         """Return connection to pool."""
         with self.pool_lock:
             if len(self.connection_pool) < self.max_connections:
@@ -300,7 +301,7 @@ class AsyncHTTPManager:
         )
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
         if self.session:
             await self.session.close()
 
@@ -430,7 +431,7 @@ class MemoryManager:
         self.tracked_objects = weakref.WeakSet()
         self.logger = logging.getLogger('spiderfoot.memory')
 
-    def track_object(self, obj) -> None:
+    def track_object(self, obj: Any) -> None:
         """Track object for memory monitoring."""
         self.tracked_objects.add(obj)
 
@@ -460,7 +461,7 @@ class MemoryManager:
 # Performance optimization decorator
 def optimize_performance(cache_ttl: int = DEFAULT_TTL_ONE_HOUR, profile: bool = True, use_async: bool = False) -> Callable:
     """Comprehensive performance optimization decorator."""
-    def decorator(func) -> Callable:
+    def decorator(func: Callable) -> Callable:
         # Apply profiling
         if profile:
             profiler = PerformanceProfiler()
@@ -488,7 +489,7 @@ def optimize_performance(cache_ttl: int = DEFAULT_TTL_ONE_HOUR, profile: bool = 
 if __name__ == "__main__":
     # Example performance-optimized function
     @optimize_performance(cache_ttl=1800, profile=True)
-    def expensive_operation(data) -> int:
+    def expensive_operation(data: Any) -> int:
         """Example expensive operation."""
         time.sleep(0.1)  # Simulate work
         return len(data) * 2

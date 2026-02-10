@@ -12,6 +12,9 @@ import logging
 import threading
 from time import sleep
 from contextlib import suppress
+from typing import Callable
+from collections.abc import Iterable
+from types import TracebackType
 
 
 class SpiderFootThreadPool:
@@ -126,7 +129,7 @@ class SpiderFootThreadPool:
                 q.close()
         return results
 
-    def submit(self, callback, *args, **kwargs) -> None:
+    def submit(self, callback: Callable, *args, **kwargs) -> None:
         """Submit a function call to the pool. The "taskName" and "maxThreads"
         arguments are optional.
 
@@ -179,7 +182,7 @@ class SpiderFootThreadPool:
             self.outputQueues[taskName] = queue.Queue(self.qsize)
             return self.outputQueues[taskName]
 
-    def map(self, callback, iterable, *args, **kwargs) -> None:  # noqa: A003
+    def map(self, callback: Callable, iterable: Iterable, *args, **kwargs) -> None:  # noqa: A003
         """map.
 
         Args:
@@ -213,7 +216,7 @@ class SpiderFootThreadPool:
                 # sleep briefly to save CPU
                 sleep(.1)
 
-    def feedQueue(self, callback, iterable, args, kwargs) -> None:
+    def feedQueue(self, callback: Callable, iterable: Iterable, args: tuple, kwargs: dict) -> None:
         for i in iterable:
             if self.stop:
                 break
@@ -236,14 +239,14 @@ class SpiderFootThreadPool:
     def __enter__(self) -> SpiderFootThreadPool:
         return self
 
-    def __exit__(self, exception_type, exception_value, traceback) -> None:
+    def __exit__(self, exception_type: type[BaseException] | None, exception_value: BaseException | None, traceback: TracebackType | None) -> None:
         self.shutdown()
 
 
 class ThreadPoolWorker(threading.Thread):
     """Worker thread that processes tasks from module input queues."""
 
-    def __init__(self, pool, name: str = None) -> None:
+    def __init__(self, pool: SpiderFootThreadPool, name: str = None) -> None:
 
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
         self.pool = pool

@@ -9,7 +9,7 @@ import json
 import os
 
 
-def export_command(cli, line) -> None:
+def export_command(cli: SpiderFootCli, line: str) -> None:
     """Export data from a scan. Usage: export <scan_id> [options]
 
     Options:
@@ -115,7 +115,7 @@ def export_command(cli, line) -> None:
             cli.dprint(resp, plain=True)
 
 
-def export_logs_command(cli, line) -> None:
+def export_logs_command(cli: SpiderFootCli, line: str) -> None:
     """Export scan logs. Usage: export_logs <scan_id> [options]
 
     Options:
@@ -162,7 +162,7 @@ def export_logs_command(cli, line) -> None:
         cli.dprint(resp, plain=True)
 
 
-def export_correlations_command(cli, line) -> None:
+def export_correlations_command(cli: SpiderFootCli, line: str) -> None:
     """Export scan correlations. Usage: export_correlations <scan_id> [options]
 
     Options:
@@ -209,7 +209,7 @@ def export_correlations_command(cli, line) -> None:
         cli.dprint(resp, plain=True)
 
 
-def export_viz_command(cli, line) -> None:
+def export_viz_command(cli: SpiderFootCli, line: str) -> None:
     """Export visualization data. Usage: export_viz <scan_id> [options]
 
     Options:
@@ -265,7 +265,7 @@ def export_viz_command(cli, line) -> None:
         cli.dprint(resp, plain=True)
 
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     """Register all export commands."""
     registry.register("export", export_command,
                      help_text="Export scan data in various formats")

@@ -14,17 +14,18 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from typing import Any, Callable
 from spiderfoot.correlation.rule_loader import RuleLoader
 
 class RuleExecutionStrategy:
     """Base class for pluggable rule execution strategies."""
-    def execute(self, dbh, rule, scan_ids) -> dict:
+    def execute(self, dbh: Any, rule: dict, scan_ids: list[str]) -> dict:
         """Execute a correlation rule against scan data and return results."""
         raise NotImplementedError
 
 class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
     """Default strategy for executing correlation rules against scan data."""
-    def execute(self, dbh, rule, scan_ids) -> dict:
+    def execute(self, dbh: Any, rule: dict, scan_ids: list[str]) -> dict:
         """Execute correlation rule and save results to database."""
         import uuid
         from collections import defaultdict
@@ -328,17 +329,17 @@ class RuleExecutor:
     }
 
     @classmethod
-    def register_strategy(cls, rule_type, strategy) -> None:
+    def register_strategy(cls, rule_type: str, strategy: RuleExecutionStrategy) -> None:
         """Register a custom execution strategy for the given rule type."""
         cls._strategy_registry[rule_type] = strategy
 
     @classmethod
-    def register_event_hook(cls, hook_name, func) -> None:
+    def register_event_hook(cls, hook_name: str, func: Callable) -> None:
         """Register a callback function for the specified rule lifecycle hook."""
         if hook_name in cls._event_hooks:
             cls._event_hooks[hook_name].append(func)
 
-    def __init__(self, dbh, rules, scan_ids=None, debug=False) -> None:
+    def __init__(self, dbh: Any, rules: list, scan_ids: list[str] | None = None, debug: bool = False) -> None:
         """Initialize the rule executor with a database handle, rules, and scan IDs."""
         self.log = logging.getLogger("spiderfoot.correlation.executor")
         self.dbh = dbh
@@ -368,7 +369,7 @@ class RuleExecutor:
                 self.log.error("Error processing rule {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}: %s", e)
         return self.results
 
-    def process_rule(self, rule) -> dict:
+    def process_rule(self, rule: dict) -> dict:
         """Process a single rule by dispatching to the appropriate execution strategy."""
         rule_type = rule.get('meta', {}).get('type', 'default')
         strategy = self._strategy_registry.get(rule_type, DefaultRuleExecutionStrategy())

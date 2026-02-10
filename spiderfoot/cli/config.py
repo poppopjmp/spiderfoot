@@ -25,23 +25,23 @@ class CLIConfig:
             "cli.server_baseurl": "http://127.0.0.1:8001"
         }
 
-    def get(self, key, default=None) -> Any:
+    def get(self, key: str, default: Any = None) -> Any:
         return self.options.get(key, default)
 
-    def set(self, key, value) -> None:
+    def set(self, key: str, value: Any) -> None:
         self.options[key] = value
 
     def as_dict(self) -> dict:
         return dict(self.options)
 
-    def update(self, d) -> None:
+    def update(self, d: dict) -> None:
         self.options.update(d)
 
-    def __getitem__(self, key) -> Any:
+    def __getitem__(self, key: str) -> Any:
         return self.options[key]
 
-    def __setitem__(self, key, value) -> None:
+    def __setitem__(self, key: str, value: Any) -> None:
         self.options[key] = value
 
-    def __contains__(self, key) -> bool:
+    def __contains__(self, key: str) -> bool:
         return key in self.options

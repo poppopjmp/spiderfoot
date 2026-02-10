@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import time
+from typing import Any
 
 # Import our security modules
 from .csrf_protection import CSRFProtection
@@ -113,7 +114,7 @@ class SpiderFootSecurityManager:
     def _init_security_headers(self) -> None:
         """Initialize security headers."""
         @self.app.after_request
-        def add_security_headers(response) -> object:
+        def add_security_headers(response: Any) -> object:
             return SecurityHeaders.add_security_headers(response)
 
     def _init_request_validation(self) -> None:
@@ -125,7 +126,7 @@ class SpiderFootSecurityManager:
     def _init_error_handlers(self) -> None:
         """Initialize security-aware error handlers."""
         @self.app.errorhandler(400)
-        def handle_bad_request(e) -> tuple:
+        def handle_bad_request(e: Exception) -> tuple:
             self.security_logger.log_security_event(
                 SecurityEventType.SUSPICIOUS_ACTIVITY,
                 {'error': 'bad_request', 'path': request.path},
@@ -135,7 +136,7 @@ class SpiderFootSecurityManager:
             return jsonify({'error': 'Bad request'}), 400
 
         @self.app.errorhandler(401)
-        def handle_unauthorized(e) -> tuple:
+        def handle_unauthorized(e: Exception) -> tuple:
             self.security_logger.log_unauthorized_access(
                 request.path,
                 ip_address=request.remote_addr,
@@ -144,7 +145,7 @@ class SpiderFootSecurityManager:
             return jsonify({'error': 'Unauthorized'}), 401
 
         @self.app.errorhandler(403)
-        def handle_forbidden(e) -> tuple:
+        def handle_forbidden(e: Exception) -> tuple:
             self.security_logger.log_unauthorized_access(
                 request.path,
                 user_id=getattr(g, 'user_id', None),
@@ -154,7 +155,7 @@ class SpiderFootSecurityManager:
             return jsonify({'error': 'Forbidden'}), 403
 
         @self.app.errorhandler(429)
-        def handle_rate_limit(e) -> tuple:
+        def handle_rate_limit(e: Exception) -> tuple:
             self.security_logger.log_rate_limit_exceeded(
                 request.path,
                 'unknown',
@@ -164,7 +165,7 @@ class SpiderFootSecurityManager:
             return jsonify({'error': 'Rate limit exceeded'}), 429
 
         @self.app.errorhandler(500)
-        def handle_internal_error(e) -> tuple:
+        def handle_internal_error(e: Exception) -> tuple:
             self.security_logger.log_security_event(
                 SecurityEventType.SUSPICIOUS_ACTIVITY,
                 {'error': 'internal_server_error', 'path': request.path},
@@ -201,7 +202,7 @@ class SpiderFootSecurityManager:
     def _setup_after_request(self) -> None:
         """Set up after request middleware."""
         @self.app.after_request
-        def security_after_request(response) -> object:
+        def security_after_request(response: Any) -> object:
             # Add security headers
             response = SecurityHeaders.add_security_headers(response)
 

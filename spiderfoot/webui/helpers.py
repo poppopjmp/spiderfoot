@@ -11,7 +11,7 @@ from spiderfoot import __version__
 
 class WebUiHelpers:
     """Utility methods for WebUI input sanitization and rendering."""
-    def cleanUserInput(self, inputList) -> list:
+    def cleanUserInput(self, inputList: list) -> list:
         """Sanitize a list of user input strings by escaping HTML entities."""
         if not isinstance(inputList, list):
             raise TypeError(f"inputList is {type(inputList)}; expected list()")
@@ -25,7 +25,7 @@ class WebUiHelpers:
             ret.append(c)
         return ret
 
-    def buildExcel(self, data, columnNames, sheetNameIndex=0) -> bytes:
+    def buildExcel(self, data: list, columnNames: list, sheetNameIndex: int = 0) -> bytes:
         """Build an Excel workbook from tabular data and return it as bytes."""
         rowNums = dict()
         from sfwebui import BytesIO  # Local import to avoid circular import
@@ -58,7 +58,7 @@ class WebUiHelpers:
             f.seek(0)
             return f.read()
 
-    def jsonify_error(self, status, message) -> dict:
+    def jsonify_error(self, status: str, message: str) -> dict:
         """Return a JSON-formatted error response with the given HTTP status."""
         cherrypy.response.headers['Content-Type'] = 'application/json'
         cherrypy.response.status = status
@@ -69,13 +69,13 @@ class WebUiHelpers:
             }
         }
 
-    def error(self, message) -> str:
+    def error(self, message: str) -> str:
         """Render the error page template with the given message."""
         templ = Template(
             filename='spiderfoot/templates/error.tmpl', lookup=self.lookup)
         return templ.render(message=message, docroot=self.docroot, version=__version__)
 
-    def searchBase(self, id=None, eventType=None, value=None) -> list:
+    def searchBase(self, id: str | None = None, eventType: str | None = None, value: str | None = None) -> list:
         """Search scan results by ID, event type, or value and return formatted rows."""
         import time
         retdata = []

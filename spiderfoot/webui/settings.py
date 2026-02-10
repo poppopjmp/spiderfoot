@@ -5,6 +5,7 @@ from __future__ import annotations
 import cherrypy
 import random
 import json
+from typing import Any
 from mako.template import Template
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import __version__
@@ -12,14 +13,14 @@ from spiderfoot import __version__
 class SettingsEndpoints:
     """WebUI endpoints for application settings."""
     @cherrypy.expose
-    def opts(self, updated=None) -> str:
+    def opts(self, updated: str | None = None) -> str:
         """Render the settings page with current configuration options."""
         templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
         self.token = random.SystemRandom().randint(0, 99999999)
         return templ.render(opts=self.config, pageid='SETTINGS', token=self.token, version=__version__, updated=updated, docroot=self.docroot)
 
     @cherrypy.expose
-    def optsexport(self, pattern=None) -> str:
+    def optsexport(self, pattern: str | None = None) -> str:
         """Export current settings as a downloadable configuration file."""
         sf = SpiderFoot(self.config)
         conf = sf.configSerialize(self.config)
@@ -41,7 +42,7 @@ class SettingsEndpoints:
         return ['SUCCESS', {'token': self.token, 'data': ret}]
 
     @cherrypy.expose
-    def savesettings(self, allopts, token, configFile=None) -> str:
+    def savesettings(self, allopts: str, token: str, configFile: Any = None) -> str:
         """Save settings from form input or uploaded config file."""
         if str(token) != str(self.token):
             # Render opts.tmpl with error message for CSRF error
@@ -113,7 +114,7 @@ class SettingsEndpoints:
         raise cherrypy.HTTPRedirect(f"{self.docroot}/opts?updated=1")
 
     @cherrypy.expose
-    def savesettingsraw(self, allopts, token) -> bytes:
+    def savesettingsraw(self, allopts: str, token: str) -> bytes:
         """Save settings via API and return JSON success or error response."""
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         from spiderfoot import SpiderFoot

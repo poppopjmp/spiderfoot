@@ -11,7 +11,7 @@ import threading
 from datetime import datetime
 
 
-def monitor_command(cli, line) -> None:
+def monitor_command(cli: SpiderFootCli, line: str) -> None:
     """Monitor scan progress in real-time. Usage: monitor <scan_id> [options]
 
     Options:
@@ -174,7 +174,7 @@ def _display_detailed_status(cli, status_data):
     cli.dprint("-" * 40, plain=True)
 
 
-def watch_scans_command(cli, line) -> None:
+def watch_scans_command(cli: SpiderFootCli, line: str) -> None:
     """Watch all active scans. Usage: watch_scans [options]
 
     Options:
@@ -287,7 +287,7 @@ def _display_scans_simple(cli, scans):
         cli.dprint(f"  • {name} ({status}) - {progress}%", plain=True)
 
 
-def logs_stream_command(cli, line) -> None:
+def logs_stream_command(cli: SpiderFootCli, line: str) -> None:
     """Stream logs from a scan in real-time. Usage: logs_stream <scan_id> [options]
 
     Options:
@@ -370,7 +370,7 @@ def logs_stream_command(cli, line) -> None:
         cli.edprint(f"Log streaming failed: {e}")
 
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     """Register all monitoring commands."""
     registry.register("monitor", monitor_command,
                      help_text="Monitor scan progress in real-time")

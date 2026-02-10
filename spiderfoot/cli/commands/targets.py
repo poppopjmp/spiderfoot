@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import shlex
 
-def targets_command(cli, line) -> None:
+def targets_command(cli: SpiderFootCli, line: str) -> None:
     """List all targets in a workspace. Usage: targets <workspace_id>."""
     args = shlex.split(line)
     if not args:
@@ -20,7 +20,7 @@ def targets_command(cli, line) -> None:
         return
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
-def target_add_command(cli, line) -> None:
+def target_add_command(cli: SpiderFootCli, line: str) -> None:
     """Add a target to a workspace. Usage: target_add <workspace_id> <target> <target_type> [metadata_json]."""
     import json
     args = shlex.split(line)
@@ -37,7 +37,7 @@ def target_add_command(cli, line) -> None:
     else:
         cli.edprint("Failed to add target.")
 
-def target_delete_command(cli, line) -> None:
+def target_delete_command(cli: SpiderFootCli, line: str) -> None:
     """Delete a target from a workspace. Usage: target_delete <workspace_id> <target_id>."""
     args = shlex.split(line)
     if len(args) < 2:
@@ -55,7 +55,7 @@ def target_delete_command(cli, line) -> None:
     except Exception as e:
         cli.edprint(f"Error deleting target: {e}")
 
-def register(registry) -> None:
+def register(registry: CommandRegistry) -> None:
     registry.register("targets", targets_command, help_text="List all targets in a workspace.")
     registry.register("target_add", target_add_command, help_text="Add a target to a workspace.")
     registry.register("target_delete", target_delete_command, help_text="Delete a target from a workspace.")
