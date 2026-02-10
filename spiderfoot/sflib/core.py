@@ -28,6 +28,14 @@ from .helpers import (
 )
 
 class SpiderFoot:
+    """Central facade for SpiderFoot scan operations.
+
+    Provides module loading, configuration management, DNS resolution,
+    HTTP session handling, and utility methods used throughout scans.
+    Every scan instantiates one :class:`SpiderFoot` object that modules
+    interact with via their ``sf`` attribute.
+    """
+
     _dbh = None
     _scanId = None
     _socksProxy = None

@@ -13,6 +13,8 @@ import netaddr
 
 
 class TargetAlias(typing.TypedDict):
+        """Typed dictionary for a target alias entry."""
+
         type: str
         value: str
 

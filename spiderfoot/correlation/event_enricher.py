@@ -11,6 +11,13 @@
 import logging
 
 class EventEnricher:
+    """Enrich scan events with source, child, and summary metadata.
+
+    Used by the correlation pipeline to attach additional context
+    (source modules, child events) to raw scan results before
+    correlation rules are evaluated.
+    """
+
     def __init__(self, dbh):
         self.log = logging.getLogger("spiderfoot.correlation.enricher")
         self.dbh = dbh

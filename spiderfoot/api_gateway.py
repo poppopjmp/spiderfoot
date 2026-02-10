@@ -53,6 +53,8 @@ log = logging.getLogger("spiderfoot.api_gateway")
 # ---------------------------------------------------------------------------
 
 class CircuitState(Enum):
+    """Possible states for the API gateway circuit breaker."""
+
     CLOSED = "closed"       # Normal operation
     OPEN = "open"           # Failing, reject requests
     HALF_OPEN = "half_open" # Testing if service recovered

@@ -23,6 +23,13 @@ from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
 log = logging.getLogger(__name__)
 
 class EventManager:
+    """Manage scan event persistence in the SpiderFoot database.
+
+    Handles inserting, querying, updating, and deleting scan events
+    and event-tree relationships.  Used by :class:`SpiderFootDb` to
+    delegate all event-related SQL operations.
+    """
+
     def __init__(self, dbh, conn, dbhLock, db_type):
         self.dbh = dbh
         self.conn = conn

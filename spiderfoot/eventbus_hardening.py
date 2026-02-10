@@ -47,6 +47,8 @@ log = logging.getLogger("spiderfoot.eventbus.hardening")
 
 
 class CircuitState(str, Enum):
+    """Possible states for the async circuit breaker."""
+
     CLOSED = "closed"
     OPEN = "open"
     HALF_OPEN = "half_open"

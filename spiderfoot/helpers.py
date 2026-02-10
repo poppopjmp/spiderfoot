@@ -43,11 +43,15 @@ class _Graph(typing.TypedDict, total=False):
     meta: dict[str, typing.Any]
 
 class Tree(typing.TypedDict):
+    """Typed dictionary representing a node in an event tree."""
+
     name: str
     children: list['Tree']
     size: typing.Optional[int]
 
 class ExtractedLink(typing.TypedDict):
+    """Typed dictionary describing a hyperlink extracted from HTML content."""
+
     url: str
     text: str
     title: typing.Optional[str]
