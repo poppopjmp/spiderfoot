@@ -21,7 +21,6 @@ Usage:
 from __future__ import annotations
 
 import time
-from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
@@ -29,16 +28,8 @@ from pydantic import BaseModel, Field, field_validator
 
 # ── Enums ────────────────────────────────────────────────────────────
 
-class ScanStatus(str, Enum):
-    """Canonical scan lifecycle states."""
-    CREATED = "CREATED"
-    STARTING = "STARTING"
-    STARTED = "STARTED"
-    RUNNING = "RUNNING"
-    ABORT_REQUESTED = "ABORT-REQUESTED"
-    ABORTED = "ABORTED"
-    FINISHED = "FINISHED"
-    ERROR_FAILED = "ERROR-FAILED"
+# Scan status enum imported from canonical source:
+#   from spiderfoot.scan_state import ScanState
 
 
 # ── Event Schemas ────────────────────────────────────────────────────

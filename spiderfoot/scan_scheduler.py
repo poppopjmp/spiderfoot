@@ -14,19 +14,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
 
+from spiderfoot.scan_state import ScanState
+
 log = logging.getLogger("spiderfoot.scan_scheduler")
-
-
-class ScanState(str, Enum):
-    """Scan lifecycle states."""
-    CREATED = "CREATED"
-    STARTING = "STARTING"
-    RUNNING = "RUNNING"
-    PAUSED = "PAUSED"
-    ABORT_REQUESTED = "ABORT-REQUESTED"
-    ABORTED = "ABORTED"
-    FINISHED = "FINISHED"
-    ERROR = "ERROR"
 
 
 class ScanPriority(str, Enum):
@@ -264,7 +254,7 @@ class ScanScheduler:
             # Check active scans
             status = self._active.get(scan_id)
             if status:
-                status.state = ScanState.ABORT_REQUESTED
+                status.state = ScanState.STOPPING
                 status.error_message = reason or "Abort requested"
                 self.log.info(f"Scan abort requested: {scan_id}")
                 return True
@@ -427,7 +417,7 @@ class ScanScheduler:
             
         except Exception as e:
             self.log.error(f"Scan {request.scan_id} failed: {e}")
-            status.state = ScanState.ERROR
+            status.state = ScanState.FAILED
             status.error_message = str(e)
             status.ended_at = time.time()
             self._move_to_completed(request.scan_id)
@@ -440,7 +430,7 @@ class ScanScheduler:
         with self._lock:
             status = self._active.get(scan_id)
             if status:
-                status.state = ScanState.FINISHED
+                status.state = ScanState.COMPLETED
                 status.ended_at = time.time()
                 status.progress = 100.0
                 self._move_to_completed(scan_id)
@@ -459,7 +449,7 @@ class ScanScheduler:
         with self._lock:
             status = self._active.get(scan_id)
             if status:
-                status.state = ScanState.ERROR
+                status.state = ScanState.FAILED
                 status.error_message = error
                 status.ended_at = time.time()
                 self._move_to_completed(scan_id)
@@ -506,7 +496,7 @@ class ScanScheduler:
                         f"Scan {scan_id} exceeded max duration "
                         f"({max_dur}s), aborting"
                     )
-                    status.state = ScanState.ABORTED
+                    status.state = ScanState.CANCELLED
                     status.error_message = f"Exceeded max duration ({max_dur}s)"
                     status.ended_at = now
                     self._move_to_completed(scan_id)
