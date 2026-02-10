@@ -5,12 +5,14 @@ resource limits, timeout enforcement, output capture, and
 fault isolation to prevent module failures from affecting scans.
 """
 
+from __future__ import annotations
+
 import logging
 import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.module_sandbox")
 
@@ -29,11 +31,11 @@ class SandboxState(Enum):
 class ResourceLimits:
     """Resource limits for sandboxed execution."""
     max_execution_seconds: float = 300.0
-    max_memory_mb: Optional[int] = None
+    max_memory_mb: int | None = None
     max_events: int = 10000
     max_errors: int = 100
     max_http_requests: int = 1000
-    rate_limit_per_second: Optional[float] = None
+    rate_limit_per_second: float | None = None
 
 
 @dataclass
@@ -45,7 +47,7 @@ class SandboxResult:
     errors: list[str] = field(default_factory=list)
     duration_seconds: float = 0.0
     output: str = ""
-    exception: Optional[str] = None
+    exception: str | None = None
     resource_usage: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -107,7 +109,7 @@ class ResourceTracker:
         """Returns True if execution has timed out."""
         return self.elapsed > self.limits.max_execution_seconds
 
-    def check_limits(self) -> Optional[str]:
+    def check_limits(self) -> str | None:
         """Check all limits. Returns violation message or None."""
         if self.check_timeout():
             return f"Execution timeout ({self.limits.max_execution_seconds}s)"
@@ -143,7 +145,7 @@ class ModuleSandbox:
     def __init__(
         self,
         module_name: str,
-        limits: Optional[ResourceLimits] = None,
+        limits: ResourceLimits | None = None,
     ) -> None:
         self.module_name = module_name
         self.limits = limits or ResourceLimits()
@@ -257,8 +259,8 @@ class ModuleSandbox:
         self,
         state: SandboxState,
         events: int = 0,
-        errors: Optional[list[str]] = None,
-        exception: Optional[str] = None,
+        errors: list[str] | None = None,
+        exception: str | None = None,
     ) -> SandboxResult:
         return SandboxResult(
             module_name=self.module_name,
@@ -298,7 +300,7 @@ class SandboxManager:
         result = sandbox.execute(func)
     """
 
-    def __init__(self, default_limits: Optional[ResourceLimits] = None) -> None:
+    def __init__(self, default_limits: ResourceLimits | None = None) -> None:
         self.default_limits = default_limits or ResourceLimits()
         self._sandboxes: dict[str, ModuleSandbox] = {}
         self._results: list[SandboxResult] = []
@@ -307,7 +309,7 @@ class SandboxManager:
     def get_sandbox(
         self,
         module_name: str,
-        limits: Optional[ResourceLimits] = None,
+        limits: ResourceLimits | None = None,
     ) -> ModuleSandbox:
         with self._lock:
             if module_name not in self._sandboxes:
@@ -324,7 +326,7 @@ class SandboxManager:
         with self._lock:
             self._results.append(result)
 
-    def get_results(self, module_name: Optional[str] = None) -> list[SandboxResult]:
+    def get_results(self, module_name: str | None = None) -> list[SandboxResult]:
         with self._lock:
             if module_name:
                 return [r for r in self._results if r.module_name == module_name]

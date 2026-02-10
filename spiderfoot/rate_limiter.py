@@ -12,6 +12,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Rate Limiter Service
 
@@ -42,7 +44,6 @@ import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
 
 log = logging.getLogger("spiderfoot.rate_limiter")
 
@@ -120,7 +121,7 @@ class RateLimiterService:
     - Custom keys
     """
 
-    def __init__(self, default_limit: Optional[RateLimit] = None) -> None:
+    def __init__(self, default_limit: RateLimit | None = None) -> None:
         """
         Args:
             default_limit: Default limit for keys without explicit config.
@@ -486,7 +487,7 @@ class RateLimiterService:
 # Singleton
 # ---------------------------------------------------------------------------
 
-_limiter_instance: Optional[RateLimiterService] = None
+_limiter_instance: RateLimiterService | None = None
 _limiter_lock = threading.Lock()
 
 

@@ -5,11 +5,13 @@ policies and serialization support. Designed for future backend swapping
 (SQLite, Redis, etc.) without API changes.
 """
 
+from __future__ import annotations
+
 import time
 import threading
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class EventPriority(Enum):
@@ -62,13 +64,13 @@ class StoredEvent:
 @dataclass
 class EventQuery:
     """Query parameters for searching events."""
-    scan_id: Optional[str] = None
-    event_type: Optional[str] = None
-    module: Optional[str] = None
-    min_priority: Optional[EventPriority] = None
-    tag: Optional[str] = None
-    since: Optional[float] = None
-    until: Optional[float] = None
+    scan_id: str | None = None
+    event_type: str | None = None
+    module: str | None = None
+    min_priority: EventPriority | None = None
+    tag: str | None = None
+    since: float | None = None
+    until: float | None = None
     limit: int = 0  # 0 = no limit
     offset: int = 0
 
@@ -107,7 +109,7 @@ class EventStore:
         retention: Retention policy for automatic cleanup.
     """
 
-    def __init__(self, retention: Optional[RetentionPolicy] = None) -> None:
+    def __init__(self, retention: RetentionPolicy | None = None) -> None:
         self._events: dict[str, StoredEvent] = {}  # event_id -> event
         self._scan_index: dict[str, list[str]] = {}  # scan_id -> [event_ids]
         self._type_index: dict[str, list[str]] = {}  # event_type -> [event_ids]
@@ -132,7 +134,7 @@ class EventStore:
 
             return event.event_id
 
-    def get(self, event_id: str) -> Optional[StoredEvent]:
+    def get(self, event_id: str) -> StoredEvent | None:
         """Get a single event by ID."""
         return self._events.get(event_id)
 
@@ -203,7 +205,7 @@ class EventStore:
                     count += 1
             return count
 
-    def count(self, scan_id: Optional[str] = None) -> int:
+    def count(self, scan_id: str | None = None) -> int:
         """Count events, optionally filtered by scan."""
         if scan_id:
             return len(self._scan_index.get(scan_id, []))
@@ -217,14 +219,14 @@ class EventStore:
             self._type_index.clear()
             self._module_index.clear()
 
-    def get_event_types(self, scan_id: Optional[str] = None) -> list[str]:
+    def get_event_types(self, scan_id: str | None = None) -> list[str]:
         """Get distinct event types, optionally for a scan."""
         if scan_id:
             events = self.query(EventQuery(scan_id=scan_id))
             return sorted({e.event_type for e in events})
         return sorted(self._type_index.keys())
 
-    def get_modules(self, scan_id: Optional[str] = None) -> list[str]:
+    def get_modules(self, scan_id: str | None = None) -> list[str]:
         """Get distinct modules, optionally for a scan."""
         if scan_id:
             events = self.query(EventQuery(scan_id=scan_id))

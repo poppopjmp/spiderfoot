@@ -10,12 +10,14 @@ This module provides comprehensive API security including:
 - DDoS protection
 """
 
+from __future__ import annotations
+
 import time
 import hashlib
 import secrets
 import jwt
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Any, List
 from datetime import datetime, timedelta
 from functools import wraps
 from collections import defaultdict, deque
@@ -45,8 +47,8 @@ class APIKeyInfo:
     permissions: list[str]
     rate_limits: RateLimitConfig
     created_at: datetime
-    expires_at: Optional[datetime] = None
-    last_used: Optional[datetime] = None
+    expires_at: datetime | None = None
+    last_used: datetime | None = None
     is_active: bool = True
 
 
@@ -197,7 +199,7 @@ class APIKeyManager:
         # Return the raw key (only time it's available in plain text)
         return f"sf_{key_id}_{raw_key}", key_id
 
-    def validate_api_key(self, api_key: str) -> tuple[bool, Optional[APIKeyInfo], str]:
+    def validate_api_key(self, api_key: str) -> tuple[bool, APIKeyInfo | None, str]:
         """Validate API key and return key info."""
         try:
             # Parse key format: sf_{key_id}_{raw_key}

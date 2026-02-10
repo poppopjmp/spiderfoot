@@ -10,6 +10,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Config Service
 
@@ -48,7 +50,7 @@ import os
 import threading
 import time
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
+from typing import Any, Callable, List, Set, Type
 
 log = logging.getLogger("spiderfoot.config_service")
 
@@ -197,11 +199,11 @@ class ConfigValidator:
         self._rules: dict[str, dict[str, Any]] = {}
 
     def add_rule(self, key: str, *,
-                 type: Optional[type] = None,
+                 type: type | None = None,
                  required: bool = False,
-                 min_value: Optional[float] = None,
-                 max_value: Optional[float] = None,
-                 choices: Optional[set] = None,
+                 min_value: float | None = None,
+                 max_value: float | None = None,
+                 choices: set | None = None,
                  default: Any = None) -> None:
         """Add a validation rule for a config key."""
         self._rules[key] = {
@@ -274,7 +276,7 @@ class ConfigService:
         self._sources: dict[str, str] = {}  # key → source (default/file/env/runtime)
         self._watchers: list[Callable] = []
         self._validator = ConfigValidator()
-        self._loaded_from: Optional[str] = None
+        self._loaded_from: str | None = None
         self._last_loaded: float = 0.0
 
         # Register default validation rules
@@ -386,7 +388,7 @@ class ConfigService:
     # ------------------------------------------------------------------
 
     def get(self, key: str, default: Any = None,
-            cast: Optional[type] = None) -> Any:
+            cast: type | None = None) -> Any:
         """Get a config value with optional type casting.
 
         Args:
@@ -523,7 +525,7 @@ class ConfigService:
     # Config source tracing
     # ------------------------------------------------------------------
 
-    def get_source(self, key: str) -> Optional[str]:
+    def get_source(self, key: str) -> str | None:
         """Return the source that last set a config key.
 
         Returns one of: 'default', 'file:<name>', 'env:<VAR>', 'runtime'
@@ -606,7 +608,7 @@ class ConfigService:
 # Singleton
 # ---------------------------------------------------------------------------
 
-_instance: Optional[ConfigService] = None
+_instance: ConfigService | None = None
 _instance_lock = threading.Lock()
 
 

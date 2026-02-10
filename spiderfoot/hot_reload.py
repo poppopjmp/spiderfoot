@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Module Hot-Reload
 
@@ -43,7 +45,7 @@ import sys
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.hot_reload")
 
@@ -57,8 +59,8 @@ class ModuleState:
     last_size: int = 0
     loaded_at: float = 0.0
     reload_count: int = 0
-    last_error: Optional[str] = None
-    module_obj: Optional[Any] = None
+    last_error: str | None = None
+    module_obj: Any | None = None
 
 
 @dataclass
@@ -68,7 +70,7 @@ class ReloadEvent:
     filepath: str
     timestamp: float
     success: bool
-    error: Optional[str] = None
+    error: str | None = None
     duration_ms: float = 0.0
 
 
@@ -99,7 +101,7 @@ class ModuleWatcher:
         self._callbacks: list[Callable] = []
         self._error_callbacks: list[Callable] = []
 
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
         self._running = False
         self._lock = threading.Lock()
 
@@ -192,7 +194,7 @@ class ModuleWatcher:
         """Get list of tracked module names."""
         return sorted(self._states.keys())
 
-    def get_state(self, module_name: str) -> Optional[ModuleState]:
+    def get_state(self, module_name: str) -> ModuleState | None:
         """Get the tracked state of a module."""
         return self._states.get(module_name)
 

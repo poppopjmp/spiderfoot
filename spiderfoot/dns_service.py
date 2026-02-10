@@ -7,13 +7,15 @@ a clean, injectable DNS resolution service for modules.
 Handles forward/reverse lookups, wildcard detection, and DNS-over-HTTPS.
 """
 
+from __future__ import annotations
+
 import logging
 import random
 import socket
 import string
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 from spiderfoot.constants import DEFAULT_DOH_URL
 
@@ -80,7 +82,7 @@ class DnsService:
         hostnames = dns_svc.reverse_resolve("93.184.216.34")
     """
 
-    def __init__(self, config: Optional[DnsServiceConfig] = None) -> None:
+    def __init__(self, config: DnsServiceConfig | None = None) -> None:
         self.config = config or DnsServiceConfig()
         self.log = logging.getLogger("spiderfoot.dns_service")
         self._cache: dict[str, tuple[float, Any]] = {}
@@ -96,7 +98,7 @@ class DnsService:
             self._resolver.timeout = self.config.timeout
             self._resolver.lifetime = self.config.lifetime
 
-    def _cache_get(self, key: str) -> Optional[Any]:
+    def _cache_get(self, key: str) -> Any | None:
         """Get value from DNS cache."""
         if not self.config.cache_enabled:
             return None
@@ -314,7 +316,7 @@ class DnsService:
         results = self.resolve(hostname, "CNAME")
         return [r.rstrip(".") for r in results]
 
-    def resolve_soa(self, domain: str) -> Optional[dict[str, Any]]:
+    def resolve_soa(self, domain: str) -> dict[str, Any] | None:
         """Resolve SOA record for a domain.
 
         Args:
@@ -384,7 +386,7 @@ class DnsService:
         results = self.resolve_host(test_domain)
         return len(results) > 0
 
-    def check_zone_transfer(self, domain: str) -> Optional[list[dict[str, str]]]:
+    def check_zone_transfer(self, domain: str) -> list[dict[str, str]] | None:
         """Attempt a DNS zone transfer (AXFR).
 
         Args:

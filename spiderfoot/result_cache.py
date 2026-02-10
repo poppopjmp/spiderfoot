@@ -4,13 +4,15 @@ Provides configurable TTL-based caching with eviction policies, size limits,
 and statistics tracking. Supports both in-memory and serializable caches.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class EvictionPolicy(Enum):
@@ -139,7 +141,7 @@ class ResultCache:
             self._stats.hits += 1
             return entry.value
 
-    def set(self, key: str, value: Any, ttl: Optional[float] = None):
+    def set(self, key: str, value: Any, ttl: float | None = None):
         """Store a value in cache. Evicts if at capacity."""
         with self._lock:
             effective_ttl = ttl if ttl is not None else self.default_ttl
@@ -203,7 +205,7 @@ class ResultCache:
                 self._stats.expirations += 1
             return len(expired_keys)
 
-    def get_or_set(self, key: str, factory, ttl: Optional[float] = None) -> Any:
+    def get_or_set(self, key: str, factory, ttl: float | None = None) -> Any:
         """Get value if cached, otherwise call factory() to compute and cache it."""
         val = self.get(key, default=self._SENTINEL)
         if val is not self._SENTINEL:
@@ -283,7 +285,7 @@ class ScanResultCache:
             parts.append(suffix)
         return ":".join(parts)
 
-    def store_result(self, scan_id: str, module: str, result: Any, ttl: Optional[float] = None):
+    def store_result(self, scan_id: str, module: str, result: Any, ttl: float | None = None):
         """Cache a module result for a scan."""
         key = self._key(scan_id, module)
         self._cache.set(key, result, ttl=ttl)

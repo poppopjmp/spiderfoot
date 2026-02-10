@@ -4,13 +4,15 @@ High-level scan lifecycle orchestration with phase management,
 module scheduling, event routing, and completion detection.
 """
 
+from __future__ import annotations
+
 import logging
 import threading
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.scan_orchestrator")
 
@@ -57,7 +59,7 @@ class ModuleSchedule:
     module_name: str
     phase: ScanPhase
     priority: int = 0
-    timeout_seconds: Optional[float] = None
+    timeout_seconds: float | None = None
     depends_on: set[str] = field(default_factory=set)
 
 
@@ -109,8 +111,8 @@ class ScanOrchestrator:
         module_name: str,
         phase: ScanPhase,
         priority: int = 0,
-        timeout_seconds: Optional[float] = None,
-        depends_on: Optional[set[str]] = None,
+        timeout_seconds: float | None = None,
+        depends_on: set[str] | None = None,
     ) -> "ScanOrchestrator":
         """Register a module to run in a specific phase."""
         schedule = ModuleSchedule(

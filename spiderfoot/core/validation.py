@@ -5,11 +5,13 @@ This module provides validation and utility functions shared across
 CLI, API, and WebUI components.
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import logging
 import re
-from typing import Dict, Any, List, Optional, Tuple, Union
+from typing import Any, List, Tuple
 from spiderfoot.constants import DEFAULT_WEB_PORT
 
 
@@ -160,7 +162,7 @@ class ValidationUtils:
         return sanitized
 
     @staticmethod
-    def validate_module_list(modules: Union[str, list[str]]) -> list[str]:
+    def validate_module_list(modules: str | list[str]) -> list[str]:
         """
         Validate and parse module list.
 
@@ -188,7 +190,7 @@ class ValidationUtils:
         return valid_modules
 
     @staticmethod
-    def validate_event_types(event_types: Union[str, list[str]]) -> list[str]:
+    def validate_event_types(event_types: str | list[str]) -> list[str]:
         """
         Validate and parse event types list.
 
@@ -261,7 +263,7 @@ class ValidationUtils:
         return sanitized
 
     @staticmethod
-    def clean_user_input(input_data: Union[str, list[str]]) -> Union[str, list[str]]:
+    def clean_user_input(input_data: str | list[str]) -> str | list[str]:
         """
         Clean user input by escaping HTML and removing dangerous characters.
 

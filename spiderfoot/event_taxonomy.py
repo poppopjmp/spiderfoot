@@ -5,10 +5,12 @@ categories, relationships, risk scoring defaults, and
 validation for the 172+ SpiderFoot event types.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 log = logging.getLogger("spiderfoot.event_taxonomy")
 
@@ -47,7 +49,7 @@ class EventTypeInfo:
     category: EventCategory = EventCategory.OTHER
     risk_level: RiskLevel = RiskLevel.INFO
     is_raw: bool = False
-    parent_type: Optional[str] = None
+    parent_type: str | None = None
     related_types: set[str] = field(default_factory=set)
     tags: set[str] = field(default_factory=set)
 
@@ -197,17 +199,17 @@ class EventTaxonomy:
     def unregister(self, name: str) -> bool:
         return self._types.pop(name, None) is not None
 
-    def get(self, name: str) -> Optional[EventTypeInfo]:
+    def get(self, name: str) -> EventTypeInfo | None:
         return self._types.get(name)
 
     def exists(self, name: str) -> bool:
         return name in self._types
 
-    def get_category(self, name: str) -> Optional[EventCategory]:
+    def get_category(self, name: str) -> EventCategory | None:
         info = self._types.get(name)
         return info.category if info else None
 
-    def get_risk(self, name: str) -> Optional[RiskLevel]:
+    def get_risk(self, name: str) -> RiskLevel | None:
         info = self._types.get(name)
         return info.risk_level if info else None
 

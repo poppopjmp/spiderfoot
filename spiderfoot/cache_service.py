@@ -5,6 +5,8 @@ Extracted from the SpiderFoot god object to provide a pluggable
 caching layer with support for file-based, Redis, and in-memory backends.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import logging
@@ -14,7 +16,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
@@ -68,7 +70,7 @@ class CacheConfig:
 class CacheService(ABC):
     """Abstract cache service interface."""
 
-    def __init__(self, config: Optional[CacheConfig] = None) -> None:
+    def __init__(self, config: CacheConfig | None = None) -> None:
         self.config = config or CacheConfig()
         self.log = logging.getLogger(f"spiderfoot.cache.{self.config.backend.value}")
         self._hits = 0
@@ -76,7 +78,7 @@ class CacheService(ABC):
         self._sets = 0
 
     @abstractmethod
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get a value from the cache.
 
         Args:
@@ -88,7 +90,7 @@ class CacheService(ABC):
         ...
 
     @abstractmethod
-    def put(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    def put(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """Store a value in the cache.
 
         Args:
@@ -175,12 +177,12 @@ class MemoryCache(CacheService):
     Best for single-process deployments and testing.
     """
 
-    def __init__(self, config: Optional[CacheConfig] = None) -> None:
+    def __init__(self, config: CacheConfig | None = None) -> None:
         super().__init__(config)
         self._store: dict[str, tuple] = {}  # key -> (expire_time, value)
         self._lock = threading.RLock()
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         full_key = self._make_key(key)
         with self._lock:
             entry = self._store.get(full_key)
@@ -197,7 +199,7 @@ class MemoryCache(CacheService):
             self._hits += 1
             return value
 
-    def put(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    def put(self, key: str, value: Any, ttl: int | None = None) -> bool:
         full_key = self._make_key(key)
         _ttl = ttl if ttl is not None else self.config.ttl
         expire_time = time.time() + _ttl if _ttl > 0 else 0
@@ -259,7 +261,7 @@ class FileCache(CacheService):
     Each cache entry is stored as a separate file with SHA-224 hashed name.
     """
 
-    def __init__(self, config: Optional[CacheConfig] = None) -> None:
+    def __init__(self, config: CacheConfig | None = None) -> None:
         super().__init__(config)
         self._cache_dir = self.config.cache_dir or os.path.join(
             os.path.expanduser("~"), ".spiderfoot", "cache"
@@ -271,7 +273,7 @@ class FileCache(CacheService):
         hashed = self.hash_key(self._make_key(key))
         return os.path.join(self._cache_dir, hashed)
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         path = self._file_path(key)
 
         if not os.path.isfile(path):
@@ -306,7 +308,7 @@ class FileCache(CacheService):
             self._misses += 1
             return None
 
-    def put(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    def put(self, key: str, value: Any, ttl: int | None = None) -> bool:
         path = self._file_path(key)
 
         try:
@@ -375,7 +377,7 @@ class RedisCache(CacheService):
     and distributed deployments.
     """
 
-    def __init__(self, config: Optional[CacheConfig] = None) -> None:
+    def __init__(self, config: CacheConfig | None = None) -> None:
         super().__init__(config)
         self._client = None
 
@@ -396,7 +398,7 @@ class RedisCache(CacheService):
             self.log.error("Redis connection failed: %s", e)
             raise
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         self._ensure_client()
         full_key = self._make_key(key)
 
@@ -419,7 +421,7 @@ class RedisCache(CacheService):
             self._misses += 1
             return None
 
-    def put(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    def put(self, key: str, value: Any, ttl: int | None = None) -> bool:
         self._ensure_client()
         full_key = self._make_key(key)
         _ttl = ttl if ttl is not None else self.config.ttl
@@ -488,7 +490,7 @@ class RedisCache(CacheService):
             return 0
 
 
-def create_cache(config: Optional[CacheConfig] = None) -> CacheService:
+def create_cache(config: CacheConfig | None = None) -> CacheService:
     """Factory function to create a cache service.
 
     Args:

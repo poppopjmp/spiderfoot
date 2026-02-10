@@ -5,6 +5,8 @@ parsing, data type detection, country-code lookups, hash identification,
 data extraction from web content, and other cross-cutting concerns.
 """
 
+from __future__ import annotations
+
 import html
 import json
 import logging
@@ -27,7 +29,7 @@ import networkx as nx
 class _GraphNode(typing.TypedDict):
     id: str
     label: str
-    size: typing.Union[int, float]
+    size: typing.int | float
     r: int
     g: int
     b: int
@@ -35,7 +37,7 @@ class _GraphNode(typing.TypedDict):
 class _GraphEdge(typing.TypedDict):
     source: str
     target: str
-    weight: typing.Union[int, float]
+    weight: typing.int | float
 
 class _Graph(typing.TypedDict, total=False):
     nodes: list[_GraphNode]
@@ -47,14 +49,14 @@ class Tree(typing.TypedDict):
 
     name: str
     children: list['Tree']
-    size: typing.Optional[int]
+    size: typing.int | None
 
 class ExtractedLink(typing.TypedDict):
     """Typed dictionary describing a hyperlink extracted from HTML content."""
 
     url: str
     text: str
-    title: typing.Optional[str]
+    title: typing.str | None
 
 
 
@@ -119,7 +121,7 @@ class SpiderFootHelpers():
         return str(uuid.uuid4()).split("-")[0].upper()
 
     @staticmethod
-    def targetTypeFromString(target: str) -> typing.Optional[str]:
+    def targetTypeFromString(target: str) -> typing.str | None:
         """Determine target type from string.
 
         Args:
@@ -201,7 +203,7 @@ class SpiderFootHelpers():
         return None
 
     @staticmethod
-    def loadModulesAsDict(path: str, ignore_files: typing.Optional[list[str]] = None) -> dict:
+    def loadModulesAsDict(path: str, ignore_files: typing.list[str] | None = None) -> dict:
         """Load modules as dictionary."""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
@@ -281,7 +283,7 @@ class SpiderFootHelpers():
         return modules
 
     @staticmethod
-    def loadCorrelationRulesRaw(path: str, ignore_files: typing.Optional[list[str]] = None) -> list[dict]:
+    def loadCorrelationRulesRaw(path: str, ignore_files: typing.list[str] | None = None) -> list[dict]:
         """Load correlation rules."""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
@@ -397,7 +399,7 @@ class SpiderFootHelpers():
         return sanitized
 
     @staticmethod
-    def dictionaryWordsFromWordlists(wordlists: typing.Optional[list[str]] = None) -> set[str]:
+    def dictionaryWordsFromWordlists(wordlists: typing.list[str] | None = None) -> set[str]:
         """Return dictionary words from several language dictionaries.
 
         Args:
@@ -427,7 +429,7 @@ class SpiderFootHelpers():
         return words
 
     @staticmethod
-    def humanNamesFromWordlists(wordlists: typing.Optional[list[str]] = None) -> set[str]:
+    def humanNamesFromWordlists(wordlists: typing.list[str] | None = None) -> set[str]:
         """Return list of human names from wordlist file.
 
         Args:
@@ -456,7 +458,7 @@ class SpiderFootHelpers():
         return words
 
     @staticmethod
-    def usernamesFromWordlists(wordlists: typing.Optional[list[str]] = None) -> set[str]:
+    def usernamesFromWordlists(wordlists: typing.list[str] | None = None) -> set[str]:
         """Return list of usernames from wordlist file.
 
         Args:
@@ -485,7 +487,7 @@ class SpiderFootHelpers():
         return words
 
     @staticmethod
-    def buildGraphGexf(root: str, title: str, data: list[str], flt: typing.Optional[list[str]] = None) -> str:
+    def buildGraphGexf(root: str, title: str, data: list[str], flt: typing.list[str] | None = None) -> str:
         """Convert supplied raw data into GEXF (Graph Exchange XML Format)
         format (e.g. for Gephi).
 
@@ -545,7 +547,7 @@ class SpiderFootHelpers():
             return b""
 
     @staticmethod
-    def buildGraphJson(root: str, data: list[str], flt: typing.Optional[list[str]] = None) -> str:
+    def buildGraphJson(root: str, data: list[str], flt: typing.list[str] | None = None) -> str:
         """Convert supplied raw data into JSON format for SigmaJS.
 
         Args:
@@ -623,7 +625,7 @@ class SpiderFootHelpers():
             return "{}"
 
     @staticmethod
-    def buildGraphData(data: list[str], flt: typing.Optional[list[str]] = None) -> set[tuple[str, str]]:
+    def buildGraphData(data: list[str], flt: typing.list[str] | None = None) -> set[tuple[str, str]]:
         """Return a format-agnostic collection of tuples to use as the basis
         for building graphs in various formats.
 
@@ -647,7 +649,7 @@ class SpiderFootHelpers():
         if not data:
             raise ValueError("data is empty")
 
-        def get_next_parent_entities(item: str, pids: typing.Optional[list[str]] = None) -> list[str]:
+        def get_next_parent_entities(item: str, pids: typing.list[str] | None = None) -> list[str]:
             if not pids:
                 pids = []
 
@@ -700,7 +702,7 @@ class SpiderFootHelpers():
         return mapping
 
     @staticmethod
-    def dataParentChildToTree(data: dict[str, typing.Optional[list[str]]]) -> typing.Union[Tree, EmptyTree]:
+    def dataParentChildToTree(data: dict[str, typing.list[str] | None]) -> typing.Tree | EmptyTree:
         """Converts a dictionary of k -> array to a nested tree that can be
         digested by d3 for visualizations.
 
@@ -720,7 +722,7 @@ class SpiderFootHelpers():
         if not data:
             raise ValueError("data is empty")
 
-        def get_children(needle: str, haystack: dict[str, typing.Optional[list[str]]]) -> typing.Optional[list[Tree]]:
+        def get_children(needle: str, haystack: dict[str, typing.list[str] | None]) -> typing.list[Tree] | None:
             ret: list[Tree] = list()
 
             if needle not in list(haystack.keys()):
@@ -796,7 +798,7 @@ class SpiderFootHelpers():
             return bool(re.match(r'^\+?[\d\s\-\(\)]{7,15}$', phone.strip()))
 
     @staticmethod
-    def extractLinksFromHtml(url: str, data: str, domains: typing.Optional[list[str]] = None) -> dict[str, ExtractedLink]:
+    def extractLinksFromHtml(url: str, data: str, domains: typing.list[str] | None = None) -> dict[str, ExtractedLink]:
         """Find all URLs within the supplied content."""
         returnLinks: dict[str, ExtractedLink] = dict()
 
@@ -815,7 +817,7 @@ class SpiderFootHelpers():
             'area': 'href', 'base': 'href', 'form': 'action'
         }
 
-        links: list[typing.Union[list[str], str]] = []
+        links: list[typing.list[str] | str] = []
 
         try:
             for t in list(tags.keys()):
@@ -1130,14 +1132,14 @@ class SpiderFootHelpers():
         return ssl.DER_cert_to_PEM_cert(der_cert)
 
     @staticmethod
-    def countryNameFromCountryCode(countryCode: str) -> typing.Optional[str]:
+    def countryNameFromCountryCode(countryCode: str) -> typing.str | None:
         """Convert a country code to full country name."""
         if not isinstance(countryCode, str):
             return None
         return SpiderFootHelpers.countryCodes().get(countryCode.upper())
 
     @staticmethod
-    def countryNameFromTld(tld: str) -> typing.Optional[str]:
+    def countryNameFromTld(tld: str) -> typing.str | None:
         """Retrieve the country name associated with a TLD."""
         if not isinstance(tld, str):
             return None
@@ -1235,7 +1237,7 @@ class SpiderFootHelpers():
         }
 
     @staticmethod
-    def fixModuleImport(module: typing.Any, module_name: typing.Optional[str] = None) -> typing.Any:
+    def fixModuleImport(module: typing.Any, module_name: typing.str | None = None) -> typing.Any:
         """Fix module imports to ensure proper class attributes for tests.
 
         Args:
@@ -1289,7 +1291,7 @@ class SpiderFootHelpers():
         return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
-def fix_module_for_tests(module_name: str) -> typing.Optional[typing.Any]:
+def fix_module_for_tests(module_name: str) -> typing.typing.Any | None:
     """Fix a module to ensure it has the expected class attribute for tests.
 
     This function ensures that modules have the expected sfp_modulename.sfp_modulename

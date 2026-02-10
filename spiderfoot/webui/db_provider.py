@@ -28,9 +28,11 @@ API Proxy Mode:
     container without database access.
 """
 
+from __future__ import annotations
+
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 log = logging.getLogger("spiderfoot.webui.db_provider")
 
@@ -56,7 +58,7 @@ class DbProvider:
     # Cached ApiClient singleton (shared across requests in proxy mode)
     _api_client_instance = None
 
-    def _get_dbh(self, config: Optional[dict[str, Any]] = None) -> Any:
+    def _get_dbh(self, config: dict[str, Any] | None = None) -> Any:
         """Create and return a data access handle.
 
         In local mode: returns a ``SpiderFootDb`` instance.

@@ -6,11 +6,13 @@ between SpiderFoot microservices. Supports subject-based routing and
 consumer groups for horizontal scaling.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
 import uuid
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from spiderfoot.eventbus.base import EventBus, EventBusConfig, EventEnvelope
 
@@ -24,7 +26,7 @@ class NatsEventBus(EventBus):
     Requires: nats-py
     """
 
-    def __init__(self, config: Optional[EventBusConfig] = None) -> None:
+    def __init__(self, config: EventBusConfig | None = None) -> None:
         super().__init__(config)
         self._nc = None
         self._js = None

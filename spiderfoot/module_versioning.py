@@ -4,11 +4,13 @@ Tracks module versions, compatibility, changelogs, and migration paths.
 Supports semantic versioning with comparison and constraint checking.
 """
 
+from __future__ import annotations
+
 import re
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class VersionBump(Enum):
@@ -129,7 +131,7 @@ class ModuleVersionInfo:
         current_version: Current semantic version.
     """
 
-    def __init__(self, module_name: str, current_version: Optional[SemanticVersion] = None) -> None:
+    def __init__(self, module_name: str, current_version: SemanticVersion | None = None) -> None:
         self.module_name = module_name
         self.current_version = current_version or SemanticVersion(1, 0, 0)
         self._changelog: list[ChangelogEntry] = []
@@ -203,14 +205,14 @@ class ModuleVersionRegistry:
     def __init__(self) -> None:
         self._modules: dict[str, ModuleVersionInfo] = {}
 
-    def register(self, module_name: str, version: Optional[str] = None) -> ModuleVersionInfo:
+    def register(self, module_name: str, version: str | None = None) -> ModuleVersionInfo:
         """Register a module with an optional initial version."""
         sv = SemanticVersion.parse(version) if version else SemanticVersion(1, 0, 0)
         info = ModuleVersionInfo(module_name, sv)
         self._modules[module_name] = info
         return info
 
-    def get(self, module_name: str) -> Optional[ModuleVersionInfo]:
+    def get(self, module_name: str) -> ModuleVersionInfo | None:
         return self._modules.get(module_name)
 
     def unregister(self, module_name: str) -> bool:

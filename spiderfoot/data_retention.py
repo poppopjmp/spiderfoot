@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Data Retention
 
@@ -49,7 +51,7 @@ import time
 import threading
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 log = logging.getLogger("spiderfoot.data_retention")
 
@@ -169,7 +171,7 @@ class ResourceAdapter:
 class FileResourceAdapter(ResourceAdapter):
     """Adapter for file-based resources (logs, exports, cache)."""
 
-    def __init__(self, directories: Optional[dict[str, str]] = None) -> None:
+    def __init__(self, directories: dict[str, str] | None = None) -> None:
         self._dirs = directories or {}
 
     def set_directory(self, resource: str, path: str) -> None:
@@ -256,7 +258,7 @@ class InMemoryResourceAdapter(ResourceAdapter):
 class RetentionManager:
     """Manages and enforces data retention policies."""
 
-    def __init__(self, adapter: Optional[ResourceAdapter] = None) -> None:
+    def __init__(self, adapter: ResourceAdapter | None = None) -> None:
         self._rules: dict[str, RetentionRule] = {}
         self._adapter = adapter or InMemoryResourceAdapter()
         self._lock = threading.Lock()
@@ -280,7 +282,7 @@ class RetentionManager:
     def remove_rule(self, name: str) -> bool:
         return self._rules.pop(name, None) is not None
 
-    def get_rule(self, name: str) -> Optional[RetentionRule]:
+    def get_rule(self, name: str) -> RetentionRule | None:
         return self._rules.get(name)
 
     def list_rules(self) -> list[RetentionRule]:
@@ -290,18 +292,18 @@ class RetentionManager:
     # Enforcement
     # ------------------------------------------------------------------
 
-    def preview(self, rule_name: Optional[str] = None
+    def preview(self, rule_name: str | None = None
                 ) -> list[RetentionResult]:
         """Preview what would be cleaned up (dry run)."""
         return self._run(dry_run=True, rule_name=rule_name)
 
-    def enforce(self, rule_name: Optional[str] = None
+    def enforce(self, rule_name: str | None = None
                 ) -> list[RetentionResult]:
         """Execute retention policies."""
         return self._run(dry_run=False, rule_name=rule_name)
 
     def _run(self, dry_run: bool = True,
-             rule_name: Optional[str] = None) -> list[RetentionResult]:
+             rule_name: str | None = None) -> list[RetentionResult]:
         rules = []
         if rule_name:
             rule = self._rules.get(rule_name)

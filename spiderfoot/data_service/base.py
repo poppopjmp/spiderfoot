@@ -5,11 +5,13 @@ Defines the interface that all data service implementations must provide.
 Modules interact with this interface instead of directly with SpiderFootDb.
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 
 class DataServiceBackend(str, Enum):
@@ -47,7 +49,7 @@ class DataService(ABC):
     system, but implementations may use async internally.
     """
 
-    def __init__(self, config: Optional[DataServiceConfig] = None) -> None:
+    def __init__(self, config: DataServiceConfig | None = None) -> None:
         self.config = config or DataServiceConfig()
         self.log = logging.getLogger(f"spiderfoot.dataservice.{self.config.backend.value}")
 
@@ -68,7 +70,7 @@ class DataService(ABC):
         ...
 
     @abstractmethod
-    def scan_instance_get(self, scan_id: str) -> Optional[dict[str, Any]]:
+    def scan_instance_get(self, scan_id: str) -> dict[str, Any] | None:
         """Get a scan instance by ID.
 
         Args:
@@ -102,8 +104,8 @@ class DataService(ABC):
 
     @abstractmethod
     def scan_status_set(self, scan_id: str, status: str,
-                        started: Optional[int] = None,
-                        ended: Optional[int] = None) -> bool:
+                        started: int | None = None,
+                        ended: int | None = None) -> bool:
         """Update scan status.
 
         Args:
@@ -154,7 +156,7 @@ class DataService(ABC):
     def event_get_by_scan(
         self,
         scan_id: str,
-        event_type: Optional[str] = None,
+        event_type: str | None = None,
         limit: int = 0,
     ) -> list[dict[str, Any]]:
         """Get events for a scan, optionally filtered by type.
@@ -213,7 +215,7 @@ class DataService(ABC):
         scan_id: str,
         classification: str,
         message: str,
-        component: Optional[str] = None,
+        component: str | None = None,
     ) -> bool:
         """Log a scan event.
 
@@ -234,7 +236,7 @@ class DataService(ABC):
         scan_id: str,
         limit: int = 0,
         offset: int = 0,
-        log_type: Optional[str] = None,
+        log_type: str | None = None,
     ) -> list[dict[str, Any]]:
         """Get scan log entries.
 

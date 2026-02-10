@@ -16,8 +16,10 @@ Usage::
     scans = ds.scan_instance_list()
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urljoin
 
 from spiderfoot.data_service.base import DataService, DataServiceConfig
@@ -32,7 +34,7 @@ class HttpDataService(DataService):
     the scanner to be fully decoupled from the database.
     """
 
-    def __init__(self, config: Optional[DataServiceConfig] = None, **kwargs) -> None:
+    def __init__(self, config: DataServiceConfig | None = None, **kwargs) -> None:
         super().__init__(config)
         self._base_url = self.config.api_url.rstrip("/")
         self._api_key = self.config.api_key
@@ -96,7 +98,7 @@ class HttpDataService(DataService):
         """Build full URL from a relative API path."""
         return f"{self._base_url}/{path.lstrip('/')}"
 
-    def _get(self, path: str, params: Optional[dict] = None) -> Any:
+    def _get(self, path: str, params: dict | None = None) -> Any:
         """HTTP GET returning parsed JSON."""
         session = self._get_session()
         resp = session.get(
@@ -105,7 +107,7 @@ class HttpDataService(DataService):
         resp.raise_for_status()
         return resp.json()
 
-    def _post(self, path: str, json_data: Optional[dict] = None) -> Any:
+    def _post(self, path: str, json_data: dict | None = None) -> Any:
         """HTTP POST returning parsed JSON."""
         session = self._get_session()
         resp = session.post(
@@ -114,7 +116,7 @@ class HttpDataService(DataService):
         resp.raise_for_status()
         return resp.json()
 
-    def _put(self, path: str, json_data: Optional[dict] = None) -> Any:
+    def _put(self, path: str, json_data: dict | None = None) -> Any:
         """HTTP PUT returning parsed JSON."""
         session = self._get_session()
         resp = session.put(
@@ -123,7 +125,7 @@ class HttpDataService(DataService):
         resp.raise_for_status()
         return resp.json()
 
-    def _patch(self, path: str, json_data: Optional[dict] = None) -> Any:
+    def _patch(self, path: str, json_data: dict | None = None) -> Any:
         """HTTP PATCH returning parsed JSON."""
         session = self._get_session()
         resp = session.patch(
@@ -162,7 +164,7 @@ class HttpDataService(DataService):
             log.error("Failed to create scan via HTTP: %s", e)
             return False
 
-    def scan_instance_get(self, scan_id: str) -> Optional[dict[str, Any]]:
+    def scan_instance_get(self, scan_id: str) -> dict[str, Any] | None:
         try:
             data = self._get(f"/scans/{scan_id}")
             return data.get("scan") or data
@@ -190,8 +192,8 @@ class HttpDataService(DataService):
         self,
         scan_id: str,
         status: str,
-        started: Optional[int] = None,
-        ended: Optional[int] = None,
+        started: int | None = None,
+        ended: int | None = None,
     ) -> bool:
         try:
             self._patch(
@@ -245,7 +247,7 @@ class HttpDataService(DataService):
     def event_get_by_scan(
         self,
         scan_id: str,
-        event_type: Optional[str] = None,
+        event_type: str | None = None,
         limit: int = 0,
     ) -> list[dict[str, Any]]:
         try:
@@ -299,7 +301,7 @@ class HttpDataService(DataService):
         scan_id: str,
         classification: str,
         message: str,
-        component: Optional[str] = None,
+        component: str | None = None,
     ) -> bool:
         try:
             self._post(
@@ -320,7 +322,7 @@ class HttpDataService(DataService):
         scan_id: str,
         limit: int = 0,
         offset: int = 0,
-        log_type: Optional[str] = None,
+        log_type: str | None = None,
     ) -> list[dict[str, Any]]:
         try:
             params: dict[str, Any] = {}

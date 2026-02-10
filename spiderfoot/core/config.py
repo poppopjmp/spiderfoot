@@ -5,10 +5,12 @@ This module provides centralized configuration management for all SpiderFoot com
 It handles default configurations, user overrides, and validation.
 """
 
+from __future__ import annotations
+
 import os
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from copy import deepcopy
 
 from spiderfoot import SpiderFootHelpers
@@ -149,7 +151,7 @@ class ConfigManager:
             raise SystemExit(-1)
 
     def get_web_config(self, host: str = '127.0.0.1', port: int = DEFAULT_WEB_PORT,
-                      root: str = '/', cors_origins: Optional[list] = None) -> dict[str, Any]:
+                      root: str = '/', cors_origins: list | None = None) -> dict[str, Any]:
         """
         Get web server configuration.
 

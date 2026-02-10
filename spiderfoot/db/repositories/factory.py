@@ -7,9 +7,11 @@ by ``SpiderFootDb``.  Includes FastAPI ``Depends`` providers
 and a thread-safe singleton.
 """
 
+from __future__ import annotations
+
 import logging
 import threading
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from spiderfoot.db.repositories.scan_repository import ScanRepository
 from spiderfoot.db.repositories.event_repository import EventRepository
@@ -28,7 +30,7 @@ class RepositoryFactory:
             scans = repo.list_scans()
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         """
         Args:
             config: SpiderFoot config dict (passed to ``SpiderFootDb``).
@@ -84,17 +86,17 @@ class RepositoryFactory:
 # Module-level singleton
 # ---------------------------------------------------------------------------
 
-_global_factory: Optional[RepositoryFactory] = None
+_global_factory: RepositoryFactory | None = None
 _global_lock = threading.Lock()
 
 
-def get_repository_factory() -> Optional[RepositoryFactory]:
+def get_repository_factory() -> RepositoryFactory | None:
     """Return the global ``RepositoryFactory`` (or None)."""
     return _global_factory
 
 
 def init_repository_factory(
-    config: Optional[dict[str, Any]] = None,
+    config: dict[str, Any] | None = None,
 ) -> RepositoryFactory:
     """Initialize the global ``RepositoryFactory``.
 

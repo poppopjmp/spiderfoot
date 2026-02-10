@@ -17,9 +17,11 @@ Usage::
     scans = ds.scan_instance_list()  # uses primary, falls back on failure
 """
 
+from __future__ import annotations
+
 import logging
 import time
-from typing import Any, Callable, Dict, List, Optional, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 
 from spiderfoot.data_service.base import DataService, DataServiceConfig
 
@@ -119,7 +121,7 @@ class ResilientDataService(DataService):
     def __init__(
         self,
         primary: DataService,
-        fallback: Optional[DataService] = None,
+        fallback: DataService | None = None,
         failure_threshold: int = 5,
         recovery_timeout: float = 30.0,
     ) -> None:
@@ -189,7 +191,7 @@ class ResilientDataService(DataService):
     def scan_instance_create(self, scan_id: str, scan_name: str, target: str) -> bool:
         return self._call("scan_instance_create", scan_id, scan_name, target, default=False)
 
-    def scan_instance_get(self, scan_id: str) -> Optional[dict[str, Any]]:
+    def scan_instance_get(self, scan_id: str) -> dict[str, Any] | None:
         return self._call("scan_instance_get", scan_id, default=None)
 
     def scan_instance_list(self) -> list[dict[str, Any]]:
@@ -199,8 +201,8 @@ class ResilientDataService(DataService):
         return self._call("scan_instance_delete", scan_id, default=False)
 
     def scan_status_set(self, scan_id: str, status: str,
-                        started: Optional[int] = None,
-                        ended: Optional[int] = None) -> bool:
+                        started: int | None = None,
+                        ended: int | None = None) -> bool:
         return self._call("scan_status_set", scan_id, status,
                           started=started, ended=ended, default=False)
 
@@ -215,7 +217,7 @@ class ResilientDataService(DataService):
         )
 
     def event_get_by_scan(self, scan_id: str,
-                          event_type: Optional[str] = None,
+                          event_type: str | None = None,
                           limit: int = 0) -> list[dict[str, Any]]:
         return self._call("event_get_by_scan", scan_id,
                           event_type=event_type, limit=limit, default=[])
@@ -228,13 +230,13 @@ class ResilientDataService(DataService):
         return self._call("event_exists", scan_id, event_type, data, default=False)
 
     def scan_log_event(self, scan_id: str, classification: str,
-                       message: str, component: Optional[str] = None) -> bool:
+                       message: str, component: str | None = None) -> bool:
         return self._call("scan_log_event", scan_id, classification,
                           message, component=component, default=False)
 
     def scan_log_get(self, scan_id: str, limit: int = 0,
                      offset: int = 0,
-                     log_type: Optional[str] = None) -> list[dict[str, Any]]:
+                     log_type: str | None = None) -> list[dict[str, Any]]:
         return self._call("scan_log_get", scan_id, limit=limit,
                           offset=offset, log_type=log_type, default=[])
 

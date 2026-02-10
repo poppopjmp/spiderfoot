@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot WebSocket Event Streaming
 
@@ -42,7 +44,7 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.websocket")
 
@@ -62,7 +64,7 @@ class WebSocketMessage:
     event_type: str
     data: Any
     timestamp: float = field(default_factory=time.time)
-    scan_id: Optional[str] = None
+    scan_id: str | None = None
 
     def to_json(self) -> str:
         return json.dumps({
@@ -87,7 +89,7 @@ class WebSocketClient:
         self._queue: asyncio.Queue = asyncio.Queue(maxsize=max_queue)
         self._dropped = 0
         self._sent = 0
-        self._task: Optional[asyncio.Task] = None
+        self._task: asyncio.Task | None = None
 
     def subscribe(self, channel: str) -> None:
         self.subscriptions.add(channel)
@@ -141,7 +143,7 @@ class WebSocketHub:
     Singleton — use ``WebSocketHub.get_instance()``.
     """
 
-    _instance: Optional["WebSocketHub"] = None
+    _instance: "WebSocketHub" | None = None
 
     def __init__(self, *, max_clients: int = 500,
                  max_queue_per_client: int = 1000) -> None:
@@ -169,7 +171,7 @@ class WebSocketHub:
     # ------------------------------------------------------------------
 
     async def connect(self, send_func: Callable,
-                      client_id: Optional[str] = None
+                      client_id: str | None = None
                       ) -> WebSocketClient:
         """Register a new WebSocket client."""
         if len(self._clients) >= self._max_clients:
@@ -340,7 +342,7 @@ class WebSocketHub:
     # ------------------------------------------------------------------
 
     async def handle_client_message(self, client_id: str,
-                                     raw_message: str) -> Optional[str]:
+                                     raw_message: str) -> str | None:
         """Handle incoming JSON message from a client.
 
         Supports commands:

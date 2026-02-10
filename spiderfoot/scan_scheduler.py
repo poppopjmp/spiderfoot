@@ -6,13 +6,15 @@ run independently of the WebUI/API. Coordinates module loading, event
 routing through the EventBus, and scan state management via DataService.
 """
 
+from __future__ import annotations
+
 import logging
 import threading
 import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, List, Optional
 
 from spiderfoot.scan_state import ScanState
 
@@ -145,8 +147,8 @@ class ScanScheduler:
 
     def __init__(
         self,
-        config: Optional[SchedulerConfig] = None,
-        registry: Optional[Any] = None,
+        config: SchedulerConfig | None = None,
+        registry: Any | None = None,
     ) -> None:
         self.config = config or SchedulerConfig()
         self._registry = registry
@@ -157,12 +159,12 @@ class ScanScheduler:
         self._completed: dict[str, ScanStatus] = {}
         self._lock = threading.RLock()
         self._running = False
-        self._scheduler_thread: Optional[threading.Thread] = None
+        self._scheduler_thread: threading.Thread | None = None
 
         # Callbacks for scan lifecycle events
-        self._on_scan_start: Optional[Callable] = None
-        self._on_scan_complete: Optional[Callable] = None
-        self._on_scan_error: Optional[Callable] = None
+        self._on_scan_start: Callable | None = None
+        self._on_scan_complete: Callable | None = None
+        self._on_scan_error: Callable | None = None
 
     # --- Lifecycle ---
 
@@ -282,7 +284,7 @@ class ScanScheduler:
 
     # --- Status ---
 
-    def get_scan_status(self, scan_id: str) -> Optional[dict[str, Any]]:
+    def get_scan_status(self, scan_id: str) -> dict[str, Any] | None:
         """Get the current status of a scan.
 
         Checks active, completed, and pending queues.
@@ -312,7 +314,7 @@ class ScanScheduler:
 
     def list_scans(
         self,
-        state: Optional[ScanState] = None,
+        state: ScanState | None = None,
     ) -> list[dict[str, Any]]:
         """List scans, optionally filtered by state."""
         results = []

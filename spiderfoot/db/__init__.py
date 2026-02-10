@@ -16,6 +16,8 @@ specialised sub-modules (``db_core``, ``db_scan``, ``db_event``,
 schema migrations, and retry logic for SQLite operations.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 import logging
 import re
@@ -23,7 +25,7 @@ import sqlite3
 import threading
 import psycopg2
 import psycopg2.extras
-from typing import Any, List, Optional
+from typing import Any, List
 
 from spiderfoot.db.db_core import DbCore
 from spiderfoot.db.db_scan import ScanManager
@@ -615,7 +617,7 @@ class SpiderFootDb:
     def scanInstanceCreate(self, *args, **kwargs) -> None:
         """Create a new scan instance record."""
         return self._scan.scanInstanceCreate(*args, **kwargs)
-    def scanInstanceGet(self, scan_id: str) -> Optional[list]:
+    def scanInstanceGet(self, scan_id: str) -> list | None:
         """Retrieve a scan instance by ID, or None if not found."""
         result = self._scan.scanInstanceGet(scan_id)
         if not result or result == []:
@@ -651,7 +653,7 @@ class SpiderFootDb:
     def configSet(self, *args, **kwargs) -> None:
         """Save configuration key-value pairs."""
         return self._config.configSet(*args, **kwargs)
-    def configGet(self, *args, **kwargs) -> Optional[dict]:
+    def configGet(self, *args, **kwargs) -> dict | None:
         """Retrieve the current configuration."""
         return self._config.configGet(*args, **kwargs)
     def configGetAll(self, *args, **kwargs) -> dict:
@@ -659,7 +661,7 @@ class SpiderFootDb:
     def scanConfigSet(self, scan_id: str, optMap: dict) -> None:
         """Save scan-specific configuration."""
         return self._config.scanConfigSet(scan_id, optMap)
-    def scanConfigGet(self, scan_id: str) -> Optional[dict]:
+    def scanConfigGet(self, scan_id: str) -> dict | None:
         """Retrieve scan-specific configuration."""
         return self._config.scanConfigGet(scan_id)
     def scanConfigDelete(self, *args: Any, **kwargs: Any) -> bool:
@@ -672,7 +674,7 @@ class SpiderFootDb:
     # --- EVENT MANAGEMENT ---
     def eventAdd(self, *args, **kwargs) -> None:
         return self._event.eventAdd(*args, **kwargs)
-    def eventGet(self, *args, **kwargs) -> Optional[list]:
+    def eventGet(self, *args, **kwargs) -> list | None:
         return self._event.eventGet(*args, **kwargs)
     def scanEventStore(self, instanceId: str, sfEvent: Any, truncateSize: int = 0) -> None:
         """Store a scan event in the database."""
@@ -680,10 +682,10 @@ class SpiderFootDb:
     # --- CORRELATION MANAGEMENT ---
     def correlationAdd(self, *args, **kwargs) -> None:
         return self._correlation.correlationAdd(*args, **kwargs)
-    def correlationGet(self, *args, **kwargs) -> Optional[list]:
+    def correlationGet(self, *args, **kwargs) -> list | None:
         return self._correlation.correlationGet(*args, **kwargs)
     # --- LOGGING ---
-    def scanLogEvent(self, instanceId: str, classification: str, message: str, component: Optional[str] = None) -> None:
+    def scanLogEvent(self, instanceId: str, classification: str, message: str, component: str | None = None) -> None:
         return self._event.scanLogEvent(instanceId, classification, message, component)
     def scanLogEvents(self, batch: list) -> bool:
         return self._event.scanLogEvents(batch)

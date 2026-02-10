@@ -5,8 +5,10 @@ Extracted from ScanServiceFacade to enforce single-responsibility.
 Handles metadata CRUD, notes, archiving, and false-positive management.
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 log = logging.getLogger("spiderfoot.scan_metadata_service")
 
@@ -40,14 +42,14 @@ class ScanMetadataService:
     # Metadata
     # ------------------------------------------------------------------
 
-    def get_metadata(self, scan_id: str) -> Dict[str, Any]:
+    def get_metadata(self, scan_id: str) -> dict[str, Any]:
         """Get scan metadata dict."""
         dbh = self._ensure_dbh()
         if hasattr(dbh, "scanMetadataGet"):
             return dbh.scanMetadataGet(scan_id) or {}
         return {}
 
-    def set_metadata(self, scan_id: str, metadata: Dict[str, Any]) -> None:
+    def set_metadata(self, scan_id: str, metadata: dict[str, Any]) -> None:
         """Set scan metadata dict."""
         dbh = self._ensure_dbh()
         if hasattr(dbh, "scanMetadataSet"):
@@ -98,9 +100,9 @@ class ScanMetadataService:
     def set_false_positive(
         self,
         scan_id: str,
-        result_ids: List[str],
+        result_ids: list[str],
         fp: str,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Set/unset false-positive flag on results + children.
 
         Returns ``{"status": "SUCCESS"|"WARNING"|"ERROR", "message": ...}``.
@@ -126,8 +128,8 @@ class ScanMetadataService:
         )
 
     def _set_false_positive_via_repo(
-        self, scan_id: str, result_ids: List[str], fp: str
-    ) -> Dict[str, str]:
+        self, scan_id: str, result_ids: list[str], fp: str
+    ) -> dict[str, str]:
         """FP management through EventRepository."""
         if fp == "0":
             data = self._event_repo.get_element_sources(
@@ -153,8 +155,8 @@ class ScanMetadataService:
         return {"status": "ERROR", "message": "Exception encountered."}
 
     def _set_false_positive_via_dbh(
-        self, dbh, scan_id: str, result_ids: List[str], fp: str
-    ) -> Dict[str, str]:
+        self, dbh, scan_id: str, result_ids: list[str], fp: str
+    ) -> dict[str, str]:
         """FP management through raw database handle (legacy path)."""
         if fp == "0":
             data = dbh.scanElementSourcesDirect(scan_id, result_ids)
@@ -189,8 +191,8 @@ class ScanMetadataService:
     # ------------------------------------------------------------------
 
     def get_scan_options(
-        self, scan_id: str, app_config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, scan_id: str, app_config: dict[str, Any]
+    ) -> dict[str, Any]:
         """Return scan options with config descriptions."""
         dbh = self._ensure_dbh()
         meta = dbh.scanInstanceGet(scan_id)
@@ -216,7 +218,7 @@ from spiderfoot.scan_state_map import (
             else "Not yet"
         )
 
-        ret: Dict[str, Any] = {
+        ret: dict[str, Any] = {
             "meta": [meta[0], meta[1], meta[2], started, finished, meta[5]],
             "config": dbh.scanConfigGet(scan_id),
             "configdesc": {},

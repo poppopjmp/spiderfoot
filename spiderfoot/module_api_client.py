@@ -4,13 +4,15 @@ Provides a unified HTTP client with retry logic, rate limiting, response
 parsing, and error handling for use by SpiderFoot modules.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import time
 import threading
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urljoin, urlencode
 
 
@@ -64,7 +66,7 @@ class ApiResponse:
     content_type: str = ""
     elapsed_ms: float = 0.0
     url: str = ""
-    error: Optional[str] = None
+    error: str | None = None
     retries_used: int = 0
 
     @property
@@ -149,7 +151,7 @@ class RequestRecord:
     status_code: int
     elapsed_ms: float
     timestamp: float = field(default_factory=time.time)
-    error: Optional[str] = None
+    error: str | None = None
     retries: int = 0
 
     def to_dict(self) -> dict:
@@ -182,8 +184,8 @@ class ModuleApiClient:
     def __init__(
         self,
         base_url: str = "",
-        config: Optional[RequestConfig] = None,
-        rate_limiter: Optional[RateLimiter] = None,
+        config: RequestConfig | None = None,
+        rate_limiter: RateLimiter | None = None,
         api_key: str = "",
         api_key_header: str = "X-API-Key",
         max_history: int = 100,
@@ -206,7 +208,7 @@ class ModuleApiClient:
         self._default_headers.pop(name, None)
         return self
 
-    def build_url(self, path: str, params: Optional[dict] = None) -> str:
+    def build_url(self, path: str, params: dict | None = None) -> str:
         """Build full URL from base + path + query params."""
         if self.base_url and not path.startswith(("http://", "https://")):
             url = self.base_url + "/" + path.lstrip("/")
@@ -217,7 +219,7 @@ class ModuleApiClient:
             url = url + separator + urlencode(params, doseq=True)
         return url
 
-    def build_headers(self, extra: Optional[dict] = None) -> dict:
+    def build_headers(self, extra: dict | None = None) -> dict:
         """Build request headers with defaults, auth, and extras."""
         headers = {"User-Agent": self.config.user_agent}
         headers.update(self._default_headers)
@@ -231,11 +233,11 @@ class ModuleApiClient:
         self,
         method: HttpMethod,
         path: str,
-        params: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        params: dict | None = None,
+        headers: dict | None = None,
         body: Any = None,
         response_format: ResponseFormat = ResponseFormat.AUTO,
-        config: Optional[RequestConfig] = None,
+        config: RequestConfig | None = None,
     ) -> ApiResponse:
         """Execute an HTTP request (simulation — returns structured ApiResponse).
 
@@ -278,7 +280,7 @@ class ModuleApiClient:
 
         return response
 
-    def get(self, path: str, params: Optional[dict] = None, **kwargs) -> ApiResponse:
+    def get(self, path: str, params: dict | None = None, **kwargs) -> ApiResponse:
         return self.request(HttpMethod.GET, path, params=params, **kwargs)
 
     def post(self, path: str, body: Any = None, **kwargs) -> ApiResponse:

@@ -14,6 +14,8 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 Migration notes (sfp_ipapico → sfp_ipapico_modern):
 
@@ -32,7 +34,7 @@ Behavioral differences:
 
 import json
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
@@ -61,8 +63,8 @@ class sfp_ipapico_modern(SpiderFootModernPlugin):
         }
     }
 
-    opts: Dict[str, Any] = {}
-    optdescs: Dict[str, str] = {}
+    opts: dict[str, Any] = {}
+    optdescs: dict[str, str] = {}
     results = None
 
     def setup(self, sfc, userOpts=None):
@@ -70,19 +72,19 @@ class sfp_ipapico_modern(SpiderFootModernPlugin):
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
-    def watchedEvents(self) -> List[str]:
+    def watchedEvents(self) -> list[str]:
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
         ]
 
-    def producedEvents(self) -> List[str]:
+    def producedEvents(self) -> list[str]:
         return [
             "GEOINFO",
             "RAW_RIR_DATA",
         ]
 
-    def query(self, ip: str) -> Optional[dict]:
+    def query(self, ip: str) -> dict | None:
         """Query ipapi.co for IP geolocation.
 
         Uses self.fetch_url() which delegates to HttpService when available,

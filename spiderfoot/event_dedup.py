@@ -4,13 +4,15 @@ Detects and filters duplicate events during scan processing using
 content hashing, fuzzy matching, and configurable dedup strategies.
 """
 
+from __future__ import annotations
+
 import hashlib
 import logging
 import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, List, Set
 
 log = logging.getLogger("spiderfoot.event_dedup")
 
@@ -242,7 +244,7 @@ class EventDeduplicator:
 
         return hashlib.sha256(key.encode("utf-8", errors="replace")).hexdigest()
 
-    def get_record(self, event_type: str, data: str, module: str = "") -> Optional[DedupRecord]:
+    def get_record(self, event_type: str, data: str, module: str = "") -> DedupRecord | None:
         """Get the dedup record for specific content."""
         content_hash = self._compute_hash(event_type, data, module)
         with self._lock:
@@ -371,7 +373,7 @@ class ScanDeduplicator:
         self,
         event_type: str,
         strategy: DedupStrategy,
-        action: Optional[DedupAction] = None,
+        action: DedupAction | None = None,
     ) -> None:
         """Set a specific strategy for an event type."""
         with self._lock:
@@ -424,7 +426,7 @@ class ScanDeduplicator:
 
 
 # Singleton
-_global_dedup: Optional[EventDeduplicator] = None
+_global_dedup: EventDeduplicator | None = None
 _dedup_lock = threading.Lock()
 
 

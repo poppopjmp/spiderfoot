@@ -5,6 +5,8 @@ This module handles server startup and management for both WebUI and API servers
 It provides a centralized interface for server operations.
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import time
@@ -35,7 +37,7 @@ class ServerManager:
         self.config = config
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
 
-    def start_web_server(self, web_config: dict[str, Any], logging_queue: Optional[mp.Queue] = None) -> None:
+    def start_web_server(self, web_config: dict[str, Any], logging_queue: mp.Queue | None = None) -> None:
         """
         Start the CherryPy web server.
 
@@ -121,7 +123,7 @@ class ServerManager:
             self.log.critical(f"Unhandled exception in start_web_server: {e}", exc_info=True)
             sys.exit(-1)
 
-    def start_fastapi_server(self, api_config: dict[str, Any], logging_queue: Optional[mp.Queue] = None) -> None:
+    def start_fastapi_server(self, api_config: dict[str, Any], logging_queue: mp.Queue | None = None) -> None:
         """
         Start the FastAPI server.
 
@@ -179,7 +181,7 @@ class ServerManager:
             sys.exit(-1)
 
     def start_both_servers(self, web_config: dict[str, Any], api_config: dict[str, Any],
-                          logging_queue: Optional[mp.Queue] = None) -> None:
+                          logging_queue: mp.Queue | None = None) -> None:
         """
         Start both web UI and FastAPI servers concurrently.
 

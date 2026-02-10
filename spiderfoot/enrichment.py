@@ -5,13 +5,15 @@ context, metadata, and derived data. Enrichers can be chained,
 filtered, and configured per event type.
 """
 
+from __future__ import annotations
+
 import logging
 import threading
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, List
 
 log = logging.getLogger("spiderfoot.enrichment")
 
@@ -72,7 +74,7 @@ class Enricher(ABC):
         self,
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
-        event_types: Optional[set[str]] = None,
+        event_types: set[str] | None = None,
     ) -> None:
         self.name = name or self.__class__.__name__
         self.priority = priority
@@ -124,7 +126,7 @@ class FunctionEnricher(Enricher):
         func: Callable[[EnrichmentContext], EnrichmentContext],
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
-        event_types: Optional[set[str]] = None,
+        event_types: set[str] | None = None,
     ) -> None:
         super().__init__(name=name or func.__name__, priority=priority, event_types=event_types)
         self._func = func
@@ -165,7 +167,7 @@ class EnrichmentPipeline:
     def add(
         self,
         enricher: Enricher,
-        priority: Optional[EnrichmentPriority] = None,
+        priority: EnrichmentPriority | None = None,
     ) -> "EnrichmentPipeline":
         """Add an enricher to the pipeline (chainable)."""
         if priority is not None:
@@ -180,7 +182,7 @@ class EnrichmentPipeline:
         func: Callable[[EnrichmentContext], EnrichmentContext],
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
-        event_types: Optional[set[str]] = None,
+        event_types: set[str] | None = None,
     ) -> "EnrichmentPipeline":
         """Add a function as an enricher (chainable)."""
         return self.add(FunctionEnricher(func, name, priority, event_types))
@@ -189,7 +191,7 @@ class EnrichmentPipeline:
         self,
         name: str = "",
         priority: EnrichmentPriority = EnrichmentPriority.NORMAL,
-        event_types: Optional[set[str]] = None,
+        event_types: set[str] | None = None,
     ):
         """Decorator to register a function as an enricher."""
         def decorator(func):

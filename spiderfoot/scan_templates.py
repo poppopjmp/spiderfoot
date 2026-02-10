@@ -5,12 +5,14 @@ for common OSINT use cases. Templates define which modules,
 event types, and policies to use for a scan.
 """
 
+from __future__ import annotations
+
 import copy
 import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 log = logging.getLogger("spiderfoot.scan_templates")
 
@@ -207,7 +209,7 @@ class TemplateRegistry:
     def unregister(self, name: str) -> bool:
         return self._templates.pop(name, None) is not None
 
-    def get(self, name: str) -> Optional[ScanTemplate]:
+    def get(self, name: str) -> ScanTemplate | None:
         return self._templates.get(name)
 
     def list_templates(self) -> list[str]:

@@ -15,10 +15,11 @@ modules during a scan.  Each event carries a type, data payload, source
 reference, and provenance metadata used for correlation and reporting.
 """
 
+from __future__ import annotations
+
 import hashlib
 import random
 import time
-from typing import Optional
 
 
 class SpiderFootEvent:
@@ -54,7 +55,7 @@ class SpiderFootEvent:
     _actualSource = None
     __id = None
 
-    def __init__(self, eventType: str, data: str, module: str, sourceEvent: Optional['SpiderFootEvent'] = None) -> None:
+    def __init__(self, eventType: str, data: str, module: str, sourceEvent: 'SpiderFootEvent' | None = None) -> None:
         """Initialize SpiderFoot event object.
 
         Args:
@@ -302,7 +303,7 @@ class SpiderFootEvent:
         self._data = data
 
     @sourceEvent.setter
-    def sourceEvent(self, sourceEvent: Optional['SpiderFootEvent']) -> None:
+    def sourceEvent(self, sourceEvent: 'SpiderFootEvent' | None) -> None:
         """Source event which lead to this event.
 
         Args:
@@ -470,7 +471,7 @@ class SpiderFootEvent:
         """
         return self.module
 
-    def getSourceEvent(self) -> Optional['SpiderFootEvent']:
+    def getSourceEvent(self) -> 'SpiderFootEvent' | None:
         """Get source event.
 
         Returns:

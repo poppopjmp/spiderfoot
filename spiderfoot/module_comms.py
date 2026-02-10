@@ -5,13 +5,15 @@ to communicate without direct dependencies. Supports pub/sub
 channels, request/reply patterns, and broadcast messaging.
 """
 
+from __future__ import annotations
+
 import logging
 import queue
 import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.module_comms")
 
@@ -53,7 +55,7 @@ class ChannelStats:
     messages_delivered: int = 0
     subscriber_count: int = 0
     errors: int = 0
-    last_message_at: Optional[float] = None
+    last_message_at: float | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -198,7 +200,7 @@ class MessageBus:
         payload: Any,
         sender: str = "",
         timeout: float = 5.0,
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """Send a request and wait for a reply.
 
         The handler should call msg.reply_to channel with the response.
@@ -251,7 +253,7 @@ class MessageBus:
         with self._lock:
             return sorted(self._subscribers.keys())
 
-    def get_channel_stats(self, channel: str) -> Optional[ChannelStats]:
+    def get_channel_stats(self, channel: str) -> ChannelStats | None:
         """Get stats for a specific channel."""
         with self._lock:
             return self._channel_stats.get(channel)
@@ -264,7 +266,7 @@ class MessageBus:
                 for ch, stats in self._channel_stats.items()
             }
 
-    def get_message_log(self, channel: Optional[str] = None, limit: int = 100) -> list[dict]:
+    def get_message_log(self, channel: str | None = None, limit: int = 100) -> list[dict]:
         """Get recent message log, optionally filtered by channel."""
         with self._lock:
             msgs = self._message_log
@@ -323,7 +325,7 @@ class MessageBus:
 
 
 # Singleton
-_global_bus: Optional[MessageBus] = None
+_global_bus: MessageBus | None = None
 _bus_lock = threading.Lock()
 
 

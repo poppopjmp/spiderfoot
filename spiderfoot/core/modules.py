@@ -5,6 +5,8 @@ This module handles loading, management, and operations on SpiderFoot modules.
 It provides a centralized interface for module-related functionality.
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import logging
@@ -23,7 +25,7 @@ class ModuleManager:
         self.modules = {}
         self.correlation_rules = []
 
-    def load_modules(self, modules_dir: Optional[str] = None) -> dict[str, Any]:
+    def load_modules(self, modules_dir: str | None = None) -> dict[str, Any]:
         """
         Load all SpiderFoot modules from the modules directory.
 
@@ -116,7 +118,7 @@ class ModuleManager:
         self.modules = sf_modules
         return sf_modules
 
-    def load_correlation_rules(self, correlations_dir: Optional[str] = None) -> list[dict[str, Any]]:
+    def load_correlation_rules(self, correlations_dir: str | None = None) -> list[dict[str, Any]]:
         """
         Load correlation rules from the correlations directory.
 
@@ -181,7 +183,7 @@ class ModuleManager:
         """
         return sorted(self.modules.keys())
 
-    def get_module_info(self, module_name: str) -> Optional[dict[str, Any]]:
+    def get_module_info(self, module_name: str) -> dict[str, Any] | None:
         """
         Get information about a specific module.
 

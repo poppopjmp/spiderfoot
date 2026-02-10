@@ -5,13 +5,15 @@ timeouts, rate limits, target exclusions, and module restrictions.
 Policies are composable and can be loaded from dictionaries.
 """
 
+from __future__ import annotations
+
 import ipaddress
 import logging
 import re
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.scan_policy")
 
@@ -77,18 +79,18 @@ class ScanPolicy:
         self._enabled = True
 
         # Scope limits
-        self._max_events: Optional[int] = None
-        self._max_depth: Optional[int] = None
-        self._max_duration_seconds: Optional[float] = None
-        self._max_targets: Optional[int] = None
+        self._max_events: int | None = None
+        self._max_depth: int | None = None
+        self._max_duration_seconds: float | None = None
+        self._max_targets: int | None = None
 
         # Target exclusions
         self._excluded_patterns: list[re.Pattern] = []
         self._excluded_networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
-        self._allowed_targets: Optional[set[str]] = None
+        self._allowed_targets: set[str] | None = None
 
         # Module restrictions
-        self._allowed_modules: Optional[set[str]] = None
+        self._allowed_modules: set[str] | None = None
         self._denied_modules: set[str] = set()
 
         # Event type restrictions
@@ -97,7 +99,7 @@ class ScanPolicy:
 
         # Rate limits
         self._rate_limit_per_module: dict[str, float] = {}  # module -> max requests/sec
-        self._global_rate_limit: Optional[float] = None
+        self._global_rate_limit: float | None = None
 
         # Tracking
         self._violations: list[PolicyViolation] = []
@@ -135,8 +137,8 @@ class ScanPolicy:
 
     def restrict_modules(
         self,
-        allowed: Optional[set[str]] = None,
-        denied: Optional[set[str]] = None,
+        allowed: set[str] | None = None,
+        denied: set[str] | None = None,
     ) -> "ScanPolicy":
         if allowed is not None:
             self._allowed_modules = allowed
@@ -408,7 +410,7 @@ class PolicyEngine:
     def remove_policy(self, name: str) -> bool:
         return self._policies.pop(name, None) is not None
 
-    def get_policy(self, name: str) -> Optional[ScanPolicy]:
+    def get_policy(self, name: str) -> ScanPolicy | None:
         return self._policies.get(name)
 
     def evaluate_target(self, target: str) -> PolicyCheckResult:

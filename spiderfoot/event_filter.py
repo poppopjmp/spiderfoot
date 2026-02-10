@@ -5,13 +5,15 @@ based on type, content patterns, risk thresholds, and custom predicates.
 Filters are composable and can be applied pre- or post-processing.
 """
 
+from __future__ import annotations
+
 import logging
 import re
 import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.event_filter")
 
@@ -83,8 +85,8 @@ class TypeFilter(EventFilter):
 
     def __init__(
         self,
-        allowed_types: Optional[set[str]] = None,
-        denied_types: Optional[set[str]] = None,
+        allowed_types: set[str] | None = None,
+        denied_types: set[str] | None = None,
         name: str = "type_filter",
     ) -> None:
         super().__init__(name=name)
@@ -165,8 +167,8 @@ class ModuleFilter(EventFilter):
 
     def __init__(
         self,
-        allowed_modules: Optional[set[str]] = None,
-        denied_modules: Optional[set[str]] = None,
+        allowed_modules: set[str] | None = None,
+        denied_modules: set[str] | None = None,
         name: str = "module_filter",
     ) -> None:
         super().__init__(name=name)

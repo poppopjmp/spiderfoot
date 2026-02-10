@@ -6,16 +6,18 @@ and a bridge class that adapts the async EventBus to the legacy
 synchronous queue.Queue interface used by SpiderFootPlugin.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import queue
 import threading
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from spiderfoot.eventbus.base import EventBus, EventBusBackend, EventBusConfig, EventEnvelope
 
 
-def create_event_bus(config: Optional[EventBusConfig] = None) -> EventBus:
+def create_event_bus(config: EventBusConfig | None = None) -> EventBus:
     """Factory function to create an event bus instance.
 
     Args:
@@ -122,8 +124,8 @@ class EventBusBridge:
         self.outgoing_queue = queue.Queue(maxsize=max_queue_size)
 
         self._running = False
-        self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._thread: Optional[threading.Thread] = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._thread: threading.Thread | None = None
         self._sub_ids: list = []
 
     def start(self) -> None:

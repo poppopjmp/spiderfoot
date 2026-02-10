@@ -3,12 +3,14 @@ API Security Module for SpiderFoot
 Provides comprehensive API security including authentication, authorization, and request validation for FastAPI.
 """
 
+from __future__ import annotations
+
 import time
 import hmac
 import hashlib
 import secrets
 import jwt
-from typing import Dict, List, Optional, Any, Tuple
+from typing import List, Any, Tuple
 from fastapi import HTTPException, Depends, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
@@ -72,7 +74,7 @@ class APISecurityManager:
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
-    def validate_jwt_token(self, token: str) -> Optional[dict[str, Any]]:
+    def validate_jwt_token(self, token: str) -> dict[str, Any] | None:
         """Validate JWT token.
 
         Args:
@@ -106,7 +108,7 @@ class APISecurityManager:
         """
         return self.generate_jwt_token(user_id, scopes, expires_in)
 
-    def validate_api_key(self, api_key: str) -> Optional[dict[str, Any]]:
+    def validate_api_key(self, api_key: str) -> dict[str, Any] | None:
         """Validate API key.
 
         Args:
@@ -446,7 +448,7 @@ def require_scopes(required_scopes: list[str]):
 
 def require_api_key(
     request: Request,
-    x_api_key: Optional[str] = Header(None),
+    x_api_key: str | None = Header(None),
     api_security: APISecurityManager = Depends()
 ) -> dict[str, Any]:
     """Dependency to require API key authentication.

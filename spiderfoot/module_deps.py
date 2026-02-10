@@ -5,11 +5,13 @@ production/consumption dependencies. Detects circular dependencies,
 identifies missing providers, and computes optimal execution order.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple
+from typing import Any, FrozenSet
 
 log = logging.getLogger("spiderfoot.module_deps")
 
@@ -102,9 +104,9 @@ class ModuleDependencyResolver:
     def add_module(
         self,
         name: str,
-        produces: Optional[set[str]] = None,
-        consumes: Optional[set[str]] = None,
-        optional_consumes: Optional[set[str]] = None,
+        produces: set[str] | None = None,
+        consumes: set[str] | None = None,
+        optional_consumes: set[str] | None = None,
     ) -> "ModuleDependencyResolver":
         """Register a module with its event type dependencies (chainable)."""
         prod = frozenset(produces or set())

@@ -9,6 +9,8 @@
 # License:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 This module implements advanced enterprise features:
 - Advanced query optimization with prepared statements
@@ -23,7 +25,7 @@ import time
 import json
 import threading
 import signal
-from typing import Dict, List, Optional, Any, Tuple
+from typing import List, Any
 from collections import defaultdict, deque
 from dataclasses import dataclass
 import hashlib
@@ -67,17 +69,17 @@ class QueryProfile:
     """Profile for optimized queries."""
     query_hash: str
     query_type: str
-    prepared_statement: Optional[str] = None
+    prepared_statement: str | None = None
     execution_count: int = 0
     avg_execution_time: float = 0.0
-    optimized_version: Optional[str] = None
-    index_hints: List[str] = None
+    optimized_version: str | None = None
+    index_hints: list[str] = None
 
 
 class ConnectionLoadBalancer:
     """Advanced connection load balancer with health monitoring."""
     
-    def __init__(self, configs: List[Dict[str, Any]]) -> None:
+    def __init__(self, configs: list[dict[str, Any]]) -> None:
         self.configs = configs
         self.pools = {}
         self.metrics = {}
@@ -123,7 +125,7 @@ class ConnectionLoadBalancer:
                     _log.error("Failed to initialize pool %s: %s", pool_id, e)
                 self.health_status[pool_id] = False
     
-    def get_optimal_connection(self, query_type: str = None) -> Tuple[str, Any]:
+    def get_optimal_connection(self, query_type: str = None) -> tuple[str, Any]:
         """Get the optimal connection based on load balancing algorithms."""
         with self.lock:
             available_pools = [
@@ -182,7 +184,7 @@ class QueryOptimizer:
         self.query_cache = {}
         self.optimization_rules = self._load_optimization_rules()
         
-    def _load_optimization_rules(self) -> Dict[str, Any]:
+    def _load_optimization_rules(self) -> dict[str, Any]:
         """Load AI-powered optimization rules."""
         return {
             'bulk_insert': {
@@ -265,7 +267,7 @@ class QueryOptimizer:
             return query.replace('INSERT INTO', 'INSERT INTO', 1) + ' ON CONFLICT DO NOTHING'
         return query
     
-    def _suggest_indexes(self, query: str) -> List[str]:
+    def _suggest_indexes(self, query: str) -> list[str]:
         """Suggest indexes for complex queries."""
         suggestions = []
         if 'WHERE' in query.upper():
@@ -324,7 +326,7 @@ class PerformanceMonitor:
             'load_factor': metrics.load_factor
         })
     
-    def _trigger_alert(self, alert_type: str, details: Dict[str, Any]):
+    def _trigger_alert(self, alert_type: str, details: dict[str, Any]):
         """Trigger performance alert."""
         alert = {
             'timestamp': time.time(),
@@ -338,7 +340,7 @@ class PerformanceMonitor:
         else:
             _log.warning("Performance alert: %s - %s", alert_type, details)
     
-    def _determine_severity(self, alert_type: str, details: Dict[str, Any]) -> str:
+    def _determine_severity(self, alert_type: str, details: dict[str, Any]) -> str:
         """Determine alert severity."""
         if alert_type == 'slow_query' and details.get('execution_time', 0) > 5.0:
             return 'HIGH'
@@ -381,7 +383,7 @@ class PerformanceMonitor:
                     'query_count': len(recent_queries)
                 })
     
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Generate comprehensive performance report."""
         recent_queries = [
             q for q in self.metrics['queries'] 
@@ -506,7 +508,7 @@ class AutoScaler:
             else:
                 _log.error("Failed to scale down %s: %s", pool_id, e)
     
-    def _recreate_pool(self, pool_id: str, config: Dict[str, Any], max_connections: int):
+    def _recreate_pool(self, pool_id: str, config: dict[str, Any], max_connections: int):
         """Recreate pool with new connection limits."""
         try:
             # Close existing pool
@@ -706,7 +708,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
             for event in events_to_process:
                 self._store_single_event(event)
 
-    def _bulk_store_with_load_balancing(self, events: List[Any]):
+    def _bulk_store_with_load_balancing(self, events: list[Any]):
         """Store events using load-balanced connections."""
         if not HAS_PSYCOPG2:
             self.error("PostgreSQL bulk storage requires psycopg2 but it's not installed. Falling back to SQLite.")
@@ -784,7 +786,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
             # Fall back to SQLite
             self._bulk_store_sqlite(events)
 
-    def _bulk_store_sqlite(self, events: List[Any]):
+    def _bulk_store_sqlite(self, events: list[Any]):
         """Bulk store events in SQLite."""
         for event in events:
             if self.opts['maxstorage'] != 0 and len(event.data) > self.opts['maxstorage']:
@@ -806,7 +808,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
         except Exception as e:
             self.error(f"Failed to store single event: {e}")
 
-    def get_performance_status(self) -> Dict[str, Any]:
+    def get_performance_status(self) -> dict[str, Any]:
         """Get comprehensive performance status."""
         status = {
             'timestamp': time.time(),

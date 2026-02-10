@@ -5,6 +5,8 @@ error rates, and resource usage. Supports histograms, counters, gauges,
 and timing measurements with optional periodic snapshots.
 """
 
+from __future__ import annotations
+
 import logging
 import statistics
 import threading
@@ -12,7 +14,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.module_metrics")
 
@@ -167,7 +169,7 @@ class ModuleMetrics:
         metric = self._get_or_create(name, MetricType.TIMER)
         metric.record(seconds)
 
-    def get(self, name: str) -> Optional[MetricValue]:
+    def get(self, name: str) -> MetricValue | None:
         with self._lock:
             return self._metrics.get(name)
 
@@ -205,7 +207,7 @@ class MetricsCollector:
         snapshot = collector.snapshot()
     """
 
-    _instance: Optional["MetricsCollector"] = None
+    _instance: "MetricsCollector" | None = None
     _instance_lock = threading.Lock()
 
     def __init__(self) -> None:

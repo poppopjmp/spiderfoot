@@ -6,9 +6,11 @@ Wraps ``SpiderFootDb`` event methods behind a type-safe facade:
 ``scanEventStore``, ``scanElementSources*``, ``search``, etc.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 from spiderfoot.db.repositories.base import AbstractRepository
 
@@ -32,7 +34,7 @@ class EventRepository(AbstractRepository):
         scan_id: str,
         event_type: str = "ALL",
         *,
-        source_module: Optional[str] = None,
+        source_module: str | None = None,
         filter_fp: bool = False,
     ) -> list[Any]:
         """Get scan result events.
@@ -130,7 +132,7 @@ class EventRepository(AbstractRepository):
         scan_id: str,
         classification: str,
         message: str,
-        component: Optional[str] = None,
+        component: str | None = None,
     ) -> None:
         """Write a single log event."""
         self.dbh.scanLogEvent(scan_id, classification, message, component)

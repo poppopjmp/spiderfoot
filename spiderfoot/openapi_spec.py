@@ -10,6 +10,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot OpenAPI Specification Generator
 
@@ -28,7 +30,7 @@ Generates a complete OpenAPI 3.1 spec from registered API endpoints::
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 log = logging.getLogger("spiderfoot.openapi_spec")
 
@@ -48,7 +50,7 @@ class OpenAPIGenerator:
     """Generates OpenAPI 3.1 specification for the SpiderFoot API."""
 
     def __init__(self, *, title: str = "SpiderFoot API",
-                 version: Optional[str] = None,
+                 version: str | None = None,
                  description: str = "") -> None:
         self.title = title
         self.version = version or _read_version()

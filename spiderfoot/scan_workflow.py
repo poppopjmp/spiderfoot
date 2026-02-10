@@ -4,10 +4,12 @@ Provides a domain-specific language for composing scan steps,
 conditional branching, parallel execution groups, and retry logic.
 """
 
+from __future__ import annotations
+
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 
 class StepType(Enum):
@@ -35,7 +37,7 @@ class StepResult:
     step_name: str
     status: StepStatus = StepStatus.PENDING
     output: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     elapsed_ms: float = 0.0
     timestamp: float = field(default_factory=time.time)
 
@@ -68,7 +70,7 @@ class WorkflowStep:
         retry_count: int = 0,
         retry_delay: float = 1.0,
         on_failure: str = "stop",
-        tags: Optional[list[str]] = None,
+        tags: list[str] | None = None,
     ) -> None:
         self.name = name
         self.step_type = step_type
@@ -77,14 +79,14 @@ class WorkflowStep:
         self.on_failure = on_failure
         self.tags = tags or []
         self._status = StepStatus.PENDING
-        self._result: Optional[StepResult] = None
+        self._result: StepResult | None = None
 
     @property
     def status(self) -> StepStatus:
         return self._status
 
     @property
-    def result(self) -> Optional[StepResult]:
+    def result(self) -> StepResult | None:
         return self._result
 
     def execute(self, context: dict) -> StepResult:
@@ -118,7 +120,7 @@ class ModuleStep(WorkflowStep):
         options: Module configuration options.
     """
 
-    def __init__(self, name: str, module_name: str, options: Optional[dict] = None, **kwargs) -> None:
+    def __init__(self, name: str, module_name: str, options: dict | None = None, **kwargs) -> None:
         super().__init__(name, step_type=StepType.MODULE, **kwargs)
         self.module_name = module_name
         self.options = options or {}
@@ -146,7 +148,7 @@ class ModuleStep(WorkflowStep):
 class SequenceStep(WorkflowStep):
     """Step that runs child steps sequentially."""
 
-    def __init__(self, name: str, steps: Optional[list[WorkflowStep]] = None, **kwargs) -> None:
+    def __init__(self, name: str, steps: list[WorkflowStep] | None = None, **kwargs) -> None:
         super().__init__(name, step_type=StepType.SEQUENCE, **kwargs)
         self.steps = steps or []
 
@@ -194,7 +196,7 @@ class SequenceStep(WorkflowStep):
 class ParallelStep(WorkflowStep):
     """Step that declares child steps to run in parallel."""
 
-    def __init__(self, name: str, steps: Optional[list[WorkflowStep]] = None, **kwargs) -> None:
+    def __init__(self, name: str, steps: list[WorkflowStep] | None = None, **kwargs) -> None:
         super().__init__(name, step_type=StepType.PARALLEL, **kwargs)
         self.steps = steps or []
 
@@ -250,8 +252,8 @@ class ConditionalStep(WorkflowStep):
         self,
         name: str,
         condition: Callable[[dict], bool],
-        if_true: Optional[WorkflowStep] = None,
-        if_false: Optional[WorkflowStep] = None,
+        if_true: WorkflowStep | None = None,
+        if_false: WorkflowStep | None = None,
         **kwargs,
     ) -> None:
         super().__init__(name, step_type=StepType.CONDITIONAL, **kwargs)
@@ -365,7 +367,7 @@ class ScanWorkflow:
         self._root.add_step(step)
         return self
 
-    def execute(self, context: Optional[dict] = None) -> StepResult:
+    def execute(self, context: dict | None = None) -> StepResult:
         """Execute the entire workflow."""
         ctx = context or {}
         self._status = StepStatus.RUNNING

@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Plugin Marketplace Registry
 
@@ -42,7 +44,7 @@ import shutil
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, List
 
 log = logging.getLogger("spiderfoot.plugin_registry")
 
@@ -210,7 +212,7 @@ class PluginRegistry:
             log.error("Failed to load catalog: %s", e)
             return 0
 
-    def save_catalog(self, filepath: Optional[str] = None) -> bool:
+    def save_catalog(self, filepath: str | None = None) -> bool:
         """Save current catalog to JSON file."""
         path = filepath or os.path.join(
             self.modules_dir, self.REGISTRY_FILE)
@@ -228,9 +230,9 @@ class PluginRegistry:
     # ------------------------------------------------------------------
 
     def search(self, query: str = "", *,
-               tags: Optional[list[str]] = None,
-               categories: Optional[list[str]] = None,
-               author: Optional[str] = None
+               tags: list[str] | None = None,
+               categories: list[str] | None = None,
+               author: str | None = None
                ) -> list[PluginManifest]:
         """Search the plugin catalog.
 
@@ -273,7 +275,7 @@ class PluginRegistry:
 
         return sorted(results, key=lambda m: m.downloads, reverse=True)
 
-    def get_plugin(self, name: str) -> Optional[PluginManifest]:
+    def get_plugin(self, name: str) -> PluginManifest | None:
         """Get a specific plugin manifest from the catalog."""
         return self._catalog.get(name)
 
@@ -282,8 +284,8 @@ class PluginRegistry:
     # ------------------------------------------------------------------
 
     def install(self, name: str, *,
-                version: Optional[str] = None,
-                source_path: Optional[str] = None,
+                version: str | None = None,
+                source_path: str | None = None,
                 force: bool = False) -> bool:
         """Install a plugin.
 
@@ -447,7 +449,7 @@ class PluginRegistry:
     def is_installed(self, name: str) -> bool:
         return name in self._installed
 
-    def get_installed(self, name: str) -> Optional[InstalledPlugin]:
+    def get_installed(self, name: str) -> InstalledPlugin | None:
         return self._installed.get(name)
 
     def enable(self, name: str) -> bool:

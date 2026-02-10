@@ -12,6 +12,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Correlation Service
 
@@ -45,7 +47,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Dict, List, Optional
+from typing import Callable, List, Optional
 
 log = logging.getLogger("spiderfoot.correlation_service")
 
@@ -150,7 +152,7 @@ class CorrelationService:
         self._rules: list[dict] = []
         self._lock = threading.Lock()
         self._running = False
-        self._worker_thread: Optional[threading.Thread] = None
+        self._worker_thread: threading.Thread | None = None
         self._queue: queue.Queue = queue.Queue()
         self._event_bus_sub = None
         self._results_cache: dict[str, list[CorrelationResult]] = {}
@@ -266,7 +268,7 @@ class CorrelationService:
     # Rule CRUD  (Cycle 26)
     # ------------------------------------------------------------------
 
-    def get_rule(self, rule_id: str) -> Optional[dict]:
+    def get_rule(self, rule_id: str) -> dict | None:
         """Return a single rule by its ``id``, or ``None``."""
         for r in self._rules:
             if r.get("id") == rule_id:
@@ -288,7 +290,7 @@ class CorrelationService:
         log.info("Added correlation rule %s", rule["id"])
         return rule
 
-    def update_rule(self, rule_id: str, updates: dict) -> Optional[dict]:
+    def update_rule(self, rule_id: str, updates: dict) -> dict | None:
         """Merge *updates* into the rule identified by *rule_id*.
 
         Returns the updated rule dict or ``None`` if not found.
@@ -316,9 +318,9 @@ class CorrelationService:
     def filter_rules(
         self,
         *,
-        risk: Optional[str] = None,
-        enabled: Optional[bool] = None,
-        tag: Optional[str] = None,
+        risk: str | None = None,
+        enabled: bool | None = None,
+        tag: str | None = None,
     ) -> list[dict]:
         """Return rules matching optional filters."""
         out: list[dict] = []
@@ -337,7 +339,7 @@ class CorrelationService:
     # ------------------------------------------------------------------
 
     def run_for_scan(self, scan_id: str,
-                     rule_ids: Optional[list[str]] = None,
+                     rule_ids: list[str] | None = None,
                      dbh=None) -> list[CorrelationResult]:
         """Run correlations for a specific scan.
 
@@ -403,7 +405,7 @@ class CorrelationService:
         return results
 
     def submit_scan(self, scan_id: str,
-                    rule_ids: Optional[list[str]] = None) -> None:
+                    rule_ids: list[str] | None = None) -> None:
         """Submit a scan for async correlation (queued)."""
         self._queue.put(("scan", scan_id, rule_ids))
 
@@ -411,7 +413,7 @@ class CorrelationService:
         """Get cached results for a scan."""
         return self._results_cache.get(scan_id, [])
 
-    def clear_cache(self, scan_id: Optional[str] = None) -> None:
+    def clear_cache(self, scan_id: str | None = None) -> None:
         """Clear result cache."""
         if scan_id:
             self._results_cache.pop(scan_id, None)
@@ -582,11 +584,11 @@ class CorrelationService:
 # Singleton access
 # ---------------------------------------------------------------------------
 
-_instance: Optional[CorrelationService] = None
+_instance: CorrelationService | None = None
 _instance_lock = threading.Lock()
 
 
-def get_correlation_service(opts: Optional[dict] = None) -> CorrelationService:
+def get_correlation_service(opts: dict | None = None) -> CorrelationService:
     """Get or create the singleton CorrelationService."""
     global _instance
     if _instance is None:

@@ -3,12 +3,14 @@ Secure Configuration Management for SpiderFoot
 Handles encryption of sensitive configuration data including API keys and passwords.
 """
 
+from __future__ import annotations
+
 import os
 import json
 import base64
 import secrets
 import time
-from typing import Dict, Any, Optional, Union
+from typing import Any
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -17,7 +19,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 class SecureConfigManager:
     """Secure configuration manager with encryption for sensitive data."""
 
-    def __init__(self, config_or_key: Union[str, dict[str, Any], None] = None, salt: Optional[bytes] = None) -> None:
+    def __init__(self, config_or_key: str | dict[str, Any] | None = None, salt: bytes | None = None) -> None:
         """Initialize secure configuration manager.
 
         Args:

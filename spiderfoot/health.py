@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Health Check System
 
@@ -38,7 +40,7 @@ import logging
 import threading
 import time
 from enum import Enum
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict
 
 log = logging.getLogger("spiderfoot.health")
 
@@ -55,7 +57,7 @@ class ComponentHealth:
     """Health state of a single component."""
 
     def __init__(self, name: str, status: HealthStatus,
-                 message: str = "", details: Optional[dict] = None,
+                 message: str = "", details: dict | None = None,
                  latency_ms: float = 0.0) -> None:
         self.name = name
         self.status = status
@@ -236,7 +238,7 @@ class HealthAggregator:
             "components": components,
         }
 
-    def check_component(self, name: str) -> Optional[dict]:
+    def check_component(self, name: str) -> dict | None:
         """Check a single component by name."""
         if name in self._checks:
             try:
@@ -304,7 +306,7 @@ def check_cache() -> HealthStatus:
         return HealthStatus.DOWN
 
 
-def register_default_checks(health: Optional[HealthAggregator] = None) -> None:
+def register_default_checks(health: HealthAggregator | None = None) -> None:
     """Register built-in health checks for core services."""
     if health is None:
         health = HealthAggregator.get_instance()

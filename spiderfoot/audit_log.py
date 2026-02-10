@@ -12,6 +12,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Audit Log
 
@@ -41,7 +43,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, List
 
 log = logging.getLogger("spiderfoot.audit_log")
 
@@ -255,7 +257,7 @@ class AuditLogger:
     callback hooks for real-time audit event processing.
     """
 
-    def __init__(self, backends: Optional[list[AuditBackend]] = None) -> None:
+    def __init__(self, backends: list[AuditBackend] | None = None) -> None:
         """
         Args:
             backends: List of audit backends. Defaults to memory backend.
@@ -380,7 +382,7 @@ class AuditLogger:
 # Singleton
 # ---------------------------------------------------------------------------
 
-_audit_instance: Optional[AuditLogger] = None
+_audit_instance: AuditLogger | None = None
 _audit_lock = threading.Lock()
 
 

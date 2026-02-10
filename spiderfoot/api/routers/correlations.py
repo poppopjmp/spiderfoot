@@ -6,8 +6,10 @@ raw ``SpiderFootDb`` / config manipulation.  Uses ``PaginationParams``
 and ``PaginatedResponse`` from Cycle 25.
 """
 
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from typing import Optional, List, Dict, Any
+from typing import List, Any
 import logging
 from datetime import datetime
 
@@ -32,17 +34,17 @@ class CorrelationRuleRequest(BaseModel):
     risk: str = Field(..., description="Risk level: HIGH, MEDIUM, LOW, INFO")
     logic: str = Field(..., description="Rule logic/query")
     enabled: bool = Field(True, description="Whether rule is enabled")
-    tags: Optional[list[str]] = Field(None, description="Rule tags")
+    tags: list[str] | None = Field(None, description="Rule tags")
 
 
 class CorrelationRuleUpdate(BaseModel):
     """Partial-update model for a correlation rule."""
-    name: Optional[str] = Field(None, description="Rule name")
-    description: Optional[str] = Field(None, description="Rule description")
-    risk: Optional[str] = Field(None, description="Risk level")
-    logic: Optional[str] = Field(None, description="Rule logic/query")
-    enabled: Optional[bool] = Field(None, description="Whether rule is enabled")
-    tags: Optional[list[str]] = Field(None, description="Rule tags")
+    name: str | None = Field(None, description="Rule name")
+    description: str | None = Field(None, description="Rule description")
+    risk: str | None = Field(None, description="Risk level")
+    logic: str | None = Field(None, description="Rule logic/query")
+    enabled: bool | None = Field(None, description="Whether rule is enabled")
+    tags: list[str] | None = Field(None, description="Rule tags")
 
 
 # -----------------------------------------------------------------------
@@ -70,9 +72,9 @@ def _result_to_dict(r: CorrelationResult) -> dict:
 @router.get("/correlation-rules")
 async def list_correlation_rules(
     api_key: str = optional_auth_dep,
-    risk: Optional[str] = Query(None, description="Filter by risk level"),
-    enabled: Optional[bool] = Query(None, description="Filter by enabled status"),
-    tag: Optional[str] = Query(None, description="Filter by tag"),
+    risk: str | None = Query(None, description="Filter by risk level"),
+    enabled: bool | None = Query(None, description="Filter by enabled status"),
+    tag: str | None = Query(None, description="Filter by tag"),
     params: PaginationParams = Depends(),
     svc: CorrelationService = Depends(get_correlation_svc),
 ):
@@ -213,8 +215,8 @@ async def test_correlation_rule(
 async def get_detailed_scan_correlations(
     scan_id: str,
     api_key: str = optional_auth_dep,
-    risk: Optional[str] = Query(None, description="Filter by risk level"),
-    rule_id: Optional[str] = Query(None, description="Filter by specific rule"),
+    risk: str | None = Query(None, description="Filter by risk level"),
+    rule_id: str | None = Query(None, description="Filter by specific rule"),
     params: PaginationParams = Depends(),
     svc: CorrelationService = Depends(get_correlation_svc),
 ):
@@ -267,7 +269,7 @@ async def analyze_correlation_patterns(
 ):
     """Run correlation analysis across multiple scans."""
     scan_ids: list[str] = analysis_request.get("scan_ids", [])
-    rule_ids: Optional[list[str]] = analysis_request.get("rule_ids") or None
+    rule_ids: list[str] | None = analysis_request.get("rule_ids") or None
 
     if not scan_ids:
         raise HTTPException(
@@ -324,7 +326,7 @@ async def analyze_correlation_patterns(
 async def export_scan_correlations(
     scan_id: str,
     format: str = Query("csv", description="Export format: csv, json"),
-    risk: Optional[str] = Query(None, description="Filter by risk level"),
+    risk: str | None = Query(None, description="Filter by risk level"),
     api_key: str = optional_auth_dep,
     svc: CorrelationService = Depends(get_correlation_svc),
 ):

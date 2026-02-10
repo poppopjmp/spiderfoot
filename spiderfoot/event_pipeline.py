@@ -5,13 +5,15 @@ transformation, validation, enrichment, and routing.
 Supports async-compatible middleware pattern with error isolation.
 """
 
+from __future__ import annotations
+
 import logging
 import threading
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.event_pipeline")
 
@@ -29,7 +31,7 @@ class PipelineEvent:
     event_type: str
     data: str
     module: str = ""
-    source_event: Optional[str] = None
+    source_event: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
     tags: set[str] = field(default_factory=set)
     _dropped: bool = False
@@ -117,8 +119,8 @@ class ValidatorStage(PipelineStage):
 
     def __init__(
         self,
-        allowed_types: Optional[set[str]] = None,
-        max_data_size: Optional[int] = None,
+        allowed_types: set[str] | None = None,
+        max_data_size: int | None = None,
         name: str = "validator",
     ) -> None:
         super().__init__(name=name)
@@ -158,7 +160,7 @@ class TransformStage(PipelineStage):
 class TaggingStage(PipelineStage):
     """Adds tags to events based on rules."""
 
-    def __init__(self, rules: Optional[dict[str, str]] = None, name: str = "tagger") -> None:
+    def __init__(self, rules: dict[str, str] | None = None, name: str = "tagger") -> None:
         super().__init__(name=name)
         self._rules: dict[str, str] = rules or {}
 

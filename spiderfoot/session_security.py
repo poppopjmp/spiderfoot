@@ -3,11 +3,13 @@ Secure Session Management for SpiderFoot Web Interface
 Provides secure session handling with proper timeouts and validation.
 """
 
+from __future__ import annotations
+
 import time
 import secrets
 import hashlib
 import hmac
-from typing import Dict, Optional, Any
+from typing import Any
 import redis
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
@@ -81,7 +83,7 @@ class SecureSessionManager:
         return session_token
 
     def validate_session(self, session_token: str, user_agent: str = None,
-                        ip_address: str = None) -> Optional[dict[str, Any]]:
+                        ip_address: str = None) -> dict[str, Any] | None:
         """Validate and refresh session.
 
         Args:
@@ -240,7 +242,7 @@ class SecureSessionManager:
             # Store in memory
             self._memory_sessions[session_token] = session_data
 
-    def _get_session(self, session_token: str) -> Optional[dict[str, Any]]:
+    def _get_session(self, session_token: str) -> dict[str, Any] | None:
         """Retrieve session data.
 
         Args:

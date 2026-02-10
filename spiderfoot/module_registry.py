@@ -33,6 +33,8 @@ Usage::
     instance = registry.create_instance("sfp_shodan", merged_opts)
 """
 
+from __future__ import annotations
+
 import glob
 import importlib
 import importlib.util
@@ -43,15 +45,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from typing import (
-    Any,
-    Dict,
-    FrozenSet,
-    List,
-    Optional,
-    Set,
-    Tuple,
-)
+from typing import Any, FrozenSet, List
 
 from collections.abc import Iterable
 
@@ -111,7 +105,7 @@ class ModuleDescriptor:
     optdescs: dict[str, str]
     """Human descriptions for each option key."""
 
-    data_source: Optional[dict[str, Any]]
+    data_source: dict[str, Any] | None
     """``meta['dataSource']`` dict if present."""
 
     priority: int
@@ -123,7 +117,7 @@ class ModuleDescriptor:
     status: ModuleStatus = ModuleStatus.DISCOVERED
     """Current registry status."""
 
-    error: Optional[str] = None
+    error: str | None = None
     """Error message when ``status == FAILED``."""
 
     # Convenience helpers -----------------------------------------------
@@ -141,7 +135,7 @@ class ModuleDescriptor:
         return "slow" in self.flags
 
     @property
-    def data_source_model(self) -> Optional[str]:
+    def data_source_model(self) -> str | None:
         if self.data_source:
             return self.data_source.get("model")
         return None
@@ -206,8 +200,8 @@ class ModuleRegistry:
         self._classes: dict[str, type] = {}
 
         # Discovery metadata
-        self._discovered_at: Optional[float] = None
-        self._modules_dir: Optional[str] = None
+        self._discovered_at: float | None = None
+        self._modules_dir: str | None = None
 
     # ------------------------------------------------------------------
     # Discovery
@@ -215,9 +209,9 @@ class ModuleRegistry:
 
     def discover(
         self,
-        modules_dir: Optional[str] = None,
+        modules_dir: str | None = None,
         *,
-        ignore_files: Optional[Iterable[str]] = None,
+        ignore_files: Iterable[str] | None = None,
     ) -> "DiscoveryResult":
         """Scan *modules_dir* for ``sfp_*.py`` files and build the catalog.
 
@@ -333,7 +327,7 @@ class ModuleRegistry:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _introspect(filepath: str) -> tuple[ModuleDescriptor, Optional[type]]:
+    def _introspect(filepath: str) -> tuple[ModuleDescriptor, type | None]:
         """Import a module file and extract its descriptor + class."""
         mod_name = os.path.basename(filepath)[:-3]
 
@@ -447,7 +441,7 @@ class ModuleRegistry:
             self._by_watched_event.keys()
         )
 
-    def get(self, name: str) -> Optional[ModuleDescriptor]:
+    def get(self, name: str) -> ModuleDescriptor | None:
         """Get a single module descriptor by name."""
         return self._descriptors.get(name)
 
@@ -576,10 +570,10 @@ class ModuleRegistry:
     def create_instance(
         self,
         module_name: str,
-        merged_opts: Optional[dict[str, Any]] = None,
+        merged_opts: dict[str, Any] | None = None,
         *,
         sf: Any = None,
-        scan_id: Optional[str] = None,
+        scan_id: str | None = None,
         dbh: Any = None,
         target: Any = None,
         shared_pool: Any = None,
@@ -650,7 +644,7 @@ class ModuleRegistry:
         self._classes[module_name] = mod_class
         return mod_class
 
-    def get_class(self, module_name: str) -> Optional[type]:
+    def get_class(self, module_name: str) -> type | None:
         """Return the raw plugin class (loading lazily if needed)."""
         cls = self._classes.get(module_name)
         if cls is not None:

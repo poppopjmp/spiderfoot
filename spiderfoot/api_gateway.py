@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot API Gateway
 
@@ -43,7 +45,7 @@ import os
 import threading
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.api_gateway")
 
@@ -193,7 +195,7 @@ class APIGateway:
     ServiceClient.
     """
 
-    def __init__(self, mode: Optional[str] = None) -> None:
+    def __init__(self, mode: str | None = None) -> None:
         """
         Args:
             mode: "monolith" or "microservices". Auto-detects from

@@ -10,6 +10,8 @@
 # License:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 Performance Optimization Module
 
@@ -29,7 +31,7 @@ import threading
 import asyncio
 import gc
 from collections import defaultdict, OrderedDict
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, Any, Callable
 import weakref
 import resource
 
@@ -49,7 +51,7 @@ class TTLCache:
         self.cleanup_thread = None
         self.start_cleanup_thread()
     
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get item from cache if not expired."""
         with self.lock:
             if key not in self.cache:
@@ -67,7 +69,7 @@ class TTLCache:
             self.cache[key] = value
             return value
     
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> None:
         """Set item in cache with TTL."""
         with self.lock:
             if ttl is None:
@@ -116,7 +118,7 @@ class TTLCache:
             self.cache.clear()
             self.ttl_map.clear()
     
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         with self.lock:
             return {
@@ -160,7 +162,7 @@ class AdaptiveRateLimiter:
             if success_rate > 0.9 and self.current_delay > self.base_delay:
                 self.current_delay = max(self.base_delay, self.current_delay * 0.9)
     
-    def record_failure(self, status_code: Optional[str] = None) -> None:
+    def record_failure(self, status_code: str | None = None) -> None:
         """Record failed request and increase delay."""
         with self.lock:
             self.failure_count += 1
@@ -182,7 +184,7 @@ class ResourceMonitor:
         self.sample_interval = 60  # seconds
         self.max_samples = 100
         
-    def sample_resources(self) -> Dict[str, float]:
+    def sample_resources(self) -> dict[str, float]:
         """Sample current resource usage."""
         try:
             # Memory usage
@@ -278,7 +280,7 @@ class RequestBatcher:
             daemon=True
         ).start()
     
-    def _process_batch(self, batch_key: str, requests: List[Dict], callbacks: List[Callable]):
+    def _process_batch(self, batch_key: str, requests: list[Dict], callbacks: list[Callable]):
         """Process a batch of requests."""
         # This would be implemented based on specific API requirements
         # For now, process individually
@@ -388,13 +390,13 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
                 self.debug("Triggering garbage collection for memory optimization")
                 gc.collect()
 
-    def get_cached_result(self, cache_key: str) -> Optional[Any]:
+    def get_cached_result(self, cache_key: str) -> Any | None:
         """Get result from cache."""
         if not self.cache:
             return None
         return self.cache.get(cache_key)
 
-    def set_cached_result(self, cache_key: str, result: Any, ttl: Optional[int] = None) -> None:
+    def set_cached_result(self, cache_key: str, result: Any, ttl: int | None = None) -> None:
         """Store result in cache."""
         if self.cache:
             self.cache.set(cache_key, result, ttl)
@@ -414,7 +416,7 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
         if self.rate_limiters:
             self.rate_limiters[domain].record_success()
 
-    def record_request_failure(self, domain: str, status_code: Optional[str] = None) -> None:
+    def record_request_failure(self, domain: str, status_code: str | None = None) -> None:
         """Record failed request for rate limiting."""
         if self.rate_limiters:
             self.rate_limiters[domain].record_failure(status_code)

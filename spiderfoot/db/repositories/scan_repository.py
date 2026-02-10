@@ -6,10 +6,12 @@ Wraps ``SpiderFootDb`` scan methods (``scanInstanceCreate``,
 ``scanConfigSet``, ``scanConfigGet``) behind a type-safe facade.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, List
 
 from spiderfoot.db.repositories.base import AbstractRepository
 
@@ -68,7 +70,7 @@ class ScanRepository(AbstractRepository):
         self.dbh.scanInstanceCreate(scan_id, name, target)
         log.debug("Created scan %s (%s)", scan_id, name)
 
-    def get_scan(self, scan_id: str) -> Optional[ScanRecord]:
+    def get_scan(self, scan_id: str) -> ScanRecord | None:
         """Get a single scan by ID.
 
         Returns:
@@ -98,8 +100,8 @@ class ScanRepository(AbstractRepository):
         scan_id: str,
         status: str,
         *,
-        started: Optional[float] = None,
-        ended: Optional[float] = None,
+        started: float | None = None,
+        ended: float | None = None,
     ) -> None:
         """Update scan status and optional timestamps."""
         self.dbh.scanInstanceSet(scan_id, started=started, ended=ended, status=status)
@@ -116,14 +118,14 @@ class ScanRepository(AbstractRepository):
         """Store serialized scan configuration."""
         self.dbh.scanConfigSet(scan_id, config_data)
 
-    def get_config(self, scan_id: str) -> Optional[dict[str, Any]]:
+    def get_config(self, scan_id: str) -> dict[str, Any] | None:
         """Retrieve scan configuration."""
         return self.dbh.scanConfigGet(scan_id)
 
     def get_scan_log(
         self,
         scan_id: str,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         from_row: int = 0,
         reverse: bool = False,
     ) -> list[Any]:

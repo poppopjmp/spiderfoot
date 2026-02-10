@@ -9,6 +9,8 @@
 # License:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 Advanced Security Hardening Module
 
@@ -29,7 +31,7 @@ import hmac
 import base64
 import secrets
 import threading
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -84,7 +86,7 @@ class User:
     username: str
     email: str
     security_level: SecurityLevel
-    permissions: List[Permission]
+    permissions: list[Permission]
     mfa_enabled: bool
     last_login: datetime
     failed_attempts: int = 0
@@ -106,7 +108,7 @@ class SecurityEvent:
     source_ip: str
     user_agent: str
     risk_score: float
-    details: Dict[str, Any]
+    details: dict[str, Any]
 
 
 @dataclass
@@ -119,7 +121,7 @@ class ThreatIntel:
     source: str
     first_seen: datetime
     last_seen: datetime
-    tags: List[str]
+    tags: list[str]
 
 
 class EncryptionManager:
@@ -208,7 +210,7 @@ class EncryptionManager:
                 logging.error(f"Decryption failed: {e}")
                 return encrypted_data
     
-    def hash_password(self, password: str, salt: str = None) -> Tuple[str, str]:
+    def hash_password(self, password: str, salt: str = None) -> tuple[str, str]:
         """Hash password with salt."""
         if salt is None:
             salt = secrets.token_hex(32)
@@ -271,7 +273,7 @@ class AuthenticationManager:
             self.users[user_id] = user
             return user
     
-    def authenticate_user(self, username: str, password: str, totp_code: str = None) -> Optional[str]:
+    def authenticate_user(self, username: str, password: str, totp_code: str = None) -> str | None:
         """Authenticate user with optional MFA."""
         with self.auth_lock:
             # Find user by username
@@ -343,7 +345,7 @@ class AuthenticationManager:
         
         return token
     
-    def validate_session(self, token: str) -> Optional[Dict[str, Any]]:
+    def validate_session(self, token: str) -> dict[str, Any] | None:
         """Validate session token."""
         with self.auth_lock:
             if token not in self.active_sessions:
@@ -458,7 +460,7 @@ class RBACManager:
             
             return True
     
-    def get_user_permissions(self, user_id: str) -> List[Permission]:
+    def get_user_permissions(self, user_id: str) -> list[Permission]:
         """Get all permissions for user."""
         with self.rbac_lock:
             role = self.user_roles.get(user_id)
@@ -491,7 +493,7 @@ class SecurityAuditLogger:
     
     def log_security_event(self, user_id: str, action: str, resource: str, 
                           outcome: str, source_ip: str = "", user_agent: str = "",
-                          details: Dict[str, Any] = None) -> SecurityEvent:
+                          details: dict[str, Any] = None) -> SecurityEvent:
         """Log a security event."""
         event = SecurityEvent(
             event_id=hashlib.sha256(f"{time.time()}{user_id}{action}".encode()).hexdigest(),
@@ -577,7 +579,7 @@ class SecurityAuditLogger:
         
         return min(base_score, 1.0)
     
-    def get_security_events(self, user_id: str = None, hours: int = 24) -> List[SecurityEvent]:
+    def get_security_events(self, user_id: str = None, hours: int = 24) -> list[SecurityEvent]:
         """Get security events for analysis."""
         with self.audit_lock:
             cutoff_time = datetime.now() - timedelta(hours=hours)
@@ -595,7 +597,7 @@ class SecurityAuditLogger:
             
             return filtered_events
     
-    def detect_suspicious_activity(self) -> List[SecurityEvent]:
+    def detect_suspicious_activity(self) -> list[SecurityEvent]:
         """Detect suspicious security activities."""
         suspicious_events = []
         
@@ -656,7 +658,7 @@ class ZeroTrustController:
             'exceptions': []
         }
     
-    def evaluate_trust(self, user_context: Dict[str, Any], resource_context: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate_trust(self, user_context: dict[str, Any], resource_context: dict[str, Any]) -> dict[str, Any]:
         """Evaluate trust for access request."""
         with self.zero_trust_lock:
             # Determine applicable policy
@@ -693,7 +695,7 @@ class ZeroTrustController:
                 'risk_score': len(conditions_failed) / max(len(policy['conditions']), 1)
             }
     
-    def _match_policy(self, user_context: Dict[str, Any], resource_context: Dict[str, Any]) -> str:
+    def _match_policy(self, user_context: dict[str, Any], resource_context: dict[str, Any]) -> str:
         """Match appropriate trust policy."""
         # Simple policy matching logic
         user_role = user_context.get('role', '')
@@ -706,8 +708,8 @@ class ZeroTrustController:
         else:
             return 'internal_network'
     
-    def _evaluate_condition(self, condition: str, user_context: Dict[str, Any], 
-                           resource_context: Dict[str, Any]) -> bool:
+    def _evaluate_condition(self, condition: str, user_context: dict[str, Any], 
+                           resource_context: dict[str, Any]) -> bool:
         """Evaluate a specific trust condition."""
         if condition == 'authenticated':
             return user_context.get('authenticated', False)
@@ -725,7 +727,7 @@ class ZeroTrustController:
         else:
             return False
     
-    def register_device(self, device_id: str, device_info: Dict[str, Any]):
+    def register_device(self, device_id: str, device_info: dict[str, Any]):
         """Register a trusted device."""
         with self.zero_trust_lock:
             self.device_registry[device_id] = {
@@ -872,7 +874,7 @@ class sfp__security_hardening(SpiderFootModernPlugin):
             except Exception as e:
                 self.error(f"Security monitoring failed: {e}")
 
-    def authenticate_user(self, username: str, password: str, totp_code: str = None) -> Optional[str]:
+    def authenticate_user(self, username: str, password: str, totp_code: str = None) -> str | None:
         """Authenticate user with MFA."""
         if not hasattr(self, 'auth_manager'):
             return None
@@ -984,7 +986,7 @@ class sfp__security_hardening(SpiderFootModernPlugin):
             return self.encryption_manager.decrypt_data(encrypted_data)
         return encrypted_data
 
-    def get_security_status(self) -> Dict[str, Any]:
+    def get_security_status(self) -> dict[str, Any]:
         """Get comprehensive security status."""
         status = {
             'timestamp': datetime.now().isoformat(),

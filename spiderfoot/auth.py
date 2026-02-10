@@ -10,6 +10,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Auth Middleware
 
@@ -44,7 +46,6 @@ import secrets
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Set
 
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
@@ -237,7 +238,7 @@ class AuthGuard:
 
     def authenticate(self, headers: dict[str, str],
                      path: str = "/",
-                     query_params: Optional[dict[str, str]] = None
+                     query_params: dict[str, str] | None = None
                      ) -> AuthResult:
         """Authenticate a request.
 
@@ -279,7 +280,7 @@ class AuthGuard:
         return False
 
     def _check_api_key(self, headers: dict[str, str],
-                       query_params: Optional[dict[str, str]]
+                       query_params: dict[str, str] | None
                        ) -> AuthResult:
         """Validate API key from header or query parameter."""
         # Check header
@@ -386,7 +387,7 @@ class AuthGuard:
         return key
 
     def generate_jwt(self, subject: str,
-                     expiry: Optional[int] = None) -> str:
+                     expiry: int | None = None) -> str:
         """Generate a JWT-like token.
 
         Args:

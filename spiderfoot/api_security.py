@@ -3,13 +3,15 @@ API Security Module for SpiderFoot
 Provides comprehensive API security including authentication, authorization, and request validation.
 """
 
+from __future__ import annotations
+
 import time
 import hmac
 import hashlib
 import logging
 import secrets
 import jwt
-from typing import Dict, List, Optional, Any, Tuple
+from typing import List, Any, Tuple
 from functools import wraps
 from flask import request, jsonify, g
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -75,7 +77,7 @@ class APISecurityManager:
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
-    def validate_api_key(self, api_key: str) -> Optional[dict[str, Any]]:
+    def validate_api_key(self, api_key: str) -> dict[str, Any] | None:
         """Validate API key and extract claims.
 
         Args:

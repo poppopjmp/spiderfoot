@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Export Service
 
@@ -38,7 +40,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, IO, List, Optional
+from typing import Any, IO
 
 from collections.abc import Generator
 
@@ -75,7 +77,7 @@ class ExportConfig:
 class ExportService:
     """Multi-format scan result exporter."""
 
-    def __init__(self, config: Optional[ExportConfig] = None) -> None:
+    def __init__(self, config: ExportConfig | None = None) -> None:
         self.config = config or ExportConfig()
 
     def export_scan(self, scan_id: str,

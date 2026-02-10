@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot gRPC Service Layer
 
@@ -57,7 +59,7 @@ import logging
 import threading
 from http.client import HTTPConnection
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 from urllib.parse import urlparse
 
 log = logging.getLogger("spiderfoot.grpc_service")
@@ -92,7 +94,7 @@ class ServiceClient:
 
     def __init__(self, service_name: str, endpoint: str,
                  timeout: float = 30.0,
-                 use_grpc: Optional[bool] = None) -> None:
+                 use_grpc: bool | None = None) -> None:
         """
         Args:
             service_name: Logical service name (scanner, data, etc.).
@@ -106,7 +108,7 @@ class ServiceClient:
         self._use_grpc = use_grpc if use_grpc is not None else _GRPC_AVAILABLE
 
     def call(self, method: str, payload: dict[str, Any] = None,
-             timeout: Optional[float] = None) -> dict[str, Any]:
+             timeout: float | None = None) -> dict[str, Any]:
         """Call a remote service method.
 
         Args:
@@ -246,8 +248,8 @@ class ServiceServer:
         self.service_name = service_name
         self.port = port
         self._handlers: dict[str, Callable] = {}
-        self._server: Optional[HTTPServer] = None
-        self._thread: Optional[threading.Thread] = None
+        self._server: HTTPServer | None = None
+        self._thread: threading.Thread | None = None
         self._running = False
 
     def register(self, method: str,

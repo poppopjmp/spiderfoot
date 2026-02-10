@@ -6,6 +6,8 @@ via the EventBus instead of in-process queues. This is the foundation
 for the microservices transition.
 """
 
+from __future__ import annotations
+
 import concurrent.futures
 import logging
 import multiprocessing
@@ -16,7 +18,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, List
 
 log = logging.getLogger("spiderfoot.worker_pool")
 
@@ -92,7 +94,7 @@ class WorkerInfo:
     events_processed: int = 0
     events_errored: int = 0
     last_activity: float = 0
-    current_scan_id: Optional[str] = None
+    current_scan_id: str | None = None
     started_at: float = 0
 
     @property
@@ -126,9 +128,9 @@ class ModuleWorker:
         self,
         module_name: str,
         module_instance: Any,
-        input_queue: Optional[queue.Queue] = None,
-        output_callback: Optional[Callable] = None,
-        config: Optional[WorkerPoolConfig] = None,
+        input_queue: queue.Queue | None = None,
+        output_callback: Callable | None = None,
+        config: WorkerPoolConfig | None = None,
     ) -> None:
         self.module_name = module_name
         self.module = module_instance
@@ -150,7 +152,7 @@ class ModuleWorker:
         self.info.state = WorkerState.STOPPING
         self._stop_event.set()
 
-    def process_event(self, event: dict[str, Any]) -> Optional[list[dict[str, Any]]]:
+    def process_event(self, event: dict[str, Any]) -> list[dict[str, Any]] | None:
         """Process a single event through the module.
 
         Args:
@@ -224,21 +226,21 @@ class WorkerPool:
         pool.shutdown()
     """
 
-    def __init__(self, config: Optional[WorkerPoolConfig] = None) -> None:
+    def __init__(self, config: WorkerPoolConfig | None = None) -> None:
         self.config = config or WorkerPoolConfig()
         self.log = logging.getLogger("spiderfoot.worker_pool")
         self._workers: dict[str, ModuleWorker] = {}
-        self._executor: Optional[concurrent.futures.Executor] = None
+        self._executor: concurrent.futures.Executor | None = None
         self._futures: dict[str, concurrent.futures.Future] = {}
         self._lock = threading.RLock()
         self._running = False
-        self._monitor_thread: Optional[threading.Thread] = None
+        self._monitor_thread: threading.Thread | None = None
 
     def register_module(
         self,
         module_name: str,
         module_instance: Any,
-        output_callback: Optional[Callable] = None,
+        output_callback: Callable | None = None,
     ) -> ModuleWorker:
         """Register a module for pool execution.
 
@@ -406,7 +408,7 @@ class WorkerPool:
                             self.log.error("Worker %s crashed: %s", name, exc)
                             worker.info.state = WorkerState.ERROR
 
-    def get_worker_info(self, module_name: str) -> Optional[dict[str, Any]]:
+    def get_worker_info(self, module_name: str) -> dict[str, Any] | None:
         """Get info about a specific worker."""
         worker = self._workers.get(module_name)
         if worker:

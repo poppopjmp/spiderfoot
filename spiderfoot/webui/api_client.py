@@ -17,9 +17,11 @@ Usage::
     scan = client.scanInstanceGet("abc123")
 """
 
+from __future__ import annotations
+
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 log = logging.getLogger("spiderfoot.webui.api_client")
 
@@ -86,13 +88,13 @@ class ApiClient:
     def _url(self, path: str) -> str:
         return f"{self._base_url}/{path.lstrip('/')}"
 
-    def _get(self, path: str, params: Optional[dict] = None) -> Any:
+    def _get(self, path: str, params: dict | None = None) -> Any:
         session = self._get_session()
         resp = session.get(self._url(path), params=params, timeout=self._timeout)
         resp.raise_for_status()
         return resp.json()
 
-    def _post(self, path: str, json_data: Optional[dict] = None) -> Any:
+    def _post(self, path: str, json_data: dict | None = None) -> Any:
         session = self._get_session()
         resp = session.post(
             self._url(path), json=json_data or {}, timeout=self._timeout
@@ -108,7 +110,7 @@ class ApiClient:
             return resp.json()
         return {"success": True}
 
-    def _patch(self, path: str, json_data: Optional[dict] = None) -> Any:
+    def _patch(self, path: str, json_data: dict | None = None) -> Any:
         session = self._get_session()
         resp = session.patch(
             self._url(path), json=json_data or {}, timeout=self._timeout
@@ -209,7 +211,7 @@ class ApiClient:
             log.error("API configGet failed: %s", e)
             return {}
 
-    def configSet(self, optMap: Optional[dict] = None) -> None:
+    def configSet(self, optMap: dict | None = None) -> None:
         """Set global configuration."""
         if optMap is None:
             return

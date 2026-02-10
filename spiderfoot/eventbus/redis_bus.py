@@ -6,11 +6,13 @@ SpiderFoot microservices. Supports consumer groups for load balancing
 across multiple worker instances.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
 import uuid
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from spiderfoot.eventbus.base import EventBus, EventBusConfig, EventEnvelope
 
@@ -24,7 +26,7 @@ class RedisEventBus(EventBus):
     Requires: redis[hiredis] (aioredis)
     """
 
-    def __init__(self, config: Optional[EventBusConfig] = None) -> None:
+    def __init__(self, config: EventBusConfig | None = None) -> None:
         super().__init__(config)
         self._redis = None
         self._consumer_group = f"sf-workers-{uuid.uuid4().hex[:8]}"

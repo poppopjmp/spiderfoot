@@ -5,9 +5,11 @@ Reads configuration from SpiderFoot settings or environment variables
 and returns the appropriate DataService implementation.
 """
 
+from __future__ import annotations
+
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 from spiderfoot.data_service.base import DataService, DataServiceBackend, DataServiceConfig
 from spiderfoot.data_service.local import LocalDataService
@@ -17,7 +19,7 @@ log = logging.getLogger("spiderfoot.dataservice.factory")
 
 
 def create_data_service(
-    config: Optional[DataServiceConfig] = None,
+    config: DataServiceConfig | None = None,
     resilient: bool = True,
 ) -> DataService:
     """Create a DataService instance from explicit config.

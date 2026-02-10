@@ -1,15 +1,17 @@
 """
 Pydantic models for SpiderFoot API
 """
+from __future__ import annotations
+
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Dict, Any, Optional
+from typing import List, Any
 from datetime import datetime
 
 class ScanRequest(BaseModel):
     name: str = Field(..., description="Scan name")
     target: str = Field(..., description="Target to scan")
-    modules: Optional[list[str]] = Field(default=None, description="List of modules to use")
-    type_filter: Optional[list[str]] = Field(default=None, description="Event types to collect")
+    modules: list[str] | None = Field(default=None, description="List of modules to use")
+    type_filter: list[str] | None = Field(default=None, description="Event types to collect")
     @field_validator('name')
     @classmethod
     def name_must_not_be_empty(cls, v):
@@ -29,12 +31,12 @@ class ScanResponse(BaseModel):
     target: str
     status: str
     created: datetime
-    started: Optional[datetime] = None
-    ended: Optional[datetime] = None
+    started: datetime | None = None
+    ended: datetime | None = None
 
 class WorkspaceRequest(BaseModel):
     name: str = Field(..., description="Workspace name")
-    description: Optional[str] = Field(default="", description="Workspace description")
+    description: str | None = Field(default="", description="Workspace description")
 
 class WorkspaceResponse(BaseModel):
     workspace_id: str
@@ -48,16 +50,16 @@ class WorkspaceResponse(BaseModel):
 class TargetRequest(BaseModel):
     target: str = Field(..., description="Target value")
     target_type: str = Field(..., description="Target type")
-    metadata: Optional[dict[str, Any]] = Field(default_factory=dict)
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
 
 class MultiScanRequest(BaseModel):
-    targets: Optional[list[str]] = Field(default=None)
+    targets: list[str] | None = Field(default=None)
     modules: list[str] = Field(..., description="Modules to use")
-    scan_options: Optional[dict[str, Any]] = Field(default_factory=dict)
+    scan_options: dict[str, Any] | None = Field(default_factory=dict)
 
 class CTIReportRequest(BaseModel):
     report_type: str = Field(default="threat_assessment")
-    custom_prompt: Optional[str] = None
+    custom_prompt: str | None = None
     output_format: str = Field(default="json")
 
 class EventResponse(BaseModel):
@@ -71,7 +73,7 @@ class EventResponse(BaseModel):
     visibility: int
     risk: int
     created: datetime
-    hash: Optional[str] = None
+    hash: str | None = None
 
 class ModuleInfo(BaseModel):
     name: str
@@ -79,7 +81,7 @@ class ModuleInfo(BaseModel):
     description: str
     flags: list[str]
     dependencies: list[str]
-    documentation_url: Optional[str] = None
+    documentation_url: str | None = None
 
 class ApiKeyModel(BaseModel):
     key: str = Field(..., description="API key")

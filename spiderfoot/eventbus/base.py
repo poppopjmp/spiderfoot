@@ -5,12 +5,14 @@ All event bus implementations must inherit from EventBus and implement
 the required publish/subscribe/unsubscribe interface.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 
 class EventBusBackend(str, Enum):
@@ -84,7 +86,7 @@ class EventBus(ABC):
     distributed services.
     """
 
-    def __init__(self, config: Optional[EventBusConfig] = None) -> None:
+    def __init__(self, config: EventBusConfig | None = None) -> None:
         self.config = config or EventBusConfig()
         self.log = logging.getLogger(f"spiderfoot.eventbus.{self.config.backend.value}")
         self._running = False

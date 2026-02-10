@@ -13,6 +13,8 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 Migration notes (sfp_ipinfo → sfp_ipinfo_modern):
 
@@ -30,7 +32,7 @@ New features enabled by ModernPlugin:
 """
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
@@ -66,11 +68,11 @@ class sfp_ipinfo_modern(SpiderFootModernPlugin):
         }
     }
 
-    opts: Dict[str, Any] = {
+    opts: dict[str, Any] = {
         "api_key": "",
         "cache_ttl": 3600,  # NEW: cache responses for 1 hour
     }
-    optdescs: Dict[str, str] = {
+    optdescs: dict[str, str] = {
         "api_key": "Ipinfo.io access token.",
         "cache_ttl": "Seconds to cache API responses (0 to disable).",
     }
@@ -83,13 +85,13 @@ class sfp_ipinfo_modern(SpiderFootModernPlugin):
         self.results = self.tempStorage()
         self.errorState = False
 
-    def watchedEvents(self) -> List[str]:
+    def watchedEvents(self) -> list[str]:
         return ['IP_ADDRESS', 'IPV6_ADDRESS']
 
-    def producedEvents(self) -> List[str]:
+    def producedEvents(self) -> list[str]:
         return ["GEOINFO"]
 
-    def queryIP(self, ip: str) -> Optional[dict]:
+    def queryIP(self, ip: str) -> dict | None:
         """Query ipinfo.io for IP geolocation.
 
         Uses CacheService for response caching (new feature) and

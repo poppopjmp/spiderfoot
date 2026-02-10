@@ -12,6 +12,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Retry and Recovery Framework
 
@@ -49,9 +51,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import (
-    Any, Callable, Deque, Dict, List, Optional, Set, Tuple, Type,
-)
+from typing import Any, Callable, Deque, Optional, Type
 
 log = logging.getLogger("spiderfoot.retry")
 
@@ -87,12 +87,12 @@ class RetryConfig:
     )
 
     # Optional predicate for retry decision
-    retry_predicate: Optional[Callable[[Exception], bool]] = None
+    retry_predicate: Callable[[Exception], bool] | None = None
 
     # Callback hooks
-    on_retry: Optional[Callable[[int, Exception, float], None]] = None
-    on_success: Optional[Callable[[int], None]] = None
-    on_failure: Optional[Callable[[int, Exception], None]] = None
+    on_retry: Callable[[int, Exception, float], None] | None = None
+    on_success: Callable[[int], None] | None = None
+    on_failure: Callable[[int, Exception], None] | None = None
 
     def compute_delay(self, attempt: int) -> float:
         """Compute delay for a given attempt number (1-indexed)."""
@@ -153,7 +153,7 @@ class RetryResult:
     """Result of a retry-managed operation."""
     success: bool
     result: Any = None
-    exception: Optional[Exception] = None
+    exception: Exception | None = None
     attempts: int = 0
     total_delay: float = 0.0
     errors: list[tuple[int, str]] = field(default_factory=list)
@@ -174,7 +174,7 @@ class DeadLetterEntry:
     exception: str
     attempts: int
     timestamp: float = field(default_factory=time.time)
-    config: Optional[dict] = None
+    config: dict | None = None
 
 
 class DeadLetterQueue:
@@ -190,7 +190,7 @@ class DeadLetterQueue:
             self._queue.append(entry)
             self._counter += 1
 
-    def pop(self) -> Optional[DeadLetterEntry]:
+    def pop(self) -> DeadLetterEntry | None:
         with self._lock:
             return self._queue.popleft() if self._queue else None
 
@@ -229,8 +229,8 @@ def get_dead_letter_queue() -> DeadLetterQueue:
 class RetryExecutor:
     """Execute operations with automatic retry and recovery."""
 
-    def __init__(self, config: Optional[RetryConfig] = None, *,
-                 dlq: Optional[DeadLetterQueue] = None) -> None:
+    def __init__(self, config: RetryConfig | None = None, *,
+                 dlq: DeadLetterQueue | None = None) -> None:
         self.config = config or RetryConfig()
         self.dlq = dlq or _dlq
         self._stats = {
@@ -344,7 +344,7 @@ class RetryExecutor:
 class RetryContext:
     """Context manager for retry-managed operations."""
 
-    def __init__(self, config: Optional[RetryConfig] = None) -> None:
+    def __init__(self, config: RetryConfig | None = None) -> None:
         self._executor = RetryExecutor(config)
 
     def __enter__(self):
@@ -361,7 +361,7 @@ class RetryContext:
         raise result.exception
 
 
-def with_retry(config: Optional[RetryConfig] = None) -> RetryContext:
+def with_retry(config: RetryConfig | None = None) -> RetryContext:
     """Create a retry context manager."""
     return RetryContext(config)
 
@@ -375,8 +375,8 @@ def retry(max_attempts: int = 3, *,
           backoff_strategy: BackoffStrategy = BackoffStrategy.EXPONENTIAL,
           backoff_base: float = 1.0,
           backoff_max: float = 60.0,
-          retryable_exceptions: Optional[list[type[Exception]]] = None,
-          on_retry: Optional[Callable] = None):
+          retryable_exceptions: list[type[Exception]] | None = None,
+          on_retry: Callable | None = None):
     """Decorator to add retry logic to a function.
 
     Usage::

@@ -5,6 +5,8 @@ STIX-like bundles, and human-readable summaries. Extensible with
 custom exporters via registry pattern.
 """
 
+from __future__ import annotations
+
 import csv
 import io
 import json
@@ -12,7 +14,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.data_export")
 
@@ -23,7 +25,7 @@ class ExportEvent:
     event_type: str
     data: str
     module: str = ""
-    source_event: Optional[str] = None
+    source_event: str | None = None
     risk: int = 0
     timestamp: float = field(default_factory=time.time)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -46,9 +48,9 @@ class ExportOptions:
     include_metadata: bool = True
     include_raw: bool = False
     min_risk: int = 0
-    max_results: Optional[int] = None
-    event_types: Optional[set[str]] = None
-    modules: Optional[set[str]] = None
+    max_results: int | None = None
+    event_types: set[str] | None = None
+    modules: set[str] | None = None
     pretty: bool = True
     timestamp_format: str = "iso"
 
@@ -317,10 +319,10 @@ class ExportRegistry:
     def unregister(self, name: str) -> bool:
         return self._exporters.pop(name, None) is not None
 
-    def get(self, name: str) -> Optional[Exporter]:
+    def get(self, name: str) -> Exporter | None:
         return self._exporters.get(name)
 
-    def export(self, format_name: str, events: list[ExportEvent], options: Optional[ExportOptions] = None) -> str:
+    def export(self, format_name: str, events: list[ExportEvent], options: ExportOptions | None = None) -> str:
         exporter = self._exporters.get(format_name)
         if exporter is None:
             raise ValueError(f"Unknown export format: {format_name}")

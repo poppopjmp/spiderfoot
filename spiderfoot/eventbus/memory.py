@@ -6,11 +6,13 @@ behavior using asyncio queues. It is used for development, testing,
 and single-instance deployments.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import uuid
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 from spiderfoot.eventbus.base import EventBus, EventBusConfig, EventEnvelope
 
@@ -23,7 +25,7 @@ class InMemoryEventBus(EventBus):
     wildcards and is fully async-compatible.
     """
 
-    def __init__(self, config: Optional[EventBusConfig] = None) -> None:
+    def __init__(self, config: EventBusConfig | None = None) -> None:
         super().__init__(config)
         self._queues: dict[str, asyncio.Queue] = {}
         self._callbacks: dict[str, Callable] = {}  # sub_id -> callback

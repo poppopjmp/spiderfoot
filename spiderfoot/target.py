@@ -6,6 +6,8 @@ offers helpers for determining whether discovered hosts and IPs fall within
 the target's scope.
 """
 
+from __future__ import annotations
+
 import sys
 import typing
 

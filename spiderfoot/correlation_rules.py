@@ -5,6 +5,8 @@ configurable conditions, temporal windows, and pattern matching.
 Rules can fire actions when conditions are met across multiple events.
 """
 
+from __future__ import annotations
+
 import logging
 import re
 import threading
@@ -12,7 +14,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.correlation_rules")
 
@@ -111,8 +113,8 @@ class CorrelationRule:
 
         self._conditions: list[Condition] = []
         self._threshold_count: int = 1
-        self._window_seconds: Optional[float] = None
-        self._group_by: Optional[str] = None
+        self._window_seconds: float | None = None
+        self._group_by: str | None = None
 
         # Tracking matched events
         self._matched_events: list[tuple[float, dict]] = []
@@ -123,7 +125,7 @@ class CorrelationRule:
         self._conditions.append(condition)
         return self
 
-    def set_threshold(self, count: int = 1, window_seconds: Optional[float] = None) -> "CorrelationRule":
+    def set_threshold(self, count: int = 1, window_seconds: float | None = None) -> "CorrelationRule":
         """Set the number of matching events required to fire, optionally within a time window."""
         self._threshold_count = count
         self._window_seconds = window_seconds
@@ -149,7 +151,7 @@ class CorrelationRule:
         else:
             return any(results)
 
-    def process(self, event: dict) -> Optional[CorrelationMatch]:
+    def process(self, event: dict) -> CorrelationMatch | None:
         """Process an event against this rule.
 
         Returns a CorrelationMatch if the threshold is reached.
@@ -274,7 +276,7 @@ class CorrelationEngine:
         with self._lock:
             return self._rules.pop(name, None) is not None
 
-    def get_rule(self, name: str) -> Optional[CorrelationRule]:
+    def get_rule(self, name: str) -> CorrelationRule | None:
         return self._rules.get(name)
 
     def on_match(self, callback: Callable[[CorrelationMatch], None]) -> None:
@@ -326,7 +328,7 @@ class CorrelationEngine:
     def total_matches(self) -> int:
         return len(self._matches)
 
-    def get_matches(self, rule_name: Optional[str] = None) -> list[CorrelationMatch]:
+    def get_matches(self, rule_name: str | None = None) -> list[CorrelationMatch]:
         if rule_name:
             return [m for m in self._matches if m.rule_name == rule_name]
         return list(self._matches)

@@ -5,11 +5,13 @@ results with risk tracking, trend detection, and categorized
 change reporting.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, List
 
 log = logging.getLogger("spiderfoot.scan_delta")
 
@@ -54,7 +56,7 @@ class Delta:
     """A single delta between two scans."""
     kind: DeltaKind
     finding: Finding
-    previous: Optional[Finding] = None
+    previous: Finding | None = None
     risk_change: int = 0
     note: str = ""
 
@@ -97,7 +99,7 @@ class ScanDeltaAnalyzer:
     def __init__(
         self,
         risk_threshold: int = 0,
-        ignore_types: Optional[set[str]] = None,
+        ignore_types: set[str] | None = None,
         track_modules: bool = True,
     ) -> None:
         self.risk_threshold = risk_threshold

@@ -10,11 +10,13 @@
 # Licence:   MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 import json
 import time
 import urllib.parse
 import base64
-from typing import Optional, Dict, Any
+from typing import Any
 from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
@@ -79,7 +81,7 @@ class sfp_fofa(SpiderFootModernPlugin):
         """Return a list of event types this module produces."""
         return ["INTERNET_NAME", "DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS", "RAW_RIR_DATA"]
 
-    def query(self, query: str) -> Optional[Dict[str, Any]]:
+    def query(self, query: str) -> dict[str, Any] | None:
         """
         Query the Fofa API for the given search string.
         :param query: The search string (domain, IP, etc.)
@@ -116,7 +118,7 @@ class sfp_fofa(SpiderFootModernPlugin):
             self.error(f"Exception during Fofa API query: {e}")
             return None
 
-    def parseApiResponse(self, res: dict) -> Optional[Dict[str, Any]]:
+    def parseApiResponse(self, res: dict) -> dict[str, Any] | None:
         """
         Parse the Fofa API response.
         :param res: Response dict from fetchUrl

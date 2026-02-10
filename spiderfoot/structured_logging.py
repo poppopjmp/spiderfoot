@@ -7,12 +7,14 @@ logging module to emit structured JSON on stdout/stderr while preserving
 backward compatibility with the existing SpiderFoot logging setup.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import socket
 import sys
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class StructuredFormatter(logging.Formatter):
@@ -43,7 +45,7 @@ class StructuredFormatter(logging.Formatter):
         include_timestamp: bool = True,
         include_hostname: bool = True,
         include_caller: bool = False,
-        extra_fields: Optional[dict[str, Any]] = None,
+        extra_fields: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the structured formatter.
 
@@ -187,7 +189,7 @@ class StructuredLogHandler(logging.Handler):
     def __init__(
         self,
         stream=None,
-        formatter: Optional[StructuredFormatter] = None,
+        formatter: StructuredFormatter | None = None,
         **kwargs
     ) -> None:
         super().__init__()
@@ -287,7 +289,7 @@ class EventLogEmitter:
 
 
 def setup_structured_logging(
-    config: Optional[dict] = None,
+    config: dict | None = None,
     level: int = logging.INFO,
     json_output: bool = True,
 ) -> logging.Logger:

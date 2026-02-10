@@ -9,9 +9,11 @@ integrating with the new security framework while maintaining backward compatibi
 Author: SpiderFoot Security Team
 """
 
+from __future__ import annotations
+
 import cherrypy
 import logging
-from typing import Dict, Any, Optional
+from typing import Any
 
 try:
     import secure
@@ -56,7 +58,7 @@ def setup_security_headers():
     })
 
 
-def setup_enhanced_security(config: dict[str, Any]) -> Optional[Any]:
+def setup_enhanced_security(config: dict[str, Any]) -> Any | None:
     """
     Set up enhanced security with the new security framework.
 

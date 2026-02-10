@@ -12,6 +12,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Module Dependency Graph
 
@@ -51,7 +53,7 @@ import logging
 import os
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 log = logging.getLogger("spiderfoot.module_graph")
 
@@ -350,7 +352,7 @@ class ModuleGraph:
     # Module loading internals
     # ------------------------------------------------------------------
 
-    def _load_module_info(self, filepath: str) -> Optional[ModuleInfo]:
+    def _load_module_info(self, filepath: str) -> ModuleInfo | None:
         """Load module info by importing the module."""
         module_name = os.path.basename(filepath).replace(".py", "")
 

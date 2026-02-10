@@ -5,6 +5,8 @@ This module handles scan-related operations including validation,
 preparation, execution, and monitoring.
 """
 
+from __future__ import annotations
+
 import sys
 import time
 import signal
@@ -21,7 +23,7 @@ from spiderfoot.scan_service.scanner import startSpiderFootScanner
 class ScanManager:
     """Centralized scan management for SpiderFoot."""
 
-    def __init__(self, config: Dict[str, Any]) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         """
         Initialize the scan manager.
 
@@ -32,10 +34,10 @@ class ScanManager:
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
         self.active_scans = {}
 
-    def validate_scan_arguments(self, target: str, modules: Optional[List[str]] = None,
-                               event_types: Optional[List[str]] = None,
-                               usecase: Optional[str] = None,
-                               strict_mode: bool = False) -> Dict[str, Any]:
+    def validate_scan_arguments(self, target: str, modules: list[str] | None = None,
+                               event_types: list[str] | None = None,
+                               usecase: str | None = None,
+                               strict_mode: bool = False) -> dict[str, Any]:
         """
         Validate scan arguments and prepare scan parameters.
 
@@ -73,7 +75,7 @@ class ScanManager:
             'strict_mode': strict_mode
         }
 
-    def _process_target(self, target: str) -> Tuple[str, str]:
+    def _process_target(self, target: str) -> tuple[str, str]:
         """
         Process and validate the scan target.
 
@@ -102,7 +104,7 @@ class ScanManager:
 
         return processed_target, target_type
 
-    def prepare_modules(self, scan_params: Dict[str, Any], sf_modules: Dict[str, Any]) -> List[str]:
+    def prepare_modules(self, scan_params: dict[str, Any], sf_modules: dict[str, Any]) -> list[str]:
         """
         Prepare module list based on scan parameters.
 
@@ -188,7 +190,7 @@ class ScanManager:
 
         return modlist
 
-    def prepare_scan_config(self, scan_params: Dict[str, Any], output_config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def prepare_scan_config(self, scan_params: dict[str, Any], output_config: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Prepare scan configuration.
 
@@ -223,7 +225,7 @@ class ScanManager:
         return cfg
 
     def execute_scan(self, scan_name: str, target: str, target_type: str,
-                    modules: List[str], config: Dict[str, Any],
+                    modules: list[str], config: dict[str, Any],
                     logging_queue: mp.Queue) -> str:
         """
         Execute a scan with the given parameters.
@@ -278,7 +280,7 @@ from spiderfoot.scan_state_map import (
             self.log.error("Failed to start scan: %s", e)
             raise RuntimeError(f"Scan execution failed: {e}")
 
-    def monitor_scan(self, scan_id: str, timeout: int = 0) -> Dict[str, Any]:
+    def monitor_scan(self, scan_id: str, timeout: int = 0) -> dict[str, Any]:
         """
         Monitor a scan until completion or timeout.
 
@@ -356,7 +358,7 @@ from spiderfoot.scan_state_map import (
             self.log.error("Failed to stop scan %s: %s", scan_id, e)
             return False
 
-    def get_scan_status(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def get_scan_status(self, scan_id: str) -> dict[str, Any] | None:
         """
         Get current status of a scan.
 

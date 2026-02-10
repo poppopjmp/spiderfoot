@@ -9,6 +9,8 @@
 # License:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 AI-Powered Threat Intelligence Engine
 
@@ -24,7 +26,7 @@ import os
 import time
 import json
 import threading
-from typing import Dict, List, Optional, Any, Tuple, Union
+from typing import Any
 from collections import defaultdict, deque
 from dataclasses import dataclass, asdict
 import hashlib
@@ -95,8 +97,8 @@ class ThreatSignature:
     signature_id: str
     threat_type: str
     confidence_score: float
-    features: Dict[str, Any]
-    indicators: List[str]
+    features: dict[str, Any]
+    indicators: list[str]
     created_at: datetime
     last_seen: datetime
     frequency: int = 1
@@ -112,9 +114,9 @@ class ThreatPrediction:
     probability: float
     risk_score: float
     time_horizon: int  # hours
-    confidence_interval: Tuple[float, float]
-    contributing_factors: List[str]
-    recommended_actions: List[str]
+    confidence_interval: tuple[float, float]
+    contributing_factors: list[str]
+    recommended_actions: list[str]
 
 
 @dataclass
@@ -122,11 +124,11 @@ class IOCCorrelation:
     """Represents correlated indicators of compromise."""
     correlation_id: str
     primary_ioc: str
-    related_iocs: List[str]
+    related_iocs: list[str]
     correlation_strength: float
     temporal_relationship: str  # "simultaneous", "sequential", "periodic"
     attack_chain_position: int
-    campaign_id: Optional[str] = None
+    campaign_id: str | None = None
 
 
 class PatternRecognitionEngine:
@@ -192,7 +194,7 @@ class PatternRecognitionEngine:
         except Exception as e:
             logging.error(f"Failed to initialize ML models: {e}")
     
-    def extract_features(self, event_data: Dict[str, Any]) -> List[float]:
+    def extract_features(self, event_data: dict[str, Any]) -> list[float]:
         """Extract ML features from event data."""
         features = []
         
@@ -243,7 +245,7 @@ class PatternRecognitionEngine:
         
         return features
     
-    def detect_anomalies(self, events: List[Dict[str, Any]]) -> List[bool]:
+    def detect_anomalies(self, events: list[dict[str, Any]]) -> list[bool]:
         """Detect anomalous patterns in events using basic statistical methods."""
         if not events:
             return []
@@ -295,7 +297,7 @@ class PatternRecognitionEngine:
                 logging.error(f"Anomaly detection failed: {e}")
                 return [False] * len(events)
     
-    def identify_attack_patterns(self, events: List[Dict[str, Any]]) -> List[ThreatSignature]:
+    def identify_attack_patterns(self, events: list[dict[str, Any]]) -> list[ThreatSignature]:
         """Identify sophisticated attack patterns."""
         signatures = []
         
@@ -312,7 +314,7 @@ class PatternRecognitionEngine:
         
         return signatures
     
-    def _group_events_by_time(self, events: List[Dict[str, Any]], window_minutes: int = 30) -> List[List[Dict[str, Any]]]:
+    def _group_events_by_time(self, events: list[dict[str, Any]], window_minutes: int = 30) -> list[list[dict[str, Any]]]:
         """Group events into time windows."""
         if not events:
             return []
@@ -341,7 +343,7 @@ class PatternRecognitionEngine:
         
         return windows
     
-    def _detect_brute_force_pattern(self, events: List[Dict[str, Any]]) -> List[ThreatSignature]:
+    def _detect_brute_force_pattern(self, events: list[dict[str, Any]]) -> list[ThreatSignature]:
         """Detect brute force attack patterns."""
         signatures = []
         
@@ -373,7 +375,7 @@ class PatternRecognitionEngine:
         
         return signatures
     
-    def _detect_reconnaissance_pattern(self, events: List[Dict[str, Any]]) -> List[ThreatSignature]:
+    def _detect_reconnaissance_pattern(self, events: list[dict[str, Any]]) -> list[ThreatSignature]:
         """Detect reconnaissance patterns."""
         signatures = []
         
@@ -407,7 +409,7 @@ class PatternRecognitionEngine:
         
         return signatures
     
-    def _detect_lateral_movement_pattern(self, events: List[Dict[str, Any]]) -> List[ThreatSignature]:
+    def _detect_lateral_movement_pattern(self, events: list[dict[str, Any]]) -> list[ThreatSignature]:
         """Detect lateral movement patterns."""
         signatures = []
         
@@ -439,7 +441,7 @@ class PatternRecognitionEngine:
         
         return signatures
     
-    def _detect_data_exfiltration_pattern(self, events: List[Dict[str, Any]]) -> List[ThreatSignature]:
+    def _detect_data_exfiltration_pattern(self, events: list[dict[str, Any]]) -> list[ThreatSignature]:
         """Detect data exfiltration patterns."""
         signatures = []
         
@@ -471,7 +473,7 @@ class PatternRecognitionEngine:
         
         return signatures
     
-    def _detect_c2_communication_pattern(self, events: List[Dict[str, Any]]) -> List[ThreatSignature]:
+    def _detect_c2_communication_pattern(self, events: list[dict[str, Any]]) -> list[ThreatSignature]:
         """Detect command and control communication patterns."""
         signatures = []
         
@@ -688,7 +690,7 @@ class IOCCorrelationEngine:
                 attack_chain_position=self._estimate_attack_chain_position(primary_ioc, list(related_iocs))
             )
     
-    def _analyze_temporal_relationship(self, primary_ioc: str, related_iocs: List[str]) -> str:
+    def _analyze_temporal_relationship(self, primary_ioc: str, related_iocs: list[str]) -> str:
         """Analyze temporal relationships between IOCs."""
         if not related_iocs:
             return "isolated"
@@ -718,7 +720,7 @@ class IOCCorrelationEngine:
         else:
             return "sequential"
     
-    def _estimate_attack_chain_position(self, primary_ioc: str, related_iocs: List[str]) -> int:
+    def _estimate_attack_chain_position(self, primary_ioc: str, related_iocs: list[str]) -> int:
         """Estimate position in attack chain based on IOC relationships."""
         # Simple heuristic based on IOC type and relationships
         ioc_type_weights = {
@@ -788,8 +790,8 @@ class ThreatScoringEngine:
         self.threat_scores = {}
         self.scoring_lock = threading.RLock()
     
-    def calculate_threat_score(self, event_data: Dict[str, Any], signatures: List[ThreatSignature], 
-                             correlations: List[IOCCorrelation]) -> float:
+    def calculate_threat_score(self, event_data: dict[str, Any], signatures: list[ThreatSignature], 
+                             correlations: list[IOCCorrelation]) -> float:
         """Calculate dynamic threat score for an event."""
         with self.scoring_lock:
             base_score = 0.0
@@ -958,7 +960,7 @@ class NLPThreatAnalyzer:
             except Exception as e:
                 logging.warning(f"Failed to initialize text vectorizer: {e}")
     
-    def analyze_threat_text(self, text_data: str) -> Dict[str, Any]:
+    def analyze_threat_text(self, text_data: str) -> dict[str, Any]:
         """Analyze unstructured text for threat intelligence."""
         results = {
             'threat_categories': [],
@@ -1018,7 +1020,7 @@ class NLPThreatAnalyzer:
         
         return results
     
-    def _extract_iocs_from_text(self, text: str) -> List[str]:
+    def _extract_iocs_from_text(self, text: str) -> list[str]:
         """Extract IOCs from unstructured text."""
         iocs = []
         

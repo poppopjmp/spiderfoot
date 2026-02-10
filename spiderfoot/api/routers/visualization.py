@@ -5,9 +5,10 @@ Cycle 28 — delegates all data aggregation to ``VisualizationService``,
 removing raw ``SpiderFootDb`` instantiation from the router.
 """
 
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response, JSONResponse
-from typing import Optional
 import json
 import logging
 
@@ -30,7 +31,7 @@ async def get_multi_scan_graph_data(
     scan_ids: str = Query(..., description="Comma-separated scan IDs"),
     api_key: str = optional_auth_dep,
     format: str = Query("gexf", description="Output format: json, gexf"),
-    filter_type: Optional[str] = Query(None, description="Filter by event type"),
+    filter_type: str | None = Query(None, description="Filter by event type"),
     include_internal: bool = Query(False, description="Include internal events"),
     svc=Depends(get_visualization_service),
 ):
@@ -79,7 +80,7 @@ async def get_scan_graph_data(
     scan_id: str,
     api_key: str = optional_auth_dep,
     format: str = Query("json", description="Output format: json, gexf"),
-    filter_type: Optional[str] = Query(None, description="Filter by event type"),
+    filter_type: str | None = Query(None, description="Filter by event type"),
     include_internal: bool = Query(False, description="Include internal events"),
     svc=Depends(get_visualization_service),
 ):
@@ -140,7 +141,7 @@ async def get_scan_timeline_data(
     scan_id: str,
     api_key: str = optional_auth_dep,
     interval: str = Query("hour", description="Time interval: hour, day, week"),
-    event_type: Optional[str] = Query(None, description="Filter by event type"),
+    event_type: str | None = Query(None, description="Filter by event type"),
     svc=Depends(get_visualization_service),
 ):
     """Get timeline data for scan events."""

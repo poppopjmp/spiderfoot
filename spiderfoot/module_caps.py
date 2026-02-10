@@ -5,11 +5,13 @@ and compatibility constraints. Enables dependency resolution,
 conflict detection, and feature discovery.
 """
 
+from __future__ import annotations
+
 import logging
 import threading
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple
+from typing import Any, FrozenSet
 
 log = logging.getLogger("spiderfoot.module_caps")
 
@@ -165,7 +167,7 @@ class CapabilityRegistry:
                     if not providers:
                         self._capability_index.pop(cap.name, None)
 
-    def get(self, module_name: str) -> Optional[ModuleCapabilityDeclaration]:
+    def get(self, module_name: str) -> ModuleCapabilityDeclaration | None:
         """Get a module's declaration."""
         with self._lock:
             return self._declarations.get(module_name)
@@ -297,7 +299,7 @@ class CapabilityRegistry:
 
 
 # Singleton
-_global_registry: Optional[CapabilityRegistry] = None
+_global_registry: CapabilityRegistry | None = None
 _registry_lock = threading.Lock()
 
 

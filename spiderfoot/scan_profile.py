@@ -12,6 +12,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Scan Templates and Profiles
 
@@ -44,7 +46,7 @@ import os
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List
 
 log = logging.getLogger("spiderfoot.scan_profile")
 
@@ -428,7 +430,7 @@ class ProfileManager:
         """Register or update a profile."""
         self._profiles[profile.name] = profile
 
-    def get(self, name: str) -> Optional[ScanProfile]:
+    def get(self, name: str) -> ScanProfile | None:
         """Get a profile by name."""
         return self._profiles.get(name)
 
@@ -436,7 +438,7 @@ class ProfileManager:
         """Delete a profile. Returns True if found."""
         return self._profiles.pop(name, None) is not None
 
-    def list_profiles(self, category: Optional[ProfileCategory] = None
+    def list_profiles(self, category: ProfileCategory | None = None
                       ) -> list[ScanProfile]:
         """List all profiles, optionally filtered by category."""
         profiles = self._profiles.values()
@@ -467,7 +469,7 @@ class ProfileManager:
             log.error("Failed to save profile %s: %s", name, e)
             return False
 
-    def load_from_file(self, filepath: str) -> Optional[ScanProfile]:
+    def load_from_file(self, filepath: str) -> ScanProfile | None:
         """Load a profile from a JSON file."""
         try:
             with open(filepath, encoding="utf-8") as f:
@@ -507,7 +509,7 @@ class ProfileManager:
 # Module-level convenience
 # ---------------------------------------------------------------------------
 
-_manager: Optional[ProfileManager] = None
+_manager: ProfileManager | None = None
 
 
 def get_profile_manager() -> ProfileManager:

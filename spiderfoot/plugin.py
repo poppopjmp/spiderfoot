@@ -16,6 +16,8 @@ coordination, error tracking, and the ``handleEvent`` / ``producedEvents``
 contract that the scan engine relies on.
 """
 
+from __future__ import annotations
+
 from contextlib import suppress
 import io
 import logging
@@ -24,7 +26,7 @@ import queue
 import sys
 from time import sleep
 import traceback
-from typing import List, Any, Callable, Optional
+from typing import Any, Callable
 
 from spiderfoot import SpiderFootEvent
 from .threadpool import SpiderFootThreadPool
@@ -143,7 +145,7 @@ class SpiderFootPlugin:
         """Called when the module should finish processing."""
         pass
 
-    def sendEvent(self, eventType: str, eventData: str, parentEvent: Optional['SpiderFootEvent'] = None, confidenceLevel: int = 100) -> None:
+    def sendEvent(self, eventType: str, eventData: str, parentEvent: 'SpiderFootEvent' | None = None, confidenceLevel: int = 100) -> None:
         """Send an event.
 
         Args:
@@ -188,7 +190,7 @@ class SpiderFootPlugin:
         self._listenerModules = list()
         self._stopScanning = False
 
-    def setup(self, sf: Any, userOpts: Optional[dict] = None) -> None:
+    def setup(self, sf: Any, userOpts: dict | None = None) -> None:
         """Will always be overriden by the implementer.
 
         Args:
@@ -317,7 +319,7 @@ class SpiderFootPlugin:
 
         self._listenerModules.append(listener)
 
-    def setOutputFilter(self, types: List[str]) -> None:
+    def setOutputFilter(self, types: list[str]) -> None:
         self.__outputFilter__ = types
 
     def tempStorage(self) -> dict:

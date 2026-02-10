@@ -8,13 +8,15 @@ Handles fetching, proxy configuration, session management, and
 search-engine iteration (Google/Bing APIs).
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import ssl
 import socket
 import urllib.parse
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 try:
     import requests
@@ -100,7 +102,7 @@ class HttpService:
         print(result["content"])
     """
 
-    def __init__(self, config: Optional[HttpServiceConfig] = None) -> None:
+    def __init__(self, config: HttpServiceConfig | None = None) -> None:
         self.config = config or HttpServiceConfig()
         self.log = logging.getLogger("spiderfoot.http_service")
         self._session_count = 0
@@ -187,15 +189,15 @@ class HttpService:
     def fetch_url(
         self,
         url: str,
-        cookies: Optional[str] = None,
-        timeout: Optional[int] = None,
-        useragent: Optional[str] = None,
-        headers: Optional[dict[str, str]] = None,
-        post_data: Optional[str] = None,
+        cookies: str | None = None,
+        timeout: int | None = None,
+        useragent: str | None = None,
+        headers: dict[str, str] | None = None,
+        post_data: str | None = None,
         disable_content_encoding: bool = False,
-        size_limit: Optional[int] = None,
+        size_limit: int | None = None,
         head_only: bool = False,
-        verify: Optional[bool] = None,
+        verify: bool | None = None,
     ) -> dict[str, Any]:
         """Fetch a URL and return the response.
 
@@ -308,7 +310,7 @@ class HttpService:
     def google_iterate(
         self,
         search_string: str,
-        opts: Optional[dict] = None,
+        opts: dict | None = None,
     ) -> dict[str, Any]:
         """Search Google Custom Search API.
 
@@ -365,7 +367,7 @@ class HttpService:
     def bing_iterate(
         self,
         search_string: str,
-        opts: Optional[dict] = None,
+        opts: dict | None = None,
     ) -> dict[str, Any]:
         """Search Bing Web Search API.
 
@@ -464,7 +466,7 @@ class HttpService:
     def parse_cert(
         self,
         raw_cert: str,
-        fqdn: Optional[str] = None,
+        fqdn: str | None = None,
         expiring_days: int = 30,
     ) -> dict[str, Any]:
         """Parse a PEM certificate and extract details.

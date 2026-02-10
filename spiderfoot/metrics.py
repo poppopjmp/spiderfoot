@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Metrics
 
@@ -38,7 +40,6 @@ Usage::
 
 import threading
 import time
-from typing import Dict, List, Optional, Tuple
 
 from collections.abc import Sequence
 
@@ -93,7 +94,7 @@ class Counter:
     """Prometheus-style counter (monotonically increasing)."""
 
     def __init__(self, name: str, help_text: str = "",
-                 label_names: Optional[list[str]] = None) -> None:
+                 label_names: list[str] | None = None) -> None:
         self.name = name
         self.help_text = help_text
         self.label_names = label_names or []
@@ -136,7 +137,7 @@ class Gauge:
     """Prometheus-style gauge (can increase and decrease)."""
 
     def __init__(self, name: str, help_text: str = "",
-                 label_names: Optional[list[str]] = None) -> None:
+                 label_names: list[str] | None = None) -> None:
         self.name = name
         self.help_text = help_text
         self.label_names = label_names or []
@@ -188,8 +189,8 @@ class Histogram:
                        1.0, 2.5, 5.0, 10.0)
 
     def __init__(self, name: str, help_text: str = "",
-                 buckets: Optional[Sequence[float]] = None,
-                 label_names: Optional[list[str]] = None) -> None:
+                 buckets: Sequence[float] | None = None,
+                 label_names: list[str] | None = None) -> None:
         self.name = name
         self.help_text = help_text
         self.buckets = sorted(buckets or self.DEFAULT_BUCKETS)

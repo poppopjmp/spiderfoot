@@ -3,11 +3,13 @@ Enhanced Error Handling and Security Logging for SpiderFoot
 Provides comprehensive error handling, security event logging, and monitoring.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 import json
 import sys
-from typing import Dict, Any, Optional, List
+from typing import Any
 from enum import Enum
 from datetime import datetime, timezone
 from pathlib import Path
@@ -422,7 +424,7 @@ class SecurityMonitor:
 
         return False
 
-    def _get_threshold_config(self, event_type: SecurityEventType) -> Optional[dict[str, int]]:
+    def _get_threshold_config(self, event_type: SecurityEventType) -> dict[str, int] | None:
         """Get alert threshold configuration for event type.
 
         Args:

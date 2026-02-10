@@ -3,9 +3,11 @@ Input Validation and XSS Prevention Module for SpiderFoot
 Provides comprehensive input sanitization and validation.
 """
 
+from __future__ import annotations
+
 import re
 import html
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 # Optional dependency for enhanced HTML sanitization
 try:
@@ -160,7 +162,7 @@ class InputValidator:
         return bool(cls.PATTERNS['url'].match(url))
 
     @classmethod
-    def sanitize_api_key(cls, api_key: str) -> Optional[str]:
+    def sanitize_api_key(cls, api_key: str) -> str | None:
         """Sanitize and validate API key.
 
         Args:
@@ -179,7 +181,7 @@ class InputValidator:
         return None
 
     @classmethod
-    def sanitize_scan_input(cls, scan_target: str) -> Optional[str]:
+    def sanitize_scan_input(cls, scan_target: str) -> str | None:
         """Sanitize scan target input.
 
         Args:

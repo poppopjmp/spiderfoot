@@ -4,13 +4,15 @@ Provides configurable alerting based on scan events: severity thresholds,
 pattern matching, rate-based alerts, and notification channel routing.
 """
 
+from __future__ import annotations
+
 import logging
 import re
 import time
 import threading
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.alert_rules")
 
@@ -135,7 +137,7 @@ class AlertRule:
         name: str,
         severity: AlertSeverity = AlertSeverity.MEDIUM,
         message_template: str = "Alert: {rule_name}",
-        conditions: Optional[list[AlertCondition]] = None,
+        conditions: list[AlertCondition] | None = None,
         match_any: bool = False,
         cooldown_seconds: float = 0.0,
         max_alerts: int = 0,
@@ -156,7 +158,7 @@ class AlertRule:
         self.conditions.append(condition)
         return self
 
-    def evaluate(self, context: dict) -> Optional[Alert]:
+    def evaluate(self, context: dict) -> Alert | None:
         """Evaluate rule against context. Returns Alert if triggered, None otherwise."""
         if not self.enabled:
             return None
@@ -245,7 +247,7 @@ class AlertEngine:
         with self._lock:
             return self._rules.pop(name, None) is not None
 
-    def get_rule(self, name: str) -> Optional[AlertRule]:
+    def get_rule(self, name: str) -> AlertRule | None:
         return self._rules.get(name)
 
     def add_handler(self, handler: Callable[[Alert], None]) -> "AlertEngine":

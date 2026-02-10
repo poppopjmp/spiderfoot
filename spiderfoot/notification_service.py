@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Notification Service
 
@@ -55,7 +57,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 log = logging.getLogger("spiderfoot.notification_service")
 
@@ -212,7 +214,7 @@ class WebhookChannel(NotificationChannel):
     def __init__(self, url: str, *,
                  channel_id: str = "",
                  name: str = "Webhook",
-                 headers: Optional[dict[str, str]] = None,
+                 headers: dict[str, str] | None = None,
                  method: str = "POST",
                  enabled: bool = True) -> None:
         super().__init__(channel_id=channel_id or "webhook-default",
@@ -267,7 +269,7 @@ class EmailChannel(NotificationChannel):
 
     def __init__(self, smtp_host: str, smtp_port: int = 587, *,
                  username: str = "", password: str = "",
-                 from_addr: str = "", to_addrs: Optional[list[str]] = None,
+                 from_addr: str = "", to_addrs: list[str] | None = None,
                  use_tls: bool = True,
                  channel_id: str = "",
                  name: str = "Email",
@@ -366,7 +368,7 @@ class LogChannel(NotificationChannel):
 
     def __init__(self, channel_id: str = "log-default",
                  name: str = "Logger", enabled: bool = True,
-                 logger: Optional[logging.Logger] = None) -> None:
+                 logger: logging.Logger | None = None) -> None:
         super().__init__(channel_id=channel_id, name=name,
                         enabled=enabled)
         self._logger = logger or log
@@ -400,7 +402,7 @@ class NotificationService:
         self._lock = threading.Lock()
         self._async = async_dispatch
         self._queue: queue.Queue = queue.Queue(maxsize=max_queue_size)
-        self._worker: Optional[threading.Thread] = None
+        self._worker: threading.Thread | None = None
         self._running = False
         self._total_sent = 0
         self._total_failed = 0
@@ -428,7 +430,7 @@ class NotificationService:
         return removed
 
     def get_channel(self, channel_id: str
-                    ) -> Optional[NotificationChannel]:
+                    ) -> NotificationChannel | None:
         return self._channels.get(channel_id)
 
     def list_channels(self) -> list[dict]:
@@ -470,7 +472,7 @@ class NotificationService:
     # Notify
     # ------------------------------------------------------------------
 
-    def notify(self, topic: str, data: Optional[dict[str, Any]] = None,
+    def notify(self, topic: str, data: dict[str, Any] | None = None,
                *, title: str = "", message: str = "",
                severity: str = "info") -> int:
         """Send a notification to all channels subscribed to this topic.

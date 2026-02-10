@@ -15,8 +15,10 @@ Usage::
     scans = ds.scan_instance_list()
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from spiderfoot.data_service.base import DataService, DataServiceConfig
 
@@ -45,7 +47,7 @@ class GrpcDataService(DataService):
     channel is created on first use and reused for subsequent calls.
     """
 
-    def __init__(self, config: Optional[DataServiceConfig] = None, **kwargs) -> None:
+    def __init__(self, config: DataServiceConfig | None = None, **kwargs) -> None:
         super().__init__(config)
         _ensure_grpc()
         self._target = self.config.api_url
@@ -146,7 +148,7 @@ class GrpcDataService(DataService):
             log.error("gRPC CreateScan failed: %s", e)
             return False
 
-    def scan_instance_get(self, scan_id: str) -> Optional[dict[str, Any]]:
+    def scan_instance_get(self, scan_id: str) -> dict[str, Any] | None:
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
 
@@ -185,8 +187,8 @@ class GrpcDataService(DataService):
         self,
         scan_id: str,
         status: str,
-        started: Optional[int] = None,
-        ended: Optional[int] = None,
+        started: int | None = None,
+        ended: int | None = None,
     ) -> bool:
         # The proto DataService doesn't have a dedicated UpdateScanStatus RPC.
         # Fall back to CreateScan re-call or log warning.
@@ -236,7 +238,7 @@ class GrpcDataService(DataService):
     def event_get_by_scan(
         self,
         scan_id: str,
-        event_type: Optional[str] = None,
+        event_type: str | None = None,
         limit: int = 0,
     ) -> list[dict[str, Any]]:
         try:
@@ -292,7 +294,7 @@ class GrpcDataService(DataService):
         scan_id: str,
         classification: str,
         message: str,
-        component: Optional[str] = None,
+        component: str | None = None,
     ) -> bool:
         try:
             from spiderfoot import spiderfoot_pb2 as pb2
@@ -314,7 +316,7 @@ class GrpcDataService(DataService):
         scan_id: str,
         limit: int = 0,
         offset: int = 0,
-        log_type: Optional[str] = None,
+        log_type: str | None = None,
     ) -> list[dict[str, Any]]:
         try:
             from spiderfoot import spiderfoot_pb2 as pb2

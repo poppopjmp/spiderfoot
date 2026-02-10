@@ -5,12 +5,14 @@ event throughput, and elapsed time. Provides ETA calculations
 and progress snapshots for UI/API consumption.
 """
 
+from __future__ import annotations
+
 import logging
 import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.scan_progress")
 
@@ -31,8 +33,8 @@ class ModuleProgress:
     status: ModuleStatus = ModuleStatus.PENDING
     events_produced: int = 0
     events_consumed: int = 0
-    started_at: Optional[float] = None
-    completed_at: Optional[float] = None
+    started_at: float | None = None
+    completed_at: float | None = None
     error_message: str = ""
 
     @property
@@ -71,7 +73,7 @@ class ProgressSnapshot:
     modules_total: int
     events_total: int
     throughput_eps: float  # events per second
-    eta_seconds: Optional[float]
+    eta_seconds: float | None
 
     def to_dict(self) -> dict:
         return {
@@ -104,8 +106,8 @@ class ScanProgressTracker:
         self.scan_id = scan_id
         self._modules: dict[str, ModuleProgress] = {}
         self._lock = threading.Lock()
-        self._started_at: Optional[float] = None
-        self._completed_at: Optional[float] = None
+        self._started_at: float | None = None
+        self._completed_at: float | None = None
         self._total_events = 0
         self._snapshots: list[ProgressSnapshot] = []
         self._max_snapshots = 1000
@@ -207,12 +209,12 @@ class ScanProgressTracker:
         return self._total_events / e
 
     @property
-    def eta_seconds(self) -> Optional[float]:
+    def eta_seconds(self) -> float | None:
         """Estimated time remaining in seconds."""
         with self._lock:
             return self._calc_eta()
 
-    def _calc_eta(self) -> Optional[float]:
+    def _calc_eta(self) -> float | None:
         """Internal ETA calculation (caller must hold lock)."""
         progress = self._calc_progress()
         if progress <= 0 or self._started_at is None:
@@ -242,7 +244,7 @@ class ScanProgressTracker:
                 self._snapshots.append(snap)
             return snap
 
-    def get_module_progress(self, module_name: str) -> Optional[ModuleProgress]:
+    def get_module_progress(self, module_name: str) -> ModuleProgress | None:
         """Get progress for a specific module."""
         with self._lock:
             return self._modules.get(module_name)

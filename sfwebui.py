@@ -9,6 +9,8 @@
 # License:      MIT
 # -----------------------------------------------------------------
 
+from __future__ import annotations
+
 # Core SpiderFoot imports
 from spiderfoot.webui.routes import WebUiRoutes
 from spiderfoot import SpiderFootDb, SpiderFoot

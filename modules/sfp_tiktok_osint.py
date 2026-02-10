@@ -9,6 +9,8 @@
 # License:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 TikTok OSINT Module
 
@@ -24,7 +26,7 @@ Performs comprehensive TikTok intelligence gathering including:
 import json
 import re
 import time
-from typing import Dict, List, Optional, Any
+from typing import Any
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
@@ -182,7 +184,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
         # that aren't available through public APIs
         pass
 
-    def _get_profile_data(self, username: str) -> Optional[Dict[str, Any]]:
+    def _get_profile_data(self, username: str) -> dict[str, Any] | None:
         """Get TikTok profile data."""
         if self.opts['api_key'] and self.opts['api_secret']:
             return self._get_profile_data_api(username)
@@ -192,14 +194,14 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
             self.debug("No API credentials and web scraping disabled")
             return None
 
-    def _get_profile_data_api(self, username: str) -> Optional[Dict[str, Any]]:
+    def _get_profile_data_api(self, username: str) -> dict[str, Any] | None:
         """Get profile data using TikTok API."""
         # Note: TikTok's API access is limited and requires approval
         # This is a placeholder for when API access is available
         self.debug("TikTok API access is currently limited - using web scraping fallback")
         return self._get_profile_data_scraping(username)
 
-    def _get_profile_data_scraping(self, username: str) -> Optional[Dict[str, Any]]:
+    def _get_profile_data_scraping(self, username: str) -> dict[str, Any] | None:
         """Get profile data using web scraping techniques."""
         profile_url = f"https://www.tiktok.com/@{username}"
         
@@ -222,7 +224,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
 
         return self._parse_profile_html(res['content'], username)
 
-    def _parse_profile_html(self, html_content: str, username: str) -> Optional[Dict[str, Any]]:
+    def _parse_profile_html(self, html_content: str, username: str) -> dict[str, Any] | None:
         """Parse TikTok profile HTML content."""
         try:
             # Extract profile data from HTML
@@ -244,7 +246,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
             self.error(f"Error parsing TikTok profile HTML: {e}")
             return None
 
-    def _extract_display_name(self, html: str) -> Optional[str]:
+    def _extract_display_name(self, html: str) -> str | None:
         """Extract display name from HTML."""
         # Look for common patterns in TikTok HTML
         patterns = [
@@ -260,7 +262,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
         
         return None
 
-    def _extract_bio(self, html: str) -> Optional[str]:
+    def _extract_bio(self, html: str) -> str | None:
         """Extract bio/description from HTML."""
         patterns = [
             r'"signature":"([^"]+)"',
@@ -274,7 +276,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
         
         return None
 
-    def _extract_follower_count(self, html: str) -> Optional[int]:
+    def _extract_follower_count(self, html: str) -> int | None:
         """Extract follower count from HTML."""
         patterns = [
             r'"followerCount":(\d+)',
@@ -291,7 +293,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
         
         return None
 
-    def _extract_following_count(self, html: str) -> Optional[int]:
+    def _extract_following_count(self, html: str) -> int | None:
         """Extract following count from HTML."""
         patterns = [
             r'"followingCount":(\d+)',
@@ -308,7 +310,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
         
         return None
 
-    def _extract_video_count(self, html: str) -> Optional[int]:
+    def _extract_video_count(self, html: str) -> int | None:
         """Extract video count from HTML."""
         patterns = [
             r'"videoCount":(\d+)',
@@ -339,7 +341,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
         
         return False
 
-    def _extract_profile_picture(self, html: str) -> Optional[str]:
+    def _extract_profile_picture(self, html: str) -> str | None:
         """Extract profile picture URL."""
         patterns = [
             r'"avatarLarger":"([^"]+)"',
@@ -353,7 +355,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
         
         return None
 
-    def _extract_recent_videos(self, html: str) -> List[Dict[str, Any]]:
+    def _extract_recent_videos(self, html: str) -> list[dict[str, Any]]:
         """Extract recent video data."""
         videos = []
         
@@ -361,7 +363,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
         # For now, return empty list
         return videos
 
-    def _process_profile_data(self, profile_data: Dict[str, Any], username: str, source_event: SpiderFootEvent) -> None:
+    def _process_profile_data(self, profile_data: dict[str, Any], username: str, source_event: SpiderFootEvent) -> None:
         """Process and emit events for profile data."""
         if not profile_data:
             return

@@ -6,13 +6,15 @@ a Vector.dev instance for routing to external data stores (ClickHouse,
 Loki, Elasticsearch, S3, etc.).
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import threading
 import time
 import queue
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 try:
     import httpx
@@ -46,7 +48,7 @@ class VectorConfig:
         timeout: float = 10.0,
         api_key: str = "",
         environment: str = "development",
-        extra_labels: Optional[dict[str, str]] = None,
+        extra_labels: dict[str, str] | None = None,
     ) -> None:
         self.enabled = enabled
         self.endpoint = endpoint.rstrip("/")
@@ -100,12 +102,12 @@ class VectorSink:
         sink.stop()
     """
 
-    def __init__(self, config: Optional[VectorConfig] = None) -> None:
+    def __init__(self, config: VectorConfig | None = None) -> None:
         self.config = config or VectorConfig()
         self.log = logging.getLogger("spiderfoot.vector")
         self._buffer: queue.Queue = queue.Queue(maxsize=10000)
         self._running = False
-        self._flush_thread: Optional[threading.Thread] = None
+        self._flush_thread: threading.Thread | None = None
         self._stats = {
             "events_sent": 0,
             "events_dropped": 0,
@@ -231,7 +233,7 @@ class VectorSink:
         self,
         name: str,
         value: float,
-        tags: Optional[dict[str, str]] = None,
+        tags: dict[str, str] | None = None,
     ) -> None:
         """Emit a metric event.
 

@@ -28,13 +28,15 @@ Usage::
     print(bus.metrics())
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable
 
 from spiderfoot.eventbus.base import EventBus, EventBusConfig, EventEnvelope
 
@@ -201,7 +203,7 @@ class AsyncDeadLetterQueue:
             self._items.append(entry)
             self._total_added += 1
 
-    async def pop(self) -> Optional[DeadLetterEntry]:
+    async def pop(self) -> DeadLetterEntry | None:
         async with self._lock:
             return self._items.pop(0) if self._items else None
 
@@ -391,7 +393,7 @@ class ResilientEventBus:
     def __init__(
         self,
         inner: EventBus,
-        config: Optional[ResilientConfig] = None,
+        config: ResilientConfig | None = None,
     ) -> None:
         self._inner = inner
         self._config = config or ResilientConfig()
@@ -405,8 +407,8 @@ class ResilientEventBus:
         )
         self.metrics = EventBusMetrics()
 
-        self._health_task: Optional[asyncio.Task] = None
-        self._last_health: Optional[HealthCheckResult] = None
+        self._health_task: asyncio.Task | None = None
+        self._last_health: HealthCheckResult | None = None
 
         # Wire circuit state changes into metrics
         self.circuit.on_state_change(self._on_circuit_change)
@@ -583,7 +585,7 @@ class ResilientEventBus:
         except asyncio.CancelledError:
             pass
 
-    def health_status(self) -> Optional[HealthCheckResult]:
+    def health_status(self) -> HealthCheckResult | None:
         """Return the last cached health check result."""
         return self._last_health
 

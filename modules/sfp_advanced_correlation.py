@@ -10,6 +10,8 @@
 # License:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 Advanced Correlation Engine
 
@@ -27,7 +29,7 @@ import re
 import time
 from collections import defaultdict, Counter
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Set
+from typing import Dict, Any
 import hashlib
 import logging
 
@@ -50,7 +52,7 @@ class AdvancedCorrelationEngine:
         self.entity_graph[entity1].add((entity2, relationship_type, confidence))
         self.entity_graph[entity2].add((entity1, relationship_type, confidence))
         
-    def find_connected_entities(self, entity: str, max_depth: int = 3) -> Dict[str, Any]:
+    def find_connected_entities(self, entity: str, max_depth: int = 3) -> dict[str, Any]:
         """Find all entities connected to a given entity."""
         visited = set()
         queue = [(entity, 0)]
@@ -74,7 +76,7 @@ class AdvancedCorrelationEngine:
                     
         return dict(connections)
         
-    def analyze_temporal_patterns(self, events: List[Dict], time_window_hours: int = 24) -> List[Dict]:
+    def analyze_temporal_patterns(self, events: list[Dict], time_window_hours: int = 24) -> list[Dict]:
         """Analyze temporal patterns in events."""
         patterns = []
         events_by_time = defaultdict(list)
@@ -99,7 +101,7 @@ class AdvancedCorrelationEngine:
                 
         return patterns
         
-    def cluster_geospatial_data(self, geo_data: List[Dict], radius_km: float = 50.0) -> List[Dict]:
+    def cluster_geospatial_data(self, geo_data: list[Dict], radius_km: float = 50.0) -> list[Dict]:
         """Cluster geospatial data points."""
         clusters = []
         used_points = set()
@@ -151,7 +153,7 @@ class AdvancedCorrelationEngine:
         
         return R * c
         
-    def _calculate_centroid(self, points: List[Dict]) -> Dict[str, float]:
+    def _calculate_centroid(self, points: list[Dict]) -> dict[str, float]:
         """Calculate centroid of a cluster of points."""
         lats = [p.get('lat', 0) for p in points]
         lngs = [p.get('lng', 0) for p in points]
@@ -161,7 +163,7 @@ class AdvancedCorrelationEngine:
             'lng': sum(lngs) / len(lngs)
         }
         
-    def _calculate_cluster_radius(self, points: List[Dict]) -> float:
+    def _calculate_cluster_radius(self, points: list[Dict]) -> float:
         """Calculate the radius of a cluster."""
         if len(points) < 2:
             return 0.0
@@ -286,7 +288,7 @@ class sfp_advanced_correlation(SpiderFootModernPlugin):
             )
             self.notifyListeners(correlation_event)
 
-    def _find_related_entities(self, event_record: Dict) -> List[Dict]:
+    def _find_related_entities(self, event_record: Dict) -> list[Dict]:
         """Find entities related to the current event."""
         related = []
         current_data = event_record['data'].lower()
@@ -469,7 +471,7 @@ class sfp_advanced_correlation(SpiderFootModernPlugin):
                     )
                     self.notifyListeners(behavior_event)
 
-    def _analyze_user_behavior(self, activities: List[Dict]) -> Dict[str, Any]:
+    def _analyze_user_behavior(self, activities: list[Dict]) -> dict[str, Any]:
         """Analyze behavior patterns for a specific user."""
         activity_times = [a['timestamp'] for a in activities]
         activity_types = [a['type'] for a in activities]

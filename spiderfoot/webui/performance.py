@@ -2,12 +2,14 @@
 Performance optimization enhancements for SpiderFoot WebUI
 """
 
+from __future__ import annotations
+
 import asyncio
 import concurrent.futures
 import functools
 import time
 import logging
-from typing import Dict, Any, Optional, Callable
+from typing import Any, Callable
 import threading
 import weakref
 
@@ -82,7 +84,7 @@ class WebUIPerformanceEnhancer:
 
         return results
 
-    def clear_cache(self, pattern: Optional[str] = None):
+    def clear_cache(self, pattern: str | None = None):
         """Clear cache entries, optionally matching a pattern."""
         with self.cache_lock:
             if pattern:
@@ -95,7 +97,7 @@ class WebUIPerformanceEnhancer:
                 self.cache.clear()
                 self.cache_ttl.clear()
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         with self.cache_lock:
             return {
@@ -111,7 +113,7 @@ class PaginationOptimizer:
 
     @staticmethod
     def optimize_pagination(data: list, page: int, per_page: int,
-                          max_memory_items: int = 10000) -> Dict[str, Any]:
+                          max_memory_items: int = 10000) -> dict[str, Any]:
         """
         Optimize pagination to handle large datasets efficiently
 
@@ -159,8 +161,8 @@ class DataCompressionHelper:
     """Helper for compressing large data transfers."""
 
     @staticmethod
-    def compress_json_response(data: Dict[str, Any],
-                             compression_threshold: int = 1024) -> Dict[str, Any]:
+    def compress_json_response(data: dict[str, Any],
+                             compression_threshold: int = 1024) -> dict[str, Any]:
         """
         Compress JSON response if it exceeds threshold
 
@@ -208,7 +210,7 @@ class MemoryOptimizer:
         self.object_pool = weakref.WeakValueDictionary()
         self.logger = logging.getLogger(__name__)
 
-    def get_memory_usage(self) -> Dict[str, Any]:
+    def get_memory_usage(self) -> dict[str, Any]:
         """Get current memory usage statistics."""
         import psutil
         import os
@@ -331,7 +333,7 @@ class PerformanceEnhancedWebUI:
 
     @monitor_performance
     def get_scan_results_optimized(self, scan_id: str, page: int = 1,
-                                 per_page: int = 100) -> Dict[str, Any]:
+                                 per_page: int = 100) -> dict[str, Any]:
         """
         Optimized scan results retrieval with pagination and caching
         """
@@ -350,7 +352,7 @@ class PerformanceEnhancedWebUI:
         return paginated_result
 
     @monitor_performance
-    def get_system_performance_metrics(self) -> Dict[str, Any]:
+    def get_system_performance_metrics(self) -> dict[str, Any]:
         """
         Get comprehensive system performance metrics
         """
@@ -363,7 +365,7 @@ class PerformanceEnhancedWebUI:
         return metrics
 
     @monitor_performance
-    def get_cached_scan_data(self, scan_id: str, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_cached_scan_data(self, scan_id: str, force_refresh: bool = False) -> dict[str, Any]:
         """
         Get cached scan data with optional force refresh
         """

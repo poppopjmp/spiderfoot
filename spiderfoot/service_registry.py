@@ -15,9 +15,11 @@ Usage:
     result = http.fetch_url("https://example.com")
 """
 
+from __future__ import annotations
+
 import logging
 import threading
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List
 
 log = logging.getLogger("spiderfoot.registry")
 
@@ -114,7 +116,7 @@ class ServiceRegistry:
                 f"Available: {list(self._services.keys())}"
             )
 
-    def get_optional(self, name: str) -> Optional[Any]:
+    def get_optional(self, name: str) -> Any | None:
         """Get a service by name, returning None if not found.
 
         Args:
@@ -140,7 +142,7 @@ class ServiceRegistry:
         with self._lock:
             return name in self._services or name in self._factories
 
-    def unregister(self, name: str) -> Optional[Any]:
+    def unregister(self, name: str) -> Any | None:
         """Remove a service from the registry.
 
         Args:
@@ -188,7 +190,7 @@ class ServiceRegistry:
 
 
 # Global registry instance
-_global_registry: Optional[ServiceRegistry] = None
+_global_registry: ServiceRegistry | None = None
 _global_lock = threading.Lock()
 
 
@@ -305,7 +307,7 @@ class ServiceMixin:
                 result = http.fetch_url("https://example.com")
     """
 
-    _registry: Optional[ServiceRegistry] = None
+    _registry: ServiceRegistry | None = None
 
     def set_registry(self, registry: ServiceRegistry) -> None:
         """Set the service registry for this component."""
@@ -325,7 +327,7 @@ class ServiceMixin:
         reg = self._registry or get_registry()
         return reg.get(name)
 
-    def get_service_optional(self, name: str) -> Optional[Any]:
+    def get_service_optional(self, name: str) -> Any | None:
         """Get a service, returning None if not available."""
         reg = self._registry or get_registry()
         return reg.get_optional(name)

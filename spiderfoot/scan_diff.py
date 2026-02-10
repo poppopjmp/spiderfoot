@@ -11,6 +11,8 @@
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
 """
 SpiderFoot Scan Diff
 
@@ -34,7 +36,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 log = logging.getLogger("spiderfoot.scan_diff")
 
@@ -87,7 +89,7 @@ class Change:
     """A single change between two scans."""
     change_type: ChangeType
     finding: Finding
-    previous: Optional[Finding] = None
+    previous: Finding | None = None
     detail: str = ""
 
     def to_dict(self) -> dict:
@@ -280,7 +282,7 @@ class ScanDiff:
     @staticmethod
     def compare(baseline: ScanSnapshot,
                 current: ScanSnapshot, *,
-                ignore_types: Optional[set[str]] = None
+                ignore_types: set[str] | None = None
                 ) -> DiffResult:
         """Compare baseline and current scan snapshots.
 
@@ -356,7 +358,7 @@ class ScanDiff:
                             baseline_id: str = "baseline",
                             current_id: str = "current",
                             target: str = "",
-                            ignore_types: Optional[set[str]] = None
+                            ignore_types: set[str] | None = None
                             ) -> DiffResult:
         """Convenience: compare raw event lists directly."""
         snap_a = ScanSnapshot.from_events(
