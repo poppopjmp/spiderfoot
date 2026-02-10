@@ -3,6 +3,32 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.118.0] — RC Cycle 34: Port Constants
+
+### Changed
+- Replaced hardcoded 8001/5001 port numbers with `DEFAULT_API_PORT`/`DEFAULT_WEB_PORT` from `constants.py`
+- Updated in `app_config.py`, `core/config.py`, `core/server.py`, `core/validation.py`
+
+## [5.117.0] — RC Cycle 33: TTL Constants
+
+### Changed
+- Replaced 20+ hardcoded `3600` values with `DEFAULT_TTL_ONE_HOUR` from `constants.py` across 14 files
+- Covers session timeout, JWT expiry, cache TTL, rate limit windows, CSRF token lifetime
+
+## [5.116.0] — RC Cycle 32: Constants Module
+
+### Added
+- Created `spiderfoot/constants.py` with 12 named constants for commonly used magic numbers
+
+### Changed
+- Replaced 23 hardcoded `0.2` retry backoff values with `DB_RETRY_BACKOFF_BASE` across 5 db module files
+
+## [5.115.0] — RC Cycle 31: DB Duplicate Fix
+
+### Fixed
+- Removed thin delegate `close()` that shadowed the full 35-line resource cleanup in `db/__init__.py`
+- Removed thin delegate `create()` that shadowed the full schema creation implementation
+
 ## [5.114.0] — RC Cycle 29: Plugin Dead Stub Removal
 
 ### Removed
