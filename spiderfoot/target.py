@@ -22,15 +22,17 @@ class SpiderFootTarget():
     """SpiderFoot target.
 
     Attributes:
-        validTypes (typing.List[str]): valid event types accepted as a target
+        validTypes (typing.FrozenSet[str]): valid event types accepted as a target
         targetType (str): target type
         targetValue (str): target value
         targetAliases (typing.List[TargetAlias]): target aliases
     """
 
-    _validTypes = ["IP_ADDRESS", 'IPV6_ADDRESS', "NETBLOCK_OWNER", "NETBLOCKV6_OWNER", "INTERNET_NAME",
-                   "EMAILADDR", "HUMAN_NAME", "BGP_AS_OWNER", 'PHONE_NUMBER', "USERNAME",
-                   "BITCOIN_ADDRESS"]
+    _validTypes: typing.FrozenSet[str] = frozenset({
+        "IP_ADDRESS", "IPV6_ADDRESS", "NETBLOCK_OWNER", "NETBLOCKV6_OWNER",
+        "INTERNET_NAME", "EMAILADDR", "HUMAN_NAME", "BGP_AS_OWNER",
+        "PHONE_NUMBER", "USERNAME", "BITCOIN_ADDRESS",
+    })
     _targetType: str
     _targetValue: str
     _targetAliases: typing.List[TargetAlias]
