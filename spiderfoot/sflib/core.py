@@ -220,34 +220,30 @@ class SpiderFoot:
         return list(set(modlist))
 
     def eventsFromModules(self, modules: list) -> list:
-        evtlist = list()
         if not modules:
-            return evtlist
+            return []
         loaded_modules = self.opts.get('__modules__')
         if not loaded_modules:
-            return evtlist
-        for mod in modules:
-            if mod in list(loaded_modules.keys()):
-                provides = loaded_modules[mod].get('provides')
-                if provides:
-                    for evt in provides:
-                        evtlist.append(evt)
-        return evtlist
+            return []
+        return [
+            evt
+            for mod in modules
+            if mod in loaded_modules
+            for evt in (loaded_modules[mod].get('provides') or [])
+        ]
 
     def eventsToModules(self, modules: list) -> list:
-        evtlist = list()
         if not modules:
-            return evtlist
+            return []
         loaded_modules = self.opts.get('__modules__')
         if not loaded_modules:
-            return evtlist
-        for mod in modules:
-            if mod in list(loaded_modules.keys()):
-                consumes = loaded_modules[mod].get('consumes')
-                if consumes:
-                    for evt in consumes:
-                        evtlist.append(evt)
-        return evtlist
+            return []
+        return [
+            evt
+            for mod in modules
+            if mod in loaded_modules
+            for evt in (loaded_modules[mod].get('consumes') or [])
+        ]
 
     def urlFQDN(self, url: str) -> str:
         if not url:

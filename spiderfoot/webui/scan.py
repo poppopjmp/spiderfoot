@@ -221,8 +221,7 @@ class ScanEndpoints:
             eventtypes = dbh.eventTypes()
         except Exception:
             eventtypes = []
-        for row in scandata:
-            retdata.append(row)
+        retdata.extend(scandata)
         return retdata
 
     @cherrypy.expose
@@ -232,8 +231,7 @@ class ScanEndpoints:
         dbh = self._get_dbh()
         try:
             data = dbh.scanCorrelationList(id)
-            for row in data:
-                retdata.append(row)
+            retdata = list(data)
         except Exception as e:
             return self.jsonify_error("500", str(e))
         return retdata
@@ -245,8 +243,7 @@ class ScanEndpoints:
         dbh = self._get_dbh()
         try:
             data = dbh.scanResultEvent(id, eventType, filterfp, correlationId)
-            for row in data:
-                retdata.append(row)
+            retdata = list(data)
         except Exception:
             return retdata
         return retdata
@@ -258,8 +255,7 @@ class ScanEndpoints:
         retdata = []
         try:
             data = dbh.scanResultEventUnique(id, eventType, filterfp)
-            for row in data:
-                retdata.append(row)
+            retdata = list(data)
         except Exception:
             return retdata
         return retdata

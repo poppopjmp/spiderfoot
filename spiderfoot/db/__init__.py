@@ -394,7 +394,7 @@ class SpiderFootDb:
         ['WIKIPEDIA_PAGE_EDIT', 'Wikipedia Page Edit', 0, 'DESCRIPTOR'],
     ]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """
         Initialize database and create handle to the database file. Supports both legacy positional and new dict-based signatures.
         """

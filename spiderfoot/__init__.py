@@ -95,7 +95,7 @@ class SpiderFootModuleFinder:
 class SpiderFootModuleLoader:
     """Custom module loader to fix SpiderFoot module imports."""
 
-    def __init__(self, spec):
+    def __init__(self, spec) -> None:
         self.spec = spec
 
     def create_module(self, spec):

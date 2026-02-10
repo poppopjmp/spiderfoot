@@ -130,10 +130,8 @@ def domainKeyword(domain: str, tldList: list) -> str:
 def domainKeywords(domainList: list, tldList: list) -> set:
     if not domainList:
         return set()
-    keywords = list()
-    for domain in domainList:
-        keywords.append(domainKeyword(domain, tldList))
-    return set([k for k in keywords if k])
+    keywords = [domainKeyword(domain, tldList) for domain in domainList]
+    return {k for k in keywords if k}
 
 def hostDomain(hostname: str, tldList: list) -> str:
     if not tldList:
