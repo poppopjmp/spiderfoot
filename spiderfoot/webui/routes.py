@@ -383,7 +383,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             dbh.vacuumDB()
             return b'["SUCCESS", ""]'
         except Exception as e:
-            return b'["ERROR", "%s"]' % str(e).encode('utf-8')
+            return f'["ERROR", "{e}"]'.encode('utf-8')
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -479,7 +479,7 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
 
             return b'["SUCCESS", ""]'
         except Exception as e:
-            return b'["ERROR", "%s"]' % str(e).encode('utf-8')
+            return f'["ERROR", "{e}"]'.encode('utf-8')
 
     @cherrypy.expose
     def savesettings(self, allopts, token, configFile=None):

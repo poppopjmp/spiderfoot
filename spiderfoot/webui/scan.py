@@ -348,7 +348,7 @@ class ScanEndpoints:
             except Exception as e:
                 errors.append({"id": scan_id, "error": str(e)})
         if errors:
-            return ('["ERROR", "%s"]' % str(errors)).encode('utf-8')
+            return f'["ERROR", "{errors}"]'.encode('utf-8')
         return b''
 
     @cherrypy.expose
@@ -364,7 +364,7 @@ class ScanEndpoints:
             except Exception as e:
                 errors.append({"id": scan_id, "error": str(e)})
         if errors:
-            return ('["ERROR", "%s"]' % str(errors)).encode('utf-8')
+            return f'["ERROR", "{errors}"]'.encode('utf-8')
         return b''
 
     @cherrypy.expose
@@ -402,7 +402,7 @@ class ScanEndpoints:
                 return b'["SUCCESS", ""]'
             return b'["ERROR", "Exception encountered."]'
         except Exception as e:
-            return ('["ERROR", "%s"]' % str(e)).encode('utf-8')
+            return f'["ERROR", "{e}"]'.encode('utf-8')
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -690,7 +690,7 @@ from spiderfoot.scan_state_map import (
         try:
             opts = json.loads(allopts)
         except Exception as e:
-            return b'["ERROR", "%s"]' % str(e).encode('utf-8')
+            return f'["ERROR", "{e}"]'.encode('utf-8')
         self.config.update(opts)
         return b'["SUCCESS", ""]'
 
@@ -701,4 +701,4 @@ from spiderfoot.scan_state_map import (
             dbh.vacuum()
             return b'["SUCCESS", ""]'
         except Exception as e:
-            return b'["ERROR", "%s"]' % str(e).encode('utf-8')
+            return f'["ERROR", "{e}"]'.encode('utf-8')
