@@ -56,12 +56,14 @@ class ModuleHealth:
 
     @property
     def avg_duration(self) -> float:
+        """Return average event processing duration in seconds."""
         if self.events_processed == 0:
             return 0.0
         return self.total_duration / self.events_processed
 
     @property
     def error_rate(self) -> float:
+        """Return the fraction of events that resulted in errors."""
         total = self.events_processed + self.error_count
         if total == 0:
             return 0.0
@@ -69,6 +71,7 @@ class ModuleHealth:
 
     @property
     def events_per_second(self) -> float:
+        """Return the event processing throughput."""
         elapsed = time.monotonic() - self.start_time
         if elapsed <= 0:
             return 0.0
@@ -76,6 +79,7 @@ class ModuleHealth:
 
     @property
     def idle_seconds(self) -> float:
+        """Return seconds since the last event was processed."""
         if self.last_event_time == 0:
             return time.monotonic() - self.start_time
         return time.monotonic() - self.last_event_time
@@ -122,6 +126,7 @@ class ModuleHealth:
         return HealthStatus.UNHEALTHY
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "module_name": self.module_name,
             "status": self.status.value,

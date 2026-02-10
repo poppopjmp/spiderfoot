@@ -156,6 +156,7 @@ class RateLimiter:
     """Rate limiting implementation with multiple strategies."""
 
     def __init__(self) -> None:
+        """Initialize the RateLimiter."""
         self.requests = {}
         self.blocked_ips = {}
         self.lock = threading.Lock()
@@ -215,6 +216,7 @@ class SecurityMiddleware:
     """Security middleware for request processing."""
 
     def __init__(self, config: dict[str, Any] = None) -> None:
+        """Initialize the SecurityMiddleware."""
         self.config = config or {}
         self.rate_limiter = RateLimiter()
         self.logger = logging.getLogger('spiderfoot.security')
@@ -267,6 +269,7 @@ class AuthenticationManager:
     """Authentication and authorization management."""
 
     def __init__(self, secret_key: str | None = None) -> None:
+        """Initialize the AuthenticationManager."""
         self.secret_key = secret_key or self._generate_secret_key()
         self.sessions = {}
         self.failed_attempts = {}
@@ -361,6 +364,7 @@ class DataProtection:
     """Data protection and encryption utilities."""
 
     def __init__(self, encryption_key: bytes | None = None) -> None:
+        """Initialize the DataProtection."""
         if encryption_key is None:
             encryption_key = Fernet.generate_key()
         self.cipher = Fernet(encryption_key)
@@ -421,8 +425,10 @@ def security_header_middleware(response: object) -> object:
 def require_authentication(auth_manager: AuthenticationManager) -> Callable:
     """Decorator for requiring authentication."""
     def decorator(func: Callable) -> Callable:
+        """Wrap a function with authentication enforcement."""
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
+            """Validate the session and invoke the wrapped function."""
             # Extract session from request (implementation depends on framework)
             session_id = kwargs.get('session_id') or (
                 args[0].headers.get(

@@ -57,6 +57,7 @@ class AdvancedRateLimiter:
     """Advanced rate limiting with multiple strategies."""
 
     def __init__(self) -> None:
+        """Initialize the AdvancedRateLimiter."""
         self.requests = defaultdict(deque)
         self.blocked_ips = {}
         self.suspicious_ips = defaultdict(int)
@@ -162,6 +163,7 @@ class APIKeyManager:
     """Secure API key management."""
 
     def __init__(self, secret_key: str) -> None:
+        """Initialize the APIKeyManager."""
         self.secret_key = secret_key
         self.api_keys: dict[str, APIKeyInfo] = {}
         self.key_usage = defaultdict(int)
@@ -287,6 +289,7 @@ class RequestValidator:
     ]
 
     def __init__(self) -> None:
+        """Initialize the RequestValidator."""
         self.compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.SUSPICIOUS_PATTERNS]
         self.logger = logging.getLogger('spiderfoot.validation')
 
@@ -360,6 +363,7 @@ class DDoSProtection:
     """DDoS protection mechanisms."""
 
     def __init__(self) -> None:
+        """Initialize the DDoSProtection."""
         self.request_counts = defaultdict(lambda: defaultdict(int))
         self.connection_counts = defaultdict(int)
         self.blocked_networks = set()
@@ -428,6 +432,7 @@ class APISecurityMiddleware:
     """Comprehensive API security middleware."""
 
     def __init__(self, config: dict[str, Any]) -> None:
+        """Initialize the APISecurityMiddleware."""
         self.config = config
         self.rate_limiter = AdvancedRateLimiter()
         self.api_key_manager = APIKeyManager(config.get('secret_key', 'default-secret'))
@@ -480,8 +485,10 @@ class APISecurityMiddleware:
 def require_api_key(permissions: list[str] = None) -> Callable:
     """Decorator to require API key with specific permissions."""
     def decorator(func: Callable) -> Callable:
+        """Wrap a function with API key validation."""
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
+            """Validate API key and invoke the wrapped function."""
             # This would need to be integrated with your web framework
             # to extract the API key from headers
             api_key = kwargs.get('api_key') or (

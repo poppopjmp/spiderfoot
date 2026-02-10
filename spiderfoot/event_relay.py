@@ -61,10 +61,12 @@ class RelayEvent:
     timestamp: float = 0.0
 
     def __post_init__(self) -> None:
+        """Set the timestamp to current time if not provided."""
         if not self.timestamp:
             self.timestamp = time.time()
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "type": self.event_type,
             "scan_id": self.scan_id,
@@ -73,6 +75,7 @@ class RelayEvent:
         }
 
     def to_json(self) -> str:
+        """Serialize the event to a JSON string."""
         return json.dumps(self.to_dict(), default=str)
 
 
@@ -88,6 +91,7 @@ class EventRelay:
     """
 
     def __init__(self, max_queue_size: int = 500) -> None:
+        """Initialize the EventRelay."""
         self._lock = threading.Lock()
         self._consumers: dict[str, set[asyncio.Queue]] = defaultdict(set)
         self._max_queue_size = max_queue_size
@@ -314,6 +318,7 @@ class EventRelay:
 
     @property
     def stats(self) -> dict[str, Any]:
+        """Return relay statistics."""
         with self._lock:
             s = dict(self._stats)
             s["active_scans"] = list(self._consumers.keys())

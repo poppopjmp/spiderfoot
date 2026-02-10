@@ -130,6 +130,7 @@ else:
         task_type: str | None = Query(None, description="Filter by task type"),
         limit: int = Query(50, ge=1, le=500),
     ) -> dict:
+        """List background tasks with optional filters."""
         mgr = get_task_manager()
         st = _parse_task_state(state) if state else None
         tt = _parse_task_type(task_type) if task_type else None
@@ -147,6 +148,7 @@ else:
         description="Shorthand for listing queued and running tasks.",
     )
     async def list_active_tasks() -> dict:
+        """List queued and running tasks."""
         mgr = get_task_manager()
         queued = mgr.list_tasks(state=TaskState.QUEUED, limit=100)
         running = mgr.list_tasks(state=TaskState.RUNNING, limit=100)
@@ -165,6 +167,7 @@ else:
         description="Retrieve the current status and result of a specific task.",
     )
     async def get_task(task_id: str) -> dict:
+        """Retrieve the status and result of a specific task."""
         mgr = get_task_manager()
         record = mgr.get(task_id)
         if record is None:
@@ -185,6 +188,7 @@ else:
         ),
     )
     async def submit_task(body: TaskSubmitRequest) -> dict:
+        """Submit a new placeholder task."""
         mgr = get_task_manager()
         tt = _parse_task_type(body.task_type)
 
@@ -206,6 +210,7 @@ else:
         description="Remove all terminal (completed/failed/cancelled) tasks from history.",
     )
     async def clear_completed() -> dict:
+        """Remove all completed, failed, and cancelled tasks."""
         mgr = get_task_manager()
         count = mgr.clear_completed()
         return {"removed": count}
@@ -216,6 +221,7 @@ else:
         description="Attempt to cancel a queued or running task.",
     )
     async def cancel_task(task_id: str) -> dict:
+        """Cancel a queued or running task."""
         mgr = get_task_manager()
         record = mgr.get(task_id)
         if record is None:

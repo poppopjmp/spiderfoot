@@ -112,10 +112,12 @@ class ReportSection:
 
     @property
     def event_count(self) -> int:
+        """Return the number of events in this section."""
         return len(self.events)
 
     @property
     def has_content(self) -> bool:
+        """Return whether the section contains any events or subsections."""
         return len(self.events) > 0 or len(self.subsections) > 0
 
     def to_text(self) -> str:
@@ -152,10 +154,12 @@ class ReportContext:
 
     @property
     def total_events(self) -> int:
+        """Return the total number of events across all sections."""
         return sum(s.event_count for s in self.sections)
 
     @property
     def non_empty_sections(self) -> list[ReportSection]:
+        """Return sections that contain content."""
         return [s for s in self.sections if s.has_content]
 
     def to_text(self, max_tokens: int = 0) -> str:
@@ -441,6 +445,7 @@ class ReportPreprocessor:
     """
 
     def __init__(self, config: PreprocessorConfig | None = None) -> None:
+        """Initialize the ReportPreprocessor."""
         self.config = config or PreprocessorConfig()
 
     def process(

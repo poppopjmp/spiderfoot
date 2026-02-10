@@ -205,19 +205,23 @@ class RateLimitStats:
 
     @property
     def uptime(self) -> float:
+        """Return seconds since stats collection started."""
         return time.monotonic() - self._start_time
 
     @property
     def rejection_rate(self) -> float:
+        """Return the fraction of requests that were rejected."""
         if self.total_requests == 0:
             return 0.0
         return self.total_rejected / self.total_requests
 
     def record_allowed(self) -> None:
+        """Record an allowed request."""
         self.total_requests += 1
         self.total_allowed += 1
 
     def record_rejected(self, tier: str, client: str) -> None:
+        """Record a rejected request for a tier and client."""
         self.total_requests += 1
         self.total_rejected += 1
         self.rejections_by_tier[tier] = self.rejections_by_tier.get(tier, 0) + 1
@@ -228,6 +232,7 @@ class RateLimitStats:
             )
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "total_requests": self.total_requests,
             "total_allowed": self.total_allowed,
@@ -356,6 +361,7 @@ if HAS_STARLETTE:
             *,
             rate_config: RateLimitConfig | None = None,
         ) -> None:
+            """Initialize the RateLimitMiddleware."""
             super().__init__(app)
             self._config = rate_config or RateLimitConfig()
             self._setup_limiter()

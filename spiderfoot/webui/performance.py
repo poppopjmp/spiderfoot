@@ -18,6 +18,7 @@ class WebUIPerformanceEnhancer:
     """Performance enhancement utilities for WebUI operations."""
 
     def __init__(self, max_workers: int = 4) -> None:
+        """Initialize the WebUIPerformanceEnhancer."""
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
         self.cache = {}
         self.cache_lock = threading.RLock()
@@ -27,8 +28,10 @@ class WebUIPerformanceEnhancer:
     def cache_with_ttl(self, ttl_seconds: int = 300) -> Callable:
         """Decorator for caching function results with TTL."""
         def decorator(func: Callable) -> Callable:
+            """Decorate a function with TTL-based caching."""
             @functools.wraps(func)
             def wrapper(*args, **kwargs) -> Any:
+                """Return cached result or execute and cache the function."""
                 # Create cache key
                 cache_key = f"{func.__name__}:{hash(str(args) + str(sorted(kwargs.items())))}"
 
@@ -207,6 +210,7 @@ class MemoryOptimizer:
     """Memory optimization utilities."""
 
     def __init__(self) -> None:
+        """Initialize the MemoryOptimizer."""
         self.object_pool = weakref.WeakValueDictionary()
         self.logger = logging.getLogger(__name__)
 
@@ -295,6 +299,7 @@ def monitor_performance(func: Callable) -> Callable:
     """Decorator to monitor function performance."""
     @functools.wraps(func)
     def wrapper(*args, **kwargs) -> Any:
+        """Measure and log the execution time of the wrapped function."""
         start_time = time.time()
         logger = logging.getLogger(__name__)
 
@@ -327,6 +332,7 @@ class PerformanceEnhancedWebUI:
     """Mixin class with performance-enhanced WebUI methods."""
 
     def __init__(self) -> None:
+        """Initialize the PerformanceEnhancedWebUI."""
         self.performance_enhancer = performance_enhancer
         self.pagination_optimizer = PaginationOptimizer()
         self.memory_optimizer = MemoryOptimizer()

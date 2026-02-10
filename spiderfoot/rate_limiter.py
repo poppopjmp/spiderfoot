@@ -72,6 +72,7 @@ class RateLimit:
 
     @property
     def effective_burst(self) -> int:
+        """Return the effective burst size."""
         return self.burst if self.burst > 0 else self.requests
 
     @property
@@ -159,10 +160,12 @@ class RateLimiterService:
 
     @property
     def enabled(self) -> bool:
+        """Return whether rate limiting is globally enabled."""
         return self._global_enabled
 
     @enabled.setter
     def enabled(self, value: bool) -> None:
+        """Set the global enabled state for rate limiting."""
         self._global_enabled = value
 
     # ------------------------------------------------------------------
@@ -332,15 +335,18 @@ class RateLimiterService:
     class _Acquirer:
         """Context manager that waits for rate limit clearance."""
         def __init__(self, service: "RateLimiterService", key: str) -> None:
+            """Initialize the _Acquirer."""
             self._service = service
             self._key = key
             self.waited = 0.0
 
         def __enter__(self) -> RateLimiterService._Acquirer:
+            """Wait for rate limit clearance and return self."""
             self.waited = self._service.wait(self._key)
             return self
 
         def __exit__(self, *_) -> None:
+            """Exit the rate limit context manager."""
             pass
 
     def acquire(self, key: str) -> "_Acquirer":

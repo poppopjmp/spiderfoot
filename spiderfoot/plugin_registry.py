@@ -95,6 +95,7 @@ class PluginManifest:
     updated_at: str = ""
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "name": self.name,
             "display_name": self.display_name,
@@ -121,6 +122,7 @@ class PluginManifest:
 
     @classmethod
     def from_dict(cls, data: dict) -> "PluginManifest":
+        """Create a PluginManifest from a dictionary."""
         fields = {
             "name", "display_name", "version", "description",
             "author", "license", "homepage", "repository",
@@ -145,6 +147,7 @@ class InstalledPlugin:
     pinned_version: bool = False
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         d = self.manifest.to_dict()
         d["installed_at"] = self.installed_at
         d["filepath"] = self.filepath
@@ -447,9 +450,11 @@ class PluginRegistry:
                       key=lambda p: p.manifest.name)
 
     def is_installed(self, name: str) -> bool:
+        """Check if a plugin is installed."""
         return name in self._installed
 
     def get_installed(self, name: str) -> InstalledPlugin | None:
+        """Get an installed plugin by name."""
         return self._installed.get(name)
 
     def enable(self, name: str) -> bool:
@@ -478,6 +483,7 @@ class PluginRegistry:
 
     @property
     def stats(self) -> dict:
+        """Return registry statistics."""
         return {
             "catalog_size": len(self._catalog),
             "installed_count": len(self._installed),

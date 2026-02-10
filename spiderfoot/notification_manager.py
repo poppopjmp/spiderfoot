@@ -50,6 +50,7 @@ class NotificationManager:
         self,
         dispatcher: WebhookDispatcher | None = None,
     ) -> None:
+        """Initialize the NotificationManager."""
         self._lock = threading.Lock()
         self._webhooks: dict[str, WebhookConfig] = {}
         self._dispatcher = dispatcher or WebhookDispatcher()
@@ -74,10 +75,12 @@ class NotificationManager:
             return self._webhooks.pop(webhook_id, None) is not None
 
     def get_webhook(self, webhook_id: str) -> WebhookConfig | None:
+        """Get a webhook configuration by ID."""
         with self._lock:
             return self._webhooks.get(webhook_id)
 
     def list_webhooks(self) -> list[WebhookConfig]:
+        """Return all registered webhooks."""
         with self._lock:
             return list(self._webhooks.values())
 
@@ -216,10 +219,12 @@ class NotificationManager:
         webhook_id: str | None = None,
         limit: int = 50,
     ) -> list[DeliveryRecord]:
+        """Return recent delivery records, optionally filtered by webhook."""
         return self._dispatcher.get_history(webhook_id=webhook_id, limit=limit)
 
     @property
     def stats(self) -> dict[str, Any]:
+        """Return notification and delivery statistics."""
         delivery = self._dispatcher.stats
         delivery["webhooks_registered"] = len(self._webhooks)
         delivery["webhooks_enabled"] = sum(

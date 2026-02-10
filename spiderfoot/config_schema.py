@@ -162,6 +162,7 @@ class ConfigSchema:
     """
 
     def __init__(self, module_name: str = "") -> None:
+        """Initialize the ConfigSchema."""
         self.module_name = module_name
         self._fields: dict[str, FieldSchema] = {}
 
@@ -181,14 +182,17 @@ class ConfigSchema:
 
     @property
     def fields(self) -> dict[str, FieldSchema]:
+        """Return all field schemas."""
         return dict(self._fields)
 
     @property
     def required_fields(self) -> list[str]:
+        """Return names of required fields."""
         return [n for n, f in self._fields.items() if f.required]
 
     @property
     def sensitive_fields(self) -> list[str]:
+        """Return names of sensitive fields."""
         return [n for n, f in self._fields.items() if f.sensitive]
 
     def validate(self, config: dict[str, Any]) -> list[str]:
@@ -238,9 +242,11 @@ class ConfigSchema:
         }
 
     def __len__(self) -> int:
+        """Return the number of fields in the schema."""
         return len(self._fields)
 
     def __contains__(self, name: str) -> bool:
+        """Check if a field name exists in the schema."""
         return name in self._fields
 
 

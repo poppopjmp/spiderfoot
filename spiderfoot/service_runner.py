@@ -57,12 +57,14 @@ class _HealthStatus:
     """Shared health state for the running service."""
 
     def __init__(self) -> None:
+        """Initialize the _HealthStatus."""
         self.ready = False
         self.service_name = "unknown"
         self.started_at = time.time()
         self.details: dict = {}
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "service": self.service_name,
             "status": "ok" if self.ready else "starting",
@@ -78,6 +80,7 @@ class _HealthHandler(BaseHTTPRequestHandler):
     """Minimal HTTP handler for /health, /healthz, /metrics endpoints."""
 
     def do_GET(self) -> None:  # noqa: N802
+        """Handle GET requests for health and metrics endpoints."""
         if self.path in ("/health", "/healthz", "/ping"):
             payload = json.dumps(_health.to_dict()).encode()
             code = 200 if _health.ready else 503
@@ -99,6 +102,7 @@ class _HealthHandler(BaseHTTPRequestHandler):
             self.send_error(404)
 
     def log_message(self, format: str, *args) -> None:  # noqa: A002
+        """Suppress default HTTP request logging."""
         pass  # silence health-check logs
 
 
@@ -263,6 +267,7 @@ _SERVICE_MAP = {
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    """Parse arguments and launch the selected SpiderFoot service."""
     parser = argparse.ArgumentParser(
         description="SpiderFoot Microservice Runner",
     )

@@ -67,6 +67,7 @@ class DedupStats:
         return (self.duplicates_found / self.total_events) * 100
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "total_events": self.total_events,
             "unique_events": self.unique_events,
@@ -154,6 +155,7 @@ class EventDeduplicator:
         scope: str = "global",
         max_records: int = 100000,
     ) -> None:
+        """Initialize the EventDeduplicator."""
         self.strategy = strategy
         self.action = action
         self.scope = scope  # "global", "per_module", "per_type"
@@ -316,10 +318,12 @@ class EventDeduplicator:
 
     @property
     def is_enabled(self) -> bool:
+        """Return whether deduplication is enabled."""
         return self._enabled
 
     @property
     def record_count(self) -> int:
+        """Return the number of tracked dedup records."""
         with self._lock:
             return len(self._records)
 
@@ -358,6 +362,7 @@ class ScanDeduplicator:
         default_strategy: DedupStrategy = DedupStrategy.EXACT,
         default_action: DedupAction = DedupAction.DROP,
     ) -> None:
+        """Initialize the ScanDeduplicator."""
         self.scan_id = scan_id
         self._default_strategy = default_strategy
         self._default_action = default_action

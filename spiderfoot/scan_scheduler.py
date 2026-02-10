@@ -53,6 +53,7 @@ class ScanRequest:
     tags: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
+        """Generate a scan ID if not provided."""
         if not self.scan_id:
             self.scan_id = str(uuid.uuid4())
 
@@ -82,6 +83,7 @@ class ScanStatus:
         return end - self.started_at
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "scan_id": self.scan_id,
             "scan_name": self.scan_name,
@@ -114,6 +116,7 @@ class SchedulerConfig:
 
     @classmethod
     def from_sf_config(cls, opts: dict[str, Any]) -> "SchedulerConfig":
+        """Create a SchedulerConfig from a SpiderFoot config dict."""
         return cls(
             max_concurrent_scans=int(opts.get("_scheduler_max_scans", 3)),
             scan_poll_interval=float(opts.get("_scheduler_poll_interval", 5)),
@@ -150,6 +153,7 @@ class ScanScheduler:
         config: SchedulerConfig | None = None,
         registry: Any | None = None,
     ) -> None:
+        """Initialize the ScanScheduler."""
         self.config = config or SchedulerConfig()
         self._registry = registry
         self.log = logging.getLogger("spiderfoot.scan_scheduler")
@@ -345,10 +349,12 @@ class ScanScheduler:
 
     @property
     def pending_count(self) -> int:
+        """Return the number of pending scans."""
         return len(self._pending)
 
     @property
     def active_count(self) -> int:
+        """Return the number of active scans."""
         return len(self._active)
 
     # --- Internal ---
