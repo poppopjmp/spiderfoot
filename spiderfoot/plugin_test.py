@@ -39,15 +39,8 @@ import logging
 import re
 import types
 from dataclasses import dataclass, field
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Type,
-    Union,
-)
+from typing import Any, Callable, Type
+
 
 from collections.abc import Sequence
 from unittest.mock import MagicMock, patch

@@ -29,7 +29,7 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.event_indexer")
 

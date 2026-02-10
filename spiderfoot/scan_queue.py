@@ -23,7 +23,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 log = logging.getLogger("spiderfoot.scan_queue")
 

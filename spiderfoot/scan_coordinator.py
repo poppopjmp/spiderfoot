@@ -40,7 +40,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, List
 
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 

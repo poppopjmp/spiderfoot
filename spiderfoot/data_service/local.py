@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 from spiderfoot.data_service.base import DataService, DataServiceConfig
 
@@ -22,7 +22,7 @@ class LocalDataService(DataService):
     or single-node mode.
     """
 
-    def __init__(self, config: Optional[DataServiceConfig] = None, db_opts: Optional[dict] = None) -> None:
+    def __init__(self, config: DataServiceConfig | None = None, db_opts: dict | None = None) -> None:
         """Initialize LocalDataService.
 
         Args:
@@ -78,7 +78,7 @@ class LocalDataService(DataService):
             self.log.error("scan_instance_create failed: %s", e)
             return False
 
-    def scan_instance_get(self, scan_id: str) -> Optional[dict[str, Any]]:
+    def scan_instance_get(self, scan_id: str) -> dict[str, Any] | None:
         """Get a scan instance by ID."""
         try:
             rows = self.dbh.scanInstanceGet(scan_id)
@@ -136,8 +136,8 @@ class LocalDataService(DataService):
             return False
 
     def scan_status_set(self, scan_id: str, status: str,
-                        started: Optional[int] = None,
-                        ended: Optional[int] = None) -> bool:
+                        started: int | None = None,
+                        ended: int | None = None) -> bool:
         """Update scan status."""
         try:
             self.dbh.scanInstanceSet(
@@ -216,7 +216,7 @@ class LocalDataService(DataService):
     def event_get_by_scan(
         self,
         scan_id: str,
-        event_type: Optional[str] = None,
+        event_type: str | None = None,
         limit: int = 0,
     ) -> list[dict[str, Any]]:
         """Get events for a scan."""
@@ -285,7 +285,7 @@ class LocalDataService(DataService):
         scan_id: str,
         classification: str,
         message: str,
-        component: Optional[str] = None,
+        component: str | None = None,
     ) -> bool:
         """Log a scan event."""
         try:
@@ -302,7 +302,7 @@ class LocalDataService(DataService):
         scan_id: str,
         limit: int = 0,
         offset: int = 0,
-        log_type: Optional[str] = None,
+        log_type: str | None = None,
     ) -> list[dict[str, Any]]:
         """Get scan log entries."""
         try:

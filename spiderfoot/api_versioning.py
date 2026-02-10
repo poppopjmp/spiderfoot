@@ -35,7 +35,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable
 
 log = logging.getLogger("spiderfoot.api_versioning")
 

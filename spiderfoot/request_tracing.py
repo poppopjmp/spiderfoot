@@ -30,7 +30,7 @@ import contextvars
 import logging
 import time
 import uuid
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.tracing")
 

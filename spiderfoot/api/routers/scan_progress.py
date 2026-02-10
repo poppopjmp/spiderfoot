@@ -21,7 +21,7 @@ import json
 import logging
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 log = logging.getLogger("spiderfoot.api.scan_progress")
 

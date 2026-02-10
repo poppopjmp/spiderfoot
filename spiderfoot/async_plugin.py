@@ -21,7 +21,7 @@ import functools
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable, Dict, List, Optional, TypeVar
+from typing import Any, Callable, TypeVar
 
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 

@@ -36,7 +36,7 @@ import threading
 from collections import OrderedDict
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
 
 log = logging.getLogger("spiderfoot.module_loader")
 
@@ -131,7 +131,7 @@ class ModuleLoader:
     @classmethod
     def create(
         cls,
-        modules_dir: Optional[str] = None,
+        modules_dir: str | None = None,
         *,
         enable_topological: bool = True,
         enable_pruning: bool = False,
@@ -197,12 +197,12 @@ class ModuleLoader:
         config: dict[str, Any],
         *,
         sf: Any = None,
-        scan_id: Optional[str] = None,
+        scan_id: str | None = None,
         dbh: Any = None,
         target: Any = None,
         shared_pool: Any = None,
         event_queue: Any = None,
-        desired_output_types: Optional[list[str]] = None,
+        desired_output_types: list[str] | None = None,
     ) -> LoadResult:
         """Load, wire, and order all modules.
 
@@ -321,7 +321,7 @@ class ModuleLoader:
         config: dict[str, Any],
         *,
         sf: Any = None,
-        scan_id: Optional[str] = None,
+        scan_id: str | None = None,
         dbh: Any = None,
         target: Any = None,
         shared_pool: Any = None,
@@ -395,7 +395,7 @@ class ModuleLoader:
         modules_config: dict[str, Any],
         *,
         sf: Any = None,
-        scan_id: Optional[str] = None,
+        scan_id: str | None = None,
         dbh: Any = None,
         target: Any = None,
         shared_pool: Any = None,
@@ -560,7 +560,7 @@ class ModuleLoader:
     def resolve_minimal_set(
         self,
         desired_output_types: list[str],
-        available_modules: Optional[list[str]] = None,
+        available_modules: list[str] | None = None,
     ) -> set[str]:
         """Find the minimal set of modules needed for desired output.
 
@@ -585,7 +585,7 @@ class ModuleLoader:
 
     def get_topological_order(
         self,
-        module_names: Optional[list[str]] = None,
+        module_names: list[str] | None = None,
     ) -> list[str]:
         """Get modules in dependency order.
 
@@ -697,17 +697,17 @@ class ModuleLoader:
 # Module-level convenience (singleton-ish)
 # ---------------------------------------------------------------------------
 
-_global_loader: Optional[ModuleLoader] = None
+_global_loader: ModuleLoader | None = None
 _global_lock = threading.Lock()
 
 
-def get_module_loader() -> Optional[ModuleLoader]:
+def get_module_loader() -> ModuleLoader | None:
     """Return the global ``ModuleLoader`` singleton, or None."""
     return _global_loader
 
 
 def init_module_loader(
-    modules_dir: Optional[str] = None,
+    modules_dir: str | None = None,
     *,
     enable_topological: bool = True,
     enable_pruning: bool = False,

@@ -23,7 +23,7 @@ import time
 import traceback as tb_module
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.error_telemetry")
 

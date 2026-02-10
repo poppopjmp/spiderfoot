@@ -49,7 +49,7 @@ from __future__ import annotations
 import logging
 import queue
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from spiderfoot.plugin import SpiderFootPlugin
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
@@ -189,12 +189,12 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
     # ------------------------------------------------------------------
 
     def fetch_url(self, url: str, method: str = "GET",
-                  headers: Optional[dict] = None,
-                  data: Optional[Any] = None,
+                  headers: dict | None = None,
+                  data: Any | None = None,
                   timeout: int = 30,
                   use_cache: bool = True,
                   cache_ttl: int = DEFAULT_TTL_ONE_HOUR,
-                  **kwargs) -> Optional[dict]:
+                  **kwargs) -> dict | None:
         """Fetch a URL using HttpService (or fallback to self.sf.fetchUrl).
 
         Accepts all legacy fetchUrl kwargs (useragent, postData, etc.)
@@ -272,7 +272,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
 
         return []
 
-    def cache_get(self, key: str) -> Optional[Any]:
+    def cache_get(self, key: str) -> Any | None:
         """Get a value from the cache."""
         try:
             if self.cache is not None:

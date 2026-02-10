@@ -34,7 +34,7 @@ import logging.handlers
 import os
 import sys
 import warnings
-from typing import Any, Dict, Final, Optional
+from typing import Any, Final
 
 from spiderfoot.structured_logging import StructuredFormatter
 

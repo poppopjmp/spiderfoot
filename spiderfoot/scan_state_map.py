@@ -25,7 +25,7 @@ Usage::
 from __future__ import annotations
 
 import logging
-from typing import Final, Optional
+from typing import Final
 
 from spiderfoot.scan_state import ScanState
 

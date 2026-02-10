@@ -32,7 +32,6 @@ import socket
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
 
 log = logging.getLogger("spiderfoot.startup")
 

@@ -42,7 +42,7 @@ import threading
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, List
 
 log = logging.getLogger("spiderfoot.event_relay")
 
@@ -52,14 +52,14 @@ class RelayEvent:
     """A normalized event for delivery to consumers."""
     event_type: str  # e.g. "scan.started", "new_event", "status_update"
     scan_id: str
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     timestamp: float = 0.0
 
     def __post_init__(self):
         if not self.timestamp:
             self.timestamp = time.time()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "type": self.event_type,
             "scan_id": self.scan_id,
@@ -84,9 +84,9 @@ class EventRelay:
 
     def __init__(self, max_queue_size: int = 500) -> None:
         self._lock = threading.Lock()
-        self._consumers: Dict[str, Set[asyncio.Queue]] = defaultdict(set)
+        self._consumers: dict[str, set[asyncio.Queue]] = defaultdict(set)
         self._max_queue_size = max_queue_size
-        self._eventbus_sub_ids: Dict[str, str] = {}  # scan_id -> subscription_id
+        self._eventbus_sub_ids: dict[str, str] = {}  # scan_id -> subscription_id
         self._eventbus = None
         self._stats = {
             "events_relayed": 0,
@@ -133,7 +133,7 @@ class EventRelay:
     def push_event(
         self,
         scan_id: str,
-        event: Dict[str, Any],
+        event: dict[str, Any],
         event_type: str = "event",
     ) -> int:
         """Push an event to all consumers registered for a scan.
@@ -176,7 +176,7 @@ class EventRelay:
 
         return delivered
 
-    def push_event_all(self, event: Dict[str, Any], event_type: str = "broadcast") -> int:
+    def push_event_all(self, event: dict[str, Any], event_type: str = "broadcast") -> int:
         """Push an event to ALL consumers regardless of scan_id."""
         with self._lock:
             all_scan_ids = list(self._consumers.keys())
@@ -217,7 +217,7 @@ class EventRelay:
         except Exception as e:
             log.error("Error relaying EventBus event: %s", e)
 
-    async def subscribe_scan(self, scan_id: str) -> Optional[str]:
+    async def subscribe_scan(self, scan_id: str) -> str | None:
         """Subscribe to EventBus events for a specific scan.
 
         Only subscribes if not already subscribed and EventBus is wired.
@@ -300,12 +300,12 @@ from spiderfoot.scan_state_map import (
         with self._lock:
             return bool(self._consumers.get(scan_id))
 
-    def active_scans(self) -> List[str]:
+    def active_scans(self) -> list[str]:
         """List scan IDs with active consumers."""
         with self._lock:
             return list(self._consumers.keys())
 
-    def consumer_count(self, scan_id: Optional[str] = None) -> int:
+    def consumer_count(self, scan_id: str | None = None) -> int:
         """Count active consumers, optionally for a specific scan."""
         with self._lock:
             if scan_id:
@@ -313,7 +313,7 @@ from spiderfoot.scan_state_map import (
             return self._count_active()
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         with self._lock:
             s = dict(self._stats)
             s["active_scans"] = list(self._consumers.keys())
@@ -325,7 +325,7 @@ from spiderfoot.scan_state_map import (
 # Singleton
 # -----------------------------------------------------------------------
 
-_relay: Optional[EventRelay] = None
+_relay: EventRelay | None = None
 _relay_lock = threading.Lock()
 
 

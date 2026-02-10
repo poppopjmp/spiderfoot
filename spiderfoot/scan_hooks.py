@@ -32,7 +32,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 log = logging.getLogger(__name__)
 
@@ -55,13 +55,13 @@ class ScanLifecycleEvent:
     event: ScanEvent
     scan_id: str
     timestamp: float = field(default_factory=time.time)
-    name: Optional[str] = None
-    target: Optional[str] = None
-    status: Optional[str] = None
-    reason: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    name: str | None = None
+    target: str | None = None
+    status: str | None = None
+    reason: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "event": self.event.value,
             "scan_id": self.scan_id,
@@ -90,8 +90,8 @@ class ScanLifecycleHooks:
     """
 
     def __init__(self) -> None:
-        self._listeners: List[ScanLifecycleListener] = []
-        self._event_log: List[ScanLifecycleEvent] = []
+        self._listeners: list[ScanLifecycleListener] = []
+        self._event_log: list[ScanLifecycleEvent] = []
         self._max_log_size = 500
 
     # ── Listener management ──────────────────────────────────────
@@ -227,17 +227,17 @@ from spiderfoot.scan_state_map import (
 
 
     # ── Query ────────────────────────────────────────────────────
-    def get_recent_events(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_recent_events(self, limit: int = 50) -> list[dict[str, Any]]:
         """Return the most recent lifecycle events."""
         return [e.to_dict() for e in self._event_log[-limit:]]
 
-    def get_events_for_scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def get_events_for_scan(self, scan_id: str) -> list[dict[str, Any]]:
         """Return all lifecycle events for a specific scan."""
         return [e.to_dict() for e in self._event_log if e.scan_id == scan_id]
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Summary statistics."""
-        counts: Dict[str, int] = {}
+        counts: dict[str, int] = {}
         for e in self._event_log:
             counts[e.event.value] = counts.get(e.event.value, 0) + 1
         return {
@@ -249,7 +249,7 @@ from spiderfoot.scan_state_map import (
 
 # ── Singleton ────────────────────────────────────────────────────────
 
-_instance: Optional[ScanLifecycleHooks] = None
+_instance: ScanLifecycleHooks | None = None
 
 
 def get_scan_hooks() -> ScanLifecycleHooks:

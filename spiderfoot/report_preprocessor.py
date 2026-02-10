@@ -33,7 +33,7 @@ import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, List, Optional
 
 log = logging.getLogger("spiderfoot.report_preprocessor")
 

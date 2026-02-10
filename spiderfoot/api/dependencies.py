@@ -17,7 +17,7 @@ from spiderfoot.helpers import SpiderFootHelpers
 from spiderfoot.app_config import AppConfig
 import multiprocessing as mp
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 security = HTTPBearer(auto_error=False)
 

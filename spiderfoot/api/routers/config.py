@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import BaseModel, Field
 from ..dependencies import get_app_config, get_config_repository, optional_auth
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 router = APIRouter()
 log = logging.getLogger(__name__)

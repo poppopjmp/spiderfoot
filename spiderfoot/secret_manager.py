@@ -43,7 +43,7 @@ import threading
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, List
 
 log = logging.getLogger("spiderfoot.secret_manager")
 

@@ -44,7 +44,7 @@ import logging
 import threading
 import time
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 log = logging.getLogger("spiderfoot.scan_event_bridge")
 

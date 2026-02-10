@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Tuple
 
 log = logging.getLogger("spiderfoot.visualization_service")
 

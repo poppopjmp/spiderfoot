@@ -14,7 +14,7 @@ import multiprocessing as mp
 import time
 from copy import deepcopy
 from io import BytesIO, StringIO
-from typing import List, Optional
+from typing import List
 
 import openpyxl
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query

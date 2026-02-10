@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import importlib
 import logging
-from typing import Any, Dict, List, Optional, Set, Type
+from typing import Any, Optional, Set, Type
 
 log = logging.getLogger("spiderfoot.test_harness")
 

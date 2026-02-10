@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response, StreamingResponse

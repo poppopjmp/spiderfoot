@@ -14,7 +14,7 @@ import logging
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from spiderfoot.db.repositories.scan_repository import ScanRecord, ScanRepository
 from spiderfoot.db.repositories.event_repository import EventRepository

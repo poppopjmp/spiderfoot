@@ -30,7 +30,7 @@ import logging
 import textwrap
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 log = logging.getLogger("spiderfoot.context_window")
 

@@ -36,7 +36,6 @@ import os
 import secrets
 import time
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger(__name__)

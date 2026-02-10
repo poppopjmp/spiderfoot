@@ -38,7 +38,7 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 log = logging.getLogger(__name__)
 

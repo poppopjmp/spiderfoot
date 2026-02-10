@@ -20,7 +20,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger("spiderfoot.multidim")

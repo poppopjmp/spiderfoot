@@ -42,7 +42,7 @@ import os
 from copy import deepcopy
 from dataclasses import dataclass, field, fields, asdict
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 from spiderfoot.constants import DEFAULT_WEB_PORT, DEFAULT_API_PORT, DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger("spiderfoot.app_config")
@@ -778,7 +778,7 @@ def _set_field(section: Any, field_attr: str, value: Any) -> None:
             elif f.type == "str":
                 target_type = str
             else:
-                # Optional[X] or complex — keep as-is
+                # X | None or complex — keep as-is
                 target_type = type(None)
             break
 

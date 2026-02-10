@@ -23,7 +23,7 @@ import logging
 import platform
 import sys
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 log = logging.getLogger("spiderfoot.api.health")
 

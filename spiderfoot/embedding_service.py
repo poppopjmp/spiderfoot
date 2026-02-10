@@ -30,7 +30,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from spiderfoot.constants import DEFAULT_OPENAI_BASE_URL
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from collections.abc import Sequence
 

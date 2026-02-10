@@ -30,7 +30,7 @@ import threading
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.module_profiler")
 
