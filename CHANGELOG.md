@@ -3,6 +3,51 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.128.0] — RC Cycle 46: Module-Level Docstrings
+
+### Added
+- Module-level docstrings to 14 core infrastructure files:
+  plugin.py, event.py, target.py, db/__init__.py, sflib/__init__.py,
+  sflib/core.py, sflib/helpers.py, sflib/network.py, sflib/config.py,
+  helpers.py, logger.py, threadpool.py, __version__.py, api/__init__.py
+
+## [5.127.0] — RC Cycle 45: `__all__` Exports
+
+### Added
+- `__all__` to sflib/helpers.py (15 public functions)
+- `__all__` to sflib/__init__.py (18 re-exported symbols)
+- Wildcard imports now expose only the intended public API
+
+## [5.126.0] — RC Cycle 44: Security Hardening
+
+### Security
+- Replaced hardcoded `'default-secret'` CSRF fallback with `secrets.token_hex(32)` + warning log
+- Scoped global `ssl._create_unverified_context` override to per-instance `_ssl_context` in sflib/core.py
+
+## [5.125.0] — RC Cycle 43: Silent Exception Cleanup (Batch 5)
+
+### Changed
+- Fixed final 14 `except: pass` blocks across 7 files
+- core/performance.py (3 Redis ops), db/__init__.py (4), db/db_event.py (2),
+  eventbus/nats_bus.py (1), helpers.py (1), sflib/network.py (1), correlation_service.py (1)
+- **Total silent exceptions fixed across RC38–43: 62 blocks**
+
+## [5.124.0] — RC Cycle 42: Silent Exception Cleanup (Batch 4)
+
+### Changed
+- Fixed 14 `except: pass` blocks across 8 files
+- benchmark.py (2), event_indexer.py (1), api_security.py (1),
+  rate_limit_middleware.py (1), llm_client.py (2), scan_service/scanner.py (3),
+  sflib/network.py (3), webui/scan.py (1)
+
+## [5.123.0] — RC Cycle 41: Silent Exception Cleanup (Batch 3)
+
+### Changed
+- Fixed 13 `except: pass` blocks across 11 files
+- alert_rules.py, audit_log.py, db_migrate.py, event_pipeline.py,
+  hot_reload.py, module_health.py, eventbus_hardening.py, api_gateway.py,
+  correlation_service.py (2), export_service.py (2), openapi_spec.py
+
 ## [5.122.0] — RC Cycle 39: Silent Exception Cleanup (Batch 2)
 
 ### Changed
