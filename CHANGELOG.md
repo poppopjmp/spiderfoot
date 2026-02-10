@@ -3,6 +3,43 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.168.0] — RC Cycle 98: Database Facade Docstrings
+
+### Added
+- Added docstrings to 15 delegation methods in `db/__init__.py`
+- Documented scan instance, config, event, log, search, and result methods
+
+## [5.167.0] — RC Cycle 97: Core Facade Docstrings
+
+### Added
+- Added docstrings to 12 undocumented public methods in `sflib/core.py`
+- Documented properties (`dbh`, `scanId`, `socksProxy`), logging methods, and key accessors
+
+## [5.166.0] — RC Cycle 96: Routes Return Types
+
+### Changed
+- Added return type hints to all 32 public methods in `webui/routes.py`
+- Added `from __future__ import annotations` for Python 3.9 compatibility
+
+## [5.165.0] — RC Cycle 95: Scan Endpoint Return Types
+
+### Changed
+- Added return type hints to all 37 public methods in `webui/scan.py`
+- Added `from __future__ import annotations` for Python 3.9 compatibility
+
+## [5.164.0] — RC Cycle 94: Parens Cleanup & Core Return Types
+
+### Changed
+- Removed 2 redundant parentheses in `sflib/core.py` and `sfp_spider.py`
+- Added return type hints to 8 methods in `sflib/core.py` (`safeSocket`, `safeSSLSocket`, `getSession`, `loadModules`, `configSerialize`, `configUnserialize`, `getEventTypes`, `getModules`)
+
+## [5.163.0] — RC Cycle 93: AI/ML Service Exception Narrowing
+
+### Changed
+- Narrowed 8 `except Exception` clauses in AI/ML service files
+- `urllib.request.urlopen` + `json.loads` → `(urllib.error.URLError, json.JSONDecodeError, OSError)`
+- Files: `reranker_service.py`, `rag_pipeline.py`, `embedding_service.py`, `qdrant_client.py`, `startup_sequencer.py`
+
 ## [5.162.0] — RC Cycle 91: Narrow Except Clauses (Batch 2) + Bug Fix
 
 ### Fixed
