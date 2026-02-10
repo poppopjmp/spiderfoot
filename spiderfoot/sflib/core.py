@@ -24,10 +24,15 @@ import logging
 import ssl
 import dns.resolver
 from .network import (
-    resolveHost, resolveIP, resolveHost6, validateIP, safeSocket, safeSSLSocket, parseCert, getSession, fetchUrl, checkDnsWildcard
+    resolveHost, resolveIP, resolveHost6, validateIP,
+    safeSocket, safeSSLSocket, parseCert, getSession,
+    fetchUrl, checkDnsWildcard,
 )
 from .helpers import (
-    hashstring, cachePut, cacheGet, removeUrlCreds, isValidLocalOrLoopbackIp, domainKeyword, domainKeywords, hostDomain, validHost, isDomain, validIP, validIP6, validIpNetwork, isPublicIpAddress, normalizeDNS
+    hashstring, cachePut, cacheGet, removeUrlCreds,
+    isValidLocalOrLoopbackIp, domainKeyword, domainKeywords,
+    hostDomain, validHost, isDomain, validIP, validIP6,
+    validIpNetwork, isPublicIpAddress, normalizeDNS,
 )
 
 class SpiderFoot:
@@ -225,10 +230,25 @@ class SpiderFoot:
         """Determine whether to use the configured proxy for a URL."""
         # Patch: pass self for urlFQDN resolution and improve local IP detection
         from .network import useProxyForUrl
-        return useProxyForUrl(url, self.opts, urlFQDN=self.urlFQDN, isValidLocalOrLoopbackIp=self.isValidLocalOrLoopbackIp)
-    def fetchUrl(self, url: str, cookies: str = None, timeout: int = 30, useragent: str = "SpiderFoot", headers: dict = None, noLog: bool = False, postData: str = None, disableContentEncoding: bool = False, sizeLimit: int = None, headOnly: bool = False, verify: bool = True) -> dict:
+        return useProxyForUrl(
+            url, self.opts,
+            urlFQDN=self.urlFQDN,
+            isValidLocalOrLoopbackIp=self.isValidLocalOrLoopbackIp,
+        )
+    def fetchUrl(
+        self, url: str, cookies: str = None, timeout: int = 30,
+        useragent: str = "SpiderFoot", headers: dict = None,
+        noLog: bool = False, postData: str = None,
+        disableContentEncoding: bool = False,
+        sizeLimit: int = None, headOnly: bool = False,
+        verify: bool = True,
+    ) -> dict:
         """Fetch the contents of a URL and return the response."""
-        return fetchUrl(url, cookies, timeout, useragent, headers, noLog, postData, disableContentEncoding, sizeLimit, headOnly, verify)
+        return fetchUrl(
+            url, cookies, timeout, useragent, headers, noLog,
+            postData, disableContentEncoding, sizeLimit,
+            headOnly, verify,
+        )
     def checkDnsWildcard(self, target: str) -> bool:
         """Check if a target domain has a DNS wildcard entry."""
         return checkDnsWildcard(target)

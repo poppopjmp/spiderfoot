@@ -112,7 +112,11 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
             if status_code >= 500:
                 log.error("API request: %(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
             elif status_code >= 400:
-                log.warning("API request: %(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
+                log.warning(
+                    "API request: %(method)s %(path)s → %(status)s (%(duration_ms)sms)",
+                    log_data,
+                    extra=log_data,
+                )
             else:
                 log.info("API request: %(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
 

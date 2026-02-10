@@ -21,4 +21,7 @@ def correlationrules_command(cli: SpiderFootCli, line: str) -> None:
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
 def register(registry: CommandRegistry) -> None:
-    registry.register("correlationrules", correlationrules_command, help_text="List available correlation rules from the API.")
+    registry.register(
+        "correlationrules", correlationrules_command,
+        help_text="List available correlation rules from the API.",
+    )

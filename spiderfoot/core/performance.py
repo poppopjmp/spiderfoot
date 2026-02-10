@@ -301,7 +301,12 @@ class AsyncHTTPManager:
         )
         return self
 
-    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         if self.session:
             await self.session.close()
 
@@ -459,7 +464,11 @@ class MemoryManager:
 
 
 # Performance optimization decorator
-def optimize_performance(cache_ttl: int = DEFAULT_TTL_ONE_HOUR, profile: bool = True, use_async: bool = False) -> Callable:
+def optimize_performance(
+    cache_ttl: int = DEFAULT_TTL_ONE_HOUR,
+    profile: bool = True,
+    use_async: bool = False,
+) -> Callable:
     """Comprehensive performance optimization decorator."""
     def decorator(func: Callable) -> Callable:
         # Apply profiling

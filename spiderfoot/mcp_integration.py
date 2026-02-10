@@ -409,7 +409,11 @@ class SpiderFootMCPClient:
             'report_type': report['report_type'],
             'generated_time': report['generated_time'],
             'risk_rating': report['risk_rating'],
-            'summary': report['executive_summary'][:500] + '...' if len(report['executive_summary']) > 500 else report['executive_summary']
+            'summary': (
+                report['executive_summary'][:500] + '...'
+                if len(report['executive_summary']) > 500
+                else report['executive_summary']
+            )
         })
 
         # Save full report separately (could be stored in files or separate table)

@@ -202,7 +202,13 @@ class DataServiceBridge:
         """Legacy wrapper for scan_instance_delete."""
         self._ds.scan_instance_delete(instanceId)
 
-    def scanInstanceSet(self, instanceId: str, started: int | None = None, ended: int | None = None, status: str | None = None) -> None:
+    def scanInstanceSet(
+        self,
+        instanceId: str,
+        started: int | None = None,
+        ended: int | None = None,
+        status: str | None = None,
+    ) -> None:
         """Legacy wrapper for scan_status_set."""
         started_int = int(started) if started else None
         ended_int = int(ended) if ended else None

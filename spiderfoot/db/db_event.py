@@ -163,7 +163,12 @@ class EventManager:
             except (sqlite3.Error, psycopg2.Error) as e:
                 raise OSError("SQL error encountered when fetching scan errors") from e
 
-    def scanResultEvent(self, instanceId: str, eventType: str = 'ALL', srcModule: str = None, data: list = None, sourceId: list = None, correlationId: str = None, filterFp: bool = False) -> list:
+    def scanResultEvent(
+        self, instanceId: str, eventType: str = 'ALL',
+        srcModule: str = None, data: list = None,
+        sourceId: list = None, correlationId: str = None,
+        filterFp: bool = False,
+    ) -> list:
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(eventType, str) and not isinstance(eventType, list):
@@ -333,7 +338,11 @@ class EventManager:
         # Always store generated as int (ms)
         generated_ms = int(sfEvent.generated * 1000)
         qry = "INSERT INTO tbl_scan_results (scan_instance_id, hash, type, generated, confidence, visibility, risk, module, data, source_event_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        qvals = [instanceId, sfEvent.hash, sfEvent.eventType, generated_ms, sfEvent.confidence, sfEvent.visibility, sfEvent.risk, sfEvent.module, storeData, sfEvent.sourceEventHash]
+        qvals = [
+            instanceId, sfEvent.hash, sfEvent.eventType, generated_ms,
+            sfEvent.confidence, sfEvent.visibility, sfEvent.risk,
+            sfEvent.module, storeData, sfEvent.sourceEventHash,
+        ]
         with self.dbhLock:
             try:
                 self.dbh.execute(qry, qvals)

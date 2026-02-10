@@ -199,7 +199,10 @@ class SpiderFootHelpers():
             return 'USERNAME'
 
         # Domain/hostname - do this last as it's most permissive
-        if re.match(r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$', stripped_target):
+        if re.match(
+            r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$',
+            stripped_target,
+        ):
             return "INTERNET_NAME"
 
         return None
@@ -1235,7 +1238,8 @@ class SpiderFootHelpers():
             "US": "United States", "UM": "United States Minor Outlying Islands",
             "UY": "Uruguay", "UZ": "Uzbekistan", "VU": "Vanuatu",
             "VA": "Vatican", "VE": "Venezuela", "VN": "Vietnam",
-            "WF": "Wallis and Futuna", "EH": "Western Sahara", "YE": "Yemen",            "ZM": "Zambia", "ZW": "Zimbabwe",
+            "WF": "Wallis and Futuna", "EH": "Western Sahara",
+            "YE": "Yemen", "ZM": "Zambia", "ZW": "Zimbabwe",
             "AC": "Ascension Island", "EU": "European Union", "SU": "Soviet Union",
             "UK": "United Kingdom"
         }

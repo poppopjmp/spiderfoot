@@ -46,12 +46,25 @@ class ConfigManager:
     CONFIG_DESCRIPTIONS = {
         '_debug': "Enable debugging?",
         '_maxthreads': "Max number of modules to run concurrently",
-        '_useragent': "User-Agent string to use for HTTP requests. Prefix with an '@' to randomly select the User Agent from a file containing user agent strings for each request, e.g. @C:\\useragents.txt or @/home/bob/useragents.txt. Or supply a URL to load the list from there.",
-        '_dnsserver': "Override the default resolver with another DNS server. For example, 8.8.8.8 is Google's open DNS server.",
+        '_useragent': (
+            "User-Agent string to use for HTTP requests. Prefix with an '@' to randomly select the"
+            " User Agent from a file containing user agent strings for each request, e.g."
+            " @C:\\useragents.txt or @/home/bob/useragents.txt. Or supply a URL to load the list from there."
+        ),
+        '_dnsserver': (
+            "Override the default resolver with another DNS server."
+            " For example, 8.8.8.8 is Google's open DNS server."
+        ),
         '_fetchtimeout': "Number of seconds before giving up on a HTTP request.",
         '_internettlds': "List of Internet TLDs.",
-        '_internettlds_cache': "Hours to cache the Internet TLD list. This can safely be quite a long time given that the list doesn't change too often.",
-        '_genericusers': "List of usernames that if found as usernames or as part of e-mail addresses, should be treated differently to non-generics.",
+        '_internettlds_cache': (
+            "Hours to cache the Internet TLD list. This can safely be quite a long"
+            " time given that the list doesn't change too often."
+        ),
+        '_genericusers': (
+            "List of usernames that if found as usernames or as part of e-mail addresses,"
+            " should be treated differently to non-generics."
+        ),
         '_socks1type': "SOCKS Server Type. Can be '4', '5', 'HTTP' or 'TOR'",
         '_socks2addr': 'SOCKS Server IP Address.',
         '_socks3port': 'SOCKS Server TCP Port. Usually 1080 for 4/5, 8080 for HTTP and 9050 for TOR.',
@@ -136,9 +149,18 @@ class ConfigManager:
         legacy_db_path = os.path.join(script_dir, '../../../spiderfoot.db')
         if os.path.exists(legacy_db_path):
             self.log.error("spiderfoot.db file exists in %s", os.path.dirname(legacy_db_path))
-            self.log.error("SpiderFoot no longer supports loading the spiderfoot.db database from the application directory.")
-            self.log.error("The database is now loaded from your home directory: %s/spiderfoot.db", SpiderFootHelpers.dataPath())
-            self.log.error("This message will go away once you move or remove spiderfoot.db from %s", os.path.dirname(legacy_db_path))
+            self.log.error(
+                "SpiderFoot no longer supports loading the spiderfoot.db"
+                " database from the application directory."
+            )
+            self.log.error(
+                "The database is now loaded from your home directory:"
+                " %s/spiderfoot.db", SpiderFootHelpers.dataPath()
+            )
+            self.log.error(
+                "This message will go away once you move or remove"
+                " spiderfoot.db from %s", os.path.dirname(legacy_db_path)
+            )
             raise SystemExit(-1)
 
         # Check for legacy passwd files
@@ -146,8 +168,14 @@ class ConfigManager:
         if os.path.exists(legacy_passwd_path):
             self.log.error("passwd file exists in %s", os.path.dirname(legacy_passwd_path))
             self.log.error("SpiderFoot no longer supports loading credentials from the application directory.")
-            self.log.error("The passwd file is now loaded from your home directory: %s/passwd", SpiderFootHelpers.dataPath())
-            self.log.error("This message will go away once you move or remove passwd from %s", os.path.dirname(legacy_passwd_path))
+            self.log.error(
+                "The passwd file is now loaded from your home"
+                " directory: %s/passwd", SpiderFootHelpers.dataPath()
+            )
+            self.log.error(
+                "This message will go away once you move or remove"
+                " passwd from %s", os.path.dirname(legacy_passwd_path)
+            )
             raise SystemExit(-1)
 
     def get_web_config(self, host: str = '127.0.0.1', port: int = DEFAULT_WEB_PORT,

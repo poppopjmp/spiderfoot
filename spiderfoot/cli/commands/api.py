@@ -43,4 +43,8 @@ def api_command(cli: SpiderFootCli, line: str) -> None:
         cli.edprint("No response from API.")
 
 def register(registry: CommandRegistry) -> None:
-    registry.register("api", api_command, help_text="Interact with the SpiderFoot API directly. Usage: api <endpoint> [POST <json_data>]")
+    registry.register(
+        "api", api_command,
+        help_text="Interact with the SpiderFoot API directly."
+        " Usage: api <endpoint> [POST <json_data>]",
+    )

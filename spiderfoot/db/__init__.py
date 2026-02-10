@@ -400,7 +400,8 @@ class SpiderFootDb:
 
     def __init__(self, *args, **kwargs) -> None:
         """
-        Initialize database and create handle to the database file. Supports both legacy positional and new dict-based signatures.
+        Initialize database and create handle to the database file.
+        Supports both legacy positional and new dict-based signatures.
         """
         # Modular signature: SpiderFootDb(opts, init=True)
         if len(args) >= 1 and isinstance(args[0], dict):
@@ -410,7 +411,10 @@ class SpiderFootDb:
         else:
             # Accept at least 5 positional args for legacy
             if len(args) < 5:
-                raise TypeError("SpiderFootDb() missing required positional arguments: 'dbhost', 'dbport', 'dbname', 'dbuser', and 'dbpass'")
+                raise TypeError(
+                    "SpiderFootDb() missing required positional arguments:"
+                    " 'dbhost', 'dbport', 'dbname', 'dbuser', and 'dbpass'"
+                )
             dbhost, dbport, dbname, dbuser, dbpass = args[:5]
             opts = {
                 '__dbtype': 'sqlite',  # or 'postgresql' if you want to support both
@@ -701,9 +705,17 @@ class SpiderFootDb:
         """Search scan results by criteria."""
         return self._event.search(criteria, filterFp)
     # --- SCAN RESULT / EVENT FUNCTIONS ---
-    def scanResultEvent(self, instanceId: str, eventType: str = 'ALL', srcModule: str = None, data: list = None, sourceId: list = None, correlationId: str = None, filterFp: bool = False) -> list:
+    def scanResultEvent(
+        self, instanceId: str, eventType: str = 'ALL',
+        srcModule: str = None, data: list = None,
+        sourceId: list = None, correlationId: str = None,
+        filterFp: bool = False,
+    ) -> list:
         """Retrieve scan result events, optionally filtered by type or module."""
-        return self._event.scanResultEvent(instanceId, eventType, srcModule, data, sourceId, correlationId, filterFp)
+        return self._event.scanResultEvent(
+            instanceId, eventType, srcModule, data,
+            sourceId, correlationId, filterFp,
+        )
     def scanResultEventUnique(self, instanceId: str, eventType: str = 'ALL', filterFp: bool = False) -> list:
         return self._event.scanResultEventUnique(instanceId, eventType, filterFp)
     def scanResultSummary(self, instanceId: str, by: str = "type") -> list:
@@ -726,8 +738,16 @@ class SpiderFootDb:
     def scanElementChildrenAll(self, instanceId: str, parentIds: list) -> list:
         return self._event.scanElementChildrenAll(instanceId, parentIds)
     # --- CORRELATION RESULTS ---
-    def correlationResultCreate(self, instanceId: str, event_hash: str, ruleId: str, ruleName: str, ruleDescr: str, ruleRisk: str, ruleYaml: str, correlationTitle: str, eventHashes: list) -> str:
-        return self._correlation.correlationResultCreate(instanceId, event_hash, ruleId, ruleName, ruleDescr, ruleRisk, ruleYaml, correlationTitle, eventHashes)
+    def correlationResultCreate(
+        self, instanceId: str, event_hash: str,
+        ruleId: str, ruleName: str, ruleDescr: str,
+        ruleRisk: str, ruleYaml: str,
+        correlationTitle: str, eventHashes: list,
+    ) -> str:
+        return self._correlation.correlationResultCreate(
+            instanceId, event_hash, ruleId, ruleName, ruleDescr,
+            ruleRisk, ruleYaml, correlationTitle, eventHashes,
+        )
     def scanCorrelationSummary(self, instanceId: str, by: str = "rule") -> list:
         return self._correlation.scanCorrelationSummary(instanceId, by)
     def scanCorrelationList(self, instanceId: str) -> list:

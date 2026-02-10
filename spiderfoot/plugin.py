@@ -150,7 +150,13 @@ class SpiderFootPlugin:
         """Called when the module should finish processing."""
         pass
 
-    def sendEvent(self, eventType: str, eventData: str, parentEvent: 'SpiderFootEvent' | None = None, confidenceLevel: int = 100) -> None:
+    def sendEvent(
+        self,
+        eventType: str,
+        eventData: str,
+        parentEvent: 'SpiderFootEvent' | None = None,
+        confidenceLevel: int = 100,
+    ) -> None:
         """Send an event.
 
         Args:
@@ -395,7 +401,11 @@ class SpiderFootPlugin:
 
         prevEvent = sfEvent.sourceEvent
         while prevEvent is not None:
-            if prevEvent.sourceEvent is not None and prevEvent.sourceEvent.eventType == sfEvent.eventType and prevEvent.sourceEvent.data.lower() == eventData.lower():
+            if (
+                prevEvent.sourceEvent is not None
+                and prevEvent.sourceEvent.eventType == sfEvent.eventType
+                and prevEvent.sourceEvent.data.lower() == eventData.lower()
+            ):
                 storeOnly = True
                 break
             prevEvent = prevEvent.sourceEvent
@@ -471,7 +481,8 @@ class SpiderFootPlugin:
         Returns:
             bool: True if the module is currently processing data.
         """
-        return self.sharedThreadPool.countQueuedTasks(f"{getattr(self, '__name__', self.__class__.__name__)}_threadWorker") > 0
+        task_name = f"{getattr(self, '__name__', self.__class__.__name__)}_threadWorker"
+        return self.sharedThreadPool.countQueuedTasks(task_name) > 0
 
     def watchedEvents(self) -> list:
         """What events is this module interested in for input. The format is a
@@ -527,7 +538,12 @@ class SpiderFootPlugin:
         # Check if queues are set up before starting thread
         if not (self.incomingEventQueue and self.outgoingEventQueue):
             # Use self._log if sf is not available
-            error_msg = f"Module {getattr(self, '__name__', 'unknown')} cannot start: queues not initialized (incoming={self.incomingEventQueue is not None}, outgoing={self.outgoingEventQueue is not None})"
+            error_msg = (
+                f"Module {getattr(self, '__name__', 'unknown')} cannot start:"
+                f" queues not initialized"
+                f" (incoming={self.incomingEventQueue is not None},"
+                f" outgoing={self.outgoingEventQueue is not None})"
+            )
             if hasattr(self, 'sf') and self.sf:
                 self.sf.error(error_msg)
             elif hasattr(self, '_log') and self._log:
@@ -573,17 +589,23 @@ class SpiderFootPlugin:
                     continue
                 if sfEvent == DB_STATUS_FINISHED:
                     self.sf.debug(
-                        f"{getattr(self, '__name__', self.__class__.__name__)}.threadWorker() got \"FINISHED\" from incomingEventQueue.")
+                        f"{getattr(self, '__name__', self.__class__.__name__)}"
+                        ".threadWorker() got \"FINISHED\""
+                        " from incomingEventQueue.")
                     self.poolExecute(self.finish)
                 else:
                     self.sf.debug(
-                        f"{getattr(self, '__name__', self.__class__.__name__)}.threadWorker() got event, {sfEvent.eventType}, from incomingEventQueue.")
+                        f"{getattr(self, '__name__', self.__class__.__name__)}"
+                        f".threadWorker() got event, {sfEvent.eventType},"
+                        " from incomingEventQueue.")
                     self.poolExecute(self.handleEvent, sfEvent)
         except KeyboardInterrupt:
             self.sf.debug(f"Interrupted module {getattr(self, '__name__', self.__class__.__name__)}.")
             self._stopScanning = True
         except Exception as e:
-            self.sf.error(f"Exception ({e.__class__.__name__}) in module {getattr(self, '__name__', self.__class__.__name__)}.")
+            self.sf.error(
+                f"Exception ({e.__class__.__name__}) in module"
+                f" {getattr(self, '__name__', self.__class__.__name__)}.")
             if hasattr(self, '_log'):
                 self._log.exception("Module error in %s", getattr(self, '__name__', self.__class__.__name__))
             # set errorState
@@ -612,8 +634,13 @@ class SpiderFootPlugin:
         if getattr(self, '__name__', self.__class__.__name__).startswith('sfp__stor_'):
             callback(*args, **kwargs)
         else:
+            task_name = f"{getattr(self, '__name__', self.__class__.__name__)}_threadWorker"
             self.sharedThreadPool.submit(
-                callback, *args, taskName=f"{getattr(self, '__name__', self.__class__.__name__)}_threadWorker", maxThreads=self.maxThreads, **kwargs)
+                callback, *args,
+                taskName=task_name,
+                maxThreads=self.maxThreads,
+                **kwargs,
+            )
 
     def threadPool(self, *args, **kwargs) -> SpiderFootThreadPool:
         return SpiderFootThreadPool(*args, **kwargs)

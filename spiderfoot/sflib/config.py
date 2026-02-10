@@ -96,7 +96,9 @@ def configUnserialize(opts: dict, referencePoint: dict, filterSystem: bool = Tru
                 if 'opts' not in returnOpts['__modules__'][modName]:
                     returnOpts['__modules__'][modName]['opts'] = dict()
                 for opt in referencePoint['__modules__'][modName]['opts']:
-                    returnOpts['__modules__'][modName]['opts'][opt] = referencePoint['__modules__'][modName]['opts'][opt]
+                    returnOpts['__modules__'][modName]['opts'][opt] = (
+                        referencePoint['__modules__'][modName]['opts'][opt]
+                    )
             else:
                 returnOpts['__modules__'][modName]['opts'] = dict()
     for modName in referencePoint['__modules__']:
@@ -120,7 +122,11 @@ def configUnserialize(opts: dict, referencePoint: dict, filterSystem: bool = Tru
                     continue
                 if isinstance(ref_mod, list):
                     if isinstance(ref_mod[0], int):
-                        returnOpts['__modules__'][modName]['opts'][opt] = [int(x) for x in str(opts[f"{modName}:{opt}"]).split(",")]
+                        returnOpts['__modules__'][modName]['opts'][opt] = [
+                        int(x) for x in str(
+                            opts[f"{modName}:{opt}"]
+                        ).split(",")
+                    ]
                     else:
                         returnOpts['__modules__'][modName]['opts'][opt] = str(opts[f"{modName}:{opt}"]).split(",")
     return returnOpts

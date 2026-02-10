@@ -190,7 +190,10 @@ class OpenAPIGenerator:
                         }},
                     },
                     "responses": {
-                        "201": {"description": "Scan created", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ScanSummary"}}}},
+                        "201": {
+                            "description": "Scan created",
+                            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ScanSummary"}}},
+                        },
                         "400": {"description": "Invalid request"},
                     },
                 },
@@ -202,7 +205,10 @@ class OpenAPIGenerator:
                     "operationId": "getScan",
                     "parameters": [{"$ref": "#/components/parameters/ScanId"}],
                     "responses": {
-                        "200": {"description": "Scan details", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ScanDetail"}}}},
+                        "200": {
+                            "description": "Scan details",
+                            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ScanDetail"}}},
+                        },
                         "404": {"description": "Scan not found"},
                     },
                 },
@@ -258,7 +264,8 @@ class OpenAPIGenerator:
                     "operationId": "exportScanEvents",
                     "parameters": [
                         {"$ref": "#/components/parameters/ScanId"},
-                        {"name": "type", "in": "query", "schema": {"type": "string"}, "description": "Event type filter"},
+                        {"name": "type", "in": "query",
+                         "schema": {"type": "string"}, "description": "Event type filter"},
                     ],
                     "responses": {
                         "200": {"description": "Exported events", "content": {"text/csv": {}, "application/json": {}}},
@@ -304,13 +311,23 @@ class OpenAPIGenerator:
                     "tags": ["Workspaces"],
                     "summary": "List all workspaces",
                     "operationId": "listWorkspaces",
-                    "responses": {"200": {"description": "List of workspaces", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/Workspace"}}}}}},
+                    "responses": {
+                        "200": {
+                            "description": "List of workspaces",
+                            "content": {"application/json": {
+                                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Workspace"}},
+                            }},
+                        },
+                    },
                 },
                 "post": {
                     "tags": ["Workspaces"],
                     "summary": "Create a workspace",
                     "operationId": "createWorkspace",
-                    "requestBody": {"required": True, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/WorkspaceRequest"}}}},
+                    "requestBody": {
+                        "required": True,
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/WorkspaceRequest"}}},
+                    },
                     "responses": {"201": {"description": "Workspace created"}},
                 },
             },
@@ -327,7 +344,10 @@ class OpenAPIGenerator:
                     "summary": "Update workspace",
                     "operationId": "updateWorkspace",
                     "parameters": [{"$ref": "#/components/parameters/WorkspaceId"}],
-                    "requestBody": {"required": True, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/WorkspaceRequest"}}}},
+                    "requestBody": {
+                        "required": True,
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/WorkspaceRequest"}}},
+                    },
                     "responses": {"200": {"description": "Workspace updated"}},
                 },
                 "delete": {
@@ -359,7 +379,14 @@ class OpenAPIGenerator:
                     "tags": ["Data"],
                     "summary": "List all modules",
                     "operationId": "listModules",
-                    "responses": {"200": {"description": "Module list", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/ModuleInfo"}}}}}},
+                    "responses": {
+                        "200": {
+                            "description": "Module list",
+                            "content": {"application/json": {
+                                "schema": {"type": "array", "items": {"$ref": "#/components/schemas/ModuleInfo"}},
+                            }},
+                        },
+                    },
                 },
             },
             "/api/data/modules/{module_name}": {
@@ -367,7 +394,10 @@ class OpenAPIGenerator:
                     "tags": ["Data"],
                     "summary": "Get module details",
                     "operationId": "getModule",
-                    "parameters": [{"name": "module_name", "in": "path", "required": True, "schema": {"type": "string"}}],
+                    "parameters": [
+                        {"name": "module_name", "in": "path",
+                         "required": True, "schema": {"type": "string"}},
+                    ],
                     "responses": {"200": {"description": "Module details"}},
                 },
             },
@@ -463,7 +493,12 @@ class OpenAPIGenerator:
                     "tags": ["Correlations"],
                     "summary": "Run correlation analysis",
                     "operationId": "runCorrelationAnalysis",
-                    "requestBody": {"required": True, "content": {"application/json": {"schema": {"type": "object", "properties": {"scan_id": {"type": "string"}}}}}},
+                    "requestBody": {
+                        "required": True,
+                        "content": {"application/json": {
+                            "schema": {"type": "object", "properties": {"scan_id": {"type": "string"}}},
+                        }},
+                    },
                     "responses": {"200": {"description": "Analysis results"}},
                 },
             },
@@ -507,11 +542,16 @@ class OpenAPIGenerator:
                     "summary": "Route request to backend service",
                     "operationId": "gatewayRoute",
                     "parameters": [
-                        {"name": "service", "in": "path", "required": True, "schema": {"type": "string", "enum": ["scanner", "data", "config"]}},
+                        {"name": "service", "in": "path",
+                         "required": True,
+                         "schema": {"type": "string", "enum": ["scanner", "data", "config"]}},
                         {"name": "method", "in": "path", "required": True, "schema": {"type": "string"}},
                     ],
                     "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
-                    "responses": {"200": {"description": "Service response"}, "502": {"description": "Service unavailable"}},
+                    "responses": {
+                        "200": {"description": "Service response"},
+                        "502": {"description": "Service unavailable"},
+                    },
                 },
             },
             "/gateway/status": {
@@ -535,7 +575,14 @@ class OpenAPIGenerator:
                     "tags": ["System"],
                     "summary": "Liveness health check",
                     "operationId": "healthCheck",
-                    "responses": {"200": {"description": "Healthy", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HealthStatus"}}}}},
+                    "responses": {
+                        "200": {
+                            "description": "Healthy",
+                            "content": {"application/json": {
+                                "schema": {"$ref": "#/components/schemas/HealthStatus"},
+                            }},
+                        },
+                    },
                 },
             },
             "/health/ready": {
@@ -608,9 +655,16 @@ class OpenAPIGenerator:
                 "properties": {
                     "scanname": {"type": "string", "description": "Name for the scan"},
                     "scantarget": {"type": "string", "description": "Target to scan (domain, IP, etc.)"},
-                    "modulelist": {"type": "array", "items": {"type": "string"}, "description": "Specific modules to use"},
+                    "modulelist": {
+                        "type": "array", "items": {"type": "string"},
+                        "description": "Specific modules to use",
+                    },
                     "typelist": {"type": "array", "items": {"type": "string"}, "description": "Event types to collect"},
-                    "usecase": {"type": "string", "enum": ["Footprint", "Investigate", "Passive"], "description": "Scan use case"},
+                    "usecase": {
+                        "type": "string",
+                        "enum": ["Footprint", "Investigate", "Passive"],
+                        "description": "Scan use case",
+                    },
                 },
             },
             "ScanSummary": {
@@ -683,7 +737,16 @@ class OpenAPIGenerator:
                 "type": "object",
                 "properties": {
                     "status": {"type": "string", "enum": ["UP", "DOWN", "DEGRADED"]},
-                    "components": {"type": "object", "additionalProperties": {"type": "object", "properties": {"status": {"type": "string"}, "detail": {"type": "string"}}}},
+                    "components": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                                "status": {"type": "string"},
+                                "detail": {"type": "string"},
+                            },
+                        },
+                    },
                     "timestamp": {"type": "string", "format": "date-time"},
                 },
             },

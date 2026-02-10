@@ -484,7 +484,12 @@ def require_api_key(permissions: list[str] = None) -> Callable:
         def wrapper(*args, **kwargs) -> Any:
             # This would need to be integrated with your web framework
             # to extract the API key from headers
-            api_key = kwargs.get('api_key') or (hasattr(args[0], 'headers') and args[0].headers.get('Authorization', '').replace('Bearer ', ''))
+            api_key = kwargs.get('api_key') or (
+                hasattr(args[0], 'headers')
+                and args[0].headers.get(
+                    'Authorization', ''
+                ).replace('Bearer ', '')
+            )
 
             if not api_key:
                 raise ValueError("API key required")

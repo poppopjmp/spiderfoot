@@ -173,7 +173,11 @@ async def get_modules(api_key: str = optional_auth_dep) -> dict[str, Any]:
 
 
 @router.patch("/modules/{module_name}/options")
-async def update_module_options(module_name: str, options: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
+async def update_module_options(
+    module_name: str,
+    options: dict = config_body,
+    api_key: str = optional_auth_dep,
+) -> dict[str, Any]:
     """
     Update config options for a specific module.
 

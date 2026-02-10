@@ -37,8 +37,12 @@ class InputValidator:
     # Regex patterns for validation
     PATTERNS = {
         'email': re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'),
-        'domain': re.compile(r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'),
-        'ip': re.compile(r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'),
+        'domain': re.compile(
+            r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'
+        ),
+        'ip': re.compile(
+            r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+        ),
         'url': re.compile(r'^https?://[^\s/$.?#].[^\s]*$'),
         'api_key': re.compile(r'^[a-zA-Z0-9_-]{16,128}$'),
         'username': re.compile(r'^[a-zA-Z0-9_-]{3,32}$'),
@@ -400,7 +404,10 @@ def security_header_middleware(response: object) -> object:
         'X-Frame-Options': 'DENY',
         'X-XSS-Protection': '1; mode=block',
         'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+        'Content-Security-Policy': (
+            "default-src 'self'; script-src 'self' 'unsafe-inline';"
+            " style-src 'self' 'unsafe-inline'"
+        ),
         'Referrer-Policy': 'strict-origin-when-cross-origin',
         'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
     }
@@ -417,7 +424,12 @@ def require_authentication(auth_manager: AuthenticationManager) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
             # Extract session from request (implementation depends on framework)
-            session_id = kwargs.get('session_id') or (args[0].headers.get('Authorization', '').replace('Bearer ', '') if args else None)
+            session_id = kwargs.get('session_id') or (
+                args[0].headers.get(
+                    'Authorization', ''
+                ).replace('Bearer ', '')
+                if args else None
+            )
 
             if not session_id:
                 raise ValueError("Authentication required")

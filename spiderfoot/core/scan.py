@@ -198,7 +198,11 @@ class ScanManager:
 
         return modlist
 
-    def prepare_scan_config(self, scan_params: dict[str, Any], output_config: dict[str, Any] | None = None) -> dict[str, Any]:
+    def prepare_scan_config(
+        self,
+        scan_params: dict[str, Any],
+        output_config: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Prepare scan configuration.
 

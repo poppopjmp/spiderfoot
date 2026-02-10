@@ -17,7 +17,11 @@ class SettingsEndpoints:
         """Render the settings page with current configuration options."""
         templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
         self.token = random.SystemRandom().randint(0, 99999999)
-        return templ.render(opts=self.config, pageid='SETTINGS', token=self.token, version=__version__, updated=updated, docroot=self.docroot)
+        return templ.render(
+            opts=self.config, pageid='SETTINGS',
+            token=self.token, version=__version__,
+            updated=updated, docroot=self.docroot,
+        )
 
     @cherrypy.expose
     def optsexport(self, pattern: str | None = None) -> str:

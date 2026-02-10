@@ -32,7 +32,10 @@ class SecureConfigManager:
         if isinstance(config_or_key, dict):
             # If a config dict is passed, store it and extract master key if available
             self.config = config_or_key
-            master_key = config_or_key.get('security.config.encryption_key') or config_or_key.get('SPIDERFOOT_ENCRYPTION_KEY')
+            master_key = (
+                config_or_key.get('security.config.encryption_key')
+                or config_or_key.get('SPIDERFOOT_ENCRYPTION_KEY')
+            )
         elif isinstance(config_or_key, str):
             # If a string is passed, it's the master key
             master_key = config_or_key

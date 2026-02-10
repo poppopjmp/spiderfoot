@@ -79,7 +79,16 @@ class SpiderFootScanner():
         status (str): status of the scan
     """
 
-    def __init__(self, scanName: str, scanId: str, targetValue: str, targetType: str, moduleList: list, globalOpts: dict, start: bool = True) -> None:
+    def __init__(
+        self,
+        scanName: str,
+        scanId: str,
+        targetValue: str,
+        targetType: str,
+        moduleList: list,
+        globalOpts: dict,
+        start: bool = True,
+    ) -> None:
         """Initialize the scanner with target details, modules, and global options."""
         # Instance attribute initialization (moved from class-level)
         self.__scanId = None
@@ -500,7 +509,11 @@ class SpiderFootScanner():
                     try:
                         mod.outgoingEventQueue = self.eventQueue
                         mod.incomingEventQueue = queue.Queue()
-                        self.__sf.debug(f"Module {modName} queues initialized: incoming={{mod.incomingEventQueue is not None}}, outgoing={{mod.outgoingEventQueue is not None}}")
+                        self.__sf.debug(
+                            f"Module {modName} queues initialized: "
+                            f"incoming={{mod.incomingEventQueue is not None}}, "
+                            f"outgoing={{mod.outgoingEventQueue is not None}}"
+                        )
                         # Explicitly check both queues
                         if mod.incomingEventQueue is None or mod.outgoingEventQueue is None:
                             self.__sf.error(f"Module {modName} queue validation failed after setup")
@@ -540,7 +553,13 @@ class SpiderFootScanner():
                                          "SpiderFoot UI", rootEvent)
             psMod.notifyListeners(firstEvent)
 
-            if self.__targetType == 'INTERNET_NAME' and self.__sf.isDomain(self.__targetValue, self.__config['_internettlds']):
+            if (
+                self.__targetType == 'INTERNET_NAME'
+                and self.__sf.isDomain(
+                    self.__targetValue,
+                    self.__config['_internettlds'],
+                )
+            ):
                 firstEvent = SpiderFootEvent(
                     'DOMAIN_NAME', self.__targetValue, "SpiderFoot UI", rootEvent)
                 psMod.notifyListeners(firstEvent)
@@ -764,7 +783,14 @@ class SpiderFootScanner():
                     self.__dbh.close()
 
             # Set status to aborted if not already finished
-            if hasattr(self, '_SpiderFootScanner__status') and self.__status not in [DB_STATUS_FINISHED, DB_STATUS_ERROR_FAILED, DB_STATUS_ABORTED]:
+            if (
+                hasattr(self, '_SpiderFootScanner__status')
+                and self.__status not in [
+                    DB_STATUS_FINISHED,
+                    DB_STATUS_ERROR_FAILED,
+                    DB_STATUS_ABORTED,
+                ]
+            ):
                 with suppress(Exception):
                     self.__setStatus(DB_STATUS_ABORTED, None, time.time() * 1000)
 

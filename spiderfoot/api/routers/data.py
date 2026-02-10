@@ -63,7 +63,10 @@ async def list_modules(
         modules = sf.getModules()
         # modules may be a dict — convert to list for pagination
         if isinstance(modules, dict):
-            module_list = [{"name": k, **v} if isinstance(v, dict) else {"name": k, "info": v} for k, v in modules.items()]
+            module_list = [
+                {"name": k, **v} if isinstance(v, dict) else {"name": k, "info": v}
+                for k, v in modules.items()
+            ]
         else:
             module_list = list(modules) if modules else []
         return paginate(module_list, params)

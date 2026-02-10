@@ -45,7 +45,9 @@ class ExportEndpoints:
         headings = ["Rule Name", "Correlation", "Risk", "Description"]
         if filetype.lower() in ["xlsx", "excel"]:
             cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{id}-correlations.xlsx"
-            cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            cherrypy.response.headers['Content-Type'] = (
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
             cherrypy.response.headers['Pragma'] = "no-cache"
             return self.buildExcel(data, headings)
         if filetype.lower() == 'csv':
@@ -77,7 +79,9 @@ class ExportEndpoints:
                 rows.append([lastseen, str(row[4]), str(row[3]), str(row[2]), row[13], datafield])
             fname = "SpiderFoot.xlsx"
             cherrypy.response.headers['Content-Disposition'] = f"attachment; filename={fname}"
-            cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            cherrypy.response.headers['Content-Type'] = (
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
             cherrypy.response.headers['Pragma'] = "no-cache"
             return self.buildExcel(rows, ["Updated", "Type", "Module", "Source", "F/P", "Data"], sheetNameIndex=1)
         if filetype.lower() == 'csv':
@@ -128,9 +132,15 @@ class ExportEndpoints:
             else:
                 fname = scan_name + "-SpiderFoot.xlsx"
             cherrypy.response.headers['Content-Disposition'] = f"attachment; filename={fname}"
-            cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            cherrypy.response.headers['Content-Type'] = (
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
             cherrypy.response.headers['Pragma'] = "no-cache"
-            return self.buildExcel(rows, ["Scan Name", "Updated", "Type", "Module", "Source", "F/P", "Data"], sheetNameIndex=2)
+            return self.buildExcel(
+                rows,
+                ["Scan Name", "Updated", "Type", "Module", "Source", "F/P", "Data"],
+                sheetNameIndex=2,
+            )
         if filetype.lower() == 'csv':
             from sfwebui import StringIO
             fileobj = StringIO()
@@ -142,7 +152,11 @@ class ExportEndpoints:
                     continue
                 lastseen = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
                 datafield = str(row[1]).replace("<SFURL>", "").replace("</SFURL>", "")
-                parser.writerow([scaninfo[row[12]][0], lastseen, str(row[4]), str(row[3]), str(row[2]), row[13], datafield])
+                parser.writerow([
+                    scaninfo[row[12]][0], lastseen,
+                    str(row[4]), str(row[3]), str(row[2]),
+                    row[13], datafield,
+                ])
             if len(ids.split(',')) > 1 or scan_name == "":
                 fname = "SpiderFoot.csv"
             else:
@@ -154,7 +168,13 @@ class ExportEndpoints:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
-    def scansearchresultexport(self, id: str, eventType: str | None = None, value: str | None = None, filetype: str = "csv", dialect: str = "excel") -> str | bytes | None:
+    def scansearchresultexport(
+        self, id: str,
+        eventType: str | None = None,
+        value: str | None = None,
+        filetype: str = "csv",
+        dialect: str = "excel",
+    ) -> str | bytes | None:
         """Export scan search results as CSV or Excel."""
         data = self.searchBase(id, eventType, value)
         if not data:
@@ -167,7 +187,9 @@ class ExportEndpoints:
                 datafield = str(row[1]).replace("<SFURL>", "").replace("</SFURL>", "")
                 rows.append([row[0], str(row[10]), str(row[3]), str(row[2]), row[11], datafield])
             cherrypy.response.headers['Content-Disposition'] = "attachment; filename=SpiderFoot.xlsx"
-            cherrypy.response.headers['Content-Type'] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            cherrypy.response.headers['Content-Type'] = (
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
             cherrypy.response.headers['Pragma'] = "no-cache"
             return self.buildExcel(rows, ["Updated", "Type", "Module", "Source", "F/P", "Data"], sheetNameIndex=1)
         if filetype.lower() == 'csv':

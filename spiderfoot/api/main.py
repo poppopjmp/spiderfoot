@@ -11,7 +11,11 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from .routers import scan, workspace, config, data, websocket, visualization, correlations, rag_correlation, reports, health, scan_progress, tasks, webhooks, export
+from .routers import (
+    scan, workspace, config, data, websocket,
+    visualization, correlations, rag_correlation, reports,
+    health, scan_progress, tasks, webhooks, export,
+)
 from spiderfoot import __version__
 
 # Security imports

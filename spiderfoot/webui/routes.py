@@ -24,7 +24,16 @@ except ImportError:
 from spiderfoot.logger import logListenerSetup, logWorkerSetup
 
 
-class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEndpoints, InfoEndpoints, WebUiHelpers, PerformanceEnhancedWebUI, DbProvider):
+class WebUiRoutes(
+    SettingsEndpoints,
+    ScanEndpoints,
+    ExportEndpoints,
+    WorkspaceEndpoints,
+    InfoEndpoints,
+    WebUiHelpers,
+    PerformanceEnhancedWebUI,
+    DbProvider,
+):
     """Main WebUI controller combining all endpoint groups."""
     defaultConfig = dict()
     config = dict()
@@ -593,7 +602,10 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
                 targetType = SpiderFootHelpers.targetTypeFromString(f'"{scantarget}"')
 
             if not targetType:
-                return self.error(f"Cannot determine target type for scan rerun. Target '{scantarget}' is not recognized.")
+                return self.error(
+                    f"Cannot determine target type for scan rerun."
+                    f" Target '{scantarget}' is not recognized."
+                )
 
             if targetType not in ["HUMAN_NAME", "BITCOIN_ADDRESS"]:
                 scantarget = scantarget.lower()
@@ -808,7 +820,9 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             if filetype.lower() == 'csv':
                 import csv
                 from sfwebui import StringIO
-                cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{scan_id}-correlations.csv"
+                cherrypy.response.headers['Content-Disposition'] = (
+                    f"attachment; filename=SpiderFoot-{scan_id}-correlations.csv"
+                )
                 cherrypy.response.headers['Content-Type'] = "application/csv"
                 cherrypy.response.headers['Pragma'] = "no-cache"
                 fileobj = StringIO()
@@ -824,7 +838,10 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return self.error(f"Export failed: {str(e)}")
 
     @cherrypy.expose
-    def scaneventresultexport(self, scan_id: str, event_type: str, filetype: str = "csv", dialect: str = "excel") -> str | bytes:
+    def scaneventresultexport(
+        self, scan_id: str, event_type: str,
+        filetype: str = "csv", dialect: str = "excel",
+    ) -> str | bytes:
         """Export scan event results."""
         try:
             dbh = self._get_dbh()
@@ -835,7 +852,9 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             if filetype.lower() == 'csv':
                 import csv
                 from sfwebui import StringIO
-                cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{scan_id}-{event_type}.csv"
+                cherrypy.response.headers['Content-Disposition'] = (
+                    f"attachment; filename=SpiderFoot-{scan_id}-{event_type}.csv"
+                )
                 cherrypy.response.headers['Content-Type'] = "application/csv"
                 cherrypy.response.headers['Pragma'] = "no-cache"
                 fileobj = StringIO()
@@ -905,7 +924,13 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             return self.error(f"Export failed: {str(e)}")
 
     @cherrypy.expose
-    def scansearchresultexport(self, scan_id: str, eventType: str | None = None, value: str | None = None, filetype: str = "csv", dialect: str = "excel") -> str | bytes:
+    def scansearchresultexport(
+        self, scan_id: str,
+        eventType: str | None = None,
+        value: str | None = None,
+        filetype: str = "csv",
+        dialect: str = "excel",
+    ) -> str | bytes:
         """Export search results."""
         try:
             search_results = self.searchBase(scan_id, eventType, value)
@@ -915,7 +940,9 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
             if filetype.lower() == 'csv':
                 import csv
                 from sfwebui import StringIO
-                cherrypy.response.headers['Content-Disposition'] = f"attachment; filename=SpiderFoot-{scan_id}-search.csv"
+                cherrypy.response.headers['Content-Disposition'] = (
+                    f"attachment; filename=SpiderFoot-{scan_id}-search.csv"
+                )
                 cherrypy.response.headers['Content-Type'] = "application/csv"
                 cherrypy.response.headers['Pragma'] = "no-cache"
                 fileobj = StringIO()
@@ -1034,7 +1061,12 @@ class WebUiRoutes(SettingsEndpoints, ScanEndpoints, ExportEndpoints, WorkspaceEn
     # Workspace methods
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacescanresults(self, workspace_id: str, scan_id: str | None = None, event_type: str | None = None, limit: str | int = 100) -> dict:
+    def workspacescanresults(
+        self, workspace_id: str,
+        scan_id: str | None = None,
+        event_type: str | None = None,
+        limit: str | int = 100,
+    ) -> dict:
         """Get workspace scan results."""
         try:
             # Convert string limit to int if needed

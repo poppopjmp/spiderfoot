@@ -351,7 +351,12 @@ class RetryContext:
     def __enter__(self) -> RetryContext:
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: types_mod.TracebackType | None) -> bool:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types_mod.TracebackType | None,
+    ) -> bool:
         return False
 
     def execute(self, func: Callable, *args, **kwargs) -> Any:

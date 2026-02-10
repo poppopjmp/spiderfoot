@@ -149,10 +149,16 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacemultiscan(self, workspace_id: str, targets: str, modules: str, scan_name_prefix: str, enable_correlation: str = 'false') -> dict:
+    def workspacemultiscan(
+        self, workspace_id: str, targets: str, modules: str,
+        scan_name_prefix: str, enable_correlation: str = 'false',
+    ) -> dict:
         """Launch scans against multiple targets in a workspace."""
         self.log.info("[MULTISCAN] Starting multi-target scan for workspace: %s", workspace_id)
-        self.log.debug("[MULTISCAN] Input parameters - targets: %s, modules: %s, prefix: %s", targets, modules, scan_name_prefix)
+        self.log.debug(
+            "[MULTISCAN] Input parameters - targets: %s, modules: %s, prefix: %s",
+            targets, modules, scan_name_prefix,
+        )
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
             target_list = [t.strip() for t in targets.split(',') if t.strip()]
@@ -164,29 +170,58 @@ class WorkspaceEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacemcpreport(self, workspace_id: str, report_type: str, format: str = 'json', include_correlations: str = 'true', include_threat_intel: str = 'true', include_recommendations: str = 'true', tlp_level: str = 'amber') -> dict:
+    def workspacemcpreport(
+        self, workspace_id: str, report_type: str,
+        format: str = 'json',
+        include_correlations: str = 'true',
+        include_threat_intel: str = 'true',
+        include_recommendations: str = 'true',
+        tlp_level: str = 'amber',
+    ) -> dict:
         """Generate an MCP-format report for the specified workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
-            report = ws.generate_mcp_report(report_type, format, include_correlations, include_threat_intel, include_recommendations, tlp_level)
+            report = ws.generate_mcp_report(
+                report_type, format, include_correlations,
+                include_threat_intel, include_recommendations, tlp_level,
+            )
             return {"success": True, "download_url": report.get('download_url', ''), "error": report.get('error', '')}
         except Exception as e:
             return {"error": str(e)}
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacetiming(self, workspace_id: str, timezone: str | None = None, default_start_time: str | None = None, retention_period: str | None = None, auto_scheduling: str | None = None, business_hours_only: str | None = None, enable_throttling: str | None = None, business_start: str | None = None, business_end: str | None = None) -> dict:
+    def workspacetiming(
+        self, workspace_id: str,
+        timezone: str | None = None,
+        default_start_time: str | None = None,
+        retention_period: str | None = None,
+        auto_scheduling: str | None = None,
+        business_hours_only: str | None = None,
+        enable_throttling: str | None = None,
+        business_start: str | None = None,
+        business_end: str | None = None,
+    ) -> dict:
         """Update scan timing and scheduling configuration for a workspace."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
-            timing = ws.update_timing_config(timezone, default_start_time, retention_period, auto_scheduling, business_hours_only, enable_throttling, business_start, business_end)
+            timing = ws.update_timing_config(
+                timezone, default_start_time, retention_period,
+                auto_scheduling, business_hours_only, enable_throttling,
+                business_start, business_end,
+            )
             return {"success": True, "timing": timing}
         except Exception as e:
             return {"error": str(e)}
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def workspacescanresults(self, workspace_id: str, scan_id: str | None = None, event_type: str | None = None, limit: str | int = 100) -> dict:
+    def workspacescanresults(
+        self, workspace_id: str,
+        scan_id: str | None = None,
+        event_type: str | None = None,
+        limit: str | int = 100,
+    ) -> dict:
         """Retrieve scan results for a workspace, optionally filtered by scan or event type."""
         try:
             ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)

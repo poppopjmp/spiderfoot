@@ -45,7 +45,10 @@ def target_delete_command(cli: SpiderFootCli, line: str) -> None:
         return
     workspace_id, target_id = args[:2]
     import requests
-    url = cli.config.get('cli.server_baseurl', 'http://127.0.0.1:5001') + f'/api/workspaces/{workspace_id}/targets/{target_id}'
+    base_url = cli.config.get(
+        'cli.server_baseurl', 'http://127.0.0.1:5001'
+    )
+    url = base_url + f'/api/workspaces/{workspace_id}/targets/{target_id}'
     try:
         resp = requests.delete(url)
         if resp.status_code == 200:

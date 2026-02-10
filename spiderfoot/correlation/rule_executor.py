@@ -366,7 +366,11 @@ class RuleExecutor:
                     hook(rule, rule_result, self.scan_ids)
                 self.results[rule.get('id', rule.get('meta', {}).get('name', 'unknown'))] = rule_result
             except Exception as e:
-                self.log.error("Error processing rule {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}: %s", e)
+                self.log.error(
+                    "Error processing rule %s: %s",
+                    rule.get('id', rule.get('meta', {}).get('name', 'unknown')),
+                    e,
+                )
         return self.results
 
     def process_rule(self, rule: dict) -> dict:

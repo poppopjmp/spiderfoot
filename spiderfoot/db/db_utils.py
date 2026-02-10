@@ -42,7 +42,11 @@ def get_upsert_clause(db_type: str, table: str, conflict_cols: list[str], update
     if not conflict_cols or not update_cols:
         raise ValueError("conflict_cols and update_cols must be non-empty lists")
     conflict_str = ','.join(conflict_cols)
-    update_str = ', '.join([f"{col}=excluded.{col}" if db_type == 'sqlite' else f"{col}=EXCLUDED.{col}" for col in update_cols])
+    update_str = ', '.join([
+        f"{col}=excluded.{col}" if db_type == 'sqlite'
+        else f"{col}=EXCLUDED.{col}"
+        for col in update_cols
+    ])
     if db_type == 'sqlite':
         return f"ON CONFLICT({conflict_str}) DO UPDATE SET {update_str}"
     elif db_type == 'postgresql':

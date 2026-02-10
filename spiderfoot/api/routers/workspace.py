@@ -85,7 +85,12 @@ async def get_workspace(workspace_id: str, api_key: str = optional_auth_dep) -> 
 
 
 @router.put("/workspaces/{workspace_id}")
-async def update_workspace(workspace_id: str, name: str | None = None, description: str | None = None, api_key: str = api_key_dep) -> dict:
+async def update_workspace(
+    workspace_id: str,
+    name: str | None = None,
+    description: str | None = None,
+    api_key: str = api_key_dep,
+) -> dict:
     """
     Update workspace details (name, description).
 

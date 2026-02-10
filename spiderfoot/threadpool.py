@@ -239,7 +239,12 @@ class SpiderFootThreadPool:
     def __enter__(self) -> SpiderFootThreadPool:
         return self
 
-    def __exit__(self, exception_type: type[BaseException] | None, exception_value: BaseException | None, traceback: TracebackType | None) -> None:
+    def __exit__(
+        self,
+        exception_type: type[BaseException] | None,
+        exception_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         self.shutdown()
 
 

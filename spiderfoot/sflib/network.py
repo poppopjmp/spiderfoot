@@ -154,7 +154,12 @@ def getSession() -> 'requests.sessions.Session':
     session = requests.session()
     return session
 
-def useProxyForUrl(url: str, opts: dict | None = None, urlFQDN: Callable | None = None, isValidLocalOrLoopbackIp: Callable | None = None) -> bool:
+def useProxyForUrl(
+    url: str,
+    opts: dict | None = None,
+    urlFQDN: Callable | None = None,
+    isValidLocalOrLoopbackIp: Callable | None = None,
+) -> bool:
     if opts is None:
         return False
     if urlFQDN is None:
@@ -183,7 +188,14 @@ def useProxyForUrl(url: str, opts: dict | None = None, urlFQDN: Callable | None 
             return False
     return True
 
-def fetchUrl(url: str, cookies: str = None, timeout: int = 30, useragent: str = "SpiderFoot", headers: dict = None, noLog: bool = False, postData: str = None, disableContentEncoding: bool = False, sizeLimit: int = None, headOnly: bool = False, verify: bool = True) -> dict:
+def fetchUrl(
+    url: str, cookies: str = None, timeout: int = 30,
+    useragent: str = "SpiderFoot", headers: dict = None,
+    noLog: bool = False, postData: str = None,
+    disableContentEncoding: bool = False,
+    sizeLimit: int = None, headOnly: bool = False,
+    verify: bool = True,
+) -> dict:
     if not isinstance(url, str):
         return None
     if not url or not url.strip():

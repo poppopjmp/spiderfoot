@@ -125,7 +125,10 @@ class ScanEndpoints:
             except Exception as e:
                 errors.append(f"{scan_id}: {str(e)}")
         templ = Template(filename='spiderfoot/templates/scanlist.tmpl', lookup=self.lookup)
-        return templ.render(rerunscans=True, docroot=self.docroot, pageid="SCANLIST", version=__version__, errors=errors)
+        return templ.render(
+            rerunscans=True, docroot=self.docroot, pageid="SCANLIST",
+            version=__version__, errors=errors,
+        )
 
     @cherrypy.expose
     def newscan(self) -> str:
@@ -173,7 +176,10 @@ class ScanEndpoints:
         if res is None:
             return self.error("Scan not found")
         templ = Template(filename='spiderfoot/templates/scaninfo.tmpl', lookup=self.lookup, input_encoding='utf-8')
-        return templ.render(id=id, name=res[0], status=res[5], docroot=self.docroot, version=__version__, pageid="SCANLIST")
+        return templ.render(
+            id=id, name=res[0], status=res[5], docroot=self.docroot,
+            version=__version__, pageid="SCANLIST",
+        )
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -259,7 +265,11 @@ class ScanEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scaneventresults(self, id: str, eventType: str | None = None, filterfp: str | bool = False, correlationId: str | None = None) -> list:
+    def scaneventresults(
+        self, id: str, eventType: str | None = None,
+        filterfp: str | bool = False,
+        correlationId: str | None = None,
+    ) -> list:
         """Return scan event results, optionally filtered by type or correlation."""
         retdata = []
         dbh = self._get_dbh()
@@ -306,7 +316,10 @@ class ScanEndpoints:
             return []
 
     @cherrypy.expose
-    def startscan(self, scanname: str, scantarget: str, modulelist: str, typelist: str, usecase: str, max_wait: str | int = 10) -> str | dict:
+    def startscan(
+        self, scanname: str, scantarget: str, modulelist: str,
+        typelist: str, usecase: str, max_wait: str | int = 10,
+    ) -> str | dict:
         """Start a new scan with the specified target, modules, and configuration."""
         scanname = self.cleanUserInput([scanname])[0]
         scantarget = self.cleanUserInput([scantarget])[0]
@@ -402,7 +415,11 @@ class ScanEndpoints:
         try:
             opts = json.loads(allopts)
         except (json.JSONDecodeError, ValueError) as e:
-            return self.opts(updated=None, error_message=f"Processing one or more of your inputs failed. {str(e)}", config=None)
+            return self.opts(
+                updated=None,
+                error_message=f"Processing one or more of your inputs failed. {str(e)}",
+                config=None,
+            )
         self.config.update(opts)
         raise cherrypy.HTTPRedirect("/opts?updated=1")
 
@@ -583,7 +600,13 @@ class ScanEndpoints:
         return self.error("Invalid export filetype.")
 
     @cherrypy.expose
-    def scansearchresultexport(self, id: str, eventType: str | None = None, value: str | None = None, filetype: str = "csv", dialect: str = "excel") -> str | bytes:
+    def scansearchresultexport(
+        self, id: str,
+        eventType: str | None = None,
+        value: str | None = None,
+        filetype: str = "csv",
+        dialect: str = "excel",
+    ) -> str | bytes:
         """Export search results for a scan as CSV or Excel."""
         import csv
         from io import StringIO

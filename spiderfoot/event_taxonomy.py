@@ -70,19 +70,28 @@ class EventTypeInfo:
 _DEFAULT_TAXONOMY: dict[str, dict[str, Any]] = {
     # Network
     "IP_ADDRESS": {"cat": EventCategory.NETWORK, "risk": RiskLevel.INFO, "desc": "IPv4/IPv6 address"},
-    "IPV6_ADDRESS": {"cat": EventCategory.NETWORK, "risk": RiskLevel.INFO, "desc": "IPv6 address", "parent": "IP_ADDRESS"},
+    "IPV6_ADDRESS": {
+        "cat": EventCategory.NETWORK, "risk": RiskLevel.INFO,
+        "desc": "IPv6 address", "parent": "IP_ADDRESS",
+    },
     "NETBLOCK_MEMBER": {"cat": EventCategory.NETWORK, "risk": RiskLevel.INFO, "desc": "Netblock member"},
     "NETBLOCK_OWNER": {"cat": EventCategory.NETWORK, "risk": RiskLevel.INFO, "desc": "Netblock owner"},
     "BGP_AS_MEMBER": {"cat": EventCategory.NETWORK, "risk": RiskLevel.INFO, "desc": "BGP AS membership"},
     "BGP_AS_OWNER": {"cat": EventCategory.NETWORK, "risk": RiskLevel.INFO, "desc": "BGP AS owner"},
     "TCP_PORT_OPEN": {"cat": EventCategory.NETWORK, "risk": RiskLevel.LOW, "desc": "Open TCP port"},
     "UDP_PORT_OPEN": {"cat": EventCategory.NETWORK, "risk": RiskLevel.LOW, "desc": "Open UDP port"},
-    "TCP_PORT_OPEN_BANNER": {"cat": EventCategory.NETWORK, "risk": RiskLevel.INFO, "desc": "TCP port banner", "parent": "TCP_PORT_OPEN"},
+    "TCP_PORT_OPEN_BANNER": {
+        "cat": EventCategory.NETWORK, "risk": RiskLevel.INFO,
+        "desc": "TCP port banner", "parent": "TCP_PORT_OPEN",
+    },
 
     # DNS / Infrastructure
     "INTERNET_NAME": {"cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.INFO, "desc": "Hostname/FQDN"},
     "DOMAIN_NAME": {"cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.INFO, "desc": "Domain name"},
-    "DOMAIN_NAME_PARENT": {"cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.INFO, "desc": "Parent domain", "parent": "DOMAIN_NAME"},
+    "DOMAIN_NAME_PARENT": {
+        "cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.INFO,
+        "desc": "Parent domain", "parent": "DOMAIN_NAME",
+    },
     "AFFILIATE_DOMAIN_NAME": {"cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.INFO, "desc": "Affiliated domain"},
     "CO_HOSTED_SITE": {"cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.INFO, "desc": "Co-hosted site"},
     "SIMILARDOMAIN": {"cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.LOW, "desc": "Similar domain"},
@@ -98,8 +107,14 @@ _DEFAULT_TAXONOMY: dict[str, dict[str, Any]] = {
 
     # Identity
     "EMAILADDR": {"cat": EventCategory.IDENTITY, "risk": RiskLevel.INFO, "desc": "Email address"},
-    "EMAILADDR_COMPROMISED": {"cat": EventCategory.IDENTITY, "risk": RiskLevel.HIGH, "desc": "Compromised email", "parent": "EMAILADDR"},
-    "EMAILADDR_GENERIC": {"cat": EventCategory.IDENTITY, "risk": RiskLevel.INFO, "desc": "Generic email", "parent": "EMAILADDR"},
+    "EMAILADDR_COMPROMISED": {
+        "cat": EventCategory.IDENTITY, "risk": RiskLevel.HIGH,
+        "desc": "Compromised email", "parent": "EMAILADDR",
+    },
+    "EMAILADDR_GENERIC": {
+        "cat": EventCategory.IDENTITY, "risk": RiskLevel.INFO,
+        "desc": "Generic email", "parent": "EMAILADDR",
+    },
     "PHONE_NUMBER": {"cat": EventCategory.IDENTITY, "risk": RiskLevel.LOW, "desc": "Phone number"},
     "HUMAN_NAME": {"cat": EventCategory.IDENTITY, "risk": RiskLevel.INFO, "desc": "Person name"},
     "USERNAME": {"cat": EventCategory.IDENTITY, "risk": RiskLevel.INFO, "desc": "Username"},
@@ -107,33 +122,60 @@ _DEFAULT_TAXONOMY: dict[str, dict[str, Any]] = {
     "SOCIAL_MEDIA": {"cat": EventCategory.SOCIAL, "risk": RiskLevel.INFO, "desc": "Social media profile"},
 
     # SSL/TLS
-    "SSL_CERTIFICATE_ISSUED": {"cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.INFO, "desc": "SSL certificate issued"},
-    "SSL_CERTIFICATE_EXPIRED": {"cat": EventCategory.VULNERABILITY, "risk": RiskLevel.MEDIUM, "desc": "Expired SSL certificate"},
-    "SSL_CERTIFICATE_MISMATCH": {"cat": EventCategory.VULNERABILITY, "risk": RiskLevel.MEDIUM, "desc": "SSL certificate mismatch"},
-    "SSL_CERTIFICATE_RAW": {"cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.INFO, "desc": "Raw SSL cert data", "raw": True},
+    "SSL_CERTIFICATE_ISSUED": {
+        "cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.INFO,
+        "desc": "SSL certificate issued",
+    },
+    "SSL_CERTIFICATE_EXPIRED": {
+        "cat": EventCategory.VULNERABILITY, "risk": RiskLevel.MEDIUM,
+        "desc": "Expired SSL certificate",
+    },
+    "SSL_CERTIFICATE_MISMATCH": {
+        "cat": EventCategory.VULNERABILITY, "risk": RiskLevel.MEDIUM,
+        "desc": "SSL certificate mismatch",
+    },
+    "SSL_CERTIFICATE_RAW": {
+        "cat": EventCategory.INFRASTRUCTURE, "risk": RiskLevel.INFO,
+        "desc": "Raw SSL cert data", "raw": True,
+    },
 
     # Vulnerabilities
-    "VULNERABILITY_CVE_CRITICAL": {"cat": EventCategory.VULNERABILITY, "risk": RiskLevel.CRITICAL, "desc": "Critical CVE"},
+    "VULNERABILITY_CVE_CRITICAL": {
+        "cat": EventCategory.VULNERABILITY, "risk": RiskLevel.CRITICAL,
+        "desc": "Critical CVE",
+    },
     "VULNERABILITY_CVE_HIGH": {"cat": EventCategory.VULNERABILITY, "risk": RiskLevel.HIGH, "desc": "High CVE"},
     "VULNERABILITY_CVE_MEDIUM": {"cat": EventCategory.VULNERABILITY, "risk": RiskLevel.MEDIUM, "desc": "Medium CVE"},
     "VULNERABILITY_CVE_LOW": {"cat": EventCategory.VULNERABILITY, "risk": RiskLevel.LOW, "desc": "Low CVE"},
-    "VULNERABILITY_GENERAL": {"cat": EventCategory.VULNERABILITY, "risk": RiskLevel.MEDIUM, "desc": "General vulnerability"},
+    "VULNERABILITY_GENERAL": {
+        "cat": EventCategory.VULNERABILITY, "risk": RiskLevel.MEDIUM,
+        "desc": "General vulnerability",
+    },
 
     # Reputation / threat intel
     "MALICIOUS_IPADDR": {"cat": EventCategory.REPUTATION, "risk": RiskLevel.HIGH, "desc": "Malicious IP"},
     "MALICIOUS_INTERNET_NAME": {"cat": EventCategory.REPUTATION, "risk": RiskLevel.HIGH, "desc": "Malicious hostname"},
-    "MALICIOUS_AFFILIATE_IPADDR": {"cat": EventCategory.REPUTATION, "risk": RiskLevel.MEDIUM, "desc": "Malicious affiliate IP"},
+    "MALICIOUS_AFFILIATE_IPADDR": {
+        "cat": EventCategory.REPUTATION, "risk": RiskLevel.MEDIUM,
+        "desc": "Malicious affiliate IP",
+    },
     "MALICIOUS_EMAILADDR": {"cat": EventCategory.REPUTATION, "risk": RiskLevel.HIGH, "desc": "Malicious email"},
     "MALICIOUS_SUBNET": {"cat": EventCategory.REPUTATION, "risk": RiskLevel.MEDIUM, "desc": "Malicious subnet"},
     "BLACKLISTED_IPADDR": {"cat": EventCategory.REPUTATION, "risk": RiskLevel.HIGH, "desc": "Blacklisted IP"},
-    "BLACKLISTED_AFFILIATE_IPADDR": {"cat": EventCategory.REPUTATION, "risk": RiskLevel.MEDIUM, "desc": "Blacklisted affiliate IP"},
+    "BLACKLISTED_AFFILIATE_IPADDR": {
+        "cat": EventCategory.REPUTATION, "risk": RiskLevel.MEDIUM,
+        "desc": "Blacklisted affiliate IP",
+    },
 
     # Data leaks
     "LEAKSITE_CONTENT": {"cat": EventCategory.DATA_LEAK, "risk": RiskLevel.HIGH, "desc": "Leak site content"},
     "LEAKSITE_URL": {"cat": EventCategory.DATA_LEAK, "risk": RiskLevel.HIGH, "desc": "Leak site URL"},
     "DARKNET_MENTION_CONTENT": {"cat": EventCategory.DATA_LEAK, "risk": RiskLevel.HIGH, "desc": "Dark web mention"},
     "DARKNET_MENTION_URL": {"cat": EventCategory.DATA_LEAK, "risk": RiskLevel.HIGH, "desc": "Dark web URL"},
-    "PASSWORD_COMPROMISED": {"cat": EventCategory.DATA_LEAK, "risk": RiskLevel.CRITICAL, "desc": "Compromised password"},
+    "PASSWORD_COMPROMISED": {
+        "cat": EventCategory.DATA_LEAK, "risk": RiskLevel.CRITICAL,
+        "desc": "Compromised password",
+    },
     "HASH_COMPROMISED": {"cat": EventCategory.DATA_LEAK, "risk": RiskLevel.HIGH, "desc": "Compromised hash"},
 
     # Geo

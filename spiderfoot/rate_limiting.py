@@ -20,7 +20,13 @@ except ImportError:
 class RateLimiter:
     """Rate limiting implementation with Redis backend."""
 
-    def __init__(self, redis_client: Any | None = None, redis_host: str = 'localhost', redis_port: int = 6379, redis_db: int = 0) -> None:
+    def __init__(
+        self,
+        redis_client: Any | None = None,
+        redis_host: str = 'localhost',
+        redis_port: int = 6379,
+        redis_db: int = 0,
+    ) -> None:
         """Initialize rate limiter.
 
         Args:
