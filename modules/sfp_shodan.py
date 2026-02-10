@@ -75,7 +75,7 @@ class sfp_shodan(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -94,7 +94,7 @@ class sfp_shodan(SpiderFootModernPlugin):
                 'VULNERABILITY_CVE_HIGH', 'VULNERABILITY_CVE_MEDIUM',
                 'VULNERABILITY_CVE_LOW', 'VULNERABILITY_GENERAL']
 
-    def queryHost(self, qry):
+    def queryHost(self, qry: str):
         """Query Host."""
         res = self.fetch_url(
             f"https://api.shodan.io/shodan/host/{qry}?key={self.opts['api_key']}",
@@ -201,7 +201,7 @@ class sfp_shodan(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

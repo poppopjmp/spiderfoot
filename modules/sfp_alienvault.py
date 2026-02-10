@@ -108,7 +108,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -178,7 +178,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
         return None
 
-    def queryReputation(self, qry):
+    def queryReputation(self, qry: str):
         """Query Reputation."""
         if ":" in qry:
             target_type = "IPv6"
@@ -201,7 +201,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryPassiveDns(self, qry):
+    def queryPassiveDns(self, qry: str):
         """Query PassiveDns."""
         if ":" in qry:
             target_type = "IPv6"
@@ -224,7 +224,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryDomainUrlList(self, qry, page=1, per_page=50):
+    def queryDomainUrlList(self, qry: str, page=1, per_page=50):
         """Query DomainUrlList."""
         params = urllib.parse.urlencode({
             'page': page,
@@ -243,7 +243,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHostnameUrlList(self, qry, page=1, per_page=50):
+    def queryHostnameUrlList(self, qry: str, page=1, per_page=50):
         """Query HostnameUrlList."""
         params = urllib.parse.urlencode({
             'page': page,
@@ -263,7 +263,7 @@ class sfp_alienvault(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

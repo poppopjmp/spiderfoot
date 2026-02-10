@@ -50,7 +50,7 @@ class sfp_apple_itunes(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -70,7 +70,7 @@ class sfp_apple_itunes(SpiderFootModernPlugin):
             'RAW_RIR_DATA'
         ]
 
-    def query(self, qry, limit=100):
+    def query(self, qry: str, limit=100):
         """Query the data source."""
         params = urllib.parse.urlencode({
             'media': 'software',
@@ -105,7 +105,7 @@ class sfp_apple_itunes(SpiderFootModernPlugin):
 
         return results
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

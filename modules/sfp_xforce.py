@@ -97,7 +97,7 @@ class sfp_xforce(SpiderFootModernPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -133,7 +133,7 @@ class sfp_xforce(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def query(self, qry, querytype):
+    def query(self, qry: str, querytype):
         """Query the data source."""
         if querytype not in ["ipr/malware", "ipr/history", "resolve"]:
             querytype = "ipr/malware"
@@ -211,7 +211,7 @@ class sfp_xforce(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

@@ -84,7 +84,7 @@ class sfp_censys(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -113,7 +113,7 @@ class sfp_censys(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def queryHosts(self, qry):
+    def queryHosts(self, qry: str):
         """Query Hosts."""
         secret = self.opts['censys_api_key_uid'] + \
             ':' + self.opts['censys_api_key_secret']
@@ -135,7 +135,7 @@ class sfp_censys(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHostsSearch(self, qry):
+    def queryHostsSearch(self, qry: str):
         """Query HostsSearch."""
         secret = self.opts['censys_api_key_uid'] + \
             ':' + self.opts['censys_api_key_secret']
@@ -209,7 +209,7 @@ class sfp_censys(SpiderFootModernPlugin):
 
         return data
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         if self.errorState:
             return

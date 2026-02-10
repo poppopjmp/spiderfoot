@@ -69,7 +69,7 @@ class sfp_ipapico_modern(SpiderFootModernPlugin):
     optdescs: dict[str, str] = {}
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         # Modern setup — wires HttpService, DnsService, etc. automatically
         """Set up the module."""
         super().setup(sfc, userOpts or {})
@@ -116,7 +116,7 @@ class sfp_ipapico_modern(SpiderFootModernPlugin):
             self.debug(f"Error processing JSON response: {e}")
             return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

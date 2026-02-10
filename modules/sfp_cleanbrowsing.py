@@ -61,7 +61,7 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -84,7 +84,7 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
             "MALICIOUS_COHOST",
         ]
 
-    def queryFamilyDNS(self, qaddr) -> bool:
+    def queryFamilyDNS(self, qaddr: str) -> bool:
         """Query FamilyDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["185.228.168.168", "185.228.168.169"]
@@ -100,7 +100,7 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
             return True
         return False
 
-    def queryAdultDNS(self, qaddr) -> bool:
+    def queryAdultDNS(self, qaddr: str) -> bool:
         """Query AdultDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["185.228.168.10", "185.228.169.11"]
@@ -116,7 +116,7 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
             return True
         return False
 
-    def querySecurityDNS(self, qaddr) -> bool:
+    def querySecurityDNS(self, qaddr: str) -> bool:
         """Query SecurityDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["185.228.168.9", "185.228.169.9"]
@@ -132,7 +132,7 @@ class sfp_cleanbrowsing(SpiderFootModernPlugin):
             return True
         return False
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

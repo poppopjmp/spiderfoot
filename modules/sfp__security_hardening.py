@@ -784,7 +784,7 @@ class sfp__security_hardening(SpiderFootModernPlugin):
         'suspicious_activity_threshold': "Threshold for suspicious activity detection"
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the security hardening module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -837,7 +837,7 @@ class sfp__security_hardening(SpiderFootModernPlugin):
             "AUTHORIZATION_DENIED"
         ]
 
-    def handleEvent(self, sfEvent) -> None:
+    def handleEvent(self, sfEvent: SpiderFootEvent) -> None:
         """Handle events with security monitoring."""
         if self.errorState:
             return

@@ -34,7 +34,7 @@ class sfp_douyin(SpiderFootModernPlugin):
         "max_videos": "Maximum number of videos to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -47,7 +47,7 @@ class sfp_douyin(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["DOUYIN_VIDEO"]
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle a SpiderFoot event by fetching recent Douyin videos for each configured username.
         Emits DOUYIN_VIDEO events with enriched data (username, description, timestamp).

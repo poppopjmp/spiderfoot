@@ -65,7 +65,7 @@ class sfp_rocketreach(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -128,7 +128,7 @@ class sfp_rocketreach(SpiderFootModernPlugin):
             self.error(f"Error processing JSON response from RocketReach: {e}")
             return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, query RocketReach, and emit relevant events.
         Deduplicate emitted events to avoid duplicates.

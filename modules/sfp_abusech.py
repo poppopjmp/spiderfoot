@@ -85,7 +85,7 @@ class sfp_abusech(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -116,7 +116,7 @@ class sfp_abusech(SpiderFootModernPlugin):
             "MALICIOUS_NETBLOCK"
         ]
 
-    def queryFeodoTrackerBlacklist(self, target, targetType) -> bool:
+    def queryFeodoTrackerBlacklist(self, target: str, targetType) -> bool:
         """Query FeodoTrackerBlacklist."""
         blacklist = self.retrieveFeodoTrackerBlacklist()
 
@@ -192,7 +192,7 @@ class sfp_abusech(SpiderFootModernPlugin):
 
         return ips
 
-    def querySslBlacklist(self, target, targetType) -> bool:
+    def querySslBlacklist(self, target: str, targetType) -> bool:
         """Query SslBlacklist."""
         blacklist = self.retrieveSslBlacklist()
 
@@ -272,7 +272,7 @@ class sfp_abusech(SpiderFootModernPlugin):
 
         return ips
 
-    def queryUrlHausBlacklist(self, target, targetType) -> bool:
+    def queryUrlHausBlacklist(self, target: str, targetType) -> bool:
         """Query UrlHausBlacklist."""
         blacklist = self.retrieveUrlHausBlacklist()
 
@@ -360,7 +360,7 @@ class sfp_abusech(SpiderFootModernPlugin):
 
         return hosts
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

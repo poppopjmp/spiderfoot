@@ -64,7 +64,7 @@ class sfp_fofa(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Setup plugin with SpiderFoot context and user options.
         :param sfc: SpiderFoot context
@@ -140,7 +140,7 @@ class sfp_fofa(SpiderFootModernPlugin):
             self.debug(f"Error processing JSON response: {e}")
             return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, query Fofa, and emit results as SpiderFootEvents.
         :param event: SpiderFootEvent

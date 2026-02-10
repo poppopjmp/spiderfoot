@@ -90,7 +90,7 @@ class sfp_binaryedge(SpiderFootModernPlugin):
     reportedhosts = None
     checkedips = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -127,7 +127,7 @@ class sfp_binaryedge(SpiderFootModernPlugin):
             "MALICIOUS_IPADDR"
         ]
 
-    def query(self, qry, querytype, page=1):
+    def query(self, qry: str, querytype, page=1):
         """Query the data source."""
         retarr = list()
 
@@ -192,7 +192,7 @@ class sfp_binaryedge(SpiderFootModernPlugin):
 
         return retarr
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

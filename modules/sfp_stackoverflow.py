@@ -68,7 +68,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
     # Tracking the error state of the module
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -91,7 +91,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
             "HUMAN_NAME"
         ]
 
-    def query(self, qry, qryType):
+    def query(self, qry: str, qryType):
         # The StackOverflow excerpts endpoint will search the site for mentions of a keyword and returns a snippet of relevant results
         """Query the data source."""
         if qryType == "excerpts":
@@ -188,7 +188,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
 
         return list(set(ips))
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventData = event.data
 

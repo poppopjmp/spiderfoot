@@ -44,7 +44,7 @@ class sfp_dideo(SpiderFootModernPlugin):
         super().__init__()
         self.sf = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Setup plugin with SpiderFoot context and user options.
 
@@ -64,7 +64,7 @@ class sfp_dideo(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["DIDEO_VIDEO"]
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle ROOT event, search Dideo.ir for each keyword, emit DIDEO_VIDEO events for found videos.
 

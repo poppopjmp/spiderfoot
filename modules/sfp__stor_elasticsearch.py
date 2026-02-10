@@ -64,7 +64,7 @@ class sfp__stor_elasticsearch(SpiderFootModernPlugin):
         'timeout': "Connection timeout in seconds"
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module with user options.
 
         Args:
@@ -171,7 +171,7 @@ class sfp__stor_elasticsearch(SpiderFootModernPlugin):
         """
         return ["*"]
 
-    def handleEvent(self, sfEvent) -> None:
+    def handleEvent(self, sfEvent: SpiderFootEvent) -> None:
         """Handle events sent to this module.
 
         Args:

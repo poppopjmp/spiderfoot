@@ -66,7 +66,7 @@ class sfp_koodous(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -84,7 +84,7 @@ class sfp_koodous(SpiderFootModernPlugin):
             'RAW_RIR_DATA'
         ]
 
-    def queryPackageName(self, qry, cursor=''):
+    def queryPackageName(self, qry: str, cursor=''):
         """Query PackageName."""
         package_name = qry.encode('raw_unicode_escape').decode(
             "ascii", errors='replace')
@@ -147,7 +147,7 @@ class sfp_koodous(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         if self.errorState:
             return

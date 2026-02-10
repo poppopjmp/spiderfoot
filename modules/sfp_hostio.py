@@ -59,7 +59,7 @@ class sfp_hostio(SpiderFootModernPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         if userOpts is None:
             userOpts = {}
@@ -106,7 +106,7 @@ class sfp_hostio(SpiderFootModernPlugin):
         self.info(
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
-    def query(self, qry):
+    def query(self, qry: str):
         """Query the data source."""
         res = self.fetch_url(
             f"https://host.io/api/full/{qry}",
@@ -129,7 +129,7 @@ class sfp_hostio(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

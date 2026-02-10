@@ -72,7 +72,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -92,7 +92,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
             "PHYSICAL_ADDRESS"
         ]
 
-    def query(self, url, data, failcount=0):
+    def query(self, url: str, data, failcount=0):
         """Query the data source."""
         headers = {
             'Authorization': f"Bearer {self.opts['api_key']}"
@@ -142,7 +142,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
 
         return ret
 
-    def queryCompany(self, domain):
+    def queryCompany(self, domain: str):
         """Query Company."""
         url = "https://api.fullcontact.com/v3/company.enrich"
 
@@ -151,7 +151,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
 
         return self.query(url, {"domain": domain})
 
-    def queryPersonByEmail(self, email):
+    def queryPersonByEmail(self, email: str):
         """Query PersonByEmail."""
         url = "https://api.fullcontact.com/v3/person.enrich"
 
@@ -169,7 +169,7 @@ class sfp_fullcontact(SpiderFootModernPlugin):
 
         return self.query(url, {'fullName': name})
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

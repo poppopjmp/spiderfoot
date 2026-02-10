@@ -71,7 +71,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
     errorState = False
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.__dataSource__ = "NeutrinoAPI"
@@ -97,7 +97,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     # Query the phone-validate REST API
     # https://www.neutrinoapi.com/api/phone-validate/
-    def queryPhoneValidate(self, qry):
+    def queryPhoneValidate(self, qry: str):
         """Query PhoneValidate."""
         res = self.fetch_url(
             'https://neutrinoapi.com/phone-validate',
@@ -111,7 +111,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     # Query the ip-info REST API
     # https://www.neutrinoapi.com/api/ip-info/
-    def queryIpInfo(self, qry):
+    def queryIpInfo(self, qry: str):
         """Query IpInfo."""
         res = self.fetch_url(
             "https://neutrinoapi.com/ip-info",
@@ -125,7 +125,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     # Query the ip-blocklist REST API
     # https://www.neutrinoapi.com/api/ip-blocklist/
-    def queryIpBlocklist(self, qry):
+    def queryIpBlocklist(self, qry: str):
         """Query IpBlocklist."""
         res = self.fetch_url(
             "https://neutrinoapi.com/ip-blocklist",
@@ -139,7 +139,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
     # Query the host-reputation REST API
     # https://www.neutrinoapi.com/api/host-reputation/
-    def queryHostReputation(self, qry):
+    def queryHostReputation(self, qry: str):
         """Query HostReputation."""
         res = self.fetch_url(
             "https://neutrinoapi.com/host-reputation",
@@ -184,7 +184,7 @@ class sfp_neutrinoapi(SpiderFootModernPlugin):
 
         return data
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

@@ -65,7 +65,7 @@ class sfp_surbl(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -102,14 +102,14 @@ class sfp_surbl(SpiderFootModernPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr):
+    def reverseAddr(self, ipaddr: str):
         """ReverseAddr."""
         if not self.sf.validIP(ipaddr):
             self.debug(f"Invalid IPv4 address {ipaddr}")
             return None
         return '.'.join(reversed(ipaddr.split('.')))
 
-    def query(self, qaddr):
+    def query(self, qaddr: str):
         """Query SURBL DNS.
 
         Args:
@@ -132,7 +132,7 @@ class sfp_surbl(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

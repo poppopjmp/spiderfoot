@@ -69,7 +69,7 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -82,7 +82,7 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "INTERNET_NAME", "DOMAIN_NAME", "LINKED_URL_INTERNAL"]
 
-    def queryDomain(self, qry):
+    def queryDomain(self, qry: str):
         """Query a domain.
 
         Args:
@@ -111,7 +111,7 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHost(self, qry):
+    def queryHost(self, qry: str):
         """Query a host.
 
         Args:
@@ -140,7 +140,7 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHash(self, qry):
+    def queryHash(self, qry: str):
         """Query a hash.
 
         Args:
@@ -212,7 +212,7 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

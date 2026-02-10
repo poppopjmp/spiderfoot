@@ -65,7 +65,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         if userOpts is None:
             userOpts = {}
@@ -113,7 +113,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
         self.error(
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
-    def query(self, qry, eventName):
+    def query(self, qry: str, eventName):
         """Query the data source."""
         queryString = ""
         if eventName == "PHONE_NUMBER":
@@ -167,7 +167,7 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
 
         return geoInfo
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

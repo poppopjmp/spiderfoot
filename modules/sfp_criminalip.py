@@ -59,7 +59,7 @@ class sfp_criminalip(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -123,7 +123,7 @@ class sfp_criminalip(SpiderFootModernPlugin):
 
         return None
 
-    def queryCriminalIP(self, qry, endpoint):
+    def queryCriminalIP(self, qry: str, endpoint):
         """Query CriminalIP API.
 
         Args:
@@ -160,7 +160,7 @@ class sfp_criminalip(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

@@ -587,7 +587,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
         'database_configs': "List of database configurations for load balancing"
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the advanced storage module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -663,7 +663,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
         """Define the events this module is interested in."""
         return ["*"]
 
-    def handleEvent(self, sfEvent) -> None:
+    def handleEvent(self, sfEvent: SpiderFootEvent) -> None:
         """Handle events with enterprise features."""
         if not self.opts['_store'] or self.errorState:
             return

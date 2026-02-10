@@ -77,7 +77,7 @@ class sfp_abuseipdb(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -175,7 +175,7 @@ class sfp_abuseipdb(SpiderFootModernPlugin):
 
         return ips
 
-    def queryIpAddress(self, ip):
+    def queryIpAddress(self, ip: str):
         """Query API for an IPv4 or IPv6 address.
 
         Note: Currently unused.
@@ -229,7 +229,7 @@ class sfp_abuseipdb(SpiderFootModernPlugin):
 
         return None
 
-    def queryNetblock(self, ip):
+    def queryNetblock(self, ip: str):
         """Query API for a netblock.
 
         Note: Currently unused.
@@ -282,7 +282,7 @@ class sfp_abuseipdb(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

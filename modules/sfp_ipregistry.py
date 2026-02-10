@@ -61,7 +61,7 @@ class sfp_ipregistry(SpiderFootModernPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -77,7 +77,7 @@ class sfp_ipregistry(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["GEOINFO", "MALICIOUS_IPADDR", "PHYSICAL_COORDINATES", "RAW_RIR_DATA"]
 
-    def query(self, qry):
+    def query(self, qry: str):
         """Query the data source."""
         qs = urllib.parse.urlencode({"key": self.opts["api_key"]})
         res = self.fetch_url(
@@ -159,7 +159,7 @@ class sfp_ipregistry(SpiderFootModernPlugin):
         self.generate_location_events(data.get("location"), pevent)
         self.generate_security_events(data.get("security"), pevent)
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         if self.errorState:
             return

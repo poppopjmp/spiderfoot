@@ -38,7 +38,7 @@ class sfp_instagram(SpiderFootModernPlugin):
         "max_items": "Maximum number of posts/stories to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -51,7 +51,7 @@ class sfp_instagram(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["INSTAGRAM_POST"]
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # Stub for Instagram monitoring logic
         """Handle an event received by this module."""
         pass

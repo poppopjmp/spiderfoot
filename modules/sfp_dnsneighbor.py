@@ -47,7 +47,7 @@ class sfp_dnsneighbor(SpiderFootModernPlugin):
     domresults = None
     hostresults = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
@@ -67,7 +67,7 @@ class sfp_dnsneighbor(SpiderFootModernPlugin):
         return ["AFFILIATE_IPADDR", "IP_ADDRESS"]
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

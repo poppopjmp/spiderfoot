@@ -47,7 +47,7 @@ class sfp_bnb(SpiderFootModernPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -70,7 +70,7 @@ class sfp_bnb(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["BNB_ADDRESS", "BNB_TX"]
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         self.debug(f"Received event: {event.eventType} from {event.module}")
         # Optionally filter by event_types (stub logic)

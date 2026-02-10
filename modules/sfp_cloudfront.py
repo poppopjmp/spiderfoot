@@ -62,7 +62,7 @@ class sfp_cloudfront(SpiderFootModernPlugin):
     # CloudFront specific HTTP headers
     CLOUDFRONT_HEADERS = ["X-Amz-Cf-Id", "Via"]
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -81,7 +81,7 @@ class sfp_cloudfront(SpiderFootModernPlugin):
             "RAW_DNS_RECORDS",
         ]
 
-    def queryDns(self, domain):
+    def queryDns(self, domain: str):
         """Check if domain has CloudFront CNAME records."""
         try:
             answers = dns.resolver.resolve(domain, "CNAME")
@@ -122,7 +122,7 @@ class sfp_cloudfront(SpiderFootModernPlugin):
         return False
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

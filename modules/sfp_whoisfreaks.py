@@ -67,7 +67,7 @@ class sfp_whoisfreaks(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -90,7 +90,7 @@ class sfp_whoisfreaks(SpiderFootModernPlugin):
         ]
 
     # Search WhoisFreaks
-    def query(self, qry, querytype, page=1, accum=None):
+    def query(self, qry: str, querytype, page=1, accum=None):
         """Query the data source."""
         url = "https://api.whoisfreaks.com/v1.0/whois?whois=reverse&mode=mini&apiKey=" + \
             self.opts['api_key']
@@ -141,7 +141,7 @@ class sfp_whoisfreaks(SpiderFootModernPlugin):
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

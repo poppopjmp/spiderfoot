@@ -102,7 +102,7 @@ class sfp_sorbs(SpiderFootModernPlugin):
         "127.0.0.14": "SORBS - Network does not contain servers",
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -130,14 +130,14 @@ class sfp_sorbs(SpiderFootModernPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr):
+    def reverseAddr(self, ipaddr: str):
         """ReverseAddr."""
         if not self.sf.validIP(ipaddr):
             self.debug(f"Invalid IPv4 address {ipaddr}")
             return None
         return '.'.join(reversed(ipaddr.split('.')))
 
-    def queryAddr(self, qaddr):
+    def queryAddr(self, qaddr: str):
         """Query SORBS DNS for an IPv4 address.
 
         Args:
@@ -159,7 +159,7 @@ class sfp_sorbs(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

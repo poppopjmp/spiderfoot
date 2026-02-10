@@ -72,7 +72,7 @@ class sfp_certspotter(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -101,7 +101,7 @@ class sfp_certspotter(SpiderFootModernPlugin):
         ]
 
     # Query CertSpotter issuances API endpoint
-    def queryIssuances(self, domain, after=None):
+    def queryIssuances(self, domain: str, after=None):
         """Query Issuances."""
         params = {
             'domain': domain.encode('raw_unicode_escape').decode("ascii", errors='replace'),
@@ -150,7 +150,7 @@ class sfp_certspotter(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

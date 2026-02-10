@@ -53,7 +53,7 @@ class sfp_github(SpiderFootModernPlugin):
         'namesonly': "Match repositories by name only, not by their descriptions. Helps reduce false positives."
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -90,7 +90,7 @@ class sfp_github(SpiderFootModernPlugin):
 
         return "\n".join([f"Name: {name}", f"URL: {html_url}", f"Description: {description}"])
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

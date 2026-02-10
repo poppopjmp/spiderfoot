@@ -71,7 +71,7 @@ class sfp_maltiverse(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -90,7 +90,7 @@ class sfp_maltiverse(SpiderFootModernPlugin):
 
     # Check whether the IP Address is malicious using Maltiverse API
     # https://app.swaggerhub.com/apis-docs/maltiverse/api/1.0.0-oas3#/IPv4/getIP
-    def queryIPAddress(self, qry):
+    def queryIPAddress(self, qry: str):
 
         """Query IPAddress."""
         headers = {
@@ -125,7 +125,7 @@ class sfp_maltiverse(SpiderFootModernPlugin):
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

@@ -89,7 +89,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
         """Initialize the sfp virustotal."""
         super().__init__()
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -120,7 +120,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
             "DOMAIN_NAME"
         ]
 
-    def queryIp(self, qry):
+    def queryIp(self, qry: str):
         """Query Ip."""
         params = urllib.parse.urlencode({
             'ip': qry,
@@ -149,7 +149,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
 
         return None
 
-    def queryDomain(self, qry):
+    def queryDomain(self, qry: str):
         """Query Domain."""
         params = urllib.parse.urlencode({
             'domain': qry,
@@ -183,7 +183,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

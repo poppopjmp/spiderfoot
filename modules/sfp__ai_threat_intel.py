@@ -1105,7 +1105,7 @@ class sfp__ai_threat_intel(SpiderFootModernPlugin):
         'ml_model_update_interval': "Interval for ML model updates (seconds)"
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the AI threat intelligence module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -1153,7 +1153,7 @@ class sfp__ai_threat_intel(SpiderFootModernPlugin):
             "AI_NLP_ANALYSIS"
         ]
 
-    def handleEvent(self, sfEvent) -> None:
+    def handleEvent(self, sfEvent: SpiderFootEvent) -> None:
         """Handle events with AI-powered analysis."""
         if self.errorState:
             return

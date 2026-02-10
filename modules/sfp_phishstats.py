@@ -66,7 +66,7 @@ class sfp_phishstats(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -96,7 +96,7 @@ class sfp_phishstats(SpiderFootModernPlugin):
 
     # Check whether the IP address is malicious using PhishStats API
     # https://phishstats.info/
-    def queryIPAddress(self, qry):
+    def queryIPAddress(self, qry: str):
         """Query IPAddress."""
         params = {
             '_where': f"(ip,eq,{qry})",
@@ -126,7 +126,7 @@ class sfp_phishstats(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

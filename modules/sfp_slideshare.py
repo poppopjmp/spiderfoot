@@ -54,7 +54,7 @@ class sfp_slideshare(SpiderFootModernPlugin):
     optdescs = {
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -74,7 +74,7 @@ class sfp_slideshare(SpiderFootModernPlugin):
         return re.findall(r'<meta property="' + meta_property + r'"\s+content="(.+)" />', html)
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

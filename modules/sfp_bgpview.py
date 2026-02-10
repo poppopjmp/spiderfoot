@@ -52,7 +52,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -92,7 +92,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
             'RAW_RIR_DATA'
         ]
 
-    def queryAsn(self, qry):
+    def queryAsn(self, qry: str):
         """
         Query BGPView for ASN information.
 
@@ -128,7 +128,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
 
         return data
 
-    def queryIp(self, qry):
+    def queryIp(self, qry: str):
         """
         Query BGPView for IP address information.
 
@@ -164,7 +164,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
 
         return data
 
-    def queryNetblock(self, qry):
+    def queryNetblock(self, qry: str):
         """
         Query BGPView for netblock information.
 
@@ -200,7 +200,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
 
         return data
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, query BGPView, and emit events for found information.
 

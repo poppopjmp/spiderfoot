@@ -64,7 +64,7 @@ class sfp_uceprotect(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -91,11 +91,11 @@ class sfp_uceprotect(SpiderFootModernPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr):
+    def reverseAddr(self, ipaddr: str):
         """ReverseAddr."""
         return '.'.join(reversed(ipaddr.split('.')))
 
-    def queryDnsblLevel1(self, qaddr):
+    def queryDnsblLevel1(self, qaddr: str):
         """Query UCEPROTECT DNS Level 1 for an IPv4 address.
 
         Args:
@@ -117,7 +117,7 @@ class sfp_uceprotect(SpiderFootModernPlugin):
 
         return None
 
-    def queryDnsblLevel2(self, qaddr):
+    def queryDnsblLevel2(self, qaddr: str):
         """Query UCEPROTECT DNS Level 2 for an IPv4 address.
 
         Args:
@@ -139,7 +139,7 @@ class sfp_uceprotect(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

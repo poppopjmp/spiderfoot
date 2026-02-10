@@ -66,7 +66,7 @@ class sfp_isc(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -89,7 +89,7 @@ class sfp_isc(SpiderFootModernPlugin):
             "MALICIOUS_AFFILIATE_IPADDR",
         ]
 
-    def query(self, ip):
+    def query(self, ip: str):
         """Query the data source."""
         if not ip:
             return None
@@ -113,7 +113,7 @@ class sfp_isc(SpiderFootModernPlugin):
 
         return res['content']
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

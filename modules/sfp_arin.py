@@ -60,7 +60,7 @@ class sfp_arin(SpiderFootModernPlugin):
     currentEventSrc = None
     keywords = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -152,7 +152,7 @@ class sfp_arin(SpiderFootModernPlugin):
         self.notifyListeners(evt)
         return data
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, query ARIN for data, and emit events for found information.
 

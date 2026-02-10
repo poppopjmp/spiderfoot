@@ -60,7 +60,7 @@ class sfp_sociallinks(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -121,7 +121,7 @@ class sfp_sociallinks(SpiderFootModernPlugin):
             return None
         return json.loads(res['content'])
 
-    def queryTelegram(self, qry, eventName):
+    def queryTelegram(self, qry: str, eventName):
         """Query Telegram."""
         if eventName == "PHONE_NUMBER":
             queryString = f"https://osint.rest/api/telegram/user_by_phone?query={qry}"
@@ -130,26 +130,26 @@ class sfp_sociallinks(SpiderFootModernPlugin):
 
         return self.query(queryString)
 
-    def queryFlickr(self, qry):
+    def queryFlickr(self, qry: str):
         """Query Flickr."""
         queryString = f"https://osint.rest/api/flickr/email?email={qry}"
 
         return self.query(queryString)
 
-    def querySkype(self, qry):
+    def querySkype(self, qry: str):
         """Query Skype."""
         queryString = f"https://osint.rest/api/skype/search/v2?query={qry}"
 
         return self.query(queryString)
 
-    def queryLinkedin(self, qry):
+    def queryLinkedin(self, qry: str):
         """Query Linkedin."""
         queryString = f"https://osint.rest/api/linkedin/lookup_by_email/v2?query={qry}"
 
         return self.query(queryString)
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

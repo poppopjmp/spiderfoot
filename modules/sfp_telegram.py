@@ -53,7 +53,7 @@ class sfp_telegram(SpiderFootModernPlugin):
         self._last_message_ids = {}
         self._emitted_message_ids = set()  # For deduplication
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts)
         if not TelegramClient:
@@ -156,7 +156,7 @@ class sfp_telegram(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["TELEGRAM_MESSAGE"]
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # This module is passive and does not process incoming events
         """Handle an event received by this module."""
         pass

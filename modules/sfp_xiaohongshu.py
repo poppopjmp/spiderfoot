@@ -35,7 +35,7 @@ class sfp_xiaohongshu(SpiderFootModernPlugin):
         "max_posts": "Maximum number of posts to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -48,7 +48,7 @@ class sfp_xiaohongshu(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["XIAOHONGSHU_POST"]
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle a SpiderFoot event by fetching recent Xiaohongshu posts for each configured username.
         Emits XIAOHONGSHU_POST events with enriched data (username, content, timestamp).

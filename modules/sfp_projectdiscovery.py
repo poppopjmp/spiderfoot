@@ -64,7 +64,7 @@ class sfp_projectdiscovery(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -76,7 +76,7 @@ class sfp_projectdiscovery(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def query(self, qry):
+    def query(self, qry: str):
         """Query the data source."""
         headers = {"Accept": "application/json",
                    "Authorization": self.opts["api_key"]}
@@ -102,7 +102,7 @@ class sfp_projectdiscovery(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

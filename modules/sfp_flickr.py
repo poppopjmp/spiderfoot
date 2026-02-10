@@ -73,7 +73,7 @@ class sfp_flickr(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -106,7 +106,7 @@ class sfp_flickr(SpiderFootModernPlugin):
         return keys[0]
 
     # Query the REST API
-    def query(self, qry, api_key, page=1, per_page=200):
+    def query(self, qry: str, api_key, page=1, per_page=200):
         """Query the data source."""
         params = {
             "sort": "relevance",
@@ -142,7 +142,7 @@ class sfp_flickr(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

@@ -78,7 +78,7 @@ class sfp_mnemonic(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -104,7 +104,7 @@ class sfp_mnemonic(SpiderFootModernPlugin):
             'DOMAIN_NAME'
         ]
 
-    def query(self, qry, limit=500, offset=0):
+    def query(self, qry: str, limit=500, offset=0):
         """Query the Mnemonic PassiveDNS v3 API.
 
         Args:
@@ -171,7 +171,7 @@ class sfp_mnemonic(SpiderFootModernPlugin):
 
         return data['data']
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

@@ -43,7 +43,7 @@ class sfp_base64(SpiderFootModernPlugin):
         'minlength': "The minimum length a string that looks like a base64-encoded string needs to be."
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.__dataSource__ = "Target Website"
@@ -58,7 +58,7 @@ class sfp_base64(SpiderFootModernPlugin):
         return ["BASE64_DATA"]
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

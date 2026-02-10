@@ -44,7 +44,7 @@ class sfp_bluesky(SpiderFootModernPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -71,7 +71,7 @@ class sfp_bluesky(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["BLUESKY_POST"]
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle event: fetch Bluesky posts for the configured username and emit BLUESKY_POST events.
         """

@@ -63,7 +63,7 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -90,7 +90,7 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
             "MALICIOUS_NETBLOCK",
         ]
 
-    def query(self, qry, targetType):
+    def query(self, qry: str, targetType):
         """Query the data source."""
         cid = "_emergingthreats"
         url = "https://rules.emergingthreats.net/blockrules/compromised-ips.txt"
@@ -135,7 +135,7 @@ class sfp_emergingthreats(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

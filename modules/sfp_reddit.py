@@ -41,7 +41,7 @@ class sfp_reddit(SpiderFootModernPlugin):
         "max_posts": "Maximum number of posts to fetch per subreddit."
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
@@ -54,7 +54,7 @@ class sfp_reddit(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["REDDIT_POST"]
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # This is a stub. Actual implementation would use praw or similar.
         """Handle an event received by this module."""
         pass

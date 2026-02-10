@@ -44,7 +44,7 @@ class sfp_hosting(SpiderFootModernPlugin):
     # Target
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -61,7 +61,7 @@ class sfp_hosting(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["PROVIDER_HOSTING"]
 
-    def queryAddr(self, qaddr) -> list | None:
+    def queryAddr(self, qaddr: str) -> list | None:
         """Query Addr."""
         data = dict()
         url = "https://raw.githubusercontent.com/client9/ipcat/master/datacenters.csv"
@@ -94,7 +94,7 @@ class sfp_hosting(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

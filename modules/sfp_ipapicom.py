@@ -65,7 +65,7 @@ class sfp_ipapicom(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -87,7 +87,7 @@ class sfp_ipapicom(SpiderFootModernPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def query(self, qry):
+    def query(self, qry: str):
         """Query the data source."""
         queryString = f"http://api.ipapi.com/api/{qry}?access_key={self.opts['api_key']}"
 
@@ -110,7 +110,7 @@ class sfp_ipapicom(SpiderFootModernPlugin):
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

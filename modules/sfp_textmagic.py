@@ -62,7 +62,7 @@ class sfp_textmagic(SpiderFootModernPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         if userOpts is None:
             userOpts = {}
@@ -100,7 +100,7 @@ class sfp_textmagic(SpiderFootModernPlugin):
         self.error(
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
-    def queryPhoneNumber(self, qry):
+    def queryPhoneNumber(self, qry: str):
         """Query PhoneNumber."""
         headers = {
             'X-TM-Username': self.opts['api_key_username'],
@@ -129,7 +129,7 @@ class sfp_textmagic(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

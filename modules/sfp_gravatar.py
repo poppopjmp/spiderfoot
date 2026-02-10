@@ -59,7 +59,7 @@ class sfp_gravatar(SpiderFootModernPlugin):
     results = None
     reportedUsers = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -79,7 +79,7 @@ class sfp_gravatar(SpiderFootModernPlugin):
     # Query Gravatar API for the specified email address
     # https://secure.gravatar.com/site/implement/
     # https://secure.gravatar.com/site/implement/profiles/
-    def query(self, qry):
+    def query(self, qry: str):
         """Query the data source."""
         email_hash = hashlib.md5(qry.encode('utf-8', errors='replace').lower()).hexdigest()  # noqa: DUO130
         output = 'json'
@@ -109,7 +109,7 @@ class sfp_gravatar(SpiderFootModernPlugin):
         return data.get('entry')[0]
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

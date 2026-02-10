@@ -56,7 +56,7 @@ class sfp_crobat_api(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -69,7 +69,7 @@ class sfp_crobat_api(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def queryDomain(self, qry, page=0):
+    def queryDomain(self, qry: str, page=0):
         """Query Domain."""
         headers = {
             "Accept": "application/json"
@@ -127,7 +127,7 @@ class sfp_crobat_api(SpiderFootModernPlugin):
 
         return data
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

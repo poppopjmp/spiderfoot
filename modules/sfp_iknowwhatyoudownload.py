@@ -66,7 +66,7 @@ class sfp_iknowwhatyoudownload(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -79,7 +79,7 @@ class sfp_iknowwhatyoudownload(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["MALICIOUS_IPADDR"]
 
-    def query(self, qry):
+    def query(self, qry: str):
         """Search iknowwhatyoudownload.com for an IPv4/IPv6 address.
 
         Args:
@@ -130,7 +130,7 @@ class sfp_iknowwhatyoudownload(SpiderFootModernPlugin):
 
         return contents
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

@@ -65,7 +65,7 @@ class sfp_netlas(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module with user options.
 
         Args:
@@ -91,7 +91,7 @@ class sfp_netlas(SpiderFootModernPlugin):
         """
         return ["RAW_RIR_DATA", "GEOINFO", "PHYSICAL_COORDINATES", "PROVIDER_TELCO"]
 
-    def queryNetlas(self, qry, qryType):
+    def queryNetlas(self, qry: str, qryType):
         """Query Netlas API for information.
 
         Args:
@@ -177,7 +177,7 @@ class sfp_netlas(SpiderFootModernPlugin):
             self.errorState = True
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle events sent to this module.
 
         Args:

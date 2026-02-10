@@ -71,7 +71,7 @@ class sfp_viewdns(SpiderFootModernPlugin):
     accum = list()
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -93,7 +93,7 @@ class sfp_viewdns(SpiderFootModernPlugin):
             'CO_HOSTED_SITE'
         ]
 
-    def query(self, qry, querytype, page=1) -> None:
+    def query(self, qry: str, querytype, page=1) -> None:
         """Query the data source."""
         if querytype == "reverseip":
             attr = "host"
@@ -168,7 +168,7 @@ class sfp_viewdns(SpiderFootModernPlugin):
         # We are at the last or only page
         self.accum.extend(response.get(responsekey, []))
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

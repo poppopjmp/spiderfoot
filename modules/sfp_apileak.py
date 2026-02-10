@@ -42,7 +42,7 @@ class sfp_apileak(SpiderFootModernPlugin):
         "max_results": "Max search results per query."
     }
 
-    def setup(self, sfc, userOpts: dict = None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)

@@ -57,7 +57,7 @@ class sfp_pgp(SpiderFootModernPlugin):
         'keyserver_fetch2': "Backup PGP public key server URL to find the public key for an e-mail address. Email address will get appended."
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -70,7 +70,7 @@ class sfp_pgp(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC", "AFFILIATE_EMAILADDR", "PGP_KEY"]
 
-    def queryDomain(self, keyserver_search_url, qry):
+    def queryDomain(self, keyserver_search_url: str, qry: str):
         """Query Domain."""
         res = self.fetch_url(
             keyserver_search_url + qry,
@@ -89,7 +89,7 @@ class sfp_pgp(SpiderFootModernPlugin):
 
         return res
 
-    def queryEmail(self, keyserver_fetch_url, qry):
+    def queryEmail(self, keyserver_fetch_url: str, qry: str):
         """Query Email."""
         res = self.fetch_url(
             keyserver_fetch_url + qry,
@@ -108,7 +108,7 @@ class sfp_pgp(SpiderFootModernPlugin):
 
         return res
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

@@ -98,7 +98,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
         "10": "Unknown (10)"
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -125,7 +125,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr):
+    def reverseAddr(self, ipaddr: str):
         """ReverseAddr."""
         return '.'.join(reversed(ipaddr.split('.')))
 
@@ -144,7 +144,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
 
         return f"{self.statuses[bits[3]]}\nLast Activity: {bits[1]} days ago\nThreat Level: {bits[2]}"
 
-    def queryAddr(self, qaddr, parentEvent) -> None:
+    def queryAddr(self, qaddr: str, parentEvent) -> None:
         """Query Addr."""
         eventName = parentEvent.eventType
 
@@ -196,7 +196,7 @@ class sfp_honeypot(SpiderFootModernPlugin):
             blacklist_type, f"ProjectHoneyPot ({qaddr}): {text}\n<SFURL>{url}</SFURL>", self.__name__, parentEvent)
         self.notifyListeners(evt)
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

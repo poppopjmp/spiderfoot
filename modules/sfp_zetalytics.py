@@ -55,7 +55,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -117,15 +117,15 @@ class sfp_zetalytics(SpiderFootModernPlugin):
             self.error(f"Error processing JSON response from Zetalytics: {e}")
         return None
 
-    def query_subdomains(self, domain):
+    def query_subdomains(self, domain: str):
         """Query subdomains."""
         return self.request("/subdomains", {"q": domain})
 
-    def query_hostname(self, hostname):
+    def query_hostname(self, hostname: str):
         """Query hostname."""
         return self.request("/hostname", {"q": hostname})
 
-    def query_email_domain(self, email_domain):
+    def query_email_domain(self, email_domain: str):
         """Query email domain."""
         return self.request("/email_domain", {"q": email_domain})
 
@@ -210,7 +210,7 @@ class sfp_zetalytics(SpiderFootModernPlugin):
 
         return events_generated  # noqa R504
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

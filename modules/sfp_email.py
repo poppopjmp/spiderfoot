@@ -34,7 +34,7 @@ class sfp_email(SpiderFootModernPlugin):
     optdescs = {
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
     # What events is this module interested in for input
@@ -53,7 +53,7 @@ class sfp_email(SpiderFootModernPlugin):
         return ["EMAILADDR", "EMAILADDR_GENERIC", "AFFILIATE_EMAILADDR"]
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

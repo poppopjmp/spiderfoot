@@ -71,7 +71,7 @@ class sfp_snov(SpiderFootModernPlugin):
     # More than 100 per response is not supported by Snov API
     limit = 100
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -130,7 +130,7 @@ class sfp_snov(SpiderFootModernPlugin):
             return None
 
     # Fetch email addresses related to target domain
-    def queryDomainName(self, qry, accessToken, currentLastId):
+    def queryDomainName(self, qry: str, accessToken, currentLastId):
         """Query DomainName."""
         params = {
             'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
@@ -158,7 +158,7 @@ class sfp_snov(SpiderFootModernPlugin):
         return res.get('content')
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

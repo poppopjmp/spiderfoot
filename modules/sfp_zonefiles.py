@@ -62,7 +62,7 @@ class sfp_zonefiles(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -82,7 +82,7 @@ class sfp_zonefiles(SpiderFootModernPlugin):
             "SOFTWARE_USED",
         ]
 
-    def queryDomain(self, qry):
+    def queryDomain(self, qry: str):
         """Query a domain.
 
         Args:
@@ -145,7 +145,7 @@ class sfp_zonefiles(SpiderFootModernPlugin):
 
         return data
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         if self.errorState:
             return

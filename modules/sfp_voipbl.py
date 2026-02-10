@@ -62,7 +62,7 @@ class sfp_voipbl(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -89,7 +89,7 @@ class sfp_voipbl(SpiderFootModernPlugin):
             "MALICIOUS_NETBLOCK",
         ]
 
-    def queryBlacklist(self, target, targetType) -> bool:
+    def queryBlacklist(self, target: str, targetType) -> bool:
         """Query Blacklist."""
         blacklist = self.retrieveBlacklist()
 
@@ -168,7 +168,7 @@ class sfp_voipbl(SpiderFootModernPlugin):
 
         return ips
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

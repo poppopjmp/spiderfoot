@@ -64,7 +64,7 @@ class sfp_seon(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -104,7 +104,7 @@ class sfp_seon(SpiderFootModernPlugin):
             "PROXY_HOST",
         ]
 
-    def query(self, qry, eventName):
+    def query(self, qry: str, eventName):
         """Query the data source."""
         if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
             queryString = f"https://api.seon.io/SeonRestService/ip-api/v1.0/{qry}"
@@ -140,7 +140,7 @@ class sfp_seon(SpiderFootModernPlugin):
         return json.loads(res['content'])
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

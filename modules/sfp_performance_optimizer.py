@@ -343,7 +343,7 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
         'auto_gc_enabled': "Enable automatic garbage collection"
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -391,7 +391,7 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
             "OPTIMIZATION_SUGGESTION"
         ]
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Optimize event processing."""
         if self.resource_monitor and self.opts.get('auto_gc_enabled', True):
             if self.resource_monitor.should_trigger_gc():

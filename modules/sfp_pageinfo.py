@@ -51,7 +51,7 @@ class sfp_pageinfo(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -70,7 +70,7 @@ class sfp_pageinfo(SpiderFootModernPlugin):
                 "URL_UPLOAD", "URL_JAVA_APPLET", "URL_FLASH", "PROVIDER_JAVASCRIPT"]
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # We are only interested in the raw data from the spidering module
         # because the spidering module will always provide events with the
         # event.sourceEvent.data set to the URL of the source.

@@ -51,7 +51,7 @@ class sfp__stor_stdout(SpiderFootModernPlugin):
         super().__init__()
         self.firstEvent = True
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         # Always start with a fresh opts dict for this instance
@@ -138,7 +138,7 @@ class sfp__stor_stdout(SpiderFootModernPlugin):
             self.error(f"Stdout write failed: {e}")
 
     # Handle events sent to this module
-    def handleEvent(self, sfEvent) -> None:
+    def handleEvent(self, sfEvent: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         if not self.opts.get('enabled', True):
             return

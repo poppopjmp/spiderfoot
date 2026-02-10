@@ -57,7 +57,7 @@ class sfp_quad9(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -80,7 +80,7 @@ class sfp_quad9(SpiderFootModernPlugin):
             "MALICIOUS_COHOST",
         ]
 
-    def query(self, qry) -> bool:
+    def query(self, qry: str) -> bool:
         """Query the data source."""
         res = dns.resolver.Resolver()
         res.nameservers = ["9.9.9.9"]
@@ -96,7 +96,7 @@ class sfp_quad9(SpiderFootModernPlugin):
             return True
         return False
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

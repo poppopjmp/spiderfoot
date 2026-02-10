@@ -61,7 +61,7 @@ class sfp_yandexdns(SpiderFootModernPlugin):
         "93.158.134.250": "Yandex - Adult",
     }
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -85,7 +85,7 @@ class sfp_yandexdns(SpiderFootModernPlugin):
         ]
 
     # Query Yandex DNS "family" servers
-    def queryAddr(self, qaddr):
+    def queryAddr(self, qaddr: str):
         """Query Addr."""
         if not qaddr:
             return None
@@ -100,7 +100,7 @@ class sfp_yandexdns(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

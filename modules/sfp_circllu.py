@@ -84,7 +84,7 @@ class sfp_circllu(SpiderFootModernPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -102,7 +102,7 @@ class sfp_circllu(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["IP_ADDRESS", "SSL_CERTIFICATE_ISSUED", "CO_HOSTED_SITE"]
 
-    def query(self, qry, qtype):
+    def query(self, qry: str, qtype):
         """Query the data source."""
         if self.errorState:
             return None
@@ -136,7 +136,7 @@ class sfp_circllu(SpiderFootModernPlugin):
         return res['content']
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

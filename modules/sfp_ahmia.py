@@ -68,7 +68,7 @@ class sfp_ahmia(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -82,7 +82,7 @@ class sfp_ahmia(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["DARKNET_MENTION_URL", "DARKNET_MENTION_CONTENT"]
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

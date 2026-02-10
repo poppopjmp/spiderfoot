@@ -68,7 +68,7 @@ class sfp_fsecure_riddler(SpiderFootModernPlugin):
     token = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -128,7 +128,7 @@ class sfp_fsecure_riddler(SpiderFootModernPlugin):
         self.token = token
 
     # https://riddler.io/help/search
-    def query(self, qry):
+    def query(self, qry: str):
         """Query the data source."""
         params = {
             'query': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
@@ -168,7 +168,7 @@ class sfp_fsecure_riddler(SpiderFootModernPlugin):
 
         return data
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

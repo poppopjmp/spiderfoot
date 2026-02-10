@@ -188,7 +188,7 @@ class sfp_template(SpiderFootModernPlugin):
     # has failed and you don't wish to process any more events.
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         # self.tempStorage() basically returns a dict(), but we use self.tempStorage()
@@ -232,7 +232,7 @@ class sfp_template(SpiderFootModernPlugin):
 
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
-    def query(self, qry):
+    def query(self, qry: str):
 
         # This is an example of querying SHODAN. Note that the fetch timeout
         # is inherited from global options (options prefixed with _ will come
@@ -265,7 +265,7 @@ class sfp_template(SpiderFootModernPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # The three most used fields in SpiderFootEvent are:
         # event.eventType - the event type, e.g. INTERNET_NAME, IP_ADDRESS, etc.
         # event.module - the name of the module that generated the event, e.g. sfp_dnsresolve

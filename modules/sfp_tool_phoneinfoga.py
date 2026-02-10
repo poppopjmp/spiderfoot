@@ -71,7 +71,7 @@ class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -183,7 +183,7 @@ class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
                     continue
                 return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle PHONE_NUMBER events and query PhoneInfoga API."""
         eventData = event.data
         if eventData in self.results:

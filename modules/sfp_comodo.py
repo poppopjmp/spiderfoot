@@ -60,7 +60,7 @@ class sfp_comodo(SpiderFootModernPlugin):
         super().__init__()
         self.__name__ = "sfp_comodo"
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -83,7 +83,7 @@ class sfp_comodo(SpiderFootModernPlugin):
             "MALICIOUS_COHOST",
         ]
 
-    def query(self, qaddr) -> bool:
+    def query(self, qaddr: str) -> bool:
         """Query the data source."""
         res = dns.resolver.Resolver()
         res.nameservers = ["8.26.56.26", "8.20.247.20"]
@@ -99,7 +99,7 @@ class sfp_comodo(SpiderFootModernPlugin):
             return True
         return False
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

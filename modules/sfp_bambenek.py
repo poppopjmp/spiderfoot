@@ -61,7 +61,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
 
     # Be sure to completely clear any class variables in setup()
     # or you risk data persisting between scan runs.
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -180,7 +180,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
         ]
 
     # Check if an IP or domain is malicious
-    def queryFeed(self, qry, feed_type):
+    def queryFeed(self, qry: str, feed_type):
         """
         Check if a query value is present in the specified feed type.
 
@@ -199,7 +199,7 @@ class sfp_bambenek(SpiderFootModernPlugin):
         return False
 
     # Handle events sent to this module
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, check Bambenek feeds, and emit events for matches.
 

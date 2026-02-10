@@ -52,7 +52,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -76,7 +76,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
             "MALICIOUS_COHOST",
         ]
 
-    def queryBlacklist(self, target) -> bool:
+    def queryBlacklist(self, target: str) -> bool:
         """Query Blacklist."""
         blacklist = self.retrieveBlacklist()
 
@@ -144,7 +144,7 @@ class sfp_botvrij(SpiderFootModernPlugin):
 
         return hosts
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

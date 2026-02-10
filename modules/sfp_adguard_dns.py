@@ -51,7 +51,7 @@ class sfp_adguard_dns(SpiderFootModernPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
@@ -71,7 +71,7 @@ class sfp_adguard_dns(SpiderFootModernPlugin):
             "BLACKLISTED_COHOST",
         ]
 
-    def queryDefaultDNS(self, qaddr):
+    def queryDefaultDNS(self, qaddr: str):
         """Query DefaultDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["94.140.14.14", "94.140.15.15"]
@@ -83,7 +83,7 @@ class sfp_adguard_dns(SpiderFootModernPlugin):
 
         return None
 
-    def queryFamilyDNS(self, qaddr):
+    def queryFamilyDNS(self, qaddr: str):
         """Query FamilyDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["94.140.14.15", "94.140.15.16"]
@@ -95,7 +95,7 @@ class sfp_adguard_dns(SpiderFootModernPlugin):
 
         return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

@@ -64,7 +64,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None) -> None:
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
         self.errorState = False
@@ -87,7 +87,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def query(self, qry, querytype, page=1):
+    def query(self, qry: str, querytype, page=1):
         """
         Query ZoomEye API for the given query and query type (host or web).
         Handle pagination based on the total number of results and page size.
@@ -155,7 +155,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-    def queryHost(self, qry, page=1, pageSize=20):
+    def queryHost(self, qry: str, page=1, pageSize=20):
         """Query ZoomEye for host information."""
         headers = {
             'API-KEY': self.opts['api_key'],
@@ -200,7 +200,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
             self.error(f"Error querying ZoomEye API: {e}")
             return None
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, query ZoomEye, and emit relevant events.
         Deduplicate emitted events to avoid duplicates.
