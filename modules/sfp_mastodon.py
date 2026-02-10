@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_mastodon(SpiderFootModernPlugin):
+    """Monitors Mastodon for posts and emits events."""
+
     meta = {
         'name': "Mastodon Monitor",
         'summary': "Monitors Mastodon for posts and emits events.",

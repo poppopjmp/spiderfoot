@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_spider(SpiderFootModernPlugin):
 
+    """Spidering of web-pages to extract content for searching."""
+
     meta = {
         'name': "Web Spider",
         'summary': "Spidering of web-pages to extract content for searching.",

@@ -25,6 +25,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_urlscan(SpiderFootModernPlugin):
 
+    """Search URLScan.io cache for domain information."""
+
     meta = {
         'name': "URLScan.io",
         'summary': "Search URLScan.io cache for domain information.",

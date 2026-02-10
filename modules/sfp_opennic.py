@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_opennic(SpiderFootModernPlugin):
 
+    """Resolves host names in the OpenNIC alternative DNS system."""
+
     meta = {
         'name': "OpenNIC DNS",
         'summary': "Resolves host names in the OpenNIC alternative DNS system.",

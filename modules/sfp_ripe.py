@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_ripe(SpiderFootModernPlugin):
 
+    """Queries the RIPE registry (includes ARIN data) to identify netblocks and other info."""
+
     meta = {
         'name': "RIPE",
         'summary': "Queries the RIPE registry (includes ARIN data) to identify netblocks and other info.",

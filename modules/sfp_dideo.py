@@ -10,6 +10,8 @@ import json
 
 class sfp_dideo(SpiderFootModernPlugin):
     
+    """Monitors Dideo.ir for new videos and emits events."""
+
     meta = {
         'name': "Dideo.ir Monitor",
         'summary': "Monitors Dideo.ir for new videos and emits events.",

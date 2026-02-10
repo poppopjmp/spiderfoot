@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_voipbl(SpiderFootModernPlugin):
 
+    """Check if an IP address or netblock is malicious according to VoIP Blacklist (VoIPBL)."""
+
     meta = {
         'name': "VoIP Blacklist (VoIPBL)",
         'summary': "Check if an IP address or netblock is malicious according to VoIP Blacklist (VoIPBL).",

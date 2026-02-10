@@ -28,6 +28,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_shodan(SpiderFootModernPlugin):
 
+    """Obtain information from SHODAN about identified IP addresses."""
+
     meta = {
         'name': "SHODAN",
         'summary': "Obtain information from SHODAN about identified IP addresses.",

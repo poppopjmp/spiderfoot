@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_openwifimap(SpiderFootModernPlugin):
+    """Queries OpenWifiMap.net for public WiFi hotspots and related info."""
+
     meta = {
         'name': "OpenWifiMap.net Lookup",
         'summary': "Queries OpenWifiMap.net for public WiFi hotspots and related info.",

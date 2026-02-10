@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_rocketchat(SpiderFootModernPlugin):
+    """Monitors Rocket.Chat servers for messages and emits events."""
+
     meta = {
         'name': "Rocket.Chat Server Monitor",
         'summary': "Monitors Rocket.Chat servers for messages and emits events.",

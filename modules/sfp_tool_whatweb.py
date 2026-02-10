@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_whatweb(SpiderFootModernPlugin):
 
+    """Identify what software is in use on the specified website."""
+
     meta = {
         'name': "Tool - WhatWeb",
         'summary': "Identify what software is in use on the specified website.",

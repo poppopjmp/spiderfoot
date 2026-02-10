@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_zetalytics(SpiderFootModernPlugin):
+    """Query the Zetalytics database for hosts on your target domain(s)."""
+
     BASE_URL = "https://zonecruncher.com/api/v1"
     meta = {
         "name": "Zetalytics",

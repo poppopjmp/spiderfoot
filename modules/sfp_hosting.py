@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_hosting(SpiderFootModernPlugin):
 
+    """Find out if any IP addresses identified fall within known 3rd party hosting ranges, e.g. Amazon, Azure, etc."""
+
     meta = {
         'name': "Hosting Provider Identifier",
         'summary': "Find out if any IP addresses identified fall within known 3rd party hosting ranges, e.g. Amazon, Azure, etc.",

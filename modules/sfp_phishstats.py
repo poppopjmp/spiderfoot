@@ -28,6 +28,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_phishstats(SpiderFootModernPlugin):
 
+    """Check if a netblock or IP address is malicious according to PhishStats."""
+
     meta = {
         'name': "PhishStats",
         'summary': "Check if a netblock or IP address is malicious according to PhishStats.",

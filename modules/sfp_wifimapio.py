@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_wifimapio(SpiderFootModernPlugin):
+    """Queries WiFiMap.io for public WiFi hotspots and related info."""
+
     meta = {
         'name': "WiFiMap.io Lookup",
         'summary': "Queries WiFiMap.io for public WiFi hotspots and related info.",

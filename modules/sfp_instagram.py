@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_instagram(SpiderFootModernPlugin):
+    """Monitors Instagram for new posts or stories and emits events."""
+
     meta = {
         'name': "Instagram Monitor",
         'summary': "Monitors Instagram for new posts or stories and emits events.",

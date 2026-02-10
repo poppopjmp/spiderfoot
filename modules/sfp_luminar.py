@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_luminar(SpiderFootModernPlugin):
 
+    """Obtain information from Luminar API."""
+
     meta = {
         'name': "Luminar",
         'summary': "Obtain information from Luminar API.",

@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_wigle(SpiderFootModernPlugin):
 
+    """Query WiGLE to identify nearby WiFi access points."""
+
     meta = {
         'name': "WiGLE",
         'summary': "Query WiGLE to identify nearby WiFi access points.",

@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_ipregistry(SpiderFootModernPlugin):
+    """Query the ipregistry.co database for reputation and geo-location."""
+
     meta = {
         "name": "ipregistry",
         "summary": "Query the ipregistry.co database for reputation and geo-location.",

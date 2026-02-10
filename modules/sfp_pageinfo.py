@@ -35,6 +35,8 @@ regexps = dict({
 
 class sfp_pageinfo(SpiderFootModernPlugin):
 
+    """Obtain information about web pages (do they take passwords, do they contain forms, etc.)"""
+
     meta = {
         'name': "Page Information",
         'summary': "Obtain information about web pages (do they take passwords, do they contain forms, etc.)",

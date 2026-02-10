@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_metadefender(SpiderFootModernPlugin):
 
+    """Search MetaDefender API for IP address and domain IP reputation."""
+
     meta = {
         'name': "MetaDefender",
         'summary': "Search MetaDefender API for IP address and domain IP reputation.",

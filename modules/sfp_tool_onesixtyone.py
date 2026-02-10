@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_onesixtyone(SpiderFootModernPlugin):
 
+    """Fast scanner to find publicly exposed SNMP services."""
+
     meta = {
         "name": "Tool - onesixtyone",
         "summary": "Fast scanner to find publicly exposed SNMP services.",

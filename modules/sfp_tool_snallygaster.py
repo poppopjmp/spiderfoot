@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_snallygaster(SpiderFootModernPlugin):
 
+    """Finds file leaks and other security problems on HTTP servers."""
+
     meta = {
         "name": "Tool - snallygaster",
         "summary": "Finds file leaks and other security problems on HTTP servers.",

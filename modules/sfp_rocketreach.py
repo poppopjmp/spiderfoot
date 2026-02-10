@@ -23,6 +23,8 @@ import requests
 
 
 class sfp_rocketreach(SpiderFootModernPlugin):
+    """Look up contact information from RocketReach using the official API."""
+
     meta = {
         "name": "RocketReach (Official API)",
         "summary": "Look up contact information from RocketReach using the official API.",

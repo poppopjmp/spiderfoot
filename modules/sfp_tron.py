@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tron(SpiderFootModernPlugin):
+    """Monitors Tron blockchain for transactions and emits events."""
+
     meta = {
         'name': "Tron Blockchain Monitor",
         'summary': "Monitors Tron blockchain for transactions and emits events.",

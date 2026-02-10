@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_googlemaps(SpiderFootModernPlugin):
 
+    """Identifies potential physical addresses and latitude/longitude coordinates."""
+
     meta = {
         'name': "Google Maps",
         'summary': "Identifies potential physical addresses and latitude/longitude coordinates.",

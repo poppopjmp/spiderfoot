@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_reddit(SpiderFootModernPlugin):
+    """Monitors specified subreddits for new posts and emits events."""
+
     meta = {
         'name': "Reddit Monitor",
         'summary': "Monitors specified subreddits for new posts and emits events.",

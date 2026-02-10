@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_leakix(SpiderFootModernPlugin):
 
+    """Search LeakIX for host data leaks, open ports, software and geoip."""
+
     meta = {
         'name': "LeakIX",
         'summary': "Search LeakIX for host data leaks, open ports, software and geoip.",

@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_ipapico(SpiderFootModernPlugin):
 
+    """Queries ipapi.co to identify geolocation of IP Addresses using ipapi.co API"""
+
     meta = {
         'name': "ipapi.co",
         'summary': "Queries ipapi.co to identify geolocation of IP Addresses using ipapi.co API",

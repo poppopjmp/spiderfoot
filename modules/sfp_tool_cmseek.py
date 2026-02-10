@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_cmseek(SpiderFootModernPlugin):
 
+    """Identify what Content Management System (CMS) might be used."""
+
     meta = {
         'name': "Tool - CMSeeK",
         'summary': "Identify what Content Management System (CMS) might be used.",

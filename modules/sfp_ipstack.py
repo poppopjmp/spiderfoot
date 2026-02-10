@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_ipstack(SpiderFootModernPlugin):
 
+    """Identifies the physical location of IP addresses identified using ipstack.com."""
+
     meta = {
         'name': "ipstack",
         'summary': "Identifies the physical location of IP addresses identified using ipstack.com.",

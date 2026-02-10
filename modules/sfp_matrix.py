@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_matrix(SpiderFootModernPlugin):
+    """Monitors Matrix servers for messages and emits events."""
+
     meta = {
         'name': "Matrix Server Monitor",
         'summary': "Monitors Matrix servers for messages and emits events.",

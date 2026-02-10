@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_koodous(SpiderFootModernPlugin):
 
+    """Search Koodous for mobile apps."""
+
     meta = {
         'name': "Koodous",
         'summary': "Search Koodous for mobile apps.",

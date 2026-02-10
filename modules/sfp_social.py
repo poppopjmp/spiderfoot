@@ -39,6 +39,8 @@ regexps = dict({
 
 
 class sfp_social(SpiderFootModernPlugin):
+    """Identify presence on social media networks such as LinkedIn, Twitter and others."""
+
     __name__ = "sfp_social"
 
     meta = {

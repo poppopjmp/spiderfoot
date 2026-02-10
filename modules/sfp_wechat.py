@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_wechat(SpiderFootModernPlugin):
+    """Monitors WeChat for new messages and emits events."""
+
     meta = {
         'name': "WeChat Monitor",
         'summary': "Monitors WeChat for new messages and emits events.",

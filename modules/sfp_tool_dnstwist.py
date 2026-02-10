@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_dnstwist(SpiderFootModernPlugin):
 
+    """Identify bit-squatting, typo and other similar domains to the target using a local DNSTwist installation."""
+
     meta = {
         'name': "Tool - DNSTwist",
         'summary': "Identify bit-squatting, typo and other similar domains to the target using a local DNSTwist installation.",

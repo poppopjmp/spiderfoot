@@ -25,6 +25,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_whois(SpiderFootModernPlugin):
 
+    """Perform a WHOIS look-up on domain names and owned netblocks."""
+
     meta = {
         'name': "Whois",
         'summary': "Perform a WHOIS look-up on domain names and owned netblocks.",

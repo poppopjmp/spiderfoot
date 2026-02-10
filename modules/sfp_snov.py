@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_snov(SpiderFootModernPlugin):
 
+    """Gather available email IDs from identified domains"""
+
     meta = {
         'name': "Snov",
         'summary': "Gather available email IDs from identified domains",

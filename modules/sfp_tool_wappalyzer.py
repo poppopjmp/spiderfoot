@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_tool_wappalyzer(SpiderFootModernPlugin):
+    """Wappalyzer identifies technologies on websites using the official API."""
+
     meta = {
         "name": "Tool - Wappalyzer (API)",
         "summary": "Wappalyzer identifies technologies on websites using the official API.",

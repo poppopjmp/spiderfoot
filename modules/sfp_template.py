@@ -25,6 +25,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 class sfp_template(SpiderFootModernPlugin):
     # The module descriptor dictionary contains all the meta data about a module necessary
     # for users to understand...
+    """This is an example module to help developers create their own SpiderFoot modules."""
+
     meta = {
         # Module name: A very short but human readable name for the module.
         'name': "Template Module",

@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_ipinfo(SpiderFootModernPlugin):
 
+    """Identifies the physical location of IP addresses identified using ipinfo.io."""
+
     meta = {
         'name': "IPInfo.io",
         'summary': "Identifies the physical location of IP addresses identified using ipinfo.io.",

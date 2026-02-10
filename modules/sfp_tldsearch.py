@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tldsearch(SpiderFootModernPlugin):
 
+    """Search all Internet TLDs for domains with the same name as the target (this can be very slow.)"""
+
     meta = {
         'name': "TLD Searcher",
         'summary': "Search all Internet TLDs for domains with the same name as the target (this can be very slow.)",

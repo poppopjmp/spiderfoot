@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_networksdb(SpiderFootModernPlugin):
 
+    """Search NetworksDB.io API for IP address and domain information."""
+
     meta = {
         'name': "NetworksDB",
         'summary': "Search NetworksDB.io API for IP address and domain information.",

@@ -10,6 +10,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
+    """Gather phone number intelligence using PhoneInfoga."""
+
     meta = {
         "name": "Tools - PhoneInfoga",
         "summary": "Gather phone number intelligence using PhoneInfoga.",

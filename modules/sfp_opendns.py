@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_opendns(SpiderFootModernPlugin):
 
+    """Check if a host would be blocked by OpenDNS."""
+
     meta = {
         'name': "OpenDNS",
         'summary': "Check if a host would be blocked by OpenDNS.",

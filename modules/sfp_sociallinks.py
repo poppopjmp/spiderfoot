@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_sociallinks(SpiderFootModernPlugin):
 
+    """Queries SocialLinks.io to gather intelligence from social media platforms and dark web."""
+
     meta = {
         'name': "Social Links",
         'summary': "Queries SocialLinks.io to gather intelligence from social media platforms and dark web.",

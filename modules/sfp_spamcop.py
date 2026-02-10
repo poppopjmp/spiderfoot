@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_spamcop(SpiderFootModernPlugin):
 
+    """Check if a netblock or IP address is in the SpamCop database."""
+
     meta = {
         'name': "SpamCop",
         'summary': "Check if a netblock or IP address is in the SpamCop database.",

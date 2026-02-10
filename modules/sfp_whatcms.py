@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_whatcms(SpiderFootModernPlugin):
 
+    """Check web technology using WhatCMS.org API."""
+
     meta = {
         'name': "WhatCMS",
         'summary': "Check web technology using WhatCMS.org API.",

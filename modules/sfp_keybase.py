@@ -28,6 +28,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_keybase(SpiderFootModernPlugin):
 
+    """Obtain additional information about domain names and identified usernames."""
+
     meta = {
         'name': "Keybase",
         'summary': "Obtain additional information about domain names and identified usernames.",

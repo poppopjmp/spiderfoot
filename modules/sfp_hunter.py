@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_hunter(SpiderFootModernPlugin):
 
+    """Check for e-mail addresses and names on hunter.io."""
+
     meta = {
         'name': "Hunter.io",
         'summary': "Check for e-mail addresses and names on hunter.io.",

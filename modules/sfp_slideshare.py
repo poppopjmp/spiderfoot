@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_slideshare(SpiderFootModernPlugin):
 
+    """Gather name and location from SlideShare profiles."""
+
     meta = {
         'name': "SlideShare",
         'summary': "Gather name and location from SlideShare profiles.",

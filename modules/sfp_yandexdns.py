@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_yandexdns(SpiderFootModernPlugin):
 
+    """Check if a host would be blocked by Yandex DNS."""
+
     meta = {
         'name': "Yandex DNS",
         'summary': "Check if a host would be blocked by Yandex DNS.",

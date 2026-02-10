@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_recordedfuture(SpiderFootModernPlugin):
 
+    """Obtain vulnerability information from Recorded Future"""
+
     meta = {
         'name': "Recorded Future",
         'summary': "Obtain vulnerability information from Recorded Future's Vulnerability Database API.",

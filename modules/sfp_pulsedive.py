@@ -29,6 +29,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_pulsedive(SpiderFootModernPlugin):
 
+    """Obtain information from Pulsedive"""
+
     meta = {
         'name': "Pulsedive",
         'summary': "Obtain information from Pulsedive's API.",

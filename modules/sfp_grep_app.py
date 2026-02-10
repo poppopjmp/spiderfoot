@@ -28,6 +28,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_grep_app(SpiderFootModernPlugin):
 
+    """Search grep.app API for links and emails related to the specified domain."""
+
     meta = {
         'name': "grep.app",
         'summary': "Search grep.app API for links and emails related to the specified domain.",

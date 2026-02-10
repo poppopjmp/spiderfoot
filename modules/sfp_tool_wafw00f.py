@@ -25,6 +25,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_tool_wafw00f(SpiderFootModernPlugin):
+    """Identify what web application firewall (WAF) is in use on the specified website."""
+
     meta = {
         'name': "Tool - WAFW00F",
         'summary': "Identify what web application firewall (WAF) is in use on the specified website.",

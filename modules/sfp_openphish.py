@@ -20,6 +20,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_openphish(SpiderFootModernPlugin):
 
+    """Check if a host/domain is malicious according to OpenPhish.com."""
+
     meta = {
         'name': "OpenPhish",
         'summary': "Check if a host/domain is malicious according to OpenPhish.com.",

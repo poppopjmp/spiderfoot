@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_iknowwhatyoudownload(SpiderFootModernPlugin):
 
+    """Check iknowwhatyoudownload.com for IP addresses that have been using torrents."""
+
     meta = {
         'name': "Iknowwhatyoudownload.com",
         'summary': "Check iknowwhatyoudownload.com for IP addresses that have been using torrents.",

@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_leakcheck(SpiderFootModernPlugin):
+    """Gather breach data from LeakCheck API."""
+
     meta = {
         "name": "LeakCheck.io",
         "summary": "Gather breach data from LeakCheck API.",

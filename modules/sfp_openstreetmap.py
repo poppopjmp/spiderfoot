@@ -28,6 +28,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_openstreetmap(SpiderFootModernPlugin):
 
+    """Retrieves latitude/longitude coordinates for physical addresses from OpenStreetMap API."""
+
     meta = {
         'name': "OpenStreetMap",
         'summary': "Retrieves latitude/longitude coordinates for physical addresses from OpenStreetMap API.",

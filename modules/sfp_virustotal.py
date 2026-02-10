@@ -28,6 +28,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_virustotal(SpiderFootModernPlugin):
 
+    """Obtain information from VirusTotal about identified IP addresses."""
+
     meta = {
         'name': "VirusTotal",
         'summary': "Obtain information from VirusTotal about identified IP addresses.",

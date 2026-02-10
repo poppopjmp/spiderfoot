@@ -30,6 +30,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_hackertarget(SpiderFootModernPlugin):
 
+    """Search HackerTarget.com for hosts sharing the same IP."""
+
     meta = {
         'name': "HackerTarget",
         'summary': "Search HackerTarget.com for hosts sharing the same IP.",

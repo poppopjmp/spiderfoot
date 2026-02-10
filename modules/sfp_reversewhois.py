@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_reversewhois(SpiderFootModernPlugin):
 
+    """Reverse Whois lookups using reversewhois.io."""
+
     meta = {
         "name": "ReverseWhois",
         "summary": "Reverse Whois lookups using reversewhois.io.",

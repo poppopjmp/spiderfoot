@@ -25,6 +25,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_viewdns(SpiderFootModernPlugin):
 
+    """Identify co-hosted websites and perform reverse Whois lookups using ViewDNS.info."""
+
     meta = {
         'name': "ViewDNS.info",
         'summary': "Identify co-hosted websites and perform reverse Whois lookups using ViewDNS.info.",

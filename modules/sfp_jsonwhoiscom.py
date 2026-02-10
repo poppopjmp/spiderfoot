@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_jsonwhoiscom(SpiderFootModernPlugin):
 
+    """Search JsonWHOIS.com for WHOIS records associated with a domain."""
+
     meta = {
         'name': "JsonWHOIS.com",
         'summary': "Search JsonWHOIS.com for WHOIS records associated with a domain.",

@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_isc(SpiderFootModernPlugin):
 
+    """Check if an IP address is malicious according to SANS ISC."""
+
     meta = {
         'name': "Internet Storm Center",
         'summary': "Check if an IP address is malicious according to SANS ISC.",

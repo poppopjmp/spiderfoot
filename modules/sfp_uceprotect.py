@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_uceprotect(SpiderFootModernPlugin):
 
+    """Check if a netblock or IP address is in the UCEPROTECT database."""
+
     meta = {
         'name': "UCEPROTECT",
         'summary': "Check if a netblock or IP address is in the UCEPROTECT database.",

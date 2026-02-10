@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_textmagic(SpiderFootModernPlugin):
 
+    """Obtain phone number type from TextMagic API"""
+
     meta = {
         "name": "TextMagic",
         "summary": "Obtain phone number type from TextMagic API",

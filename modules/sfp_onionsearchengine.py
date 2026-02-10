@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_onionsearchengine(SpiderFootModernPlugin):
 
+    """Search Tor onionsearchengine.com for mentions of the target domain."""
+
     meta = {
         'name': "Onionsearchengine.com",
         'summary': "Search Tor onionsearchengine.com for mentions of the target domain.",

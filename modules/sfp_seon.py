@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_seon(SpiderFootModernPlugin):
 
+    """Queries seon.io to gather intelligence about IP Addresses, email addresses, and phone numbers"""
+
     meta = {
         'name': "Seon",
         'summary': "Queries seon.io to gather intelligence about IP Addresses, email addresses, and phone numbers",

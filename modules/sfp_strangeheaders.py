@@ -85,6 +85,8 @@ headers = [
 
 
 class sfp_strangeheaders(SpiderFootModernPlugin):
+    """Obtain non-standard HTTP headers returned by web servers."""
+
     __name__ = "sfp_strangeheaders"
 
     meta = {

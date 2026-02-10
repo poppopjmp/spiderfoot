@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_zoomeye(SpiderFootModernPlugin):
+    """Look up domain, IP address, and other information from ZoomEye."""
+
     meta = {
         "name": "ZoomEye",
         "summary": "Look up domain, IP address, and other information from ZoomEye.",

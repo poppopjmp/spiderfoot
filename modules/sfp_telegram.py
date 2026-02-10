@@ -13,6 +13,8 @@ except ImportError:
     TelegramClient = None
 
 class sfp_telegram(SpiderFootModernPlugin):
+    """Monitors specified Telegram channels for new messages and emits events."""
+
     meta = {
         'name': "Telegram Channel Monitor",
         'summary': "Monitors specified Telegram channels for new messages and emits events.",

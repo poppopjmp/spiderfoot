@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_maltiverse(SpiderFootModernPlugin):
 
+    """Obtain information about any malicious activities involving IP addresses"""
+
     meta = {
         'name': "Maltiverse",
         'summary': "Obtain information about any malicious activities involving IP addresses",

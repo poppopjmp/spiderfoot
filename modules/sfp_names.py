@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_names(SpiderFootModernPlugin):
+    """Attempt to identify human names in fetched content."""
+
     __name__ = "sfp_names"
 
     meta = {

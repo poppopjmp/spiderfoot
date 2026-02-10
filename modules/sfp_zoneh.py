@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_zoneh(SpiderFootModernPlugin):
 
+    """Check if a hostname/domain appears on the zone-h.org """
+
     meta = {
         'name': "Zone-H Defacement Check",
         'summary': "Check if a hostname/domain appears on the zone-h.org 'special defacements' RSS feed.",

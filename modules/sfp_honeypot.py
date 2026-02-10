@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_honeypot(SpiderFootModernPlugin):
 
+    """Query the Project Honey Pot database for IP addresses."""
+
     meta = {
         'name': "Project Honey Pot",
         'summary': "Query the Project Honey Pot database for IP addresses.",

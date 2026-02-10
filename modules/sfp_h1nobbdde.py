@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_h1nobbdde(SpiderFootModernPlugin):
 
+    """Check external vulnerability scanning/reporting service h1.nobbd.de to see if the target is listed."""
+
     meta = {
         'name': "HackerOne (Unofficial)",
         'summary': "Check external vulnerability scanning/reporting service h1.nobbd.de to see if the target is listed.",

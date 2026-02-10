@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_neutrinoapi(SpiderFootModernPlugin):
 
+    """Search NeutrinoAPI for phone location information, IP address information, and host reputation."""
+
     meta = {
         'name': "NeutrinoAPI",
         'summary': "Search NeutrinoAPI for phone location information, IP address information, and host reputation.",

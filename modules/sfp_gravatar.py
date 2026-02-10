@@ -25,6 +25,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_gravatar(SpiderFootModernPlugin):
 
+    """Retrieve user information from Gravatar API."""
+
     meta = {
         'name': "Gravatar",
         'summary': "Retrieve user information from Gravatar API.",

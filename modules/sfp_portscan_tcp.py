@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_portscan_tcp(SpiderFootModernPlugin):
 
+    """Scans for commonly open TCP ports on Internet-facing systems."""
+
     meta = {
         'name': "Port Scanner - TCP",
         'summary': "Scans for commonly open TCP ports on Internet-facing systems.",

@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_threatminer(SpiderFootModernPlugin):
 
+    """Obtain information from ThreatMiner"""
+
     meta = {
         'name': "ThreatMiner",
         'summary': "Obtain information from ThreatMiner's database for passive DNS and threat intelligence.",

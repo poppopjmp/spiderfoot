@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_quad9(SpiderFootModernPlugin):
 
+    """Check if a host would be blocked by Quad9 DNS."""
+
     meta = {
         'name': "Quad9",
         'summary': "Check if a host would be blocked by Quad9 DNS.",

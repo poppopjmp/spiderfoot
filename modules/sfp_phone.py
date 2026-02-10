@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_phone(SpiderFootModernPlugin):
 
+    """Identify phone numbers in scraped webpages."""
+
     meta = {
         'name': "Phone Number Extractor",
         'summary': "Identify phone numbers in scraped webpages.",

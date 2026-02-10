@@ -20,6 +20,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_vxvault(SpiderFootModernPlugin):
 
+    """Check if a domain or IP address is malicious according to VXVault.net."""
+
     meta = {
         'name': "VXVault.net",
         'summary': "Check if a domain or IP address is malicious according to VXVault.net.",

@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_punkspider(SpiderFootModernPlugin):
 
+    """Check the QOMPLX punkspider.io service to see if the target is listed as vulnerable."""
+
     meta = {
         'name': "PunkSpider",
         'summary': "Check the QOMPLX punkspider.io service to see if the target is listed as vulnerable.",

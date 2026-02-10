@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_webanalytics(SpiderFootModernPlugin):
+    """Identify web analytics IDs in scraped webpages and DNS TXT records."""
+
     __name__ = "sfp_webanalytics"
 
     meta = {

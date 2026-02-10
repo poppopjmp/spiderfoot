@@ -19,6 +19,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_intfiles(SpiderFootModernPlugin):
+    """Identifies potential files of interest, e.g. office documents, zip files."""
+
     __name__ = "sfp_intfiles"
 
     meta = {

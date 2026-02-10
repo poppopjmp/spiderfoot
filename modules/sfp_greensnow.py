@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_greensnow(SpiderFootModernPlugin):
 
+    """Check if a netblock or IP address is malicious according to greensnow.co."""
+
     meta = {
         'name': "Greensnow",
         'summary': "Check if a netblock or IP address is malicious according to greensnow.co.",

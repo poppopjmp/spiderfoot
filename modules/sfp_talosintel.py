@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_talosintel(SpiderFootModernPlugin):
 
+    """Check if a netblock or IP address is malicious according to TalosIntelligence."""
+
     meta = {
         'name': "Talos Intelligence",
         'summary': "Check if a netblock or IP address is malicious according to TalosIntelligence.",

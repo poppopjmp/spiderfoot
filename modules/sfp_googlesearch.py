@@ -20,6 +20,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_googlesearch(SpiderFootModernPlugin):
 
+    """Obtain information from the Google Custom Search API to identify sub-domains and links."""
+
     meta = {
         'name': "Google",
         'summary': "Obtain information from the Google Custom Search API to identify sub-domains and links.",

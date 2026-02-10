@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_googlesafebrowsing(SpiderFootModernPlugin):
 
+    """Check if the URL is included on any of the Safe Browsing lists."""
+
     meta = {
         "name": "Google SafeBrowsing",
         "summary": "Check if the URL is included on any of the Safe Browsing lists.",

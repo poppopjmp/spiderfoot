@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_junkfiles(SpiderFootModernPlugin):
 
+    """Looks for old/temporary and other similar files."""
+
     meta = {
         'name': "Junk File Finder",
         'summary': "Looks for old/temporary and other similar files.",

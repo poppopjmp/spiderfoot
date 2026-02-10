@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_sorbs(SpiderFootModernPlugin):
 
+    """Query the SORBS database for open relays, open proxies, vulnerable servers, etc."""
+
     meta = {
         'name': "SORBS",
         'summary': "Query the SORBS database for open relays, open proxies, vulnerable servers, etc.",

@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_searchcode(SpiderFootModernPlugin):
 
+    """Search searchcode for code repositories mentioning the target domain."""
+
     meta = {
         'name': "searchcode",
         'summary': "Search searchcode for code repositories mentioning the target domain.",

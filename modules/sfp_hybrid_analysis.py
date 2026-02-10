@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_hybrid_analysis(SpiderFootModernPlugin):
 
+    """Search Hybrid Analysis for domains and URLs related to the target."""
+
     meta = {
         'name': "Hybrid Analysis",
         'summary': "Search Hybrid Analysis for domains and URLs related to the target.",

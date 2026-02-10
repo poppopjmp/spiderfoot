@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_venmo(SpiderFootModernPlugin):
 
+    """Gather user information from Venmo API."""
+
     meta = {
         'name': "Venmo",
         'summary': "Gather user information from Venmo API.",

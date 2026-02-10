@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_trumail(SpiderFootModernPlugin):
 
+    """Check whether an email is disposable"""
+
     meta = {
         'name': "Trumail",
         'summary': "Check whether an email is disposable",

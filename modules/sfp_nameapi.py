@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_nameapi(SpiderFootModernPlugin):
 
+    """Check whether an email is disposable"""
+
     meta = {
         'name': "NameAPI",
         'summary': "Check whether an email is disposable",

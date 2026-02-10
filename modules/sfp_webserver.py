@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_webserver(SpiderFootModernPlugin):
 
+    """Obtain web server banners to identify versions of web servers being used."""
+
     meta = {
         'name': "Web Server Identifier",
         'summary': "Obtain web server banners to identify versions of web servers being used.",

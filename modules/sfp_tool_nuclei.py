@@ -30,6 +30,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_nuclei(SpiderFootModernPlugin):
 
+    """Fast and customisable vulnerability scanner."""
+
     meta = {
         "name": "Tool - Nuclei",
         "summary": "Fast and customisable vulnerability scanner.",

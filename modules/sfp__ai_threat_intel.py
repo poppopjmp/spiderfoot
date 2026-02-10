@@ -57,6 +57,8 @@ except ImportError:
     HAS_NUMPY = False
     # Use our basic implementations
     class np:
+        """Advanced AI/ML-powered threat intelligence with pattern recognition, predictive analytics, and automated IOC correlation."""
+
         @staticmethod
         def array(data):
             return data

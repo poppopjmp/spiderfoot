@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_openbugbounty(SpiderFootModernPlugin):
 
+    """Check external vulnerability scanning/reporting service openbugbounty.org to see if the target is listed."""
+
     meta = {
         'name': "Open Bug Bounty",
         'summary': "Check external vulnerability scanning/reporting service openbugbounty.org to see if the target is listed.",

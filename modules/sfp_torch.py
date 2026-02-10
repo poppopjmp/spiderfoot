@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_torch(SpiderFootModernPlugin):
 
+    """Search Tor """
+
     meta = {
         'name': "TORCH",
         'summary': "Search Tor 'TORCH' search engine for mentions of the target domain.",

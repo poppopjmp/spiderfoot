@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_skymem(SpiderFootModernPlugin):
 
+    """Look up e-mail addresses on Skymem."""
+
     meta = {
         'name': "Skymem",
         'summary': "Look up e-mail addresses on Skymem.",

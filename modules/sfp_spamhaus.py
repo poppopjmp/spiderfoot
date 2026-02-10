@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_spamhaus(SpiderFootModernPlugin):
 
+    """Check if a netblock or IP address is in the Spamhaus Zen database."""
+
     meta = {
         'name': "Spamhaus Zen",
         'summary': "Check if a netblock or IP address is in the Spamhaus Zen database.",

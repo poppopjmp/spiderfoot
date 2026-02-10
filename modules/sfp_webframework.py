@@ -33,6 +33,8 @@ regexps = dict({
 
 
 class sfp_webframework(SpiderFootModernPlugin):
+    """Identify the usage of popular web frameworks like jQuery, YUI and others."""
+
     __name__ = "sfp_webframework"
 
     meta = {

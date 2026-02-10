@@ -25,6 +25,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_intelx(SpiderFootModernPlugin):
 
+    """Obtain information from IntelligenceX about identified IP addresses, domains, e-mail addresses and phone numbers."""
+
     meta = {
         'name': "IntelligenceX",
         'summary': "Obtain information from IntelligenceX about identified IP addresses, domains, e-mail addresses and phone numbers.",

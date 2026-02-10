@@ -25,6 +25,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_spur(SpiderFootModernPlugin):
 
+    """Obtain information about any malicious activities involving IP addresses found"""
+
     meta = {
         'name': "spur.us",
         'summary': "Obtain information about any malicious activities involving IP addresses found",

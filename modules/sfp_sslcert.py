@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_sslcert(SpiderFootModernPlugin):
 
+    """Gather information about SSL certificates used by the target"""
+
     meta = {
         'name': "SSL Certificate Analyzer",
         'summary': "Gather information about SSL certificates used by the target's HTTPS sites.",

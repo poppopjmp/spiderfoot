@@ -28,6 +28,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_testsslsh(SpiderFootModernPlugin):
 
+    """Identify various TLS/SSL weaknesses, including Heartbleed, CRIME and ROBOT."""
+
     meta = {
         'name': "Tool - testssl.sh",
         'summary': "Identify various TLS/SSL weaknesses, including Heartbleed, CRIME and ROBOT.",

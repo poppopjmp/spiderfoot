@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_nmap(SpiderFootModernPlugin):
 
+    """Identify what Operating System might be used."""
+
     meta = {
         'name': "Tool - Nmap",
         'summary': "Identify what Operating System might be used.",

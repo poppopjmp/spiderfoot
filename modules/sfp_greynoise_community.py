@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_greynoise_community(SpiderFootModernPlugin):
 
+    """Obtain IP enrichment data from GreyNoise Community API"""
+
     meta = {
         "name": "GreyNoise Community",
         "summary": "Obtain IP enrichment data from GreyNoise Community API",

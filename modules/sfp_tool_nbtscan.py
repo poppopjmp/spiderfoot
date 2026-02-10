@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_nbtscan(SpiderFootModernPlugin):
 
+    """Scans for open NETBIOS nameservers on your target"""
+
     meta = {
         "name": "Tool - nbtscan",
         "summary": "Scans for open NETBIOS nameservers on your target's network.",

@@ -40,6 +40,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_ipinfo_modern(SpiderFootModernPlugin):
 
+    """Identifies the physical location of IP addresses """
+
     meta = {
         'name': "IPInfo.io (Modern)",
         'summary': "Identifies the physical location of IP addresses "

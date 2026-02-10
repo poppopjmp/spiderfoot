@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_pgp(SpiderFootModernPlugin):
 
+    """Look up domains and e-mail addresses in PGP public key servers."""
+
     meta = {
         'name': "PGP Key Servers",
         'summary': "Look up domains and e-mail addresses in PGP public key servers.",

@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_threatcrowd(SpiderFootModernPlugin):
 
+    """Obtain information from ThreatCrowd about identified IP addresses, domains and e-mail addresses."""
+
     meta = {
         'name': "ThreatCrowd",
         'summary': "Obtain information from ThreatCrowd about identified IP addresses, domains and e-mail addresses.",

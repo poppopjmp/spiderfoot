@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_stackoverflow(SpiderFootModernPlugin):
 
+    """Search StackOverflow for any mentions of a target domain. Returns potentially related information."""
+
     meta = {
         'name': "StackOverflow",
         'summary': "Search StackOverflow for any mentions of a target domain. Returns potentially related information.",

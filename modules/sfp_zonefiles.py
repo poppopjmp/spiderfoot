@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_zonefiles(SpiderFootModernPlugin):
 
+    """Search ZoneFiles.io Domain query API for domain information."""
+
     meta = {
         'name': "ZoneFile.io",
         'summary': "Search ZoneFiles.io Domain query API for domain information.",

@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_stevenblack_hosts(SpiderFootModernPlugin):
 
+    """Check if a domain is malicious (malware or adware) according to Steven Black Hosts list."""
+
     meta = {
         'name': "Steven Black Hosts",
         'summary': "Check if a domain is malicious (malware or adware) according to Steven Black Hosts list.",

@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_hostio(SpiderFootModernPlugin):
 
+    """Obtain information about domain names from host.io."""
+
     meta = {
         "name": "Host.io",
         "summary": "Obtain information about domain names from host.io.",

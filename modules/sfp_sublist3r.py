@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_sublist3r(SpiderFootModernPlugin):
 
+    """Passive subdomain enumeration using Sublist3r"""
+
     meta = {
         "name": "Sublist3r PassiveDNS",
         "summary": "Passive subdomain enumeration using Sublist3r's API",

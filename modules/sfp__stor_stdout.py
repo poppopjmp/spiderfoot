@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp__stor_stdout(SpiderFootModernPlugin):
 
+    """Dumps output to standard out. Used for when a SpiderFoot scan is run via the command-line."""
+
     meta = {
         'name': "Command-line output",
         'summary': "Dumps output to standard out. Used for when a SpiderFoot scan is run via the command-line."

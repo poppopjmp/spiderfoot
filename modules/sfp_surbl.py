@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_surbl(SpiderFootModernPlugin):
 
+    """Check if a netblock, IP address or domain is in the SURBL blacklist."""
+
     meta = {
         'name': "SURBL",
         'summary': "Check if a netblock, IP address or domain is in the SURBL blacklist.",

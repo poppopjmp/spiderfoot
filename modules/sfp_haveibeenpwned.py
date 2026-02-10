@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_haveibeenpwned(SpiderFootModernPlugin):
 
+    """Check HaveIBeenPwned.com for hacked e-mail addresses identified in breaches."""
+
     meta = {
         'name': "HaveIBeenPwned",
         'summary': "Check HaveIBeenPwned.com for hacked e-mail addresses identified in breaches.",

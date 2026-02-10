@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_myspace(SpiderFootModernPlugin):
 
+    """Gather username and location from MySpace.com profiles."""
+
     meta = {
         'name': "MySpace",
         'summary': "Gather username and location from MySpace.com profiles.",

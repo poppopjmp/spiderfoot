@@ -27,6 +27,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_retirejs(SpiderFootModernPlugin):
 
+    """Scanner detecting the use of JavaScript libraries with known vulnerabilities"""
+
     meta = {
         "name": "Tool - Retire.js",
         "summary": "Scanner detecting the use of JavaScript libraries with known vulnerabilities",

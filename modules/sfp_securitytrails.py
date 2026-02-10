@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_securitytrails(SpiderFootModernPlugin):
 
+    """Obtain Passive DNS and other information from SecurityTrails"""
+
     meta = {
         'name': "SecurityTrails",
         'summary': "Obtain Passive DNS and other information from SecurityTrails",

@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_opencorporates(SpiderFootModernPlugin):
 
+    """Look up company information from OpenCorporates."""
+
     meta = {
         'name': "OpenCorporates",
         'summary': "Look up company information from OpenCorporates.",

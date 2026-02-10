@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_whatsapp(SpiderFootModernPlugin):
+    """Monitors WhatsApp for new messages and emits events."""
+
     meta = {
         'name': "WhatsApp Monitor",
         'summary': "Monitors WhatsApp for new messages and emits events.",

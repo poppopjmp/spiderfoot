@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_mattermost(SpiderFootModernPlugin):
+    """Monitors Mattermost servers for messages and emits events."""
+
     meta = {
         'name': "Mattermost Server Monitor",
         'summary': "Monitors Mattermost servers for messages and emits events.",

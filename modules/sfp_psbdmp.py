@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_psbdmp(SpiderFootModernPlugin):
 
+    """Check psbdmp.cc (PasteBin Dump) for potentially hacked e-mails and domains."""
+
     meta = {
         'name': "Psbdmp",
         'summary': "Check psbdmp.cc (PasteBin Dump) for potentially hacked e-mails and domains.",

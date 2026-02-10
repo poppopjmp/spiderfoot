@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_soroush(SpiderFootModernPlugin):
+    """Monitors Soroush for new messages and emits events."""
+
     meta = {
         'name': "Soroush Monitor",
         'summary': "Monitors Soroush for new messages and emits events.",

@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_onioncity(SpiderFootModernPlugin):
 
+    """Search Tor """
+
     meta = {
         'name': "Onion.link",
         'summary': "Search Tor 'Onion City' search engine for mentions of the target domain using Google Custom Search.",

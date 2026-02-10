@@ -28,6 +28,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_wikipediaedits(SpiderFootModernPlugin):
 
+    """Identify edits to Wikipedia articles made from a given IP address or username."""
+
     meta = {
         'name': "Wikipedia Edits",
         'summary': "Identify edits to Wikipedia articles made from a given IP address or username.",

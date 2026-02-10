@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_twitter(SpiderFootModernPlugin):
 
+    """Gather name and location from Twitter profiles."""
+
     meta = {
         'name': "Twitter",
         'summary': "Gather name and location from Twitter profiles.",

@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_numverify(SpiderFootModernPlugin):
 
+    """Lookup phone number location and carrier information from numverify.com."""
+
     meta = {
         'name': "numverify",
         'summary': "Lookup phone number location and carrier information from numverify.com.",

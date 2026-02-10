@@ -22,6 +22,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_whoxy(SpiderFootModernPlugin):
 
+    """Reverse Whois lookups using Whoxy.com."""
+
     meta = {
         'name': "Whoxy",
         'summary': "Reverse Whois lookups using Whoxy.com.",

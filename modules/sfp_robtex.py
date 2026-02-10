@@ -25,6 +25,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_robtex(SpiderFootModernPlugin):
 
+    """Search Robtex.com for hosts sharing the same IP."""
+
     meta = {
         'name': "Robtex",
         'summary': "Search Robtex.com for hosts sharing the same IP.",

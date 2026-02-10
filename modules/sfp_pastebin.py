@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_pastebin(SpiderFootModernPlugin):
 
+    """PasteBin search (via Google Search API) to identify related content."""
+
     meta = {
         'name': "PasteBin",
         'summary': "PasteBin search (via Google Search API) to identify related content.",

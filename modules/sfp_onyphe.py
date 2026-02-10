@@ -25,6 +25,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_onyphe(SpiderFootModernPlugin):
 
+    """Check Onyphe data (threat list, geo-location, pastries, vulnerabilities)  about a given IP."""
+
     meta = {
         "name": "Onyphe",
         "summary": "Check Onyphe data (threat list, geo-location, pastries, vulnerabilities)  about a given IP.",

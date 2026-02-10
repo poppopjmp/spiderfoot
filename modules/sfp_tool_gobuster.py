@@ -26,6 +26,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_tool_gobuster(SpiderFootModernPlugin):
+    """Identify web paths on target websites using the Gobuster tool."""
+
     meta = {
         "name": "Tools - Gobuster",
         "summary": "Identify web paths on target websites using the Gobuster tool.",

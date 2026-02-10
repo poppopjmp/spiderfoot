@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_projectdiscovery(SpiderFootModernPlugin):
+    """Search for hosts/subdomains using chaos.projectdiscovery.io"""
+
     meta = {
         "name": "ProjectDiscovery Chaos",
         "summary": "Search for hosts/subdomains using chaos.projectdiscovery.io",

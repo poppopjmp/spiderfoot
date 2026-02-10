@@ -51,6 +51,8 @@ sites = {
 
 class sfp_socialprofiles(SpiderFootModernPlugin):
 
+    """Tries to discover the social media profiles for human names identified."""
+
     meta = {
         'name': "Social Media Profile Finder",
         'summary': "Tries to discover the social media profiles for human names identified.",

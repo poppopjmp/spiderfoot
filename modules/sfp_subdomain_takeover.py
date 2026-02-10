@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_subdomain_takeover(SpiderFootModernPlugin):
 
+    """Check if affiliated subdomains are vulnerable to takeover."""
+
     meta = {
         'name': "Subdomain Takeover Checker",
         'summary': "Check if affiliated subdomains are vulnerable to takeover.",

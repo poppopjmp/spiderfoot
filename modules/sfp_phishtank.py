@@ -20,6 +20,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_phishtank(SpiderFootModernPlugin):
 
+    """Check if a host/domain is malicious according to PhishTank."""
+
     meta = {
         'name': "PhishTank",
         'summary': "Check if a host/domain is malicious according to PhishTank.",

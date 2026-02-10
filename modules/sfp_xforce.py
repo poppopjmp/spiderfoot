@@ -28,6 +28,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_xforce(SpiderFootModernPlugin):
 
+    """Obtain IP reputation and passive DNS information from IBM X-Force Exchange."""
+
     meta = {
         'name': "XForce Exchange",
         'summary': "Obtain IP reputation and passive DNS information from IBM X-Force Exchange.",

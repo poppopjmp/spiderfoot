@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_grayhatwarfare(SpiderFootModernPlugin):
 
+    """Find bucket names matching the keyword extracted from a domain from Grayhat API."""
+
     meta = {
         'name': "Grayhat Warfare",
         'summary': "Find bucket names matching the keyword extracted from a domain from Grayhat API.",

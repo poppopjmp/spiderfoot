@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_threatfox(SpiderFootModernPlugin):
 
+    """Check if an IP address is malicious according to ThreatFox."""
+
     meta = {
         'name': "ThreatFox",
         'summary': "Check if an IP address is malicious according to ThreatFox.",

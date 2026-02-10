@@ -65,6 +65,8 @@ pairs = {
 
 class sfp_similar(SpiderFootModernPlugin):
 
+    """Search various sources to identify similar looking domain names, for instance squatted domains."""
+
     meta = {
         'name': "Similar Domain Finder",
         'summary': "Search various sources to identify similar looking domain names, for instance squatted domains.",

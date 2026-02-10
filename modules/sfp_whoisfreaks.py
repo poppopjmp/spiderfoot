@@ -21,6 +21,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_whoisfreaks(SpiderFootModernPlugin):
+    """Reverse Whois Lookup by owner email or name or company name"""
+
     meta = {
         'name': "WhoisFreaks",
         'summary': "Reverse Whois Lookup by owner email or name or company name",

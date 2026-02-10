@@ -23,6 +23,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_twilio(SpiderFootModernPlugin):
 
+    """Obtain information from Twilio about phone numbers. Ensure you have the Caller Name add-on installed in Twilio."""
+
     meta = {
         'name': "Twilio",
         'summary': "Obtain information from Twilio about phone numbers. Ensure you have the Caller Name add-on installed in Twilio.",

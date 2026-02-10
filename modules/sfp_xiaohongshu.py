@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_xiaohongshu(SpiderFootModernPlugin):
+    """Monitors Xiaohongshu for new posts and emits events."""
+
     meta = {
         'name': "Xiaohongshu (Little Red Book) Monitor",
         'summary': "Monitors Xiaohongshu for new posts and emits events.",

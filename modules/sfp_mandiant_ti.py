@@ -24,6 +24,8 @@ from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_mandiant_ti(SpiderFootModernPlugin):
 
+    """Obtain threat intelligence information from Mandiant Threat Intelligence API."""
+
     meta = {
         'name': "Mandiant Threat Intelligence",
         'summary': "Obtain threat intelligence information from Mandiant Threat Intelligence API.",

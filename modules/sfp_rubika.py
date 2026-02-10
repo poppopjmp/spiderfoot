@@ -6,6 +6,8 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 
 class sfp_rubika(SpiderFootModernPlugin):
+    """Monitors Rubika for new messages and emits events."""
+
     meta = {
         'name': "Rubika Monitor",
         'summary': "Monitors Rubika for new messages and emits events.",
