@@ -25,7 +25,7 @@ import sys
 import threading
 from time import sleep
 import traceback
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Callable, Optional
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
 from .threadpool import SpiderFootThreadPool
@@ -144,7 +144,7 @@ class SpiderFootPlugin:
         """Called when the module should finish processing."""
         pass
 
-    def sendEvent(self, eventType: str, eventData: str, parentEvent=None, confidenceLevel: int = 100):
+    def sendEvent(self, eventType: str, eventData: str, parentEvent: Optional['SpiderFootEvent'] = None, confidenceLevel: int = 100) -> None:
         """Send an event.
 
         Args:
@@ -189,7 +189,7 @@ class SpiderFootPlugin:
         self._listenerModules = list()
         self._stopScanning = False
 
-    def setup(self, sf, userOpts: dict = {}) -> None:
+    def setup(self, sf: Any, userOpts: Optional[dict] = None) -> None:
         """Will always be overriden by the implementer.
 
         Args:
@@ -240,7 +240,7 @@ class SpiderFootPlugin:
         """
         pass
 
-    def setTarget(self, target) -> None:
+    def setTarget(self, target: 'SpiderFootTarget') -> None:
         """Assigns the current target this module is acting against.
 
         Args:
@@ -257,7 +257,7 @@ class SpiderFootPlugin:
 
         self._currentTarget = target
 
-    def setDbh(self, dbh) -> None:
+    def setDbh(self, dbh: 'SpiderFootDb') -> None:
         """Used to set the database handle, which is only to be used by modules
         in very rare/exceptional cases (e.g. sfp__stor_db)
 
@@ -308,7 +308,7 @@ class SpiderFootPlugin:
 
         return self._currentTarget
 
-    def registerListener(self, listener) -> None:
+    def registerListener(self, listener: 'SpiderFootPlugin') -> None:
         """Listener modules which will get notified once we have data for them
         to work with.
 
@@ -318,7 +318,7 @@ class SpiderFootPlugin:
 
         self._listenerModules.append(listener)
 
-    def setOutputFilter(self, types) -> None:
+    def setOutputFilter(self, types: List[str]) -> None:
         self.__outputFilter__ = types
 
     def tempStorage(self) -> dict:
@@ -332,7 +332,7 @@ class SpiderFootPlugin:
         """
         return dict()
 
-    def notifyListeners(self, sfEvent) -> None:
+    def notifyListeners(self, sfEvent: 'SpiderFootEvent') -> None:
         """Call the handleEvent() method of every other plug-in listening for
         events from this plug-in. Remember that those plug-ins will be called
         within the same execution context of this thread, not on their own.
@@ -492,7 +492,7 @@ class SpiderFootPlugin:
 
         return []
 
-    def handleEvent(self, sfEvent) -> None:
+    def handleEvent(self, sfEvent: 'SpiderFootEvent') -> None:
         """Handle events to this module. Will usually be overriden by the
         implementer, unless it doesn't handle any events.
 
@@ -598,7 +598,7 @@ from spiderfoot.scan_state_map import (
                 # if there are leftover objects in the queue, the scan will hang.
                 self.incomingEventQueue = None
 
-    def poolExecute(self, callback, *args, **kwargs) -> None:
+    def poolExecute(self, callback: Callable, *args: Any, **kwargs: Any) -> None:
         """Execute a callback with the given args. If we're in a storage
         module, execute normally. Otherwise, use the shared thread pool.
 
@@ -616,7 +616,7 @@ from spiderfoot.scan_state_map import (
     def threadPool(self, *args, **kwargs):
         return SpiderFootThreadPool(*args, **kwargs)
 
-    def setSharedThreadPool(self, sharedThreadPool) -> None:
+    def setSharedThreadPool(self, sharedThreadPool: 'SpiderFootThreadPool') -> None:
         self.sharedThreadPool = sharedThreadPool
 
 # end of SpiderFootPlugin class
