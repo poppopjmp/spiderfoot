@@ -104,7 +104,7 @@ def monitor_command(cli, line):
                                     message = log.get('message', '')
                                     cli.dprint(f"  {timestamp}: {message}", plain=True)
                                 last_log_count = len(logs)
-                        except Exception:
+                        except json.JSONDecodeError:
                             pass
 
                 # Show events if requested
@@ -119,7 +119,7 @@ def monitor_command(cli, line):
                                 new_events = len(events) - last_event_count
                                 cli.dprint(f"New events: {new_events}", plain=True)
                                 last_event_count = len(events)
-                        except Exception:
+                        except json.JSONDecodeError:
                             pass
 
             except Exception as e:

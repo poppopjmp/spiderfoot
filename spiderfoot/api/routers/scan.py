@@ -1525,7 +1525,7 @@ async def archive_scan(
         try:
             _hooks.on_archived(scan_id)
         except Exception:
-            pass
+            logging.debug("Hook callback error", exc_info=True)
     return MessageResponse(message="Scan archived")
 
 
@@ -1544,7 +1544,7 @@ async def unarchive_scan(
         try:
             _hooks.on_unarchived(scan_id)
         except Exception:
-            pass
+            logging.debug("Hook callback error", exc_info=True)
     return MessageResponse(message="Scan unarchived")
 
 

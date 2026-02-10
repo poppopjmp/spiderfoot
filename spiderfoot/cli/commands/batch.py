@@ -142,7 +142,7 @@ def _create_scan(cli, base_url, scan_config, workspace):
         if resp:
             data = json.loads(resp)
             return data.get('id', data.get('scan_id'))
-    except Exception:
+    except (json.JSONDecodeError, ConnectionError, OSError):
         pass
     return None
 
@@ -156,7 +156,7 @@ def _get_scan_config(cli, scan_id):
         if resp:
             data = json.loads(resp)
             return data.get('config', {})
-    except Exception:
+    except (json.JSONDecodeError, ConnectionError, OSError):
         pass
     return None
 
@@ -180,7 +180,7 @@ def _wait_for_scans_completion(cli, scan_ids):
                     if status in ['FINISHED', 'ABORTED', 'ERROR-FAILED']:
                         completed.add(scan_id)
                         cli.dprint(f"Scan {scan_id} completed: {status}", plain=True)
-            except Exception:
+            except (json.JSONDecodeError, ConnectionError, OSError):
                 pass
 
         if len(completed) < len(scan_ids):
@@ -288,7 +288,7 @@ def _export_single_scan(cli, base_url, scan_id, export_format, output_dir):
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(resp)
             return True
-    except Exception:
+    except (json.JSONDecodeError, ConnectionError, OSError):
         pass
     return False
 

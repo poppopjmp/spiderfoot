@@ -172,7 +172,7 @@ async def _relay_mode(websocket: WebSocket, scan_id: str) -> None:
             try:
                 await relay.unsubscribe_scan(scan_id)
             except Exception:
-                pass
+                logging.debug("WebSocket cleanup error", exc_info=True)
 
 
 async def _polling_mode(websocket: WebSocket, scan_id: str) -> None:
