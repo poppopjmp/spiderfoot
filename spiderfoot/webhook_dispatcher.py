@@ -26,7 +26,7 @@ import uuid
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Deque
+from typing import Any
 
 log = logging.getLogger("spiderfoot.webhook")
 
@@ -149,7 +149,7 @@ class WebhookDispatcher:
 
     def __init__(self, max_history: int = 200) -> None:
         self._lock = threading.Lock()
-        self._history: Deque[DeliveryRecord] = deque(maxlen=max_history)
+        self._history: deque[DeliveryRecord] = deque(maxlen=max_history)
 
     def deliver(
         self,

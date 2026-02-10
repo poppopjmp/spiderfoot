@@ -25,7 +25,6 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import List
 
 
 class MigrationResult:
@@ -33,8 +32,8 @@ class MigrationResult:
 
     def __init__(self, filepath: str):
         self.filepath = filepath
-        self.changes: List[str] = []
-        self.warnings: List[str] = []
+        self.changes: list[str] = []
+        self.warnings: list[str] = []
         self.error: str = ""
         self.original_lines: int = 0
         self.migrated: bool = False
@@ -303,7 +302,7 @@ def migrate_file(filepath: str, dry_run: bool = False) -> MigrationResult:
 
 
 def migrate_directory(dirpath: str, dry_run: bool = False,
-                      pattern: str = "sfp_*.py") -> List[MigrationResult]:
+                      pattern: str = "sfp_*.py") -> list[MigrationResult]:
     """Migrate all matching modules in a directory."""
     import glob
     results = []

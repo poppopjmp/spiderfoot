@@ -51,7 +51,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Deque
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.retry")
 
@@ -181,7 +181,7 @@ class DeadLetterQueue:
     """Stores permanently failed operations for later inspection/replay."""
 
     def __init__(self, max_size: int = 1000) -> None:
-        self._queue: Deque[DeadLetterEntry] = deque(maxlen=max_size)
+        self._queue: deque[DeadLetterEntry] = deque(maxlen=max_size)
         self._lock = threading.Lock()
         self._counter = 0
 

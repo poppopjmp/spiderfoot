@@ -30,7 +30,7 @@ import json
 import re
 import time
 import requests
-from typing import Dict, Any
+from typing import Any
 from collections import defaultdict
 
 from spiderfoot import SpiderFootEvent
@@ -46,7 +46,7 @@ class BlockchainAnalyzer:
         self.sanctions_lists = self._load_sanctions_data()
         self.risk_indicators = self._load_risk_indicators()
         
-    def _load_exchange_data(self) -> dict[str, Dict]:
+    def _load_exchange_data(self) -> dict[str, dict]:
         """Load known exchange address patterns and identifiers."""
         return {
             'coinbase': {
@@ -128,7 +128,7 @@ class BlockchainAnalyzer:
         
         return analysis_result
     
-    def _get_address_transactions(self, address: str, crypto_type: str) -> list[Dict]:
+    def _get_address_transactions(self, address: str, crypto_type: str) -> list[dict]:
         """Get transaction history for an address."""
         if crypto_type.lower() == 'bitcoin':
             return self._get_bitcoin_transactions(address)
@@ -137,7 +137,7 @@ class BlockchainAnalyzer:
         else:
             return []
     
-    def _get_bitcoin_transactions(self, address: str) -> list[Dict]:
+    def _get_bitcoin_transactions(self, address: str) -> list[dict]:
         """Get Bitcoin transactions using multiple APIs."""
         transactions = []
         
@@ -182,7 +182,7 @@ class BlockchainAnalyzer:
         
         return transactions
     
-    def _get_ethereum_transactions(self, address: str) -> list[Dict]:
+    def _get_ethereum_transactions(self, address: str) -> list[dict]:
         """Get Ethereum transactions using Etherscan API."""
         transactions = []
         
@@ -237,7 +237,7 @@ class BlockchainAnalyzer:
         
         return connected
     
-    def _identify_exchange(self, address: str) -> Dict | None:
+    def _identify_exchange(self, address: str) -> dict | None:
         """Identify if address belongs to a known exchange."""
         for exchange_name, exchange_data in self.known_exchanges.items():
             for pattern in exchange_data['patterns']:
@@ -250,7 +250,7 @@ class BlockchainAnalyzer:
                     }
         return None
     
-    def _detect_money_laundering_patterns(self, transactions: list[Dict]) -> list[str]:
+    def _detect_money_laundering_patterns(self, transactions: list[dict]) -> list[str]:
         """Detect potential money laundering patterns."""
         indicators = []
         
@@ -285,7 +285,7 @@ class BlockchainAnalyzer:
         
         return indicators
     
-    def _detect_peel_chain(self, transactions: list[Dict]) -> bool:
+    def _detect_peel_chain(self, transactions: list[dict]) -> bool:
         """Detect peel chain money laundering pattern."""
         # Simplified peel chain detection
         # In practice, this would require more detailed transaction analysis
@@ -460,7 +460,7 @@ class sfp_blockchain_analytics(SpiderFootModernPlugin):
         """Check if address is a valid Ethereum address."""
         return re.match(r'^0x[a-fA-F0-9]{40}$', address) is not None
 
-    def _emit_analysis_events(self, analysis_result: Dict, source_event: SpiderFootEvent, analysis_event: SpiderFootEvent):
+    def _emit_analysis_events(self, analysis_result: dict, source_event: SpiderFootEvent, analysis_event: SpiderFootEvent):
         """Emit specific events based on analysis results."""
         
         # Risk assessment event

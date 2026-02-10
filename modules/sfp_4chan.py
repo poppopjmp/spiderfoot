@@ -4,7 +4,6 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin
 import requests
 import time
-from typing import Dict
 
 class sfp_4chan(SpiderFootModernPlugin):
     """
@@ -56,7 +55,7 @@ class sfp_4chan(SpiderFootModernPlugin):
         """Return a list of event types this module produces."""
         return ["FOURCHAN_POST"]
 
-    def _fetch_catalog(self, board: str) -> list[Dict] | None:
+    def _fetch_catalog(self, board: str) -> list[dict] | None:
         url = f"https://a.4cdn.org/{board}/catalog.json"
         try:
             resp = requests.get(url, timeout=10)
@@ -67,7 +66,7 @@ class sfp_4chan(SpiderFootModernPlugin):
             self.log.error(f"Exception fetching catalog for board {board}: {e}")
         return None
 
-    def _fetch_thread(self, board: str, thread_id: int) -> Dict | None:
+    def _fetch_thread(self, board: str, thread_id: int) -> dict | None:
         url = f"https://a.4cdn.org/{board}/thread/{thread_id}.json"
         try:
             resp = requests.get(url, timeout=10)

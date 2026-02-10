@@ -17,7 +17,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 
 class ValidationResult:
@@ -26,9 +26,9 @@ class ValidationResult:
     def __init__(self, filepath: str):
         self.filepath = filepath
         self.module_name = Path(filepath).stem
-        self.passed: List[str] = []
-        self.failed: List[str] = []
-        self.warnings: List[str] = []
+        self.passed: list[str] = []
+        self.failed: list[str] = []
+        self.warnings: list[str] = []
 
     @property
     def ok(self) -> bool:
@@ -111,7 +111,7 @@ def _check_imports(content: str, tree: ast.Module, result: ValidationResult) -> 
         result.pass_("no_legacy_import")
 
 
-def _find_plugin_classes(tree: ast.Module) -> List[ast.ClassDef]:
+def _find_plugin_classes(tree: ast.Module) -> list[ast.ClassDef]:
     """Find classes that inherit from SpiderFootModernPlugin."""
     classes = []
     for node in ast.iter_child_nodes(tree):
@@ -238,7 +238,7 @@ def _check_no_legacy(content: str, result: ValidationResult) -> None:
         result.pass_("no_legacy_sf_assign")
 
 
-def validate_directory(dirpath: str, pattern: str = "sfp_*.py") -> List[ValidationResult]:
+def validate_directory(dirpath: str, pattern: str = "sfp_*.py") -> list[ValidationResult]:
     """Validate all matching modules in directory."""
     results = []
     for filepath in sorted(glob.glob(os.path.join(dirpath, pattern))):

@@ -31,7 +31,7 @@ import threading
 import asyncio
 import gc
 from collections import defaultdict, OrderedDict
-from typing import Dict, Any, Callable
+from typing import Any, Callable
 import weakref
 import resource
 
@@ -247,7 +247,7 @@ class RequestBatcher:
         self.last_flush = defaultdict(float)
         self.lock = threading.Lock()
         
-    def add_request(self, batch_key: str, request_data: Dict, callback: Callable):
+    def add_request(self, batch_key: str, request_data: dict, callback: Callable):
         """Add request to batch."""
         with self.lock:
             self.batches[batch_key].append(request_data)
@@ -280,7 +280,7 @@ class RequestBatcher:
             daemon=True
         ).start()
     
-    def _process_batch(self, batch_key: str, requests: list[Dict], callbacks: list[Callable]):
+    def _process_batch(self, batch_key: str, requests: list[dict], callbacks: list[Callable]):
         """Process a batch of requests."""
         # This would be implemented based on specific API requirements
         # For now, process individually
@@ -437,7 +437,7 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
         monitor_thread = threading.Thread(target=monitor_resources, daemon=True)
         monitor_thread.start()
 
-    def _emit_performance_stats(self, resource_sample: Dict):
+    def _emit_performance_stats(self, resource_sample: dict):
         """Emit performance statistics event."""
         stats = {
             'resource_usage': resource_sample,
@@ -457,7 +457,7 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
         # Check if optimization suggestions should be made
         self._check_optimization_suggestions(stats)
 
-    def _check_optimization_suggestions(self, stats: Dict):
+    def _check_optimization_suggestions(self, stats: dict):
         """Check if optimization suggestions should be made."""
         suggestions = []
         

@@ -29,7 +29,7 @@ import re
 import time
 from collections import defaultdict, Counter
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Any
 import hashlib
 import logging
 
@@ -76,7 +76,7 @@ class AdvancedCorrelationEngine:
                     
         return dict(connections)
         
-    def analyze_temporal_patterns(self, events: list[Dict], time_window_hours: int = 24) -> list[Dict]:
+    def analyze_temporal_patterns(self, events: list[dict], time_window_hours: int = 24) -> list[dict]:
         """Analyze temporal patterns in events."""
         patterns = []
         events_by_time = defaultdict(list)
@@ -101,7 +101,7 @@ class AdvancedCorrelationEngine:
                 
         return patterns
         
-    def cluster_geospatial_data(self, geo_data: list[Dict], radius_km: float = 50.0) -> list[Dict]:
+    def cluster_geospatial_data(self, geo_data: list[dict], radius_km: float = 50.0) -> list[dict]:
         """Cluster geospatial data points."""
         clusters = []
         used_points = set()
@@ -153,7 +153,7 @@ class AdvancedCorrelationEngine:
         
         return R * c
         
-    def _calculate_centroid(self, points: list[Dict]) -> dict[str, float]:
+    def _calculate_centroid(self, points: list[dict]) -> dict[str, float]:
         """Calculate centroid of a cluster of points."""
         lats = [p.get('lat', 0) for p in points]
         lngs = [p.get('lng', 0) for p in points]
@@ -163,7 +163,7 @@ class AdvancedCorrelationEngine:
             'lng': sum(lngs) / len(lngs)
         }
         
-    def _calculate_cluster_radius(self, points: list[Dict]) -> float:
+    def _calculate_cluster_radius(self, points: list[dict]) -> float:
         """Calculate the radius of a cluster."""
         if len(points) < 2:
             return 0.0
@@ -265,7 +265,7 @@ class sfp_advanced_correlation(SpiderFootModernPlugin):
         normalized_data = data.lower().strip()
         return hashlib.md5(normalized_data.encode()).hexdigest()[:12]
 
-    def _perform_realtime_correlation(self, event_record: Dict, source_event: SpiderFootEvent):
+    def _perform_realtime_correlation(self, event_record: dict, source_event: SpiderFootEvent):
         """Perform real-time correlation analysis for high-value events."""
         entity_hash = event_record['entity_hash']
         
@@ -288,7 +288,7 @@ class sfp_advanced_correlation(SpiderFootModernPlugin):
             )
             self.notifyListeners(correlation_event)
 
-    def _find_related_entities(self, event_record: Dict) -> list[Dict]:
+    def _find_related_entities(self, event_record: dict) -> list[dict]:
         """Find entities related to the current event."""
         related = []
         current_data = event_record['data'].lower()
