@@ -37,6 +37,7 @@ import secrets
 import time
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ class ServiceTokenIssuer:
         service_name: Optional[str] = None,
         static_token: Optional[str] = None,
         secret: Optional[str] = None,
-        ttl: int = 3600,
+        ttl: int = DEFAULT_TTL_ONE_HOUR,
     ) -> None:
         self.service_name = service_name or os.environ.get("SF_SERVICE_NAME", "unknown")
         self._static_token = static_token or os.environ.get("SF_SERVICE_TOKEN", "")
@@ -132,7 +133,7 @@ class ServiceTokenValidator:
         self,
         static_token: Optional[str] = None,
         secret: Optional[str] = None,
-        ttl: int = 3600,
+        ttl: int = DEFAULT_TTL_ONE_HOUR,
         enabled: Optional[bool] = None,
     ) -> None:
         self._static_token = static_token or os.environ.get("SF_SERVICE_TOKEN", "")

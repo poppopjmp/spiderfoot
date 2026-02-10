@@ -48,6 +48,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+
 log = logging.getLogger("spiderfoot.auth")
 
 
@@ -115,7 +117,7 @@ class AuthConfig:
 
     # JWT secret (for JWT method)
     jwt_secret: str = ""
-    jwt_expiry: int = 3600  # seconds
+    jwt_expiry: int = DEFAULT_TTL_ONE_HOUR  # seconds
 
     # Paths that don't require auth
     public_paths: List[str] = field(default_factory=lambda: [

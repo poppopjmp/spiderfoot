@@ -22,6 +22,7 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger("spiderfoot.multidim")
 
@@ -168,7 +169,7 @@ def _entity_score(a: EventData, b: EventData) -> float:
 
 
 def _temporal_score(a: EventData, b: EventData,
-                    window_seconds: float = 3600.0) -> float:
+                    window_seconds: float = DEFAULT_TTL_ONE_HOUR) -> float:
     """Score based on temporal proximity."""
     if a.timestamp == 0 or b.timestamp == 0:
         return 0.0
@@ -324,7 +325,7 @@ class MultiDimAnalyzer:
         weights: Optional[Dict[Dimension, float]] = None,
         fusion_method: str = "weighted",
         min_score: float = 0.1,
-        temporal_window: float = 3600.0,
+        temporal_window: float = DEFAULT_TTL_ONE_HOUR,
     ) -> None:
         self._weights = weights or DEFAULT_WEIGHTS
         self._fusion_method = fusion_method

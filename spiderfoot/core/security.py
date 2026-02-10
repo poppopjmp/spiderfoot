@@ -27,6 +27,7 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import base64
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 
 class InputValidator:
@@ -155,7 +156,7 @@ class RateLimiter:
         self.lock = threading.Lock()
         
     def check_rate_limit(self, identifier: str, max_requests: int = 100, 
-                        window_seconds: int = 3600) -> tuple[bool, int]:
+                        window_seconds: int = DEFAULT_TTL_ONE_HOUR) -> tuple[bool, int]:
         """Check if request is within rate limits."""
         current_time = time.time()
         

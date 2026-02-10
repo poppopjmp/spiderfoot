@@ -51,6 +51,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from spiderfoot.plugin import SpiderFootPlugin
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 
 log = logging.getLogger("spiderfoot.modern_plugin")
@@ -191,7 +192,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
                   data: Optional[Any] = None,
                   timeout: int = 30,
                   use_cache: bool = True,
-                  cache_ttl: int = 3600,
+                  cache_ttl: int = DEFAULT_TTL_ONE_HOUR,
                   **kwargs) -> Optional[Dict]:
         """Fetch a URL using HttpService (or fallback to self.sf.fetchUrl).
 
@@ -284,7 +285,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
 
         return None
 
-    def cache_put(self, key: str, value: Any, ttl: int = 3600) -> bool:
+    def cache_put(self, key: str, value: Any, ttl: int = DEFAULT_TTL_ONE_HOUR) -> bool:
         """Put a value into the cache."""
         try:
             if self.cache is not None:

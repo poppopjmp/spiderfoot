@@ -43,6 +43,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field, fields, asdict
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger("spiderfoot.app_config")
 
@@ -153,7 +154,7 @@ class ApiConfig:
 class CacheSettings:
     """Cache layer settings."""
     backend: str = "memory"
-    ttl: int = 3600
+    ttl: int = DEFAULT_TTL_ONE_HOUR
     max_size: int = 10000
     redis_url: str = ""
 

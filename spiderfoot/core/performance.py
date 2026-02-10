@@ -26,6 +26,8 @@ import asyncio
 import aiohttp
 import weakref
 
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+
 
 class PerformanceProfiler:
     """Performance profiling and monitoring."""
@@ -120,7 +122,7 @@ class CacheManager:
                 logging.warning(f"Redis connection failed: {e}")
                 self.redis_client = None
     
-    def cache_result(self, ttl: int = 3600, use_redis: bool = False):
+    def cache_result(self, ttl: int = DEFAULT_TTL_ONE_HOUR, use_redis: bool = False):
         """Decorator for caching function results."""
         def decorator(func):
             @wraps(func)
@@ -456,7 +458,7 @@ class MemoryManager:
 
 
 # Performance optimization decorator
-def optimize_performance(cache_ttl: int = 3600, profile: bool = True, use_async: bool = False):
+def optimize_performance(cache_ttl: int = DEFAULT_TTL_ONE_HOUR, profile: bool = True, use_async: bool = False):
     """Comprehensive performance optimization decorator."""
     def decorator(func):
         # Apply profiling

@@ -10,6 +10,7 @@ import hashlib
 import hmac
 from typing import Dict, Optional, Any
 import redis
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 
 class SecureSessionManager:
@@ -40,7 +41,7 @@ class SecureSessionManager:
                 self._memory_sessions = {}
         
         # Session configuration
-        self.session_timeout = 3600  # 1 hour
+        self.session_timeout = DEFAULT_TTL_ONE_HOUR  # 1 hour
         self.idle_timeout = 1800     # 30 minutes
         self.max_sessions_per_user = 5
         self.secure_cookie = True

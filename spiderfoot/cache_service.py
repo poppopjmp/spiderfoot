@@ -16,6 +16,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+
 log = logging.getLogger("spiderfoot.cache_service")
 
 
@@ -39,7 +41,7 @@ class CacheConfig:
         key_prefix: Prefix for all cache keys
     """
     backend: CacheBackend = CacheBackend.MEMORY
-    ttl: int = 3600  # 1 hour default
+    ttl: int = DEFAULT_TTL_ONE_HOUR  # 1 hour default
     max_size: int = 10000
     cache_dir: str = ""
     redis_url: str = "redis://localhost:6379/1"

@@ -10,6 +10,7 @@ import secrets
 import time
 from functools import wraps
 import cherrypy
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 
 class CSRFProtection:
@@ -22,7 +23,7 @@ class CSRFProtection:
             secret_key: Secret key for CSRF token generation
         """
         self.secret_key = secret_key or secrets.token_hex(32)
-        self.token_lifetime = 3600  # 1 hour
+        self.token_lifetime = DEFAULT_TTL_ONE_HOUR  # 1 hour
     
     def generate_csrf_token(self):
         """Generate a new CSRF token for the current session.

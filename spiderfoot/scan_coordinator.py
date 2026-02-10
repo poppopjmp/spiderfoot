@@ -43,6 +43,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
 
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+
 log = logging.getLogger("spiderfoot.scan_coordinator")
 
 __all__ = [
@@ -147,7 +149,7 @@ class ScanWork:
     options: Dict[str, Any] = field(default_factory=dict)
     priority: int = 0       # higher = more urgent
     required_tags: List[str] = field(default_factory=list)
-    timeout_seconds: int = 3600
+    timeout_seconds: int = DEFAULT_TTL_ONE_HOUR
     max_retries: int = 2
 
     def to_dict(self) -> dict:

@@ -14,6 +14,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from functools import wraps
 from flask import request, jsonify, g
 from werkzeug.security import check_password_hash, generate_password_hash
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ log = logging.getLogger(__name__)
 class APISecurityManager:
     """Comprehensive API security management."""
     
-    def __init__(self, secret_key: str = None, token_expiry: int = 3600):
+    def __init__(self, secret_key: str = None, token_expiry: int = DEFAULT_TTL_ONE_HOUR):
         """Initialize API security manager.
         
         Args:
@@ -202,7 +203,7 @@ class APISecurityManager:
             Rate limit configuration
         """
         max_requests = 0
-        window = 3600  # Default 1 hour
+        window = DEFAULT_TTL_ONE_HOUR  # Default 1 hour
         
         for scope in scopes:
             if scope in self.scope_limits:

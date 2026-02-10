@@ -32,6 +32,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger("spiderfoot.report_storage")
 
@@ -52,7 +53,7 @@ class StoreConfig:
     backend: StorageBackend = StorageBackend.SQLITE
     db_path: str = ""  # Empty = auto-detect from SpiderFoot config
     cache_max_size: int = 100  # Max reports in LRU cache
-    cache_ttl_seconds: float = 3600.0  # Cache entry TTL (1 hour)
+    cache_ttl_seconds: float = DEFAULT_TTL_ONE_HOUR  # Cache entry TTL (1 hour)
     auto_cleanup_days: int = 90  # Auto-delete reports older than N days (0=disable)
 
     def __post_init__(self):
@@ -70,7 +71,7 @@ class StoreConfig:
 class LRUCache:
     """Thread-safe LRU cache with TTL expiration."""
 
-    def __init__(self, max_size: int = 100, ttl_seconds: float = 3600.0):
+    def __init__(self, max_size: int = 100, ttl_seconds: float = DEFAULT_TTL_ONE_HOUR):
         self._max_size = max(1, max_size)
         self._ttl = ttl_seconds
         self._cache: OrderedDict[str, tuple] = OrderedDict()  # key -> (data, timestamp)

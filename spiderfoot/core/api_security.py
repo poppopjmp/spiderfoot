@@ -25,13 +25,14 @@ import ipaddress
 import re
 from dataclasses import dataclass
 import json
+from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 
 @dataclass
 class RateLimitConfig:
     """Configuration for rate limiting."""
     max_requests: int = 100
-    window_seconds: int = 3600
+    window_seconds: int = DEFAULT_TTL_ONE_HOUR
     burst_limit: int = 10
     burst_window: int = 60
 
