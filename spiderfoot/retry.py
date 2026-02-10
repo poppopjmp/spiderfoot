@@ -267,8 +267,8 @@ class RetryExecutor:
                 if self.config.on_success:
                     try:
                         self.config.on_success(attempt)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        log.debug("on_success callback failed for %s: %s", func.__name__, e)
 
                 return result
 
@@ -294,8 +294,8 @@ class RetryExecutor:
                 if self.config.on_retry:
                     try:
                         self.config.on_retry(attempt, e, delay)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        log.debug("on_retry callback failed for %s: %s", func.__name__, e)
 
                 log.info(
                     "Retry %d/%d for %s after %.1fs: %s",
@@ -315,8 +315,8 @@ class RetryExecutor:
         if self.config.on_failure:
             try:
                 self.config.on_failure(result.attempts, last_exception)
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug("on_failure callback failed for %s: %s", func.__name__, e)
 
         # Add to dead letter queue
         import uuid

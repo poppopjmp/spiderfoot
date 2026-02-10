@@ -919,8 +919,8 @@ async def validate_current_config(api_key: str = optional_auth_dep):
                 "field": var,
                 "message": f"Unknown SF_* variable (possible typo): {var}",
             })
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Failed to discover unknown SF_* env vars: %s", e)
 
     # 4. Check module API key requirements
     try:
@@ -943,8 +943,8 @@ async def validate_current_config(api_key: str = optional_auth_dep):
                 "message": f"{len(modules_missing_keys)} enabled modules missing API keys",
                 "modules": modules_missing_keys[:20],
             })
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Failed to check module API key requirements: %s", e)
 
     # 5. Service auth configuration check
     try:
@@ -956,8 +956,8 @@ async def validate_current_config(api_key: str = optional_auth_dep):
                 "category": "security",
                 "message": "No inter-service auth configured (OK for standalone mode)",
             })
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Failed to check service auth configuration: %s", e)
 
     error_count = sum(1 for r in results if r["severity"] == "error")
     warning_count = sum(1 for r in results if r["severity"] == "warning")
@@ -1116,8 +1116,8 @@ async def get_config_diff(
             from spiderfoot.sflib.core import SpiderFoot
             sf = SpiderFoot({})
             defaults = sf.defaultConfig if hasattr(sf, 'defaultConfig') else {}
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Failed to load default config for diff: %s", e)
 
         # Build diff
         modified = {}

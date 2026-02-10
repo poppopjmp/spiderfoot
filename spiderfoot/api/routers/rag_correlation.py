@@ -461,22 +461,22 @@ async def stats(_auth: str = optional_auth_dep):
         total_vectors = info.get("point_count", 0)
         dims = info.get("vector_dimensions", 0)
         qdrant_ok = True
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("Qdrant client unavailable for stats: %s", e)
 
     try:
         from spiderfoot.embedding_service import get_embedding_service
         emb = get_embedding_service()
         emb_ok = True
         extra["embedding_cache"] = emb.cache_stats()
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("Embedding service unavailable for stats: %s", e)
 
     try:
         analyzer = _get_multidim()
         extra["multidim"] = analyzer.stats()
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("Multidim analyzer unavailable for stats: %s", e)
 
     return StatsResponse(
         qdrant_available=qdrant_ok,
