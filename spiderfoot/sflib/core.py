@@ -177,13 +177,13 @@ class SpiderFoot:
         return resolveHost6(hostname)
     def validateIP(self, host: str, ip: str) -> bool:
         return validateIP(host, ip)
-    def safeSocket(self, host: str, port: int, timeout: int):
+    def safeSocket(self, host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
         return safeSocket(host, port, timeout)
-    def safeSSLSocket(self, host: str, port: int, timeout: int):
+    def safeSSLSocket(self, host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
         return safeSSLSocket(host, port, timeout)
     def parseCert(self, rawcert: str, fqdn: str = None, expiringdays: int = 30) -> dict:
         return parseCert(rawcert, fqdn, expiringdays)
-    def getSession(self):
+    def getSession(self) -> 'requests.sessions.Session':
         return getSession()
     def useProxyForUrl(self, url: str) -> bool:
         # Patch: pass self for urlFQDN resolution and improve local IP detection
@@ -391,7 +391,7 @@ class SpiderFoot:
                 "The key 'content' in the bing API response doesn't contain valid JSON.")
             return None
 
-        if ("webPages" in response_json and "value" in response_json["webPages"]):
+        if "webPages" in response_json and "value" in response_json["webPages"]:
             urls = [str(k['url']) for k in response_json["webPages"]["value"]]
             webSearchUrl = response_json["webPages"].get("webSearchUrl", "")
             return {
@@ -400,7 +400,7 @@ class SpiderFoot:
             }
         return None
 
-    def loadModules(self):
+    def loadModules(self) -> None:
         """Load SpiderFoot modules from the modules directory."""
         import os
         from spiderfoot import SpiderFootHelpers
@@ -453,18 +453,18 @@ class SpiderFoot:
             self.debug(f"CVE lookup for {cveId} from {source} not implemented")
         return (eventType, f"{cveId}\nScore: Unknown\nDescription: Unknown")
 
-    def configSerialize(self, opts: dict, filterSystem: bool = True):
+    def configSerialize(self, opts: dict, filterSystem: bool = True) -> dict:
         """Delegate to config.configSerialize."""
         from .config import configSerialize
         return configSerialize(opts, filterSystem)
 
-    def configUnserialize(self, opts: dict, referencePoint: dict, filterSystem: bool = True):
+    def configUnserialize(self, opts: dict, referencePoint: dict, filterSystem: bool = True) -> dict:
         """Delegate to config.configUnserialize."""
         from .config import configUnserialize
         return configUnserialize(opts, referencePoint, filterSystem)
 
-    def getEventTypes(self):
+    def getEventTypes(self) -> list:
         return self.opts.get('__eventtypes__', [])
 
-    def getModules(self):
+    def getModules(self) -> dict:
         return self.opts.get('__modules__', {})

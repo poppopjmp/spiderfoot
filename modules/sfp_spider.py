@@ -386,7 +386,7 @@ class sfp_spider(SpiderFootModernPlugin):
         # Iterations after that are based on links found on those pages, while:
         # number of spidered pages < max pages
         # spidering depth <= max levels (the first level is the first link)
-        while (pagesFetched < self.opts['maxpages']) and (levelsTraversed <= self.opts['maxlevels']):
+        while pagesFetched < self.opts['maxpages'] and levelsTraversed <= self.opts['maxlevels']:
             if not nextLinks:
                 self.info("No more links to spider, finishing.")
                 return
