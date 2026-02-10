@@ -32,10 +32,11 @@ Per-scan wiring::
     from spiderfoot.service_integration import wire_scan_services
     wire_scan_services(scanner_instance, scan_id)
 """
+from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 log = logging.getLogger("spiderfoot.service_integration")
 

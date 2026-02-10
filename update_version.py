@@ -8,12 +8,12 @@ Usage:
     python update_version.py --check            # Just display current version
     python update_version.py --set 5.3.0        # Set a new version
 """
+from __future__ import annotations
 
 import os
 import re
 import sys
 from pathlib import Path
-from typing import List, Dict
 
 def get_version():
     """Get version from VERSION file."""

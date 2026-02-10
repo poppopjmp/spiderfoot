@@ -1,11 +1,12 @@
 """
 Enhanced interactive features for SpiderFoot CLI.
 """
+from __future__ import annotations
 
 import shlex
 import json
 import re
-from typing import List, Dict, Any
+from typing import Any
 
 
 def interactive_scan_wizard(cli, line):

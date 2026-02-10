@@ -6,6 +6,7 @@ Platform-Specific Utilities for SpiderFoot Tests
 Cross-platform compatibility layer for thread management,
 process control, and resource cleanup.
 """
+from __future__ import annotations
 
 import sys
 import os
@@ -13,7 +14,7 @@ import threading
 import time
 import signal
 from contextlib import suppress
-from typing import Any, Optional, List, Dict
+from typing import Any
 
 
 class PlatformUtils:
@@ -163,7 +164,7 @@ class ThreadManager:
         return False
     
     @staticmethod
-    def get_thread_stack_trace(thread: threading.Thread) -> Optional[str]:
+    def get_thread_stack_trace(thread: threading.Thread) -> str | None:
         """
         Get stack trace for a thread (if possible).
         
@@ -186,7 +187,7 @@ class ThreadManager:
         return None
     
     @staticmethod
-    def list_thread_details() -> List[Dict[str, Any]]:
+    def list_thread_details() -> list[dict[str, Any]]:
         """
         Get detailed information about all threads.
         
@@ -218,7 +219,7 @@ class ProcessManager:
     """Platform-specific process management utilities."""
     
     @staticmethod
-    def get_process_info() -> Dict[str, Any]:
+    def get_process_info() -> dict[str, Any]:
         """
         Get information about current process.
         
@@ -451,7 +452,7 @@ class NetworkManager:
         return closed
 
 
-def get_platform_specific_cleanup_strategy() -> Dict[str, callable]:
+def get_platform_specific_cleanup_strategy() -> dict[str, callable]:
     """
     Get platform-specific cleanup strategy.
     
@@ -474,7 +475,7 @@ def get_platform_specific_cleanup_strategy() -> Dict[str, callable]:
     return strategy
 
 
-def perform_platform_cleanup() -> Dict[str, int]:
+def perform_platform_cleanup() -> dict[str, int]:
     """
     Perform comprehensive platform-specific cleanup.
     

@@ -1,5 +1,7 @@
 """SpiderFoot Workspace Management.
 
+from __future__ import annotations
+
 This module provides workspace functionality for managing multiple scans,
 targets, and cross-correlations within a unified context.
 """
@@ -9,7 +11,7 @@ import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Any
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
 

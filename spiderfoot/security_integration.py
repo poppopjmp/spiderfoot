@@ -2,12 +2,13 @@
 SpiderFoot Security Integration Module
 Integrates all security enhancements into the existing SpiderFoot codebase.
 """
+from __future__ import annotations
 
 import os
 import sys
 import logging
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 # Import security modules
 from .secure_config import SecureConfigManager

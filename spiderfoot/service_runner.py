@@ -27,6 +27,7 @@ Environment variables:
     SF_VECTOR_ENDPOINT   Vector.dev HTTP source endpoint
     SF_LOG_LEVEL         Log level (DEBUG|INFO|WARNING|ERROR)
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -37,7 +38,6 @@ import sys
 import threading
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from typing import Optional
 
 from spiderfoot.logging_config import LOG_FORMAT_TEXT
 

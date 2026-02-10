@@ -10,6 +10,7 @@ This test suite covers:
 - Bulk processing and connection pooling
 - Integration with existing SpiderFoot test framework
 """
+from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase
@@ -17,7 +18,7 @@ import time
 import threading
 import json
 from unittest.mock import Mock, patch, MagicMock, call
-from typing import Dict, List, Any
+from typing import Any
 import tempfile
 import os
 import sys

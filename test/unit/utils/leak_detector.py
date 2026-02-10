@@ -6,6 +6,7 @@ Thread and Resource Leak Detection and Reporting
 Comprehensive leak detection system for SpiderFoot tests.
 Tracks threads, file handles, memory usage, and other resources.
 """
+from __future__ import annotations
 
 import threading
 import time
@@ -14,7 +15,7 @@ import weakref
 import os
 import gc
 from contextlib import suppress
-from typing import Dict, List, Any, Optional
+from typing import Any
 from dataclasses import dataclass, field
 
 
@@ -25,8 +26,8 @@ class LeakInfo:
     resource_id: str
     description: str
     age_seconds: float
-    stack_trace: List[str] = field(default_factory=list)
-    additional_info: Dict[str, Any] = field(default_factory=dict)
+    stack_trace: list[str] = field(default_factory=list)
+    additional_info: dict[str, Any] = field(default_factory=dict)
 
 
 class LeakDetector:
@@ -42,10 +43,10 @@ class LeakDetector:
     """
     
     def __init__(self):
-        self._baseline_threads: Dict[int, threading.Thread] = {}
+        self._baseline_threads: dict[int, threading.Thread] = {}
         self._baseline_files: set = set()
-        self._baseline_memory: Optional[int] = None
-        self._tracked_resources: Dict[str, Dict[str, Any]] = {}
+        self._baseline_memory: int | None = None
+        self._tracked_resources: dict[str, dict[str, Any]] = {}
         self._start_time = time.time()
         self._lock = threading.Lock()
     
@@ -116,7 +117,7 @@ class LeakDetector:
         with self._lock:
             self._tracked_resources.pop(resource_id, None)
     
-    def detect_thread_leaks(self) -> List[LeakInfo]:
+    def detect_thread_leaks(self) -> list[LeakInfo]:
         """
         Detect thread leaks compared to baseline.
         
@@ -147,7 +148,7 @@ class LeakDetector:
         
         return leaks
     
-    def detect_file_leaks(self) -> List[LeakInfo]:
+    def detect_file_leaks(self) -> list[LeakInfo]:
         """
         Detect file handle leaks compared to baseline.
         
@@ -179,7 +180,7 @@ class LeakDetector:
         
         return leaks
     
-    def detect_memory_leaks(self, threshold_mb: float = 50.0) -> List[LeakInfo]:
+    def detect_memory_leaks(self, threshold_mb: float = 50.0) -> list[LeakInfo]:
         """
         Detect significant memory increases.
         
@@ -221,7 +222,7 @@ class LeakDetector:
         
         return leaks
     
-    def detect_resource_leaks(self) -> List[LeakInfo]:
+    def detect_resource_leaks(self) -> list[LeakInfo]:
         """
         Detect leaks in tracked custom resources.
         
@@ -257,7 +258,7 @@ class LeakDetector:
         
         return leaks
     
-    def detect_all_leaks(self) -> Dict[str, List[LeakInfo]]:
+    def detect_all_leaks(self) -> dict[str, list[LeakInfo]]:
         """
         Detect all types of leaks.
         
@@ -273,7 +274,7 @@ class LeakDetector:
         
         return all_leaks
     
-    def get_leak_summary(self) -> Dict[str, int]:
+    def get_leak_summary(self) -> dict[str, int]:
         """
         Get summary count of all leak types.
         
@@ -425,7 +426,7 @@ def set_leak_detection_baseline():
     detector.set_baseline()
 
 
-def detect_all_test_leaks() -> Dict[str, List[LeakInfo]]:
+def detect_all_test_leaks() -> dict[str, list[LeakInfo]]:
     """Detect all test leaks."""
     detector = get_test_leak_detector()
     return detector.detect_all_leaks()
@@ -489,7 +490,7 @@ class LeakDetectorMixin:
         """Set leak detection baseline manually."""
         self.leak_detector.set_baseline()
     
-    def assert_no_leaks(self, leak_types: List[str] = None):
+    def assert_no_leaks(self, leak_types: list[str] = None):
         """
         Assert that no leaks are detected.
         

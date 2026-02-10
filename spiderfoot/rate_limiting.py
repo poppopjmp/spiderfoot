@@ -2,10 +2,10 @@
 Rate Limiting Module for SpiderFoot API and Web Interface
 Provides protection against abuse and DoS attacks.
 """
+from __future__ import annotations
 
 import time
 import hashlib
-from typing import Dict, Optional, Tuple
 
 # Optional dependencies for enhanced rate limiting
 try:

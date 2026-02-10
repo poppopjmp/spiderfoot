@@ -8,12 +8,13 @@ Covers:
   - websocket.py _polling_mode() with ScanService (unit-level)
   - Verification that event_schema.py is deleted (dead code removal)
 """
+from __future__ import annotations
 
 import json
 import os
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 from starlette.testclient import TestClient

@@ -15,11 +15,12 @@ Features:
 
 Author: SpiderFoot Security Team
 """
+from __future__ import annotations
 
 import logging
 import time
 import cherrypy
-from typing import Dict, Any
+from typing import Any
 import json
 
 from .csrf_protection import CSRFProtection

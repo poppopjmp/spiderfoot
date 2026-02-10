@@ -6,13 +6,14 @@ Resource Manager for SpiderFoot Tests
 Thread-safe resource management with guaranteed cleanup.
 Ensures all test resources are properly released, even during catastrophic failures.
 """
+from __future__ import annotations
 
 import threading
 import time
 import weakref
 import traceback
 from contextlib import suppress
-from typing import Any, Callable, List, Dict, Optional
+from typing import Any, Callable
 
 
 class ResourceManager:
@@ -28,8 +29,8 @@ class ResourceManager:
     """
     
     def __init__(self):
-        self._resources: List[Dict[str, Any]] = []
-        self._cleanup_functions: List[Callable] = []
+        self._resources: list[dict[str, Any]] = []
+        self._cleanup_functions: list[Callable] = []
         self._lock = threading.Lock()
         self._cleanup_attempted = False
         self._resource_counter = 0
@@ -72,7 +73,7 @@ class ResourceManager:
             self._resources.append(resource_info)
             return resource_id
     
-    def register_thread(self, thread: threading.Thread, stop_func: Optional[Callable] = None,
+    def register_thread(self, thread: threading.Thread, stop_func: Callable | None = None,
                         timeout: float = 5.0) -> int:
         """
         Register a thread for cleanup.
@@ -169,7 +170,7 @@ class ResourceManager:
             description=f"Module: {module.__class__.__name__}"
         )
     
-    def register_server(self, server: Any, stop_func: Optional[Callable] = None) -> int:
+    def register_server(self, server: Any, stop_func: Callable | None = None) -> int:
         """
         Register a web server for cleanup.
         
@@ -215,7 +216,7 @@ class ResourceManager:
                     return True
         return False
     
-    def cleanup_all(self, force: bool = False) -> Dict[str, int]:
+    def cleanup_all(self, force: bool = False) -> dict[str, int]:
         """
         Execute all cleanup functions in LIFO order.
         
@@ -301,7 +302,7 @@ class ResourceManager:
             
             return cleaned
     
-    def get_resource_summary(self) -> Dict[str, int]:
+    def get_resource_summary(self) -> dict[str, int]:
         """
         Get summary of currently registered resources.
         
@@ -315,7 +316,7 @@ class ResourceManager:
                 summary[category] = summary.get(category, 0) + 1
             return summary
     
-    def detect_leaks(self) -> List[Dict[str, Any]]:
+    def detect_leaks(self) -> list[dict[str, Any]]:
         """
         Detect potential resource leaks.
         
@@ -413,7 +414,7 @@ def reset_test_resource_manager():
         _test_resource_manager = None
 
 
-def cleanup_all_test_resources() -> Dict[str, int]:
+def cleanup_all_test_resources() -> dict[str, int]:
     """
     Cleanup all test resources using the global manager.
     
@@ -425,7 +426,7 @@ def cleanup_all_test_resources() -> Dict[str, int]:
 
 
 # Convenience functions for common resource types
-def register_test_thread(thread: threading.Thread, stop_func: Optional[Callable] = None) -> int:
+def register_test_thread(thread: threading.Thread, stop_func: Callable | None = None) -> int:
     """Register a thread with the global resource manager."""
     manager = get_test_resource_manager()
     return manager.register_thread(thread, stop_func)
@@ -443,7 +444,7 @@ def register_test_module(module: Any) -> int:
     return manager.register_module(module)
 
 
-def register_test_server(server: Any, stop_func: Optional[Callable] = None) -> int:
+def register_test_server(server: Any, stop_func: Callable | None = None) -> int:
     """Register a server with the global resource manager."""
     manager = get_test_resource_manager()
     return manager.register_server(server, stop_func)

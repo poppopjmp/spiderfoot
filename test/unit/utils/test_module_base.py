@@ -6,12 +6,13 @@ Enhanced Test Base for SpiderFoot Module Tests
 Provides automatic resource management, thread cleanup, and leak detection
 for all SpiderFoot module tests.
 """
+from __future__ import annotations
 
 import unittest
 import threading
 import time
 from contextlib import suppress
-from typing import Any, Optional
+from typing import Any
 
 try:
     # Relative imports (when called from package)
@@ -120,7 +121,7 @@ class TestModuleBase(unittest.TestCase):
         return resource_id
     
     def register_thread(self, thread: threading.Thread,
-                        stop_func: Optional[callable] = None) -> int:
+                        stop_func: callable | None = None) -> int:
         """
         Register a thread for automatic cleanup.
         

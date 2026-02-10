@@ -4,9 +4,10 @@ ConfigRepository — Clean interface for global configuration storage.
 Wraps ``SpiderFootDb`` config methods: ``configSet``, ``configGet``,
 ``configClear``.
 """
+from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from spiderfoot.db.repositories.base import AbstractRepository
 

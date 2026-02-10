@@ -6,11 +6,12 @@ Covers:
     metadata/notes/archive, false-positive, clear, scan_options)
   - All 25 router endpoints via TestClient with dependency override
 """
+from __future__ import annotations
 
 import json
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 from starlette.testclient import TestClient
@@ -106,7 +107,7 @@ class FakeRepo:
     __bool__ = True
 
     def __init__(self, dbh=None):
-        self._scans: Dict[str, ScanRecord] = {}
+        self._scans: dict[str, ScanRecord] = {}
         self._dbh = dbh if dbh is not None else FakeDbh()
 
     def list_scans(self):

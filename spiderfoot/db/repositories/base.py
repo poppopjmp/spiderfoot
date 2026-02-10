@@ -5,10 +5,11 @@ Provides a context-manager protocol and common interface that all
 concrete repositories inherit.  Repositories wrap ``SpiderFootDb``
 internals without exposing raw SQL, locking, or connection details.
 """
+from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 log = logging.getLogger("spiderfoot.db.repositories")
 

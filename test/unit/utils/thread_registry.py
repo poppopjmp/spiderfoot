@@ -6,13 +6,14 @@ Thread Registry System for SpiderFoot Tests
 Central registry for all test-created threads to ensure no thread escapes cleanup.
 Part of the ThreadReaper comprehensive thread management overhaul.
 """
+from __future__ import annotations
 
 import threading
 import time
 import traceback
 import weakref
 from contextlib import suppress
-from typing import Dict, List, Optional, Any, Set
+from typing import Any
 
 
 class ThreadRegistry:
@@ -22,12 +23,12 @@ class ThreadRegistry:
     """
     
     def __init__(self):
-        self._threads: Dict[int, Dict[str, Any]] = {}
+        self._threads: dict[int, dict[str, Any]] = {}
         self._lock = threading.Lock()
-        self._categories: Set[str] = set()
-        self._owners: Dict[str, List[int]] = {}
+        self._categories: set[str] = set()
+        self._owners: dict[str, list[int]] = {}
         
-    def register(self, thread: threading.Thread, category: str, owner: Optional[str] = None) -> None:
+    def register(self, thread: threading.Thread, category: str, owner: str | None = None) -> None:
         """
         Register a thread for tracking and cleanup.
         
@@ -76,7 +77,7 @@ class ThreadRegistry:
                 
                 del self._threads[thread_id]
     
-    def get_active_threads(self, category: Optional[str] = None, owner: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_active_threads(self, category: str | None = None, owner: str | None = None) -> list[dict[str, Any]]:
         """
         Get list of active threads, optionally filtered by category or owner.
         
@@ -174,7 +175,7 @@ class ThreadRegistry:
         
         return cleaned
     
-    def force_cleanup_all_threads(self, timeout: float = 3.0) -> Dict[str, int]:
+    def force_cleanup_all_threads(self, timeout: float = 3.0) -> dict[str, int]:
         """
         Force cleanup of all registered threads.
         
@@ -244,7 +245,7 @@ class ThreadRegistry:
         
         return total_cleaned
     
-    def _cleanup_thread_list(self, thread_list: List[Dict[str, Any]], timeout: float) -> int:
+    def _cleanup_thread_list(self, thread_list: list[dict[str, Any]], timeout: float) -> int:
         """Clean up a specific list of threads."""
         # Step 1: Graceful shutdown
         for thread_info in thread_list:
@@ -350,7 +351,7 @@ class ThreadRegistry:
         
         return "\n".join(report)
     
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get statistics about registered threads."""
         threads = self.get_active_threads()
         
@@ -433,7 +434,7 @@ class ThreadRegistry:
 _global_registry = ThreadRegistry()
 
 
-def register_thread(thread: threading.Thread, category: str, owner: Optional[str] = None) -> None:
+def register_thread(thread: threading.Thread, category: str, owner: str | None = None) -> None:
     """Register a thread with the global registry."""
     _global_registry.register(thread, category, owner)
 
@@ -463,7 +464,7 @@ def get_thread_report() -> str:
     return _global_registry.generate_report()
 
 
-def get_thread_statistics() -> Dict[str, Any]:
+def get_thread_statistics() -> dict[str, Any]:
     """Get thread statistics."""
     return _global_registry.get_statistics()
 

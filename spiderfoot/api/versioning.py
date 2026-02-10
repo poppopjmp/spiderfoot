@@ -11,8 +11,9 @@ Usage:
     from spiderfoot.api.versioning import mount_versioned_routers
     mount_versioned_routers(app, routers)
 """
+from __future__ import annotations
+
 import logging
-from typing import List, Optional, Tuple
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import JSONResponse

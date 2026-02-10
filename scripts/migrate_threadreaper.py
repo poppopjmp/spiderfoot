@@ -7,13 +7,13 @@ Automatically migrates the entire SpiderFoot test suite to use
 ThreadReaper infrastructure, eliminating thread leaks and timeouts
 across all platforms and Python versions.
 """
+from __future__ import annotations
 
 import os
 import sys
 import re
 import shutil
 from pathlib import Path
-from typing import List, Dict, Tuple, Set
 import ast
 import tempfile
 
@@ -64,7 +64,7 @@ class ThreadReaperMigrator:
             }
         }
     
-    def analyze_test_file(self, file_path: Path) -> Dict:
+    def analyze_test_file(self, file_path: Path) -> dict:
         """Analyze a test file to determine migration strategy."""
         try:
             content = file_path.read_text(encoding='utf-8')
@@ -129,7 +129,7 @@ class ThreadReaperMigrator:
                 'needs_migration': False
             }
     
-    def migrate_file_content(self, analysis: Dict) -> Tuple[str, bool]:
+    def migrate_file_content(self, analysis: dict) -> tuple[str, bool]:
         """Migrate file content to use ThreadReaper infrastructure."""
         content = analysis['content']
         migration_type = analysis['migration_type']
@@ -253,7 +253,7 @@ class ThreadReaperMigrator:
             self.stats['failed_files'] += 1
             return False
     
-    def find_test_files(self) -> List[Path]:
+    def find_test_files(self) -> list[Path]:
         """Find all test files in the project."""
         test_files = []
         

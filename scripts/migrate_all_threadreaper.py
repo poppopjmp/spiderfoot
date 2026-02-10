@@ -6,13 +6,13 @@ Complete ThreadReaper Migration Tool
 Migrates ALL test files to use ThreadReaper infrastructure,
 including those using unittest.TestCase directly.
 """
+from __future__ import annotations
 
 import os
 import sys
 import re
 import shutil
 from pathlib import Path
-from typing import List, Dict, Tuple, Set
 import ast
 
 # Add project root to Python path
@@ -78,7 +78,7 @@ class ComprehensiveThreadReaperMigrator:
         
         return any(re.search(pattern, content) for pattern in needs_patterns)
     
-    def migrate_unittest_to_threadreaper(self, content: str, file_path: Path) -> Tuple[str, bool]:
+    def migrate_unittest_to_threadreaper(self, content: str, file_path: Path) -> tuple[str, bool]:
         """Migrate unittest.TestCase to ThreadReaper base classes."""
         modified = False
         
@@ -234,7 +234,7 @@ class ComprehensiveThreadReaperMigrator:
             self.stats['failed_files'] += 1
             return False
     
-    def find_all_test_files(self) -> List[Path]:
+    def find_all_test_files(self) -> list[Path]:
         """Find all test files in the project."""
         test_files = []
         

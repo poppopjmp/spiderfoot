@@ -9,6 +9,7 @@ This module provides comprehensive security controls including:
 - API security measures
 - Data protection
 """
+from __future__ import annotations
 
 import re
 import hashlib
@@ -16,7 +17,7 @@ import secrets
 import time
 import threading
 from collections.abc import Callable
-from typing import Dict, Any, Union, Optional, List
+from typing import Any
 from datetime import datetime, timedelta
 import logging
 import ipaddress

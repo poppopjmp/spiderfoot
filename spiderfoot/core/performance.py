@@ -5,6 +5,7 @@ Performance Optimization Framework for SpiderFoot
 This module provides performance monitoring, optimization tools,
 and caching mechanisms for SpiderFoot operations.
 """
+from __future__ import annotations
 
 import time
 import threading
@@ -13,7 +14,7 @@ import json
 import os
 import psutil
 import logging
-from typing import Dict, Any, Callable, Optional, Union
+from typing import Any, Callable
 from functools import wraps, lru_cache
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
