@@ -71,7 +71,8 @@ class SpiderFootThreadPool:
 
     @stop.setter
     def stop(self, val: bool):
-        assert val in (True, False), "stop must be either True or False"
+        if not isinstance(val, bool):
+            raise TypeError("stop must be either True or False")
         for t in self.pool:
             with suppress(Exception):
                 t.stop = val

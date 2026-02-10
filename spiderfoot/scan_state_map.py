@@ -31,6 +31,24 @@ from spiderfoot.scan_state import ScanState
 
 log = logging.getLogger("spiderfoot.scan_state_map")
 
+__all__ = [
+    "DB_STATUS_CREATED",
+    "DB_STATUS_QUEUED",
+    "DB_STATUS_STARTING",
+    "DB_STATUS_RUNNING",
+    "DB_STATUS_STARTED",
+    "DB_STATUS_PAUSED",
+    "DB_STATUS_ABORT_REQUESTED",
+    "DB_STATUS_ABORTED",
+    "DB_STATUS_FINISHED",
+    "DB_STATUS_ERROR_FAILED",
+    "db_status_to_state",
+    "state_to_db_status",
+    "proto_to_state",
+    "state_to_proto",
+    "db_status_to_proto",
+    "proto_to_db_status",
+]
 
 # ── Legacy DB status string ↔ Python ScanState enum ──────────────────────────
 

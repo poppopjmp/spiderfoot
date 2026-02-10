@@ -9,9 +9,6 @@ import logging
 from pathlib import Path
 from typing import Dict, Any
 
-# Import SpiderFoot core modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
 # Import security modules
 from .secure_config import SecureConfigManager
 from .security_logging import SecurityLogger, SecurityEventType

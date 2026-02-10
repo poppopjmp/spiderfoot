@@ -38,6 +38,17 @@ from typing import Any, Dict, Final, Optional
 
 from spiderfoot.structured_logging import StructuredFormatter
 
+__all__ = [
+    "DEFAULT_LOG_LEVEL",
+    "LOG_FORMAT_TEXT",
+    "LOG_FORMAT_DEBUG",
+    "LOG_FORMAT_SECURITY",
+    "LOG_FORMAT_SECURITY_CONSOLE",
+    "LOG_FORMAT_NAMED",
+    "configure_logging",
+    "reset_logging",
+    "get_module_logger",
+]
 
 # ---------------------------------------------------------------------------
 # Constants
