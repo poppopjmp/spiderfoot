@@ -64,14 +64,17 @@ class SpiderFoot:
 
     @property
     def dbh(self) -> SpiderFootDb | None:
+        """Database handle for this scan instance."""
         return self._dbh
 
     @property
     def scanId(self) -> str:
+        """Unique identifier for the current scan."""
         return self._scanId
 
     @property
     def socksProxy(self) -> str:
+        """SOCKS proxy address for network requests."""
         return self._socksProxy
 
     @dbh.setter
@@ -87,6 +90,7 @@ class SpiderFoot:
         self._socksProxy = socksProxy
 
     def optValueToData(self, val: str) -> str:
+        """Resolve an option value that may reference a file (@path) or URL."""
         if not isinstance(val, str):
             self.error(f"Invalid option value {val}")
             return None
@@ -112,26 +116,31 @@ class SpiderFoot:
         return val
 
     def error(self, message: str) -> None:
+        """Log an error message for the current scan."""
         if not self.opts.get('__logging', False):
             return
         self.log.error(message, extra={'scanId': self._scanId})
 
     def fatal(self, error: str) -> None:
+        """Log a critical error and terminate the process."""
         self.log.critical(error, extra={'scanId': self._scanId})
         import sys
         sys.exit(-1)
 
     def status(self, message: str) -> None:
+        """Log a status/info message for the current scan."""
         if not self.opts.get('__logging', False):
             return
         self.log.info(message, extra={'scanId': self._scanId})
 
     def info(self, message: str) -> None:
+        """Log an informational message for the current scan."""
         if not self.opts.get('__logging', False):
             return
         self.log.info(message, extra={'scanId': self._scanId})
 
     def debug(self, message: str) -> None:
+        """Log a debug message if debug mode is enabled."""
         if not self.opts.get('_debug', False):
             return
         if not self.opts.get('__logging', False):
@@ -184,6 +193,7 @@ class SpiderFoot:
     def parseCert(self, rawcert: str, fqdn: str = None, expiringdays: int = 30) -> dict:
         return parseCert(rawcert, fqdn, expiringdays)
     def getSession(self) -> 'requests.sessions.Session':
+        """Return a configured requests session for HTTP operations."""
         return getSession()
     def useProxyForUrl(self, url: str) -> bool:
         # Patch: pass self for urlFQDN resolution and improve local IP detection
@@ -464,7 +474,9 @@ class SpiderFoot:
         return configUnserialize(opts, referencePoint, filterSystem)
 
     def getEventTypes(self) -> list:
+        """Return the list of event types known to this scan."""
         return self.opts.get('__eventtypes__', [])
 
     def getModules(self) -> dict:
+        """Return the dictionary of loaded modules."""
         return self.opts.get('__modules__', {})
