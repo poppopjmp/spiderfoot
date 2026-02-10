@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 import html
-from typing import Any, List, Optional
+from typing import Any
 
 # Optional dependency for enhanced HTML sanitization
 try:

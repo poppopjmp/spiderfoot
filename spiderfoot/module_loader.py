@@ -36,7 +36,7 @@ import threading
 from collections import OrderedDict
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 log = logging.getLogger("spiderfoot.module_loader")
 

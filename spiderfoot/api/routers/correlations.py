@@ -9,7 +9,7 @@ and ``PaginatedResponse`` from Cycle 25.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from typing import List, Any
+from typing import Any
 import logging
 from datetime import datetime
 

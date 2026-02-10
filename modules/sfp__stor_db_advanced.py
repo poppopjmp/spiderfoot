@@ -25,7 +25,7 @@ import time
 import json
 import threading
 import signal
-from typing import List, Any
+from typing import Any
 from collections import defaultdict, deque
 from dataclasses import dataclass
 import hashlib

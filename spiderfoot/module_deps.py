@@ -11,7 +11,7 @@ import logging
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, FrozenSet
+from typing import Any
 
 log = logging.getLogger("spiderfoot.module_deps")
 

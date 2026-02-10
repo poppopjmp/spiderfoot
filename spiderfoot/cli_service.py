@@ -41,7 +41,7 @@ import json
 import os
 import sys
 import time
-from typing import Any, List
+from typing import Any
 
 
 def _print_json(data: Any, indent: int = 2) -> None:

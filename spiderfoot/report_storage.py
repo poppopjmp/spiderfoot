@@ -31,7 +31,7 @@ import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger("spiderfoot.report_storage")

@@ -12,7 +12,7 @@ import time
 import signal
 import logging
 import multiprocessing as mp
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any
 from copy import deepcopy
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers

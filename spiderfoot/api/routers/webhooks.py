@@ -18,7 +18,7 @@ Endpoints:
 from __future__ import annotations
 
 import logging
-from typing import Any, List
+from typing import Any
 
 log = logging.getLogger("spiderfoot.api.webhooks")
 

@@ -28,7 +28,7 @@ import logging
 import os
 import time
 from dataclasses import dataclass, field
-from typing import Any, Optional, Set
+from typing import Any
 
 log = logging.getLogger("spiderfoot.api.rate_limit")
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, List
+from typing import Any
 
 from spiderfoot.data_service.base import DataService, DataServiceConfig
 

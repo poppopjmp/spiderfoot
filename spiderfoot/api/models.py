@@ -4,7 +4,7 @@ Pydantic models for SpiderFoot API
 from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Any
+from typing import Any
 from datetime import datetime
 
 class ScanRequest(BaseModel):

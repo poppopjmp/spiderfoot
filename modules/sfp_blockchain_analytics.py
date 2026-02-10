@@ -30,7 +30,7 @@ import json
 import re
 import time
 import requests
-from typing import Dict, Optional, Any
+from typing import Dict, Any
 from collections import defaultdict
 
 from spiderfoot import SpiderFootEvent

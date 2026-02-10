@@ -16,7 +16,7 @@ import ssl
 import socket
 import urllib.parse
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 try:
     import requests

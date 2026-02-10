@@ -32,7 +32,7 @@ New features enabled by ModernPlugin:
 """
 
 import json
-from typing import Any, Optional
+from typing import Any
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot.modern_plugin import SpiderFootModernPlugin

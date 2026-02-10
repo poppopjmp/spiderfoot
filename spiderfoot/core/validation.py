@@ -11,7 +11,7 @@ import os
 import sys
 import logging
 import re
-from typing import Any, List, Tuple
+from typing import Any
 from spiderfoot.constants import DEFAULT_WEB_PORT
 
 

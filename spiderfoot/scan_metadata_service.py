@@ -8,7 +8,7 @@ Handles metadata CRUD, notes, archiving, and false-positive management.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from spiderfoot.scan_state_map import (
     DB_STATUS_ABORTED,

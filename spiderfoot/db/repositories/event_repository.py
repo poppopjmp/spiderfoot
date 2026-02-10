@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 
 from spiderfoot.db.repositories.base import AbstractRepository
 

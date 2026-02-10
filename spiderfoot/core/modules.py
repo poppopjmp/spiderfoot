@@ -11,7 +11,7 @@ import os
 import sys
 import logging
 import importlib.util
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 from spiderfoot import SpiderFootHelpers
 

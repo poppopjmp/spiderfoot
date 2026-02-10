@@ -18,7 +18,7 @@ import secrets
 import jwt
 import logging
 from collections.abc import Callable
-from typing import Any, List
+from typing import Any
 from datetime import datetime, timedelta
 from functools import wraps
 from collections import defaultdict, deque

@@ -25,7 +25,7 @@ import sqlite3
 import threading
 import psycopg2
 import psycopg2.extras
-from typing import Any, List
+from typing import Any
 
 from spiderfoot.db.db_core import DbCore
 from spiderfoot.db.db_scan import ScanManager

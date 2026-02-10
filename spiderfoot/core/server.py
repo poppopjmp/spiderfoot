@@ -12,7 +12,7 @@ import sys
 import time
 import logging
 import threading
-from typing import Dict, Any, Optional
+from typing import Any
 import multiprocessing as mp
 
 import cherrypy

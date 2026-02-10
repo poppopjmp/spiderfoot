@@ -42,7 +42,7 @@ import os
 from copy import deepcopy
 from dataclasses import dataclass, field, fields, asdict
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 from spiderfoot.constants import DEFAULT_WEB_PORT, DEFAULT_API_PORT, DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger("spiderfoot.app_config")

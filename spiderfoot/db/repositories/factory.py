@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Optional
+from typing import Any
 
 from spiderfoot.db.repositories.scan_repository import ScanRepository
 from spiderfoot.db.repositories.event_repository import EventRepository

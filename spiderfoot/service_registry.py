@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.registry")
 

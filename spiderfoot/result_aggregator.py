@@ -28,7 +28,7 @@ import logging
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, List, Optional
+from typing import Any
 
 log = logging.getLogger("spiderfoot.result_aggregator")
 

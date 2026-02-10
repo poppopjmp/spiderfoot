@@ -42,7 +42,7 @@ import threading
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Callable, List
+from typing import Any, Callable
 
 from spiderfoot.scan_state_map import (
     DB_STATUS_FINISHED,

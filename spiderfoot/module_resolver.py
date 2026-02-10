@@ -21,7 +21,7 @@ import importlib
 import importlib.util
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, FrozenSet, Optional
+from typing import Any
 
 log = logging.getLogger("spiderfoot.module_resolver")
 

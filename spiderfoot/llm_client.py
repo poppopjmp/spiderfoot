@@ -34,7 +34,7 @@ import urllib.request
 import urllib.error
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable
 
 from collections.abc import Generator
 

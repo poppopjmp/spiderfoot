@@ -15,7 +15,7 @@ import socket
 import string
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 from spiderfoot.constants import DEFAULT_DOH_URL
 

@@ -10,7 +10,7 @@ import hmac
 import hashlib
 import secrets
 import jwt
-from typing import List, Any, Tuple
+from typing import Any
 from fastapi import HTTPException, Depends, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext

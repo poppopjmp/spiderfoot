@@ -51,7 +51,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Deque, Optional, Type
+from typing import Any, Callable, Deque
 
 log = logging.getLogger("spiderfoot.retry")
 

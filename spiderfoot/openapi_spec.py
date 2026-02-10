@@ -30,7 +30,7 @@ Generates a complete OpenAPI 3.1 spec from registered API endpoints::
 import json
 import logging
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 log = logging.getLogger("spiderfoot.openapi_spec")
 

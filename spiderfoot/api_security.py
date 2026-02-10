@@ -11,7 +11,7 @@ import hashlib
 import logging
 import secrets
 import jwt
-from typing import List, Any, Tuple
+from typing import Any
 from functools import wraps
 from flask import request, jsonify, g
 from werkzeug.security import check_password_hash, generate_password_hash

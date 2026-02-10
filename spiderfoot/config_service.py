@@ -50,7 +50,7 @@ import os
 import threading
 import time
 from pathlib import Path
-from typing import Any, Callable, List, Set, Type
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.config_service")
 

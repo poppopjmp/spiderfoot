@@ -29,7 +29,7 @@ import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 from threading import Lock
-from typing import Any, Dict
+from typing import Any
 
 log = logging.getLogger("spiderfoot.module_output_validator")
 

@@ -43,7 +43,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, List
+from typing import Any, Callable
 
 log = logging.getLogger("spiderfoot.audit_log")
 

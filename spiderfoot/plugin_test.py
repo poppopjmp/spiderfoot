@@ -39,7 +39,7 @@ import logging
 import re
 import types
 from dataclasses import dataclass, field
-from typing import Any, Callable, Type
+from typing import Any, Callable
 
 
 from collections.abc import Sequence
