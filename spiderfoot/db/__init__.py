@@ -604,10 +604,6 @@ class SpiderFootDb:
         gc.collect()
 
     # --- Back-end database operations ---
-    def create(self) -> None:
-        return self._core.create()
-    def close(self) -> None:
-        return self._core.close()
     def vacuumDB(self) -> bool:
         return self._core.vacuumDB()
     # --- SCAN INSTANCE MANAGEMENT ---
