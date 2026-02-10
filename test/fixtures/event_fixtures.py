@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Event fixtures for testing SpiderFoot event handling."""
 
 import pytest

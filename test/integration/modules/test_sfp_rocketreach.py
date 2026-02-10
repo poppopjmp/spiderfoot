@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         test_sfp_rocketreach
 # Purpose:      Test RocketReach module.

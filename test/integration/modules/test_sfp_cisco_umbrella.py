@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         test_sfp_cisco_umbrella
 # Purpose:      Test Cisco Umbrella Investigate API module.

@@ -205,7 +205,7 @@ class TestFileAuditBackend:
                 category=AuditCategory.AUTH,
                 action=f"action_{i}"))
 
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             lines = [l for l in f if l.strip()]
         assert len(lines) == 3
 

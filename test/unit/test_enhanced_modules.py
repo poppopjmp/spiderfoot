@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Unit tests for enhanced SpiderFoot modules.
@@ -435,7 +434,7 @@ class TestNewCorrelationRules(TestModuleBase):
         
         # Read and parse YAML
         import yaml
-        with open(rule_path, 'r') as f:
+        with open(rule_path) as f:
             rule = yaml.safe_load(f)
         
         # Verify required fields
@@ -454,7 +453,7 @@ class TestNewCorrelationRules(TestModuleBase):
         
         # Read and parse YAML
         import yaml
-        with open(rule_path, 'r') as f:
+        with open(rule_path) as f:
             rule = yaml.safe_load(f)
         
         # Verify required fields

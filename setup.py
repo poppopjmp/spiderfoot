@@ -7,15 +7,15 @@ from setuptools import setup, find_packages
 
 # Read version from VERSION file
 version_file = pathlib.Path(__file__).parent / "VERSION"
-with open(version_file, 'r', encoding='utf-8') as f:
+with open(version_file, encoding='utf-8') as f:
     version = f.read().strip()
 
 # Read README for long description
-with open("README.md", "r", encoding="utf-8") as fh:
+with open("README.md", encoding="utf-8") as fh:
     long_description = fh.read()
 
 # Read requirements
-with open("requirements.txt", "r", encoding="utf-8") as fh:
+with open("requirements.txt", encoding="utf-8") as fh:
     requirements = [
         line.strip()
         for line in fh

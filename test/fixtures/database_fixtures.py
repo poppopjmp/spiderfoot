@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Database fixtures for testing SpiderFoot database operations."""
 
 import pytest

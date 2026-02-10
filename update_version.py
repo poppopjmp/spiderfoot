@@ -19,7 +19,7 @@ def get_version():
     """Get version from VERSION file."""
     version_file = Path(__file__).parent / "VERSION"
     try:
-        with open(version_file, 'r', encoding='utf-8') as f:
+        with open(version_file, encoding='utf-8') as f:
             return f.read().strip()
     except FileNotFoundError:
         print(f"ERROR: VERSION file not found at {version_file}")
@@ -47,7 +47,7 @@ def update_readme():
         print(f"WARNING: README.md not found at {readme_path}")
         return
     
-    with open(readme_path, 'r', encoding='utf-8') as f:
+    with open(readme_path, encoding='utf-8') as f:
         content = f.read()
     
     updated = False
@@ -106,7 +106,7 @@ def update_docs():
             print(f"WARNING: {file_path} not found")
             continue
             
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             content = f.read()
         
         original_content = content
@@ -134,7 +134,7 @@ def update_code_fallback():
         print(f"WARNING: {version_file} not found")
         return
     
-    with open(version_file, 'r', encoding='utf-8') as f:
+    with open(version_file, encoding='utf-8') as f:
         content = f.read()
     
     original_content = content
@@ -161,7 +161,7 @@ def update_debian_control():
     if not control_path.exists():
         print(f"WARNING: {control_path} not found")
         return
-    with open(control_path, 'r', encoding='utf-8') as f:
+    with open(control_path, encoding='utf-8') as f:
         content = f.read()
     original_content = content
     # Optionally update a Version: field if present (not required for all controls)
@@ -186,7 +186,7 @@ def update_github_workflows():
     if not workflow_path.exists():
         print(f"WARNING: {workflow_path} not found")
         return
-    with open(workflow_path, 'r', encoding='utf-8') as f:
+    with open(workflow_path, encoding='utf-8') as f:
         content = f.read()
     original_content = content
     # Update artifact names with version
@@ -214,7 +214,7 @@ def update_snapcraft():
     if not snap_path.exists():
         print(f"WARNING: {snap_path} not found")
         return
-    with open(snap_path, 'r', encoding='utf-8') as f:
+    with open(snap_path, encoding='utf-8') as f:
         content = f.read()
     new_content = re.sub(r"version: '([\d\.]+)'", f"version: '{version}'", content)
     if new_content != content:
@@ -231,7 +231,7 @@ def update_homebrew_formula():
     if not rb_path.exists():
         print(f"WARNING: {rb_path} not found")
         return
-    with open(rb_path, 'r', encoding='utf-8') as f:
+    with open(rb_path, encoding='utf-8') as f:
         content = f.read()
     new_content = re.sub(r'version "[\d\.]+"', f'version "{version}"', content)
     new_content = re.sub(r'v[\d\.]+.tar.gz', f'v{version}.tar.gz', new_content)
@@ -250,7 +250,7 @@ def update_docker_image_yml():
     if not docker_image_yml.exists():
         print(f"WARNING: {docker_image_yml} not found")
         return
-    with open(docker_image_yml, 'r', encoding='utf-8') as f:
+    with open(docker_image_yml, encoding='utf-8') as f:
         content = f.read()
     # Replace the vX.Y.Z tag in the tags: block (uncomment and update if present)
     new_content = re.sub(
@@ -279,7 +279,7 @@ def update_test_versions():
     # test_sfcli.py
     sfcli_path = Path(__file__).parent / "test" / "unit" / "test_sfcli.py"
     if sfcli_path.exists():
-        with open(sfcli_path, 'r', encoding='utf-8') as f:
+        with open(sfcli_path, encoding='utf-8') as f:
             content = f.read()
         new_content = re.sub(r'self.cli.version = "\d+\.\d+\.\d+"', f'self.cli.version = "{version}"', content)
         if new_content != content:
@@ -294,7 +294,7 @@ def update_test_versions():
     # test_spiderfootcli.py
     spiderfootcli_path = Path(__file__).parent / "test" / "unit" / "test_spiderfootcli.py"
     if spiderfootcli_path.exists():
-        with open(spiderfootcli_path, 'r', encoding='utf-8') as f:
+        with open(spiderfootcli_path, encoding='utf-8') as f:
             content = f.read()
         new_content = re.sub(r'\["SUCCESS", "\d+\.\d+\.\d+"\]', f'["SUCCESS", "{version}"]', content)
         if new_content != content:
@@ -309,7 +309,7 @@ def update_test_versions():
     # workflow_api.py
     workflow_api_path = Path(__file__).parent / "spiderfoot" / "workflow_api.py"
     if workflow_api_path.exists():
-        with open(workflow_api_path, 'r', encoding='utf-8') as f:
+        with open(workflow_api_path, encoding='utf-8') as f:
             content = f.read()
         new_content = re.sub(r"('version': ')\d+\.\d+\.\d+(')", lambda m: f"{m.group(1)}{version}{m.group(2)}", content)
         if new_content != content:
@@ -358,7 +358,7 @@ def check_version_consistency():
         if not file_path.exists():
             continue
             
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             content = f.read()
         
         for pattern in file_patterns:

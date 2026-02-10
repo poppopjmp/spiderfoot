@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -----------------------------------------------------------------
 # Name:         sfwebui wrapper
 # Purpose:      Web User interface class for use with a web browser
@@ -64,7 +63,7 @@ class SpiderFootWebUi(WebUiRoutes):
     a clean, modular architecture.
     """
     
-    def __init__(self, web_config: Dict[str, Any], config: Dict[str, Any], loggingQueue: Optional[mp.Queue] = None):
+    def __init__(self, web_config: dict[str, Any], config: dict[str, Any], loggingQueue: Optional[mp.Queue] = None):
         """
         Initialize the SpiderFoot Web UI.
         
@@ -218,7 +217,7 @@ class SpiderFootWebUi(WebUiRoutes):
         except Exception:
             return False
     
-    def sanitize_user_input(self, user_input: Union[str, List[str]]) -> Union[str, List[str]]:
+    def sanitize_user_input(self, user_input: Union[str, list[str]]) -> Union[str, list[str]]:
         """
         Sanitize user input to prevent XSS and injection attacks.
         
@@ -242,7 +241,7 @@ class SpiderFootWebUi(WebUiRoutes):
             return self.cleanUserInput([user_input])[0] if user_input else ""
         return str(user_input) if user_input is not None else ""
     
-    def handle_error(self, error_msg: str, error_type: str = "error") -> Dict[str, Any]:
+    def handle_error(self, error_msg: str, error_type: str = "error") -> dict[str, Any]:
         """
         Standard error handling for API endpoints.
         
@@ -267,7 +266,7 @@ class SpiderFootWebUi(WebUiRoutes):
             'timestamp': time.time()
         }
     
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """
         Get system status information.
         
@@ -299,7 +298,7 @@ class SpiderFootWebUi(WebUiRoutes):
         except Exception as e:
             return self.handle_error(f"Failed to get system status: {e}")
     
-    def cleanup_old_scans(self, retention_days: int = 30) -> Dict[str, Any]:
+    def cleanup_old_scans(self, retention_days: int = 30) -> dict[str, Any]:
         """
         Clean up old scan data based on retention policy.
         
@@ -335,7 +334,7 @@ class SpiderFootWebUi(WebUiRoutes):
         except Exception as e:
             return self.handle_error(f"Failed to cleanup old scans: {e}")
     
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """
         Get performance metrics for the system.
         
@@ -372,7 +371,7 @@ class SpiderFootWebUi(WebUiRoutes):
         except Exception as e:
             return self.handle_error(f"Failed to get performance metrics: {e}")
     
-    def backup_database(self, backup_path: Optional[str] = None) -> Dict[str, Any]:
+    def backup_database(self, backup_path: Optional[str] = None) -> dict[str, Any]:
         """
         Create a backup of the database.
         
@@ -414,7 +413,7 @@ class SpiderFootWebUi(WebUiRoutes):
         except Exception as e:
             return self.handle_error(f"Failed to backup database: {e}")
     
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """
         Perform a comprehensive health check.
         
@@ -478,7 +477,7 @@ class SpiderFootWebUiApp:
     configuration validation, and system monitoring.
     """
     
-    def __init__(self, config: Dict[str, Any], docroot: Optional[str] = None, loggingQueue: Optional[mp.Queue] = None):
+    def __init__(self, config: dict[str, Any], docroot: Optional[str] = None, loggingQueue: Optional[mp.Queue] = None):
         """
         Initialize the SpiderFoot Web UI Application.
         
@@ -507,7 +506,7 @@ class SpiderFootWebUiApp:
         
         self.log.info("SpiderFootWebUiApp initialized successfully")
     
-    def _validate_and_setup_config(self, config: Dict[str, Any]):
+    def _validate_and_setup_config(self, config: dict[str, Any]):
         """Validate and setup configuration with enhanced error checking."""
         from copy import deepcopy
         
@@ -720,7 +719,7 @@ class SpiderFootWebUiApp:
         else:
             cherrypy.response.body = b"<html><body>Error</body></html>"
     
-    def validate_system(self) -> Dict[str, Any]:
+    def validate_system(self) -> dict[str, Any]:
         """
         Perform comprehensive system validation.
         
@@ -788,7 +787,7 @@ class SpiderFootWebUiApp:
         
         return validation_results
     
-    def get_system_info(self) -> Dict[str, Any]:
+    def get_system_info(self) -> dict[str, Any]:
         """
         Get comprehensive system information.
         

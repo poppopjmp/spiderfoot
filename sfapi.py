@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 SpiderFoot REST API (modular entrypoint)
 Delegates to the modular FastAPI app in spiderfoot/api/main.py

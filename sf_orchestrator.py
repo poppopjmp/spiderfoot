@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sf_orchestrator
 # Purpose:      Modular orchestrator for SpiderFoot - integrates CLI, API, WebUI

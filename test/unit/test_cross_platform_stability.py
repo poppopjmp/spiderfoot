@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Comprehensive test suite to validate cross-platform stability fixes.
 

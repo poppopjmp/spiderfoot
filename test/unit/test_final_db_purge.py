@@ -363,7 +363,7 @@ class TestRouterDbPurge:
         """No router should have 'from spiderfoot import SpiderFootDb'
         or 'from spiderfoot import SpiderFootDb' as an actual import."""
         for filepath in self._get_router_files():
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 for lineno, line in enumerate(f, 1):
                     stripped = line.strip()
                     # Skip comments, docstrings
@@ -380,7 +380,7 @@ class TestRouterDbPurge:
     def test_no_spiderfoot_db_instantiation_in_any_router(self):
         """No router should instantiate SpiderFootDb(...)."""
         for filepath in self._get_router_files():
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 for lineno, line in enumerate(f, 1):
                     stripped = line.strip()
                     if stripped.startswith("#") or stripped.startswith('"""'):

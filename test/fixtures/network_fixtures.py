@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Network and HTTP fixtures for testing SpiderFoot modules."""
 
 import pytest

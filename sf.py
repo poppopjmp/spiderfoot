@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sf
 # Purpose:      Main wrapper for calling all SpiderFoot modules (Modular Version)

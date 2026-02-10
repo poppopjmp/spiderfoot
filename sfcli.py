@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfcli
 # Purpose:     Command Line Interface for SpiderFoot.
@@ -327,7 +326,7 @@ class SpiderFootCli(cmd.Cmd):
         # Then the separator
         for i, c in enumerate(cols):
             # out += "-" * ((maxsize[c]+spaces))
-            out.append("-" * ((maxsize[c] + spaces)))
+            out.append("-" * (maxsize[c] + spaces))
             if i < len(cols) - 1:
                 # out += "+"
                 out.append("+")
@@ -809,7 +808,7 @@ if __name__ == "__main__":
         config['cli.password'] = args.p
     if args.P:
         try:
-            with open(args.P, 'r') as f:
+            with open(args.P) as f:
                 config['cli.password'] = f.readlines()[0].strip('\n')
         except Exception as e:
             print(f"Unable to open {args.P}: ({e})")
@@ -843,7 +842,7 @@ if __name__ == "__main__":
     # Load commands from a file
     if args.e:
         try:
-            with open(args.e, 'r') as f:
+            with open(args.e) as f:
                 cin = f.read()
         except Exception as e:
             print(f"Unable to open {args.e}: ({e})")
