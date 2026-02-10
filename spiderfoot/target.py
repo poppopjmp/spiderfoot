@@ -46,6 +46,9 @@ class SpiderFootTarget():
         self.targetValue = targetValue
         self.targetAliases = list()
 
+    def __repr__(self) -> str:
+        return f"SpiderFootTarget({self._targetValue!r}, {self._targetType!r})"
+
     @property
     def targetType(self) -> str:
         return self._targetType

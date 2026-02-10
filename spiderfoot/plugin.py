@@ -138,6 +138,9 @@ class SpiderFootPlugin:
         self.__scanId__ = None
         self._listenerModules = []  # Initialize _listenerModules attribute
 
+    def __repr__(self) -> str:
+        return f"SpiderFootPlugin({self._name!r})"
+
     def finished(self):
         """Called when the module should finish processing."""
         pass
