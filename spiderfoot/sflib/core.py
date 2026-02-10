@@ -14,6 +14,9 @@ Contains the :class:`SpiderFoot` "god object" that holds scan
 configuration, provides DNS resolution, HTTP fetching, content analysis,
 and various domain / IP / URL helper methods used by every module.
 """
+
+from __future__ import annotations
+
 # Will import from .config, .network, .logging, .helpers as needed
 
 from copy import deepcopy
@@ -60,7 +63,7 @@ class SpiderFoot:
             dns.resolver.override_system_resolver(res)
 
     @property
-    def dbh(self):
+    def dbh(self) -> SpiderFootDb | None:
         return self._dbh
 
     @property
@@ -72,7 +75,7 @@ class SpiderFoot:
         return self._socksProxy
 
     @dbh.setter
-    def dbh(self, dbh):
+    def dbh(self, dbh: SpiderFootDb | None) -> None:
         self._dbh = dbh
 
     @scanId.setter

@@ -5,6 +5,8 @@ Wraps the existing SpiderFootDb layer to provide the DataService interface
 when running in single-process mode (backward-compatible default).
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from typing import Any, Dict, List, Optional
@@ -60,7 +62,7 @@ class LocalDataService(DataService):
         self._initialized = True
 
     @property
-    def dbh(self):
+    def dbh(self) -> SpiderFootDb:
         """Get the underlying database handle."""
         self._ensure_db()
         return self._dbh

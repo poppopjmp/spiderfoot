@@ -67,7 +67,7 @@ class TestSpiderFootHelpers(TestModuleBase):
         import os
         with tempfile.TemporaryDirectory() as tmpdir:
             mod_path = os.path.join(tmpdir, 'sfp_test.py')
-            with open(mod_path, 'w') as f:
+            with open(mod_path, 'w', encoding='utf-8') as f:
                 f.write(
                     "from spiderfoot.modern_plugin import SpiderFootModernPlugin\n"
                     "class sfp_test(SpiderFootModernPlugin):\n"

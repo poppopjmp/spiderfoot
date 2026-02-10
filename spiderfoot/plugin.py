@@ -160,7 +160,7 @@ class SpiderFootPlugin:
             self.notifyListeners(evt)
 
     @property
-    def log(self):
+    def log(self) -> logging.Logger:
         if self._log is None:
             # temporarily set logger class
             logging.setLoggerClass(SpiderFootPluginLogger)

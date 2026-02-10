@@ -26,6 +26,8 @@ Usage::
     # result.stats    — loading statistics
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import queue
@@ -661,12 +663,12 @@ class ModuleLoader:
         return self._graph is not None
 
     @property
-    def registry(self):
+    def registry(self) -> ModuleRegistry | None:
         """The underlying ``ModuleRegistry`` (or None)."""
         return self._registry
 
     @property
-    def graph(self):
+    def graph(self) -> ModuleGraph | None:
         """The underlying ``ModuleGraph`` (or None)."""
         return self._graph
 

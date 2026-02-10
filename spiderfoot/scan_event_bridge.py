@@ -84,7 +84,7 @@ class ScanEventBridge:
     # ------------------------------------------------------------------
 
     @property
-    def relay(self):
+    def relay(self) -> EventRelay:
         if self._relay is None:
             from spiderfoot.event_relay import get_event_relay
             self._relay = get_event_relay()

@@ -88,7 +88,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
     # ------------------------------------------------------------------
 
     @property
-    def log(self):
+    def log(self) -> logging.Logger:
         """Module-specific logger."""
         if self._log is None:
             name = getattr(self, "__name__", None) or self.__class__.__name__
@@ -125,35 +125,35 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
     # ------------------------------------------------------------------
 
     @property
-    def http(self):
+    def http(self) -> Any | None:
         """Access the HttpService."""
         if self._http_service is None:
             self._http_service = self._get_service("http")
         return self._http_service
 
     @property
-    def dns(self):
+    def dns(self) -> Any | None:
         """Access the DnsService."""
         if self._dns_service is None:
             self._dns_service = self._get_service("dns")
         return self._dns_service
 
     @property
-    def cache(self):
+    def cache(self) -> Any | None:
         """Access the CacheService."""
         if self._cache_service is None:
             self._cache_service = self._get_service("cache")
         return self._cache_service
 
     @property
-    def data(self):
+    def data(self) -> Any | None:
         """Access the DataService."""
         if self._data_service is None:
             self._data_service = self._get_service("data")
         return self._data_service
 
     @property
-    def event_bus(self):
+    def event_bus(self) -> Any | None:
         """Access the EventBus."""
         if self._event_bus is None:
             self._event_bus = self._get_service("event_bus")

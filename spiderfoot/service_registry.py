@@ -331,26 +331,26 @@ class ServiceMixin:
         return reg.get_optional(name)
 
     @property
-    def http_service(self):
+    def http_service(self) -> Any:
         """Convenience accessor for HttpService."""
         return self.get_service(SERVICE_HTTP)
 
     @property
-    def dns_service(self):
+    def dns_service(self) -> Any:
         """Convenience accessor for DnsService."""
         return self.get_service(SERVICE_DNS)
 
     @property
-    def cache_service(self):
+    def cache_service(self) -> Any:
         """Convenience accessor for CacheService."""
         return self.get_service(SERVICE_CACHE)
 
     @property
-    def data_service(self):
+    def data_service(self) -> Any:
         """Convenience accessor for DataService."""
         return self.get_service(SERVICE_DATA)
 
     @property
-    def event_bus(self):
+    def event_bus(self) -> Any:
         """Convenience accessor for EventBus."""
         return self.get_service(SERVICE_EVENT_BUS)

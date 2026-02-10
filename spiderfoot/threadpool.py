@@ -218,7 +218,7 @@ class SpiderFootThreadPool:
             self.submit(callback, i, *args, **kwargs)
 
     @property
-    def finished(self):
+    def finished(self) -> bool:
         if self.stop:
             return True
 

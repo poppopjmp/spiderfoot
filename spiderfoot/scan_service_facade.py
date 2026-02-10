@@ -272,7 +272,7 @@ class ScanService:
         raise ScanServiceError("No database handle available")
 
     @property
-    def dbh(self):
+    def dbh(self) -> SpiderFootDb:
         """Expose raw DB handle for un-migrated endpoints."""
         return self._ensure_dbh()
 
