@@ -223,6 +223,7 @@ class ReportFormatter:
     """Renders GeneratedReport objects into various output formats."""
 
     def __init__(self, config: FormatterConfig | None = None) -> None:
+        """Initialize the ReportFormatter."""
         self.config = config or FormatterConfig()
 
     # -----------------------------------------------------------------------

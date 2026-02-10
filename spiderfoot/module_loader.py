@@ -82,6 +82,7 @@ class LoadResult:
     """Module names removed by minimal-set resolution."""
 
     def __repr__(self) -> str:
+        """Return a string representation of the load result."""
         return (
             f"<LoadResult loaded={self.loaded} failed={self.failed} "
             f"order={self.order_method} cycles={self.cycles_detected} "
@@ -689,6 +690,7 @@ class ModuleLoader:
         return result
 
     def __repr__(self) -> str:
+        """Return a string representation of the module loader."""
         return (
             f"<ModuleLoader registry={self.has_registry} "
             f"graph={self.has_graph} "

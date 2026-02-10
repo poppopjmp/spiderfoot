@@ -50,6 +50,7 @@ class DataService(ABC):
     """
 
     def __init__(self, config: DataServiceConfig | None = None) -> None:
+        """Initialize the DataService."""
         self.config = config or DataServiceConfig()
         self.log = logging.getLogger(f"spiderfoot.dataservice.{self.config.backend.value}")
 

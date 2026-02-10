@@ -35,4 +35,5 @@ def help_command(cli: SpiderFootCli, line: str) -> None:
             cli.edprint(f"No help found for command '{cmd}'")
 
 def register(registry: CommandRegistry) -> None:
+    """Register the help command with the CLI registry."""
     registry.register("help", help_command, help_text="This help output.")

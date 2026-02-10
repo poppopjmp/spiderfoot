@@ -443,8 +443,10 @@ def require_api_auth(required_scope: str = None) -> Callable:
         required_scope: Required scope for the endpoint
     """
     def decorator(f: Callable) -> Callable:
+        """Wrap the function with authentication checks."""
         @wraps(f)
         def decorated_function(*args, **kwargs) -> Any:
+            """Validate API key and check permissions before calling the handler."""
             # Get API key from Authorization header
             auth_header = request.headers.get('Authorization')
             if not auth_header or not auth_header.startswith('Bearer '):

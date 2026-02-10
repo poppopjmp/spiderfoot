@@ -83,6 +83,7 @@ class ModuleOutputValidator:
 
     @property
     def mode(self) -> str:
+        """Return the current validation mode."""
         return self._mode
 
     def check(self, module: Any, event: Any) -> bool:

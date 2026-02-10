@@ -108,6 +108,7 @@ class CSRFTool(cherrypy.Tool):
     """CherryPy tool for CSRF protection."""
 
     def __init__(self) -> None:
+        """Initialize the CSRFTool."""
         cherrypy.Tool.__init__(self, 'before_handler', self.check_csrf)
         self.csrf_protection = CSRFProtection()
 
@@ -134,6 +135,7 @@ def csrf_protect(f: Callable) -> Callable:
     """
     @wraps(f)
     def decorated_function(*args, **kwargs) -> Any:
+        """Check CSRF token and call the wrapped function."""
         csrf_protection.check_csrf_token()
         return f(*args, **kwargs)
     return decorated_function

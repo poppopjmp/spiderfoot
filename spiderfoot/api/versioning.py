@@ -41,6 +41,7 @@ class ApiVersionMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """Add API version headers to responses."""
         path = request.url.path
 
         # Skip non-API routes

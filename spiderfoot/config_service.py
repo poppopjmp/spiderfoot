@@ -196,6 +196,7 @@ class ConfigValidator:
     """Validates configuration values against rules."""
 
     def __init__(self) -> None:
+        """Initialize the ConfigValidator."""
         self._rules: dict[str, dict[str, Any]] = {}
 
     def add_rule(self, key: str, *,
@@ -271,6 +272,7 @@ class ConfigService:
     """
 
     def __init__(self) -> None:
+        """Initialize the ConfigService."""
         self._lock = threading.RLock()
         self._config: dict[str, Any] = {}
         self._sources: dict[str, str] = {}  # key → source (default/file/env/runtime)

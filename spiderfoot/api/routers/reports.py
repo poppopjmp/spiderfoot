@@ -300,6 +300,7 @@ def _generate_report_background(
         total_sections = [3]  # estimate
 
         def on_section(section_title: str, _content: str) -> None:
+            """Track report section completion progress."""
             sections_done[0] += 1
             pct = min(10 + (sections_done[0] / max(total_sections[0], 1)) * 80, 90)
             update_stored_report(report_id, {

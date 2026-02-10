@@ -34,4 +34,5 @@ def data_command(cli: SpiderFootCli, line: str) -> None:
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
 def register(registry: CommandRegistry) -> None:
+    """Register the data command with the CLI registry."""
     registry.register("data", data_command, help_text="Show data from a scan's results using the API.")

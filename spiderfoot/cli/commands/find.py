@@ -35,4 +35,5 @@ def find_command(cli: SpiderFootCli, line: str) -> None:
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
 def register(registry: CommandRegistry) -> None:
+    """Register the find command with the CLI registry."""
     registry.register("find", find_command, help_text="Search for data within scan results using the API.")

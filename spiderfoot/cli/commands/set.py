@@ -126,4 +126,5 @@ def set_command(cli: SpiderFootCli, line: str) -> None:
         return
 
 def register(registry: CommandRegistry) -> None:
+    """Register the set command with the CLI registry."""
     registry.register("set", set_command, help_text="Set variables and configuration settings.")

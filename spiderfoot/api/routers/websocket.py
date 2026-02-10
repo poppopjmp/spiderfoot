@@ -37,6 +37,7 @@ class WebSocketManager:
     """
 
     def __init__(self) -> None:
+        """Initialize the WebSocketManager."""
         self._connections: dict[str, set[WebSocket]] = {}
         self._lock = asyncio.Lock()
 

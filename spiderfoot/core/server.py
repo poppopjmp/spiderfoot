@@ -222,6 +222,7 @@ class ServerManager:
 
             # Start FastAPI server in a separate thread
             def run_fastapi() -> None:
+                """Start the FastAPI server in the current thread."""
                 try:
                     # Check if sfapi.py exists
                     sfapi_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../sfapi.py')
@@ -308,6 +309,7 @@ class ServerManager:
             secrets: Username/password pairs
         """
         def get_ha1(realm: str, username: str) -> str | None:
+            """Return the HA1 hash for digest authentication."""
             if username in secrets:
                 return auth_digest.get_ha1(realm, username, secrets[username])
             return None

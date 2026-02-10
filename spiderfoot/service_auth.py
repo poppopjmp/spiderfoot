@@ -69,6 +69,7 @@ class ServiceTokenIssuer:
         secret: str | None = None,
         ttl: int = DEFAULT_TTL_ONE_HOUR,
     ) -> None:
+        """Initialize the ServiceTokenIssuer."""
         self.service_name = service_name or os.environ.get("SF_SERVICE_NAME", "unknown")
         self._static_token = static_token or os.environ.get("SF_SERVICE_TOKEN", "")
         self._secret = secret or os.environ.get("SF_SERVICE_SECRET", "")
@@ -135,6 +136,7 @@ class ServiceTokenValidator:
         ttl: int = DEFAULT_TTL_ONE_HOUR,
         enabled: bool | None = None,
     ) -> None:
+        """Initialize the ServiceTokenValidator."""
         self._static_token = static_token or os.environ.get("SF_SERVICE_TOKEN", "")
         self._secret = secret or os.environ.get("SF_SERVICE_SECRET", "")
         self._ttl = int(os.environ.get("SF_SERVICE_TOKEN_TTL", str(ttl)))
@@ -154,6 +156,7 @@ class ServiceTokenValidator:
 
     @property
     def enabled(self) -> bool:
+        """Return whether service authentication is enabled."""
         return self._enabled
 
     def validate(self, token: str) -> TokenValidationResult:

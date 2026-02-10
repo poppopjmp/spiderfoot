@@ -51,6 +51,7 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(self, app: Any, exclude_paths: set[str] | None = None, log_body: bool = False) -> None:
+        """Initialize the AuditLoggingMiddleware."""
         super().__init__(app)
         env_excludes = os.environ.get("SF_API_AUDIT_EXCLUDE", "")
         if env_excludes:
@@ -60,6 +61,7 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
         self._log_body = log_body or os.environ.get("SF_API_AUDIT_BODY", "").lower() in ("1", "true")
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        """Log request and response audit details."""
         # Skip excluded paths
         path = request.url.path
         if path in self._exclude:

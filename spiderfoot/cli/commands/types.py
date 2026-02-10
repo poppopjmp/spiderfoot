@@ -21,4 +21,5 @@ def types_command(cli: SpiderFootCli, line: str) -> None:
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
 def register(registry: CommandRegistry) -> None:
+    """Register the types command with the CLI registry."""
     registry.register("types", types_command, help_text="List available data types from the API.")

@@ -172,6 +172,7 @@ class DataServiceBridge:
     """
 
     def __init__(self, data_service: DataService) -> None:
+        """Initialize the DataServiceBridge."""
         self._ds = data_service
         self.log = logging.getLogger("spiderfoot.dataservice.bridge")
 

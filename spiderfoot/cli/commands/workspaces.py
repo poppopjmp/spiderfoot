@@ -50,6 +50,7 @@ def workspace_delete_command(cli: SpiderFootCli, line: str) -> None:
         cli.edprint(f"Error deleting workspace: {e}")
 
 def register(registry: CommandRegistry) -> None:
+    """Register the workspaces command with the CLI registry."""
     registry.register("workspaces", workspaces_command, help_text="List all workspaces using the API.")
     registry.register("workspace_create", workspace_create_command, help_text="Create a new workspace using the API.")
     registry.register("workspace_delete", workspace_delete_command, help_text="Delete a workspace using the API.")

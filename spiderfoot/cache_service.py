@@ -393,6 +393,7 @@ class RedisCache(CacheService):
     """
 
     def __init__(self, config: CacheConfig | None = None) -> None:
+        """Initialize the RedisCache."""
         super().__init__(config)
         self._client = None
 

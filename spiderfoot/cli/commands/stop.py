@@ -27,4 +27,5 @@ def stop_command(cli: SpiderFootCli, line: str) -> None:
         cli.edprint("No response from API.")
 
 def register(registry: CommandRegistry) -> None:
+    """Register the stop command with the CLI registry."""
     registry.register("stop", stop_command, help_text="Stop a scan using the SpiderFoot API.")

@@ -27,4 +27,5 @@ def logs_command(cli: SpiderFootCli, line: str) -> None:
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
 def register(registry: CommandRegistry) -> None:
+    """Register the logs command with the CLI registry."""
     registry.register("logs", logs_command, help_text="Show logs for a scan using the API.")

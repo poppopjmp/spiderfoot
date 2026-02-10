@@ -212,6 +212,7 @@ class MessageBus:
         result_queue: queue.Queue = queue.Queue()
 
         def reply_handler(msg: Message) -> None:
+            """Handle a reply message on the reply channel."""
             result_queue.put(msg.payload)
 
         self.subscribe(reply_channel, reply_handler)

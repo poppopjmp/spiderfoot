@@ -459,6 +459,7 @@ class SpiderFootDb:
             self.conn = dbh
             self.dbh = dbh.cursor()
             def __dbregex__(qry: str, data: str) -> bool:
+                """Test if a regular expression matches data."""
                 try:
                     rx = re.compile(qry, re.IGNORECASE | re.DOTALL)
                     ret = rx.match(data)

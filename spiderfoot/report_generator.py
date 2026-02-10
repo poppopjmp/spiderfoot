@@ -92,6 +92,7 @@ class ReportGeneratorConfig:
     on_section_complete: Callable[[str, str], None] | None = None
 
     def __post_init__(self) -> None:
+        """Apply default configurations after initialization."""
         if self.preprocessor_config is None:
             self.preprocessor_config = PreprocessorConfig()
         if self.window_config is None:
@@ -293,6 +294,7 @@ class ReportGenerator:
     """
 
     def __init__(self, config: ReportGeneratorConfig | None = None) -> None:
+        """Initialize the ReportGenerator."""
         self.config = config or ReportGeneratorConfig()
         self._preprocessor = ReportPreprocessor(self.config.preprocessor_config)
         self._window_manager = ContextWindowManager(self.config.window_config)

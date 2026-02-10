@@ -87,6 +87,7 @@ class EventBus(ABC):
     """
 
     def __init__(self, config: EventBusConfig | None = None) -> None:
+        """Initialize the EventBus."""
         self.config = config or EventBusConfig()
         self.log = logging.getLogger(f"spiderfoot.eventbus.{self.config.backend.value}")
         self._running = False

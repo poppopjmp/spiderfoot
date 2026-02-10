@@ -83,6 +83,7 @@ class DnsService:
     """
 
     def __init__(self, config: DnsServiceConfig | None = None) -> None:
+        """Initialize the DnsService."""
         self.config = config or DnsServiceConfig()
         self.log = logging.getLogger("spiderfoot.dns_service")
         self._cache: dict[str, tuple[float, Any]] = {}

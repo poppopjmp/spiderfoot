@@ -31,6 +31,7 @@ class VisualizationService:
     """
 
     def __init__(self, *, scan_repo=None, dbh=None) -> None:
+        """Initialize the VisualizationService."""
         self._scan_repo = scan_repo
         self._dbh = dbh
 
@@ -244,5 +245,6 @@ class VisualizationService:
     # ------------------------------------------------------------------
 
     def close(self) -> None:
+        """Release resources held by the service."""
         if self._scan_repo is not None and hasattr(self._scan_repo, "close"):
             self._scan_repo.close()

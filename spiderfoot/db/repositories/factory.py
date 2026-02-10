@@ -78,6 +78,7 @@ class RepositoryFactory:
         return ConfigRepository(dbh)
 
     def __repr__(self) -> str:
+        """Return a string representation of the factory."""
         has_config = bool(self._config)
         return f"<RepositoryFactory config={'yes' if has_config else 'no'}>"
 

@@ -192,6 +192,7 @@ class StructuredLogHandler(logging.Handler):
         formatter: StructuredFormatter | None = None,
         **kwargs
     ) -> None:
+        """Initialize the StructuredLogHandler."""
         super().__init__()
         self.stream = stream or sys.stdout
         if formatter:
@@ -221,6 +222,7 @@ class EventLogEmitter:
     """
 
     def __init__(self, logger_name: str = "spiderfoot.events") -> None:
+        """Initialize the EventLogEmitter."""
         self.log = logging.getLogger(logger_name)
 
     def emit_scan_event(

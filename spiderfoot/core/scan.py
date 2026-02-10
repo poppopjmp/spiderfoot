@@ -402,6 +402,7 @@ class ScanManager:
             scan_id: Scan ID to handle interruption for
         """
         def handle_abort(signum: int, frame: types.FrameType | None) -> None:
+            """Handle abort signal for scan interruption."""
             self.log.info("Received interrupt signal, stopping scan %s", scan_id)
             self.stop_scan(scan_id)
             sys.exit(-1)

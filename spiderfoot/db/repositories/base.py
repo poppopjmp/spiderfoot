@@ -49,6 +49,7 @@ class AbstractRepository(ABC):
         return self._dbh is not None
 
     def __enter__(self) -> AbstractRepository:
+        """Enter the repository context manager."""
         return self
 
     def __exit__(
@@ -57,6 +58,7 @@ class AbstractRepository(ABC):
         exc_val: BaseException | None,
         exc_tb: types.TracebackType | None,
     ) -> bool:
+        """Exit the repository context manager."""
         self.close()
         return False
 
@@ -73,5 +75,6 @@ class AbstractRepository(ABC):
             self._dbh = None
 
     def __repr__(self) -> str:
+        """Return a string representation of the repository."""
         status = "connected" if self.is_connected else "disconnected"
         return f"<{type(self).__name__} {status}>"

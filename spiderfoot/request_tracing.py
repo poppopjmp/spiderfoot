@@ -101,6 +101,7 @@ class RequestIdFilter(logging.Filter):
     """
 
     def filter(self, record: logging.LogRecord) -> bool:
+        """Attach request context to the log record."""
         record.request_id = _request_id_var.get() or ""
         record.request_method = _request_method_var.get() or ""
         record.request_path = _request_path_var.get() or ""
@@ -152,12 +153,14 @@ if HAS_STARLETTE:
             log_requests: bool = True,
             slow_request_threshold: float = 5.0,
         ) -> None:
+            """Initialize the RequestTracingMiddleware."""
             super().__init__(app)
             self.trust_client_id = trust_client_id
             self.log_requests = log_requests
             self.slow_request_threshold = slow_request_threshold
 
         async def dispatch(self, request: Request, call_next: Callable) -> Response:
+            """Process the request with tracing context."""
             # 1. Determine request ID
             client_id = request.headers.get(REQUEST_ID_HEADER)
             if client_id and self.trust_client_id:

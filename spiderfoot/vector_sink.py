@@ -50,6 +50,7 @@ class VectorConfig:
         environment: str = "development",
         extra_labels: dict[str, str] | None = None,
     ) -> None:
+        """Initialize the VectorConfig."""
         self.enabled = enabled
         self.endpoint = endpoint.rstrip("/")
         self.batch_size = batch_size
@@ -103,6 +104,7 @@ class VectorSink:
     """
 
     def __init__(self, config: VectorConfig | None = None) -> None:
+        """Initialize the VectorSink."""
         self.config = config or VectorConfig()
         self.log = logging.getLogger("spiderfoot.vector")
         self._buffer: queue.Queue = queue.Queue(maxsize=10000)
@@ -318,6 +320,7 @@ class VectorLogHandler(logging.Handler):
     """
 
     def __init__(self, sink: VectorSink) -> None:
+        """Initialize the VectorLogHandler."""
         super().__init__()
         self.sink = sink
 

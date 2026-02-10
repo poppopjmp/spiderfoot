@@ -27,4 +27,5 @@ def summary_command(cli: SpiderFootCli, line: str) -> None:
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
 def register(registry: CommandRegistry) -> None:
+    """Register the summary command with the CLI registry."""
     registry.register("summary", summary_command, help_text="Scan result summary using the API.")

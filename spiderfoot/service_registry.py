@@ -51,6 +51,7 @@ class ServiceRegistry:
     """
 
     def __init__(self) -> None:
+        """Initialize the ServiceRegistry."""
         self._services: dict[str, Any] = {}
         self._factories: dict[str, Callable[[], Any]] = {}
         self._lock = threading.RLock()

@@ -744,6 +744,7 @@ class DbCore:
             self.conn = dbh
             self.dbh = dbh.cursor()
             def __dbregex__(qry: str, data: str) -> bool:
+                """Test if a regular expression matches data."""
                 import re
                 return re.search(qry, data) is not None
             self.conn.create_function("REGEXP", 2, __dbregex__)

@@ -40,4 +40,5 @@ def scaninfo_command(cli: SpiderFootCli, line: str) -> None:
         cli.edprint(f"Failed to parse API response: {e}")
 
 def register(registry: CommandRegistry) -> None:
+    """Register the scaninfo command with the CLI registry."""
     registry.register("scaninfo", scaninfo_command, help_text="Scan information from the API.")

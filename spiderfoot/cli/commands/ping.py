@@ -28,4 +28,5 @@ def ping_command(cli: SpiderFootCli, line: str) -> None:
         cli.edprint("No response from API.")
 
 def register(registry: CommandRegistry) -> None:
+    """Register the ping command with the CLI registry."""
     registry.register("ping", ping_command, help_text="Test connectivity to the SpiderFoot API server.")

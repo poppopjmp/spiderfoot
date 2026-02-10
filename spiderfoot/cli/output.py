@@ -17,6 +17,7 @@ class bcolors:
 
 
 def format_colored(msg: str, color: str | None = None, bold: bool = False, prefix: str | None = None) -> str:
+    """Format a message with terminal color codes."""
     out = ""
     if color:
         out += color
@@ -31,6 +32,7 @@ def format_colored(msg: str, color: str | None = None, bold: bool = False, prefi
 
 
 def pretty_table(data: list, titlemap: dict | None = None) -> str:
+    """Format tabular data as a pretty-printed text table."""
     if not data:
         return ""
     out = list()

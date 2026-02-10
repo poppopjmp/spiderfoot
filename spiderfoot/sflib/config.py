@@ -18,6 +18,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 def configSerialize(opts: dict, filterSystem: bool = True) -> dict:
+    """Serialize a configuration dictionary for storage."""
     if not isinstance(opts, dict):
         raise TypeError(f"opts is {type(opts)}; expected dict()")
     storeopts = dict()
@@ -58,6 +59,7 @@ def configSerialize(opts: dict, filterSystem: bool = True) -> dict:
     return storeopts
 
 def configUnserialize(opts: dict, referencePoint: dict, filterSystem: bool = True) -> dict:
+    """Deserialize stored configuration back to a full config dictionary."""
     if not isinstance(opts, dict):
         raise TypeError(f"opts is {type(opts)}; expected dict()")
     if not isinstance(referencePoint, dict):

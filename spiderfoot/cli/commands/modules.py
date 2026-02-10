@@ -21,4 +21,5 @@ def modules_command(cli: SpiderFootCli, line: str) -> None:
     cli.send_output(resp, line, titles=None, total=True, raw=True)
 
 def register(registry: CommandRegistry) -> None:
+    """Register the modules command with the CLI registry."""
     registry.register("modules", modules_command, help_text="List available modules from the API.")

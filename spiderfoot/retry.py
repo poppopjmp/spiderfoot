@@ -416,8 +416,10 @@ def retry(max_attempts: int = 3, *,
     executor = RetryExecutor(config)
 
     def decorator(func: Callable) -> Callable:
+        """Wrap the function with retry logic."""
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> Any:
+            """Execute the function with automatic retry on failure."""
             result = executor.execute(func, *args, **kwargs)
             if result.success:
                 return result.result

@@ -123,6 +123,7 @@ class ScanCreate(BaseModel):
     @field_validator("target")
     @classmethod
     def target_not_empty(cls, v: str) -> str:
+        """Validate that the target is not blank."""
         if not v.strip():
             raise ValueError("Target must not be blank")
         return v.strip()
@@ -233,6 +234,7 @@ class PaginationMeta(BaseModel):
 
     @classmethod
     def compute(cls, total: int, page: int = 1, page_size: int = 50) -> PaginationMeta:
+        """Compute pagination metadata from total count and page info."""
         return cls(
             page=page,
             page_size=page_size,

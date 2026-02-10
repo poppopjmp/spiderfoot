@@ -42,6 +42,7 @@ class StepResult:
     timestamp: float = field(default_factory=time.time)
 
     def to_dict(self) -> dict:
+        """Return a dictionary representation."""
         return {
             "step_name": self.step_name,
             "status": self.status.value,

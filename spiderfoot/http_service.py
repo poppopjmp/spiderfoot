@@ -103,6 +103,7 @@ class HttpService:
     """
 
     def __init__(self, config: HttpServiceConfig | None = None) -> None:
+        """Initialize the HttpService."""
         self.config = config or HttpServiceConfig()
         self.log = logging.getLogger("spiderfoot.http_service")
         self._session_count = 0

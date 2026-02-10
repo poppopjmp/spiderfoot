@@ -139,6 +139,7 @@ class ModuleWatcher:
 
     @property
     def is_running(self) -> bool:
+        """Return whether the module watcher is running."""
         return self._running
 
     # ------------------------------------------------------------------
@@ -204,6 +205,7 @@ class ModuleWatcher:
 
     @property
     def stats(self) -> dict:
+        """Return watcher statistics."""
         total_reloads = sum(s.reload_count
                             for s in self._states.values())
         errors = sum(1 for s in self._states.values()

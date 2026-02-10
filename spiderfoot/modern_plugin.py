@@ -75,6 +75,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
     _enable_metrics = True
 
     def __init__(self) -> None:
+        """Initialize the SpiderFootModernPlugin."""
         super().__init__()
         self._registry = None
         self._http_service = None

@@ -84,6 +84,7 @@ class StateTransition:
     reason: str = ""
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "from": self.from_state.value,
             "to": self.to_state.value,
@@ -95,6 +96,7 @@ class StateTransition:
 class InvalidTransitionError(Exception):
     """Raised when an invalid state transition is attempted."""
     def __init__(self, from_state: ScanState, to_state: ScanState) -> None:
+        """Initialize the InvalidTransitionError."""
         self.from_state = from_state
         self.to_state = to_state
         allowed = VALID_TRANSITIONS.get(from_state, set())
@@ -116,6 +118,7 @@ class ScanStateMachine:
 
     def __init__(self, scan_id: str,
                  initial_state: ScanState = ScanState.CREATED) -> None:
+        """Initialize the ScanStateMachine."""
         self.scan_id = scan_id
         self._state = initial_state
         self._lock = threading.Lock()

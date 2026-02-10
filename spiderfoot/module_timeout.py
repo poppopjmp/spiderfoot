@@ -157,8 +157,10 @@ class ModuleTimeoutGuard:
     ) -> Callable:
         """Decorator that wraps a function with timeout enforcement."""
         def decorator(fn: Callable) -> Callable:
+            """Wrap the function with timeout enforcement."""
             @wraps(fn)
             def wrapper(*args: Any, **kwargs: Any) -> Any:
+                """Execute the wrapped function within a timeout context."""
                 sid = scan_id or kwargs.get("scan_id", "")
                 with self.timed(module_name, scan_id=sid):
                     return fn(*args, **kwargs)

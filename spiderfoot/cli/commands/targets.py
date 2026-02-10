@@ -59,6 +59,7 @@ def target_delete_command(cli: SpiderFootCli, line: str) -> None:
         cli.edprint(f"Error deleting target: {e}")
 
 def register(registry: CommandRegistry) -> None:
+    """Register the targets command with the CLI registry."""
     registry.register("targets", targets_command, help_text="List all targets in a workspace.")
     registry.register("target_add", target_add_command, help_text="Add a target to a workspace.")
     registry.register("target_delete", target_delete_command, help_text="Delete a target from a workspace.")

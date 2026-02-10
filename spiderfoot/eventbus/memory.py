@@ -26,6 +26,7 @@ class InMemoryEventBus(EventBus):
     """
 
     def __init__(self, config: EventBusConfig | None = None) -> None:
+        """Initialize the InMemoryEventBus."""
         super().__init__(config)
         self._queues: dict[str, asyncio.Queue] = {}
         self._callbacks: dict[str, Callable] = {}  # sub_id -> callback

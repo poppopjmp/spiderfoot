@@ -9,6 +9,7 @@ import string
 from io import BytesIO
 
 def clean_user_input(input_list: list) -> list:
+    """Escape HTML entities in a list of user inputs."""
     ret = []
     for item in input_list:
         if isinstance(item, str):
@@ -19,6 +20,7 @@ def clean_user_input(input_list: list) -> list:
     return ret
 
 def build_excel(data: list, column_names: list, sheet_name_index: int = 0) -> str:
+    """Build an Excel workbook from tabular data."""
     row_nums = dict()
     workbook = openpyxl.Workbook()
     default_sheet = workbook.active

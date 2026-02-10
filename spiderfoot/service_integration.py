@@ -250,6 +250,7 @@ def _inject_legacy_metrics(module) -> None:
 
     @functools.wraps(original_handler)
     def instrumented_handler(event: Any) -> Any:
+        """Invoke the original handler with metrics instrumentation."""
         t0 = time.monotonic()
         try:
             result = original_handler(event)

@@ -66,6 +66,7 @@ class ExportConfig:
 
     @classmethod
     def from_config(cls, opts: dict) -> "ExportConfig":
+        """Create an ExportConfig from a configuration dictionary."""
         return cls(
             include_raw_data=opts.get("_export_raw_data", True),
             include_correlations=opts.get("_export_correlations", True),
@@ -78,6 +79,7 @@ class ExportService:
     """Multi-format scan result exporter."""
 
     def __init__(self, config: ExportConfig | None = None) -> None:
+        """Initialize the ExportService."""
         self.config = config or ExportConfig()
 
     def export_scan(self, scan_id: str,

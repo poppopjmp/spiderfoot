@@ -81,6 +81,7 @@ class SpiderFootEvent:
 
     @property
     def generated_ms(self) -> int:
+        """Return the event creation timestamp."""
         return self._generated
 
     @property

@@ -135,6 +135,7 @@ class WindowingResult:
 
     @property
     def window_count(self) -> int:
+        """Return the number of context windows."""
         return len(self.windows)
 
 
@@ -214,6 +215,7 @@ class ContextWindowManager:
     """
 
     def __init__(self, config: WindowConfig | None = None) -> None:
+        """Initialize the ContextWindowManager."""
         self.config = config or WindowConfig()
 
     @property

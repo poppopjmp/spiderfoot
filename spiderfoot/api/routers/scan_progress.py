@@ -285,6 +285,7 @@ else:
         interval = max(0.5, min(interval, 30.0))
 
         async def event_stream() -> AsyncGenerator[str, None]:
+            """Yield server-sent events for scan progress updates."""
             async for event in _sse_generator(scan_id, interval=interval):
                 # Check if client disconnected
                 if await request.is_disconnected():

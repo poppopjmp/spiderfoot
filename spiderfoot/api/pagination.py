@@ -67,6 +67,7 @@ class PaginationParams:
             description="Sort order: asc or desc",
         ),
     ) -> None:
+        """Initialize the PaginationParams."""
         # Resolve page_size/limit
         if page_size is not None:
             self._page_size = min(max(page_size, self.MIN_PAGE_SIZE), self.MAX_PAGE_SIZE)
@@ -115,6 +116,7 @@ class PaginationParams:
         return self.sort_order == "desc"
 
     def __repr__(self) -> str:
+        """Return a string representation of the pagination parameters."""
         return (
             f"PaginationParams(page={self.page}, page_size={self.page_size}, "
             f"offset={self.offset}, sort_by={self.sort_by}, sort_order={self.sort_order})"

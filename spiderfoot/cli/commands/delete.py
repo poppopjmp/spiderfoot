@@ -31,4 +31,5 @@ def delete_command(cli: SpiderFootCli, line: str) -> None:
         cli.edprint(f"Error deleting scan: {e}")
 
 def register(registry: CommandRegistry) -> None:
+    """Register the delete command with the CLI registry."""
     registry.register("delete", delete_command, help_text="Delete a scan using the SpiderFoot API.")

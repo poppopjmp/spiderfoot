@@ -249,6 +249,7 @@ class ProfileManager:
     """
 
     def __init__(self) -> None:
+        """Initialize the ProfileManager."""
         self._profiles: dict[str, ScanProfile] = {}
         self._register_builtins()
 

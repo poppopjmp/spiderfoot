@@ -66,11 +66,13 @@ class CompressionMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(self, app: Any, *, min_size: int = _DEFAULT_MIN_SIZE, level: int = _DEFAULT_LEVEL) -> None:
+        """Initialize the CompressionMiddleware."""
         super().__init__(app)
         self.min_size = min_size
         self.level = max(1, min(9, level))
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """Compress response body with gzip if the client accepts it."""
         # Check if client accepts gzip
         accept_encoding = request.headers.get("accept-encoding", "")
         if "gzip" not in accept_encoding.lower():

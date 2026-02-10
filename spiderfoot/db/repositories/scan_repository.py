@@ -46,6 +46,7 @@ class ScanRecord:
         )
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "scan_id": self.scan_id,
             "name": self.name,

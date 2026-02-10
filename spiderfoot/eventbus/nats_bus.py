@@ -27,6 +27,7 @@ class NatsEventBus(EventBus):
     """
 
     def __init__(self, config: EventBusConfig | None = None) -> None:
+        """Initialize the NatsEventBus."""
         super().__init__(config)
         self._nc = None
         self._js = None
@@ -141,6 +142,7 @@ class NatsEventBus(EventBus):
         durable_name = f"sf-{sub_id[:8]}"
 
         async def msg_handler(msg: Any) -> None:
+            """Handle an incoming NATS message."""
             try:
                 payload = json.loads(msg.data.decode())
                 envelope = EventEnvelope(

@@ -158,6 +158,7 @@ class ShutdownCoordinator:
 
     @property
     def in_flight_count(self) -> int:
+        """Return the number of in-flight requests."""
         with self._in_flight_lock:
             return self._in_flight
 

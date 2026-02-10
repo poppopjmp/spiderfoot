@@ -65,6 +65,7 @@ class ScanEventBridge:
         relay: Any = None,
         throttle_ms: int = 50,
     ) -> None:
+        """Initialize the ScanEventBridge."""
         self.scan_id = scan_id
         self._relay = relay
         self._throttle_s = throttle_ms / 1000.0
@@ -85,6 +86,7 @@ class ScanEventBridge:
 
     @property
     def relay(self) -> EventRelay:
+        """Return the event relay instance, creating it lazily if needed."""
         if self._relay is None:
             from spiderfoot.event_relay import get_event_relay
             self._relay = get_event_relay()

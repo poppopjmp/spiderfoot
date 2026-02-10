@@ -62,6 +62,7 @@ class VectorHealthStatus:
     error: str = ""
 
     def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation."""
         return {
             "reachable": self.reachable,
             "version": self.version,
@@ -98,6 +99,7 @@ class VectorBootstrap:
     """
 
     def __init__(self, config: VectorBootstrapConfig | None = None) -> None:
+        """Initialize the VectorBootstrap."""
         self.config = config or VectorBootstrapConfig()
         self._health_cache: VectorHealthStatus | None = None
 

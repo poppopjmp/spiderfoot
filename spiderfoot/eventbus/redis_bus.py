@@ -27,6 +27,7 @@ class RedisEventBus(EventBus):
     """
 
     def __init__(self, config: EventBusConfig | None = None) -> None:
+        """Initialize the RedisEventBus."""
         super().__init__(config)
         self._redis = None
         self._consumer_group = f"sf-workers-{uuid.uuid4().hex[:8]}"

@@ -36,4 +36,5 @@ def start_command(cli: SpiderFootCli, line: str) -> None:
         cli.edprint("No response from API.")
 
 def register(registry: CommandRegistry) -> None:
+    """Register the start command with the CLI registry."""
     registry.register("start", start_command, help_text="Start a new scan using the SpiderFoot API.")

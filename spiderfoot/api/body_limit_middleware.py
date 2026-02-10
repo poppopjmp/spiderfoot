@@ -58,6 +58,7 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
     """Reject requests with Content-Length exceeding configured limits."""
 
     def __init__(self, app: Any, max_body: int = _DEFAULT_MAX_BODY, max_upload: int = _DEFAULT_MAX_UPLOAD) -> None:
+        """Initialize the BodySizeLimitMiddleware."""
         super().__init__(app)
         self._max_body = _parse_size(
             os.environ.get("SF_API_MAX_BODY_SIZE", ""), max_body
@@ -71,6 +72,7 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         )
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        """Reject requests exceeding the configured body size limit."""
         # Only check methods that can have bodies
         if request.method not in ("POST", "PUT", "PATCH"):
             return await call_next(request)

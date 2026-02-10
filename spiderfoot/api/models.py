@@ -16,12 +16,14 @@ class ScanRequest(BaseModel):
     @field_validator('name')
     @classmethod
     def name_must_not_be_empty(cls, v: str) -> str:
+        """Validate that the scan name is not empty."""
         if not v.strip():
             raise ValueError('Scan name cannot be empty')
         return v
     @field_validator('target')
     @classmethod
     def target_must_not_be_empty(cls, v: str) -> str:
+        """Validate that the scan target is not empty."""
         if not v.strip():
             raise ValueError('Target cannot be empty')
         return v

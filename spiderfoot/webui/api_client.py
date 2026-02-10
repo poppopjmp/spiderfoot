@@ -40,6 +40,7 @@ class ApiClient:
         api_key: str = "",
         timeout: float = 30.0,
     ) -> None:
+        """Initialize the ApiClient."""
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
         self._timeout = timeout
@@ -407,4 +408,5 @@ class ApiClient:
             self._session = None
 
     def __repr__(self) -> str:
+        """Return a string representation of the API client."""
         return f"ApiClient(url={self._base_url!r})"

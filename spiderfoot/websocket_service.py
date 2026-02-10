@@ -442,9 +442,11 @@ def create_ws_router() -> Any:
 
     @router.websocket("/ws")
     async def websocket_endpoint(websocket: WebSocket) -> None:
+        """Handle incoming WebSocket connections."""
         await websocket.accept()
 
         async def send(data: str) -> None:
+            """Send data to the WebSocket client."""
             await websocket.send_text(data)
 
         client = await hub.connect(send)
@@ -469,6 +471,7 @@ def create_ws_router() -> Any:
         await websocket.accept()
 
         async def send(data: str) -> None:
+            """Send data to the WebSocket client."""
             await websocket.send_text(data)
 
         client = await hub.connect(send)
