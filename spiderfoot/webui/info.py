@@ -12,7 +12,7 @@ class InfoEndpoints:
     """WebUI endpoints for event type and module information."""
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def eventtypes(self):
+    def eventtypes(self) -> list:
         """Return a sorted JSON list of all available event types."""
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         dbh = self.get_dbh()
@@ -24,7 +24,7 @@ class InfoEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def modules(self):
+    def modules(self) -> list:
         """Return a sorted JSON list of all available modules with metadata."""
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         modlist = list()
@@ -61,7 +61,7 @@ class InfoEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def correlationrules(self):
+    def correlationrules(self) -> list:
         """Return a sorted JSON list of all configured correlation rules."""
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         rules = list()
@@ -71,14 +71,14 @@ class InfoEndpoints:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def ping(self):
+    def ping(self) -> list:
         """Return a health-check response with the current application version."""
         cherrypy.response.headers['Content-Type'] = "application/json; charset=utf-8"
         return ["SUCCESS", __version__]
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def query(self, query):
+    def query(self, query) -> list:
         """Execute a read-only SQL SELECT query and return the results as JSON."""
         dbh = self.get_dbh()
         if not query:
