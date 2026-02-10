@@ -19,6 +19,7 @@ import sqlite3
 import psycopg2
 from ..event import SpiderFootEvent
 from .db_utils import get_placeholder, is_transient_error
+from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
 
 log = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ class EventManager:
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("Error in scanLogEvents", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     try:
                         self.conn.rollback()
@@ -108,7 +109,7 @@ class EventManager:
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("Error in scanLogEvent", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("Error in scanLogEvent") from e
 

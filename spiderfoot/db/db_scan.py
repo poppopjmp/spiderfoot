@@ -18,6 +18,7 @@ import psycopg2
 import logging
 import time
 from .db_utils import get_placeholder, is_transient_error
+from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
 
 log = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class ScanManager:
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("Unable to create scan instance in database", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("Unable to create scan instance in database") from e
 
@@ -86,7 +87,7 @@ class ScanManager:
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("Unable to set information for the scan instance.", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("Unable to set information for the scan instance.") from e
 
@@ -104,7 +105,7 @@ class ScanManager:
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("SQL error encountered when retrieving scan instance", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when retrieving scan instance") from e
 
@@ -118,7 +119,7 @@ class ScanManager:
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("SQL error encountered when fetching scan list", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when fetching scan list") from e
 
@@ -143,7 +144,7 @@ class ScanManager:
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("SQL error encountered when deleting scan", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when deleting scan") from e
         return True

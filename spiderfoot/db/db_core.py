@@ -18,6 +18,7 @@ import sqlite3
 import psycopg2
 from pathlib import Path
 import time
+from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
 from spiderfoot.db.db_utils import (
     get_placeholder, get_upsert_clause, get_type_mapping, get_bool_value,
     get_schema_version_queries, get_index_if_not_exists, check_connection, is_transient_error, normalize_db_type
@@ -838,7 +839,7 @@ class DbCore:
                 except Exception as e:
                     self._log_db_error("Unable to set schema version", e)
                     if is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("Unable to set schema version") from e
 
@@ -872,7 +873,7 @@ class DbCore:
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("SQL error encountered when setting up database", e)
                     if is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when setting up database") from e
 
@@ -910,7 +911,7 @@ class DbCore:
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("SQL error encountered when vacuuming the database", e)
                     if is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when vacuuming the database") from e
         return False

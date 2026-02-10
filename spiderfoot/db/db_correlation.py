@@ -15,6 +15,7 @@ Correlation result management and queries for SpiderFootDb.
 import logging
 import time
 from .db_utils import get_placeholder, is_transient_error
+from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class CorrelationManager:
                 except Exception as e:
                     self._log_db_error("Unable to create correlation result in database", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("Unable to create correlation result in database") from e
             correlationId = correlation_id
@@ -63,7 +64,7 @@ class CorrelationManager:
                     except Exception as e:
                         self._log_db_error("Unable to create correlation result events in database", e)
                         if self._is_transient_error(e) and attempt < 2:
-                            time.sleep(0.2 * (attempt + 1))
+                            time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                             continue
                         raise IOError("Unable to create correlation result events in database") from e
             for attempt in range(3):
@@ -73,7 +74,7 @@ class CorrelationManager:
                 except Exception as e:
                     self._log_db_error("Unable to commit correlation result events", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("Unable to commit correlation result events") from e
         return str(correlationId)
@@ -99,7 +100,7 @@ class CorrelationManager:
                 except Exception as e:
                     self._log_db_error("SQL error encountered when fetching correlation summary", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when fetching correlation summary") from e
 
@@ -117,7 +118,7 @@ class CorrelationManager:
                 except Exception as e:
                     self._log_db_error("SQL error encountered when fetching correlation list", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when fetching correlation list") from e
 

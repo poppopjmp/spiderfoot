@@ -15,6 +15,7 @@ Configuration management (global and per-scan) for SpiderFootDb.
 from .db_utils import get_placeholder, is_transient_error, get_upsert_clause
 import logging
 import time
+from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class ConfigManager:
                     except Exception as e:
                         self._log_db_error("SQL error encountered when storing config", e)
                         if self._is_transient_error(e) and attempt < 2:
-                            time.sleep(0.2 * (attempt + 1))
+                            time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                             continue
                         raise IOError("SQL error encountered when storing config, aborting") from e
             for attempt in range(3):
@@ -63,7 +64,7 @@ class ConfigManager:
                 except Exception as e:
                     self._log_db_error("SQL error encountered when storing config (commit)", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when storing config, aborting") from e
         return True
@@ -85,7 +86,7 @@ class ConfigManager:
                 except Exception as e:
                     self._log_db_error("SQL error encountered when fetching configuration", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when fetching configuration") from e
 
@@ -101,7 +102,7 @@ class ConfigManager:
                 except Exception as e:
                     self._log_db_error("Unable to clear configuration from the database", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("Unable to clear configuration from the database") from e
 
@@ -127,7 +128,7 @@ class ConfigManager:
                     except Exception as e:
                         self._log_db_error("SQL error encountered when storing config", e)
                         if self._is_transient_error(e) and attempt < 2:
-                            time.sleep(0.2 * (attempt + 1))
+                            time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                             continue
                         raise IOError("SQL error encountered when storing config, aborting") from e
             for attempt in range(3):
@@ -137,7 +138,7 @@ class ConfigManager:
                 except Exception as e:
                     self._log_db_error("SQL error encountered when storing config (commit)", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when storing config, aborting") from e
 
@@ -159,7 +160,7 @@ class ConfigManager:
                 except Exception as e:
                     self._log_db_error("SQL error encountered when fetching configuration", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("SQL error encountered when fetching configuration") from e
 
@@ -176,7 +177,7 @@ class ConfigManager:
                 except Exception as e:
                     self._log_db_error("Unable to clear scan configuration from the database", e)
                     if self._is_transient_error(e) and attempt < 2:
-                        time.sleep(0.2 * (attempt + 1))
+                        time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
                     raise IOError("Unable to clear scan configuration from the database") from e
 
