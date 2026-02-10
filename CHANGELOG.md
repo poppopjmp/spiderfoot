@@ -3,6 +3,14 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.224.0] — RC Cycle 164: Public Method Docstrings — 100% Coverage
+
+### Changed
+- Added one-line docstrings to **all 1,217 public methods** across the entire `spiderfoot/` package (RC149–164)
+- 16 batches covering all files: core services, database layer, API routers, CLI commands, WebUI, correlation engine, event system, and utilities
+- Consistent format: `__init__` → "Initialize the [ClassName].", `to_dict` → "Return a dictionary representation.", properties → "Return the [name]."
+- **0 public methods without docstrings remaining** (excl auto-generated `pb2` files)
+
 ## [5.208.0] — RC Cycle 147: Line Length Cleanup
 
 ### Changed
