@@ -17,7 +17,7 @@ __url__ = "https://github.com/poppopjmp/spiderfoot"
 
 # Core imports for package
 from .db import SpiderFootDb
-from .event import SpiderFootEvent
+from .events import SpiderFootEvent
 from .helpers import SpiderFootHelpers
 from .plugin import SpiderFootPlugin
 from .target import SpiderFootTarget
