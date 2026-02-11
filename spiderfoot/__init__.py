@@ -19,7 +19,7 @@ __url__ = "https://github.com/poppopjmp/spiderfoot"
 from .db import SpiderFootDb
 from .events import SpiderFootEvent
 from .helpers import SpiderFootHelpers
-from .plugin import SpiderFootPlugin
+from .plugins import SpiderFootPlugin
 from .target import SpiderFootTarget
 from .threadpool import SpiderFootThreadPool
 from .sflib import SpiderFoot
